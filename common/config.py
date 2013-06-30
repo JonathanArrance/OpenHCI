@@ -1,0 +1,5 @@
+TRANSCIRRUS_DB="192.168.10.16"
+TRAN_DB_USER="cacsystem"
+TRAN_DB_PASS="cacsystem"
+TRAN_DB_NAME="cac_system"
+TRAN_DB_PORT="5432"
