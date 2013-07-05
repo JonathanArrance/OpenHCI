@@ -7,15 +7,18 @@ import sys
 sys.path.append('../common')
 import logger
 import config
-
-sys.path.append('../database')
-from postgres import pgsql
-
 from auth import authorization
+
+sys.path.append('/home/jonathan/alpo.0/component/keystone')
+from keystone_tokens import token_ops
 
 a = authorization("testuser2","test")
 
 #get the user dict
 d = a.get_auth()
-print d
 
+#d is the user_dictionary
+
+tokenops = token_ops(d)
+
+t = tokenops.check_token()

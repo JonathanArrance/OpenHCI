@@ -7,7 +7,7 @@ import os
 #log file /var/log/caclogs/db/sql.log
 def sql_info(message):
     logging.basicConfig(filename='/var/log/caclogs/system.log',level=logging.DEBUG)
-    logging.info(" SQL INFO: %s" %(message))
+    logging.info("SQL INFO: %s" %(message))
 
 def sql_warning(message):
     logging.basicConfig(filename='/var/log/caclogs/system.log',level=logging.DEBUG)

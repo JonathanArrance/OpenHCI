@@ -28,8 +28,7 @@ class pgsql:
 
     #name: pg_insert
     #desc: does a simple sql insert operation
-    #input: psql cursor object
-    #       psql connection object
+    #input: self object
     #       table - table to insert new data into
     #       options - new values to insert into table
     #
@@ -174,6 +173,11 @@ class pgsql:
         self.cur.execute(SQL)
         self.conn.commit()
 
+    #name: pg_update
+    #desc: Update the database table
+    #input: self object
+    #       options - the values to search the db on
+    #output: returns a void and deletes the value from the table
     def pg_update(self,options):
         logger.sql_info("Performing simple UPDATE operation pg_update")
 
@@ -212,3 +216,12 @@ class pgsql:
         logger.sql_info(SQL)
         self.cur.execute(SQL)
         self.conn.commit()
+
+    def pg_transaction_begin(self):
+        self.cur.execute("BEGIN")
+        
+    def pg_transaction_commit(self):
+        self.cur.execute("COMMIT")
+        
+    def pg_transaction_rollback(self):
+        self.cur.execute("ROLLBACK")

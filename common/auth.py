@@ -1,7 +1,8 @@
 #check to make sure that a user has an account in the transcirrus system
 # and that the account corresponds to an account in keystone
 # get the user level from the transcirrus system DB
-#passes the user level out 
+#passes the user level out
+#tested and works as of 7-1-2013
 import sys
 import json
 from api_caller import caller
@@ -83,21 +84,29 @@ class authorization:
             #get user access token (PKI key) from openstack if
             #user has a status level of 2 or higher and user level of 1 or greater
             token = ""
+            adm_token = ""
             if (status_level == 0):
                 token = ""
                 logger.sys_info("User: %s had a status level of 0. Could not get a token." %(self.username))
-            elif(status_level == 2 and user_level >= 1):
+            elif(status_level == 2 and user_level >= 1 and exist[0][7] != ""):
                 token = _get_token(self.username,self.user_pass,exist[0][7])
                 logger.sys_info("User: %s had a status level of %s. Retrieving API token." %(self.username,status_level))
             elif(status_level == 2 and user_level == 0 and is_admin == 1):
-                token = _get_admin_token(self.db,exist[0][7])
-                logger.sys_info("User: %s had a status level of %s. Retrieving OpenStack admin token for port 35357." %(self.username,status_level))
+                if(exist[0][7] == 'NULL'):
+                    adm_token = config.DEFAULT_ADMIN_TOKEN
+                    logger.sys_info("User: %s had a status level of %s. Using default OpenStack admin token for port 35357." %(self.username,status_level))
+                else:
+                    logger.sys_info("User: %s had a status level of %s. Retrieving OpenStack admin token for port 35357." %(self.username,status_level))
+                    adm_token = _get_admin_token(self.db,exist[0][7])
+                    logger.sys_info("User: %s had a status level of %s. Retrieving OpenStack token for port 5000." %(self.username,status_level))
+                    token = _get_token(self.username,self.user_pass,exist[0][7])
             else:
                 token = "error"
                 logger.sys_error("Could not get a token for the the user: %s. Check the system." %(self.username))
 
-            #dictionary containing the user login info
-            user_dict = {"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token}
+            #dictionary containing the user login info. permissions, token and status
+            #need to set PKI token and ADMIN token
+            user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token,"adm_token":adm_token}
 
             #close open db connections
             self.db.pg_close_connection()
@@ -166,6 +175,7 @@ def _check_user_enabled(key,user_array):
 #INPUT: username
 #       password
 #       project_id
+#OUTPUT: api_token used to run REST API commands
 def _get_token(username,password,project_id):
     #submit the values passed in 
     api_dict = {"username":username, "password":password, "project_id":project_id}
@@ -198,9 +208,6 @@ def _get_token(username,password,project_id):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
     elif(rest['response'] == 401):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 403):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
     elif(rest['response'] == 405):
