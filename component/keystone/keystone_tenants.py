@@ -114,7 +114,7 @@ class tenant_ops:
             function = 'POST'
             api_path = '/v2.0/tenants'
             token = self.adm_token
-            sec = 'FALSE'
+            sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             rest = api.call_rest(rest_dict)
 
@@ -138,8 +138,8 @@ class tenant_ops:
             self.db.pg_insert("projects",proj_ins_dict)
 
             #Update the user table
-            user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='%s',user_project_id='%s'"""%(project_name,tenant_id),'where':"user_name='%s'" %(self.username)}
-            self.db.pg_update(user_up_dict)
+            #user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='%s',user_project_id='%s'"""%(project_name,tenant_id),'where':"user_name='%s'" %(self.username)}
+            #self.db.pg_update(user_up_dict)
 
             self.db.pg_transaction_commit()
             self.db.pg_close_connection()
@@ -148,11 +148,13 @@ class tenant_ops:
             self.db.pg_transaction_rollback()
             #simple cleanup of failed project create
             raise
-        r_dict = {"response":200,"reason":"OK","tenant_id":tenant_id}
+        r_dict = {"response":200,"reason":"OK","project_name":project_name,"tenant_id":tenant_id}
         return r_dict
 
     #DESC: remove a tenant from the OpenStack system and from the Transcirrus DB
-    
+    #INPUT: self object
+    #       project_name
+    #OUTPUT: dictionary containg the rest API response,reason and status of "OK' if task completed successfully
     def remove_tenant(self,project_name):
         
         if((not project_name) or (project_name == "")):
@@ -199,7 +201,6 @@ class tenant_ops:
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             rest = api.call_rest(rest_dict)
-            print rest
             #check the response and make sure it is a 200 or 201
             if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
                 #read the json that is returned

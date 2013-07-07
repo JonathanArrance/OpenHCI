@@ -7,10 +7,17 @@ TRAN_DB_PASS="cacsystem"
 TRAN_DB_NAME="cac_system"
 TRAN_DB_PORT="5432"
 
+#change during setup if needed from DB vars
 DEFAULT_ADMIN_TOKEN="cheapass"
 DEFAULT_API_IP="192.168.10.30"
 
+#change this, update as neccessary from setup operation
 DEFAULT_CLOUD_CONTROLER="jon-devstack"
+
+#DEFAULT openstack roles
+DEFAULT_MEMBER_ROLE_ID="97e132b165c94edfa1404896b3784416"
+DEFAULT_ADMIN_ROLE_ID="de7d1547c12849119dba612e80fa0e27"
+
 
 ##PATHS##
 COMPONENT_PATH="/home/jonathan/alpo.0/component"
