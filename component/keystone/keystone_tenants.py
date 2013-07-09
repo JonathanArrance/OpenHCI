@@ -284,7 +284,7 @@ class tenant_ops:
     def update_tenant(self):
         print "yo"
         
-######Internal defs
+######Internal defs#######
 def _http_codes(code,reason):
     if(code):
         logger.sys_error("Response %s with Reason %s" %(code,reason))

@@ -53,7 +53,7 @@ class authorization:
         #    doing with openstack
         #2 - User has access and use both transcirrus and Openstack stuff
         status_level = 0
-        if (exist[0][0] != 1):
+        if (exist != 1):
             #check if the user is enabled in the keystone DB
             enabled = _check_user_enabled(self.key,exist)
             #Need to possibly add checks for False and False
@@ -113,8 +113,8 @@ class authorization:
             self.key.pg_close_connection()
             return user_dict
         else:
-            logger.sys_error("The user: %s does not appear to hava an account." %(self.username))
-            raise Exception("The user: %s does not appear to hava an account." %(self.username))
+            logger.sys_error("The user: %s, does not appear to hava an account." %(self.username))
+            raise Exception("The user: %s, does not appear to hava an account." %(self.username))
 
 #DESC: Check if the user exists in the database
 #INPUT: self object

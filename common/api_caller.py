@@ -91,6 +91,7 @@ class caller:
             logger.sys_info("Setting api_caller.call_rest to  use admin port 35357.")
             port = '35357'
         url = "%s:%s" %(self.api_ip,port)
+
         sec = api_dict['sec']
         if (sec == 'TRUE'):
             logger.sys_info("%s is connecting to REST API with a secured connection." %(self.username))

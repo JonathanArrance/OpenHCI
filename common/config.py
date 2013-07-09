@@ -1,5 +1,5 @@
 ##This file will be written out by values inserted into the system database
-#defaults will be facotry set
+#defaults will be factory set
 #file will update when local admin sets up system.
 TRANSCIRRUS_DB="192.168.10.16"
 TRAN_DB_USER="cacsystem"
@@ -26,12 +26,12 @@ DB_PATH="/home/jonathan/alpo.0/database"
 
 
 ##DEFAULT OPENSTACK DB SETTINGS##
-OS_DB=""
-OS_DB_PORT=""
+OS_DB="192.168.10.30"
+OS_DB_PORT="5432"
 
-KEYSTONE_DB_NAME=""
-KEYSTONE_DB_USER=""
-KEYSTONE_DB_PASS=""
+KEYSTONE_DB_NAME="keystone"
+KEYSTONE_DB_USER="cacsystem"
+KEYSTONE_DB_PASS="cacsystem"
 
 NOVA_DB_NAME=""
 NOVA_DB_USER=""

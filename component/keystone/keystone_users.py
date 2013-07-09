@@ -111,6 +111,9 @@ class user_ops:
                 raise Exception("Only admins can create a project.")
 
             #need to figure out the group id based on the role given
+            #NOTE for now we are sticking with the default admin,Member roles in Keystone.
+            #all access is controlled with Transcirrus permissions. Later we will add the
+            #ability to create and use custom roles in keystone.
             group_id = ""
             key_role = ""
             if(new_user_dict['userrole'] == 'admin'):
@@ -187,23 +190,216 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
+    #DESC: Removes a user from the Keystone Db and th Transcirrus DB
+    #      Admin must be in the same project as user they are removeing
+    #      only admins can remove users includeing other admins
+    #INPUTS: self object
+    #        delete_dict - dictionary containg the user info
+    #                    username
+    #                    userid
+    #OUTPUTS: OK if successful or Exception
+    def remove_user(self,delete_dict):
+        #Only an admin can create a new user
+        #check to make sure that new_user_dict is present
+        if(not delete_dict):
+            logger.sys_error("delete_dict not specified for remove_user operation.")
+            raise Exception("delete_dict not specified for remove_user operation.")
+        #Check to make sure that the username,password and userrole are valid
+        if((not delete_dict['username'])or(not delete_dict['userid'])):
+            logger.sys_error("Blank parametrs passed into remove user operation, INVALID.")
+            raise Exception("Blank parametrs passed into remove user operation, INVALID.")
+        if(('username' not in delete_dict) or ('userid' not in delete_dict)):
+            logger.sys_error("Required parametrs missing for remove user operation, MISSING PARAM.")
+            raise Exception("Required parametrs missing for remove user operation, MISSING PARAM.")
 
-    def remove_user():
-        print "yo"
-    
+        #check if the user creating a new account is an admin
+        if(self.is_admin == 1):
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+
+                #get the project ID of the user you want to remove - Only primary project for the prototype
+                get_proj_id = {"select":"user_project_id", "from":"trans_user_info","where":"user_name='%s'" %(delete_dict['username'])}
+                proj_id = self.db.pg_select(get_proj_id)
+            except Exception as e:
+                logger.sys_error("%s" %(e))
+                raise
+
+            #Compare the admin project id to the user project id
+            #only an admin in the same project can disable a user in a project
+            if((self.project_id != proj_id[0][0]) or (self.user_level >= 1)):
+                logger.sys_error("Admin and User not in the same project, can not remove user.")
+                raise Exception("Admin and User not in the same project, can not remove user.")
+
+            #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
+            if(self.status_level <= 1):
+                logger.sys_error("User status not sufficient for remove user operation.")
+                raise Exception("User status not sufficient for remove user operation.")
+
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+
+                #add the new user to openstack
+                body = ""
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/users/%s' %(delete_dict['userid'])
+                token = self.adm_token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+                print rest
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 200) or (rest['response'] == 204)):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+
+                    #update the transcirrus db
+                    del_dict = {"table":'trans_user_info',"where":"user_name='%s'" %(delete_dict['username'])}
+                    self.db.pg_delete(del_dict)
+                    self.db.pg_close_connection()
+                    return "OK"
+                else:
+                    _http_codes(rest['response'],rest['reason'])
+            except Exception as e:
+                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
+                #back the user out of the transcirrus DB if the db works and the REST API fails
+                raise
+        else:
+            logger.sys_error("Admin flag not set, could not create the new user.")
+
+    #DESC: Disable a user in both the Keystone and Transcirrus DB
+    #INPUT:self object
+    #      disable_dict - dictionary containg the parameters for the user account
+    #                    username - name of the user to toggle
+    #                    toggle - enable/disable
+    #                    userid - OPTIONAL
+    #OUTPUT: dictionary conating the username,userid,toggle status(enable|disable) or exception
+    def toggle_user(self,disable_dict):
+        #Check to make sure required params are given
+        if(not disable_dict):
+            logger.sys_error("new_user_dict not specified for create_user operation.")
+            raise Exception("new_user_dict not specified for create_user operation.")
+        #Check to make sure that the username,password and userrole are valid
+        if((not disable_dict['username'])or(not disable_dict['toggle'])):
+            logger.sys_error("Blank parametrs passed into create user operation, INVALID.")
+            raise Exception("Blank parametrs passed into create user operation, INVALID.")
+        #make sure that toggle is set to enable or disable only
+        if((disable_dict['toggle'] == 'enable') or (disable_dict['toggle'] == 'disable')):
+            #HACK
+            logger.sys_error("Toggle value is invalid.")
+        else:
+            logger.sys_error("Toggle value is invalid.")
+            raise Exception("Toggle value is invalid.")
+        #Set userid to NULL to easily track
+        if(('userid' not in disable_dict) or (disable_dict['userid'] == "")):
+            disable_dict['userid'] = 'NULL'
+
+        toggle = ""
+        if(disable_dict['toggle'] == 'enable'):
+            toggle = 'true'
+        elif(disable_dict['toggle'] == 'disable'):
+            toggle = 'false'
+
+        #if the userid is not specified connect to the DB and get it
+        try:
+            #Try to connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+            logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            #get the project ID if not using the admins
+            if(disable_dict['userid'] == 'NULL'):
+                logger.sql_info("Userid was NULL for toggle user operation, retrieving userid from Transcirrus DB.")
+                select_user = {"select":"user_project_id,keystone_user_uuid","from":"trans_user_info","where":"user_name='%s'" %(disable_dict['username'])}
+                user = self.db.pg_select(select_user)
+                disable_dict['userid'] = user[0][1]
+            else:
+                logger.sql_info("Userid was not NULL for toggle user operation.")
+                select_user = {"select":"user_project_id","from":"trans_user_info","where":"user_name='%s'" %(disable_dict['username'])}
+                user = self.db.pg_select(select_user)
+        except Exception as e:
+            logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
+            raise
+
+        #Create an API connection with the admin
+        if(self.is_admin == 1):
+            #only an admin in the same project can disable a user in a project
+            if((self.project_id != user[0][0]) or (self.user_level >= 1)):
+                logger.sys_error("Admin and User not in the same project, can not toggle user.")
+                raise Exception("Admin and User not in the same project, can not toggle user.")
+
+            #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
+            if(self.status_level <= 1):
+                logger.sys_error("User status not sufficient for toggle operation.")
+                raise Exception("User status not sufficient for toggle operation.")
+
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+
+                #add the new user to openstack
+                body = '{"user": {"enabled": %s, "id":"%s"}}' %(toggle,disable_dict['userid'])
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/users/%s' %(disable_dict['userid'])
+                token = self.adm_token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+
+                #check the response and make sure it is a 200 or 201
+                if(rest['response'] == 200):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+
+                    #update the transcirrus db
+                    update_dict = {'table':"trans_user_info",'set':"user_enabled='%s'" %(toggle.upper()),'where':"keystone_user_uuid='%s'" %(disable_dict['userid'])}
+                    self.db.pg_update(update_dict)
+                    self.db.pg_close_connection()
+
+                    r_dict = {"username":disable_dict['username'],"userid":disable_dict['userid'],"toggle":disable_dict['toggle']}
+                    return r_dict
+                else:
+                    _http_codes(rest['response'],rest['reason'])
+            except Exception as e:
+                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
+                #back the user out of the transcirrus DB if the db works and the REST API fails
+                raise
+        else:
+            logger.sys_error("Admin flag not set, could not create the new user.")
+
     def create_user_role():
+        #Glabal and tenit based
         print "not implemented"
     def remove_user_role():
+        #global and tenant based
         print "not implemeted"
+
     def update_user():
-        print "yo"
-    def update_user_role():
-        print "not implemented"
+        #updates keystone and the transcirrus db
+        print "not implemneted"
+
+    #NOTE this will be added when we add the ability to have users in multiple projects.
+    #OpenStack allows it, but for now we will not.
     def list_user_tenants():
         print "not implemented"
+    
+    #Note at some point we will allow a user to be assigned to multiple Roles,
+    #however one role must be the default admin, or Member role.
     def list_user_roles():
         print "not implemented"
 
+    #DESC: Add a new user to a role in the keystone DB
+    #INPUT: self object
+    #       new_role_dict - dictionary containg the user_role_info
+    #                       username
+    #                       project_id - id of the project to user is in
+    #                       role - keystone role can only be admin or Member at this time
+    #OUTPUT: Dictionary containing the username and keystone role
+    #NOTE: need to add ability to add global role to user
     def add_role_to_user(self, user_role_dict):
         #user_role_dict = {"username":new_user_dict['username'],"project_id":new_user_dict['tenant_id'],"role":key_role}
         #Only an admin can add a role to a user
@@ -314,13 +510,117 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
-    def remove_role_from_user():
-        print "not implemented"
+    #DESC: removes a specifc keystone role from a user on a project basis, if a role is not specified
+    #then all of the roles for that user in the project are removed.
+    #INPUT: Dictionary containing the username and keystone role to remove
+    #OUTPUT: OK if successful
+    #NOTE: used for internal admin for now. The ability to create add,remove custom user roles
+    #will NOT be available in the prototype
+    def remove_role_from_user(self,remove_role):
+        if(not remove_role):
+            logger.sys_error("remove_role not specified for remove_role_from_user operation.")
+            raise Exception("remove_role not specified for remove_role_from_user operation.")
+        #Check to make sure that the username and keystone role are specified
+        if((not remove_role['username']) or (not remove_role['key_role'])):
+            logger.sys_error("Blank parametrs passed into remove_role_from_user operation, INVALID.")
+            raise Exception("Blank parametrs passed into remove_role_from_user, INVALID.")
 
-        
+        #check if the user creating a new account is an admin
+        if(self.is_admin == 1):
+            logger.sys_info("User identified as an admin.")
+            #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
+            if(self.status_level <= 1):
+                logger.sys_error("User status not sufficient.")
+                raise Exception("User status not sufficient.")
+
+            #standard users can not add roles to users
+            if(self.user_level >= 1):
+                logger.sys_error("Only admins can add roles to users.")
+                raise Exception("Only admins can add roles to users.")
+
+            #connect to the transcirrus DB and the keystone DB
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+
+                self.key_db = pgsql(config.OS_DB,config.OS_DB_PORT,config.KEYSTONE_DB_NAME,config.KEYSTONE_DB_USER,config.KEYSTONE_DB_PASS)
+                logger.sql_info("Connected to the Keystone DB to do keystone user operations.")
+            except Exception as e:
+                logger.sql_error("Could not connect to the DB, %s" %(e))
+                raise
+
+            #HACK - Should use rest api. get the role id from keystone DB
+            try:
+                get_role_id = {"select":"id","from":"role","where":"name='%s'" %(remove_role['key_role'])}
+                key_role_id = self.key_db.pg_select(get_role_id)
+                self.key_db.pg_close_connection()
+            except Exception as e:
+                logger.sql_error("Could not connect to the DB, %s" %(e))
+                raise
+
+            #get the userid and tenant id from the transcirrus db
+            try:
+                get_user_id = {"select":"keystone_user_uuid,user_project_id","from":"trans_user_info","where":"user_name='%s'" %(remove_role['username'])}
+                user_id = self.db.pg_select(get_user_id)
+            except:
+                logger.sql_error("Could not connect to the DB, %s" %(e))
+                raise
+
+            #if we remove the built in admin or Member set the DB to NULL
+            if(remove_role['key_role'] == 'admin' or remove_role['key_role'] == 'Member'):
+                try:
+                    up_dict = {'table':"trans_user_info",'set':"keystone_role='NULL'",'where':"username='%s'" %(remove_role['username'])}
+                    self.db.pg_update(up_dict)
+                    self.db.pg_close_connection()
+                except Exception as e:
+                    logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
+                    raise
+
+            # NOTE at some point need to check if the role exists in openstack
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+
+                #remove the role from the user on the tenant
+                body = ""
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][1],user_id[0][0],key_role_id[0][0])
+                token = self.adm_token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+                print rest
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 200) or (rest['response'] == 204)):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    #load = json.loads(rest['data'])
+                    #new_role_name = load['role']['name']
+                else:
+                    _http_codes(rest['response'],rest['reason'])
+            except Exception as e:
+                logger.sys_error('%s' %(e))
+                raise
+            r_dict = {"response":rest['response'],"reason":rest['reason']}
+            return r_dict
+        else:
+            logger.sys_error("Admin flag not set, could not create the new user.")
+
     def get_user_credentials():
         print "not implemented"
     def update_user_credentials():
-        sunday
+        print "not implemented"
     def remove_user_credentials():
-        sunday
+        print "not implemented"
+        
+######Internal defs#######
+def _http_codes(code,reason):
+    if(code):
+        logger.sys_error("Response %s with Reason %s" %(code,reason))
+        raise Exception("Response %s with Reason %s" %(code,reason))
+    else:
+        logger.sys_error("Error for unknown reason.")
+        raise Exception("Error for unknown reason.")
