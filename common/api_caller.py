@@ -81,19 +81,26 @@ class caller:
     #       api_path - ex /v2.0/tenants
     #       token - auth or admin token
     #       sec - TRUE/FALSE, use https = True
+    #       port - optional default to 5000 or 35357
     #OUTPUT - Result of the call to be passed back
     def call_rest(self,api_dict):
         #standard keystone login port
         port = '5000'
         #if an admin token is passed make sure that port 35357 is used
-        if (api_dict['token'] == self.adm_token):
+        #also make sure the corret admin token is passed for the system
+        if(api_dict['token'] == self.adm_token):
             #set the admin port defaults to 50000
             logger.sys_info("Setting api_caller.call_rest to  use admin port 35357.")
             port = '35357'
+
+        #use the service port passed in - ex. cinder 8776
+        if('port' in api_dict):
+            port = api_dict['port']
+
         url = "%s:%s" %(self.api_ip,port)
 
         sec = api_dict['sec']
-        if (sec == 'TRUE'):
+        if(sec == 'TRUE'):
             logger.sys_info("%s is connecting to REST API with a secured connection." %(self.username))
             self.connection = httplib.HTTPSConnection(url, key_file='../cert/priv.pem', cert_file='../cert/srv_test.crt')
         elif(sec == 'FALSE' or sec == ""):
@@ -102,7 +109,6 @@ class caller:
         else:
             logger.sys_error("There was an error connecting to the REST API. Check input params.")
             raise Exception("There was an error connecting to the REST API. Check input params.")
-
         self.connection.request(api_dict['function'], api_dict['api_path'], api_dict['body'], api_dict['header'])
         response = self.connection.getresponse()
         #get the response and the reason
