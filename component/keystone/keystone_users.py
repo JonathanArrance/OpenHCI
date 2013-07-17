@@ -259,7 +259,6 @@ class user_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
-                print rest
                 #check the response and make sure it is a 200 or 201
                 if((rest['response'] == 200) or (rest['response'] == 204)):
                     #read the json that is returned
@@ -452,7 +451,6 @@ class user_ops:
                 #check if valid username
                 select_user = {"select":"keystone_user_uuid","from":"trans_user_info","where":"user_name='%s'" %(user_role_dict['username'])}
                 user = self.db.pg_select(select_user)
-                print user
                 if(type(user[0][0]) is str):
                     logger.sys_info("Username is valid in the transcirrus DB, for operation add_role_to_user.")
                 else:

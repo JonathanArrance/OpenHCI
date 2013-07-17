@@ -98,7 +98,6 @@ class caller:
             port = api_dict['port']
 
         url = "%s:%s" %(self.api_ip,port)
-        print url
 
         sec = api_dict['sec']
         if(sec == 'TRUE'):
