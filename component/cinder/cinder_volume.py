@@ -89,8 +89,8 @@ class volume_ops:
             create_vol['description'] = "%s volume" %(self.project_id)
          #sanity check
         if(self.status_level < 2):
-            logger.sys_error("Status level not sufficient to delete volumes.")
-            raise Exception("Status level not sufficient to delete volumes.")
+            logger.sys_error("Status level not sufficient to create volumes.")
+            raise Exception("Status level not sufficient to create volumes.")
 
         #connect to the transcirrus DB
         try:
@@ -215,6 +215,9 @@ class volume_ops:
                 #del_status = 1 - DELETE volume
                 logger.sys_info("The user is not an and can delete the volume in their project.")
                 del_status = 1
+            else:
+                logger.sys_error("Users can not delete volumes outside of their project.")
+                raise Exception("Users can not delete volumes outside of their project.")
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can delete any volume.")
             del_status = 1

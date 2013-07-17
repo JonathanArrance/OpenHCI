@@ -29,7 +29,7 @@ class authorization:
             #INFO: DB will never move from the root CiaC system so 127 address can be used.
             self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
             #INFO: connect directly to the keystone DB
-            self.key = pgsql("192.168.10.30","5432","keystone","cacsystem","cacsystem")
+            self.key = pgsql("192.168.10.30","5432","keystone","root","builder")
         except StandardError as e:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise

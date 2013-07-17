@@ -130,13 +130,18 @@ class user_ops:
                 #Try to connect to the transcirrus db
                 self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
                 logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except Exception as e:
+                logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
+                raise
+
+            try:
                 #get the project ID if not using the admins
-                if(new_user_proj_id == "NULL"):
+                if('project_name' in new_user_dict):
                     select_proj_id = {"select":"proj_id","from":"projects","where":"proj_name='%s'" %(new_user_dict['project_name'])}
                     proj_id = self.db.pg_select(select_proj_id)
                     new_user_proj_id = proj_id[0][0]
-            except Exception as e:
-                logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
+            except:
+                logger.sql_error("Could not get the project ID, %s" %(e))
                 raise
 
             try:
@@ -162,9 +167,6 @@ class user_ops:
                     new_user_id = load['user']['id']
                 else:
                     _http_codes(rest['response'],rest['reason'])
-
-                user_role_dict = {"username":new_user_dict['username'],"project_id":new_user_dict['tenant_id'],"role":key_role}
-                add_role_to_user(user_role_dict)
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
@@ -183,6 +185,12 @@ class user_ops:
                 logger.sql_error("%s" %(e))
                 #back the user out if an exception is thrown
                 raise
+
+            #add the role to the new user
+            #NOTE: adding a role throws a 404 error on the REST call.
+            #Maybe a bug in the new devstack?
+            #user_role_dict = {"username":new_user_dict['username'],"project_id":new_user_proj_id,"role":key_role}
+            #self.add_role_to_user(user_role_dict)
 
             r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":new_user_proj_id}
             return r_dict
@@ -400,6 +408,7 @@ class user_ops:
     #                       role - keystone role can only be admin or Member at this time
     #OUTPUT: Dictionary containing the username and keystone role
     #NOTE: need to add ability to add global role to user
+    #NOTE: getting 404 error when calling REST
     def add_role_to_user(self, user_role_dict):
         #user_role_dict = {"username":new_user_dict['username'],"project_id":new_user_dict['tenant_id'],"role":key_role}
         #Only an admin can add a role to a user
@@ -443,6 +452,7 @@ class user_ops:
                 #check if valid username
                 select_user = {"select":"keystone_user_uuid","from":"trans_user_info","where":"user_name='%s'" %(user_role_dict['username'])}
                 user = self.db.pg_select(select_user)
+                print user
                 if(type(user[0][0]) is str):
                     logger.sys_info("Username is valid in the transcirrus DB, for operation add_role_to_user.")
                 else:
@@ -489,6 +499,7 @@ class user_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_role_dict['project_id'],user[0][0],key_role)
+                print api_path
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
