@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#tested and works as of 7-21-2013
 
 # get the user level from the transcirrus system DB
 #passes the user level out 
@@ -89,6 +90,9 @@ class user_ops:
         if((not new_user_dict['username'])or(not new_user_dict['password'])or(not new_user_dict['userrole'])):
             logger.sys_error("Blank parametrs passed into create user operation, INVALID.")
             raise Exception("Blank parametrs passed into create user operation, INVALID.")
+        if(('username' not in new_user_dict) or ('password' not in new_user_dict) or ('userrole' not in new_user_dict) or ('email' not in new_user_dict)):
+            logger.sys_error("Required parametrs not passed into create user operation, INVALID.")
+            raise Exception("Required parametrs not passed into create user operation, INVALID.")
         #make sure that only the admin pu or user role specifeid
         #if((new_user_dict['userrole'] != "admin") or (new_user_dict['userrole'] != "pu") or (new_user_dict['userrole'] != "user")):
         #    logger.sys_error("INVALID user role passed to create_user operation.")
@@ -378,27 +382,6 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
-    def create_user_role():
-        #Glabal and tenit based
-        print "not implemented"
-    def remove_user_role():
-        #global and tenant based
-        print "not implemeted"
-
-    def update_user():
-        #updates keystone and the transcirrus db
-        print "not implemneted"
-
-    #NOTE this will be added when we add the ability to have users in multiple projects.
-    #OpenStack allows it, but for now we will not.
-    def list_user_tenants():
-        print "not implemented"
-    
-    #Note at some point we will allow a user to be assigned to multiple Roles,
-    #however one role must be the default admin, or Member role.
-    def list_user_roles():
-        print "not implemented"
-
     #DESC: Add a new user to a role in the keystone DB
     #INPUT: self object
     #       new_role_dict - dictionary containg the user_role_info
@@ -618,6 +601,84 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
+    #DESC: get information in regards to a specific user, only admins
+    #      are allowed to get user information
+    #INPUT: user_dict - REQ
+    #           username
+    #           project_name
+    #OUTPUT: Dictionary containg the user information
+    def get_user_info(self,user_dict):
+        if(not user_dict):
+            logger.sys_error("user_dict not specified for get_user_info operation.")
+            raise Exception("user_dict not specified for get_user_info operation.")
+        #Check to make sure that the username and keystone role are specified
+        if((not user_dict['username']) or (not user_dict['project_name'])):
+            logger.sys_error("Blank parametrs passed into get_user_info operation, INVALID.")
+            raise Exception("Blank parametrs passed into get_user_info, INVALID.")
+
+        #check if the calling user is an admin and if so proceed
+        if(self.is_admin == 1):
+            logger.sys_info("User identified as an admin.")
+            #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
+            if(self.status_level <= 1):
+                logger.sys_error("User status not sufficient.")
+                raise Exception("User status not sufficient.")
+
+            #standard users can not add roles to users
+            if(self.user_level >= 1):
+                logger.sys_error("Only admins can add roles to users.")
+                raise Exception("Only admins can add roles to users.")
+
+            #connect to the transcirrus DB and the keystone DB
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except Exception as e:
+                logger.sql_error("Could not connect to the DB, %s" %(e))
+                raise
+
+            #get the user info from the transcirrus db
+            try:
+                get_user = {"select":"*","from":"trans_user_info","where":"user_name='%s'" %(user_dict['username']), "and": "user_primary_project = '%s'" %(user_dict['project_name'])}
+                user_info= self.db.pg_select(get_user)
+            except Exception as e:
+                logger.sql_error("Could not find user information in Transcirrus DB., %s" %(e))
+                raise
+
+            #call the REST api to get info from keystone - used as a check more then anything else.
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+
+                #remove the role from the user on the tenant
+                body = ""
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'GET'
+                api_path = '/v2.0/users/%s' %(user_info[0][5])
+                token = self.adm_token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 200) or (rest['response'] == 203)):
+                    #read the json that is returned
+                    load = json.loads(rest['data'])
+                    #make sure the pimary project is the same in the keystone DB as in the Transcirrus db
+                    #if(str(load['user']['project_id']) != user_info[0][6]):
+                    #    logger.sys_error("Transcirrus and Keystone primary projects are not in sync.")
+
+                    r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"primary_project":user_info[0][6],"primary_proj_id":user_info[0][7],"trans_user_role":user_info[0][2],"email":str(load['user']['email']),"user_enabled":user_info[0][4]}
+                    return r_dict
+                else:
+                    _http_codes(rest['response'],rest['reason'])
+            except Exception as e:
+                logger.sys_error('%s' %(e))
+                raise
+        else:
+            logger.sys_error("Admin flag not set, could not create the new user.")
+
     def get_user_credentials():
         print "not implemented"
     def update_user_credentials():
@@ -625,6 +686,27 @@ class user_ops:
     def remove_user_credentials():
         print "not implemented"
         
+    def create_user_role():
+        #Glabal and tenit based
+        print "not implemented"
+    def remove_user_role():
+        #global and tenant based
+        print "not implemeted"
+
+    def update_user():
+        #updates keystone and the transcirrus db
+        print "not implemneted"
+
+    #NOTE this will be added when we add the ability to have users in multiple projects.
+    #OpenStack allows it, but for now we will not.
+    def list_user_tenants():
+        print "not implemented"
+    
+    #Note at some point we will allow a user to be assigned to multiple Roles,
+    #however one role must be the default admin, or Member role.
+    def list_user_roles():
+        print "not implemented"
+
 ######Internal defs#######
 def _http_codes(code,reason):
     if(code):

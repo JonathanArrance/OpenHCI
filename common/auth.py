@@ -2,7 +2,7 @@
 # and that the account corresponds to an account in keystone
 # get the user level from the transcirrus system DB
 #passes the user level out
-#tested and works as of 7-1-2013
+#tested and works as of 7-21-2013
 import sys
 import json
 from api_caller import caller
@@ -141,6 +141,7 @@ def _get_user_info(db,username):
 #INPUT: user_array containg the info for a user from trans_user_info
 #OUTPUT: Dictionary containg the enable status from transcirrus and keystone DB
 def _check_user_enabled(key,user_array):
+    print user_array
     #check if the user is enabled in the DB
     transcirrus_enabled = 'FALSE'
     if(user_array[0][4] == 'TRUE'):
@@ -162,10 +163,10 @@ def _check_user_enabled(key,user_array):
             keystone_enabled = 'TRUE'
         else:
             logger.sys_info("User: %s is enabled in the Keystone DB" %(user_array[0][1]))
-    except Exception as e:
+    except:
         logger.sql_error("Could not find user: %s in the Keystone database." %(user_array[0][1]))
         logger.sys_error("Could not find user: %s in the Keystone database." %(user_array[0][1]))
-        raise e
+        raise
 
     enable_dict = {"trans": transcirrus_enabled, "keystone":keystone_enabled}
     return enable_dict

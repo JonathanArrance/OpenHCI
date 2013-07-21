@@ -1,0 +1,18 @@
+BUG1
+keystone_user.py add_user_role 404 error. All of the rest calls look correct. Troubleshoot could be a bug in keystone api.
+
+BUG2
+keystone_tenant.py - projects not deleting correctly. FIXED
+
+BUG3
+keystone_tokens.py - all defs need to be fixed and tested
+
+BUG4
+Database - need a script that checks the newly installed openstack and puts all of the defaults in the database and builds out the config file - see trans_system_settings table in the DB.
+			and config.py
+
+BUG5
+cinder_snapshot.py - create_snapshot needs to have a mechanism to check when a snapshot becomes available. The one in the code already does not work.
+
+BUG6
+logger mechanism needs to be fixed so that logs can be split up by type. Ex sql, system , etc...

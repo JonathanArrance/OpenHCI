@@ -3,6 +3,7 @@
 # get the user level from the transcirrus system DB
 #passes the user level out 
 import sys
+import time
 
 sys.path.append('../common')
 import logger
@@ -12,20 +13,28 @@ from auth import authorization
 sys.path.append('/home/jonathan/alpo.0/component/keystone')
 from keystone_tenants import tenant_ops
 
-a = authorization("testuser2","test")
+a = authorization("admin","builder")
 
 #get the user dict
 d = a.get_auth()
-print "unittest"
-print d
 
+print "Instantiating a new tenant ops object."
 ten = tenant_ops(d)
+time.sleep(2)
+print "----------------------------------------"
 
-#proj = ten.create_tenant("kevenduerr4")
+print "creating test project"
+proj = ten.create_tenant("testproj")
+print proj
+time.sleep(2)
+print "----------------------------------------"
 
-#print proj
+print "listing projects"
+listit = ten.list_all_tenants()
+print listit
+time.sleep(2)
+print "----------------------------------------"
 
-yo = ten.list_all_tenants()
-print yo
-
-#delproj = ten.remove_tenant("kevenduerr4")
+print "deleting testproject"
+delproj = ten.remove_tenant("testproj")
+print delproj

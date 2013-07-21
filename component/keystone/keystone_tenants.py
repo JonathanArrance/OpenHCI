@@ -185,48 +185,53 @@ class tenant_ops:
             try:
                 select_dict = {"select":"proj_id", "from":"projects", "where":"proj_name='%s'" %(project_name)}
                 select = self.db.pg_select(select_dict)
+                print select
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 raise
 
-            api_dict = {"username":self.username, "password":self.password, "project_id":select[0][0]}
-            api = caller(api_dict)
+            try:
+                api_dict = {"username":self.username, "password":self.password, "project_id":select[0][0]}
+                api = caller(api_dict)
 
-            #body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s dev project", "id": "%s"}}' %(project_name,project_name,select[0][0])
-            body = ""
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
-            function = 'DELETE'
-            api_path = '/v2.0/tenants/%s' %(self.project_id)
-            token = self.adm_token
-            sec = 'FALSE'
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-            rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                logger.sys_info("Project: %s has been removed from the Transcirrus DB." %(self.project_id))
-                #delete the project from transcirrus db and update the user account
-                try:
-                    self.db.pg_transaction_begin()
-                    del_dict = {"table":'projects',"where":"proj_id='%s'" %(self.project_id)}
-                    self.db.pg_delete(del_dict)
+                #body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s dev project", "id": "%s"}}' %(project_name,project_name,select[0][0])
+                body = ""
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/tenants/%s' %(select[0][0])
+                print api_path
+                token = self.adm_token
+                sec = 'FALSE'
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+                print rest
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    logger.sys_info("Project: %s has been removed from the Transcirrus DB." %(select[0][0]))
+                    #delete the project from transcirrus db and update the user account
+                    try:
+                        self.db.pg_transaction_begin()
+                        del_dict = {"table":'projects',"where":"proj_id='%s'" %(select[0][0])}
+                        self.db.pg_delete(del_dict)
 
-                    user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(self.project_id)}
-                    self.db.pg_update(user_up_dict)
-
-                    self.db.pg_transaction_commit()
-                except Exception as e:
-                    logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
-                    self.db.pg_transaction_rollback()
-                    raise
-                #close all of the db connections that are open
-                self.db.pg_close_connection()
-                #build up the return dictionary and return it if everythig is good to go
-                r_dict = {"response":rest['response'],"reason":rest['reason'],"status":"OK"}
-                return r_dict
-            else:
-                _http_codes(rest['response'],rest['reason'])
+                        user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(select[0][0])}
+                        self.db.pg_update(user_up_dict)
+                        self.db.pg_transaction_commit()
+                    except Exception as e:
+                        logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                        self.db.pg_transaction_rollback()
+                        raise
+                    #close all of the db connections that are open
+                    self.db.pg_close_connection()
+                    #build up the return dictionary and return it if everythig is good to go
+                    r_dict = {"response":rest['response'],"reason":rest['reason'],"status":"OK"}
+                    return r_dict
+                else:
+                    _http_codes(rest['response'],rest['reason'])
+            except Exception as e:
+                logger.sys_error("Could not remove the project %s" %(e))
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
 
@@ -277,7 +282,42 @@ class tenant_ops:
                 raise
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
-        
+
+    #DESC: Get the information for a specific project from the Transcirrus DB
+    #      Admins can get any project users can only view the primary project
+    #      they belong to
+    #INPUT: project_name
+    #OUTPUT: dictionary containing the project info
+    def get_tenant(self,project_name):
+        if(not project_name):
+            logger.sys_error("Did not pass a project name to the get_tenant operation.")
+            raise Exception ("Did not pass a project name to the get_tenant operation.")
+
+        #connect to the db
+        try:
+            #Try to connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sys_error("Could not connect to db with error: %s" %(e))
+            raise Exception("Could not connect to db with error: %s" %(e))
+
+        #get the project info
+        try:
+            get = {"select":'*', "from":'projects', "where":"proj_name='%s'" %(project_name)}
+            proj = self.db.pg_select(get)
+        except:
+            logger.sql_error("Could not get the project info for project: %s" %(project_name))
+            raise Exception("Could not get the project info for project: %s" %(project_name))
+
+        #build the dictionary up
+        r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"internal_net_id":proj[0][2],"internal_net_name":proj[0][3],"router_id":proj[0][4],"router_name":proj[0][5],"internal_subnet_name":proj[0][6],"internal_subnet_id":proj[0][7],"secuiy_key_name":proj[0][8],"security_key_id":proj[0][9], "security_group_id":proj[0][10], "security_group_name":proj[0][11], "cloud_controller":proj[0][12], "api_ip":proj[0][13] }
+        if(self.is_admin == 1):
+            return r_dict
+        else:
+            if(self.project_id == proj[0][0]):
+                return r_dict
+            else:
+                raise Exception("Users can only get information on their own projects.")
 
     def list_tenant_users(self):
         print "yo"

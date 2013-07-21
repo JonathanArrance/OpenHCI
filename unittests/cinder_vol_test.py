@@ -13,33 +13,27 @@ sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from cinder_volume import volume_ops
 
 a = authorization("admin","builder")
-
 #get the user dict
 d = a.get_auth()
 
+print "instantiating a volume abject."
 vol = volume_ops(d)
 
-desc = {'volume_name':'testjon2','volume_size':'1'}
-create = vol.create_volume(desc)
-print create
+print "createing a new volume"
+create = {'volume_name':'testvol','volume_size':'1'}
+create_vol = vol.create_volume(create)
+print create_vol
+time.sleep(10)
+print "------------------------------------------"
+print "sleeping for 10 seconds"
 
-#time.sleep(2)
+print "list current volumes"
+listit = vol.list_volumes()
+print listit
+time.sleep(2)
+print "------------------------------------------"
 
-#desc = {'volume_name':'testjon3','volume_size':'1'}
-#create = vol.create_volume(desc)
-#print create
-
-#time.sleep(2)
-
-#desc = {'volume_name':'testjon4','volume_size':'1'}
-#create = vol.create_volume(desc)
-#print create
-
-#time.sleep(5)
-#listit = vol.list_volumes()
-#print listit
-
-#delete_vol = {"vol_name":'testjon2'}
-#yo = vol.delete_volume(delete_vol)
-#print "unittest"
-#print yo
+print "deleteing the volume"
+delete_vol = {"vol_name":'testvol'}
+delete = vol.delete_volume(delete_vol)
+print delete
