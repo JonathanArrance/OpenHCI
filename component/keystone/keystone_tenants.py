@@ -4,7 +4,7 @@
 #passes the user level out 
 import sys
 import json
-import numpy as np
+#import numpy as np
 
 sys.path.append('../../common')
 import logger
@@ -204,7 +204,6 @@ class tenant_ops:
                 sec = 'FALSE'
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
-                print rest
                 #check the response and make sure it is a 200 or 201
                 if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
                     #read the json that is returned

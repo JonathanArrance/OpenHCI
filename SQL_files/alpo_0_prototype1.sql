@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.9
 -- Dumped by pg_dump version 9.2.0
--- Started on 2013-07-17 19:56:23 EDT
+-- Started on 2013-07-28 21:08:04 EDT
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -66,7 +66,10 @@ CREATE TABLE instances (
     inst_public_ip character varying,
     floating_ip_id character varying,
     inst_id character varying,
-    inst_port_id character varying
+    inst_port_id character varying,
+    inst_key_id character varying,
+    inst_sec_group_id character varying,
+    inst_creater_id character varying
 );
 
 
@@ -130,7 +133,7 @@ CREATE TABLE projects (
 ALTER TABLE public.projects OWNER TO cacsystem;
 
 --
--- TOC entry 1956 (class 0 OID 0)
+-- TOC entry 1969 (class 0 OID 0)
 -- Dependencies: 172
 -- Name: COLUMN projects.host_system_name; Type: COMMENT; Schema: public; Owner: cacsystem
 --
@@ -139,7 +142,7 @@ COMMENT ON COLUMN projects.host_system_name IS 'Name of the cloud controller';
 
 
 --
--- TOC entry 1957 (class 0 OID 0)
+-- TOC entry 1970 (class 0 OID 0)
 -- Dependencies: 172
 -- Name: COLUMN projects.host_system_ip; Type: COMMENT; Schema: public; Owner: cacsystem
 --
@@ -192,6 +195,46 @@ CREATE TABLE swift (
 
 
 ALTER TABLE public.swift OWNER TO cacsystem;
+
+--
+-- TOC entry 178 (class 1259 OID 19890)
+-- Name: trans_sec_groups; Type: TABLE; Schema: public; Owner: cacsystem; Tablespace: 
+--
+
+CREATE TABLE trans_sec_groups (
+    proj_id character varying,
+    sec_goup_name character varying,
+    sec_group_id character varying
+);
+
+
+ALTER TABLE public.trans_sec_groups OWNER TO cacsystem;
+
+--
+-- TOC entry 180 (class 1259 OID 19916)
+-- Name: trans_security_group; Type: TABLE; Schema: public; Owner: cacsystem; Tablespace: 
+--
+
+CREATE TABLE trans_security_group (
+);
+
+
+ALTER TABLE public.trans_security_group OWNER TO cacsystem;
+
+--
+-- TOC entry 179 (class 1259 OID 19908)
+-- Name: trans_security_keys; Type: TABLE; Schema: public; Owner: cacsystem; Tablespace: 
+--
+
+CREATE TABLE trans_security_keys (
+    index integer[] NOT NULL,
+    proj_id character varying,
+    user_id character varying,
+    sec_key_id character varying
+);
+
+
+ALTER TABLE public.trans_security_keys OWNER TO cacsystem;
 
 --
 -- TOC entry 169 (class 1259 OID 18521)
@@ -280,7 +323,7 @@ CREATE SEQUENCE trans_user_info_index_seq
 ALTER TABLE public.trans_user_info_index_seq OWNER TO cacsystem;
 
 --
--- TOC entry 1958 (class 0 OID 0)
+-- TOC entry 1971 (class 0 OID 0)
 -- Dependencies: 175
 -- Name: trans_user_info_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: cacsystem
 --
@@ -289,7 +332,7 @@ ALTER SEQUENCE trans_user_info_index_seq OWNED BY trans_user_info.index;
 
 
 --
--- TOC entry 1911 (class 2604 OID 19846)
+-- TOC entry 1922 (class 2604 OID 19846)
 -- Name: index; Type: DEFAULT; Schema: public; Owner: cacsystem
 --
 
@@ -297,7 +340,7 @@ ALTER TABLE ONLY trans_user_info ALTER COLUMN index SET DEFAULT nextval('trans_u
 
 
 --
--- TOC entry 1922 (class 2606 OID 18489)
+-- TOC entry 1933 (class 2606 OID 18489)
 -- Name: cinder_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -306,7 +349,7 @@ ALTER TABLE ONLY cinder
 
 
 --
--- TOC entry 1924 (class 2606 OID 18505)
+-- TOC entry 1935 (class 2606 OID 18505)
 -- Name: glance_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -315,7 +358,7 @@ ALTER TABLE ONLY glance
 
 
 --
--- TOC entry 1918 (class 2606 OID 16438)
+-- TOC entry 1929 (class 2606 OID 16438)
 -- Name: index; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -324,7 +367,7 @@ ALTER TABLE ONLY psql_buildout
 
 
 --
--- TOC entry 1920 (class 2606 OID 18480)
+-- TOC entry 1931 (class 2606 OID 18480)
 -- Name: index_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -333,7 +376,7 @@ ALTER TABLE ONLY quantum
 
 
 --
--- TOC entry 1933 (class 2606 OID 18550)
+-- TOC entry 1944 (class 2606 OID 18550)
 -- Name: instances_inst_ext_ip_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -342,7 +385,7 @@ ALTER TABLE ONLY instances
 
 
 --
--- TOC entry 1935 (class 2606 OID 18552)
+-- TOC entry 1946 (class 2606 OID 18552)
 -- Name: instances_inst_int_ip_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -351,7 +394,7 @@ ALTER TABLE ONLY instances
 
 
 --
--- TOC entry 1937 (class 2606 OID 18554)
+-- TOC entry 1948 (class 2606 OID 18554)
 -- Name: instances_pkey; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -360,7 +403,7 @@ ALTER TABLE ONLY instances
 
 
 --
--- TOC entry 1916 (class 2606 OID 18520)
+-- TOC entry 1927 (class 2606 OID 18520)
 -- Name: keystone_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -369,7 +412,7 @@ ALTER TABLE ONLY keystone
 
 
 --
--- TOC entry 1928 (class 2606 OID 18515)
+-- TOC entry 1939 (class 2606 OID 18515)
 -- Name: nova_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -378,7 +421,7 @@ ALTER TABLE ONLY nova
 
 
 --
--- TOC entry 1939 (class 2606 OID 19809)
+-- TOC entry 1950 (class 2606 OID 19809)
 -- Name: projects_internal_net_id_internal_net_name_router_id_router_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -387,7 +430,7 @@ ALTER TABLE ONLY projects
 
 
 --
--- TOC entry 1941 (class 2606 OID 19805)
+-- TOC entry 1952 (class 2606 OID 19805)
 -- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -396,7 +439,7 @@ ALTER TABLE ONLY projects
 
 
 --
--- TOC entry 1943 (class 2606 OID 19807)
+-- TOC entry 1954 (class 2606 OID 19807)
 -- Name: projects_proj_name_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -405,7 +448,7 @@ ALTER TABLE ONLY projects
 
 
 --
--- TOC entry 1926 (class 2606 OID 18513)
+-- TOC entry 1937 (class 2606 OID 18513)
 -- Name: swift_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -414,7 +457,7 @@ ALTER TABLE ONLY swift
 
 
 --
--- TOC entry 1930 (class 2606 OID 18528)
+-- TOC entry 1941 (class 2606 OID 18528)
 -- Name: sys_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -423,7 +466,16 @@ ALTER TABLE ONLY trans_system_settings
 
 
 --
--- TOC entry 1951 (class 2606 OID 19882)
+-- TOC entry 1964 (class 2606 OID 19915)
+-- Name: trans_security_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_security_keys
+    ADD CONSTRAINT trans_security_keys_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 1962 (class 2606 OID 19882)
 -- Name: trans_system_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -432,7 +484,7 @@ ALTER TABLE ONLY trans_system_snapshots
 
 
 --
--- TOC entry 1949 (class 2606 OID 19874)
+-- TOC entry 1960 (class 2606 OID 19874)
 -- Name: trans_system_vols_pkey; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -441,7 +493,7 @@ ALTER TABLE ONLY trans_system_vols
 
 
 --
--- TOC entry 1945 (class 2606 OID 19848)
+-- TOC entry 1956 (class 2606 OID 19848)
 -- Name: trans_user_info_keystone_user_uuid_key; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -450,7 +502,7 @@ ALTER TABLE ONLY trans_user_info
 
 
 --
--- TOC entry 1947 (class 2606 OID 19850)
+-- TOC entry 1958 (class 2606 OID 19850)
 -- Name: trans_user_info_pkey; Type: CONSTRAINT; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
@@ -459,14 +511,14 @@ ALTER TABLE ONLY trans_user_info
 
 
 --
--- TOC entry 1931 (class 1259 OID 19814)
+-- TOC entry 1942 (class 1259 OID 19814)
 -- Name: trans_system_settings_index_idx; Type: INDEX; Schema: public; Owner: cacsystem; Tablespace: 
 --
 
 CREATE INDEX trans_system_settings_index_idx ON trans_system_settings USING btree (index);
 
 
--- Completed on 2013-07-17 19:56:27 EDT
+-- Completed on 2013-07-28 21:08:08 EDT
 
 --
 -- PostgreSQL database dump complete

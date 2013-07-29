@@ -141,7 +141,6 @@ def _get_user_info(db,username):
 #INPUT: user_array containg the info for a user from trans_user_info
 #OUTPUT: Dictionary containg the enable status from transcirrus and keystone DB
 def _check_user_enabled(key,user_array):
-    print user_array
     #check if the user is enabled in the DB
     transcirrus_enabled = 'FALSE'
     if(user_array[0][4] == 'TRUE'):

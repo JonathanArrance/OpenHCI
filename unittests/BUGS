@@ -16,3 +16,6 @@ cinder_snapshot.py - create_snapshot needs to have a mechanism to check when a s
 
 BUG6
 logger mechanism needs to be fixed so that logs can be split up by type. Ex sql, system , etc...
+
+BUG7
+Implement pg_transaction begin/end where needed. will help with reliability
