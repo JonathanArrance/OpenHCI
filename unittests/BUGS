@@ -5,7 +5,7 @@ BUG2
 keystone_tenant.py - projects not deleting correctly. FIXED
 
 BUG3
-keystone_tokens.py - all defs need to be fixed and tested
+keystone_tokens.py - all defs need to be fixed and tested - implementation needs to be completed
 
 BUG4
 Database - need a script that checks the newly installed openstack and puts all of the defaults in the database and builds out the config file - see trans_system_settings table in the DB.
@@ -18,4 +18,4 @@ BUG6
 logger mechanism needs to be fixed so that logs can be split up by type. Ex sql, system , etc...
 
 BUG7
-Implement pg_transaction begin/end where needed. will help with reliability
+Implement pg_transaction begin/end where needed. will help with reliability - check all component libraries, if multiple inserts,updates or deletes in a call need a transaction.
