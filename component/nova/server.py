@@ -86,21 +86,25 @@ class server_ops:
     #DESC: Build a nee virtual instance. Users can only build servers
     #      in the projects that they are members of includeing admin users
     #INPUT: create_dict - config_script - op
-    #                     security_group - default project group if none specified
+    #                     sec_group_name - default project security group if none specified
+    #                     sec_key_name - default project security key if none specified.
     #                     avail_zone - default availability zone - nova
-    #                     server - Server
-    #                     image - req - image name
-    #                     flavor - req - flavor name
+    #                     network_name - default project net used if none specified
+    #                     image_name - default system image used if none specified
+    #                     flavor_name - default system flavor used if none specifed
     #                     name - req - name of the server
     #                     
-    #OUTPUT: r_dict - name - vm name
-    #                 id - vm id
-    #                 key_name - security key name
-    #                 security_group - security group name
-    #                 created - time created
-    #                 created_by - name of creater
-    #                 creater_id - id of creater
-    #                 project_id - id of project
+    #OUTPUT: r_dict - vm_name - vm name
+    #               - vm_id - vm id
+    #               - sec_key_name - security key name
+    #               - sec_key_id
+    #               - sec_group_name - security group name
+    #               - sec_group_id
+    #               - created - time created
+    #               - created_by - name of creater
+    #               - creater_id - id of creater
+    #               - project_id - id of project
+    #body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}], "security_groups": [{"name": "%s"}]}}'
     def create_server(self,create_dict):
         #do variable checks
         if(not create_dict):
@@ -114,20 +118,60 @@ class server_ops:
             create_dict['config_script'] = 'NULL'
 
         #security group verification
-        if('sec_group' not in create_dict):
-            #check the security group
+        if('sec_group_name' not in create_dict):
+            #get the default security group from the transcirrus db
             try:
-                select_sec = {"select":'security_group_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                select_sec = {"select":'def_security_group_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
                 get_sec = self.db.pg_select(select_sec)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
-            create_dict['security_group'] = get_sec[0][0]
+                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+            create_dict['sec_group_name'] = get_sec[0][0]
         else:
             #check if the group specified is associated with the users project
             try:
-                select_sec = {"select":'sec_group_id', "from":'trans_sec_group', "where":"proj_id='%s'" %(self.project_id), "and":"sec_group_name='%s'" %(create_dict['security_group'])}
+                select_sec = {"select":'def_security_group_name', "from":'trans_sec_group', "where":"proj_id='%s'" %(self.project_id)}
                 get_sec = self.db.pg_select(select_sec)
+                if(not get_sec[0][0]):
+                    raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+            except:
+                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+
+        #security key verification
+        if('security_key' not in create_dict):
+            #get the default security group from the transcirrus db
+            try:
+                select_key = {"select":'def_security_key_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                sec_key = self.db.pg_select(select_key)
+            except:
+                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
+                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
+            create_dict['security_key'] = sec_key[0][0]
+        else:
+            #check if the group specified is associated with the users project
+            try:
+                select_key = {"select":'def_security_group_id', "from":'trans_sec_group', "where":"proj_id='%s'" %(self.project_id), "and":"sec_group_name='%s'" %(create_dict['security_group'])}
+                sec_key = self.db.pg_select(select_key)
+            except:
+                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
+                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
+
+        #network verification
+        if('network_name' not in create_dict):
+            #get the default security group from the transcirrus db
+            try:
+                select_net = {"select":'def_network_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                net = self.db.pg_select(select_key)
+            except:
+                logger.sql_error("Could not find the specified network for create_server operation %s" %(create_dict['name']))
+                raise Exception("Could not find the specified network for create_server operation %s" %(create_dict['name']))
+            create_dict['network_name'] = net[0][0]
+        else:
+            #check if the network specified is associated with the users project
+            try:
+                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'" %(self.project_id), "and":"net_name='%s'" %(create_dict['network_name'])}
+                net = self.db.pg_select(select_key)
             except:
                 logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
                 raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
