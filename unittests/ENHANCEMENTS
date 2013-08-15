@@ -7,3 +7,5 @@ Need to add the concept of a cloud admin to alpo.1 the cloud admin is a super ad
 psql 'SELECT' library needs to be fixed to take uses of the multi dimensional array output - alpo.1
 
 keystone tokens library - alpo.1
+
+In the Nova component Images and Flavors should be just made a module with no constructor. This should be more flexible and save memory.

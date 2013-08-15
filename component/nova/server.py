@@ -13,7 +13,10 @@ from api_caller import caller
 #get the db library path from the config file
 sys.path.append(config.DB_PATH)
 from postgres import pgsql
-import flavor
+
+#get the nova libs
+from flavor import flavor_ops
+from image import nova_image_ops
 
 #######Special imports#######
 #sys.path.append('/home/jonathan/alpo.0/component/neutron')
@@ -70,6 +73,12 @@ class server_ops:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise Exception("Could not connect to db with error: %s" %(e))
 
+        #build flavor object
+        self.flav = flavor_ops(user_dict)
+
+        #build the nova image object
+        self.image = nova_image_ops(user_dict)
+
     #DESC: used to clean up after the server class
     #INPUT: self object
     #OUTPUT: void
@@ -104,13 +113,12 @@ class server_ops:
     #               - created_by - name of creater
     #               - creater_id - id of creater
     #               - project_id - id of project
-    #body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}], "security_groups": [{"name": "%s"}]}}'
     def create_server(self,create_dict):
         #do variable checks
         if(not create_dict):
             logger.sys_error("No dictionary passed into create_server operation.")
             raise Exception("No dictionary passed into create_server operation.")
-        if(('image' not in create_dict) or ('flavor' not in create_dict) or ('name' not in create_dict)):
+        if(('image_name' not in create_dict) or ('flavor_name' not in create_dict) or ('name' not in create_dict)):
             logger.sys_error("Required value not passed to create_server operation")
             raise Exception("Required value not passed to create_server operation")
         #account for optional params
@@ -124,62 +132,86 @@ class server_ops:
                 select_sec = {"select":'def_security_group_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
                 get_sec = self.db.pg_select(select_sec)
             except:
-                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
+                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
             create_dict['sec_group_name'] = get_sec[0][0]
         else:
             #check if the group specified is associated with the users project
             try:
-                select_sec = {"select":'def_security_group_name', "from":'trans_sec_group', "where":"proj_id='%s'" %(self.project_id)}
+                select_sec = {"select":'sec_group_name', "from":'trans_security_group', "where":"proj_id='%s'" %(self.project_id)}
                 get_sec = self.db.pg_select(select_sec)
                 if(not get_sec[0][0]):
-                    raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+                    raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
             except:
-                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['name']))
+                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
+                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
 
         #security key verification
-        if('security_key' not in create_dict):
+        if('sec_key_name' not in create_dict):
             #get the default security group from the transcirrus db
             try:
                 select_key = {"select":'def_security_key_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
                 sec_key = self.db.pg_select(select_key)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
-            create_dict['security_key'] = sec_key[0][0]
+                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+            create_dict['sec_key_name'] = sec_key[0][0]
         else:
             #check if the group specified is associated with the users project
             try:
-                select_key = {"select":'def_security_group_id', "from":'trans_sec_group', "where":"proj_id='%s'" %(self.project_id), "and":"sec_group_name='%s'" %(create_dict['security_group'])}
+                select_key = {"select":'sec_key_name', "from":'trans_security_keys', "where":"proj_id='%s'" %(self.project_id)}
                 sec_key = self.db.pg_select(select_key)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
+                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
 
         #network verification
         if('network_name' not in create_dict):
             #get the default security group from the transcirrus db
             try:
-                select_net = {"select":'def_network_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                select_net = {"select":'def_network_id', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
                 net = self.db.pg_select(select_key)
+                self.net_id = net[0][0]
             except:
-                logger.sql_error("Could not find the specified network for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified network for create_server operation %s" %(create_dict['name']))
-            create_dict['network_name'] = net[0][0]
+                logger.sql_error("Could not find the specified network for create_server operation %s" %(create_dict['network_name']))
+                raise Exception("Could not find the specified network for create_server operation %s" %(create_dict['network_name']))
         else:
             #check if the network specified is associated with the users project
             try:
-                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'" %(self.project_id), "and":"net_name='%s'" %(create_dict['network_name'])}
-                net = self.db.pg_select(select_key)
+                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'" %(self.project_id)}
+                net = self.db.pg_select(select_net)
+                self.net_id = net[0][0]
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['name']))
+                logger.sql_error("Could not find the specified network id for create_server operation %s" %(create_dict['network_name']))
+                raise Exception("Could not find the specified network id for create_server operation %s" %(create_dict['network_name']))
 
         #verify the availability zone
         #NOTE: for the prototype zone will always be nova
         if(('avail_zone' not in create_dict) or ('avail_zone' in create_dict)):
             create_dict['avail_zone'] = 'nova'
+
+        #verify that the flavor requested exists
+        #get the flavor from the list
+        flav_list = self.flav.list_flavors()
+        for flav in flav_list:
+            if(flav['flavor_name'] == create_dict['flavor_name']):
+                #get the flavor_id
+                self.flav_id = flav['flav_id']
+                # as soon as the value we want is found break out of the loop
+                break
+            else:
+                logger.sys_error("The flavor: %s was not found" %(create_dict['flavor_name']))
+                raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
+
+        #verify the image requested exsists
+        image_list = self.image.nova_list_images()
+        for image in image_list:
+            if(image['image_name'] == create_dict['image_name']):
+                self.image_id = image['image_id']
+                break
+            else:
+                logger.sys_error("The image: %s was not found" %(create_dict['image_name']))
+                raise Exception("The image: %s was not found" %(create_dict['image_name']))
 
         #connect to the rest api caller
         try:
@@ -189,24 +221,28 @@ class server_ops:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
             raise Esception("Could not connec to the REST api caller in create_server operation.")
 
-        #verify that the flavor requested exists
-        #get the flavor from the list
-        flav_list = flavor.list_flavors()
-        flav_name = ""
-        info = ""
-        for flav in flav_list:
-            if(flav['flavor_name'] == create_dict['flavor']):
-                info = flavor.get_flavor(create_dict['flavor'])
-            else:
-                logger.sys_error("The flavor: %s was not found" %(create_dict['flavor']))
-                raise Exception("The flavor: %s was not found" %(create_dict['flavor']))
-        print info
-
-
-        #verify the image requested exsists
-        
         #build the server
-        
+        try:
+            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}], "security_groups": [{"name": "%s"}]}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers' %(self.project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            print rest
+            #check the response and make sure it is a 200 or 201
+            if(rest['response'] == 200):
+                print rest['response']
+            else:
+                self.db.pg_transaction_rollback()
+                _http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
+
     #DESC:Used to ge the status of the server
     #     if the poll option is specified in the dictionary
     #     only the server progress is returned
