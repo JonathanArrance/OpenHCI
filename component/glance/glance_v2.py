@@ -92,8 +92,48 @@ class image:
     #               - image_link
     #               - schema
     def create_image(self,create_dict):
-        print "not implemented"
+        #print "not implemented"
         #POST v2/images
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        #connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        try:
+            body = ""
+            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token":self.token, "x-image-meta-name": create_dict['image_name'], "x-image-meta-disk_format": create_dict['image_disk_format'], "x-image-meta-container_format": create_dict['image_container_format'], "x-image-meta-is_public": False]}
+            function = 'POST'
+            api_path = '/v1/%s/images' %(self.project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+            #
+            #BELOW IS COPIED FROM LIST_IMAGES, working on modifying it for create_image
+            #
+            #check the response and make sure it is a 200 or 201
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                img_array = []
+                for image in load['images']:
+                    line = {"image_name": str(image['name']), "image_id": str(image['id']), "image_link":str(image['links'][1]['href'])}
+                    img_array.append(line)
+                return img_array
+            else:
+                _http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
 
     #DESC: Create a new operating system binary from an .iso file. Only admins can build
     #      new binaries and and them to the Glance catalog.
@@ -152,8 +192,45 @@ class image:
     #OUTPUT: array of r_dict - image_name
     #                        - image_id
     def list_images(self):
-        print "not implemented"
+        #print "not implemented"
         #GET v2/images
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        #connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "User-Agent": "python/glanceclient"}
+            function = 'GET'
+            api_path = '/v1/%s/images/detail' %(self.project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 200 or 201
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                img_array = []
+                for image in load['images']:
+                    line = {"image_name": str(image['name']), "image_id": str(image['id']), "image_link":str(image['links'][1]['href'])}
+                    img_array.append(line)
+                return img_array
+            else:
+                _http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
 
     #DESC: Get detailed information about a Glance image. All users can
     #      get information regarding images in their project.
