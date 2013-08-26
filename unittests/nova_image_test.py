@@ -27,6 +27,6 @@ listimg = img.nova_list_images()
 print listimg
 
 #list the availabe images
-for image in listimg:
-    getimg = img.nova_get_image(image['image_id'])
-    print getimg
+#for image in listimg:
+#    getimg = img.nova_get_image(image['image_id'])
+#    print getimg

@@ -84,14 +84,35 @@ class server_ops:
     #OUTPUT: void
     def destructor(self):
         #close any open db connections
-        self.db.close_connection()
+        self.db.pg_close_connection()
 
-    #DESC:
-    #INPUT:
-    #OUTPUT:
+    #DESC: List the virtual servers in the project. Users and power users can list the servers
+    #      in a project they own. Admins can list all virtual servers in the project.
+    #INPUT:self object.
+    #OUTPUT: array or r_dict - server_name
+    #                        - server_id
     def list_servers(self):
-        print "not implemented"
-        
+        #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to list virtual servers.")
+            raise Exception("Status level not sufficient to list virtual servers.")
+
+        #get the instances from the transcirrus DB for admins
+        get_inst = ""
+        if(self.is_admin == 1):
+            get_inst = {'select':"inst_name,inst_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
+        else:
+            get_inst = {'select':"inst_name,inst_id", 'from':"trans_instances", 'where':"proj_id=%s" %(self.project_id), 'and':"username=%s" %(self.username)}
+        instances = self.db.pg_select(get_inst)
+
+        #build the array of r_dict
+        inst_array = []
+        for inst in instances:
+            r_dict = {'server_name':inst[0],'server_id':inst[1]}
+            inst_array.append(r_dict)
+
+        return inst_array
+
     #DESC: Build a nee virtual instance. Users can only build servers
     #      in the projects that they are members of includeing admin users
     #INPUT: create_dict - config_script - op
@@ -102,16 +123,12 @@ class server_ops:
     #                     image_name - default system image used if none specified
     #                     flavor_name - default system flavor used if none specifed
     #                     name - req - name of the server
-    #                     
+
     #OUTPUT: r_dict - vm_name - vm name
     #               - vm_id - vm id
     #               - sec_key_name - security key name
-    #               - sec_key_id
     #               - sec_group_name - security group name
-    #               - sec_group_id
-    #               - created - time created
     #               - created_by - name of creater
-    #               - creater_id - id of creater
     #               - project_id - id of project
     def create_server(self,create_dict):
         #do variable checks
@@ -124,6 +141,10 @@ class server_ops:
         #account for optional params
         if('config_script' not in create_dict):
             create_dict['config_script'] = 'NULL'
+
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to create virtual servers.")
+            raise Exception("Status level not sufficient to create virtual servers.")
 
         #security group verification
         if('sec_group_name' not in create_dict):
@@ -157,7 +178,7 @@ class server_ops:
                 raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
             create_dict['sec_key_name'] = sec_key[0][0]
         else:
-            #check if the group specified is associated with the users project
+            #check if the key specified is associated with the users project
             try:
                 select_key = {"select":'sec_key_name', "from":'trans_security_keys', "where":"proj_id='%s'" %(self.project_id)}
                 sec_key = self.db.pg_select(select_key)
@@ -206,7 +227,9 @@ class server_ops:
         #verify the image requested exsists
         image_list = self.image.nova_list_images()
         for image in image_list:
-            if(image['image_name'] == create_dict['image_name']):
+            if(image['image_name'] == 'None'):
+                continue
+            elif(image['image_name'] == create_dict['image_name']):
                 self.image_id = image['image_id']
                 break
             else:
@@ -231,10 +254,18 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            print rest
             #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 200):
-                print rest['response']
+            if(rest['response'] == 202):
+                #NOTE: need to add in a polling mechanism to report back status of the creation
+                load = json.loads(rest['data'])
+                self.db.pg_transaction_begin()
+                #add the instance values to the transcirrus DB
+                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':"NULL",'inst_floating_ip':"NULL",'proj_id':self.project_id,'in_use':"1",'floating_ip_id':"NULL",'inst_id':load['server']['id'],'inst_port_id':"NULL",'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_int_net_id':self.net_id,'inst_ext_net_id':"NULL",'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
+                self.db.pg_insert("trans_instances",ins_dict)
+                #commit the db transaction
+                self.db.pg_transaction_commit()
+                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':self.project_id}
+                return r_dict
             else:
                 self.db.pg_transaction_rollback()
                 _http_codes(rest['response'],rest['reason'])
@@ -243,26 +274,163 @@ class server_ops:
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
 
-    #DESC:Used to ge the status of the server
-    #     if the poll option is specified in the dictionary
-    #     only the server progress is returned
-    #INPUT:
-    #OUTPUT:
-    def get_server(self,server_dict):
-        print "not implemted"
+    #DESC:Used to get detailed info for a specific virtual server.
+    #     All users can get information for a virtual server in their project they own.
+    #     Admins can get info on any virtual server in their project.
+    #INPUT: server_name
+    #OUTPUT: r_dict - server_name
+    #               - server_id
+    #               - sec_key_name
+    #               - sec_group_name
+    #               - server_flavor
+    #               - server_os
+    def get_server(self,server_name):
+        if((not server_name) or (server_name == "")):
+            logger.sys_error("The virtual server name was not specifed or is blank.")
+            raise Exception("The virtual server name was not specifed or is blank.")
+
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to get virtual servers.")
+            raise Exception("Status level not sufficient to get virtual servers.")
+
+        get_server = ""
+        if(self.is_admin == 1):
+            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_name='%s'" %(server_name), 'and':"proj_id='%s'" %(self.project_id)}
+        else:
+            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_name='%s'" %(server_name), 'and':"inst_username='%s'" %(self.username)}
+        server = self.db.pg_select(get_server)
         
-    #DESC:
-    #INPUT:
-    #OUTPUT:
+        #build the return dictionary
+        r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
+        return r_dict
+
+    #DESC: Used to update a virtual servers name.
+    #      users can only update their servers admins
+    #      can update any server in the project
+    #INPUT: update_dict - server_name
+    #                   - new_server_name
+    #OUTPUT: r_dict - server_name
+    #               - server_id
+    #NOTE: at this time update canonly update the server name per the Grizzly Rest API
     def update_server(self,update_dict):
-        print "not implemented"
-        
-    #DESC:
-    #INPUT:
-    #OUTPUT:
+        if(('server_name' not in update_dict) or (update_dict['server_name'] == "")):
+            logger.sys_error("The virtual server name was not specifed or is blank.")
+            raise Exception("The virtual server name was not specifed or is blank.")
+
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to get virtual servers.")
+            raise Exception("Status level not sufficient to get virtual servers.")
+
+        #get the server id based on the name and the project
+        try:
+            select_id = {'select':"inst_id,inst_username", 'from':"trans_instances", 'where':"inst_name='%s'" %(update_dict['server_name']), 'and':"proj_id='%s'" %(self.project_id)}
+            serv_id = self.db.pg_select(select_id)
+        except:
+            logger.sql_error("Could not get the instance id or username from Transcirrus db fo update_server operation")
+            raise Exception("Could not get the instance id or username from Transcirrus db fo update_server operation")
+
+        #check the user name can update server name
+        if(self.user_level != 0):
+            if(self.username != serv_id[0][1]):
+                logger.sys_error("Users can only update virtual servers they own.")
+                raise Exceptopn("Users can only update virtual servers they own.")
+
+        #connect to the rest api caller
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connec to the REST api caller in create_server operation.")
+            raise Esception("Could not connec to the REST api caller in create_server operation.")
+
+        #update the server name
+        try:
+            body = '{"server": {"name": "%s"}}' %(update_dict['new_server_name'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'PUT'
+            api_path = '/v2/%s/servers/%s' %(self.project_id,serv_id[0][0])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 200 or 201
+            if(rest['response'] == 200):
+                load = json.loads(rest['data'])
+                self.db.pg_transaction_begin()
+                #add the instance values to the transcirrus DB
+                up_dict = {'table':"trans_instances",'set':"inst_name='%s'" %(update_dict['new_server_name']),'where':"proj_id='%s'" %(self.project_id),'and':"inst_name='%s'" %(update_dict['server_name'])}
+                self.db.pg_update(up_dict)
+                #commit the db transaction
+                self.db.pg_transaction_commit()
+                r_dict = {'server_name':update_dict['new_server_name'],'server_id':load['server']['id']}
+                return r_dict
+            else:
+                self.db.pg_transaction_rollback()
+                _http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
+
+    #DESC: Deletes a virtual server. Users can only delete the servers they own.
+    #      Admins can delete any server in their project.
+    #INPUT: server_name
+    #OUTPUT: OK if deleted or error
     def delete_server(self,server_name):
-        print "not implemented"
-        
+        if(not 'server_name'):
+            logger.sys_error("The virtual server name was not specifed or is blank.")
+            raise Exception("The virtual server name was not specifed or is blank.")
+
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to delete virtual servers.")
+            raise Exception("Status level not sufficient to delete virtual servers.")
+
+        #get the server id based on the name and the project
+        try:
+            select_id = {'select':"inst_id,inst_username", 'from':"trans_instances", 'where':"inst_name='%s'" %(server_name), 'and':"proj_id='%s'" %(self.project_id)}
+            serv_id = self.db.pg_select(select_id)
+        except:
+            logger.sql_error("Could not get the instance id or username from Transcirrus db fo update_server operation")
+            raise Exception("Could not get the instance id or username from Transcirrus db fo update_server operation")
+
+        #check the user name can delete server name
+        if(self.user_level != 0):
+            if(self.username != serv_id[0][1]):
+                logger.sys_error("Users can only delete virtual servers they own.")
+                raise Exceptopn("Users can only delete virtual servers they own.")
+
+        #connect to the rest api caller
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connec to the REST api caller in create_server operation.")
+            raise Esception("Could not connec to the REST api caller in create_server operation.")
+
+        #delete the server
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2/%s/servers/%s' %(self.project_id,serv_id[0][0])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 204
+            if(rest['response'] == 204):
+                self.db.pg_transaction_begin()
+                del_dict = {"table":'trans_instances',"where":"inst_name='%s'" %(server_name), "and":"proj_id='%s'" %(self.project_id)}
+                self.db.pg_delete(del_dict)
+                self.db.pg_transaction_commit()
+                return "OK"
+            else:
+                self.db.pg_transaction_rollback()
+                _http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
 
 #######Nova security#######
 

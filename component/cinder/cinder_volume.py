@@ -269,11 +269,11 @@ class volume_ops:
         return r_dict
 
     #DESC: list the volumes for a particular project if the user is a member
-    #only admins can list all volumes on the system
+    #      only admins can list all volumes on the system
     #INPUT self object
     #OUTPUT - array of volumes dict {"vol_id":'',"vol_name":'',"project_id":''}
     def list_volumes(self):
-         #sanity check
+        #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list volumes.")
             raise Exception("Status level not sufficient to list volumes.")
@@ -305,9 +305,54 @@ class volume_ops:
 
         return vol_array
 
+    #DESC: Get all of the information for a specific volume. Admins and power users can get info on
+    # any volume in their project. Users can only list their own volumes
+    #INPUT:         - vol_id
+    #OUTPUT: r_dict - volume_name
+    #               - volume_id
+    #               - volume_size
+    #               - volume_attached
+    #               - volume_instance
     def get_volume_info(self,vol_id):
-        print "yo"
-        
+        #sanity check
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to list volumes.")
+            raise Exception("Status level not sufficient to list volumes.")
+
+         #connect to the transcirrus DB
+        try:
+            #connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sql_error("Could not connect to the Transcirrus DB ")
+            raise e
+
+        #Get the user ID based on the username
+        try:
+            select_db = {"select":'keystone_user_uuid', "from":'trans_user_info',"where":"user_name='%s'" %(self.username),"and":"user_project_id='%s'" %(self.project_id)}
+            user_id = self.db.pg_select(select_db)
+        except:
+            logger.sql_error("Could not get the user id for the user: %s in cinder get volume operation." %(self.username))
+            raise Exception("Could not get the user id for the user: %s in cinder get volume operation." %(self.username))
+        print user_id
+        #get the r_dict based on the user type
+        if(self.user_level == 2):
+            get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_id),'and':"keystone_user_uuid='%s'" %(user_id[0][0])}
+        else:
+            get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_id),'and':"proj_id='%s'" %(self.project_id)}
+
+        try:
+            get_vol = self.db.pg_select(get_vol_dict)
+        except:
+            logger.sql_error("Could not get the volume info for %s" %(vol_id))
+            raise Exception("Could not get the volume info for %s" %(vol_id))
+
+        print get_vol
+        r_dict = {'volume_name':get_vol[0][1],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
+        self.db.pg_close_connection
+
+        return r_dict
+
 ######Internal defs#######
 def _http_codes(code,reason):
     if(code):

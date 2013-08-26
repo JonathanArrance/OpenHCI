@@ -19,21 +19,24 @@ d = a.get_auth()
 print "instantiating a volume abject."
 vol = volume_ops(d)
 
-print "createing a new volume"
-create = {'volume_name':'testvol','volume_size':'1'}
-create_vol = vol.create_volume(create)
-print create_vol
-time.sleep(10)
-print "------------------------------------------"
-print "sleeping for 10 seconds"
+#print "createing a new volume"
+#create = {'volume_name':'testvol','volume_size':'1'}
+#create_vol = vol.create_volume(create)
+#print create_vol
+#time.sleep(10)
+#print "------------------------------------------"
+#print "sleeping for 10 seconds"
 
-print "list current volumes"
-listit = vol.list_volumes()
-print listit
-time.sleep(2)
-print "------------------------------------------"
+#print "list current volumes"
+#listit = vol.list_volumes()
+#print listit
+#time.sleep(2)
+#print "------------------------------------------"
 
-print "deleteing the volume"
-delete_vol = {"vol_name":'testvol'}
-delete = vol.delete_volume(delete_vol)
-print delete
+#print "deleteing the volume"
+#delete_vol = {"vol_name":'testvol'}
+#delete = vol.delete_volume(delete_vol)
+#print delete
+
+get_vol = vol.get_volume_info("36330da5-560a-4cc1-b885-bc8925646f4e")
+print get_vol

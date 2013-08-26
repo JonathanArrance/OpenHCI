@@ -130,11 +130,9 @@ class pgsql:
     
     #name: pg_delete
     #desc: delete a single entry from the table
-    #input: cur - potgres cursor object
-    #       con - postgres connection object
-    #       options - the values to search the db on
+    #input: options - the values to search the db on
     #
-    #ex: database.pg_delete('cur','con','options')
+    #ex: database.pg_delete('options')
     #
     #output: returns a void and deletes the value from the table
     def pg_delete(self,options):

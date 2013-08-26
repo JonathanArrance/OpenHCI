@@ -157,7 +157,7 @@ def _check_user_enabled(key,user_array):
         get_user_status = {'select':"enabled", 'from':"public.user", "where":"id='%s'" %(user_array[0][5])}
         key_user = key.pg_select(get_user_status)
         #why did I have to convert this to string to get it to work???? Investigate
-        if (str(key_user[0][0]) == 'True'):
+        if ((str(key_user[0][0]) == 'True') or (str(key_user[0][0]) == 'TRUE')):
             logger.sys_info("User: %s is enabled in the Keystone DB" %(user_array[0][1]))
             keystone_enabled = 'TRUE'
         else:

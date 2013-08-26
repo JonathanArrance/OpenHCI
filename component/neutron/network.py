@@ -73,14 +73,17 @@ class neutron_ops:
         self.db.close_connection()
         
     #DESC: List the networks available in a project. All user types can only
-    #      list the networks that are availabel in their project.
+    #      list the networks that are available in their project.
     #INPUT: self object
     #OUTPUT: array of r_dict - net_name
     #                        - net_id
     #                        - shared (true/false)
     #                        - status
     def list_networks(self):
-        print "not implemented"
+        if(self.status_level == 2):
+            logger.sys_error("User has insufficent priveleges to list networks.")
+            raise Exception("User has insufficent priveleges to list networks.")
+
         
     #DESC: Get the information on a specific network. All user types can only
     #      get the information on networks in their project.
@@ -102,6 +105,7 @@ class neutron_ops:
     #NOTE: need to update the transcirrus db with the new network.
     def add_network(self,create_dict):
         print "not implemented"
+        #-d '{"network": {"router:external": "True", "name": "jon", "admin_state_up": true}}'
 
     #DESC: Remove a network from a project. Only project admin can remove
     #      a network. Can not remove default system networks.
