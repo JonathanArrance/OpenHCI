@@ -2,10 +2,10 @@ nova.server.create_sec_group - after prototype we will want to have the ability 
 
 In alpo.1 move postgres and api connection object into authentication that is passed into constructor just like other user variables. Destroy connections when the user logs out.
 
-Need to add the concept of a cloud admin to alpo.1 the cloud admin is a super admin and acts much like the default admin in openstack - moved to alpo.1
-
 psql 'SELECT' library needs to be fixed to take uses of the multi dimensional array output - alpo.1
 
 keystone tokens library - alpo.1
 
 In the Nova component Images and Flavors should be just made a module with no constructor. This should be more flexible and save memory.
+
+Add in list,get,update service endpoints in alpo.1 keystone_endpoints.py

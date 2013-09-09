@@ -124,7 +124,6 @@ class pgsql:
         for e in self.cur:
             # strip off white spaces on values and build array to return
             x.append(e)
-    
         logger.sql_info("Returning values of simple select")
         return x
     

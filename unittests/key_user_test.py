@@ -21,13 +21,18 @@ d = a.get_auth()
 
 print "Instantiating user_ops object."
 use = user_ops(d)
-
-
-print "Create a new standard user."
-new_user_dict = {"username":'testuser',"password":"test","userrole":"user","email":"test@domain.com","project_name":"demo"}
+"""
+print "Create a new standard user with no project."
+new_user_dict = {"username":'testuser9',"password":"test","userrole":"user","email":"test9@domain.com"}
 create = use.create_user(new_user_dict)
 print create
+"""
 
+print "Create a new standard user."
+new_user_dict = {"username":'testuser20',"password":"test","userrole":"user","email":"test20@domain.com","project_name":"demo"}
+create = use.create_user(new_user_dict)
+print create
+"""
 print "getting user info"
 user_info = {"username":'testuser',"project_name":'demo'}
 get = use.get_user_info(user_info)
@@ -60,7 +65,7 @@ time.sleep(2)
 print "---------------------------------------------"
 
 #ROLES NEED TO BE FIXED keep getting 404 error when attempting to add a new role
-"""
+
 #add a keystone role to the user
 print "Add the Member role to the testuser."
 user_role_dict = {"username":"testuser","project_id":"26c877c1d5f7449c93001cc9187754dd","role":"Member"}
@@ -74,7 +79,7 @@ remove_role = {"username":'testuser',"key_role":'_member_'}
 remove = use.remove_role_from_user(remove_role)
 print remove
 time.sleep(2)
-"""
+
 print "---------------------------------------------"
 
 print "toggle user to disable"
@@ -102,3 +107,4 @@ blah = use.remove_user(delete)
 print blah
 
 print "---------------------------------------------"
+"""

@@ -80,7 +80,6 @@ class authorization:
             is_admin = 0
             if ((user_level == 0) and (str(user_keystone_role) == "admin")):
                 is_admin = 1
-
             #get user access token (PKI key) from openstack if
             #user has a status level of 2 or higher and user level of 1 or greater
             token = ""
@@ -88,10 +87,10 @@ class authorization:
             if (status_level == 0):
                 token = ""
                 logger.sys_info("User: %s had a status level of 0. Could not get a token." %(self.username))
-            elif(status_level == 2 and user_level >= 1 and exist[0][7] != ""):
+            elif (status_level == 2 and user_level >= 1 and exist[0][7] != ""):
                 token = _get_token(self.username,self.user_pass,exist[0][7])
                 logger.sys_info("User: %s had a status level of %s. Retrieving API token." %(self.username,status_level))
-            elif(status_level == 2 and user_level == 0 and is_admin == 1):
+            elif (status_level == 2 and user_level == 0 and is_admin == 1):
                 if(exist[0][7] == 'NULL'):
                     adm_token = config.DEFAULT_ADMIN_TOKEN
                     logger.sys_info("User: %s had a status level of %s. Using default OpenStack admin token for port 35357." %(self.username,status_level))
@@ -115,6 +114,25 @@ class authorization:
         else:
             logger.sys_error("The user: %s, does not appear to hava an account." %(self.username))
             raise Exception("The user: %s, does not appear to hava an account." %(self.username))
+
+
+    def check_first_time_boot():
+        print "not implemented"
+    
+    def check_admin_pass_set():
+        print "not implemeted"
+        
+    def set_admin_pass():
+        print "not implemeted"
+    
+    def set_first_time_boot():
+        print "not implemeted"
+
+    def delete_admin_pass():
+        print "not implemeted"
+    
+    def delete_first_time_boot():
+        print "not implemeted"
 
 #DESC: Check if the user exists in the database
 #INPUT: self object
@@ -143,10 +161,10 @@ def _get_user_info(db,username):
 def _check_user_enabled(key,user_array):
     #check if the user is enabled in the DB
     transcirrus_enabled = 'FALSE'
-    if(user_array[0][4] == 'TRUE'):
+    if (user_array[0][4] == 'TRUE'):
         logger.sys_info("User: %s is enabled in the Transcirrus database." %(user_array[0][1]))
         transcirrus_enabled = 'TRUE'
-    elif(user_array[0][4] == 'FALSE'):
+    elif (user_array[0][4] == 'FALSE'):
         logger.sys_warning("User: %s is not enabled in the Transcirrus database." %(user_array[0][1]))
     else:
         logger.sys_error("No user array was passed into auth.check_user_enabled")
@@ -195,31 +213,31 @@ def _get_token(username,password,project_id):
     rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
     rest = api.call_rest(rest_dict)
 
-    if((rest['response'] == 200) or (rest['response'] == 203)):
+    if ((rest['response'] == 200) or (rest['response'] == 203)):
         #read the json that is returned
         logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
         load = json.loads(rest['data'])
         apitoken = load['access']['token']['id']
         return apitoken
-    elif(rest['response'] == 403):
+    elif (rest['response'] == 403):
         logger.sys_warning("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 400):
+    elif (rest['response'] == 400):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 401):
+    elif (rest['response'] == 401):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 405):
+    elif (rest['response'] == 405):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 413):
+    elif (rest['response'] == 413):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 503):
+    elif (rest['response'] == 503):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif(rest['response'] == 404):
+    elif (rest['response'] == 404):
         logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
         raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
     else:

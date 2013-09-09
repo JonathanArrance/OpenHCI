@@ -47,7 +47,7 @@ class token_ops:
             else:
                 self.sec = 'FALSE'
 
-        if((self.username == "")or(self.password == "")):
+        if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
 

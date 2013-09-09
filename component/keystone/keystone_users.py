@@ -77,12 +77,13 @@ class user_ops:
     #                       userrole - admin,pu,user
     #                       email
     #                       project_name  name of the project to add the user to OPTIONAL
-    #                               if project_name is not set, the admin users project will be used
-    #OUTPUT: Dictionary containing the 
+    #                               if project_name is not set, project is set to the NULL state
+    #OUTPUT: r_dict - user_name
+    #               - user_id
+    #               - project_id
     def create_user(self,new_user_dict):
         #Only an admin can create a new user
         #check to make sure that new_user_dict is present
-        new_user_proj_id = "NULL"
         if(not new_user_dict):
             logger.sys_error("new_user_dict not specified for create_user operation.")
             raise Exception("new_user_dict not specified for create_user operation.")
@@ -97,9 +98,6 @@ class user_ops:
         #if((new_user_dict['userrole'] != "admin") or (new_user_dict['userrole'] != "pu") or (new_user_dict['userrole'] != "user")):
         #    logger.sys_error("INVALID user role passed to create_user operation.")
         #    raise Exception("INVALID user role passed to create_user operation.")
-        if('project_name' not in new_user_dict):
-            #set the tenant id to the admin users project id
-            new_user_proj_id = self.project_id
 
         #check if the user creating a new account is an admin
         if(self.is_admin == 1):
@@ -114,47 +112,61 @@ class user_ops:
                 logger.sys_error("Only admins can create a project")
                 raise Exception("Only admins can create a project.")
 
-            #need to figure out the group id based on the role given
-            #NOTE for now we are sticking with the default admin,Member roles in Keystone.
-            #all access is controlled with Transcirrus permissions. Later we will add the
-            #ability to create and use custom roles in keystone.
-            group_id = ""
-            key_role = ""
-            if(new_user_dict['userrole'] == 'admin'):
-                group_id = 0
-                key_role = 'admin'
-            elif(new_user_dict['userrole'] == 'pu'):
-                group_id = 1
-                key_role = 'Member'
-            else:
-                group_id = 2
-                key_role = 'Member'
-
             try:
                 #Try to connect to the transcirrus db
                 self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
                 logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
             except Exception as e:
                 logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
-                raise
+                raise e
 
-            try:
-                #get the project ID if not using the admins
-                if('project_name' in new_user_dict):
+            group_id = ""
+            key_role = ""
+            if('project_name' in new_user_dict):
+                #need to figure out the group id based on the role given
+                #NOTE for now we are sticking with the default admin,Member roles in Keystone.
+                #all access is controlled with Transcirrus permissions. Later we will add the
+                #ability to create and use custom roles in keystone.
+                if(new_user_dict['userrole'] == 'admin'):
+                    group_id = 0
+                    key_role = 'admin'
+                elif(new_user_dict['userrole'] == 'pu'):
+                    group_id = 1
+                    key_role = 'Member'
+                else:
+                    group_id = 2
+                    key_role = 'Member'
+
+                try:
+                    #get the project ID if not using the admins
                     select_proj_id = {"select":"proj_id","from":"projects","where":"proj_name='%s'" %(new_user_dict['project_name'])}
                     proj_id = self.db.pg_select(select_proj_id)
-                    new_user_proj_id = proj_id[0][0]
-            except:
-                logger.sql_error("Could not get the project ID, %s" %(e))
-                raise
+                    self.new_user_proj_id = proj_id[0][0]
+                except:
+                    logger.sql_error("Could not get the project ID for project %s" %(new_user_dict['project_name']))
+                    raise Exception("Could not get the project ID for project %s" %(new_user_dict['project_name']))
+            else:
+                #This is the default case if the user is being created
+                #without a project. When we add the user to a project then
+                #we can specify if the user will be a power_user or reamin a standard user.
+                group_id = 2
+                key_role = 'Member'
+                self.new_user_proj_id = "NULL"
 
             try:
-                #build an api connection for the admin user
+                #build an api connection for the admin user. NOTE project ID is the admin user project id
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
+            try:
                 #add the new user to openstack
-                body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId":"%s"}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'],new_user_proj_id)
+                if('project_name' not in new_user_dict):
+                    body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": null}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'])
+                else:
+                    body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": "%s"}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'],self.new_user_proj_id)
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/users'
@@ -174,21 +186,25 @@ class user_ops:
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise
-            
+                raise e
+
+            if(self.new_user_proj_id != "NULL"):
+                self.proj_name = new_user_dict['project_name']
+            else:
+                self.proj_name = "NULL"
+
             try:
-                #get the project id from the transcirrus DB
-                get_proj_name = {"select":"proj_name", "from":"projects", "where":"proj_id='%s'" %(new_user_proj_id)}
-                proj_name = self.db.pg_select(get_proj_name)
-                
+                self.db.pg_transaction_begin()
                 #insert data in transcirrus DB
-                ins_dict = {"user_name":new_user_dict['username'],"user_group_membership":new_user_dict['userrole'],"user_group_id":group_id,"user_enabled":'TRUE',"keystone_role":key_role,"user_primary_project":proj_name[0][0],"user_project_id":new_user_proj_id,"keystone_user_uuid":new_user_id}
+                ins_dict = {"user_name":new_user_dict['username'],"user_group_membership":new_user_dict['userrole'],"user_group_id":group_id,"user_enabled":'TRUE',"keystone_role":key_role,"user_primary_project":self.proj_name,"user_project_id":self.new_user_proj_id,"keystone_user_uuid":new_user_id}
                 insert = self.db.pg_insert("trans_user_info",ins_dict)
-                self.db.pg_close_connection()
             except Exception as e:
+                self.db.pg_transaction_rollback()
                 logger.sql_error("%s" %(e))
                 #back the user out if an exception is thrown
-                raise
+                raise e
+            self.db.pg_transaction_commit()
+            self.db.pg_close_connection()
 
             #add the role to the new user
             #NOTE: adding a role throws a 404 error on the REST call.
@@ -196,11 +212,12 @@ class user_ops:
             #user_role_dict = {"username":new_user_dict['username'],"project_id":new_user_proj_id,"role":key_role}
             #self.add_role_to_user(user_role_dict)
 
-            r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":new_user_proj_id}
+            r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":self.new_user_proj_id}
             return r_dict
 
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
+            raise Exception("Admin flag not set, could not create the new user.")
 
     #DESC: Removes a user from the Keystone Db and th Transcirrus DB
     #      Admin must be in the same project as user they are removeing
@@ -382,7 +399,7 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
-    #DESC: Add a new user to a role in the keystone DB
+    #DESC: Add a new user to a project
     #INPUT: self object
     #       new_role_dict - dictionary containg the user_role_info
     #                       username
@@ -390,8 +407,11 @@ class user_ops:
     #                       role - keystone role can only be admin or Member at this time
     #OUTPUT: Dictionary containing the username and keystone role
     #NOTE: need to add ability to add global role to user
-    #NOTE: getting 404 error when calling REST
-    def add_role_to_user(self, user_role_dict):
+    #REQ: curl -i -X PUT http://192.168.10.30:35357/v2.0/tenants/a2ef53c14635446e9903585737b494bc/users/b33545c086b14c9d99205dcb73d604f3/roles/OS-KSADM/10d138c68dec4a9098ad409931030f25 -H "User-Agent: python-keystoneclient" -H "X-Auth-Token: cheapass"
+    #RESP: [200] {'date': 'Mon, 09 Sep 2013 00:01:35 GMT', 'content-type': 'application/json', 'content-length': '70', 'vary': 'X-Auth-Token'}
+    #RESP BODY: {"role": {"id": "10d138c68dec4a9098ad409931030f25", "name": "Member"}}
+#this is also used to add a user to a project
+    def add_project_user(self, user_role_dict):
         #user_role_dict = {"username":new_user_dict['username'],"project_id":new_user_dict['tenant_id'],"role":key_role}
         #Only an admin can add a role to a user
         if(not user_role_dict):

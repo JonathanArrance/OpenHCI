@@ -70,7 +70,7 @@ class tenant_ops:
     #      calls the rest api in OpenStack and updates applicable fields in Transcirrus
     #      database
     #INPUT: self object
-    #       project_name - what you want to call it - Required
+    #       project_name - what you want to call the new project - Required
     #OUTPUT tenant ID
     def create_tenant(self,project_name):
         # create a new project in OpenStack. This can only be done by and Admin
@@ -109,7 +109,7 @@ class tenant_ops:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             api = caller(api_dict)
 
-            body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s dev project"}}' %(project_name,project_name)
+            body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s project"}}' %(project_name,project_name)
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
             function = 'POST'
             api_path = '/v2.0/tenants'
@@ -156,7 +156,6 @@ class tenant_ops:
     #       project_name
     #OUTPUT: dictionary containg the rest API response,reason and status of "OK' if task completed successfully
     def remove_tenant(self,project_name):
-        
         if((not project_name) or (project_name == "")):
             logger.sys_error("No project name was specified for the new project.")
             raise EXception("No project name was specified for the new project.")
@@ -239,7 +238,6 @@ class tenant_ops:
     #Output:dictionary containing all of the projects and project ids
     #This operation is only available to admins
     def list_all_tenants(self):
-        
         # create a new project in OpenStack. This can only be done by and Admin
         # we need to make sure that the user is a transcirrus admin and an openstack admin.
         # if not reject and throw an exception
@@ -283,7 +281,7 @@ class tenant_ops:
             logger.sys_error("Admin flag not set, could not create the new project ")
 
     #DESC: Get the information for a specific project from the Transcirrus DB
-    #      Admins can get any project users can only view the primary project
+    #      Admins can get any project, users can only view the primary project
     #      they belong to
     #INPUT: project_name
     #OUTPUT: dictionary containing the project info
@@ -318,10 +316,15 @@ class tenant_ops:
             else:
                 raise Exception("Users can only get information on their own projects.")
 
-    def list_tenant_users(self):
-        print "yo"
+    #DESC: list the users that are members of the project. Admins and power users can do this.
+    #INPUT: project_name
+    #OUTPUT: array of r_dict - username
+    #                        - user_id
+    def list_tenant_users(self,project_name):
+        print "not implemented"
+
     def update_tenant(self):
-        print "yo"
+        print "not implemented"
         
 ######Internal defs#######
 def _http_codes(code,reason):
