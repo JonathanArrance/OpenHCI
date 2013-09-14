@@ -21,18 +21,29 @@ d = a.get_auth()
 
 print "Instantiating user_ops object."
 use = user_ops(d)
+
+
+update_dict = {'username':"yo",'toggle':"enable",'email':"test@domain.com",'new_username':"testuser",'new_project':"unittest",'new_role':"pu"}
+yo = use.update_user(update_dict)
+print yo
 """
 print "Create a new standard user with no project."
-new_user_dict = {"username":'testuser9',"password":"test","userrole":"user","email":"test9@domain.com"}
+new_user_dict = {"username":'testuser15',"password":"test","userrole":"user","email":"test15@domain.com"}
 create = use.create_user(new_user_dict)
 print create
-"""
+
+time.sleep(2)
+#print "Adding user %s to demo project" %(create['username'])
+add_user_dict = {"username":"testuser15","user_role":'user',"project_name":'demo'}
+add = use.add_user_to_project(add_user_dict)
+print add
+
 
 print "Create a new standard user."
 new_user_dict = {"username":'testuser20',"password":"test","userrole":"user","email":"test20@domain.com","project_name":"demo"}
 create = use.create_user(new_user_dict)
 print create
-"""
+
 print "getting user info"
 user_info = {"username":'testuser',"project_name":'demo'}
 get = use.get_user_info(user_info)
@@ -75,12 +86,13 @@ time.sleep(2)
 print "--------------------------------------------"
 
 #remove role from user in a tenant
-remove_role = {"username":'testuser',"key_role":'_member_'}
-remove = use.remove_role_from_user(remove_role)
+remove_role = {"username":'testuser15',"project_name":'demo'}
+remove = use.remove_user_from_project(remove_role)
 print remove
 time.sleep(2)
 
 print "---------------------------------------------"
+
 
 print "toggle user to disable"
 toggle = {"username":'testuser',"toggle":'disable'}

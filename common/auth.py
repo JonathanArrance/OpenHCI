@@ -105,10 +105,10 @@ class authorization:
 
             #dictionary containing the user login info. permissions, token and status
             #need to set PKI token and ADMIN token
-            user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token,"adm_token":adm_token}
+            user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token,"adm_token":adm_token,"db_object":self.db}
 
             #close open db connections
-            self.db.pg_close_connection()
+            #self.db.pg_close_connection()
             self.key.pg_close_connection()
             return user_dict
         else:

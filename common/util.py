@@ -1,8 +1,9 @@
 #!/usr/bin/python
+import sys
 import logger
 import config
 
-sys.path.append('../database')
+sys.path.append(config.DB_PATH)
 from postgres import pgsql
 
 ######Transcirrus utils#######

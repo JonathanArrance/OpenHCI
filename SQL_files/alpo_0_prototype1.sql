@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.9
 -- Dumped by pg_dump version 9.2.0
--- Started on 2013-09-08 20:08:09 EDT
+-- Started on 2013-09-14 15:24:52 EDT
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -608,7 +608,8 @@ CREATE TABLE trans_user_info (
     keystone_user_uuid character varying,
     user_primary_project character varying,
     user_project_id character varying,
-    keystone_role character varying
+    keystone_role character varying,
+    user_email character varying
 );
 
 
@@ -956,7 +957,7 @@ CREATE INDEX trans_system_settings_index_idx ON trans_system_settings USING btre
 CREATE INDEX trans_user_info_user_name_idx ON trans_user_info USING btree (user_name);
 
 
--- Completed on 2013-09-08 20:08:15 EDT
+-- Completed on 2013-09-14 15:24:58 EDT
 
 --
 -- PostgreSQL database dump complete
