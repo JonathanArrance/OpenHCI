@@ -1,5 +1,6 @@
 BUG1
 keystone_user.py add_user_role 404 error. All of the rest calls look correct. Troubleshoot could be a bug in keystone api.
+-> fixed this got turned into add_user_to_project. It fits better in the new stratagy.
 
 BUG2
 keystone_tenant.py - projects not deleting correctly. FIXED
