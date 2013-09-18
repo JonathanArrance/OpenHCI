@@ -1,3 +1,5 @@
+mkdir -p /usr/lib/python2.7/dist-packages/transcirrus/
+
 echo 'Adding common to Transcirrus dir'
 cp -Rf ./common /usr/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding component to Transcirrus dir'
