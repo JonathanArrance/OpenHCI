@@ -1,10 +1,9 @@
 #!/usr/bin/python
 import sys
-import logger
-import config
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-sys.path.append(config.DB_PATH)
-from postgres import pgsql
+from transcirrus.database.postgres import pgsql
 
 ######Transcirrus utils#######
 

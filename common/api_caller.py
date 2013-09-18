@@ -3,12 +3,10 @@ import exceptions
 import httplib
 
 #verified to work on 7-1-2013
-sys.path.append('../common')
-import logger
-import config
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-sys.path.append('../database')
-from postgres import pgsql
+from transcirrus.database.postgres import pgsql
 
 class caller:
     #INPUT: options dictionary containing

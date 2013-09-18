@@ -3,16 +3,13 @@ import sys
 import json
 import random
 
-sys.path.append('../../common')
-import logger
-import config
+import transcirrus.common.util as util
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-#get the transcirrus api caller
-from api_caller import caller
+from transcirrus.common.api_caller import caller
 
-#get the db library path from the config file
-sys.path.append(config.DB_PATH)
-from postgres import pgsql
+from transcirrus.database.postgres import pgsql
 
 class nova_image_ops:
     #DESC:

@@ -6,13 +6,12 @@
 import sys
 import json
 
-sys.path.append('../../common')
-import logger
-import config
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-#get the db library path from the config file
-sys.path.append(config.DB_PATH)
-from postgres import pgsql
+from transcirrus.common.api_caller import caller
+
+from transcirrus.database.postgres import pgsql
 
 class routing_ops:
     #DESC:

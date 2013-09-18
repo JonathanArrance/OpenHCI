@@ -3,16 +3,12 @@
 import sys
 import json
 
-sys.path.append('../../common')
-import logger
-import config
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-#get the transcirrus api caller
-from api_caller import caller
+from transcirrus.common.api_caller import caller
 
-#get the db library path from the config file
-sys.path.append(config.DB_PATH)
-from postgres import pgsql
+from transcirrus.database.postgres import pgsql
 
 #get the nova libs
 from flavor import flavor_ops

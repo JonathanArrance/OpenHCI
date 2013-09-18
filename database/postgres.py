@@ -6,8 +6,7 @@ import exceptions
 import time
 import pprint
 
-sys.path.append('../common')
-import logger
+import transcirrus.common.logger as logger
 
 class pgsql:
     def __init__(self,host,port,dbname,user,password):

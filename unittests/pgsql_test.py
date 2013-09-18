@@ -2,12 +2,10 @@
 
 import sys
 
-sys.path.append('../database')
-sys.path.append('../common')
 
 #import the pgsql class from postgres
-from postgres import pgsql
-import logger
+from transcirrus.database.postgres import pgsql
+import transcirrus.common.logger as logger
 
 #connect to the database
 pg = pgsql('192.168.10.16','5432','cac_system','cacsystem','cacsystem')

@@ -7,15 +7,13 @@ import sys
 import json
 import re
 
-sys.path.append('../../common')
-import logger
-import config
-import util
+import transcirrus.common.util as util
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-from api_caller import caller
+from transcirrus.common.api_caller import caller
 
-sys.path.append(config.DB_PATH)
-from postgres import pgsql
+from transcirrus.database.postgres import pgsql
 
 class user_ops:
     def __init__(self,user_dict):

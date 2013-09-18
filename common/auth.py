@@ -5,14 +5,12 @@
 #tested and works as of 7-21-2013
 import sys
 import json
-from api_caller import caller
+from transcirrus.common.api_caller import caller
 
-sys.path.append('../common')
-import logger
-import config
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
 
-sys.path.append('../database')
-from postgres import pgsql
+from transcirrus.database.postgres import pgsql
 
 #username is an email address
 #should be checked by fron end django

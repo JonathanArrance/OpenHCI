@@ -4,14 +4,12 @@
 #passes the user level out 
 import sys
 
-sys.path.append('../common')
-import logger
-import config
+#from auth import authorization
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
+from transcirrus.database.postgres import pgsql
+from transcirrus.common.auth import authorization
 
-sys.path.append('../database')
-from postgres import pgsql
-
-from auth import authorization
 
 print "Instantiateing authorization object"
 #a = authorization("jon2","test")

@@ -4,13 +4,13 @@ import time
 #passes the user level out 
 import sys
 
-sys.path.append('../common')
-import logger
-import config
-from auth import authorization
+#sys.path.append('../common')
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
+from transcirrus.common.auth import authorization
 
-sys.path.append('/home/jonathan/alpo.0/component/cinder')
-from cinder_volume import volume_ops
+#sys.path.append('/home/jonathan/alpo.0/component/cinder')
+from transcirrus.component.cinder.cinder_volume import volume_ops
 
 a = authorization("admin","builder")
 #get the user dict
@@ -38,5 +38,5 @@ vol = volume_ops(d)
 #delete = vol.delete_volume(delete_vol)
 #print delete
 
-get_vol = vol.get_volume_info("36330da5-560a-4cc1-b885-bc8925646f4e")
+get_vol = vol.get_volume_info("630a0d7d-e5b0-4366-83b1-92eb70e39fcc")
 print get_vol
