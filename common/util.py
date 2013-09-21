@@ -1,5 +1,7 @@
 #!/usr/bin/python
 import sys
+import pwd
+import os
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
@@ -39,6 +41,63 @@ def db_close(db_obj):
     db_obj.pg_close_connection()
 
 
+def write_new_config_file(file_dict):
+    """
+    DESC: Write out a config file.
+    INPUT: file_dict - file_path - req
+                     - file_name - req
+                     - file_content - array - req
+                     - file_owner - req
+                     - file_group - req
+                     - file_permissions - default 644
+    OUTPUT: A file written out to the proper location with the proper permissions
+    ACCESS: wide open
+    NOTES: Note the file permissions come in the bit format, ex. 644
+           The defualt file permissions should be sufficient for any config
+           file written.
+    """
+    #make sure none of the values are empty
+    for key, val in file_dict.items():
+        #skip over these
+        if(key == 'file_permissions'):
+            continue
+        if(val == ""):
+            logger.sys_error("The value %s was left blank" %(val))
+            raise Exception("The value %s was left blank" %(val))
+        if(key not in file_dict):
+            logger.sys_error("Required info not specified for file creation.")
+            raise Exception ("Required info not specified for file creation.")
+    
+    #set the userID to the transuser system user
+    #HACK - I can see this being a security hole
+    uid = pwd.getpwnam('transuser')[2]
+    os.setuid(uid)
+
+    #check if the config file exists in the file system
+    path = []
+    path.extend([file_dict['file_path'],file_dict['file_name']])
+    fqp = "/".join(path)
+    
+    check_fqp = os.path.exists("%s") %(fqp)
+    if(check_fqp == False):
+        logger.sys_warning("The file %s does not exists, Creating...")
+        config = open('%s', 'w') %(fqp)
+    else:
+        logger.sys_warning("The file %s exists. Creating a backup and building new config.")
+        
+    
+
+
+def delete_config_file(file_dict):
+    """
+    DESC: Write out a config file.
+    INPUT: file_dict - file_path
+                     - file_name
+                     - file_content
+    OUTPUT:
+    ACCESS:
+    NOTES:
+    """
 #######System level calls used to run linux commands#######
 
 #DESC: ping an ip

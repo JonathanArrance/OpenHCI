@@ -365,7 +365,7 @@ class server_ops:
                 _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             self.db.pg_transaction_rollback()
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not create the project %s" %(e))
             raise e
 
     #DESC: Deletes a virtual server. Users can only delete the servers they own.

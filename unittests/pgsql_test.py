@@ -12,7 +12,7 @@ pg = pgsql('192.168.10.16','5432','cac_system','cacsystem','cacsystem')
 
 #print the connection object
 print pg
-
+'''
 #insert something into the unit test table
 insert = {"index":"6","parameter":"yo","param_value":"test"}
 pg.pg_insert("unit_test",insert)
@@ -40,6 +40,10 @@ update = {'table':"unit_test",'set':"param_value='tester'",'where':"index='51'"}
 pg.pg_update(update)
 select1 = {'select':'*','from':'unit_test'}
 sel = pg.pg_select(select1)
-
+'''
+#count up the number of nodes attached to controller
+elem_dict = {'table':"trans_nodes",'where':"node_controller='ciac-01'"}
+count = pg.count_elements(elem_dict)
+print count
 #close the connection
 pg.pg_close_connection()

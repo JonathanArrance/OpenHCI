@@ -171,9 +171,8 @@ class pgsql:
 
     #name: pg_update
     #desc: Update the database table
-    #input: self object
-    #       options - the values to search the db on
-    #output: returns a void and deletes the value from the table
+    #input: 
+    #output:
     def pg_update(self,options):
         logger.sql_info("Performing simple UPDATE operation pg_update")
 
@@ -205,6 +204,7 @@ class pgsql:
             whereopt = options['where']
             SQL += 'WHERE %s ' %whereopt
 
+
         if 'and' in options:
             andopt = options['and']
             SQL += 'AND %s' % andopt
@@ -221,3 +221,33 @@ class pgsql:
         
     def pg_transaction_rollback(self):
         self.cur.execute("ROLLBACK")
+
+    #Count the elements that match query
+    #options = {'table':'tablename','where':element,'and':element}
+    def count_elements(self,options):
+        logger.sql_info("Counting up elements")
+        SQL = "SELECT count(*) FROM"
+
+        if 'table' in options:
+            tableopt = options['table']
+            SQL += ' %s ' %tableopt
+        else:
+            logger.sql_error("No table specified in simple sql update operation.")
+            logger.sql_error(exceptions.SystemError)
+        
+        if 'where' in options:
+            whereopt = options['where']
+            SQL += 'WHERE %s ' %whereopt
+
+        if 'and' in options:
+            andopt = options['and']
+            SQL += 'AND %s' %andopt
+        logger.sql_info(SQL)
+
+        self.cur.execute(SQL)
+        #self.conn.commit()
+        out = None
+        for e in self.cur:
+            out = e[0]
+        return out
+
