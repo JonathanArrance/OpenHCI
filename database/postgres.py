@@ -83,6 +83,7 @@ class pgsql:
         fromopt = ""
         whereopt = ""
         andopt = ""
+        oropt = ""
     
         #the strings
         SQL = ""
@@ -114,7 +115,11 @@ class pgsql:
         if 'and' in options:
             andopt = options['and']
             SQL += 'AND %s' % andopt
-    
+
+        if 'or' in options:
+            oropt = options['or']
+            SQL += 'OR %s' % oropt
+
         # execute the built up simple select statement
         logger.sql_info(SQL)
         self.cur.execute(SQL)
@@ -250,4 +255,26 @@ class pgsql:
         for e in self.cur:
             out = e[0]
         return out
+'''
+    def pg_inner_join(self,options):
+        logger.sql_info("Performing an inner join on tables %s %s" %(options['table1'],options['table2']))
+        #build out select
+        if 'select' in options:
+            selopt = options['select']
+            if selopt != '' or selopt != '*':
+                SQL += 'SELECT %s ' %selopt
+            elif selopt == ' ':
+                SQL += 'SELECT * '
+        else:
+            logger.sql_error("No SELECT statement given in pg_select")
+            logger.sql_error(exceptions.SystemError)
+    
+        #build out from
+        if 'from' in options:
+            fromopt = options['from']
+            SQL += 'FROM %s ' %fromopt
+        else:
+            logger.sql_error("No FROM statement given in pg_select")
+            logger.sql_error(exceptions.SystemError)
+'''
 

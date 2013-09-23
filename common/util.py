@@ -1,11 +1,14 @@
 #!/usr/bin/python
 import sys
-import pwd
 import os
+import shutil
+
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
 from transcirrus.database.postgres import pgsql
+from time import gmtime, strftime
+from ifconfig import ifconfig
 
 ######Transcirrus utils#######
 
@@ -49,8 +52,12 @@ def write_new_config_file(file_dict):
                      - file_content - array - req
                      - file_owner - req
                      - file_group - req
-                     - file_permissions - default 644
+                     - file_perm - default 644
     OUTPUT: A file written out to the proper location with the proper permissions
+            raise exceptions on fail
+            OK - file written
+            ERROR - file not written
+            NA - unknown
     ACCESS: wide open
     NOTES: Note the file permissions come in the bit format, ex. 644
            The defualt file permissions should be sufficient for any config
@@ -67,26 +74,69 @@ def write_new_config_file(file_dict):
         if(key not in file_dict):
             logger.sys_error("Required info not specified for file creation.")
             raise Exception ("Required info not specified for file creation.")
-    
-    #set the userID to the transuser system user
-    #HACK - I can see this being a security hole
-    uid = pwd.getpwnam('transuser')[2]
-    os.setuid(uid)
+
+    permissions = None
+    if(('file_permissions' not in file_dict) or (file_dict['file_permissions'])):
+        permissions = '644'
+    else:
+        permissions = file_dict['file_permissions']
 
     #check if the config file exists in the file system
     path = []
     path.extend([file_dict['file_path'],file_dict['file_name']])
     fqp = "/".join(path)
-    
-    check_fqp = os.path.exists("%s") %(fqp)
-    if(check_fqp == False):
-        logger.sys_warning("The file %s does not exists, Creating...")
-        config = open('%s', 'w') %(fqp)
-    else:
-        logger.sys_warning("The file %s exists. Creating a backup and building new config.")
-        
-    
 
+    spath = []
+    spath.extend(['/tmp',file_dict['file_name']])
+    scratch = "/".join(spath)
+
+    check_fqp = os.path.exists(fqp)
+    config = None
+    if(check_fqp == False):
+        logger.sys_warning("The file %s does not exists, Creating..." %(fqp))
+        #os.system('touch %s' %(scratch))
+        config = open(scratch, 'w')
+    else:
+        logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))
+        date = strftime("%Y-%m-%d", gmtime())
+        old = '%s_%s' %(fqp,date)
+        os.system('sudo cp -f %s %s' %(fqp,old))
+        config = open(scratch, 'w')
+
+    #check that the array of lines is not empty
+    if(len(file_dict['file_content']) == 0):
+        logger.sys_warning("No file input was given. Can not write out the file.")
+        raise Exception("No file input was given. Can not write out the file.")
+
+    try:
+        for line in file_dict['file_content']:
+            config.write(line)
+            config.write('\n')
+        os.system('sudo mv %s %s' %(scratch,fqp))
+        config.close()
+        os.system('rm -f %s' %(scratch))
+
+        #set ownership
+        os.system('sudo chown %s:%s %s' %(file_dict['file_owner'],file_dict['file_group'],fqp))
+
+        #set permissions
+        os.system('sudo chmod %s %s' %(file_dict['file_perm'],fqp))
+
+    except IOError:
+        config.close()
+        #move the backup copy back to the original copy
+        #shutil.move('%s_%s','%s') %(fqp,date,fqp)
+        logger.sys_error("Could not write the config file at path %s" %(fqp))
+        raise Exception("Could not write the config file at path %s" %(fqp))
+
+    #confirm the file was written and return OK if it was ERROR if not
+    check_new_path = os.path.exists(fqp)
+    if(check_new_path == True):
+        return 'OK'
+    elif(check_new_path == False):
+        return 'ERROR'
+    else:
+        return 'NA'
 
 def delete_config_file(file_dict):
     """
@@ -94,63 +144,90 @@ def delete_config_file(file_dict):
     INPUT: file_dict - file_path
                      - file_name
                      - file_content
-    OUTPUT:
-    ACCESS:
-    NOTES:
+    OUTPUT: OK - file deleted
+            ERROR - file could not be deleted
+            NA - Unknown
+    ACCESS: wide open
+    NOTES: This will be used as part fo the cleanup procedure to set the system back to
+           the factory state.
     """
 #######System level calls used to run linux commands#######
 
-#DESC: ping an ip
-#INPUT: ip
-#OUTPUT: SUCCESS - ip pingable
-#        FAIL - ip not pingable
 def ping_ip(ip):
-    print "not implemented"
+    """
+    DESC: Ping an ip
+    INPUT: ip
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    """
+    out = os.system('sudo ping %s'  %(ip))
+    if(out):
+        return 'OK'
+    elif(!out):
+        return 'ERROR'
+    else:
+        return 'NA'
 
-#DESC: Change the ip address for the given adapter. Only cloud admins can
-#      perform this operation.
-#INPUT: input_dict - user_level
-#                  - net_adapter
-#                  - new_ip
-#                  - new_subnet - op
-#                  - new_gateway - op
-#OUTPUT: r_dict - net_adapter
-#               - new_p
-#               - ping SUCCESS/FAIL
+
 def set_adapter_ip():
+    """
+    DESC: Change the ip address for the given adapter. Only cloud admins can
+          perform this operation.
+    INPUT: input_dict - user_level
+                      - net_adapter
+                      - new_ip
+                      - new_subnet - op
+                      - new_gateway - op
+    OUTPUT: r_dict - net_adapter
+                   - new_ip
+                   - ping SUCCESS/FAIL
+    """
+
     print "not implemented"
     
 
-#DESC: Set a system adapter to DHCP. Only cloud admin can perform this operation.
-#INPUT: net_adapter
-#OUTPUT: r_dict - net_adapter
-#               - dhcp_ip
-#               - dhcp_net_mask
-#               - dhcp_net_gateway
 def set_adapter_dhcp(net_adapter):
     print "not implemented"
 
-#DESC: Get the ip info associated with a specific network adapter. Only cloud admin can
-#      perform this operation.
-#INPUT: net_adapter
-#OUTPUT: r_dict - net_adapter
-#               - net_ip
-#               - net_mask
-#               - net_gateway
 def get_adapter_ip(net_adapter):
-    print "not implemeted"
+    """
+    DESC: Get the ip info associated with a specific network adapter.
+    INPUT: net_adapter
+    OUTPUT: r_dict - net_adapter
+                   - net_ip
+                   - net_mask
+                   - net_mac
+    """
+    out = ifconfig('%s' %(net_adapter))
+    r_dict = {'net_adapter':net_adapter,'net_ip':out['addr'],'net_mask':out['netmask'],'net_mac':out['hwaddr']}
+    return r_dict
 
-#DESC: Halt, but do not power off the linux system. Only cloud admins
-#      can perform this task.
-#INPUT: 
-#OUTPUT: 
 def halt_system():
-    print "not implememted"
-    
+    """
+    DESC: Halt the local system.
+    INPUT: none
+    OUTPUT: none
+    NOTE: VERY DANGEROUS. THIS IS WIDE OPEN AS OF NOW
+    """
+    os.system('sudo shutdown -H')
+
 def reboot_system():
-    print "not implemeted"
-    
+    """
+    DESC: Reboot the local system.
+    INPUT: none
+    OUTPUT:
+    NOTE: VERY DANGEROUS. THIS IS WIDE OPEN AS OF NOW
+    """
+    os.system('sudo reboot')
+
 def power_off_system():
-    print "not implemented"
+    """
+    DESC: Power off the local system.
+    INPUT: none
+    OUTPUT: none
+    NOTE: VERY DANGEROUS. THIS IS WIDE OPEN AS OF NOW
+    """
+    os.system('sudo shutdown -P')
 
 
