@@ -12,6 +12,16 @@ cp -Rf ./tasks /usr/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding ha to Transcirrus dir'
 cp -Rf ./ha /usr/lib/python2.7/dist-packages/transcirrus/
 
+#check to see if the log file exists
+if [ -e /var/log/caclogs/system.log ]
+then
+echo "CAClog exists"
+else
+mkdir -p /var/log/caclogs
+touch /var/log/caclogs/system.log
+chmod -R 776 /var/log/caclogs
+chown -R transuser:transystem /var/log/caclogs
+fi
 
 #add the django site to its proper place in the file system
 
