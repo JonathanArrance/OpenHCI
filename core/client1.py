@@ -5,6 +5,8 @@ import socket
 import pickle
 from time import sleep
 import select
+import transcirrus.common.util as util
+import transcirrus.databases.node_db as node_db
 
 timeout_sec = 1
 retry_count = 5
@@ -120,21 +122,21 @@ def processComputeConfig(sock):
 
     # write compute nodes nova config files
 
-    ret = write_new_config_file(nova_conf)
+    ret = util.write_new_config_file(nova_conf)
     if ret == "ERROR" or ret == "NA":
         print "eror in writing nova conf, exiting!!!"
         sys.exit()
     else:
         print "write success, nova conf"
 
-    ret = write_new_config_file(comp_conf)
+    ret = util.write_new_config_file(comp_conf)
     if ret == "ERROR" or ret == "NA":
         print "error in writing comp conf, exiting!!!"
         sys.exit()
     else:
         print "write success, comp conf"
 
-    ret = write_new_config_file(api_conf)
+    ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
         print "error in writing api conf, exiting!!!"
         sys.exit()
@@ -143,7 +145,7 @@ def processComputeConfig(sock):
 
     # write compute nodes ovs config file
 
-    ret = write_new_config_file(ovs_conf)
+    ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
         print "error in writing ovs conf, exiting!!!"
         sys.exit()

@@ -7,6 +7,8 @@ from thread import *
 import pickle
 import select
 from time import sleep
+import transcirrus.common.util as util
+import transcirrus.databases.node_db as node_db
 
 timeout_sec=1
 count=0
@@ -30,7 +32,7 @@ def check_node_update(data):
     update = 'NA'
     node_id = data['Value']['node_id']
 
-    node = get_node(node_id)
+    node = node_db.get_node(node_id)
 
     if node == 'NA' or node == 'ERROR':
         print "node_id : %s not found in the DB, exiting !!!" % node_id
@@ -44,41 +46,32 @@ def check_node_update(data):
                 update = 'OK'
             elif data['Value']['node_mgmt_ip'] != node['node_mgmt_ip']:
                 update = 'OK'
-            elif data['Value']['node_controller'] !=
-            node['node_controller']:
+            elif data['Value']['node_controller'] != node['node_controller']:
                 update = 'OK'
-            elif data['Value']['node_cloud_name'] !=
-            node['node_cloud_name']:
+            elif data['Value']['node_cloud_name'] != node['node_cloud_name']:
                 update = 'OK'
             elif data['Value']['node_nova_zone'] != node['node_nova_zone']:
                 if data['Value']['node_nova_zone'] == '':
-                    data['Value']['node_nova_zone'] =
-                    node['node_nova_zone']
+                    data['Value']['node_nova_zone'] = node['node_nova_zone']
                     update = 'OK'
                     
                 else:
-                    data['Value']['node_nova_zone'] =
-                    node['node_nova_zone']
+                    data['Value']['node_nova_zone'] = node['node_nova_zone']
                     update = 'OK'
-            elif data['Value']['node_iscsi_iqn'] !=
-            node['node_iscsi_iqn']:
+            elif data['Value']['node_iscsi_iqn'] != node['node_iscsi_iqn']:
                 if data['Value']['node_iscsi_iqn'] == '':
                     data['Value']['node_iscsi_iqn'] = node['node_iscsi_iqn']
                     update = 'OK'
                 else:
-                    data['Value']['node_iscsi_iqn'] =
-                    node['node_iscsi_iqn']
+                    data['Value']['node_iscsi_iqn'] = node['node_iscsi_iqn']
                     update = 'OK'
 
-            elif data['Value']['node_swift_ring'] !=
-            node['node_swift_ring']:
+            elif data['Value']['node_swift_ring'] != node['node_swift_ring']:
                 if data['Value']['node_swift_ring'] == '':
-                    data['Value']['node_swift_ring'] =
-                    node['node_swift_ring']
+                    data['Value']['node_swift_ring'] = node['node_swift_ring']
                     update = 'OK'
                 else:
-                    data['Value']['node_swift_ring'] =
-                    node['node_swift_ring']
+                    data['Value']['node_swift_ring'] = node['node_swift_ring']
                     update = 'OK'
 
 
@@ -86,7 +79,7 @@ def check_node_update(data):
     return update
 
 
-def sendStorageConfig(conn):
+def sendStorageConfig(conn, node_id):
 
     '''
     @author         : Shashaa
@@ -116,7 +109,7 @@ def sendComputeConfig(conn, node_id):
     comments        :
     '''
     # get compute node nova config
-    config = get_node_nova_config(node_id)
+    config = node_db.get_node_nova_config(node_id)
     if config:
         print "nova config %s" % config
 
@@ -134,7 +127,7 @@ def sendComputeConfig(conn, node_id):
             sys.exit()
 
         # get ovs config for compute node
-        config = get_node_neutron_config(node_id)
+        config = node_db.get_node_neutron_config(node_id)
         if config:
 
             '''
@@ -151,8 +144,8 @@ def sendComputeConfig(conn, node_id):
                 data = pickle.loads(data)
                 print "server received %s" % data
             else:
-                print "serve did not receive ack for sent ovs config structure for compute node, 
-                exiting"
+                print "serve did not receive ack for sent ovs config structure for compute node,.\
+		 exiting"
                 sys.exit()
 
     else:
@@ -247,11 +240,10 @@ def keep_alive_check(conn):
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 print "***%s***" % data['Value']
-            elif data['Type'] == 'status' and data['Value'] ==
-            'node_up':
-                print "received %s " data['Value']
+            elif data['Type'] == 'status' and data['Value'] == 'node_ready':
+                print "received %s " % data['Value']
             else:
-                print "received %s " data
+                print "received %s " % data
 
 
 
@@ -325,7 +317,7 @@ def client_thread(conn, client_addr):
                         node_id = data['Value']['node_id']
 
                         # check for the node in DB
-                        exists = check_node_exists(node_id)
+                        exists = node_db.check_node_exists(node_id)
 
                         if exists == 'OK':
                             print "node exists in the DB"
@@ -342,7 +334,7 @@ def client_thread(conn, client_addr):
 
                                 # check node type
                                 if data['Value']['node_type'] == 'sn':
-                                    sendStorageConfig()
+                                    sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
 
@@ -350,7 +342,7 @@ def client_thread(conn, client_addr):
 
                             # node info has not been changed
                             else:
-                                print "node_id:%s,node_type: %s is ready
+                                print "node_id:%s,node_type: %s is ready .\
                                 to use" % (node_id, data['Value']['node_type'])
 
                                 sendOk(conn)
