@@ -6,6 +6,240 @@ import pickle
 from time import sleep
 import select
 
+timeout_sec = 1
+retry_count = 5
+
+
+def sendOk(sock):
+
+    '''
+    @author         : Shashaa
+    comment         : send's ok packet to the socket connected to conn
+                      input: conn socket descriptor 
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    status_ok = {
+            'Type': 'status',
+            'Length': '1',
+            'Value': 'ok'
+        }
+    sock.sendall(pickle.dumps(status_ok, -1))
+
+def recv_data(sock):
+
+    '''
+    @author         : Shashaa
+    comment         : receives data from connected socket to sock
+                      then deserializes it
+    return value    : received data
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    count=0
+    while True:
+        ready = select.select([sock], [], [], timeout_sec)
+        if ready[0]:
+            data = sock.recv(1024)
+            break
+        else:
+            count = count + 1
+            if count >= retry_count:
+                print "retry count expired..exiting!!"
+                sys.exit(1)
+            print "retrying... ", count
+
+    return data
+
+def processComputeConfig(sock):
+
+    '''
+    @author         : Shashaa
+    description     : receives compute node default config
+                      write config files for compute node
+                      checks for compute node services
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    # receive compute node default config file
+    cn_config = recv_data(sock)
+
+    # parse config file
+    if cn_config:
+        cn_config = pickle.loads(cn_config)
+
+        # send ok, ack 
+        sendOk(sock)
+        for i in range(0,2): # 2 - since three arrays are received
+            if cn_config[i]['file_name'] == 'nova.conf':
+                nova_conf = cn_config[i]
+            elif cn_config[i]['file_name'] == 'nova-compute.conf':
+                comp_conf = cn_config[i]
+            elif cn_config[i]['filename'] == 'api-paste.ini' :
+                api_conf = cn_config[i]
+    else:
+        print "compute node did not receive ovs config file, exiting!!!"
+        sys.exit()
+
+    # receive ovs config structures
+    cn_config1 = recv_data(sock)
+
+    if cn_config1:
+        cn_config1 = pickle.loads(cn_config1)
+
+        # send ok, ack
+        sendOk(sock)
+
+        # get ovs config file
+        for i in range(0,5):
+            if cn_config1[i]['file_name'] == 'ovs_quantum_plugin.ini':
+                ovs_conf = cn_config1[i]
+
+    else:
+        print "compute node did not receive nova config file, exiting!!!"
+        sys.exit()
+                
+
+    '''
+    there is no need for config file match checking, as build message is
+    sent for any update in node info or if the node is inserted into
+    cluster for the first time
+    '''
+
+    # write compute nodes nova config files
+
+    ret = write_new_config_file(nova_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "eror in writing nova conf, exiting!!!"
+        sys.exit()
+    else:
+        print "write success, nova conf"
+
+    ret = write_new_config_file(comp_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "error in writing comp conf, exiting!!!"
+        sys.exit()
+    else:
+        print "write success, comp conf"
+
+    ret = write_new_config_file(api_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "error in writing api conf, exiting!!!"
+        sys.exit()
+    else:
+        print "write success, api conf"
+
+    # write compute nodes ovs config file
+
+    ret = write_new_config_file(ovs_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "error in writing ovs conf, exiting!!!"
+        sys.exit()
+    else:
+        print "write success, ovs conf"
+
+
+    post_install_status = True
+    # check nova services
+    out = os.system('service nova-compute status')
+    status = out.read()
+    # process status TODO
+
+    out = os.system('nova-manage service list')
+    status = out.read()
+    # process status TODO
+
+    out = os.system('service quantum-plugin-openvswitch-agent restart')
+    status = out.read()
+    # process status TODO
+
+
+    out = os.system('nova host-list') # TODO
+
+
+    # check ovs services
+    out = os.system('ovs-vsctl list-br')
+    status = out.read()
+    # process status TODO
+
+
+    if post_install_status == True:
+
+        # send node_ready status message to cc
+        status_ready = {
+                'Type':'status',
+                'Length':1,
+                'Value':'node_ready'
+                }
+
+        sock.sendall(pickle.dumps(status_ready, -1))
+
+        # listen for ok message, ack -- loops infinetly
+        while True:
+            data = recv_data(sock)
+
+            if data:
+                data = pickle.loads(data)
+                print "client received %s" % data
+                break
+            else:
+                print "listening for status_ready ack"
+
+    else:
+
+        # retry for 2 times TODO
+
+        if post_install_status != True:
+
+            # send node_halt status message to cc
+            status_halt = {
+                    'Type':'status',
+                    'length':1,
+                    'Value':'node_halt'
+                    }
+            sock.sendall(pickle.dumps(status_halt, -1))
+
+            # listen for ok message, ack -- loop infinetly
+            while True:
+                data = recv_data(sock)
+
+                if data:
+                    data = pickle.loads(data)
+                    print "client received %s" % data
+                    break
+                else:
+                    print "listening for status_halt ack"
+
+    # send keep alive messages
+    keep_alive(sock)
+
+def processStorageConfig():
+
+    '''
+    @author         : Shashaa
+    description     : receives compute node default config
+                      checks for existing config matching
+                      checks for compute node services
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    print "TODO"
 
 def keep_alive(sock):
 
@@ -79,17 +313,26 @@ try:
             # send node data
             data = {
                 'Type': 'Node_info', 
-                'Length': 2, 
+                'Length': 10, 
                 'Value': 
                     {
-                    'Node_id':'abcd',
-                    'Node_Type':'storage',
-                    'Node_IP':'192.168.10.35',
-                    'Node_Mgmt_IP':'10.10.10.10'
+                    'node_name':'box123',
+                    'node_type':'sn',
+                    'node_mgmt_ip':'10.10.10.10',
+                    'node_data_ip':'172.16.16.16',
+                    'node_controller':'ciac',
+                    'node_cloud_name':'cloud1',
+                    'node_nova_zone':'',
+                    'node_iscsi_iqn':'',
+                    'node_swift_ring':'',
+                    'node_id':'trans123'
                     }
                 }
     
+
+            node_type = 'cn'
             print "sending %s " % data
+            print "node_id = %s" % data['Value']['Node_id']
             sock.sendall(pickle.dumps(data, -1))
 
             # receive status message, retry_count
@@ -117,54 +360,15 @@ try:
                 elif data['Type'] == 'status' and data['Value'] == 'build':
                     print "client received %s" % data['Value']
 
-                    # accept cinder config info, retry_count
-                    count=0
-                    while True:
-                        ready = select.select([sock], [], [], timeout_sec)
-                        if ready[0]:
-                            data = sock.recv(1024)
-                            break
-                        else:
-                            count = count + 1
-                            if count >= retry_count:
-                                print "retry count expired..exiting!!"
-                                sys.exit(1)
-                                print "retrying... ", count
-                    if data:
-                        data = pickle.loads(data)
-                        print "client received %s" % data
-                        if data['Type'] == 'config':
-                            print "write config file ... TODO"
-                        else:
-                            print "client did not receive valid packet"
-
-                    # accept swift config info, retry_count
-                    count=0
-                    while True:
-                        ready = select.select([sock], [], [], timeout_sec)
-                        if ready[0]:
-                            data = sock.recv(1024)
-                            break
-                        else:
-                            count = count + 1
-                            if count >= retry_count:
-                                print "retry count expired..exiting!!"
-                                sys.exit(1)
-                                print "retrying... ", count
-
-                    if data:
-                        data = data.pickle.loads(data)
-                        print "client received %s" % data
-                        if data['Type'] == 'config':
-                            print "write config file ... TODO"
-                        else:
-                            print "client did not receive valid packet"
-
+                    if node_type == 'cn':
+                        processComputeConfig(sock)
+                    elif node_type == 'sn':
+                        processStorageConfig(sock)
 
                 else:
                     print "client received invalid status message"
             else:
-                print "client did not receive status message"
+                print "client did not receive status message, exiting!!!"
                 sys.exit(1)
 
         else:
@@ -175,32 +379,4 @@ try:
 finally:
     print "closing client socket"
     sock.close()
-
-
-def recv_data(sock):
-
-    '''
-    @author         : Shashaa
-    comment         :
-    return value    :
-    create date     :
-    ----------------------
-    modify date     :
-    @author         :
-    comments        :
-    '''
-    while True:
-        ready = select.select([sock], [], [], timeout_sec)
-        if ready[0]:
-            data = sock.recv(1024)
-            break
-        else:
-            count = count + 1
-            if count >= retry_count:
-                print "retry count expired..exiting!!"
-                sys.exit(1)
-            print "retrying... ", count
-    data = pickle.loads(data)
-
-    return data
 

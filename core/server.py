@@ -13,11 +13,197 @@ count=0
 retry_count=5
 
 
+def check_node_update(data):
+
+    '''
+    @author         : Shashaa
+    comment         : get the node from TC ciac DB, check for any
+                      mismatch in node_info.
+                      Input: data dictionary of node_info
+    return value    : OK if there is any mismatch, else NA
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    update = 'NA'
+    node_id = data['Value']['node_id']
+
+    node = get_node(node_id)
+
+    if node == 'NA' or node == 'ERROR':
+        print "node_id : %s not found in the DB, exiting !!!" % node_id
+        sys.exit()
+    else:
+        if node['status'] == 'OK':
+
+            # check for mismatch records
+
+            if data['Value']['node_data_ip'] != node['node_data_ip']:
+                update = 'OK'
+            elif data['Value']['node_mgmt_ip'] != node['node_mgmt_ip']:
+                update = 'OK'
+            elif data['Value']['node_controller'] !=
+            node['node_controller']:
+                update = 'OK'
+            elif data['Value']['node_cloud_name'] !=
+            node['node_cloud_name']:
+                update = 'OK'
+            elif data['Value']['node_nova_zone'] != node['node_nova_zone']:
+                if data['Value']['node_nova_zone'] == '':
+                    data['Value']['node_nova_zone'] =
+                    node['node_nova_zone']
+                    update = 'OK'
+                    
+                else:
+                    data['Value']['node_nova_zone'] =
+                    node['node_nova_zone']
+                    update = 'OK'
+            elif data['Value']['node_iscsi_iqn'] !=
+            node['node_iscsi_iqn']:
+                if data['Value']['node_iscsi_iqn'] == '':
+                    data['Value']['node_iscsi_iqn'] = node['node_iscsi_iqn']
+                    update = 'OK'
+                else:
+                    data['Value']['node_iscsi_iqn'] =
+                    node['node_iscsi_iqn']
+                    update = 'OK'
+
+            elif data['Value']['node_swift_ring'] !=
+            node['node_swift_ring']:
+                if data['Value']['node_swift_ring'] == '':
+                    data['Value']['node_swift_ring'] =
+                    node['node_swift_ring']
+                    update = 'OK'
+                else:
+                    data['Value']['node_swift_ring'] =
+                    node['node_swift_ring']
+                    update = 'OK'
+
+
+
+    return update
+
+
+def sendStorageConfig(conn):
+
+    '''
+    @author         : Shashaa
+    comment         : pulls storage nodes default configurationa and
+                      sends it to node via socket
+                      Input: socket descriptor fro communication
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    print "In sendStorageConfig TODO"
+def sendComputeConfig(conn, node_id):
+
+    '''
+    @author         : Shashaa
+    comment         : pulls out compute node default configration and
+                      sends it to new node via socket
+                      Input: socket desriptor
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    # get compute node nova config
+    config = get_node_nova_config(node_id)
+    if config:
+        print "nova config %s" % config
+
+        # send config
+        conn.sendall(pickle.dumps(config, -1))
+        print "sent compute node nova config!!"
+
+        # listen for ok message, ack
+        data = recv_data(conn)
+        if data:
+            data = pickle.loads(data)
+            print "server received %s" % data
+        else:
+            print "server did not receive ack for sent nova config for compute node, exiting!!!"
+            sys.exit()
+
+        # get ovs config for compute node
+        config = get_node_neutron_config(node_id)
+        if config:
+
+            '''
+            here we are sending the complete neutron config structure,
+            the receiving compute node should extract necessary config
+            structure
+            '''
+            conn.sendall(pickle.dumps(config, -1))
+            print "sent compute node ovs config"
+
+            # listen for ok message, ack
+            data = recv_data(conn)
+            if data:
+                data = pickle.loads(data)
+                print "server received %s" % data
+            else:
+                print "serve did not receive ack for sent ovs config structure for compute node, 
+                exiting"
+                sys.exit()
+
+    else:
+        print "server did not extract nova config, exiting"
+        sys.exit()
+
+    print "server done with sending config files"
+    
+def handle():
+
+    '''
+    @author         : Shashaa
+    comment         : handle exception in node_type
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        : TODO
+    '''
+    print "Unknowm node_type"
+    sys.exit()
+
+
+def sendOk(conn):
+
+    '''
+    @author         : Shashaa
+    comment         : send's ok packet to the socket connected to conn
+                      input: conn socket descriptor 
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    status_ok = {
+            'Type': 'status',
+            'Length': '1',
+            'Value': 'ok'
+        }
+    conn.sendall(pickle.dumps(status_ok, -1))
+
 def recv_data(conn):
 
     '''
     @author         : Shashaa
-    comment         :
+    comment         : receives data from socket connected to conn
+                      retries 'retry_count' for 'timeout_sec' then exits
+                      out of the current thread control
     return value    :
     create date     :
     ----------------------
@@ -61,6 +247,11 @@ def keep_alive_check(conn):
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 print "***%s***" % data['Value']
+            elif data['Type'] == 'status' and data['Value'] ==
+            'node_up':
+                print "received %s " data['Value']
+            else:
+                print "received %s " data
 
 
 
@@ -90,23 +281,25 @@ def sendBuild(conn):
 
 
 def client_thread(conn, client_addr):
+    '''
+    @author         : Shashaa
+    comment         : contol thread that is called for each client
+                      connection from nodes inserted into the cluster.
+                      * does connection handshaking
+                      * receives node information
+                      * processes configuration of storage, compute node
+                      Input: connection descriptor, client address
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
     try:
         while True:
 
             # receive data from client, retry_count
-            '''
-            while True:
-                ready = select.select([conn], [], [], timeout_sec)
-                if ready[0]:
-                    data = conn.recv(1024)
-                    break
-                else:
-                    count = count + 1
-                    if count >= retry_count:
-                        print "retry count expired..exiting!!"
-                        sys.exit(1)
-                    print "retrying... ", count
-            '''
             data = recv_data(conn)
 
             # received data from client
@@ -118,28 +311,9 @@ def client_thread(conn, client_addr):
                 if data['Type'] == 'connect':
 
                     # construct a TLV status ok packet
-                    status_ok = {
-                        'Type': 'status',
-                        'Length': '1',
-                        'Value': 'ok'
-                        }
-                    conn.sendall(pickle.dumps(status_ok, -1))
+                    sendOk(conn)
 
                     # recv data, retry_count
-                    '''
-                    count=0
-                    while True:
-                        ready = select.select([conn], [], [], timeout_sec)
-                        if ready[0]:
-                            data = conn.recv(1024)
-                            break
-                        else:
-                            count = count + 1
-                            if count >= retry_count:
-                                print "retry count expired..exiting!!"
-                                sys.exit(1)
-                            print "retrying... ", count
-                     '''
                     data = recv_data(conn)
 
                     # received data from client
@@ -147,45 +321,99 @@ def client_thread(conn, client_addr):
                         data = pickle.loads(data)
                         print "server received %s" % data
 
+                        # extract node_id from the packet
+                        node_id = data['Value']['node_id']
+
                         # check for the node in DB
-                        #result = check_node(data)
+                        exists = check_node_exists(node_id)
 
-                        ''' check for node existence and write if not
-                        available. If exists check for node updation if
-                        there is no updation then send status_ok. else check
-                        for node_type and send status_build message
-                         
-                        '''
+                        if exists == 'OK':
+                            print "node exists in the DB"
 
-                        '''
-                        if result == '':
-                            print ""
-                        elif result == '':
-                            print ""
-                        '''
+                            # check for updation
+                            update = 'NA'
+                            update = check_node_update(data)
 
-                        # construct status packet
-                        status_ok = {
-                            'Type': 'status',
-                            'Length': '1',
-                            'Value': 'ok'
-                            }
-                        print "sending status_ok"
-                        conn.sendall(pickle.dumps(status_ok, -1))
-                        # go for keep_alive check
-                        keep_alive_check(conn)
+                            if update == 'OK':
+                                print "sending build mesage to %s,node_type: %s" % (node_id,
+                                data['Value']['node_type'])
 
-                        is_update = True
+                                sendBuild(conn)
 
-                        # check for node_type
-                        #print "Node type: %s" % data['Values']['Node_Type']
-                        if data['Value']['Node_Type'] == 'storage' and is_update:
-                            sendBuild(conn)
-                        elif data['Value']['Node_Type'] == 'compute' and is_update:
-                            sendBuild(conn)
-                        
+                                # check node type
+                                if data['Value']['node_type'] == 'sn':
+                                    sendStorageConfig()
+                                elif data['Value']['node_type'] == 'cn':
+                                    sendComputeConfig(conn, node_id)
+
+                                    keep_alive_check(conn)
+
+                            # node info has not been changed
+                            else:
+                                print "node_id:%s,node_type: %s is ready
+                                to use" % (node_id, data['Value']['node_type'])
+
+                                sendOk(conn)
+                                # go for keep_alive check
+                                keep_alive_check(conn)
+                                
+
+                        # node does not exists in the ciac DB
+                        else:
+                            print "new node being inserted in DB"
+
+                            # make a DB compatible dictionary 
+                            input_dict = {
+                                    'node_id':data['Value']['node_id'],
+                                    'node_name':data['Value']['node_name'],
+                                    'node_type':data['Value']['node_type'],
+                                    'node_data_ip':data['Value']['node_data_ip'],
+                                    'node_mgmt_ip':data['Value']['node_mgmt_ip'],
+                                    'node_controller':data['Value']['node_controller'],
+                                    'node_cloud_name':data['Value']['node_cloud_name'],
+                                    'node_nova_zone':data['Value']['node_nova_zone'],
+                                    'node_iscsi_iqn':data['Value']['node_iscsi_iqn'],
+                                    'node_swift_ring':data['Value']['node_swift_ring']
+                                    }
+                            # insert into ciac DB
+                            insert = insert_node(input_dict)
+
+                            if insert == 'OK':
+                                print "new node %s inserted sucessfully in DB" % node_id
+
+                                # check for node_type, then send build message
+                                sendBuild(conn)
+
+                                if data['Value']['node_type'] == 'sn':
+                                    sendStorageConfig(conn)
+                                elif data['Value']['node_type'] == 'cn':
+                                    node_id = data['Value']['node_id']
+                                    sendComputeConfig(conn, node_id)
+
+                                    while True:
+                                        data = recv_data(conn)
+
+                                        if data:
+                                            data = pickle.loads(data)
+                                            if data['Type'] == 'status':
+                                                print "server received %s" % data['Value']
+                                                sendOk(conn)
+                                                break
+                                        else:
+                                            print "waiting for status ready/halt from compute node"
+
+                                    # go for keep alive check
+                                    keep_alive_check(conn)
+
+                            else:
+                                print "error in inserting new node in DB, exiting !!!"
+                                sys.exit()
+
+                    
+                    # server did not receive node_info
                     else:
                         print "server did not receive any data"
+                # handshake process failure
                 else:
                     print "server did not receive connect, exiting"
                     sys.exit(1)
