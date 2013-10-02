@@ -24,6 +24,8 @@ chown -R transuser:transystem /var/log/caclogs
 fi
 
 #add the django site to its proper place in the file system
+echo 'Adding Coalesce to the opt directory.'
+cp -Rf ./interfaces/Coalesce /opt
 
 #add the shell to its proper place
 

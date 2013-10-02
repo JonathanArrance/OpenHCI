@@ -95,7 +95,7 @@ def write_new_config_file(file_dict):
     config = None
     if(check_fqp == False):
         logger.sys_warning("The file %s does not exists, Creating..." %(fqp))
-        #os.system('touch %s' %(scratch))
+        os.system('mkdir -p %s' %(file_dict['file_path']))
         config = open(scratch, 'w')
     else:
         logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))
@@ -255,7 +255,7 @@ def update_system_variables(update_array):
             logger.sgl_error("Could not insert system config into the Transcirrus db.")
             return 'ERROR'
 
-def update_cloud_controller_name():
+def update_cloud_controller_name(update_dict):
     """
     DESC: Update the cloud controller name.
     INPUT: update_dict - old_name
@@ -282,8 +282,8 @@ def update_cloud_controller_name():
     #check if the old name is valid
     #update the host_system colum in the trans_system settings table
     try:
-        select_name = {'select':"param_value", 'from':"trans_system_settings", 'where':"parameter='%s'" %(update_dict['old_name'])}
-        db.pg_select(select_name)
+        select_id = {'select':"param_value", 'from':"trans_system_settings", 'where':"parameter='cloud_controller_id'", 'and':"host_system='%s'"%(update_dict['old_name'])}
+        nodeid = db.pg_select(select_id)
     except:
         logger.sql_error("Could not validate the cloud controller name.")
         return 'ERROR'
@@ -291,7 +291,7 @@ def update_cloud_controller_name():
     #update the name in the trans_nodes table
     try:
         db.pg_transaction_begin()
-        update_node = {'table':"trans_nodes",'set':"node_name='%s'" %(update_dict['new_name']),'where':"node_name='%s'" %(update_dict['old_name'])}
+        update_node = {'table':"trans_nodes",'set':"node_name='%s'" %(update_dict['new_name']),'where':"node_id='%s'" %(node[0][0])}
         db.pg_update(update_node)
         db.pg_transaction_commit()
     except:
@@ -302,7 +302,7 @@ def update_cloud_controller_name():
     #update the node controller variable in the trans_nodes table
     try:
         db.pg_transaction_begin()
-        update_node_con = {'table':"trans_nodes",'set':"node_controller='%s'" %(update_dict['new_name']),'where':"node_name='%s'" %(update_dict['old_name'])}
+        update_node_con = {'table':"trans_nodes",'set':"node_controller='%s'" %(update_dict['new_name']),'where':"node_controller='%s'" %(update_dict['old_name'])}
         db.pg_update(update_node_con)
         db.pg_transaction_commit()
     except:
@@ -311,6 +311,7 @@ def update_cloud_controller_name():
         return 'ERROR'
 
     #update the cloud controller variable in the trans_system_settings table
+    '''
     try:
         db.pg_transaction_begin()
         update = {'table':"trans_system_settings",'set':"param_value='%s'" %(update_dict['new_name']),'where':"param_value='default_cloud_controller'"}
@@ -320,7 +321,7 @@ def update_cloud_controller_name():
         db.pg_transaction_rollback()
         logger.sql_error("Could not update trans node table with new default_cloud_controller name.")
         return 'ERROR'
-
+    '''
     #update the host_system colum in the trans_system settings table
     try:
         db.pg_transaction_begin()
@@ -412,8 +413,17 @@ def get_system_defaults():
                    - TRAN_DB_NAME
                    - TRAN_DB_PORT
                    - ADMIN_TOKEN
-                   - API_IP
+                   - API_IP - "public api ip"
+                   - MGMT_IP
+                   - INT_API_IP
+                   - ADMIN_API_IP
                    - CLOUD_CONTROLLER
+                   - CLOUD_CONTROLLER_ID
+                   - CLOUD_NAME
+                   - OS_DB
+                   - OS_DB_USER
+                   - OS_DB_PASS
+                   - OS_DB_PORT
                    - MEMBER_ROLE_ID
                    - ADMIN_ROLE_ID
     ACCESS: Wide open
@@ -432,8 +442,17 @@ def get_system_variables(system_name):
                    - TRAN_DB_NAME
                    - TRAN_DB_PORT
                    - ADMIN_TOKEN
-                   - API_IP
+                   - API_IP - "public api ip"
+                   - MGMT_IP
+                   - INT_API_IP
+                   - ADMIN_API_IP
                    - CLOUD_CONTROLLER
+                   - CLOUD_CONTROLLER_ID
+                   - CLOUD_NAME
+                   - OS_DB
+                   - OS_DB_USER
+                   - OS_DB_PASS
+                   - OS_DB_PORT
                    - MEMBER_ROLE_ID
                    - ADMIN_ROLE_ID
     ACCESS: Wide open
@@ -446,14 +465,17 @@ def get_system_variables(system_name):
 
     db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     try:
-        find_sys_dict = {'select':"transcirrus_db,tran_db_user,tran_db_pass,tran_db_name,tran_db_port,admin_token,api_ip,default_cloud_controller,default_admin_role_id,default_member_role_id"
+        find_sys_dict = {'select':"transcirrus_db,tran_db_user,tran_db_pass,tran_db_name,tran_db_port,admin_token,api_ip,mgmt_ip,int_api_ip,admin_api_ip,.\
+                         cloud_controller,cloud_controller_id,cloud_name,os_db,os_db_user,os_db_pass,os_db_port,admin_role_id,member_role_id"
                           ,'from':"trans_system_settings",'where':"node_id='%s'" %(node_id)}
         sys = db.pg_select(find_node_dict)
         db.pg_close_connection()
         if(sys):
             r_dict = {'TRANSCIRRUS_DB':sys[0][0],'TRAN_DB_USER':sys[0][1],'TRAN_DB_PASS':sys[0][2],'TRAN_DB_NAME':sys[0][3],
-                      'TRAN_DB_PORT':node[0][4],'DEFAULT_ADMIN_TOKEN':sys[0][5],'DEFAULT_API_IP':node[0][6],
-                      'DEFAULT_CLOUD_CONTROLER':node[0][7],'DEFAULT_ADMIN_ROLE_ID':sys[0][8],'DEFAULT_MEMBER_ROLE_ID':sys[0][9]}
+                      'TRAN_DB_PORT':sys[0][4],'ADMIN_TOKEN':sys[0][5],'API_IP':sys[0][6],'MGMT_IP':sys[0][7],'INT_API_IP':sys[0][8],
+                      'ADMIN_API_IP':sys[0][9],'CLOUD_CONTROLLER':sys[0][10],'CLOUD_CONTROLLER_ID':sys[0][11],'CLOUD_NAME':sys[0][12],
+                      'OS_DB':sys[0][13],'OS_DB_USER':sys[0][14],'OS_DB_PASS':sys[0][15],'OS_DB_PORT':sys[0][16],'ADMIN_ROLE_ID':sys[0][17],
+                      'MEMBER_ROLE_ID':sys[0][18]}
         else:
             return'ERROR'
     except:

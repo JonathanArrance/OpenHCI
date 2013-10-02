@@ -27,7 +27,7 @@ def check_config_type():
     db = util.db_connect()
 
     try:
-        single = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='single_node' and host_system='%s'" %(config.DEFAULT_CLOUD_CONTROLER)}
+        single = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='single_node' and host_system='%s'" %(config.CLOUD_CONTROLLER)}
         nodeconfig = db.pg_select(single)
     except:
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
@@ -64,7 +64,7 @@ def enable_multi_node():
         db = util.db_connect()
         try:
             db.pg_transaction_begin()
-            update_config = {'table':"trans_system_settings",'set':"param_value='0'",'where':"parameter='single_node'",'and':"host_system='%s'" %(config.DEFAULT_CLOUD_CONTROLER)}
+            update_config = {'table':"trans_system_settings",'set':"param_value='0'",'where':"parameter='single_node'",'and':"host_system='%s'" %(config.CLOUD_CONTROLLER)}
             db.pg_update(update_config)
             #This may be a complete HACK need more research
             os.system('sudo /etc/init.d/isc-dhcp-server start')
@@ -172,7 +172,7 @@ def check_first_time_boot():
 
     r_dict = None
     try:
-        single = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='first_time_boot'", 'and':"host_system='%s'" %(config.DEFAULT_CLOUD_CONTROLER)}
+        single = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='first_time_boot'", 'and':"host_system='%s'" %(config.CLOUD_CONTROLLER)}
         nodeconfig = db.pg_select(single)
     except:
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
@@ -211,13 +211,12 @@ def set_first_time_boot(set_flag):
 
     try:
         db.pg_transaction_begin()
-        update_config = {'table':"trans_system_settings",'set':"param_value='%s'" %(value),'where':"parameter='first_time_boot'",'and':"host_system='%s'" %(config.DEFAULT_CLOUD_CONTROLER)}
+        update_config = {'table':"trans_system_settings",'set':"param_value='%s'" %(value),'where':"parameter='first_time_boot'",'and':"host_system='%s'" %(config.CLOUD_CONTROLLER)}
         db.pg_update(update_config)
         db.pg_transaction_commit()
         r_dict = {'first_time_boot':'OK'}
     except:
-        db.pg_transaction_rollback()
-        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        db.pg_transaction_wror("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'first_time_boot':'ERROR'}
 
     return r_dict
@@ -236,7 +235,7 @@ def check_admin_pass_status():
 
     r_dict = {}
     try:
-        single = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='admin_pass_set'", 'and':"host_system='%s'" %(config.DEFAULT_CLOUD_CONTROLER)}
+        single = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='admin_pass_set'", 'and':"host_system='%s'" %(config.CLOUD_CONTROLLER)}
         nodeconfig = db.pg_select(single)
     except:
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
@@ -275,7 +274,7 @@ def set_admin_pass_status(pass_flag):
 
     try:
         db.pg_transaction_begin()
-        update = {'table':"trans_system_settings",'set':"param_value='%s'" %(value),'where':"parameter='admin_pass_set'",'and':"host_system='%s'" %(config.DEFAULT_CLOUD_CONTROLER)}
+        update = {'table':"trans_system_settings",'set':"param_value='%s'" %(value),'where':"parameter='admin_pass_set'",'and':"host_system='%s'" %(config.CLOUD_CONTROLLER)}
         db.pg_update(update)
         db.pg_transaction_commit()
         r_dict = {'pass_flag_set':'OK'}

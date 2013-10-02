@@ -15,7 +15,8 @@ ADMIN_TOKEN="cheapass"
 API_IP="192.168.10.30"
 
 #change this, update as neccessary from setup operation
-CLOUD_CONTROLER="jon-devstack"
+CLOUD_CONTROLLER="jon-devstack"
+CLOUD_CONTROLLER_ID="000-12345678-12345"
 CLOUD_NAME="RegionOne"
 
 #DEFAULT openstack roles
@@ -27,3 +28,4 @@ OS_DB="192.168.10.30"
 OS_DB_PORT="5432"
 OS_DB_USER="transuser"
 OS_DB_PASS="builder"
+
