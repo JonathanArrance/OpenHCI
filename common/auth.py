@@ -114,24 +114,6 @@ class authorization:
             raise Exception("The user: %s, does not appear to hava an account." %(self.username))
 
 
-    def check_first_time_boot():
-        print "not implemented"
-    
-    def check_admin_pass_set():
-        print "not implemeted"
-        
-    def set_admin_pass():
-        print "not implemeted"
-    
-    def set_first_time_boot():
-        print "not implemeted"
-
-    def delete_admin_pass():
-        print "not implemeted"
-    
-    def delete_first_time_boot():
-        print "not implemeted"
-
 #DESC: Check if the user exists in the database
 #INPUT: self object
 #OUTPUT: Array of array containing user info from the Transcirrus database on success

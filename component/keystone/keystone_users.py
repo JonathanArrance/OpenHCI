@@ -708,10 +708,13 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
-    def get_user_credentials():
-        print "not implemented"
-    def update_user_credentials():
-        print "not implemented"
+    def update_user_password():
+        """
+        DESC: Change the user password.
+        """
+        
+        return 1
+
     def remove_user_credentials():
         print "not implemented"
         

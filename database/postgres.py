@@ -179,6 +179,7 @@ class pgsql:
     #input: 
     #output:
     def pg_update(self,options):
+        logger.sql_info(options)
         logger.sql_info("Performing simple UPDATE operation pg_update")
 
         #initialize values
@@ -189,10 +190,11 @@ class pgsql:
 
         #the sql string
         SQL = "UPDATE "
-
+        logger.sql_info(SQL)
         if 'table' in options:
             tableopt = options['table']
             SQL += '%s ' %tableopt
+            logger.sql_info(SQL)
         else:
             logger.sql_error("No table specified in simple sql update operation.")
             logger.sql_error(exceptions.SystemError)
@@ -200,6 +202,7 @@ class pgsql:
         if 'set' in options:
             setopt = options['set']
             SQL += 'SET %s ' %setopt
+            logger.sql_info(SQL)
         else:
             logger.sql_error("No set options specified in simple sql update operation.")
             logger.sql_error(exceptions.SystemError) 
@@ -208,11 +211,12 @@ class pgsql:
             #add check for more than one where option
             whereopt = options['where']
             SQL += 'WHERE %s ' %whereopt
-
+            logger.sql_info(SQL)
 
         if 'and' in options:
             andopt = options['and']
             SQL += 'AND %s' % andopt
+            logger.sql_info(SQL)
 
         logger.sql_info(SQL)
         self.cur.execute(SQL)

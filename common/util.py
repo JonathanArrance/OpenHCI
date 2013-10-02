@@ -2,6 +2,7 @@
 import sys
 import os
 import shutil
+import subprocess
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -151,6 +152,358 @@ def delete_config_file(file_dict):
     NOTES: This will be used as part fo the cleanup procedure to set the system back to
            the factory state.
     """
+    print "not implemented"
+
+def insert_system_variables(input_array):
+    """
+    DESC: Used to take system variables in from the user interface and insert them into the
+          Transcirrus system db where they are used for config_files. This is NOT the same
+          thing as node config tables. This is for the overall system. These variables
+          apply to the ciac node for the most part.
+    INPUT: array of input_dict - system_name
+                               - parameter
+                               - param_value
+    OUTPUT: OK - success
+            ERROR - fail
+    ACCESS: Wide open
+    NOTE: This table is very extndable and we can add almost anythng we want in here.
+          The input will look like this
+          [{'system_name':"jon",parameter:"mgmt_ip",'param_value':"192.168.10.2"},{'system_name':"jon",parameter:"default_region",'param_value':"RegionOne"}]
+    """
+    for key, val in file_dict.items():
+        #skip over these
+        if(val == ""):
+            logger.sys_error("The value %s was left blank" %(val))
+            raise Exception("The value %s was left blank" %(val))
+        if(key not in file_dict):
+            logger.sys_error("Required info not specified for file creation.")
+            raise Exception ("Required info not specified for file creation.")
+
+    db = db_connect()
+
+    for dictionary in input_array:
+        try:
+            db.pg_transaction_begin()
+            insert = {"parameter":value['parameter'],"param_value":value['param_value'],'host_system':value['system_name']}
+            db.pg_insert("trans_system_settings",insert)
+            db.pg_transaction_commit()
+            return 'OK'
+        except:
+            db.pg_transaction_rollback()
+            logger.sgl_error("Could not insert system config into the Transcirrus db.")
+            return 'ERROR'
+
+def delete_system_variables(del_dict):
+    """
+    DESC: Used to delete a variable from the transcirrus systems settings db. This is mostly used when resetting a box to factory.
+    INPUT:array of delete_dict - system_name
+                               - parameter - op
+                               - param_value - op
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    ACCESS: Wide open
+    NOTE: Note if only the system name is specified all values will be removed from the DB.
+          The input will look like this
+          [{'system_name':"jon",parameter:"mgmt_ip",'param_value':"192.168.10.2"},{'system_name':"jon",parameter:"default_region",'param_value':"RegionOne"}]
+    """
+    print "not implemented"
+
+def update_system_variables(update_array):
+    """
+    DESC: Used to update a variable in the transcirrus systems settings db. 
+    INPUT:array of update_dict - system_name
+                               - parameter - op
+                               - param_value - op
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    ACCESS: Wide open
+    NOTE: This call will only update system variables. Not the actual system name. YOu need to use update_cloud_controller_name() in order to change the
+          cloud controller/ciac node name.
+          The update input will look like this
+          [{'system_name':"jon",parameter:"mgmt_ip",'param_value':"192.168.10.2"},{'system_name':"jon",parameter:"default_region",'param_value':"RegionOne"}]
+    """
+    #check if the input is an array
+    if(len(update_array) == 0):
+        logger.sys_warning("The input array did contain any values")
+        return 'NA'
+
+    db = db_connect()
+
+    for value in input_array:
+        for key,val in value.items():
+            #skip over these
+            if(val == ""):
+                logger.sys_error("The value %s was left blank" %(val))
+                raise Exception("The value %s was left blank" %(val))
+            if(key == ""):
+                logger.sys_error("The key was left blank")
+                raise Exception("The key was left blank")
+        if(('parameter' not in value) or ('param_value' not in value) or ('system_name' not in value)):
+            logger.sys_error("Required info not specified for file creation.")
+            raise Exception ("Required info not specified for file creation.")
+
+        try:
+            db.pg_transaction_begin()
+            update = {'table':"trans_system_settings",'set':"param_value='%s'"%(value['param_value']),'where':"host_system='%s'" %(value['system_name']),'and':"parameter='%s'" %(value['parameter'])}
+            db.pg_update(update)
+            db.pg_transaction_commit()
+            return 'OK'
+        except:
+            db.pg_transaction_rollback()
+            logger.sgl_error("Could not insert system config into the Transcirrus db.")
+            return 'ERROR'
+
+def update_cloud_controller_name():
+    """
+    DESC: Update the cloud controller name.
+    INPUT: update_dict - old_name
+                       - new_name
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    ACCESS: Wide open
+    NOTE: Update the cloud controller name on the physical system as well as in the various transcirrsus db tables.
+          also regenerate the system config.py file.
+    """
+    for key,val in update_dict.items():
+        #skip over these
+        if(val == ""):
+            logger.sys_error("The value %s was left blank" %(val))
+            raise Exception("The value %s was left blank" %(val))
+        if(key == ""):
+            logger.sys_error("The key was left blank")
+            raise Exception("The key was left blank")
+        if((key != 'old_name') or (key != 'new_name')):
+            logger.sys_error("The key was invalid.")
+            raise Exception("The key was invalid")
+
+    #check if the old name is valid
+    #update the host_system colum in the trans_system settings table
+    try:
+        select_name = {'select':"param_value", 'from':"trans_system_settings", 'where':"parameter='%s'" %(update_dict['old_name'])}
+        db.pg_select(select_name)
+    except:
+        logger.sql_error("Could not validate the cloud controller name.")
+        return 'ERROR'
+
+    #update the name in the trans_nodes table
+    try:
+        db.pg_transaction_begin()
+        update_node = {'table':"trans_nodes",'set':"node_name='%s'" %(update_dict['new_name']),'where':"node_name='%s'" %(update_dict['old_name'])}
+        db.pg_update(update_node)
+        db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not update trans node table with new cloud controller node name.")
+        return 'ERROR'
+
+    #update the node controller variable in the trans_nodes table
+    try:
+        db.pg_transaction_begin()
+        update_node_con = {'table':"trans_nodes",'set':"node_controller='%s'" %(update_dict['new_name']),'where':"node_name='%s'" %(update_dict['old_name'])}
+        db.pg_update(update_node_con)
+        db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not update trans node table with new cloud controller node name.")
+        return 'ERROR'
+
+    #update the cloud controller variable in the trans_system_settings table
+    try:
+        db.pg_transaction_begin()
+        update = {'table':"trans_system_settings",'set':"param_value='%s'" %(update_dict['new_name']),'where':"param_value='default_cloud_controller'"}
+        db.pg_update(update)
+        db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not update trans node table with new default_cloud_controller name.")
+        return 'ERROR'
+
+    #update the host_system colum in the trans_system settings table
+    try:
+        db.pg_transaction_begin()
+        update_name = {'table':"trans_system_settings",'set':"host_system='%s'" %(update_dict['new_name']),'where':"host_system='%s'" %(update_dict['old_name'])}
+        db.pg_update(update_name)
+        db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not update trans system settings table with new host system name.")
+        return 'ERROR'
+
+    #disconnect from db
+    db.pg_close_connection()
+
+    #rewrite the default config.py file and save to transcirrus.common
+    system_vars = get_system_variables(update_dict['new_name'])
+
+    #build a file descriptor for config.py
+    #NODE - check quantum version make path based on that.
+    config_array = []
+    conf = {}
+    for key,val in system_vars:
+        row = key+"="+value
+        config_array.append(row)
+    conf['op'] = 'new'
+    conf['file_owner'] = 'transuser'
+    conf['file_group'] = 'transystem'
+    conf['file_perm'] = '644'
+    conf['file_path'] = '/usr/lib/python2.7/dist-packages/transcirrus/common/'
+    conf['file_name'] = 'config.py'
+    conf['file_content'] = config_array
+
+    #build the new config.py out
+    write = write_new_config_file(conf)
+    if(write == 'OK'):
+        return 'OK'
+    elif(write == 'ERORR'):
+        return 'ERROR'
+    else:
+        return 'NA'
+
+def get_cloud_controller_name():
+    """
+    DESC: get the cloud controller name from the transcirrus db
+    INPUT: None
+    OUTPUT: r_dict - cloud_controller
+    ACCESS: Wide open
+    NOTE: The cloud controller is also the ciac node system name. These are human readable names. This
+          is not the same as the node id.
+    """
+    db = db_connect()
+    try:
+        get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='default_cloud_controller'"}
+        name = db.pg_select(get_name)
+        r_dict = {'cloud_controller':name[0][0]}
+    except:
+        logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")
+        raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
+
+    return r_dict
+
+def get_cloud_name():
+    """
+    DESC: get the cloud name from the transcirrus db
+    INPUT: None
+    OUTPUT: r_dict - cloud_name
+    ACCESS: Wide open
+    NOTE: The cloud controller is also the ciac node system name. These are human readable names.
+          The cloud name is needed when setting up api endpoints.
+    """
+    db = db_connect()
+    try:
+        get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='cloud_name'"}
+        name = db.pg_select(get_name)
+        r_dict = {'cloud_name':name[0][0]}
+    except:
+        logger.sql_error("Could not retrieve cloud name from the Transcirrus db.")
+        raise Exception("Could not retrieve cloud name from the Transcirrus db.")
+
+    return r_dict
+
+def get_system_defaults():
+    """
+    DESC: Return the system settings from the transcirrus system settings db.
+    INPUT: system_name
+    OUTPUT: r_dict - TRANSCIRRUS_DB
+                   - TRAN_DB_USER
+                   - TRAN_DB_PASS
+                   - TRAN_DB_NAME
+                   - TRAN_DB_PORT
+                   - ADMIN_TOKEN
+                   - API_IP
+                   - CLOUD_CONTROLLER
+                   - MEMBER_ROLE_ID
+                   - ADMIN_ROLE_ID
+    ACCESS: Wide open
+    NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
+          config.py file that is in transcirrus.common by calling write_new_config.py
+    """
+    return 1
+
+def get_system_variables(system_name):
+    """
+    DESC: Return the system settings from the transcirrus system settings db.
+    INPUT: system_name
+    OUTPUT: r_dict - TRANSCIRRUS_DB
+                   - TRAN_DB_USER
+                   - TRAN_DB_PASS
+                   - TRAN_DB_NAME
+                   - TRAN_DB_PORT
+                   - ADMIN_TOKEN
+                   - API_IP
+                   - CLOUD_CONTROLLER
+                   - MEMBER_ROLE_ID
+                   - ADMIN_ROLE_ID
+    ACCESS: Wide open
+    NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
+          config.py file that is in transcirrus.common by calling write_new_config.py
+    """
+    if(system_name == ""):
+        logger.sys_error("System name can not be blank when getting system variables.")
+        raise Exception("System name can not be blank when getting system variables.")
+
+    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    try:
+        find_sys_dict = {'select':"transcirrus_db,tran_db_user,tran_db_pass,tran_db_name,tran_db_port,admin_token,api_ip,default_cloud_controller,default_admin_role_id,default_member_role_id"
+                          ,'from':"trans_system_settings",'where':"node_id='%s'" %(node_id)}
+        sys = db.pg_select(find_node_dict)
+        db.pg_close_connection()
+        if(sys):
+            r_dict = {'TRANSCIRRUS_DB':sys[0][0],'TRAN_DB_USER':sys[0][1],'TRAN_DB_PASS':sys[0][2],'TRAN_DB_NAME':sys[0][3],
+                      'TRAN_DB_PORT':node[0][4],'DEFAULT_ADMIN_TOKEN':sys[0][5],'DEFAULT_API_IP':node[0][6],
+                      'DEFAULT_CLOUD_CONTROLER':node[0][7],'DEFAULT_ADMIN_ROLE_ID':sys[0][8],'DEFAULT_MEMBER_ROLE_ID':sys[0][9]}
+        else:
+            return'ERROR'
+    except:
+        logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
+        return 'NA'
+
+    return r_dict
+
+def set_network_variables(input_dict):
+    """
+    DESC: Change the ip address for the given adapter. Only cloud admins can
+          perform this operation.
+    INPUT: input_dict - net_adapter
+                      - net_ip
+                      - net_subnet - op
+                      - net_gateway - op
+    OUTPUT: r_dict - net_adapter
+                   - new_ip
+                   - status OK/ERROR/NA
+    ACCESS - wide open
+    NOTE: This is used to set the net adapters on the physical machines - neutron libs for virtual environments
+          This function also writes the network config file.
+    """
+
+    #make sure none of the values are empty
+    for key, val in file_dict.items():
+        #skip over these
+        if(key == 'file_permissions'):
+            continue
+        if(val == ""):
+            logger.sys_error("The value %s was left blank" %(val))
+            raise Exception("The value %s was left blank" %(val))
+        if(key not in file_dict):
+            logger.sys_error("Required info not specified for file creation.")
+            raise Exception ("Required info not specified for file creation.")
+    print "not implemented"
+
+def get_network_variables(net_adapter):
+    """
+    DESC: Return the network settings from the transcirrus system settings db.
+    INPUT: system_name
+    OUTPUT: Array of file descriptors containing file entries,write operations, and file name.
+            raise error on failure
+    ACCESS: Wide open
+    NOTE: This only returns the network interface settings of the system. It is used for information puposes and 
+    """
+
+
+def list_network_variables():
+    return 1
 #######System level calls used to run linux commands#######
 
 def ping_ip(ip):
@@ -164,31 +517,45 @@ def ping_ip(ip):
     out = os.system('sudo ping %s'  %(ip))
     if(out):
         return 'OK'
-    elif(!out):
+    elif(not out):
         return 'ERROR'
     else:
         return 'NA'
 
-
-def set_adapter_ip():
+def enable_network_card(net_adapter):
     """
-    DESC: Change the ip address for the given adapter. Only cloud admins can
-          perform this operation.
-    INPUT: input_dict - user_level
-                      - net_adapter
-                      - new_ip
-                      - new_subnet - op
-                      - new_gateway - op
-    OUTPUT: r_dict - net_adapter
-                   - new_ip
-                   - ping SUCCESS/FAIL
+    DESC: Perform the ifconfig up command on the given net adapter.
+    INPUT: net_adapter
+    OUTPUT: OK - success
+            ERROR - fail
+    ACCESS: Wide open
+    NOTE:
     """
-
-    print "not implemented"
+    os.system("sudo ifconfig %s up" %(net_adapter))
+    out = subprocess.Popen('sudo ifconfig -s | grep "%s"' %(net_adapter), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ifconfig = out.stdout.readlines()
+    if(ifconfig[0]):
+        return 'OK'
+    else:
+        return 'ERROR'
     
-
-def set_adapter_dhcp(net_adapter):
-    print "not implemented"
+def disable_network_card(net_adapter):
+    """
+    DESC: Perform the ifconfig down command on the given net adapter.
+    INPUT: net_adapter
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    ACCESS: Wide open
+    NOTE:
+    """
+    os.system("sudo ifconfig %s down" %(net_adapter))
+    out = subprocess.Popen('sudo ifconfig -s | grep "%s"' %(net_adapter), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ifconfig = out.stdout.readlines()
+    if(len(ifconfig) == 0):
+        return 'OK'
+    else:
+        return 'ERROR'
 
 def get_adapter_ip(net_adapter):
     """
@@ -229,5 +596,3 @@ def power_off_system():
     NOTE: VERY DANGEROUS. THIS IS WIDE OPEN AS OF NOW
     """
     os.system('sudo shutdown -P')
-
-
