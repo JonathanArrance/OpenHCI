@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta content="text/html">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Coalesce cloud manager">
+        <meta name="author" content="TransCirrus">
+
+        <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+        <!--[if lt IE 9]>
+          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/transcirrus_print.css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
+
+        <!-- Favicons  ================================================ -->
+        <link rel="shortcut icon" href="{{ STATIC_URL }}images/favicon.ico">
+        <link rel="apple-touch-icon" href="{{ STATIC_URL }}images/apple-touch-icon.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="{{ STATIC_URL }}images/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="{{ STATIC_URL }}images/apple-touch-icon-114x114.png">
+
+        <!-- Le javascript ================================================== -->
+        <!-- Placed at the beginning of the document so  programmers can find it -->
+
+        {% block javascripts %}{% endblock %}
+    </head>
+
+    <body>
+		<!-- =================  MAIN CONTENT WELL  ================= -->
+		<img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png" alt="TransCirrus" width="248" height="75">
+		
+		{% block content %}
+			PAGE CONTENT GOES HERE
+		{% endblock %}
+	
+		<br>
+		<p class="small" style="color:silver"><b>TransCirrus Confidential</b></p>
+		<p class="small" style="color:silver"><i>
+		The information contained in this website is for general information purposes only. The information is provided by TransCirrus, Inc. and while we<br>
+		endeavour to keep the information up to date and correct, we make no representations or warranties of any kind, express or implied, about the <br>
+		completeness, accuracy, reliability, suitability or availability with respect to the website or the information, products, services, or related <br>
+		graphics contained on the website for any purpose. Any reliance you place on such information is therefore strictly at your own risk.
+		</i></p>		
+
+    </body>
+</html>

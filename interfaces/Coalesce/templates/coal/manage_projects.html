@@ -1,0 +1,21 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %}Manage Projects{% endblock %}
+
+{% block content %}
+
+
+    <div class="row-fluid">
+      <div class="span6">
+        <div class="well">
+
+          {% load render_table from django_tables2 %}
+          {% render_table projects_table %}
+        </div>
+      </div><!-- end span5-->
+
+
+    </div><!-- end row-fluid-->
+
+
+{% endblock %}

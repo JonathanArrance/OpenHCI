@@ -1,0 +1,27 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %} Node Details{% endblock %}
+
+{% block content %}
+
+
+    <div class="row-fluid">
+      <div class="span6">
+        <div class="well">
+          <div class="legend">
+             {{ node.name }} Details
+          </div>
+          <table class="paleblue">
+                <tr> <th>Node IP Address</th>  <td>{{ node.node_ip }}</td>  </tr>
+                <tr class="odd"> <th>Management IP Address</th>  <td>{{node.management_ip }}</td>  </tr>
+                <tr> <th>Node Type</th>  <td>{{ node.node_type }}</td>  </tr>
+
+          </table>
+        </div>
+      </div><!-- end span5-->
+
+
+    </div><!-- end row-fluid-->
+
+
+{% endblock %}
