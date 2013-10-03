@@ -95,7 +95,7 @@ def write_new_config_file(file_dict):
     config = None
     if(check_fqp == False):
         logger.sys_warning("The file %s does not exists, Creating..." %(fqp))
-        os.system('mkdir -p %s' %(file_dict['file_path']))
+        os.system('sudo mkdir -p %s' %(file_dict['file_path']))
         config = open(scratch, 'w')
     else:
         logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))

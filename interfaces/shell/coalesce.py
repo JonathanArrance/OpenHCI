@@ -1,0 +1,369 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
+
+"""Setup for Transcirrus CiaC"""
+
+from __future__ import nested_scopes, division
+import sys, os, time, getopt, subprocess, dialog
+
+progname = os.path.basename(sys.argv[0])
+progversion = "0.3"
+version_blurb = """Setup for Transcirrus CiaC
+                   Version 0.1 2013"""
+
+usage = """Usage: %(progname)s [option ...]
+Setup for Transcirrus CiaC.
+
+Options:
+      --help                   display this message and exit
+      --version                output version information and exit""" \
+  % { "progname": progname }
+
+# Global parameters
+params = {}
+
+
+def handle_exit_code(d, code):
+    """Function showing how to interpret the dialog exit codes.
+
+    This function is not used after every call to dialog in this demo
+    for two reasons:
+
+       1. For some boxes, unfortunately, dialog returns the code for
+          ERROR when the user presses ESC (instead of the one chosen
+          for ESC). As these boxes only have an OK button, and an
+          exception is raised and correctly handled here in case of
+          real dialog errors, there is no point in testing the dialog
+          exit status (it can't be CANCEL as there is no CANCEL
+          button; it can't be ESC as unfortunately, the dialog makes
+          it appear as an error; it can't be ERROR as this is handled
+          in dialog.py to raise an exception; therefore, it *is* OK).
+
+       2. To not clutter simple code with things that are
+          demonstrated elsewhere.
+
+    """
+    # d is supposed to be a Dialog instance
+    if code in (d.DIALOG_CANCEL, d.DIALOG_ESC):
+        if code == d.DIALOG_CANCEL:
+            msg = "You chose cancel in the last dialog box. Do you want to " \
+                  "exit setup?"
+        else:
+            msg = "You pressed ESC in the last dialog box. Do you want to " \
+                  "exit setup?"
+        # "No" or "ESC" will bring the user back to the demo.
+        # DIALOG_ERROR is propagated as an exception and caught in main().
+        # So we only need to handle OK here.
+        if d.yesno(msg) == d.DIALOG_OK:
+            clear_screen(d)
+            sys.exit(0)
+        return d.DIALOG_CANCEL
+    else:
+        # 'code' can be d.DIALOG_OK (most common case) or, depending on the
+        # particular dialog box, d.DIALOG_EXTRA, d.DIALOG_HELP,
+        # d.DIALOG_ITEM_HELP... (cf. _dialog_exit_status_vars in dialog.py)
+        return code
+
+
+def controls(d):
+    """Defines the UI controls for the user"""
+    d.msgbox("Use SPACE to select items (ie in a radio list) "
+              "Use ARROW KEYS to move the cursor \n"
+              "Use ENTER to submit and advance (OK or Cancel)", width=50)
+
+
+def userbox(d):
+    """Takes input of username"""
+    while True:
+        (code, answer) = d.inputbox("Username:", init="")
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    return answer
+
+
+def passwordbox(d):
+    """Takes input of password"""
+    while True:
+        # 'insecure' keyword argument only asks dialog to echo asterisks when
+        # the user types characters. Not *that* bad.
+        (code, password) = d.passwordbox("Password:", insecure=True)
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    return password
+
+
+def firstTimeFlag(d):
+    # Return the answer given to the question (also specifies if ESC was
+    # pressed)
+    return d.yesno("Would you like to perform Setup?",
+         yes_label="Yes, take me to Setup",
+         no_label="No, take me to Coalesce Dashboard", width=80)
+
+
+def info(d):
+    while True:
+        HIDDEN = 0x1
+        elements = [
+            ("Uplink IP:", 1, 1, "", 1, 24, 16, 15, 0x0),
+            ("Management IP:", 2, 1, "", 2, 24, 16, 16, 0x0),
+            ("VM Range Start-Point:", 3, 1, "", 3, 24, 16, 16, 0x0),
+            ("VM Range End-Point:", 4, 1, "", 4, 24, 16, 16, 0x0),
+            ("Cloud (Region) Name:", 5, 1, "", 5, 24, 16, 16, 0x0),
+            ("New Admin password:", 6, 1, "", 6, 24, 16, 16, HIDDEN),
+            ("Confirm Password:", 7, 1, "", 7, 24, 16, 15, HIDDEN)]
+
+        (code, fields) = d.mixedform(
+            "Please fill in Cloud Information:", elements, width=77)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+
+    return fields
+
+
+def singleNode(d):
+    # Return the answer given to the question (also specifies if ESC was
+    # pressed)
+    return d.yesno("Is this currently a single node system?",
+         yes_label="Yes",
+         no_label="No, it contains other nodes (enable DHCP)", width=100)
+
+
+def dhcp(d):
+    d.gauge_start("Progress: 0%", title="Enabling DHCP...")
+
+    for i in range(1, 101):
+        if i < 50:
+            d.gauge_update(i, "Progress: %d%%" % i, update_text=1)
+        elif i == 50:
+            d.gauge_update(i, "Over %d%%. Good." % i, update_text=1)
+        elif i == 80:
+            d.gauge_update(i, "Yeah, this boring crap will be over Really "
+                           "Soon Now.", update_text=1)
+        else:
+            d.gauge_update(i)
+
+        time.sleep(0.01 if params["fast_mode"] else 0.1)
+
+    d.gauge_stop()
+
+
+def success(d, seconds):
+    d.pause("""\
+Setup has completed successfully.  The system will now restart in %u seconds\
+ and update with the information you have entered.  To connect to this unit\
+ again, use the newly created IP address and login credentials."""
+% seconds, height=15, seconds=seconds)
+
+
+def clear_screen(d):
+    program = "clear"
+
+    try:
+        p = subprocess.Popen([program], shell=False, stdout=None, stderr=None,
+                             close_fds=True)
+        retcode = p.wait()
+    except os.error, e:
+        d.msgbox("Unable to execute program '%s': %s." % (program,
+                                                          e.strerror),
+                 title="Error")
+        return -1
+
+    if retcode > 0:
+        msg = "Program %s returned exit code %u." % (program, retcode)
+    elif retcode < 0:
+        msg = "Program %s was terminated by signal %u." % (program, -retcode)
+    else:
+        return 0
+
+    d.msgbox(msg)
+    return -1
+
+
+def setup(d):
+    d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
+        "interface tool for your TransCirrus system.", width=60, height=10)
+    controls(d)
+    while(True):
+        user = userbox(d)
+        password = passwordbox(d)
+        # Verify credentials
+        # if cloud admin, continue setup
+        # else re-prompt for credentials
+        if (user == "admin" and password == "password"):
+            break
+        else:
+            d.msgbox("Invalid credentials, try again.", width=60, height=10)
+
+    first_time = firstTimeFlag(d)
+    # Check to determine if first time (will be implemented differently
+    # once we have those flags setup on database, this is just proof of concept
+    if (first_time == d.DIALOG_CANCEL):
+        d.msgbox("Taking you to the Coalesce Dashboard...")
+        # Direct user to Coalesce Dashboard
+        clear_screen(d)
+        return
+
+    while(True):
+        uplink_ip, mgmt_ip, vm_ip_start, vm_ip_end, cloud, pwd, cnfrm, = info(d)
+        # Validate uplink ip
+        if(valid_ip(uplink_ip) is False):
+            d.msgbox("Invalid Uplink IP, try again.", width=60, height=10)
+            continue
+        # Validate mgmt ip
+        if(valid_ip(mgmt_ip) is False):
+            d.msgbox("Invalid Management IP, try again.", width=60, height=10)
+            continue
+        # Validate start point
+        if(valid_ip_within(uplink_ip, vm_ip_start) is False):
+            d.msgbox("Invalid VM Range Start-Point, try again.", width=60, height=10)
+            continue
+        # Validate end point
+        if(valid_ip_within(vm_ip_start, vm_ip_end) is False):
+            d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
+            continue
+        # Validate new password
+        if(pwd != cnfrm and len(pwd) != 0 and len(cnfrm) != 0):
+            d.msgbox("Passwords did not match, try again.", width=60, height=10)
+            continue
+        # Make sure uplink and mgmt IPs don't match
+        if(uplink_ip == mgmt_ip):
+            d.msgbox("Uplink IP and Management IP cannot match, try again.", width=60, height=10)
+            continue
+        break
+
+    # Sanity check, just prints out what was entered in the setup page
+    # Currently no error checking, but that will added of course
+    d.msgbox(uplink_ip + "\n" + pwd + "\n" + cnfrm + "\n" + vm_ip_start + "\n"
+        + vm_ip_end + "\n" + cloud)
+
+    single_node = singleNode(d)
+    # Check to determine is system is single node
+    # If not, enable DHCP
+    if (single_node == d.DIALOG_CANCEL):
+        dhcp(d)
+        # Enable DHCP
+
+    timeout = 20
+    success(d, timeout)
+
+    clear_screen(d)
+
+
+def valid_ip(address):
+    """
+    Validate IP address's format:
+        (only numbers and periods)
+        (numbers between 0 and 255)
+        (must have exactly 4 numbers)
+        (must have exactly 3 periods)
+        (must be the form #.#.#.#)
+    """
+    try:
+        host_bytes = address.split('.')
+        valid = [int(b) for b in host_bytes]
+        valid = [b for b in valid if b >= 0 and b <= 255]
+        return len(host_bytes) == 4 and len(valid) == 4
+    except:
+        return False
+
+
+def valid_ip_within(broad, narrow):
+    """
+    Validate that the narrow IP address has the same network prefix of the broad IP address
+    and that the host part of the narrow IP address is greater than or equal to that of the
+    broad IP address
+    """
+    try:
+        broad_bytes = broad.split('.')
+        narrow_bytes = narrow.split('.')
+        valid_broad = [int(b) for b in broad_bytes]
+        valid_narrow = [int(b) for b in narrow_bytes]
+        if (valid_broad[0] == valid_narrow[0] and
+        valid_broad[1] == valid_narrow[1] and
+        valid_broad[2] == valid_narrow[2] and
+        valid_broad[3] <= valid_narrow[3]):
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def process_command_line():
+    global params
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "ft",
+                                   ["test-suite",
+                                    "fast",
+                                    "help",
+                                    "version"])
+    except getopt.GetoptError, message:
+        sys.stderr.write(usage + "\n")
+        return ("exit", 1)
+
+    # Let's start with the options that don't require any non-option argument
+    # to be present
+    for option, value in opts:
+        if option == "--help":
+            print usage
+            return ("exit", 0)
+        elif option == "--version":
+            print "%s %s\n%s" % (progname, progversion, version_blurb)
+            return ("exit", 0)
+
+    # Now, require a correct invocation.
+    if len(args) != 0:
+        sys.stderr.write(usage + "\n")
+        return ("exit", 1)
+
+    # Default values for parameters
+    params = {"fast_mode": False,
+              "testsuite_mode": False}
+
+    # Get the home directory, if any, and store it in params (often useful).
+    root_dir = os.sep           # This is OK for Unix-like systems
+    params["home_dir"] = os.getenv("HOME", root_dir)
+
+    # General option processing
+    for option, value in opts:
+        if option in ("-t", "--test-suite"):
+            params["testsuite_mode"] = True
+            # --test-suite implies --fast
+            params["fast_mode"] = True
+        elif option in ("-f", "--fast"):
+            params["fast_mode"] = True
+        else:
+            # The options (such as --help) that cause immediate exit
+            # were already checked, and caused the function to return.
+            # Therefore, if we are here, it can't be due to any of these
+            # options.
+            assert False, "Unexpected option received from the " \
+                "getopt module: '%s'" % option
+
+    return ("continue", None)
+
+
+def main():
+    what_to_do, code = process_command_line()
+    if what_to_do == "exit":
+        sys.exit(code)
+
+    try:
+        # If you want to use Xdialog (pathnames are also OK for the 'dialog'
+        # argument), you can use:
+        #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
+        d = dialog.Dialog(dialog="dialog")
+        d.add_persistent_args(["--backtitle", "TransCirrus - CoalesceShell"])
+
+        setup(d)
+    except dialog.error, exc_instance:
+        sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
+        sys.exit(1)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__": main()
