@@ -54,26 +54,19 @@ def check_node_update(data):
                 update = 'OK'
             elif data['Value']['node_nova_zone'] != node['node_nova_zone']:
                 if data['Value']['node_nova_zone'] == '':
-                    data['Value']['node_nova_zone'] = node['node_nova_zone']
-                    update = 'OK'
-                    
+                    update = 'NA'
                 else:
-                    data['Value']['node_nova_zone'] = node['node_nova_zone']
                     update = 'OK'
             elif data['Value']['node_iscsi_iqn'] != node['node_iscsi_iqn']:
                 if data['Value']['node_iscsi_iqn'] == '':
-                    data['Value']['node_iscsi_iqn'] = node['node_iscsi_iqn']
-                    update = 'OK'
+                    update = 'NA'
                 else:
-                    data['Value']['node_iscsi_iqn'] = node['node_iscsi_iqn']
                     update = 'OK'
 
             elif data['Value']['node_swift_ring'] != node['node_swift_ring']:
                 if data['Value']['node_swift_ring'] == '':
-                    data['Value']['node_swift_ring'] = node['node_swift_ring']
-                    update = 'OK'
+                    update = 'NA'
                 else:
-                    data['Value']['node_swift_ring'] = node['node_swift_ring']
                     update = 'OK'
 
 
