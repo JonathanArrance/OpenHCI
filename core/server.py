@@ -7,12 +7,14 @@ from thread import *
 import pickle
 import select
 from time import sleep
+
 import transcirrus.common.util as util
-import transcirrus.databases.node_db as node_db
+import transcirrus.database.node_db as node_db
 
 timeout_sec=1
 count=0
 retry_count=5
+recv_buffer=4096
 
 
 def check_node_update(data):
@@ -135,6 +137,7 @@ def sendComputeConfig(conn, node_id):
             the receiving compute node should extract necessary config
             structure
             '''
+            #print "sending ovs conf %s" % config
             conn.sendall(pickle.dumps(config, -1))
             print "sent compute node ovs config"
 
@@ -152,7 +155,7 @@ def sendComputeConfig(conn, node_id):
         print "server did not extract nova config, exiting"
         sys.exit()
 
-    print "server done with sending config files"
+    print "ciac server done with sending config files"
     
 def handle():
 
@@ -208,7 +211,7 @@ def recv_data(conn):
     while True:
         ready = select.select([conn], [], [], timeout_sec)
         if ready[0]:
-            data = conn.recv(1024)
+            data = conn.recv(recv_buffer)
             break
         else:
             count = count + 1
@@ -234,9 +237,10 @@ def keep_alive_check(conn):
     '''
 
     while True:
-        data = conn.recv(1024)
+        ready = select.select([conn], [], [], timeout_sec)
+        if ready[0]:
+            data = conn.recv(recv_buffer)
 
-        if data:
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 print "***%s***" % data['Value']
@@ -244,7 +248,8 @@ def keep_alive_check(conn):
                 print "received %s " % data['Value']
             else:
                 print "received %s " % data
-
+        else:
+            print "ciac server waiting for keep alive messages"
 
 
 def sendBuild(conn):
@@ -332,13 +337,31 @@ def client_thread(conn, client_addr):
 
                                 sendBuild(conn)
 
+                                node_id = data['Value']['node_id']
                                 # check node type
                                 if data['Value']['node_type'] == 'sn':
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
 
-                                    keep_alive_check(conn)
+                                while True:
+        			    ready = select.select([conn], [], [], timeout_sec)
+        			    if ready[0]:
+            			        data = conn.recv(recv_buffer)
+            			        break
+                                    else:
+                                        print "ciac server waiting for status ready/halt from compute node"
+                                if data:
+                                    data = pickle.loads(data)
+                                    if data['Type'] == 'status':
+                                        print "server received %s" % data['Value']
+                                        sendOk(conn)
+                                        break
+                                else:
+                                    print "ciac server did not receive any data"
+
+                                print "ciac server listening for keep alive messages"
+                                keep_alive_check(conn)
 
                             # node info has not been changed
                             else:
@@ -346,7 +369,9 @@ def client_thread(conn, client_addr):
                                 to use" % (node_id, data['Value']['node_type'])
 
                                 sendOk(conn)
+
                                 # go for keep_alive check
+                                print "ciac server listening for keep alive messages"
                                 keep_alive_check(conn)
                                 
 
@@ -368,7 +393,7 @@ def client_thread(conn, client_addr):
                                     'node_swift_ring':data['Value']['node_swift_ring']
                                     }
                             # insert into ciac DB
-                            insert = insert_node(input_dict)
+                            insert = node_db.insert_node(input_dict)
 
                             if insert == 'OK':
                                 print "new node %s inserted sucessfully in DB" % node_id
@@ -376,26 +401,32 @@ def client_thread(conn, client_addr):
                                 # check for node_type, then send build message
                                 sendBuild(conn)
 
+                                node_id = data['Value']['node_id']
+
                                 if data['Value']['node_type'] == 'sn':
-                                    sendStorageConfig(conn)
+                                    sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
-                                    node_id = data['Value']['node_id']
                                     sendComputeConfig(conn, node_id)
 
-                                    while True:
-                                        data = recv_data(conn)
+                                while True:
+        			    ready = select.select([conn], [], [], timeout_sec)
+        			    if ready[0]:
+            			        data = conn.recv(recv_buffer)
+            			        break
+                                    else:
+                                        print "ciac server waiting for status ready/halt from compute node"
+                                if data:
+                                    data = pickle.loads(data)
+                                    if data['Type'] == 'status':
+                                        print "server received %s" % data['Value']
+                                        sendOk(conn)
+                                        break
+                                else:
+                                    print "ciac server did not receive any data"
 
-                                        if data:
-                                            data = pickle.loads(data)
-                                            if data['Type'] == 'status':
-                                                print "server received %s" % data['Value']
-                                                sendOk(conn)
-                                                break
-                                        else:
-                                            print "waiting for status ready/halt from compute node"
-
-                                    # go for keep alive check
-                                    keep_alive_check(conn)
+                                # go for keep alive check
+                                print "ciac server listening for keep alive messages"
+                                keep_alive_check(conn)
 
                             else:
                                 print "error in inserting new node in DB, exiting !!!"
@@ -418,7 +449,8 @@ def client_thread(conn, client_addr):
         print 'Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
         sys.exit()
     finally:
-        conn.close()
+       print "In finally block"
+       # conn.close()
 
 
 # Create socket

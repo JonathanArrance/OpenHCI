@@ -522,7 +522,7 @@ def get_node_neutron_config(node_id):
             raise Exception('Could not get the dhcp_agent.ini entries from the Transcirrus neutron db.')
     else:
         logger.sys_error('Could not get neutron entries, node type invalid.')
-        raise Exception('Could not get neutron entries, node type invalid.')
+        #raise Exception('Could not get neutron entries, node type invalid.')
 
     #disconnect from db
     db.pg_close_connection()

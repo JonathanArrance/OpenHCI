@@ -1,15 +1,17 @@
 #! /usr/sbin/python
 
 import os
+import sys
 import socket
 import pickle
 from time import sleep
 import select
 import transcirrus.common.util as util
-import transcirrus.databases.node_db as node_db
+import transcirrus.database.node_db as node_db
 
 timeout_sec = 1
 retry_count = 5
+recv_buffer = 4096
 
 
 def sendOk(sock):
@@ -49,7 +51,7 @@ def recv_data(sock):
     while True:
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
-            data = sock.recv(1024)
+            data = sock.recv(recv_buffer)
             break
         else:
             count = count + 1
@@ -75,7 +77,7 @@ def processComputeConfig(sock):
     comments        :
     '''
 
-    # receive compute node default config file
+    # receive compute node nova config file
     cn_config = recv_data(sock)
 
     # parse config file
@@ -84,15 +86,15 @@ def processComputeConfig(sock):
 
         # send ok, ack 
         sendOk(sock)
-        for i in range(0,2): # 2 - since three arrays are received
+        for i in range(0,len(cn_config)): # 2 - since three arrays are received
             if cn_config[i]['file_name'] == 'nova.conf':
                 nova_conf = cn_config[i]
             elif cn_config[i]['file_name'] == 'nova-compute.conf':
                 comp_conf = cn_config[i]
-            elif cn_config[i]['filename'] == 'api-paste.ini' :
+            elif cn_config[i]['file_name'] == 'api-paste.ini' :
                 api_conf = cn_config[i]
     else:
-        print "compute node did not receive ovs config file, exiting!!!"
+        print "compute node did not receive nova config file, exiting!!!"
         sys.exit()
 
     # receive ovs config structures
@@ -105,12 +107,14 @@ def processComputeConfig(sock):
         sendOk(sock)
 
         # get ovs config file
-        for i in range(0,5):
+        for i in range(0,len(cn_config1)):
             if cn_config1[i]['file_name'] == 'ovs_quantum_plugin.ini':
                 ovs_conf = cn_config1[i]
+	    elif cn_config1[i]['file_name'] == 'quantum.conf':
+                net_conf = cn_config[i]
 
     else:
-        print "compute node did not receive nova config file, exiting!!!"
+        print "compute node did not receive ovs config file, exiting!!!"
         sys.exit()
                 
 
@@ -152,29 +156,41 @@ def processComputeConfig(sock):
     else:
         print "write success, ovs conf"
 
+    ret = util.write_new_config_file(net_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "error in writing net conf, exiting!!!"
+        sys.exit()
+    else:
+        print "write success, net_conf"
+
 
     post_install_status = True
+
     # check nova services
-    out = os.system('service nova-compute status')
+    out = os.popen('service nova-compute status')
     status = out.read()
     # process status TODO
+    print "nova compute :: %s" % status
 
-    out = os.system('nova-manage service list')
+    out = os.popen('nova-manage service list')
     status = out.read()
     # process status TODO
+    print "nova manage :: %s" % status
 
-    out = os.system('service quantum-plugin-openvswitch-agent restart')
+    out = os.popen('service quantum-plugin-openvswitch-agent restart')
     status = out.read()
     # process status TODO
+    print "quantun-plugin :: %s" % status
 
 
-    out = os.system('nova host-list') # TODO
+    #out = os.system('nova host-list') # TODO
 
 
     # check ovs services
-    out = os.system('ovs-vsctl list-br')
+    out = os.popen('ovs-vsctl list-br')
     status = out.read()
     # process status TODO
+    print "ovs-vsctl :: %s" % status
 
 
     if post_install_status == True:
@@ -223,6 +239,28 @@ def processComputeConfig(sock):
                     break
                 else:
                     print "listening for status_halt ack"
+        else:
+             
+            # send node_ready status message to cc
+            status_ready = {
+                'Type':'status',
+                'Length':1,
+                'Value':'node_ready'
+                }
+
+            sock.sendall(pickle.dumps(status_ready, -1))
+
+            # listen for ok message, ack -- loops infinetly
+            while True:
+                data = recv_data(sock)
+
+                if data:
+                    data = pickle.loads(data)
+                    print "client received %s" % data
+                    break
+                else:
+                    print "listening for status_ready ack"
+
 
     # send keep alive messages
     keep_alive(sock)
@@ -318,23 +356,23 @@ try:
                 'Length': 10, 
                 'Value': 
                     {
-                    'node_name':'box123',
-                    'node_type':'sn',
+                    'node_name':'box6',
+                    'node_type':'cn',
                     'node_mgmt_ip':'10.10.10.10',
                     'node_data_ip':'172.16.16.16',
-                    'node_controller':'ciac',
-                    'node_cloud_name':'cloud1',
+                    'node_controller':'ciac6',
+                    'node_cloud_name':'cloud6',
                     'node_nova_zone':'',
                     'node_iscsi_iqn':'',
                     'node_swift_ring':'',
-                    'node_id':'trans123'
+                    'node_id':'trans6'
                     }
                 }
     
 
             node_type = 'cn'
             print "sending %s " % data
-            print "node_id = %s" % data['Value']['Node_id']
+            print "node_id = %s" % data['Value']['node_id']
             sock.sendall(pickle.dumps(data, -1))
 
             # receive status message, retry_count
