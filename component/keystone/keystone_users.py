@@ -52,8 +52,8 @@ class user_ops:
             #Retrieve all default values from the DB????
             #Screw a config file????
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLER
+            self.api_ip = config.API_IP
             #self.db = user_dict['db']
 
         if((self.username == "") or (self.password == "")):
@@ -709,11 +709,51 @@ class user_ops:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
     def update_user_password():
+        #REQ: curl -i -X PUT http://192.168.10.30:35357/v2.0/users/9d3742672d9149728af6b2d414344aab/OS-KSADM/password -H "User-Agent: python-keystoneclient" -H "Content-Type: application/json" -H "X-Auth-Token: cheapass"
+        #REQ BODY: {"user": {"password": "test2", "id": "9d3742672d9149728af6b2d414344aab"}}
         """
         DESC: Change the user password.
+        INPUT: new_password
+        OUTPUT: OK
+        ACCESS: admins can change any user password, powerusers/users can only
+                change their own passwords.
+        NOTE: none
         """
+        if((pass_dict['new_password'] == "") or ('new_password' not in pass_dict)):
+            logger.sys_error("Can not change user password for user %s" %(self.username))
+            raise Exception("Can not change user password for user %s" %(self.username))
+
         
-        return 1
+        #call the REST api to get info from keystone - used as a check more then anything else.
+        try:
+            #build an api connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not change user %s password."%(self.username))
+            raise Exception("Could not change user %s password." %(self.username))
+
+        try:
+            #remove the role from the user on the tenant
+            body = '{"user": {"password": "%s", "id": "%s"}}' %(new_password,self.user)
+            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+            function = 'PUT'
+            api_path = '/v2.0/users/%s' %(user_info[0][5])
+            token = self.adm_token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 200 or 201
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #read the json that is returned
+                load = json.loads(rest['data'])
+                r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"primary_project":user_info[0][6],"primary_proj_id":user_info[0][7],"user_role":user_info[0][2],"email":str(load['user']['email']),"user_enabled":user_info[0][4]}
+                return r_dict
+            else:
+                _http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error('%s' %(e))
+            raise
 
     def remove_user_credentials():
         print "not implemented"
