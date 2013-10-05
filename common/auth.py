@@ -27,7 +27,7 @@ class authorization:
             #INFO: DB will never move from the root CiaC system so 127 address can be used.
             self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
             #INFO: connect directly to the keystone DB
-            self.key = pgsql(config.OS_DB,config.OS_DB_PORT,"keystone",OS_DB_USER,OS_DB_PASS)
+            self.key = pgsql(config.OS_DB,config.OS_DB_PORT,"keystone",config.OS_DB_USER,config.OS_DB_PASS)
         except StandardError as e:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise
@@ -103,7 +103,7 @@ class authorization:
 
             #dictionary containing the user login info. permissions, token and status
             #need to set PKI token and ADMIN token
-            user_dict = {"username":self.username,"user_id":exist[0][5],"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token,"adm_token":adm_token,"db_object":self.db}
+            user_dict = {"username":self.username,"password":self.user_pass,"user_id":exist[0][5],"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token,"adm_token":adm_token,"db_object":self.db}
 
             #close open db connections
             #self.db.pg_close_connection()

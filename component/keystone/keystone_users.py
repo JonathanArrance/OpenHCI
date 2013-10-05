@@ -44,15 +44,16 @@ class user_ops:
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
             self.adm_token = user_dict['adm_token']
+            self.user_id = user_dict['user_id']
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
-                
+
             #Retrieve all default values from the DB????
             #Screw a config file????
             #get the default cloud controller info
-            self.controller = config.CLOUD_CONTROLER
+            self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
             #self.db = user_dict['db']
 
@@ -61,8 +62,9 @@ class user_ops:
             raise Exception("Credentials not properly passed.")
 
         if(self.adm_token == ''):
-            logger.sys_error("No admin tokens passed.")
-            raise Exception("No admin tokens passed.")
+            #logger.sys_error("No admin tokens passed.")
+            #raise Exception("No admin tokens passed.")
+            self.adm_token = config.ADMIN_TOKEN
 
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
@@ -708,22 +710,21 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
-    def update_user_password():
-        #REQ: curl -i -X PUT http://192.168.10.30:35357/v2.0/users/9d3742672d9149728af6b2d414344aab/OS-KSADM/password -H "User-Agent: python-keystoneclient" -H "Content-Type: application/json" -H "X-Auth-Token: cheapass"
-        #REQ BODY: {"user": {"password": "test2", "id": "9d3742672d9149728af6b2d414344aab"}}
+    def update_user_password(self,new_password):
         """
         DESC: Change the user password.
         INPUT: new_password
         OUTPUT: OK
         ACCESS: admins can change any user password, powerusers/users can only
                 change their own passwords.
-        NOTE: none
+        NOTE: We are going to re-engineer the openstack paradigm and let all users update the passwords. This
+              function only changes the keystone password for the user. You must use the change_admin_user_password
+              task in order to update the admin user password correctly.
         """
-        if((pass_dict['new_password'] == "") or ('new_password' not in pass_dict)):
+        if(new_password == ""):
             logger.sys_error("Can not change user password for user %s" %(self.username))
             raise Exception("Can not change user password for user %s" %(self.username))
 
-        
         #call the REST api to get info from keystone - used as a check more then anything else.
         try:
             #build an api connection for the admin user
@@ -735,25 +736,23 @@ class user_ops:
 
         try:
             #remove the role from the user on the tenant
-            body = '{"user": {"password": "%s", "id": "%s"}}' %(new_password,self.user)
+            body = '{"user": {"password": "%s", "id": "%s"}}' %(new_password,self.user_id)
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
             function = 'PUT'
-            api_path = '/v2.0/users/%s' %(user_info[0][5])
+            api_path = '/v2.0/users/%s/OS-KSADM/password' %(self.user_id)
             token = self.adm_token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             rest = api.call_rest(rest_dict)
             #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 200) or (rest['response'] == 203)):
+            if(rest['response'] == 200):
                 #read the json that is returned
-                load = json.loads(rest['data'])
-                r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"primary_project":user_info[0][6],"primary_proj_id":user_info[0][7],"user_role":user_info[0][2],"email":str(load['user']['email']),"user_enabled":user_info[0][4]}
-                return r_dict
+                return 'OK'
             else:
                 _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             logger.sys_error('%s' %(e))
-            raise
+            return 'ERROR'
 
     def remove_user_credentials():
         print "not implemented"

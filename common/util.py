@@ -372,6 +372,7 @@ def get_cloud_controller_name():
     NOTE: The cloud controller is also the ciac node system name. These are human readable names. This
           is not the same as the node id.
     """
+    '''
     db = db_connect()
     try:
         get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='default_cloud_controller'"}
@@ -380,18 +381,29 @@ def get_cloud_controller_name():
     except:
         logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")
         raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
+    '''
+    return config.CLOUD_CONTROLLER
 
-    return r_dict
+def get_cloud_controller_id():
+    """
+    DESC: get the system name from the config.py file.
+    INPUT: None
+    OUTPUT: node_name
+    ACCESS: Wide open
+    NOTE: The cloud controller name and the system name on a ciac node will be the same.
+    """
+    return config.CLOUD_CONTROLLER_ID
 
 def get_cloud_name():
     """
     DESC: get the cloud name from the transcirrus db
     INPUT: None
-    OUTPUT: r_dict - cloud_name
+    OUTPUT: cloud_name
     ACCESS: Wide open
     NOTE: The cloud controller is also the ciac node system name. These are human readable names.
           The cloud name is needed when setting up api endpoints.
     """
+    '''
     db = db_connect()
     try:
         get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='cloud_name'"}
@@ -400,10 +412,30 @@ def get_cloud_name():
     except:
         logger.sql_error("Could not retrieve cloud name from the Transcirrus db.")
         raise Exception("Could not retrieve cloud name from the Transcirrus db.")
+    '''
+    return config.CLOUD_NAME
 
-    return r_dict
+def get_system_name():
+    """
+    DESC: get the system name from the config.py file.
+    INPUT: None
+    OUTPUT: node_name
+    ACCESS: Wide open
+    NOTE: The cloud controller name and the system name on a ciac node will be the same.
+    """
+    return config.NODE_NAME
 
-def get_system_defaults():
+def get_node_id():
+    """
+    DESC: get the system id from the config.py file.
+    INPUT: None
+    OUTPUT: node_name
+    ACCESS: Wide open
+    NOTE: The cloud controller id and the system id on a ciac node will be the same.
+    """
+    return config.NODE_ID
+
+def get_system_defaults(node_id):
     """
     DESC: Return the system settings from the transcirrus system settings db.
     INPUT: system_name
@@ -426,61 +458,96 @@ def get_system_defaults():
                    - OS_DB_PORT
                    - MEMBER_ROLE_ID
                    - ADMIN_ROLE_ID
+                   - NODE_ID
     ACCESS: Wide open
     NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
-          config.py file that is in transcirrus.common by calling write_new_config.py
+          config.py file descriptor to write out the config.py that is in transcirrus.common by calling write_new_config.py
     """
-    return 1
+    if(node_id == ""):
+        logger.sys_error("System node_id can not be blank when getting system variables.")
+        raise Exception("System node_id can not be blank when getting system variables.")
 
-def get_system_variables(system_name):
-    """
-    DESC: Return the system settings from the transcirrus system settings db.
-    INPUT: system_name
-    OUTPUT: r_dict - TRANSCIRRUS_DB
-                   - TRAN_DB_USER
-                   - TRAN_DB_PASS
-                   - TRAN_DB_NAME
-                   - TRAN_DB_PORT
-                   - ADMIN_TOKEN
-                   - API_IP - "public api ip"
-                   - MGMT_IP
-                   - INT_API_IP
-                   - ADMIN_API_IP
-                   - CLOUD_CONTROLLER
-                   - CLOUD_CONTROLLER_ID
-                   - CLOUD_NAME
-                   - OS_DB
-                   - OS_DB_USER
-                   - OS_DB_PASS
-                   - OS_DB_PORT
-                   - MEMBER_ROLE_ID
-                   - ADMIN_ROLE_ID
-    ACCESS: Wide open
-    NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
-          config.py file that is in transcirrus.common by calling write_new_config.py
-    """
-    if(system_name == ""):
-        logger.sys_error("System name can not be blank when getting system variables.")
-        raise Exception("System name can not be blank when getting system variables.")
-
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = db_connect()
+    #get the system name
     try:
-        find_sys_dict = {'select':"transcirrus_db,tran_db_user,tran_db_pass,tran_db_name,tran_db_port,admin_token,api_ip,mgmt_ip,int_api_ip,admin_api_ip,.\
-                         cloud_controller,cloud_controller_id,cloud_name,os_db,os_db_user,os_db_pass,os_db_port,admin_role_id,member_role_id"
-                          ,'from':"trans_system_settings",'where':"node_id='%s'" %(node_id)}
+        get_sys_name = {'select':'host_system', 'from':'trans_system_settings','where':"parameter='node_id'", 'and':"param_value='%s'"%(node_id)}
+        node_name = db.pg_select(get_sys_name)
+    except:
+        logger.sql_error("Could not get the system name/node name for node id %s" %(node_id))
+        raise Exception("Could not get the system name/node name for node id %s" %(node_id))
+
+    try:
+        find_node_dict = {'select':"parameter,param_value",'from':"factory_defaults",'where':"host_system='%s'" %(node_name[0][0])}
         sys = db.pg_select(find_node_dict)
-        db.pg_close_connection()
-        if(sys):
-            r_dict = {'TRANSCIRRUS_DB':sys[0][0],'TRAN_DB_USER':sys[0][1],'TRAN_DB_PASS':sys[0][2],'TRAN_DB_NAME':sys[0][3],
-                      'TRAN_DB_PORT':sys[0][4],'ADMIN_TOKEN':sys[0][5],'API_IP':sys[0][6],'MGMT_IP':sys[0][7],'INT_API_IP':sys[0][8],
-                      'ADMIN_API_IP':sys[0][9],'CLOUD_CONTROLLER':sys[0][10],'CLOUD_CONTROLLER_ID':sys[0][11],'CLOUD_NAME':sys[0][12],
-                      'OS_DB':sys[0][13],'OS_DB_USER':sys[0][14],'OS_DB_PASS':sys[0][15],'OS_DB_PORT':sys[0][16],'ADMIN_ROLE_ID':sys[0][17],
-                      'MEMBER_ROLE_ID':sys[0][18]}
-        else:
-            return'ERROR'
     except:
         logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
         return 'NA'
+    db.pg_close_connection()
+
+    r_dict = {}
+    for x in sys:
+        r = iter(x)
+        key = r.next()
+        val = r.next()
+        r_dict[key] = val
+
+    return r_dict
+
+def get_system_variables(node_id):
+    """
+    DESC: Return the system settings from the transcirrus system settings db.
+    INPUT: system_name
+    OUTPUT: r_dict - TRANSCIRRUS_DB
+                   - TRAN_DB_USER
+                   - TRAN_DB_PASS
+                   - TRAN_DB_NAME
+                   - TRAN_DB_PORT
+                   - ADMIN_TOKEN
+                   - API_IP - "public api ip"
+                   - MGMT_IP
+                   - INT_API_IP
+                   - ADMIN_API_IP
+                   - CLOUD_CONTROLLER
+                   - CLOUD_CONTROLLER_ID
+                   - CLOUD_NAME
+                   - OS_DB
+                   - OS_DB_USER
+                   - OS_DB_PASS
+                   - OS_DB_PORT
+                   - MEMBER_ROLE_ID
+                   - ADMIN_ROLE_ID
+                   - NODE_ID
+    ACCESS: Wide open
+    NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
+          config.py file descriptor to write out the config.py that is in transcirrus.common by calling write_new_config.py
+    """
+    if(node_id == ""):
+        logger.sys_error("System node_id can not be blank when getting system variables.")
+        raise Exception("System node_id can not be blank when getting system variables.")
+
+    db = db_connect()
+    #get the system name
+    try:
+        get_sys_name = {'select':'host_system', 'from':'trans_system_settings','where':"parameter='node_id'", 'and':"param_value='%s'"%(node_id)}
+        node_name = db.pg_select(get_sys_name)
+    except:
+        logger.sql_error("Could not get the system name/node name for node id %s" %(node_id))
+        raise Exception("Could not get the system name/node name for node id %s" %(node_id))
+
+    try:
+        find_node_dict = {'select':"parameter,param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(node_name[0][0])}
+        sys = db.pg_select(find_node_dict)
+    except:
+        logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
+        return 'NA'
+    db.pg_close_connection()
+
+    r_dict = {}
+    for x in sys:
+        r = iter(x)
+        key = r.next()
+        val = r.next()
+        r_dict[key] = val
 
     return r_dict
 
@@ -522,6 +589,7 @@ def get_network_variables(net_adapter):
     ACCESS: Wide open
     NOTE: This only returns the network interface settings of the system. It is used for information puposes and 
     """
+    return 1
 
 
 def list_network_variables():
