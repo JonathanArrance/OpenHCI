@@ -11,6 +11,7 @@ from time import sleep
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
 
+_server_port=6161
 timeout_sec=1
 count=0
 retry_count=5
@@ -454,7 +455,7 @@ def client_thread(conn, client_addr):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # bind the socket
-sock.bind(('', 6161))
+sock.bind(('', _server_port))
 
 sock.listen(5)
 

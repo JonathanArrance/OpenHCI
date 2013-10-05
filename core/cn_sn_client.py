@@ -62,6 +62,157 @@ def recv_data(sock):
 
     return data
 
+
+
+def checkNovaCompute(status):
+    '''
+    @author         : Shashaa
+    description     : parse and checks nova compute output 
+    return value    : True/False
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    if status.find("start/running"):
+        print "service nova-compute is running!!!"
+        return True
+    else:
+        print "service nova-compute is halted!!!"
+        return False
+
+def checkNovaManage(status):
+    '''
+    @author         : Shashaa
+    description     : parse and check nova manage services 
+    return value    : True/False
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    line_array = status.split('\n')
+    '''
+    print "0 %s" % line_array[0]
+    print "1 %s" % line_array[1]
+    print "2 %s" % line_array[2]
+    print "3 %s" % line_array[3]
+    print "4 %s" % line_array[4]
+    print "5 %s" % line_array[5]
+    '''
+    for i in range(0, len(line_array)-1):            
+        if line_array[i].find('nova-conductor') and line_array[i].find('enabled') and line_array[i].find(':-)'):
+            print "nova-conductor is running !!!"
+        elif line_array[i].find('nova-scheduler') and line_array[i].find('enabled') and line_array[i].find(':-)'):
+            print "nova-scheduler is running !!!"
+        elif line_array[i].find('nova-consoleauth') and line_array[i].find('enabled') and line_array[i].find(':-)'):
+            print "nova-consoleauth is running !!!"
+        elif line_array[i].find('nova-cert') and line_array[i].find('enabled') and line_array[i].find(':-)'):
+            print "nova-cert is running !!!"
+        elif line_array[i].find('nova-compute') and line_array[i].find('enabled') and line_array[i].find(':-)'):
+            print "nova-compute is running !!!"
+
+    return True
+
+def checkOpenvswitch(status):
+    '''
+    @author         : Shashaa
+    description     : parse and check openv switch process status  
+    return value    : True/False
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    if status.find('start/running'):
+        print "quantum-plugin-openvswitch-agent running !!!"
+        return True
+    else:
+        print "quantum-plugin-openvswitch-agent stopped/halted !!!"
+        return False
+
+def checkOvs(status):
+    '''
+    @author         : Shashaa
+    description     : parse and check openv switch process status  
+    return value    : True/False
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    line_array = status.split('\n')
+    for i in range(0, len(line_array)-1):
+        print "bridge: %s" % line_array[i]
+    return True
+
+def checkNovaServices():
+    '''
+    @author         : Shashaa
+    description     : execute and check nova services 
+    return value    : False if any of the service fails, else True
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    # check nova services
+    out = os.popen('service nova-compute status')
+    status = out.read()
+    #print "nova compute :: %s" % status
+    ret = checkNovaCompute(status)
+    if ret == False:
+        return ret
+
+    out = os.popen('nova-manage service list')
+    status = out.read()
+    print "nova manage :: %s" % status
+    ret = checkNovaManage(status)
+    if ret == False:
+        return ret
+
+    out = os.popen('service quantum-plugin-openvswitch-agent status')
+    status = out.read()
+    #print "quantun-plugin :: %s" % status
+    ret = checkOpenvswitch(status)
+    if ret == False:
+        return ret
+
+
+    #out = os.popen('nova host-list') # TODO
+
+    return True
+
+
+def checkOvsServices():
+
+    '''
+    @author         : Shashaa
+    description     : Fasle if any of the service fails, else True
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    # check ovs services
+    out = os.popen('ovs-vsctl list-br')
+    status = out.read()
+    #print "ovs-vsctl :: %s" % status
+    ret = checkOvs(status)
+    if ret == False:
+        return ret
+
+    return True
+
 def processComputeConfig(sock):
 
     '''
@@ -166,31 +317,15 @@ def processComputeConfig(sock):
 
     post_install_status = True
 
-    # check nova services
-    out = os.popen('service nova-compute status')
-    status = out.read()
-    # process status TODO
-    print "nova compute :: %s" % status
+    nova_services = checkNovaServices()
 
-    out = os.popen('nova-manage service list')
-    status = out.read()
-    # process status TODO
-    print "nova manage :: %s" % status
+    ovs_services = checkOvsServices()
 
-    out = os.popen('service quantum-plugin-openvswitch-agent restart')
-    status = out.read()
-    # process status TODO
-    print "quantun-plugin :: %s" % status
-
-
-    #out = os.system('nova host-list') # TODO
-
-
-    # check ovs services
-    out = os.popen('ovs-vsctl list-br')
-    status = out.read()
-    # process status TODO
-    print "ovs-vsctl :: %s" % status
+    if nova_services==True and ovs_services==True:
+        print "All services are up and running !!!"
+        post_install_status=True
+    else:
+        post_install_status=False
 
 
     if post_install_status == True:
@@ -198,7 +333,7 @@ def processComputeConfig(sock):
         # send node_ready status message to cc
         status_ready = {
                 'Type':'status',
-                'Length':1,
+                'Length':'1',
                 'Value':'node_ready'
                 }
 
@@ -218,6 +353,8 @@ def processComputeConfig(sock):
     else:
 
         # retry for 2 times TODO
+        #startNovaServices()
+        #startOvsServices
 
         if post_install_status != True:
 
