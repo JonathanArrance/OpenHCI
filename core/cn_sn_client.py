@@ -353,8 +353,8 @@ def processComputeConfig(sock):
     else:
 
         # retry for 2 times TODO
-        #startNovaServices()
-        #startOvsServices
+        #restartNovaServices()
+        #restartOvsServices
 
         if post_install_status != True:
 
