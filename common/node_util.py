@@ -358,7 +358,6 @@ def check_node_ready_flag(node_id):
         else:
             r_dict = {'ready_flag_set':'%s' %(get_flag[0][0])}
     except:
-        db.pg_transaction_rollback()
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'ready_flag_set':'ERROR'}
 
@@ -436,7 +435,6 @@ def check_node_fault_flag(node_id):
         else:
             r_dict = {'fault_flag_set':'%s' %(get_flag[0][0])}
     except:
-        db.pg_transaction_rollback()
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'ready_flag_set':'ERROR'}
 
