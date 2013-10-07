@@ -284,3 +284,160 @@ def set_admin_pass_status(pass_flag):
         r_dict = {'pass_flag_set':'ERROR'}
 
     return r_dict
+
+def set_node_ready_flag(node_id):
+    """
+    DESC: Set the node ready flag when the node is ready to use in the Transcirrsu db.
+    INPUT: node_id
+    OUTPUT: r_dict -ready_flag_set SET
+                                   ERROR
+    ACCESS: Wide open
+    NOTE: SET - node ready flag has been set, ERROR - node ready could not be set.
+    """
+    db = util.db_connect()
+    r_dict = {}
+
+    try:
+        db.pg_transaction_begin()
+        update = {'table':"trans_nodes",'set':"node_ready_flag='SET'",'where':"node_id='%s'" %(node_id)}
+        db.pg_update(update)
+        db.pg_transaction_commit()
+        r_dict = {'ready_flag_set':'SET'}
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        r_dict = {'ready_flag_set':'ERROR'}
+
+    return r_dict
+    
+def clear_node_ready_flag(node_id):
+    """
+    DESC: Unset the node ready flag when the node is not ready to use in the Transcirrsu db.
+          Can also be used to set the flag if there is an error during setup.
+    INPUT: node_id
+    OUTPUT: r_dict -ready_flag_set UNSET
+                                   ERROR
+    ACCESS: Wide open
+    NOTE: UNSET - node ready flag has been unset, ERROR - node ready could not be set.
+    """
+    db = util.db_connect()
+    r_dict = {}
+
+    try:
+        db.pg_transaction_begin()
+        update = {'table':"trans_nodes",'set':"node_ready_flag='UNSET'",'where':"node_id='%s'" %(node_id)}
+        db.pg_update(update)
+        db.pg_transaction_commit()
+        r_dict = {'ready_flag_set':'UNSET'}
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        r_dict = {'ready_flag_set':'ERROR'}
+
+    return r_dict
+    
+def check_node_ready_flag(node_id):
+    """
+    DESC: Get the node ready flag in the Transcirrsu db.
+    INPUT: None
+    OUTPUT: r_dict -node_ready_set SET
+                                   UNSET
+                                   ERROR
+                                   NA
+    ACCESS: Wide open
+    NOTE: SET - Node is ready to use, UNSET - Node not ready to use.
+    """
+    db = util.db_connect()
+    r_dict = {}
+
+    try:
+        get = {'select':"node_ready_flag", 'from':"trans_nodes", 'where':"node_id='%s'" %(node_id)}
+        get_flag = db.pg_select(get)
+        if((get_flag[0][0] == '') or (get_flag[0][0] == 'NULL')):
+            r_dict = {'ready_flag_set':'NA'}
+        else:
+            r_dict = {'ready_flag_set':'%s' %(get_flag[0][0])}
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        r_dict = {'ready_flag_set':'ERROR'}
+
+    return r_dict
+
+def set_node_fault_flag(node_id):
+    """
+    DESC: Set the node fault flag when the node is ready to use in the Transcirrsu db.
+    INPUT: node_id
+    OUTPUT: r_dict -fault_flag_set SET
+                                   ERROR
+    ACCESS: Wide open
+    NOTE: SET - node fault flag has been set, ERROR - node fault could not be set.
+    """
+    db = util.db_connect()
+    r_dict = {}
+
+    try:
+        db.pg_transaction_begin()
+        update = {'table':"trans_nodes",'set':"node_fault_flag='SET'",'where':"node_id='%s'" %(node_id)}
+        db.pg_update(update)
+        db.pg_transaction_commit()
+        r_dict = {'fault_flag_set':'SET'}
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        r_dict = {'fault_flag_set':'ERROR'}
+
+    return r_dict
+    
+def clear_node_fault_flag(node_id):
+    """
+    DESC: Unset the node falt flag when the node is not in a fault state in the Transcirrsu db.
+    INPUT: node_id
+    OUTPUT: r_dict -fault_flag_set UNSET
+                                   ERROR
+    ACCESS: Wide open
+    NOTE: UNSET - node fault flag has been unset, ERROR - node ready could not be set.
+    """
+    db = util.db_connect()
+    r_dict = {}
+
+    try:
+        db.pg_transaction_begin()
+        update = {'table':"trans_nodes",'set':"node_fault_flag='UNSET'",'where':"node_id='%s'" %(node_id)}
+        db.pg_update(update)
+        db.pg_transaction_commit()
+        r_dict = {'fault_flag_set':'UNSET'}
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        r_dict = {'fault_flag_set':'ERROR'}
+
+    return r_dict
+    
+def check_node_fault_flag(node_id):
+    """
+    DESC: Get the node fault flag in the Transcirrsu db.
+    INPUT: None
+    OUTPUT: r_dict -node_fault_flag SET
+                                    UNSET
+                                    ERROR
+                                    NA
+    ACCESS: Wide open
+    NOTE: SET - Node fault flag is set, UNSET - Node fault is not set.
+    """
+    db = util.db_connect()
+    r_dict = {}
+
+    try:
+        get = {'select':"node_fault_flag", 'from':"trans_nodes", 'where':"node_id='%s'" %(node_id)}
+        get_flag = db.pg_select(get)
+        if((get_flag[0][0] == '') or (get_flag[0][0] == 'NULL')):
+            r_dict = {'fault_flag_set':'NA'}
+        else:
+            r_dict = {'fault_flag_set':'%s' %(get_flag[0][0])}
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        r_dict = {'ready_flag_set':'ERROR'}
+
+    return r_dict

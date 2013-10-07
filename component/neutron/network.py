@@ -94,17 +94,30 @@ class neutron_ops:
     def get_network(self,net_name):
         print "not implemented"
 
-    #DESC: Create a network in the project. Only a project admin can create
-    #      a new network. Users and power users can not create networks.
+    #DESC: Create a network in the project. Only an admin or project power user can create
+    #      a new private network. Users can not create networks.
     #INPUT: create_dict - net_name
     #                   - admin_state (up/down)
     #                   - shared (true/false)
     #OUTPUT: r_dict - net_name
     #               - net_id
     #NOTE: need to update the transcirrus db with the new network.
-    def add_network(self,create_dict):
+    def add_private_network(self,create_dict):
         print "not implemented"
         #-d '{"network": {"router:external": "True", "name": "jon", "admin_state_up": true}}'
+
+    #DESC: Create a public network in the project. Only an admin can create
+    #      a new public network. Public networks allow vms and virtual routers to
+    #      recieve floating ips on the external. Users and power users can not
+    #      create networks.
+    #INPUT: create_dict - net_name
+    #                   - admin_state (up/down)
+    #                   - shared (true/false)
+    #OUTPUT: r_dict - net_name
+    #               - net_id
+    #NOTE: need to update the transcirrus db with the new network.
+    def add_public_network(self,create_dict):
+        print "Not implemented"
 
     #DESC: Remove a network from a project. Only project admin can remove
     #      a network. Can not remove default system networks.
