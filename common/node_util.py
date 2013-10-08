@@ -185,6 +185,7 @@ def check_first_time_boot():
     else:
         r_dict = {'first_time_boot':'NA'}
 
+    db.pg_close_connection()
     return r_dict
 
 def set_first_time_boot(set_flag):
@@ -216,9 +217,11 @@ def set_first_time_boot(set_flag):
         db.pg_transaction_commit()
         r_dict = {'first_time_boot':'OK'}
     except:
-        db.pg_transaction_wror("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'first_time_boot':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
 
 def check_admin_pass_status():
@@ -248,6 +251,7 @@ def check_admin_pass_status():
     else:
         r_dict = {'admin_pass_set':'NA'}
 
+    db.pg_close_connection()
     return r_dict
 
 def set_admin_pass_status(pass_flag):
@@ -283,6 +287,7 @@ def set_admin_pass_status(pass_flag):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'pass_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
 
 def set_node_ready_flag(node_id):
@@ -308,6 +313,7 @@ def set_node_ready_flag(node_id):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'ready_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
     
 def clear_node_ready_flag(node_id):
@@ -334,6 +340,7 @@ def clear_node_ready_flag(node_id):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'ready_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
     
 def check_node_ready_flag(node_id):
@@ -361,6 +368,7 @@ def check_node_ready_flag(node_id):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'ready_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
 
 def set_node_fault_flag(node_id):
@@ -386,6 +394,7 @@ def set_node_fault_flag(node_id):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'fault_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
     
 def clear_node_fault_flag(node_id):
@@ -411,6 +420,7 @@ def clear_node_fault_flag(node_id):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'fault_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict
     
 def check_node_fault_flag(node_id):
@@ -438,4 +448,5 @@ def check_node_fault_flag(node_id):
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'ready_flag_set':'ERROR'}
 
+    db.pg_close_connection()
     return r_dict

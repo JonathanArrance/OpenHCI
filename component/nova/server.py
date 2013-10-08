@@ -250,7 +250,7 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
+            #check the response and make sure it is a 202
             if(rest['response'] == 202):
                 #NOTE: need to add in a polling mechanism to report back status of the creation
                 load = json.loads(rest['data'])
