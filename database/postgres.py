@@ -129,6 +129,7 @@ class pgsql:
             # strip off white spaces on values and build array to return
             x.append(e)
         logger.sql_info("Returning values of simple select")
+        logger.sql_info("This is x from select %s" %(x))
         return x
     
     #name: pg_delete

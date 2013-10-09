@@ -8,12 +8,29 @@ a = authorization("admin","builder")
 #get the user dict
 d = a.get_auth()
 
-print "Instantiating user_ops object."
+print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
 
-create = {'net_name':"thistest6",'admin_state':"true", 'shared':"true"}
+print"----------------------------------------"
+print "creating a new network"
+create = {'net_name':"thistest7",'admin_state':"true", 'shared':"true"}
 newnet = net.add_private_network(create)
 print newnet
 
-#newnet = net.list_networks()
-#print newnet
+time.sleep(1)
+print "----------------------------------------"
+print "listing the networks"
+newnet = net.list_networks()
+print newnet
+
+time.sleep(1)
+print "----------------------------------------"
+print "getting the new network7"
+getnet = net.get_network("thistest7")
+print getnet
+
+time.sleep(1)
+print"-----------------------------------------"
+print "deleteing the new network"
+delnet = net.remove_network("thistest7")
+print delnet
