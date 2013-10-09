@@ -6,6 +6,9 @@
 
 from __future__ import nested_scopes, division
 import sys, os, time, getopt, subprocess, dialog
+from transcirrus.common.auth import authorization
+from transcirrus.common import node_util
+from transcirrus.common import util
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -188,25 +191,33 @@ def setup(d):
     while(True):
         user = userbox(d)
         password = passwordbox(d)
-        # Verify credentials
-        # if cloud admin, continue setup
-        # else re-prompt for credentials
-        if (user == "admin" and password == "password"):
-            break
-        else:
+        try:
+            a = authorization(user, password)
+            user_dict = a.get_auth()
+
+            # Verify credentials
+            # if cloud admin, continue setup
+            # else re-prompt for credentials
+            if (user_dict['is_admin'] == 1):
+                break
+            else:
+                d.msgbox("Admin only, try again.", width=60, height=10)
+        except:
             d.msgbox("Invalid credentials, try again.", width=60, height=10)
 
-    first_time = firstTimeFlag(d)
+    first_time = node_util.check_first_time_boot()
     # Check to determine if first time (will be implemented differently
     # once we have those flags setup on database, this is just proof of concept
-    if (first_time == d.DIALOG_CANCEL):
+    if (first_time is False):
         d.msgbox("Taking you to the Coalesce Dashboard...")
         # Direct user to Coalesce Dashboard
         clear_screen(d)
         return
+    else:
+        d.msgbox("Continue to first time setup.")
 
     while(True):
-        uplink_ip, mgmt_ip, vm_ip_start, vm_ip_end, cloud, pwd, cnfrm, = info(d)
+        uplink_ip, mgmt_ip, vm_ip_min, vm_ip_max, cloud_name, pwd, cnfrm, = info(d)
         # Validate uplink ip
         if(valid_ip(uplink_ip) is False):
             d.msgbox("Invalid Uplink IP, try again.", width=60, height=10)
@@ -216,11 +227,11 @@ def setup(d):
             d.msgbox("Invalid Management IP, try again.", width=60, height=10)
             continue
         # Validate start point
-        if(valid_ip_within(uplink_ip, vm_ip_start) is False):
+        if(valid_ip_within(uplink_ip, vm_ip_min) is False):
             d.msgbox("Invalid VM Range Start-Point, try again.", width=60, height=10)
             continue
         # Validate end point
-        if(valid_ip_within(vm_ip_start, vm_ip_end) is False):
+        if(valid_ip_within(vm_ip_min, vm_ip_max) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
         # Validate new password
@@ -233,10 +244,73 @@ def setup(d):
             continue
         break
 
+    try:
+        d.msgbox("cloud_name: " + cloud_name)
+        system = util.get_cloud_controller_name()
+        d.msgbox("cloud_controller: " + system)
+        """
+        util.update_system_variables(
+            [{'system_name':system, 'parameter':"api_ip", 'param_value':mgmt_ip},
+             {'system_name':system, 'parameter':"mgmt_ip", 'param_value':mgmt_ip},
+             {'system_name':system, 'parameter':"admin_api_ip", 'param_value':mgmt_ip},
+             {'system_name':system, 'parameter':"int_api_ip", 'param_value':mgmt_ip},
+             {'system_name':system, 'parameter':"uplink_ip", 'param_value':uplink_ip},
+             {'system_name':system, 'parameter':"vm_ip_min", 'param_value':vm_ip_min},
+             {'system_name':system, 'parameter':"vm_ip_max", 'param_value':vm_ip_max}])
+        """
+        util.update_cloud_controller_name({'old_name': system, 'new_name': cloud_name})
+
+    except:
+        d.msgbox("Error when updating database.")
+
     # Sanity check, just prints out what was entered in the setup page
     # Currently no error checking, but that will added of course
-    d.msgbox(uplink_ip + "\n" + pwd + "\n" + cnfrm + "\n" + vm_ip_start + "\n"
-        + vm_ip_end + "\n" + cloud)
+    """
+    system_variables = util.get_system_variables(cloud_name)
+    sys_trans_db = system_variables['TRANSCIRRUS_DB']
+    sys_trans_db_user = system_variables['TRAN_DB_USER']
+    sys_trans_db_pass = system_variables['TRAN_DB_PASS']
+    sys_trans_db_name = system_variables['TRAN_DB_NAME']
+    sys_trans_db_port = system_variables['TRAN_DB_PORT']
+    sys_admin_token = system_variables['ADMIN_TOKEN']
+    sys_api_ip = system_variables['API_IP']
+    sys_mgmt_ip = system_variables['MGMT_IP']
+    sys_int_api_ip = system_variables['INT_API_IP']
+    sys_admin_api_ip = system_variables['ADMIN_API_IP']
+    sys_cloud_controller = system_variables['CLOUD_CONTROLLER']
+    sys_cloud_controller_id = system_variables['CLOUD_CONTROLLER_ID']
+    sys_cloud_name = system_variables['CLOUD_NAME']
+    sys_os_db = system_variables['OS_DB']
+    sys_os_db_user = system_variables['OS_DB_USER']
+    sys_os_db_pass = system_variables['OS_DB_PASS']
+    sys_os_db_port = system_variables['OS_DB_PORT']
+    sys_member_role_id = system_variables['MEMBER_ROLE_ID']
+    sys_admin_role_id = system_variables['ADMIN_ROLE_ID']
+
+    d.msgbox("TRANSCIRRUS_DB: " + sys_trans_db + "\n" +
+             "TRAN_DB_USER: " + sys_trans_db_user + "\n" +
+             "TRAN_DB_PASS: " + sys_trans_db_pass + "\n" +
+             "TRAN_DB_NAME: " + sys_trans_db_name + "\n" +
+             "TRAN_DB_PORT: " + sys_trans_db_port + "\n" +
+             "ADMIN_TOKEN: " + sys_admin_token + "\n" +
+             "API_IP: " + sys_api_ip + "\n" +
+             "MGMT_IP: " + sys_mgmt_ip + "\n" +
+             "INT_API_IP: " + sys_int_api_ip + "\n" +
+             "ADMIN_API_IP: " + sys_admin_api_ip + "\n" +
+             "CLOUD_CONTROLLER: " + sys_cloud_controller + "\n" +
+             "CLOUD_CONTROLLER_ID: " + sys_cloud_controller_id + "\n" +
+             "CLOUD_NAME: " + sys_cloud_name + "\n" +
+             "OS_DB: " + sys_os_db + "\n" +
+             "OS_DB_USER: " + sys_os_db_user + "\n" +
+             "OS_DB_PASS: " + sys_os_db_pass + "\n" +
+             "OS_DB_PORT: " + sys_os_db_port + "\n" +
+             "MEMBER_ROLE_ID: " + sys_member_role_id + "\n" +
+             "ADMIN_ROLE_ID: " + sys_admin_role_id + "\n")
+    """
+
+    cn_dict = util.get_cloud_controller_name()
+    system = cn_dict['cloud_controller']
+    d.msgbox("Cloud controller name: " + system)
 
     single_node = singleNode(d)
     # Check to determine is system is single node
