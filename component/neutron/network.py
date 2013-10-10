@@ -5,6 +5,7 @@
 
 import sys
 import json
+import socket
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -361,7 +362,7 @@ class neutron_net_ops:
         #get the network. Make sure it exists
         net = self.get_network(net_name)
         if(net):
-            if(len(net['net_subnet_id'])):
+            if(len(net['net_subnet_id']) >= 1):
                 logger.error('Can not remove network %s, it has subnets attached.' %(net_name))
                 raise Exception('Can not remove network %s, it has subnets attached.' %(net_name))
         else:
@@ -389,7 +390,7 @@ class neutron_net_ops:
                 api_path = '/v2.0/networks/%s' %(net['net_id'])
                 token = self.token
                 sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": self.token, "sec": sec, "port":'9696'}
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
                 #check the response and make sure it is a 204
                 if(rest['response'] == 204):
@@ -464,7 +465,7 @@ class neutron_net_ops:
                 api_path = '/v2.0/networks/%s' %(net['net_id'])
                 token = self.token
                 sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": self.token, "sec": sec, "port":'9696'}
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 print rest_dict
                 rest = api.call_rest(rest_dict)
                 #check the response and make sure it is a 204
@@ -489,61 +490,157 @@ class neutron_net_ops:
             logger.sys_error("Only an admin or a power user can remove a new network.")
             raise Exception("Only an admin or a power user can remove a new network.")
 
-    #DESC: Lists the subnets for the specified network. All user types can
-    #      list the subnets in the project networks.
-    #INPUT: net_name
-    #OUTPUT: array of r_dict - subnet_name
-    #                        - subnet_id
-    #NOTE: all of the return info can be quried from the transcirrus db. May use
-    #      rest api to verify subent exsists(not required).
     def list_net_subnet(self,net_name):
+        """
+        DESC: Lists the subnets for the specified network. All user types can
+              list the subnets in the project networks.
+        INPUT: net_name
+        OUTPUT: array of r_dict - subnet_name
+                                - subnet_id
+        NOTE: all of the return info can be quried from the transcirrus db. May use
+              rest api to verify subent exsists(not required).
+        """
+
         print "not implemented"
 
-    #DESC: Get all of the information for a specific subnet. All user types
-    #      can get information for subnets in the project networks.
-    #INPUT: subnet_name
-    #OUTPUT: r_dict - subnet_id
-    #               - subnet_class
-    #               - subnet_ip_ver
-    #               - subnet_cidr
-    #               - subnet_gateway
-    #               - subnet_allocation_start
-    #               - subnet_allocation_end
-    #               - subnet_dhcp_enable
-    #NOTE: all of the return info can be quried from the transcirrus db. May use
-    #      rest api to verify subent exsists(not required).
     def get_net_subnet(self,subnet_name):
+        """
+        DESC: Get all of the information for a specific subnet. All user types
+              can get information for subnets in the project networks.
+        INPUT: subnet_name
+        OUTPUT: r_dict - subnet_id
+                       - subnet_class
+                       - subnet_ip_ver
+                       - subnet_cidr
+                       - subnet_gateway
+                       - subnet_allocation_start
+                       - subnet_allocation_end
+                       - subnet_dhcp_enable
+        NOTE: all of the return info can be quried from the transcirrus db. May use
+              rest api to verify subent exsists(not required).
+        """
         print "not implemented"
 
-    #DESC: Add a new subnet to a project subnet. Only admins can add a subnet to
-    #      a network in their project.
-    #INPUT: subnet_dict - subnet_id
-    #                   - subnet_class
-    #                   - subnet_ip_ver
-    #                   - subnet_cidr
-    #                   - subnet_gateway
-    #                   - subnet_allocation_start
-    #                   - subnet_allocation_end
-    #                   - subnet_dhcp_enable
-    #OUTPUT: r_dict - subnet_name
-    #               - subnet_id
-    #NOTE: REST API will throw a 409 error if there is a conflict
     def add_net_subnet(self,subnet_dict):
-        print "not implemented"
+        """
+        DESC: Add a new subnet to a project subnet. Only admins can add a subnet to
+              a network in their project.
+        INPUT: subnet_dict - net_name
+                           - subnet_dhcp_enable true/false
+                           - subnet_dns[]
+        OUTPUT: r_dict - subnet_name
+                       - subnet_id
+                       - subnet_cidr
+                       - subnet_start_range
+                       - subnet_end_range
+                       - subnet_mask
+                       - subnet_gateway
+        ACCESS: Admins can create a subnet in any network, powerusers can create a subnet
+                only a subnet in their project.
+        NOTE: REST API will throw a 409 error if there is a conflict. Default google dns used if no DNS server specified.
+              Up to 2 more DNS servers can be specified.
+        """
 
-    #DESC: used to clean up after the
-    #INPUT: update_dict - subnet_name - req
-    #                   - subnet_class - op
-    #                   - subnet_ip_ver - op
-    #                   - subnet_cidr - op
-    #                   - subnet_gateway - op
-    #                   - subnet_allocation_start - op
-    #                   - subnet_allocation_end - op
-    #                   - subnet_dhcp_enable - op
-    #OUTPUT: r_dict - subnet_name
-    #               - subne_id
-    #               - net_id
+        if(('net_name' not in subnet_dict) or (subnet_dict['net_name'] == '')):
+            logger.sys_error("Could not create subnet. No network name given.")
+            raise Exception("Could not create subnet. No network name given.")
+        if(('subnet_dhcp_enable' not in subnet_dict) or (subnet_dict['subnet_dhcp_enable'] == '')):
+            logger.sys_error("Could not activate the dhcp service.")
+            raise Exception("Could not activate the dhcp service.")
+        
+        #strings
+        self.enable_dhcp = subnet_dict['subnet_dhcp_enable'].lower()
+        if((self.enable_dhcp == 'true') or (self.enable_dhcp == 'false')):
+            logger.sys_info("enable_dhcp passed")
+        else:
+            #HACK hate this
+            logger.sys_error("Invalid value given for enable_dhcp.")
+            raise Exception("Invalid value given for enable_dhcp.")
+
+        self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+        if('subnet_dns' in subnet_dict):
+            """
+            for sub in subnet_dict['subnet_dns']:
+                try:
+                    socket.inet_aton(sub)
+                    self.dns + sub
+                except socket.error:
+                    logger.sys_error("The dns ip address %s was not valid." %(sub))
+                    raise Exception("The dns ip address %s was not valid." %(sub))
+            """
+            #HACK this needs to be fixed
+            logger.sys_warning("Need to be able to add more dns servers.")
+
+        #get the network info
+        net = self.get_network(subnet_dict['net_name'])
+        if(len(net) == 0):
+            logger.sys_error("No network with the name %s was found."%(subnet_dict['net_name']))
+            raise Exception("No network with the name %s was found."%(subnet_dict['net_name']))
+    
+        #get the next available subnet from the database
+        try:
+            get_sub = {'select':"*",'from':"trans_subnets",'where':"in_use=0 order by index ASC"}
+            sub = self.db.pg_select(get_sub)
+        except:
+            logger.sql_error("Could not get subnet information from the Transcirrus db.")
+            raise Exception("Could not get subnet information from the Transcirrus db.")
+
+        if(self.user_level <= 1):
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(sub[0][3],sub[0][6],sub[0][13],self.enable_dhcp,net['net_id'],self.project_id,sub[0][4],self.dns_string)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/subnets'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 201
+                if(rest['response'] == 201):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    load = json.loads(rest['data'])
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    update_dict = {'table':"trans_subnets",'set':"in_use='1',proj_id='%s',subnet_dhcp_enable='%s',subnet_id='%s',net_id='%s',subnet_dns='8.8.8.8'"%(self.project_id,self.enable_dhcp,load['subnet']['id'],net['net_id']),'where':"index='%s'"%(sub[0][0])}
+                    self.db.pg_update(update_dict)
+                    self.db.pg_transaction_commit()
+                    r_dict = {'subnet_name':sub[0][13],'subnet_id':sub[0][1],'subnet_cidr':sub[0][4],'subnet_start_range':sub[0][6],'subnet_end_range':sub[0][7],'subnet_mask':sub[0][14],'subnet_gateway':sub[0][5]}
+                    return r_dict
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add a new subnet to Neutron.")
+                raise Exception("Could not add a new subnet to Neutron.")
+        else:
+            logger.sys_error("Only an admin or a power user can create a new network.")
+            raise Exception("Only an admin or a power user can create a new network.")
+
     def update_net_subnet(self,update_dict):
+        """
+        #DESC: used to clean up after the
+        #INPUT: update_dict - subnet_name - req
+        #                   - subnet_class - op
+        #                   - subnet_ip_ver - op
+        #                   - subnet_cidr - op
+        #                   - subnet_gateway - op
+        #                   - subnet_allocation_start - op
+        #                   - subnet_allocation_end - op
+        #                   - subnet_dhcp_enable - op
+        #OUTPUT: r_dict - subnet_name
+        #               - subne_id
+        #               - net_id
+        """
         print "not implemented"
 
     #DESC: Remove a subnet from a network. Only admins can delete subnets from networks

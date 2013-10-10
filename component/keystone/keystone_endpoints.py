@@ -272,18 +272,35 @@ class endpoint_ops:
         else:
             util.http_codes(ep_rest['response'],ep_rest['reason'])
         """
-    #DESC: Get the attribute info for a specific cloud service endpoint
-    #INPUT: input_dict -cloud_name - op ciac cloud name is used
-    #                  -service_name - req
-    #OUTPUT: r_dict - endpoint_id
-    #               - endpoint_version
-    #               - service_name
-    #               - admin_url
-    #               - internal_url
-    #               - public_url
-    def get_endpoint(self):
-        print "not implemented"
     
+    def get_endpoint(self,input_dict):
+        """
+        DESC: Get the attribute info for a specific cloud service endpoint
+        INPUT: input_dict -cloud_name - op ciac cloud name is used
+                          -service_name - req
+        OUTPUT: r_dict - endpoint_id
+                       - endpoint_version
+                       - service_name
+                       - admin_url
+                       - internal_url
+                       - public_url
+        """
+        if(('cloud_name' not in input_dict) or (input_dict['cloud_name'] == '')):
+            #Get the defualt cloud name from the config.py file
+            input_dict['cloud_name'] == config.CLOUD_NAME
+        
+        print "not implemented"
+
+    #DESC: List the cloud endpoints for the services configured in openstack
+    #INPUT: self object
+    #OUTPUT: array of r_dict -service_name
+    #                        -service_id
+    #                        -admin_url
+    #                        -internal_url
+    #                        -public_url
+    def list_endpoints(self):
+        print "not implemented"
+        
     #DESC: update a cloud service endpoint configured in openstack
     #      function will actually delete that endpoint and then
     #      recreate the endpoint.
@@ -298,16 +315,6 @@ class endpoint_ops:
     #                        -internal_url
     #                        -public_url
     def update_endpoint(self,update_dict):
-        print "not implemented"
-
-    #DESC: List the cloud endpoints for the services configured in openstack
-    #INPUT: self object
-    #OUTPUT: array of r_dict -service_name
-    #                        -service_id
-    #                        -admin_url
-    #                        -internal_url
-    #                        -public_url
-    def list_endpoints(self):
         print "not implemented"
         """
 #REQ: curl -i -X GET http://192.168.10.30:35357/v2.0/endpoints -H "User-Agent: python-keystoneclient" -H "X-Auth-Token: cheapass"
