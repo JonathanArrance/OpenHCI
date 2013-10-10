@@ -13,7 +13,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Instantiateing authorization object"
-a = authorization("test","test")
+a = authorization("admin","builder")
 
 #print "Get the authorization dictionary for user."
 #get the user dict
