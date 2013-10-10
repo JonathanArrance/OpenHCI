@@ -16,6 +16,7 @@ timeout_sec=1
 count=0
 retry_count=5
 recv_buffer=4096
+keep_alive_sec=10
 
 
 def check_node_update(data):
@@ -221,7 +222,7 @@ def keep_alive_check(conn):
 
     '''
     @author         : Shashaa
-    comment         : 
+    comment         : Send keep alive status messages 
     return value    : 
     create date     :
     ----------------------
@@ -231,19 +232,16 @@ def keep_alive_check(conn):
     '''
 
     while True:
-        ready = select.select([conn], [], [], timeout_sec)
-        if ready[0]:
-            data = conn.recv(recv_buffer)
+        status_alive = {
+                'Type': 'status',
+                'Length': '1',
+                'Value': 'alive'
+                }
+        conn.sendall(pickle.dumps(status_alive, -1))
 
-            data = pickle.loads(data)
-            if data['Type'] == 'status' and data['Value'] == 'alive':
-                print "***%s***" % data['Value']
-            elif data['Type'] == 'status' and data['Value'] == 'node_ready':
-                print "received %s " % data['Value']
-            else:
-                print "received %s " % data
-        else:
-            print "ciac server waiting for keep alive messages"
+        # sleep for keep_alive_sec
+        print "***keep_alive***"
+        sleep(keep_alive_sec)
 
 
 def sendBuild(conn):
@@ -287,6 +285,7 @@ def client_thread(conn, client_addr):
     @author         :
     comments        :
     '''
+    print "Thread created for a connection from host:", client_addr
     try:
         while True:
 
@@ -341,10 +340,10 @@ def client_thread(conn, client_addr):
                                     sendComputeConfig(conn, node_id)
 
                                 while True:
-        			    ready = select.select([conn], [], [], timeout_sec)
-        			    if ready[0]:
-            			        data = conn.recv(recv_buffer)
-            			        break
+                                    ready = select.select([conn], [], [], timeout_sec)
+                                    if ready[0]:
+                                        data = conn.recv(recv_buffer)
+                                        break
                                     else:
                                         print "ciac server waiting for status ready/halt from compute node_id: %s" % (node_id)
                                 if data:
@@ -353,11 +352,10 @@ def client_thread(conn, client_addr):
                                         print "ciac server received %s from node_id: %s" % (data['Value'], node_id)
                                         print "ciac server sending ok ack node_id: %s" % (node_id)
                                         sendOk(conn)
-                                        break
                                 else:
                                     print "ciac server did not receive any data"
 
-                                print "ciac server listening for keep alive messages from node_id: %s" % (node_id)
+                                print "ciac server sending keep alive messages for node_id: %s" % (node_id)
                                 keep_alive_check(conn)
 
                             # node info has not been changed
@@ -368,7 +366,7 @@ def client_thread(conn, client_addr):
                                 sendOk(conn)
 
                                 # go for keep_alive check
-                                print "ciac server listening for keep alive messages from node_id: %s" % (node_id)
+                                print "ciac server sending keep alive messages from node_id: %s" % (node_id)
                                 keep_alive_check(conn)
                                 
 
@@ -406,10 +404,10 @@ def client_thread(conn, client_addr):
                                     sendComputeConfig(conn, node_id)
 
                                 while True:
-        			    ready = select.select([conn], [], [], timeout_sec)
-        			    if ready[0]:
-            			        data = conn.recv(recv_buffer)
-            			        break
+                                    ready = select.select([conn], [], [], timeout_sec)
+                                    if ready[0]:
+                                        data = conn.recv(recv_buffer)
+                                        break
                                     else:
                                         print "ciac server waiting for status ready/halt from node_id: %s" % (node_id)
                                 if data:
@@ -418,12 +416,11 @@ def client_thread(conn, client_addr):
                                         print "ciac server received %s from node_id: %s" % (data['Value'], node_id)
                                         print "ciac server sent ok ack, node_id: %s" % (node_id)
                                         sendOk(conn)
-                                        break
                                 else:
                                     print "ciac server did not receive any data from node_id: %s" % (node_id)
 
                                 # go for keep alive check
-                                print "ciac server listening for keep alive messages, node_id: %s" % (node_id)
+                                print "ciac server sending keep alive messages, node_id: %s" % (node_id)
                                 keep_alive_check(conn)
 
                             else:
@@ -461,7 +458,7 @@ sock.listen(5)
 
 try:
     while True:
-        print "waiting for connection...IP: %s, port: %s" % ("127.0.0.1", "6161")
+        print "waiting for connection...on %s of ciac server, port: %s" % ("all NICs", "6161")
         conn, client_addr = sock.accept()
         print "connection from ", client_addr
         start_new_thread(client_thread, (conn, client_addr))
