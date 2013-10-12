@@ -231,7 +231,7 @@ def update_system_variables(update_array):
 
     db = db_connect()
 
-    for value in input_array:
+    for value in update_array:
         for key,val in value.items():
             #skip over these
             if(val == ""):
@@ -523,7 +523,7 @@ def get_system_variables(node_id):
         find_node_dict = {'select':"parameter,param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(node_name[0][0])}
         sys = db.pg_select(find_node_dict)
     except:
-        logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
+        logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(node_name[0][0]))
         return 'NA'
     db.pg_close_connection()
 
