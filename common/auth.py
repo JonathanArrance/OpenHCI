@@ -176,22 +176,26 @@ def _check_user_enabled(key,user_array):
 #OUTPUT: api_token used to run REST API commands
 def _get_token(username,password,project_id):
     #submit the values passed in 
-    api_dict = {"username":username, "password":password, "project_id":project_id}
-    api = caller(api_dict)
-    #       body - body of the rest call
-    #       Function - POST,PUT,GET,HEAD,DELETE,INSERT
-    #       api_path - ex /v2.0/tenants
-    #       token - auth or admin token
-    #       sec - TRUE/FALSE, use https = True
-    logger.sys_info("Tenant id was passwed in %s." %(username))
-    body = '{"auth":{"passwordCredentials":{"username": "%s", "password":"%s"}, "tenantId":"%s"}}' %(username,password,project_id)
-    header = {"Content-Type": "application/json"}
-    function = 'POST'
-    api_path = '/v2.0/tokens'
-    token = ""
-    sec = 'FALSE'
-    rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-    rest = api.call_rest(rest_dict)
+    try:
+        api_dict = {"username":username, "password":password, "project_id":project_id}
+        api = caller(api_dict)
+        #       body - body of the rest call
+        #       Function - POST,PUT,GET,HEAD,DELETE,INSERT
+        #       api_path - ex /v2.0/tenants
+        #       token - auth or admin token
+        #       sec - TRUE/FALSE, use https = True
+        logger.sys_info("Tenant id was passwed in %s." %(username))
+        body = '{"auth":{"passwordCredentials":{"username": "%s", "password":"%s"}, "tenantId":"%s"}}' %(username,password,project_id)
+        header = {"Content-Type": "application/json"}
+        function = 'POST'
+        api_path = '/v2.0/tokens'
+        token = ""
+        sec = 'FALSE'
+        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+        rest = api.call_rest(rest_dict)
+    except Exception as e:
+        logger.sys_error("%s" %(e))
+        raise e
 
     if ((rest['response'] == 200) or (rest['response'] == 203)):
         #read the json that is returned
@@ -227,12 +231,20 @@ def _get_token(username,password,project_id):
 def _get_admin_token(db,project_id):
     #retrieve the default system token from the Transcirrus DB
     #get the host system where the prject lives
-    host_dict = {"select":"host_system_name", "from":"projects", "where":"proj_id='%s'" %(project_id)}
-    host = db.pg_select(host_dict)
+    try:
+        host_dict = {"select":"host_system_name", "from":"projects", "where":"proj_id='%s'" %(project_id)}
+        host = db.pg_select(host_dict)
+    except:
+        logger.sql_error("Could not get the project id %s" %(project_id))
+        raise Exception("Could not get the project id %s" %(project_id))
 
     #get the admin token from the db.
     #get the admin token in case it needs to be verified aginst a passed in "token"
-    adm_dict = {"select":"param_value", "from":"trans_system_settings", "where":"parameter='admin_token'", "and":"host_system='%s'" %(host[0][0])}
-    adm_token = db.pg_select(adm_dict)
+    try:
+        adm_dict = {"select":"param_value", "from":"trans_system_settings", "where":"parameter='admin_token'", "and":"host_system='%s'" %(host[0][0])}
+        adm_token = db.pg_select(adm_dict)
+    except:
+        logger.sql_error("Could not get the admin token for %s" %(host[0][0]))
+        raise Exception("Could not get the admin token for %s" %(host[0][0]))
 
     return adm_token[0][0]

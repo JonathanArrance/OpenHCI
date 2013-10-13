@@ -551,7 +551,7 @@ def set_network_variables(input_dict):
     NOTE: This is used to set the net adapters on the physical machines - neutron libs for virtual environments
           This function also writes the network config file.
     """
-
+    #do this today!
     #make sure none of the values are empty
     for key, val in file_dict.items():
         #skip over these
@@ -563,6 +563,9 @@ def set_network_variables(input_dict):
         if(key not in file_dict):
             logger.sys_error("Required info not specified for file creation.")
             raise Exception ("Required info not specified for file creation.")
+        
+        
+    
     print "not implemented"
 
 def get_network_variables(net_adapter):
