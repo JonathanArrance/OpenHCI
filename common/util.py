@@ -249,11 +249,11 @@ def update_system_variables(update_array):
             update = {'table':"trans_system_settings",'set':"param_value='%s'"%(value['param_value']),'where':"host_system='%s'" %(value['system_name']),'and':"parameter='%s'" %(value['parameter'])}
             db.pg_update(update)
             db.pg_transaction_commit()
-            return 'OK'
         except:
             db.pg_transaction_rollback()
             logger.sgl_error("Could not insert system config into the Transcirrus db.")
             return 'ERROR'
+    return 'OK'
 
 def update_cloud_controller_name(update_dict):
     """
