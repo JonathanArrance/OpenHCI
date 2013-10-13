@@ -1,0 +1,7 @@
+export OS_SERVICE_TOKEN=builder
+export OS_USERNAME=admin
+export OS_PASSWORD=builder
+export OS_TENANT_NAME=demo
+export OS_AUTH_URL=http://192.168.10.36:5000/v2.0
+export OS_REGION_NAME=RegionOne
+export OS_SERVICE_ENDPOINT=http://192.168.10.36:35357/v2.0
