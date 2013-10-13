@@ -178,6 +178,7 @@ def _get_token(username,password,project_id):
     #submit the values passed in 
     try:
         api_dict = {"username":username, "password":password, "project_id":project_id}
+        
         api = caller(api_dict)
         #       body - body of the rest call
         #       Function - POST,PUT,GET,HEAD,DELETE,INSERT
