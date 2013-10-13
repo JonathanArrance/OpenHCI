@@ -245,72 +245,72 @@ def setup(d):
         break
 
     try:
-        d.msgbox("cloud_name: " + cloud_name)
         system = util.get_cloud_controller_name()
-        d.msgbox("cloud_controller: " + system)
-        """
+
         util.update_system_variables(
             [{'system_name':system, 'parameter':"api_ip", 'param_value':mgmt_ip},
              {'system_name':system, 'parameter':"mgmt_ip", 'param_value':mgmt_ip},
              {'system_name':system, 'parameter':"admin_api_ip", 'param_value':mgmt_ip},
              {'system_name':system, 'parameter':"int_api_ip", 'param_value':mgmt_ip},
+             {'system_name':system, 'parameter':"transcirrus_db", 'param_value':mgmt_ip},
              {'system_name':system, 'parameter':"uplink_ip", 'param_value':uplink_ip},
              {'system_name':system, 'parameter':"vm_ip_min", 'param_value':vm_ip_min},
-             {'system_name':system, 'parameter':"vm_ip_max", 'param_value':vm_ip_max}])
-        """
-        util.update_cloud_controller_name({'old_name': system, 'new_name': cloud_name})
+             {'system_name':system, 'parameter':"vm_ip_max", 'param_value':vm_ip_max},
+             {'system_name':system, 'parameter':"cloud_name", 'param_value':cloud_name}])
 
-    except:
-        d.msgbox("Error when updating database.")
+    except Exception as e:
+        d.msgbox("Error when updating database: " + str(e))
 
-    # Sanity check, just prints out what was entered in the setup page
-    # Currently no error checking, but that will added of course
-    """
-    system_variables = util.get_system_variables(cloud_name)
-    sys_trans_db = system_variables['TRANSCIRRUS_DB']
-    sys_trans_db_user = system_variables['TRAN_DB_USER']
-    sys_trans_db_pass = system_variables['TRAN_DB_PASS']
-    sys_trans_db_name = system_variables['TRAN_DB_NAME']
-    sys_trans_db_port = system_variables['TRAN_DB_PORT']
-    sys_admin_token = system_variables['ADMIN_TOKEN']
-    sys_api_ip = system_variables['API_IP']
-    sys_mgmt_ip = system_variables['MGMT_IP']
-    sys_int_api_ip = system_variables['INT_API_IP']
-    sys_admin_api_ip = system_variables['ADMIN_API_IP']
-    sys_cloud_controller = system_variables['CLOUD_CONTROLLER']
-    sys_cloud_controller_id = system_variables['CLOUD_CONTROLLER_ID']
-    sys_cloud_name = system_variables['CLOUD_NAME']
-    sys_os_db = system_variables['OS_DB']
-    sys_os_db_user = system_variables['OS_DB_USER']
-    sys_os_db_pass = system_variables['OS_DB_PASS']
-    sys_os_db_port = system_variables['OS_DB_PORT']
-    sys_member_role_id = system_variables['MEMBER_ROLE_ID']
-    sys_admin_role_id = system_variables['ADMIN_ROLE_ID']
+    node = util.get_node_id()
+    system_variables = util.get_system_variables(node)
+    sys_api_ip = system_variables['api_ip']
+    sys_mgmt_ip = system_variables['mgmt_ip']
+    sys_int_api_ip = system_variables['int_api_ip']
+    sys_admin_api_ip = system_variables['admin_api_ip']
+    sys_cloud_name = system_variables['cloud_name']
+    sys_vm_ip_min = system_variables['vm_ip_min']
+    sys_vm_ip_max = system_variables['vm_ip_max']
+    sys_uplink_ip = system_variables['uplink_ip']
 
-    d.msgbox("TRANSCIRRUS_DB: " + sys_trans_db + "\n" +
-             "TRAN_DB_USER: " + sys_trans_db_user + "\n" +
-             "TRAN_DB_PASS: " + sys_trans_db_pass + "\n" +
-             "TRAN_DB_NAME: " + sys_trans_db_name + "\n" +
-             "TRAN_DB_PORT: " + sys_trans_db_port + "\n" +
-             "ADMIN_TOKEN: " + sys_admin_token + "\n" +
-             "API_IP: " + sys_api_ip + "\n" +
+    d.msgbox("API_IP: " + sys_api_ip + "\n" +
              "MGMT_IP: " + sys_mgmt_ip + "\n" +
              "INT_API_IP: " + sys_int_api_ip + "\n" +
              "ADMIN_API_IP: " + sys_admin_api_ip + "\n" +
-             "CLOUD_CONTROLLER: " + sys_cloud_controller + "\n" +
-             "CLOUD_CONTROLLER_ID: " + sys_cloud_controller_id + "\n" +
              "CLOUD_NAME: " + sys_cloud_name + "\n" +
-             "OS_DB: " + sys_os_db + "\n" +
-             "OS_DB_USER: " + sys_os_db_user + "\n" +
-             "OS_DB_PASS: " + sys_os_db_pass + "\n" +
-             "OS_DB_PORT: " + sys_os_db_port + "\n" +
-             "MEMBER_ROLE_ID: " + sys_member_role_id + "\n" +
-             "ADMIN_ROLE_ID: " + sys_admin_role_id + "\n")
-    """
+             "VM_IP_MIN: " + sys_vm_ip_min + "\n"
+             "VM_IP_MAX: " + sys_vm_ip_max + "\n"
+             "UPLINK IP: " + sys_uplink_ip + "\n", width=80, height=40)
 
-    cn_dict = util.get_cloud_controller_name()
-    system = cn_dict['cloud_controller']
-    d.msgbox("Cloud controller name: " + system)
+    system = util.get_cloud_controller_name()
+    util.update_system_variables(
+            [{'system_name':system, 'parameter':"api_ip", 'param_value':"192.168.10.37"},
+             {'system_name':system, 'parameter':"mgmt_ip", 'param_value':"192.168.10.37"},
+             {'system_name':system, 'parameter':"admin_api_ip", 'param_value':"192.168.10.37"},
+             {'system_name':system, 'parameter':"int_api_ip", 'param_value':"192.168.10.37"},
+             {'system_name':system, 'parameter':"uplink_ip", 'param_value':"0.0.0.0"},
+             {'system_name':system, 'parameter':"vm_ip_min", 'param_value':"0.0.0.0"},
+             {'system_name':system, 'parameter':"vm_ip_max", 'param_value':"0.0.0.0"},
+             {'system_name':system, 'parameter':"cloud_name", 'param_value':"integration"}])
+
+    node = util.get_node_id()
+    system_variables = util.get_system_variables(node)
+    sys_api_ip = system_variables['api_ip']
+    sys_mgmt_ip = system_variables['mgmt_ip']
+    sys_int_api_ip = system_variables['int_api_ip']
+    sys_admin_api_ip = system_variables['admin_api_ip']
+    sys_cloud_name = system_variables['cloud_name']
+    sys_vm_ip_min = system_variables['vm_ip_min']
+    sys_vm_ip_max = system_variables['vm_ip_max']
+    sys_uplink_ip = system_variables['uplink_ip']
+
+    d.msgbox("API_IP: " + sys_api_ip + "\n" +
+             "MGMT_IP: " + sys_mgmt_ip + "\n" +
+             "INT_API_IP: " + sys_int_api_ip + "\n" +
+             "ADMIN_API_IP: " + sys_admin_api_ip + "\n" +
+             "CLOUD_NAME: " + sys_cloud_name + "\n" +
+             "VM_IP_MIN: " + sys_vm_ip_min + "\n"
+             "VM_IP_MAX: " + sys_vm_ip_max + "\n"
+             "UPLINK IP: " + sys_uplink_ip + "\n", width=80, height=40)
 
     single_node = singleNode(d)
     # Check to determine is system is single node
