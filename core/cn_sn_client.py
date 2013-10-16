@@ -13,6 +13,11 @@ timeout_sec = 1
 retry_count = 5
 recv_buffer = 4096
 
+status_ready = {
+'Type':'status',
+'Length':'1',
+'Value':'node_ready'
+}
 
 def sendOk(sock):
 
@@ -104,7 +109,7 @@ def restartOvsServices(node_id):
     comments        :
     '''
     # restart ovs
-    out = os.popen("service quantum-server restart")
+    out = os.popen("sudo service quantum-server restart")
     status = out.read()
 
     #print "node_id: %s, nova quantum server restart: %s" % (node_id, status)
@@ -112,14 +117,10 @@ def restartOvsServices(node_id):
     # check output
     out_array = status.split('\n')
 
-    if out_array[0] == "quantum-server stop/waiting":
-        print "node_id: %s, quantum server stopped!!!" % node_id
-        if out_array[1].find("quantum-server start/running") != -1:
-            print "node_id: %s, quantum server started!!!" % node_id
-        else:
-            print "node_id: %s, failure in starting quantum server!!!" % node_id
+    if out_array[1].find("start/running") != -1:
+        print "node_id: %s, quantum server re-started!!!" % node_id
     else:
-        print "node_id: %s, failure in stopping quantum server" % node_id
+        print "node_id: %s, failure in starting quantum server!!!" % node_id
 
 
     # check openvswitch
@@ -238,7 +239,7 @@ def checkOvs(node_id, status):
     '''
     line_array = status.split('\n')
     for i in range(0, len(line_array)-1):
-        if line_array[i] == "br-int":
+        if line_array[i].find("br-int") != -1:
             print "node_id: %s, bridge exists : %s" % (node_id,line_array[i])
             return True
         else:
@@ -300,7 +301,7 @@ def checkOvsServices(node_id):
     comments        :
     '''
     # check ovs services
-    out = os.popen('ovs-vsctl list-br')
+    out = os.popen('sudo ovs-vsctl list-br')
     status = out.read()
     #print "ovs-vsctl :: %s" % status
     ret = checkOvs(node_id, status)
@@ -433,11 +434,6 @@ def processComputeConfig(sock, node_id):
     if post_install_status == True:
 
         # send node_ready status message to cc
-        status_ready = {
-                'Type':'status',
-                'Length':'1',
-                'Value':'node_ready'
-                }
 
         sock.sendall(pickle.dumps(status_ready, -1))
 
@@ -471,7 +467,7 @@ def processComputeConfig(sock, node_id):
                 post_install_status = True 
                 break;
             retry = retry-1
-            print "node_id: %s, retrying services ... %s" % (node_id, retry)
+            print "node_id: %s, ******retrying services******* %s" % (node_id, retry)
 
         if post_install_status != True:
 
@@ -496,11 +492,6 @@ def processComputeConfig(sock, node_id):
         else:
              
             # send node_ready status message to cc
-            status_ready = {
-                'Type':'status',
-                'Length':1,
-                'Value':'node_ready'
-                }
 
             sock.sendall(pickle.dumps(status_ready, -1))
 
@@ -616,16 +607,16 @@ try:
                 'Length': 10, 
                 'Value': 
                     {
-                    'node_name':'box12',
+                    'node_name':'box15',
                     'node_type':'cn',
                     'node_mgmt_ip':'10.10.10.10',
                     'node_data_ip':'172.16.16.16',
-                    'node_controller':'ciac121',
-                    'node_cloud_name':'cloud12',
+                    'node_controller':'ciac15',
+                    'node_cloud_name':'cloud15',
                     'node_nova_zone':'',
                     'node_iscsi_iqn':'',
                     'node_swift_ring':'',
-                    'node_id':'trans12'
+                    'node_id':'trans15'
                     }
                 }
     
@@ -637,24 +628,14 @@ try:
             sock.sendall(pickle.dumps(data, -1))
 
             # receive status message, retry_count
-            count=0
-            while True:
-                ready = select.select([sock], [], [], timeout_sec)
-                if ready[0]:
-                    data = sock.recv(1024)
-                    break
-                else:
-                    count = count + 1
-                    if count == retry_count:
-                        print "retry count expired..exiting!!"
-                        sys.exit(1)
-                    print "retrying... ", count
+            data = recv_data(sock)
 
             if data:
                 data = pickle.loads(data)
                 print "client received %s" % data
                 if data['Type'] == 'status' and data['Value'] == 'ok':
                     print "client received %s" % data['Value']
+                    # check for services TODO
                     print "Node is setup and ready to use!!!"
                     keep_alive(sock)
 
