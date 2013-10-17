@@ -10,6 +10,7 @@ from time import sleep
 
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
+import transcirrus.common.node_util as node_util
 
 _server_port=6161
 timeout_sec=1
@@ -18,6 +19,47 @@ retry_count=5
 recv_buffer=4096
 keep_alive_sec=10
 
+def setDbFlag(node_id, flag):
+    '''
+    @author         : Shashaa
+    comment         : set appropriate flag in the DB
+                      Input: node_id and flag variable to set
+    return value    : 
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    if flag == 'node_ready':
+        r_dict = node_util.set_node_ready_flag(node_id)
+        if r_dict['ready_flag_set'] == 'SET':
+            print "ready flag set success, node_id: %s" % node_id
+        else:
+            print "ready flag set failure !!! node_id: %s" % node_id
+            # TODO
+        r_dict = node_util.clear_node_fault_flag(node_id)
+        if r_dict['fault_flag_set'] == 'UNSET':
+            print "fault flag clear success"
+        else:
+            print "fault flag clear failure !!!, node_id: %s" % node_id
+            # TODO
+
+    elif flag == 'node_halt':
+        r_dict = node_util.set_node_fault_flag(node_id)
+        if r_dict['fault_flag_set'] == 'SET':
+            print "fault flag set success, node_id: %s" % node_id
+        else:
+            print "fault flag set failure!!!, node_id: %s" % node_id
+            # TODO
+        r_dict = node_util.set_node_ready_flag(node_id)
+        if r_dict['ready_flag_set'] == 'SET':
+            print "ready flag set success, node_id: %s" % node_id
+        else:
+            print "ready flag set failure!!!, node_id: %s" % node_id
+            # TODO
+    else:
+        print "ERROR:received %s in staus message from node_id: %s" % (data['Value'], node_id)
 
 def check_node_update(data):
 
@@ -352,6 +394,10 @@ def client_thread(conn, client_addr):
                                         print "ciac server received %s from node_id: %s" % (data['Value'], node_id)
                                         print "ciac server sending ok ack node_id: %s" % (node_id)
                                         sendOk(conn)
+                                        setDbFlag(node_id, data['Value'])
+                                    else:
+                                        print "ciac server received non status message from node_id: %s" % (node_id)
+
                                 else:
                                     print "ciac server did not receive any data"
 
@@ -364,6 +410,8 @@ def client_thread(conn, client_addr):
                                 to use" % (node_id, data['Value']['node_type'])
 
                                 sendOk(conn)
+                                # proactively setting Db flag, may be # redundant ? TODO
+                                setDbFlag(node_id, 'node_ready')
 
                                 # go for keep_alive check
                                 print "ciac server sending keep alive messages from node_id: %s" % (node_id)
@@ -416,6 +464,7 @@ def client_thread(conn, client_addr):
                                         print "ciac server received %s from node_id: %s" % (data['Value'], node_id)
                                         print "ciac server sent ok ack, node_id: %s" % (node_id)
                                         sendOk(conn)
+                                        setDbFlag(node_id, data['Value'])
                                 else:
                                     print "ciac server did not receive any data from node_id: %s" % (node_id)
 

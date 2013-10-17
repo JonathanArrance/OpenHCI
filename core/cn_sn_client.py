@@ -13,6 +13,11 @@ timeout_sec = 1
 retry_count = 5
 recv_buffer = 4096
 
+status_ready = {
+'Type':'status',
+'Length':'1',
+'Value':'node_ready'
+}
 
 def sendOk(sock):
 
@@ -62,6 +67,81 @@ def recv_data(sock):
 
     return data
 
+def restartNovaServices(node_id):
+    '''
+    @author         : Shashaa
+    description     : restart Nova compute services and check for
+                      running status 
+    return value    : 
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    # restart nova services
+    out = os.popen('service nova-compute restart')
+    status = out.read()
+    #print "node_id: %s, nova compute restart:: %s" % (node_id, status)
+
+    # check output
+    out_array = status.split('\n')
+
+    if out_array[0] == "nova-compute stop/waiting":
+        print "nova-compute stopped!! node_id %s" % node_id
+        if out_array[1].find("nova-compute start/running") != -1:
+            print "nova-compute re-started!!! node_id: %s" % node_id
+        else:
+            print "failure to re-start nova-compute!!! node_id: %s" % node_id
+    else:
+        print "failure to stop nova-compute!!! node_id: %s" % node_id
+
+def restartOvsServices(node_id):    
+    '''
+    @author         : Shashaa
+    description     : restart ovs services and check for
+                      running status 
+    return value    : 
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    # restart ovs
+    out = os.popen("sudo service quantum-server restart")
+    status = out.read()
+
+    #print "node_id: %s, nova quantum server restart: %s" % (node_id, status)
+
+    # check output
+    out_array = status.split('\n')
+
+    if out_array[1].find("start/running") != -1:
+        print "node_id: %s, quantum server re-started!!!" % node_id
+    else:
+        print "node_id: %s, failure in starting quantum server!!!" % node_id
+
+
+    # check openvswitch
+    out = os.popen("service openvswitch-switch restart")
+    status = out.read()
+
+    #print "node_id: %s, openvswitch retstart status: %s" % (node_id, status)
+
+    # check output
+    out_array = status.split('\n')
+
+    for i in range(0, len(out_array)-1):
+        if out_array[i].find("Killing ovs-vswitchd") != -1:
+            print "node_id: %s, ovs-vswitchd killed" % (node_id)
+        elif out_array[i].find("Killing ovsdb-server") != -1:
+            print "node_id: %s, ovsdb-server killed" % (node_id)
+        elif out_array[i].find("Starting ovsdb-server") != -1:
+            print "node_id: %s, ovsdb-server re-started !!!" % node_id
+        elif out_array[i].find("Starting ovs-vswitchd") != -1:
+            print "node_id: %s, ovs-switchd re-started !!!" % node_id
+
 
 
 def checkNovaCompute(status):
@@ -76,11 +156,9 @@ def checkNovaCompute(status):
     comments        :
     '''
 
-    if status.find("start/running"):
-        print "service nova-compute is running!!!"
+    if status.find("start/running") != -1:
         return True
     else:
-        print "service nova-compute is halted!!!"
         return False
 
 def checkNovaManage(status):
@@ -95,27 +173,41 @@ def checkNovaManage(status):
     comments        :
     '''
     line_array = status.split('\n')
-    '''
-    print "0 %s" % line_array[0]
-    print "1 %s" % line_array[1]
-    print "2 %s" % line_array[2]
-    print "3 %s" % line_array[3]
-    print "4 %s" % line_array[4]
-    print "5 %s" % line_array[5]
+    ret = 0
 
     for i in range(0, len(line_array)-1):            
-        if line_array[i].find('nova-conductor') and line_array[i].find('enabled') and line_array[i].find(':-)'):
-            print "nova-conductor is running !!!"
-        elif line_array[i].find('nova-scheduler') and line_array[i].find('enabled') and line_array[i].find(':-)'):
-            print "nova-scheduler is running !!!"
-        elif line_array[i].find('nova-consoleauth') and line_array[i].find('enabled') and line_array[i].find(':-)'):
-            print "nova-consoleauth is running !!!"
-        elif line_array[i].find('nova-cert') and line_array[i].find('enabled') and line_array[i].find(':-)'):
-            print "nova-cert is running !!!"
-        elif line_array[i].find('nova-compute') and line_array[i].find('enabled') and line_array[i].find(':-)'):
-            print "nova-compute is running !!!"
-    '''
-    return True
+        if line_array[i].find('nova-conductor') != -1:
+            if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
+                ret = ret+1
+            else:
+                print "nova-conductor is not running"
+        elif line_array[i].find('nova-scheduler') != -1:
+            if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
+                ret = ret+1
+            else:
+                print "nova-scheduler is not running"
+        elif line_array[i].find('nova-consoleauth') != -1:
+            if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
+                ret = ret+1
+            else:
+                print "nova-consoleauth is not running"
+        elif line_array[i].find('nova-cert') != -1: 
+            if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
+                ret = ret+1
+            else:
+                print "nova-cert is not running"
+        elif line_array[i].find('nova-compute') != -1:
+            if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
+                ret = ret+1
+            else:
+                print "nova-compute is not running"
+
+
+    # make sure all services are listed            
+    if ret == 5:
+        return True
+    else:
+        return False
 
 def checkOpenvswitch(status):
     '''
@@ -128,14 +220,13 @@ def checkOpenvswitch(status):
     @author         :
     comments        :
     '''
-    if status.find('start/running'):
-        print "quantum-plugin-openvswitch-agent running !!!"
+    if status.find('start/running') != -1:
         return True
     else:
         print "quantum-plugin-openvswitch-agent stopped/halted !!!"
         return False
 
-def checkOvs(status):
+def checkOvs(node_id, status):
     '''
     @author         : Shashaa
     description     : parse and check openv switch process status  
@@ -148,10 +239,13 @@ def checkOvs(status):
     '''
     line_array = status.split('\n')
     for i in range(0, len(line_array)-1):
-        print "bridge: %s" % line_array[i]
-    return True
+        if line_array[i].find("br-int") != -1:
+            print "node_id: %s, bridge exists : %s" % (node_id,line_array[i])
+            return True
+        else:
+            return False
 
-def checkNovaServices():
+def checkNovaServices(node_id):
     '''
     @author         : Shashaa
     description     : execute and check nova services 
@@ -169,13 +263,14 @@ def checkNovaServices():
     #print "nova compute :: %s" % status
     ret = checkNovaCompute(status)
     if ret == False:
+        print "node_id: %s, nova-compute status failure !!!" % node_id
         return ret
 
     out = os.popen('nova-manage service list')
     status = out.read()
-    print "nova manage :: %s" % status
     ret = checkNovaManage(status)
     if ret == False:
+        print "node_id: %s, nova-manage services failure !!!" % node_id
         return ret
 
     out = os.popen('service quantum-plugin-openvswitch-agent status')
@@ -183,15 +278,17 @@ def checkNovaServices():
     #print "quantun-plugin :: %s" % status
     ret = checkOpenvswitch(status)
     if ret == False:
+        print "node_id: %s, quantum openvswitch agent failure !!!" % node_id
         return ret
 
-
+    # export environment variables TODO
+    out = os.system("source $PWD/creds")
     #out = os.popen('nova host-list') # TODO
 
     return True
 
 
-def checkOvsServices():
+def checkOvsServices(node_id):
 
     '''
     @author         : Shashaa
@@ -204,16 +301,18 @@ def checkOvsServices():
     comments        :
     '''
     # check ovs services
-    out = os.popen('ovs-vsctl list-br')
+    out = os.popen('sudo ovs-vsctl list-br')
     status = out.read()
     #print "ovs-vsctl :: %s" % status
-    ret = checkOvs(status)
+    ret = checkOvs(node_id, status)
     if ret == False:
+        print "node_id: %s, ovs services failure !!!" % node_id
         return ret
+    else:
+        #print "node_id: %s, ovs services success !!!" % node_id
+        return True
 
-    return True
-
-def processComputeConfig(sock):
+def processComputeConfig(sock, node_id):
 
     '''
     @author         : Shashaa
@@ -313,13 +412,17 @@ def processComputeConfig(sock):
         sys.exit()
     else:
         print "write success, net_conf"
-
+                                                                                   
 
     post_install_status = True
 
-    nova_services = checkNovaServices()
+    # restart Nova and ovs services TODO
+    restartNovaServices(node_id)
+    restartOvsServices(node_id)
 
-    ovs_services = checkOvsServices()
+    nova_services = checkNovaServices(node_id)
+
+    ovs_services = checkOvsServices(node_id)
 
     if nova_services==True and ovs_services==True:
         print "All services are up and running !!!"
@@ -331,11 +434,6 @@ def processComputeConfig(sock):
     if post_install_status == True:
 
         # send node_ready status message to cc
-        status_ready = {
-                'Type':'status',
-                'Length':'1',
-                'Value':'node_ready'
-                }
 
         sock.sendall(pickle.dumps(status_ready, -1))
 
@@ -352,9 +450,24 @@ def processComputeConfig(sock):
 
     else:
 
-        # retry for 2 times TODO
-        #restartNovaServices()
-        #restartOvsServices
+        # retry  TODO
+        retry=5
+
+        # loop 
+        while(retry >= 0):
+
+            # restart services
+            restartNovaServices(node_id)
+            restartOvsServices(node_id)
+
+            # check services
+            nova_services = checkNovaServices(node_id)
+            ovs_services = checkOvsServices(node_id)
+            if nova_services == True and ovs_services == True:
+                post_install_status = True 
+                break;
+            retry = retry-1
+            print "node_id: %s, ******retrying services******* %s" % (node_id, retry)
 
         if post_install_status != True:
 
@@ -379,11 +492,6 @@ def processComputeConfig(sock):
         else:
              
             # send node_ready status message to cc
-            status_ready = {
-                'Type':'status',
-                'Length':1,
-                'Value':'node_ready'
-                }
 
             sock.sendall(pickle.dumps(status_ready, -1))
 
@@ -402,7 +510,7 @@ def processComputeConfig(sock):
     # receive keep alive messages
     keep_alive(sock)
 
-def processStorageConfig():
+def processStorageConfig(sock, node_id):
 
     '''
     @author         : Shashaa
@@ -476,7 +584,7 @@ try:
     while True:
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
-            data = sock.recv(1024)
+            data = sock.recv(recv_buffer)
             break
         else:
             count = count + 1
@@ -499,44 +607,35 @@ try:
                 'Length': 10, 
                 'Value': 
                     {
-                    'node_name':'box12',
+                    'node_name':'box15',
                     'node_type':'cn',
                     'node_mgmt_ip':'10.10.10.10',
                     'node_data_ip':'172.16.16.16',
-                    'node_controller':'ciac121',
-                    'node_cloud_name':'cloud12',
+                    'node_controller':'ciac15',
+                    'node_cloud_name':'cloud15',
                     'node_nova_zone':'',
                     'node_iscsi_iqn':'',
                     'node_swift_ring':'',
-                    'node_id':'trans12'
+                    'node_id':'trans15'
                     }
                 }
     
 
             node_type = 'cn'
+            node_id = data['Value']['node_id']
             print "sending %s " % data
             print "node_id = %s" % data['Value']['node_id']
             sock.sendall(pickle.dumps(data, -1))
 
             # receive status message, retry_count
-            count=0
-            while True:
-                ready = select.select([sock], [], [], timeout_sec)
-                if ready[0]:
-                    data = sock.recv(1024)
-                    break
-                else:
-                    count = count + 1
-                    if count == retry_count:
-                        print "retry count expired..exiting!!"
-                        sys.exit(1)
-                    print "retrying... ", count
+            data = recv_data(sock)
 
             if data:
                 data = pickle.loads(data)
                 print "client received %s" % data
                 if data['Type'] == 'status' and data['Value'] == 'ok':
                     print "client received %s" % data['Value']
+                    # check for services TODO
                     print "Node is setup and ready to use!!!"
                     keep_alive(sock)
 
@@ -544,9 +643,9 @@ try:
                     print "client received %s" % data['Value']
 
                     if node_type == 'cn':
-                        processComputeConfig(sock)
+                        processComputeConfig(sock, node_id)
                     elif node_type == 'sn':
-                        processStorageConfig(sock)
+                        processStorageConfig(sock, node_id)
 
                 else:
                     print "client received invalid status message"

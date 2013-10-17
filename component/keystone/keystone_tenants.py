@@ -278,12 +278,16 @@ class tenant_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
 
-    #DESC: Get the information for a specific project from the Transcirrus DB
-    #      Admins can get any project, users can only view the primary project
-    #      they belong to
-    #INPUT: project_name
-    #OUTPUT: dictionary containing the project info
     def get_tenant(self,project_name):
+        """
+        DESC: Get the information for a specific project from the Transcirrus DB
+        INPUT: project_name
+        OUTPUT: dictionary containing the project info
+        ACCESS: Admins can get any project, users can only view the primary project
+              they belong to.
+        NOTE: If any of the project variables are empty a None will be returned for that variable.
+        """
+        
         if(not project_name):
             logger.sys_error("Did not pass a project name to the get_tenant operation.")
             raise Exception ("Did not pass a project name to the get_tenant operation.")
@@ -305,7 +309,8 @@ class tenant_ops:
             raise Exception("Could not get the project info for project: %s" %(project_name))
 
         #build the dictionary up
-        r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"internal_net_id":proj[0][2],"internal_net_name":proj[0][3],"router_id":proj[0][4],"router_name":proj[0][5],"internal_subnet_name":proj[0][6],"internal_subnet_id":proj[0][7],"secuiy_key_name":proj[0][8],"security_key_id":proj[0][9], "security_group_id":proj[0][10], "security_group_name":proj[0][11], "cloud_controller":proj[0][12], "api_ip":proj[0][13] }
+        r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
+                  "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9]}
         if(self.is_admin == 1):
             return r_dict
         else:

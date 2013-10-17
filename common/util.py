@@ -231,7 +231,7 @@ def update_system_variables(update_array):
 
     db = db_connect()
 
-    for value in input_array:
+    for value in update_array:
         for key,val in value.items():
             #skip over these
             if(val == ""):
@@ -249,11 +249,11 @@ def update_system_variables(update_array):
             update = {'table':"trans_system_settings",'set':"param_value='%s'"%(value['param_value']),'where':"host_system='%s'" %(value['system_name']),'and':"parameter='%s'" %(value['parameter'])}
             db.pg_update(update)
             db.pg_transaction_commit()
-            return 'OK'
         except:
             db.pg_transaction_rollback()
             logger.sgl_error("Could not insert system config into the Transcirrus db.")
             return 'ERROR'
+    return 'OK'
 
 def update_cloud_controller_name(update_dict):
     """
@@ -523,7 +523,7 @@ def get_system_variables(node_id):
         find_node_dict = {'select':"parameter,param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(node_name[0][0])}
         sys = db.pg_select(find_node_dict)
     except:
-        logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
+        logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(node_name[0][0]))
         return 'NA'
     db.pg_close_connection()
 
@@ -551,7 +551,7 @@ def set_network_variables(input_dict):
     NOTE: This is used to set the net adapters on the physical machines - neutron libs for virtual environments
           This function also writes the network config file.
     """
-
+    #do this today!
     #make sure none of the values are empty
     for key, val in file_dict.items():
         #skip over these
@@ -563,6 +563,9 @@ def set_network_variables(input_dict):
         if(key not in file_dict):
             logger.sys_error("Required info not specified for file creation.")
             raise Exception ("Required info not specified for file creation.")
+        
+        
+    
     print "not implemented"
 
 def get_network_variables(net_adapter):
