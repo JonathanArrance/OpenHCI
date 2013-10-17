@@ -1,4 +1,4 @@
-##This file will be written out by values inserted into the system database
+#This file will be written out by values inserted into the system database
 #defaults will be factory set
 #file will update when local admin sets up system.
 
@@ -23,12 +23,11 @@ CLOUD_CONTROLLER_ID="000-12345678-12345"
 CLOUD_NAME="RegionOne"
 
 #DEFAULT openstack roles
-MEMBER_ROLE_ID="91d303fd4bf9496994f955191d685557"
-ADMIN_ROLE_ID="ed9d479266b341aeb182d4c77919c706"
+MEMBER_ROLE_ID="db594393d3b1474b9e502b2dea19e468"
+ADMIN_ROLE_ID="86cd1e2cebd144e0b3521a2428ac7266"
 
 ##DEFAULT OPENSTACK DB SETTINGS##
 OS_DB="192.168.10.33"
 OS_DB_PORT="5432"
 OS_DB_USER="root"
 OS_DB_PASS="builder"
-

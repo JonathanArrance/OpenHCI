@@ -275,12 +275,17 @@ def update_cloud_controller_name(update_dict):
         if(key == ""):
             logger.sys_error("The key was left blank")
             raise Exception("The key was left blank")
-        if((key != 'old_name') or (key != 'new_name')):
+        if((key == 'old_name') or (key == 'new_name')):
+            logger.sys_info("The key was valid.")
+        else:
             logger.sys_error("The key was invalid.")
             raise Exception("The key was invalid")
 
     #check if the old name is valid
     #update the host_system colum in the trans_system settings table
+
+    db = db_connect()
+
     try:
         select_id = {'select':"param_value", 'from':"trans_system_settings", 'where':"parameter='cloud_controller_id'", 'and':"host_system='%s'"%(update_dict['old_name'])}
         nodeid = db.pg_select(select_id)
@@ -291,71 +296,50 @@ def update_cloud_controller_name(update_dict):
     #update the name in the trans_nodes table
     try:
         db.pg_transaction_begin()
-        update_node = {'table':"trans_nodes",'set':"node_name='%s'" %(update_dict['new_name']),'where':"node_id='%s'" %(node[0][0])}
+        update_node = {'table':"trans_nodes",'set':"node_name='%s'" %(update_dict['new_name']),'where':"node_id='%s'" %(nodeid[0][0])}
         db.pg_update(update_node)
-        db.pg_transaction_commit()
-    except:
-        db.pg_transaction_rollback()
-        logger.sql_error("Could not update trans node table with new cloud controller node name.")
-        return 'ERROR'
 
-    #update the node controller variable in the trans_nodes table
-    try:
-        db.pg_transaction_begin()
         update_node_con = {'table':"trans_nodes",'set':"node_controller='%s'" %(update_dict['new_name']),'where':"node_controller='%s'" %(update_dict['old_name'])}
         db.pg_update(update_node_con)
-        db.pg_transaction_commit()
-    except:
-        db.pg_transaction_rollback()
-        logger.sql_error("Could not update trans node table with new cloud controller node name.")
-        return 'ERROR'
 
-    #update the cloud controller variable in the trans_system_settings table
-    '''
-    try:
-        db.pg_transaction_begin()
-        update = {'table':"trans_system_settings",'set':"param_value='%s'" %(update_dict['new_name']),'where':"param_value='default_cloud_controller'"}
-        db.pg_update(update)
-        db.pg_transaction_commit()
-    except:
-        db.pg_transaction_rollback()
-        logger.sql_error("Could not update trans node table with new default_cloud_controller name.")
-        return 'ERROR'
-    '''
-    #update the host_system colum in the trans_system settings table
-    try:
-        db.pg_transaction_begin()
+        update_name = {'table':"trans_system_settings",'set':"param_value='%s'" %(update_dict['new_name']),'where':"parameter='cloud_controller'"}
+        db.pg_update(update_name)
+
         update_name = {'table':"trans_system_settings",'set':"host_system='%s'" %(update_dict['new_name']),'where':"host_system='%s'" %(update_dict['old_name'])}
         db.pg_update(update_name)
-        db.pg_transaction_commit()
+
     except:
         db.pg_transaction_rollback()
         logger.sql_error("Could not update trans system settings table with new host system name.")
         return 'ERROR'
-
-    #disconnect from db
-    db.pg_close_connection()
+    finally:
+        db.pg_transaction_commit()
+        #disconnect from db
+        db.pg_close_connection()
 
     #rewrite the default config.py file and save to transcirrus.common
-    system_vars = get_system_variables(update_dict['new_name'])
+    system_vars = get_system_variables(nodeid[0][0])
 
     #build a file descriptor for config.py
     #NODE - check quantum version make path based on that.
+
     config_array = []
     conf = {}
-    for key,val in system_vars:
-        row = key+"="+value
+    for key,val in system_vars.items():
+        row = key.upper()+"="+'"%s"'%(val)
+        print row
         config_array.append(row)
     conf['op'] = 'new'
     conf['file_owner'] = 'transuser'
     conf['file_group'] = 'transystem'
     conf['file_perm'] = '644'
-    conf['file_path'] = '/usr/lib/python2.7/dist-packages/transcirrus/common/'
+    conf['file_path'] = '/usr/local/lib/python2.7/dist-packages/transcirrus/common/'
     conf['file_name'] = 'config.py'
     conf['file_content'] = config_array
 
     #build the new config.py out
     write = write_new_config_file(conf)
+    
     if(write == 'OK'):
         return 'OK'
     elif(write == 'ERORR'):
@@ -363,11 +347,12 @@ def update_cloud_controller_name(update_dict):
     else:
         return 'NA'
 
+
 def get_cloud_controller_name():
     """
     DESC: get the cloud controller name from the transcirrus db
     INPUT: None
-    OUTPUT: r_dict - cloud_controller
+    OUTPUT: cloud_controller
     ACCESS: Wide open
     NOTE: The cloud controller is also the ciac node system name. These are human readable names. This
           is not the same as the node id.
@@ -611,6 +596,17 @@ def ping_ip(ip):
         return 'ERROR'
     else:
         return 'NA'
+
+def change_phy_system_name(sys_name):
+    """
+    DESC: Change the physical system name.
+    INPUT: sys_name
+    OUTPUT: OK - success
+            ERROR - fail
+    ACCESS: Wide open
+    NOTE: 
+    """
+    #NOT sure if we should do this or not.
 
 def enable_network_card(net_adapter):
     """

@@ -11,3 +11,5 @@ In the Nova component Images and Flavors should be just made a module with no co
 Add in list,get,update service endpoints in alpo.1 keystone_endpoints.py
 
 Add the ability of a user to belong to multiple projects
+
+Need to add the ability to add more then one dns server to network.py add_network_subnet. Right now sets the default to 8.8.8.8

@@ -1,0 +1,24 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %} Setup Results {% endblock %}
+
+{% block content %}
+
+    <div class="span7 offset2">
+
+
+
+            <img border="0" src="{{ STATIC_URL }}images/coalesce.png"
+                                        alt="coalesce" width="200" height="203">
+
+            <h3>Running {{cloud_name}} Setup.</h3>
+
+            <p>The appliance and {{cloud_name}} are being modified with the new parameters you requested.</p>
+            <p>Because you  modified the management IP, the web page you are currently viewing will now become obsolete.
+            The new web server will be running at <a href="http://{{management_ip}}:8000">http://{{management_ip}}:8000</a>.
+            It may take a minute or two for setup to complete, so check the link above once the box has finished rebooting.</p>
+
+    </div>
+
+
+{% endblock %}

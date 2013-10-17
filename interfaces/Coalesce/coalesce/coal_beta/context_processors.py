@@ -1,10 +1,18 @@
 from django.conf import settings
 from coalesce.coal_beta.models import Node, Project
-from transcirrus.component.keystone_tenant import *
+from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.database.node_db import list_nodes
 
 def global_vars(request):
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        project_list = to.list_all_tenants()
+        token = auth['token']
+    except:
+        project_list = []
+        token = ""
+    node_list = list_nodes()
 
-    project_list = Project.objects.all()
-    #project_list = tenant_ops.list_all_tenants
-    node_list = Node.objects.all()
-    return {'node_list': node_list, 'project_list': project_list}
+
+    return {'node_list': node_list, 'project_list': project_list, 'token': token}

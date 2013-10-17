@@ -102,7 +102,7 @@ def checkNovaManage(status):
     print "3 %s" % line_array[3]
     print "4 %s" % line_array[4]
     print "5 %s" % line_array[5]
-    '''
+
     for i in range(0, len(line_array)-1):            
         if line_array[i].find('nova-conductor') and line_array[i].find('enabled') and line_array[i].find(':-)'):
             print "nova-conductor is running !!!"
@@ -114,7 +114,7 @@ def checkNovaManage(status):
             print "nova-cert is running !!!"
         elif line_array[i].find('nova-compute') and line_array[i].find('enabled') and line_array[i].find(':-)'):
             print "nova-compute is running !!!"
-
+    '''
     return True
 
 def checkOpenvswitch(status):
@@ -399,7 +399,7 @@ def processComputeConfig(sock):
                     print "listening for status_ready ack"
 
 
-    # send keep alive messages
+    # receive keep alive messages
     keep_alive(sock)
 
 def processStorageConfig():
@@ -422,7 +422,8 @@ def keep_alive(sock):
 
     '''
     @author         : Shashaa
-    description     : send keep alive messages to CiaC node periodically
+    description     : listen for keep alive status messages and other
+                      status messages
     return value    :
     create date     :
     ----------------------
@@ -431,16 +432,21 @@ def keep_alive(sock):
     comments        :
     '''
     while True:
-        status_alive = {
-                'Type': 'status',
-                'Length': '1',
-                'Value': 'alive'
-                }
-        sock.sendall(pickle.dumps(status_alive, -1))
+        ready = select.select([sock], [], [], timeout_sec)
+        if ready[0]:
+            data = sock.recv(recv_buffer)
 
-        # sleep for keep_alive_sec
-        print "***keep_alive***"
-        sleep(keep_alive_sec)
+            data = pickle.loads(data)
+            if data['Type'] == 'status' and data['Value'] == 'alive':
+                print "***%s***" % data['Value']
+            elif data['Type'] == 'status' and data['Value'] == 'node_ready':
+                print "received %s " % data['Value']
+                keep_alive(sock)
+            else:
+                print "received %s " % data
+                keep_alive(sock)
+        else:
+            print "client waiting for keep alive messages"
 
 
 # Create socket
@@ -493,16 +499,16 @@ try:
                 'Length': 10, 
                 'Value': 
                     {
-                    'node_name':'box8',
+                    'node_name':'box12',
                     'node_type':'cn',
                     'node_mgmt_ip':'10.10.10.10',
                     'node_data_ip':'172.16.16.16',
-                    'node_controller':'ciac8',
-                    'node_cloud_name':'cloud_81',
+                    'node_controller':'ciac121',
+                    'node_cloud_name':'cloud12',
                     'node_nova_zone':'',
                     'node_iscsi_iqn':'',
                     'node_swift_ring':'',
-                    'node_id':'trans8'
+                    'node_id':'trans12'
                     }
                 }
     
