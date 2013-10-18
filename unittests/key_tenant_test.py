@@ -4,11 +4,10 @@
 #passes the user level out 
 import sys
 import time
-
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+from transcirrus.database.postgres import pgsql
 from transcirrus.common.auth import authorization
-
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
 a = authorization("admin","builder")

@@ -51,3 +51,6 @@ print stuff
 #print "Exsistant adapter bond2"
 stuff2 = util.restart_network_card("bond2")
 print stuff2
+update_dict = {'old_name':'cloud','new_name':'integration'}
+sys = util.update_cloud_controller_name(update_dict)
+print sys

@@ -6,7 +6,9 @@
 
     <div class="span7 offset3">
 
-        {% if user.is_authenticated %}
+
+        {% if token %}
+
 
             <img border="0" src="{{ STATIC_URL }}images/coalesce.png"
                                         alt="coalesce" width="200" height="203">
@@ -22,7 +24,7 @@
         {% else %}
             <p>Welcome to the Coalesce cloud management interface by TransCirrus.<p>
             <p>You are not currenly logged in, please
-            <a href={% url 'login' %}>log in</a>.  If you don't have or have forgotten your logon credentials, please contact your
+            <a href={% url 'login_page' %}>log in</a>.  If you don't have or have forgotten your logon credentials, please contact your
             Transcirrus Cloud Administrator to gain access to this site.</p>
         {% endif %}
 
