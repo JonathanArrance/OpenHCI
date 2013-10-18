@@ -42,7 +42,7 @@ class endpoint_ops:
                 self.sec = 'FALSE'
                 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
+            self.controller = config.CLOUD_CONTROLLER
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -291,16 +291,47 @@ class endpoint_ops:
         
         print "not implemented"
 
-    #DESC: List the cloud endpoints for the services configured in openstack
-    #INPUT: self object
-    #OUTPUT: array of r_dict -service_name
-    #                        -service_id
-    #                        -admin_url
-    #                        -internal_url
-    #                        -public_url
     def list_endpoints(self):
-        print "not implemented"
-        
+        """
+        DESC: List the cloud endpoints for the services configured in openstack
+        INPUT: self object
+        OUTPUT: array of r_dict -service_name
+                                -service_id
+                                -service_endpoint_id
+                                -endpoint_url
+                                -endpoint_desc
+        ACCESS: Only admins can list the service endpoints
+        NOTE:
+        """
+        if(self.is_admin == 1):
+            try:
+                #only get the service public ip since as of now admin,internal,public are all the same
+                endpoints = {'select':"service_name,service_port,service_type,service_api_version,service_desc,service_public_ip,service_id,service_endpoint_id",'from':"trans_service_settings"}
+                ends = self.db.pg_select(endpoints)
+            except:
+                logger.sql_error("Could not connect to the Transcirrus db.")
+                raise Exception("Could not connect to the Transcirrus db.")
+
+            r_array = []
+            for end in ends:
+                r_dict = {}
+                r_dict['service_name'] = end[0]
+                r_dict['service_type'] = end[2]
+                r_dict['service_id'] = end[6]
+                if(end[7] == 'NULL'):
+                    r_dict['service_endpoint_id'] = "No service ID"
+                else:
+                    r_dict['service_endpoint_id'] = end[7]
+                #r_dict['endpoint_url'] = "http://" + end[5] + ":" + end[1] + "/" + end[3]
+                if((end[5] == 'NULL') and (end[3] == 'NULL')):
+                    r_dict['endpoint_url'] = "No Endpoint URL"
+                else:
+                    r_dict['endpoint_url'] = "http://%s:%s%s" %(end[5],end[1],end[3])
+                r_dict['endpoint_desc'] = end[4]
+                r_array.append(r_dict)
+
+            return r_array
+
     #DESC: update a cloud service endpoint configured in openstack
     #      function will actually delete that endpoint and then
     #      recreate the endpoint.
@@ -344,3 +375,6 @@ class endpoint_ops:
         else:
             _http_codes(rest['response'],rest['reason'])
         """
+
+    def service_catalog_list(self):
+        pass

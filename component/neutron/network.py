@@ -259,7 +259,7 @@ class neutron_net_ops:
               create networks.
         INPUT: create_dict - net_name
                            - admin_state (up/down)
-                           - shared (true/false)
+                           - shared (true/false) change to 1 for shared 0 for not shared?????
         OUTPUT: r_dict - net_name
                        - net_id
         NOTE: need to update the transcirrus db with the new network.
