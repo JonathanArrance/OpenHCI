@@ -24,7 +24,7 @@ end = endpoint_ops(d)
 
 
 print "Create a new service endpoint with a cloud name."
-new_endpoint_dict = {"cloud_name":'joncloud',"service_name":"cinder"}
+new_endpoint_dict = {"cloud_name":'joncloud',"service_name":"ec2"}
 create = end.create_endpoint(new_endpoint_dict)
 print create
 print "---------------------------------------------"
@@ -43,9 +43,16 @@ print create3
 print "---------------------------------------------"
 time.sleep(2)
 """
+time.sleep(1)
+print "listing the service endpoints"
+listend = end.list_endpoints()
+print listend
+print "----------------------------------------------"
+"""
 time.sleep(5)
 print "Delete a service endpoint with out a cloud name."
 new_endpoint_dict2 = {"service_name":"cinder"}
 create2 = end.delete_endpoint(new_endpoint_dict2)
 print create2
 print "---------------------------------------------"
+"""

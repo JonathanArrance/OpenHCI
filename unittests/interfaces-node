@@ -1,0 +1,25 @@
+#slave adapters
+auto eth0
+iface eth0 inet manual
+bond-master bond0
+
+auto eth1
+iface eth1 inet manual
+bond-master bond0
+
+auto eth2
+iface eth2 inet manual
+bond-master bond1
+
+auto eth3
+iface eth3 inet manual
+bond-master bond1
+
+
+#Datanet bond - 10gig card
+auto bond1
+iface bond1 inet dhcp
+        bond-mode 1
+        bond-miimon 100
+        bond-slaves none
+
