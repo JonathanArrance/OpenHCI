@@ -5,13 +5,11 @@
 import sys
 import time
 
-sys.path.append('../common')
-import logger
-import config
-from auth import authorization
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
+from transcirrus.common.auth import authorization
 
-sys.path.append('/home/jonathan/alpo.0/component/keystone')
-from keystone_endpoints import endpoint_ops
+from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
