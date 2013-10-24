@@ -25,7 +25,7 @@ proj = ten.create_tenant("testproj")
 print proj
 time.sleep(1)
 print "----------------------------------------"
-"""
+
 print "listing projects"
 listit = ten.list_all_tenants()
 print listit
@@ -37,8 +37,10 @@ get = ten.get_tenant("unittest")
 print get
 print "----------------------------------------"
 time.sleep(1)
-"""
+
 print "deleting testproject"
 delproj = ten.remove_tenant("testproj")
 print delproj
 """
+lis = ten.list_tenant_users("demo")
+print lis
