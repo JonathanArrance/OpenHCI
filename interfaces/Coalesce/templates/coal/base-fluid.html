@@ -43,12 +43,12 @@
                                         alt="TransCirrus" width="248" height="75"></div>
                         <div class="span7"><h1>{% block title %}OVERRIDE THIS{% endblock %}</h1></div>
                         <div class="span2">
-                            {% if user.is_authenticated %}
+                            {% if token %}
                                 <small>Welcome,{{ user.username }} <br>
                                 <a href={% url 'logout' %}> Log out</a>
                                 </small>
                             {% else %}
-                                <a href={% url 'login' %}> Log in</a>
+                                <a href={% url 'login_page' %}> Log in</a>
                             {% endif %}
                         </div>
                     </div>
@@ -61,7 +61,7 @@
                             <ul class="nav" id="main-menu-left">
                                 <li><a href={% url 'home' %}>Home</a></li>
                                 {% block navigation %}
-                                    {% if user.is_authenticated %}
+                                    {% if token %}
                                         {% if 1 %}
                                             <li class="dropdown">
                                                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">Manage Nodes <b class="caret"></b></a>
@@ -69,7 +69,7 @@
                                                     <li><a href="/nodes/manage">View All Nodes</a></li>
                                                     <li class="divider"></li>
                                                     {% for node in node_list %}
-                                                        <li><a href="/nodes/{{ node.name|urlencode}}/view">{{node.name}}</a></li>
+                                                        <li><a href="/nodes/{{ node.name|urlencode}}/view">{{node.node_name}}</a></li>
                                                     {% endfor %}
                                                 </ul>
                                             </li>
@@ -80,13 +80,13 @@
                                                     <li><a href="/projects/manage">View All Projects</a></li>
                                                     <li class="divider"></li>
                                                     {% for project in project_list %}
-                                                        {% url 'project_view' project.id as proj_url %}
-                                                        <li><a href={{proj_url}}>{{project.name}}</a></li>
+                                                        {% url 'project_view' project as proj_url %}
+                                                        <li><a href={{proj_url}}>{{project}}</a></li>
                                                     {% endfor %}
                                                 </ul>
                                             </li>
 
-                                            <li><a href="/run_setup">Run Setup</a></li>
+                                            <li><a href="/setup">Run Setup</a></li>
                                         {% endif %}
                                     {% endif %}
                                 {% endblock %}

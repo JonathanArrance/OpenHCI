@@ -32,18 +32,31 @@ def setDbFlag(node_id, flag):
     comments        :
     '''
     if flag == 'node_ready':
-        r_dict = set_node_ready_flag(node_id)
-        if r_dict['ready_flag_set'] != 'SET':
+        r_dict = node_util.set_node_ready_flag(node_id)
+        if r_dict['ready_flag_set'] == 'SET':
             print "ready flag set success, node_id: %s" % node_id
         else:
-            print "ready flag set failure !!!"
+            print "ready flag set failure !!! node_id: %s" % node_id
             # TODO
+        r_dict = node_util.clear_node_fault_flag(node_id)
+        if r_dict['fault_flag_set'] == 'UNSET':
+            print "fault flag clear success"
+        else:
+            print "fault flag clear failure !!!, node_id: %s" % node_id
+            # TODO
+
     elif flag == 'node_halt':
-        r_dict = set_node_fault_flag(node_id)
-        if r_dict['fault_flag_set'] != 'SET':
+        r_dict = node_util.set_node_fault_flag(node_id)
+        if r_dict['fault_flag_set'] == 'SET':
             print "fault flag set success, node_id: %s" % node_id
         else:
-            print "fault flag set failure!!!"
+            print "fault flag set failure!!!, node_id: %s" % node_id
+            # TODO
+        r_dict = node_util.set_node_ready_flag(node_id)
+        if r_dict['ready_flag_set'] == 'SET':
+            print "ready flag set success, node_id: %s" % node_id
+        else:
+            print "ready flag set failure!!!, node_id: %s" % node_id
             # TODO
     else:
         print "ERROR:received %s in staus message from node_id: %s" % (data['Value'], node_id)

@@ -9,10 +9,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-        # views that are not customer specific
-        # ====================================
-        # these views may (should) take a request that may have a logged-in
-        # user and make template descisions to customize based on the user
+
         url(r'^$',
             'coalesce.coal_beta.views.welcome',
             name='home'),
@@ -41,7 +38,7 @@ urlpatterns = patterns('',
             name='manage_nodes'),
 
         # --- Projects ----
-        url(r'^projects/(?P<project_id>\w+)/view/$',
+        url(r'^projects/(?P<project_name>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 
@@ -50,26 +47,29 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
 
-        # user account views
-        # ==================
-        url(r'^accounts/login/$',
-            'django.contrib.auth.views.login',
-            {'template_name': 'coal/login.html'},
-            name='login'),
+        # --- Setup ----
+        url(r'^setup/$',
+            'coalesce.coal_beta.views.setup',
+            name='setup'),
 
-        url(r'^accounts/logout/$',
-            'django.contrib.auth.views.logout',
+        # user account views
+        url(r'^coal/login_page/$',
+            'coalesce.coal_beta.views.login_page',
+            {'template_name': 'coal/login.html'},
+            name='login_page'),
+
+        url(r'^coal/logout/$',
+            'coalesce.coal_beta.views.logout',
             {'template_name': 'coal/logged_out.html'},
             name='logout'),
 
-	    url(r'^accounts/change-password/$',
-            'django.contrib.auth.views.password_change',
+	    url(r'^coal/change-password/$',
+            'coalesce.coal_beta.views.password_change',
             {'template_name': 'coal/change-password.html', 'post_change_redirect': '/'},
             name='change-password'),
 
         # admin views
-        # ===========
-        # Uncomment the next line to enable the admin:
+
         (r'^admin/', include(admin.site.urls)),
 
 

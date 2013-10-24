@@ -1,0 +1,19 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %}Run Setup{% endblock %}
+
+{% block content %}
+
+
+    <div class="row-fluid">
+        {% if token %}
+            <div class="span6">
+    		{% load crispy_forms_tags %}
+    		{% crispy form %}
+
+            </div><!-- end span-->
+        {% endif %}
+    </div><!-- end row-fluid-->
+
+
+{% endblock %}

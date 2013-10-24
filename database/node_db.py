@@ -61,6 +61,7 @@ def get_node(node_id):
     return r_dict
 
 def insert_node(input_dict):
+    #Need to add in the OVS/neutron stuff
     """
     DESC: Insert a new node into the Transcirrus DB.
     INPUT: input_dict - node_id - req - transcirrus assigned node_id
@@ -394,7 +395,7 @@ def get_node_nova_config(node_id):
     nova_conf['file_owner'] = 'nova'
     nova_conf['file_group'] = 'nova'
     nova_conf['file_perm'] = '644'
-    nova_conf['file_path'] = '/srv/nova'
+    nova_conf['file_path'] = '/etc/nova'
     nova_conf['file_name'] = 'nova.conf'
     nova_conf['file_content'] = nova_con
 
@@ -407,7 +408,7 @@ def get_node_nova_config(node_id):
     comp_conf['file_owner'] = 'nova'
     comp_conf['file_group'] = 'nova'
     comp_conf['file_perm'] = '644'
-    comp_conf['file_path'] = '/srv/nova'
+    comp_conf['file_path'] = '/etc/nova'
     comp_conf['file_name'] = 'nova-compute.conf'
     comp_conf['file_content'] = comp_con
 
@@ -420,7 +421,7 @@ def get_node_nova_config(node_id):
     api_conf['file_owner'] = 'nova'
     api_conf['file_group'] = 'nova'
     api_conf['file_perm'] = '644'
-    api_conf['file_path'] = '/srv/nova'
+    api_conf['file_path'] = '/etc/nova'
     api_conf['file_name'] = 'api-paste.ini'
     api_conf['file_content'] = api_con
 
