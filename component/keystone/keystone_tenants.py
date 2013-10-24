@@ -357,7 +357,7 @@ class tenant_ops:
         return r_array
 
     def update_tenant(self):
-        print "not implemented"
+        pass
         
 ######Internal defs#######
 def _http_codes(code,reason):
