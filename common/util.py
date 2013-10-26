@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 
-from confparse import properties
+#from confparse import properties
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
