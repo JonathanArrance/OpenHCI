@@ -533,7 +533,7 @@ def get_system_variables(node_id):
     r_dict = {}
     for x in sys:
         r = iter(x)
-        key = r.next()
+        key = r.next().upper()
         val = r.next()
         r_dict[key] = val
 

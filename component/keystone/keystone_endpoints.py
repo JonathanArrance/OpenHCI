@@ -280,10 +280,12 @@ class endpoint_ops:
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json"}
             function = 'DELETE'
             api_path = '/v2.0/OS-KSADM/services/%s' %(self.get_service[0][0])
+            print api_path
             token = self.adm_token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             rest = api.call_rest(rest_dict)
+            print rest
             if(rest['response'] == 204):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -296,9 +298,9 @@ class endpoint_ops:
             else:
                 self.db.pg_transaction_rollback()
                 util.http_codes(rest['response'],rest['reason'])
-        except:
-            logger.sys_error("Could not delete the aoi endpoint.")
-            raise Exception("Could not delete the aoi endpoint.")
+        except Exception as e:
+            logger.sys_error("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
+            raise Exception("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
         """
         WHEN THE SERVICE IS DELETED IT APPEARS AS THOUGH THE ENDPOINT IS DELETED AUTOMATICALLY
         KEEPING THIS JUST IN CASE SOMETHING CHANGES

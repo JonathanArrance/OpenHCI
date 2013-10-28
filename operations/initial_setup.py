@@ -1,5 +1,5 @@
-from celery import Celery
-from celery import task
+#from celery import Celery
+#from celery import task
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -30,19 +30,20 @@ for field in fields:
         new_system_variables.append(updated_field_dict)
 run_setup(new_system_variables,auth_dict)
 '''
-@celery.task(name='initial_setup')
-def run_setup(new_system_variables,auth_dict,admin_pass):
+#@celery.task(name='initial_setup')
+def run_setup(new_system_variables,auth_dict):
     #create a sevice controller object
     controller = service_controller(auth_dict)
     endpoint = endpoint_ops(auth_dict)
 
     #call tasks/change_admin_user_password
-    result = change_admin_password.delay(auth_dict,admin_pass)
+    #result = change_admin_password.delay(auth_dict,admin_pass)
     #check the status of the task_id
-    if(result.status != 'SUCCESS'):
-        raise "Could not chnage the admin password, initial setup has failed."
+    #if(result.status != 'SUCCESS'):
+    #    raise "Could not chnage the admin password, initial setup has failed."
 
     #add all of the new value from the interface into the db
+    print new_system_variables
     update_sys_vars = util.update_system_variables(new_system_variables)
     if((update_sys_vars == 'ERROR') or (update_sys_vars == 'NA')):
         logger.sys_error("Could not update the system variables, Setup has failed.")
@@ -51,23 +52,34 @@ def run_setup(new_system_variables,auth_dict,admin_pass):
     #get the current system settings
     #retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
+    print node_id
     sys_vars = util.get_system_variables(node_id)
+    print sys_vars
     if(sys_vars == 'NA'):
         logger.sys_error("Could not retrieve the system_variables.")
         raise Exception("Could not retrieve the system_variables.")
 
+    #properly format the key values to an array.
+    content = []
+    for val,key in sys_vars:
+        row = key+"="+val
+        content.append(row)
+
     #build the new config.py file
-    config_dict = {'file_path':'/usr/local/lib/python/dist-packages/transcirrus/common/',
+    config_dict = {'file_path':'/home/builder/common/',
                    'file_name':'config.py',
-                   'file_content':sys_vars,
+                   'file_content':content,
                    'file_owner':'transuser',
                    'file_group':'transystem',
                    'file_perm':'644'}
+    print config_dict
     write_config = util.write_new_config_file(config_dict)
+    print write_config
 
     #reset the keystone endpoint
     key_input = {'service_name':'keystone'}
     del_keystone = endpoint.delete_endpoint(key_input)
+    print del_keystone
     if(del_keystone == 'OK'):
         input_dict = {'cloud_name':sys_vars['cloud_name'],'service_name':'keystone'}
         create_keystone = endpoint.create_endpoint(input_dict)
@@ -79,30 +91,35 @@ def run_setup(new_system_variables,auth_dict,admin_pass):
     #set up all of the other endpoint based on the new mgmt IP address
     nova_input_dict = {'cloud_name':sys_vars['cloud_name'],'service_name':'nova'}
     create_nova = endpoint.create_endpoint(nova_input_dict)
+    print create_nova
     if(create_nova['endpoint_id']):
         print "Nova endpoint set up complete."
     else:
         return "Nova error."
     cinder_input_dict = {'cloud_name':sys_vars['cloud_name'],'service_name':'cinder'}
     create_cinder = endpoint.create_endpoint(cinder_input_dict)
+    print create_cinder
     if(create_cinder['endpoint_id']):
         print "Cinder endpoint set up complete."
     else:
         return "Cinder error."
     glance_input_dict = {'cloud_name':sys_vars['cloud_name'],'service_name':'glance'}
     create_glance = endpoint.create_endpoint(glance_input_dict)
+    print create_glance
     if(create_glance['endpoint_id']):
         print "Glance endpoint set up complete."
     else:
         return "Glance error."
     quantum_input_dict = {'cloud_name':sys_vars['cloud_name'],'service_name':'quantum'}
     create_quantum = endpoint.create_endpoint(quantum_input_dict)
+    print create_quantum
     if(create_quantum['endpoint_id']):
         print "Quantum endpoint set up complete."
     else:
         return "Quantum error."
     swift_input_dict = {'cloud_name':sys_vars['cloud_name'],'service_name':'swift'}
     create_swift = endpoint.create_endpoint(swift_input_dict)
+    print create_swift
     if(create_glance['endpoint_id']):
         print "Swift endpoint set up complete."
     else:
