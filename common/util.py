@@ -504,6 +504,7 @@ def get_system_variables(node_id):
                    - MEMBER_ROLE_ID
                    - ADMIN_ROLE_ID
                    - NODE_ID
+                   - NODE_TYPE
     ACCESS: Wide open
     NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
           config.py file descriptor to write out the config.py that is in transcirrus.common by calling write_new_config.py

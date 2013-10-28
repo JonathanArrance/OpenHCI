@@ -93,22 +93,24 @@ class endpoint_ops:
 
         #get the cloud name (Region)
         if('cloud_name' not in input_dict):
-            try:
-                get_name = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='cloud_name'"}
-                input_dict['cloud_name'] = self.db.pg_select(get_name)
-            except:
-                logger.sys_error("Could not retrieve the cloud name from the trans_system_settings db.")
-                raise Exception("Could not retrieve the cloud name from the trans_system_settings db.")
+            input_dict['cloud_name'] = config.CLOUD_NAME
+            #try:
+            #    get_name = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='cloud_name'"}
+            #    input_dict['cloud_name'] = self.db.pg_select(get_name)
+            #except:
+            #    logger.sys_error("Could not retrieve the cloud name from the trans_system_settings db.")
+            #    raise Exception("Could not retrieve the cloud name from the trans_system_settings db.")
 
         #get ip info from the DB for the endpoint creaton
         try:
+            #this will need to be chabged if we use different ips for endpoints
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
             get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='api_ip'"}
             self.api_ips = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
             raise Exception("Could not retrieve the api ips to create endpoints with.")
-        
+
         #Build the endpoints for the service in question
         #get the service info from the DB
         try:
@@ -119,6 +121,16 @@ class endpoint_ops:
                 #if the service name is bogus it will fail
                 logger.sys_error("Could not find the service %s." %(input_dict['service_name']))
                 raise Exception("Could not find the service %s." %(input_dict['service_name']))
+
+            if(input_dict['service_name'] == 'keystone'):
+                get_serv_info = {'select':"service_port,service_api_version",'from':"trans_service_settings",'where':"service_name='keystone_admin'"}
+                get_service = self.db.pg_select(get_serv_info)
+                self.admin_api = "http://%s:%s%s" %(self.api_ips[0][0],get_service[0][0],get_service[0][1])
+
+            if(input_dict['service_name'] == 'swift'):
+                get_serv_info = {'select':"service_port,service_api_version",'from':"trans_service_settings",'where':"service_name='swift_admin'"}
+                get_service = self.db.pg_select(get_serv_info)
+                self.admin_api = "http://%s:%s%s" %(self.api_ips[0][0],get_service[0][0],get_service[0][1])
         except:
             logger.sql_error("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
             raise Exception("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
@@ -128,8 +140,11 @@ class endpoint_ops:
             self.get_service[0][1] = ""
         public_api = "http://%s:%s%s" %(self.api_ips[0][0],self.get_service[0][0],self.get_service[0][1])
         internal_api = "http://%s:%s%s" %(self.api_ips[0][0],self.get_service[0][0],self.get_service[0][1])
-        admin_api = "http://%s:%s%s" %(self.api_ips[0][0],self.get_service[0][0],self.get_service[0][1])
-        
+        #HUGE HACK
+        if(input_dict['service_name'] != 'keystone'):
+            if(input_dict['service_name'] != 'swift'):
+                self.admin_api = "http://%s:%s%s" %(self.api_ips[0][0],self.get_service[0][0],self.get_service[0][1])
+
         #connect to the API
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -157,6 +172,12 @@ class endpoint_ops:
                 self.db.pg_transaction_begin()
                 update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.api_ips[0][0],self.api_ips[0][0],self.api_ips[0][0]),'where':"service_name='%s'" %(input_dict['service_name'])}
                 self.db.pg_update(update)
+                if(input_dict['service_name'] == 'keystone'):
+                    update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.api_ips[0][0],self.api_ips[0][0],self.api_ips[0][0]),'where':"service_name='keystone_admin'"}
+                    self.db.pg_update(update)
+                if(input_dict['service_name'] == 'swift'):
+                    update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.api_ips[0][0],self.api_ips[0][0],self.api_ips[0][0]),'where':"service_name='swift_admin'"}
+                    self.db.pg_update(update)
                 self.db.pg_transaction_commit()
             else:
                 self.db.pg_transaction_rollback()
@@ -166,7 +187,7 @@ class endpoint_ops:
             raise Exception("Could not add a new service catalog entry.")
 
         try:
-            ep_body = '{"endpoint": {"adminurl": "%s", "service_id": "%s", "region": "%s", "internalurl": "%s", "publicurl": "%s"}}' %(admin_api,self.service_id,input_dict['cloud_name'],internal_api,public_api)
+            ep_body = '{"endpoint": {"adminurl": "%s", "service_id": "%s", "region": "%s", "internalurl": "%s", "publicurl": "%s"}}' %(self.admin_api,self.service_id,input_dict['cloud_name'],internal_api,public_api)
             ep_header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json"}
             ep_function = 'POST'
             ep_api_path = '/v2.0/endpoints'
@@ -181,8 +202,14 @@ class endpoint_ops:
                 ep_id = load['endpoint']['id']
                 update = {'table':"trans_service_settings",'set':"service_endpoint_id='%s'" %(ep_id),'where':"service_name='%s'" %(input_dict['service_name'])}
                 self.db.pg_update(update)
+                if(input_dict['service_name'] == 'keystone'):
+                    update = {'table':"trans_service_settings",'set':"service_endpoint_id='%s'" %(ep_id),'where':"service_name='keystone_admin'"}
+                    self.db.pg_update(update)
+                if(input_dict['service_name'] == 'swift'):
+                    update = {'table':"trans_service_settings",'set':"service_endpoint_id='%s'" %(ep_id),'where':"service_name='swift_admin'"}
+                    self.db.pg_update(update)
                 self.db.pg_transaction_commit()
-                r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':admin_api,'internal_url':internal_api,'public_url':public_api}
+                r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':self.admin_api,'internal_url':internal_api,'public_url':public_api}
                 return r_dict
             else:
                 self.db.pg_transaction_rollback()
