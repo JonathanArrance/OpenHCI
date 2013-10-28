@@ -395,7 +395,7 @@ def get_node_nova_config(node_id):
     nova_conf['file_owner'] = 'nova'
     nova_conf['file_group'] = 'nova'
     nova_conf['file_perm'] = '644'
-    nova_conf['file_path'] = '/etc/nova'
+    nova_conf['file_path'] = '/home/builder/etc/nova'
     nova_conf['file_name'] = 'nova.conf'
     nova_conf['file_content'] = nova_con
 
@@ -408,7 +408,7 @@ def get_node_nova_config(node_id):
     comp_conf['file_owner'] = 'nova'
     comp_conf['file_group'] = 'nova'
     comp_conf['file_perm'] = '644'
-    comp_conf['file_path'] = '/etc/nova'
+    comp_conf['file_path'] = '/home/builder/etc/nova'
     comp_conf['file_name'] = 'nova-compute.conf'
     comp_conf['file_content'] = comp_con
 
@@ -421,7 +421,7 @@ def get_node_nova_config(node_id):
     api_conf['file_owner'] = 'nova'
     api_conf['file_group'] = 'nova'
     api_conf['file_perm'] = '644'
-    api_conf['file_path'] = '/etc/nova'
+    api_conf['file_path'] = '/home/builder/etc/nova'
     api_conf['file_name'] = 'api-paste.ini'
     api_conf['file_content'] = api_con
 
@@ -538,7 +538,7 @@ def get_node_neutron_config(node_id):
     net_conf['file_owner'] = 'quantum'
     net_conf['file_group'] = 'quantum'
     net_conf['file_perm'] = '644'
-    net_conf['file_path'] = '/etc/quantum'
+    net_conf['file_path'] = '/home/builder/etc/quantum'
     net_conf['file_name'] = 'quantum.conf'
     net_conf['file_content'] = net_con
     r_array.append(net_conf)
@@ -552,7 +552,7 @@ def get_node_neutron_config(node_id):
     ovs_conf['file_owner'] = 'quantum'
     ovs_conf['file_group'] = 'quantum'
     ovs_conf['file_perm'] = '644'
-    ovs_conf['file_path'] = '/etc/quantum/plugins/openvswitch'
+    ovs_conf['file_path'] = '/home/builder/etc/quantum/plugins/openvswitch'
     ovs_conf['file_name'] = 'ovs_quantum_plugin.ini'
     ovs_conf['file_content'] = ovs_con
     r_array.append(ovs_conf)
@@ -567,7 +567,7 @@ def get_node_neutron_config(node_id):
         dhcp_conf['file_owner'] = 'quantum'
         dhcp_conf['file_group'] = 'quantum'
         dhcp_conf['file_perm'] = '644'
-        dhcp_conf['file_path'] = '/etc/quantum'
+        dhcp_conf['file_path'] = '/home/builder/etc/quantum'
         dhcp_conf['file_name'] = 'dhcp_agent.ini'
         dhcp_conf['file_content'] = dhcp_con
         r_array.append(dhcp_conf)
@@ -581,7 +581,7 @@ def get_node_neutron_config(node_id):
         meta_conf['file_owner'] = 'quantum'
         meta_conf['file_group'] = 'quantum'
         meta_conf['file_perm'] = '644'
-        meta_conf['file_path'] = '/etc/quantum'
+        meta_conf['file_path'] = '/home/builder/etc/quantum'
         meta_conf['file_name'] = 'metadata_agent.ini'
         meta_conf['file_content'] = meta_con
         r_array.append(meta_conf)
@@ -595,7 +595,7 @@ def get_node_neutron_config(node_id):
         api_conf['file_owner'] = 'quantum'
         api_conf['file_group'] = 'quantum'
         api_conf['file_perm'] = '644'
-        api_conf['file_path'] = '/etc/quantum'
+        api_conf['file_path'] = '/home/builder/etc/quantum'
         api_conf['file_name'] = 'api_paste.ini'
         api_conf['file_content'] = api_con
         r_array.append(api_conf)
@@ -609,7 +609,7 @@ def get_node_neutron_config(node_id):
         l3_conf['file_owner'] = 'quantum'
         l3_conf['file_group'] = 'quantum'
         l3_conf['file_perm'] = '644'
-        l3_conf['file_path'] = '/etc/quantum'
+        l3_conf['file_path'] = '/home/builder/etc/quantum'
         l3_conf['file_name'] = 'l3_agent.ini'
         l3_conf['file_content'] = l3_con
         r_array.append(l3_conf)
@@ -693,7 +693,7 @@ def get_node_cinder_config(node_id):
     cin_conf['file_owner'] = 'cinder'
     cin_conf['file_group'] = 'cinder'
     cin_conf['file_perm'] = '644'
-    cin_conf['file_path'] = '/etc/cinder'
+    cin_conf['file_path'] = '/home/builder/etc/cinder'
     cin_conf['file_name'] = 'cinder.conf'
     cin_conf['file_content'] = cin_con
 
@@ -706,7 +706,7 @@ def get_node_cinder_config(node_id):
     api_conf['file_owner'] = 'cinder'
     api_conf['file_group'] = 'cinder'
     api_conf['file_perm'] = '644'
-    api_conf['file_path'] = '/etc/cinder'
+    api_conf['file_path'] = '/home/builder/etc/cinder'
     api_conf['file_name'] = 'api-paste.ini'
     api_conf['file_content'] = api_con
 
@@ -765,7 +765,7 @@ def get_node_networking_config(node_id):
     sys_conf['file_owner'] = 'quantum'
     sys_conf['file_group'] = 'quantum'
     sys_conf['file_perm'] = '644'
-    sys_conf['file_path'] = '/etc'
+    sys_conf['file_path'] = '/home/builder/etc'
     sys_conf['file_name'] = 'sysctl.conf'
     sys_conf['file_content'] = net_con
     r_array.append(sys_conf)
