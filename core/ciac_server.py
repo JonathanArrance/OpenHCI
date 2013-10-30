@@ -133,6 +133,29 @@ def sendStorageConfig(conn, node_id):
     comments        :
     '''
     print "In sendStorageConfig TODO"
+
+    # get cinder config
+    config = node_db.get_node_cinder_config(node_id)
+
+    if config:
+        # send config files
+        conn.sendall(pickle.dumps(config, -1))
+        print "node_id: %s, sent storage node config files"
+
+        # listen for ok ack message
+        data = recv_data(conn)
+        if data:
+            data = pickle.loads(data)
+            print "node_id: %s, ciac server received %s" % (node_id, data)
+        else:
+            print "node_id: %s, ciac server did not receiv ok ack for config files" % node_id
+            sys.exit()
+
+    else:
+        print "node_id: %s, ciac server failure in extracting storage node config files" % node_id
+
+    print "node_id: %s, ciac server done with sending storage config files" % node_id
+
 def sendComputeConfig(conn, node_id):
 
     '''
