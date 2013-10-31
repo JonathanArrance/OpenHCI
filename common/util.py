@@ -76,10 +76,12 @@ def write_new_config_file(file_dict):
             continue
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
-            raise Exception("The value %s was left blank" %(val))
+            #raise Exception("The value %s was left blank" %(val))
+            return 'ERROR'
         if(key not in file_dict):
             logger.sys_error("Required info not specified for file creation.")
-            raise Exception ("Required info not specified for file creation.")
+            #raise Exception ("Required info not specified for file creation.")
+            return 'ERROR'
 
     permissions = None
     if(('file_permissions' not in file_dict) or (file_dict['file_permissions'])):
@@ -112,12 +114,15 @@ def write_new_config_file(file_dict):
     if(file_dict['file_op'] == 'new'):
         config = open(scratch, 'w')
     elif(file_dict['file_op'] == 'append'):
-        config = open(scratch, 'a')
+        config = open(fqp, 'a')
+    else:
+	config = open(scratch, 'w')
 
     #check that the array of lines is not empty
     if(len(file_dict['file_content']) == 0):
         logger.sys_warning("No file input was given. Can not write out the file.")
-        raise Exception("No file input was given. Can not write out the file.")
+        #raise Exception("No file input was given. Can not write out the file.")
+        return 'ERROR'
 
     try:
         for line in file_dict['file_content']:
@@ -138,7 +143,8 @@ def write_new_config_file(file_dict):
         #move the backup copy back to the original copy
         #shutil.move('%s_%s','%s') %(fqp,date,fqp)
         logger.sys_error("Could not write the config file at path %s" %(fqp))
-        raise Exception("Could not write the config file at path %s" %(fqp))
+        #raise Exception("Could not write the config file at path %s" %(fqp))
+        return 'ERROR'
 
     #confirm the file was written and return OK if it was ERROR if not
     check_new_path = os.path.exists(fqp)
@@ -388,6 +394,16 @@ def get_cloud_controller_id():
     NOTE: The cloud controller name and the system name on a ciac node will be the same.
     """
     return config.CLOUD_CONTROLLER_ID
+
+def get_api_ip():
+    """
+    DESC: get the system name from the config.py file.
+    INPUT: None
+    OUTPUT: node_name
+    ACCESS: Wide open
+    NOTE: The cloud controller name and the system name on a ciac node will be the same.
+    """
+    return config.API_IP
 
 def get_cloud_name():
     """

@@ -428,6 +428,28 @@ def get_node_nova_config(node_id):
     r_array = [nova_conf,comp_conf,api_conf]
     return r_array
 
+def update_controller_config(update_dict):
+    """
+    DESC: used to update the controller node nova configuration.
+    INPUT: update_dict - node_id
+                       - mgmt_ip - op
+                       - uplink_ip - op
+                       - 
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    ACCESS: wide open
+    NOTES: Updates the controller node openstack config info if the uplink or mgmt(API) network
+           info changes. If this is used new config files will need to be created for the control
+           node. This function only works if the node is of type cc.  
+    """
+    #if((update_dict['node_id'] == "") or ('node_id' not in update_dict)):
+        #logger.sys_error('The node_id was not specified')
+        #raise Exception("The node_id was not specified.") 
+    
+    #get the current nova info needed
+    #selet_nova = {'select':}    
+
 def get_node_neutron_config(node_id):
     """
     DESC: Pull the neutron(quantum) config information out of the  config DB.

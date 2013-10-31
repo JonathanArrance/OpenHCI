@@ -4,17 +4,19 @@ import time
 
 print "Building a dummy test config file"
 file_array = ['test=testfile','proj=testproject','my_ip=192.168.10.3','sql=postgresql://test:test@localhost/nova']
-file_path = '/etc/nova'
-file_name = 'jonarrance.conf'
-file_owner = 'stack'
-file_group = 'stack'
+file_path = '/tmp/test'
+file_name = 'test.conf'
+file_owner = 'transuser'
+file_group = 'transystem'
 file_permissions = '777'
+file_op = 'append'
 
-file_dict = {'file_path':file_path,'file_name':file_name,'file_content':file_array,'file_owner':file_owner,'file_group':file_group,'file_perm':file_permissions}
+file_dict = {'file_path':file_path,'file_name':file_name,'file_content':file_array,'file_owner':file_owner,'file_group':file_group,'file_perm':file_permissions,'file_op':file_op}
 
 write = util.write_new_config_file(file_dict)
 print write
 
+'''
 time.sleep(1)
 print "-------------------------------------------"
 print "Getting Nova config info for a dummy node"
@@ -30,7 +32,6 @@ for x in test:
     print write
 
 
-'''
 time.sleep(1)
 print "-------------------------------------------"
 print "Getting the neutron config info for a dummy node"

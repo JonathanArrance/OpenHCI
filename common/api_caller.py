@@ -95,6 +95,12 @@ class caller:
         if('port' in api_dict):
             port = api_dict['port']
 
+        #overide the api_ip found in the db if needed
+        #used mostly during init and re-init
+        if('api_ip' in api_dict):
+            self.api_ip = api_dict['api_ip']
+
+        #set the url for the api caller
         url = "%s:%s" %(self.api_ip,port)
 
         sec = api_dict['sec']
