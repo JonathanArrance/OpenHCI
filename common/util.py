@@ -56,6 +56,7 @@ def write_new_config_file(file_dict):
                      - file_owner - req
                      - file_group - req
                      - file_perm - default 644
+                     - file_op - new/append
     OUTPUT: A file written out to the proper location with the proper permissions
             raise exceptions on fail
             OK - file written
@@ -64,12 +65,14 @@ def write_new_config_file(file_dict):
     ACCESS: wide open
     NOTES: Note the file permissions come in the bit format, ex. 644
            The defualt file permissions should be sufficient for any config
-           file written.
+           file written. Default file operation is write. -Need to add the ability to append to a config file
     """
     #make sure none of the values are empty
     for key, val in file_dict.items():
         #skip over these
         if(key == 'file_permissions'):
+            continue
+        if(key == 'file_op'):
             continue
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
@@ -98,13 +101,18 @@ def write_new_config_file(file_dict):
     if(check_fqp == False):
         logger.sys_warning("The file %s does not exists, Creating..." %(fqp))
         os.system('sudo mkdir -p %s' %(file_dict['file_path']))
-        config = open(scratch, 'w')
     else:
         logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))
         date = strftime("%Y-%m-%d", gmtime())
         old = '%s_%s' %(fqp,date)
         os.system('sudo cp -f %s %s' %(fqp,old))
+
+    #decide if we append the scratch file or write it as
+    #an entire new file
+    if(file_dict['file_op'] == 'new'):
         config = open(scratch, 'w')
+    elif(file_dict['file_op'] == 'append'):
+        config = open(scratch, 'a')
 
     #check that the array of lines is not empty
     if(len(file_dict['file_content']) == 0):
