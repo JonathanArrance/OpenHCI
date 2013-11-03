@@ -8,7 +8,7 @@ from time import sleep
 import select
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
-from transcirrus.common.service_control import service_controller
+import transcirrus.common.service_control as service_controller
 
 timeout_sec = 1
 retry_count = 5
@@ -594,12 +594,12 @@ def processStorageConfig(sock, node_id):
 
 
     # create service_controller object: TODO auth_dict      
-    controller = service_controller(auth_dict)
+    #controller = service_controller(auth_dict)
     # check for post install tests
     post_install_status = True
 
     # restart services
-    sn_services = controller.cinder(restart)
+    sn_services = service_controller.cinder(restart)
     if sn_services == "NA" or sn_services == "ERROR":
         print "node_id: %s, error in restarting cinder services" % node_id
     elif sn_services == "OK":
@@ -637,7 +637,7 @@ def processStorageConfig(sock, node_id):
         while(retry >= 0):
 
             # restart services
-            sn_services = controller.cinder(restart)
+            sn_services = service_controller.cinder(restart)
             if sn_services == "NA" or sn_services == "ERROR":
                 print "node_id: %s, error in restarting cinder services" % node_id
             elif sn_services == "OK":
