@@ -162,7 +162,8 @@ def swift(action):
 def _operator(service_array,action):
     for service in service_array:
         process = []
-        os.system('sudo /etc/init.d/%s %s'%(service,action))
+        #os.system('sudo /etc/init.d/%s %s'%(service,action))
+        os.system('sudo service %s %s'%(service,action))
         time.sleep(1)
         out = None
         if(action.lower() == 'start' or action.lower() == 'restart'):
