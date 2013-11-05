@@ -188,7 +188,7 @@ CREATE TABLE glance_defaults (
     parameter character varying,
     param_value character varying,
     host_name character varying,
-    file_path character varying,
+    file_name character varying,
     index integer NOT NULL
 );
 
