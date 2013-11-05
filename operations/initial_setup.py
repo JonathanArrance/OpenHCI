@@ -162,7 +162,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Nova config file written."
     #start the NOVA service
-    nova_start = service.nova(restart)
+    nova_start = service.nova('restart')
 
     #enable cinder
     cinder_configs = node_db.get_node_cinder_config(node_id)
@@ -175,7 +175,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Cinder config file written."
     #start the cinder service
-    cinder_start = service.cinder(restart)
+    cinder_start = service.cinder('restart')
 
     #enable glance
     glance_configs = node_db.get_node_glance_config(node_id)
@@ -188,7 +188,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Glance config file written."
     #start the cinder service
-    glance_start = service.glance(restart)
+    glance_start = service.glance('restart')
 
     #enable neutron
     neu_configs = node_db.get_node_neutron_config(node_id)
@@ -201,7 +201,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Neutron config file written."
     #start the cinder service
-    neutron_start = service.neutron(restart)
+    neutron_start = service.neutron('restart')
 
     #after quantum enabled create the default_public ip range
 
