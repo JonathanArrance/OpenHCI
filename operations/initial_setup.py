@@ -5,8 +5,8 @@
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.node_util as node_util
+import transcirrus.common.service_control as service
 
-from transcirrus.common.service_control import service_controller
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
@@ -86,7 +86,6 @@ def run_setup(new_system_variables,auth_dict):
         #rollback = util.update_system_variables(rollback_sys_vars)
 
     #create a sevice controller object
-    controller = service_controller(auth_dict)
     endpoint = endpoint_ops(auth_dict)
     '''
     #reset the keystone endpoint
@@ -163,7 +162,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Nova config file written."
     #start the NOVA service
-    nova_start = controller.nova(restart)
+    nova_start = service.nova(restart)
 
     #enable cinder
     cinder_configs = node_db.get_node_cinder_config(node_id)
@@ -176,7 +175,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Cinder config file written."
     #start the cinder service
-    cinder_start = controller.cinder(restart)
+    cinder_start = service.cinder(restart)
 
     #enable glance
     glance_configs = node_db.get_node_glance_config(node_id)
@@ -189,7 +188,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Glance config file written."
     #start the cinder service
-    glance_start = controller.glance(restart)
+    glance_start = service.glance(restart)
 
     #enable neutron
     neu_configs = node_db.get_node_neutron_config(node_id)
@@ -202,7 +201,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Neutron config file written."
     #start the cinder service
-    neutron_start = controller.neutron(restart)
+    neutron_start = service.neutron(restart)
 
     #after quantum enabled create the default_public ip range
 
