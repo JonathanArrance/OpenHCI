@@ -185,7 +185,7 @@ def run_setup(new_system_variables,auth_dict):
     '''
 
     #enable glance
-    glance_configs = node_db.get_node_glance_config(node_id)
+    glance_configs = node_db.get_glance_config(node_id)
     #take the array of cinder file decriptors and write the files
     for config in glance_configs:
         write_glance_config = util.write_new_config_file(config)
