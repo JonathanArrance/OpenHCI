@@ -165,26 +165,37 @@ def _operator(service_array,action):
         #os.system('sudo /etc/init.d/%s %s'%(service,action))
         os.system('sudo service %s %s'%(service,action))
         time.sleep(1)
-        out = None
-        act = action.lower()
-        if(act == 'start' or act == 'restart'):
-            out = subprocess.Popen('sudo service %s status | grep "running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        elif(act == 'stop'):
-            out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print out.communicate()
+        out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process = out.stdout.readlines()
-        #look for process status the is not stop/waiting
-        print "DEBUG %s"%(process)
+        if (process[0]):
+            logger.sys_info("Service operation did not start.")
+            return 'ERROR'
+
         if(not process):
             out = subprocess.Popen('sudo service %s status | grep "NOT"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             process = out.stdout.readlines()
-            if(not process):
+            if (process[0]):
+                logger.sys_info("Service operation did not start.")
                 return 'ERROR'
-        if (process):
-            logger.sys_info("Service operation complete.")
-            print process[0]
-        elif(process[0] == ""):
-            return 'ERROR'
-        else:
-            return 'NA'
+        
+        #if(act == 'start' or act == 'restart'):
+        #    out = subprocess.Popen('sudo service %s status | grep "running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #elif(act == 'stop'):
+        #    out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #print out.communicate()
+        #process = out.stdout.readlines()
+        #look for process status the is not stop/waiting
+        #print "DEBUG %s"%(process)
+        #if(not process):
+        #    out = subprocess.Popen('sudo service %s status | grep "NOT"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #    process = out.stdout.readlines()
+        #    if(not process):
+        #        return 'ERROR'
+        #if (process):
+        #    logger.sys_info("Service operation complete.")
+        #    print process[0]
+        #elif(process[0] == ""):
+        #    return 'ERROR'
+        #else:
+        #    return 'NA'
     return 'OK'
