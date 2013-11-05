@@ -185,17 +185,20 @@ def run_setup(new_system_variables,auth_dict):
     '''
 
     #enable glance
-    glance_configs = node_db.get_glance_config(node_id)
+    glance_configs = node_db.get_glance_config()
     #take the array of cinder file decriptors and write the files
     for config in glance_configs:
         write_glance_config = util.write_new_config_file(config)
         if(write_glance_config != 'OK'):
             #Exit the setup return to factory default
-            return 'ERROR'
+            return write_glance_config
         else:
             print "Glance config file written."
     #start the cinder service
     glance_start = service.glance('restart')
+    if(glance_start != 'OK'):
+        #fire off revert
+        return cinder_start
 
     #enable neutron
     neu_configs = node_db.get_node_neutron_config(node_id)
