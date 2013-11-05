@@ -148,6 +148,8 @@ def run_setup(new_system_variables,auth_dict):
                       'node_nova_zone':'nova',
                       'node_iscsi_iqn':'NULL'}
     insert_cc = node_db.insert_node(cc_insert_dict)
+    if(insert_cc != 'OK'):
+        return 'ERROR'
 
     #enable nova
     #write the nova config files
