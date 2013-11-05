@@ -166,9 +166,10 @@ def _operator(service_array,action):
         os.system('sudo service %s %s'%(service,action))
         time.sleep(1)
         out = None
-        if(action.lower() == 'start' or action.lower() == 'restart'):
+        act = action.lower()
+        if(act == 'start' or act == 'restart'):
             out = subprocess.Popen('sudo service %s status | grep "running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        elif(action.lower() == 'stop'):
+        elif(act == 'stop'):
             out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         process = out.stdout.readlines()
         #look for process status the is not stop/waiting
