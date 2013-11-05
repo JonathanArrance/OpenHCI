@@ -111,12 +111,12 @@ def write_new_config_file(file_dict):
 
     #decide if we append the scratch file or write it as
     #an entire new file
-    if(file_dict['file_op'] == 'new'):
+    if(file_dict['file_op'].lower() == 'new'):
         config = open(scratch, 'w')
-    elif(file_dict['file_op'] == 'append'):
+    elif(file_dict['file_op'].lower() == 'append'):
         config = open(fqp, 'a')
     else:
-	config = open(scratch, 'w')
+        config = open(scratch, 'w')
 
     #check that the array of lines is not empty
     if(len(file_dict['file_content']) == 0):

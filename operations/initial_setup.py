@@ -74,7 +74,9 @@ def run_setup(new_system_variables,auth_dict):
                    'file_content':content,
                    'file_owner':'transuser',
                    'file_group':'transystem',
-                   'file_perm':'644'}
+                   'file_perm':'644',
+                   'file_op':'new'
+                   }
 
     write_config = util.write_new_config_file(config_dict)
     if(write_config != 'OK'):
@@ -139,6 +141,8 @@ def run_setup(new_system_variables,auth_dict):
     #add the params to the *_node and the *_default db tables before we build out the new config files
     #and start the services up. Values for ciac added at install time.
     update_os_configs = node_db.update_openstack_config(input_dict) 
+
+    #add the ciac node info to the trans_nodes table
     
 
     #enable nova

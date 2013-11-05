@@ -8,8 +8,6 @@ import transcirrus.common.logger as logger
 import transcirrus.common.util as util
 import transcirrus.common.config as config
 
-
-
 def check_config_type():
     """
     DESC: Check the Transcirrus system DB and see if the system is set to be a single or multi node system

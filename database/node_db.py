@@ -73,7 +73,6 @@ def insert_node(input_dict):
                       - node_cloud_name - op
                       - node_nova_zone - default nova
                       - node_iscsi_iqn - default NULL
-                      - node_swift_ring - default NULL
     OUTPUT: OK if successful
             ERROR if not successful
             raise error
@@ -99,9 +98,10 @@ def insert_node(input_dict):
 
     #static assign nova availability zone for now
     input_dict['node_nova_zone'] = 'nova'
-    input_dict['node_swift_ring'] = 'NULL'
+    #input_dict['node_swift_ring'] = 'NULL'
 
-    input_dict['cloud_name'] = 'NULL'
+    if('node_cloud_name' not in input_dict):
+        input_dict['node_cloud_name'] = 'RegionOne'
 
     if((input_dict['node_iscsi_iqn'] == "") or ('node_iscsi_iqn' not in input_dict)):
         input_dict['node_iscsi_iqn'] = 'NULL'
@@ -122,11 +122,11 @@ def insert_node(input_dict):
         logger.sys_info("Controller %s has %s nodes attached." %(input_dict['node_controller'],count))
 
     #insert node info into specific service dbs based on node_type
-    if(input_dict['node_type'] == 'sn'):
+    if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
         #do the cinder config for now. Swift is up in the air still
         #HACK need to add in a supersecret db password
         try:
-            insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:builder@172.24.28.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.38.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             db.pg_transaction_begin()
             db.pg_insert('cinder_node',insert_cinder_conf)
             db.pg_transaction_commit()
@@ -134,9 +134,9 @@ def insert_node(input_dict):
             db.pg_transaction_rollback()
             logger.sql_error("Could not insert node specific cinder config into Transcirrus db.")
             return 'ERROR'
-    elif(input_dict['node_type'] == 'cn'):
+    elif((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
         try:
-            insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:builder@172.24.28.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             nova_array = [insert_nova_conf,insert_nova_ip]
             for nova in nova_array:
@@ -148,8 +148,21 @@ def insert_node(input_dict):
             logger.sql_error("Could not insert node specific nova config into Transcirrus db.")
             return 'ERROR'
     try:
+        insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
+        insert_neutron_localip = {"parameter":"auth_region","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+        neutron_array = [insert_neutron_region,insert_neutron_localip]
+        for neutron in neutron_array:
+            db.pg_transaction_begin()
+            db.pg_insert('neutron_node',neutron)
+            db.pg_transaction_commit()
+        return 'OK'
+    except:
+        db.pg_transaction_rollback()
+        logger.sys_error("Could not insert node specific neutron config into Transcirrus db.")
+        return 'ERROR'
+    try:
         insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
-                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['node_nova_zone'],'node_iscsi_iqn':input_dict['node_iscsi_iqn'],'node_swift_ring':input_dict['node_swift_ring']}
+                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['node_nova_zone'],'node_iscsi_iqn':input_dict['node_iscsi_iqn']}
         db.pg_transaction_begin()
         db.pg_insert('trans_nodes',insert_dict)
         db.pg_transaction_commit()
@@ -560,7 +573,7 @@ def get_node_neutron_config(node_id):
     net_conf['file_owner'] = 'quantum'
     net_conf['file_group'] = 'quantum'
     net_conf['file_perm'] = '644'
-    net_conf['file_path'] = '/home/builder/etc/quantum'
+    net_conf['file_path'] = '/etc/quantum'
     net_conf['file_name'] = 'quantum.conf'
     net_conf['file_content'] = net_con
     r_array.append(net_conf)
@@ -574,7 +587,7 @@ def get_node_neutron_config(node_id):
     ovs_conf['file_owner'] = 'quantum'
     ovs_conf['file_group'] = 'quantum'
     ovs_conf['file_perm'] = '644'
-    ovs_conf['file_path'] = '/home/builder/etc/quantum/plugins/openvswitch'
+    ovs_conf['file_path'] = '/etc/quantum/plugins/openvswitch'
     ovs_conf['file_name'] = 'ovs_quantum_plugin.ini'
     ovs_conf['file_content'] = ovs_con
     r_array.append(ovs_conf)
@@ -589,7 +602,7 @@ def get_node_neutron_config(node_id):
         dhcp_conf['file_owner'] = 'quantum'
         dhcp_conf['file_group'] = 'quantum'
         dhcp_conf['file_perm'] = '644'
-        dhcp_conf['file_path'] = '/home/builder/etc/quantum'
+        dhcp_conf['file_path'] = '/etc/quantum'
         dhcp_conf['file_name'] = 'dhcp_agent.ini'
         dhcp_conf['file_content'] = dhcp_con
         r_array.append(dhcp_conf)
@@ -603,7 +616,7 @@ def get_node_neutron_config(node_id):
         meta_conf['file_owner'] = 'quantum'
         meta_conf['file_group'] = 'quantum'
         meta_conf['file_perm'] = '644'
-        meta_conf['file_path'] = '/home/builder/etc/quantum'
+        meta_conf['file_path'] = '/etc/quantum'
         meta_conf['file_name'] = 'metadata_agent.ini'
         meta_conf['file_content'] = meta_con
         r_array.append(meta_conf)
@@ -617,7 +630,7 @@ def get_node_neutron_config(node_id):
         api_conf['file_owner'] = 'quantum'
         api_conf['file_group'] = 'quantum'
         api_conf['file_perm'] = '644'
-        api_conf['file_path'] = '/home/builder/etc/quantum'
+        api_conf['file_path'] = '/etc/quantum'
         api_conf['file_name'] = 'api_paste.ini'
         api_conf['file_content'] = api_con
         r_array.append(api_conf)
@@ -631,7 +644,7 @@ def get_node_neutron_config(node_id):
         l3_conf['file_owner'] = 'quantum'
         l3_conf['file_group'] = 'quantum'
         l3_conf['file_perm'] = '644'
-        l3_conf['file_path'] = '/home/builder/etc/quantum'
+        l3_conf['file_path'] = '/etc/quantum'
         l3_conf['file_name'] = 'l3_agent.ini'
         l3_conf['file_content'] = l3_con
         r_array.append(l3_conf)
@@ -677,7 +690,7 @@ def get_node_cinder_config(node_id):
     db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
 
     ovsraw = None
-    if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'cn')):
+    if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'sn')):
         logger.sys_info("Node is a valid compute node or cloud in a can.")
         #query the novaconf table in transcirrus db
         #first get the nova.conf configs
@@ -715,7 +728,7 @@ def get_node_cinder_config(node_id):
     cin_conf['file_owner'] = 'cinder'
     cin_conf['file_group'] = 'cinder'
     cin_conf['file_perm'] = '644'
-    cin_conf['file_path'] = '/home/builder/etc/cinder'
+    cin_conf['file_path'] = '/etc/cinder'
     cin_conf['file_name'] = 'cinder.conf'
     cin_conf['file_content'] = cin_con
 
@@ -728,7 +741,7 @@ def get_node_cinder_config(node_id):
     api_conf['file_owner'] = 'cinder'
     api_conf['file_group'] = 'cinder'
     api_conf['file_perm'] = '644'
-    api_conf['file_path'] = '/home/builder/etc/cinder'
+    api_conf['file_path'] = '/etc/cinder'
     api_conf['file_name'] = 'api-paste.ini'
     api_conf['file_content'] = api_con
 
