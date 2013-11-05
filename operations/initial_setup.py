@@ -36,6 +36,7 @@ run_setup(new_system_variables,auth_dict)
 def run_setup(new_system_variables,auth_dict):
     #retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
+    node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
     
     #get the original system vars from the DB - used in case we need to rollback
@@ -138,12 +139,17 @@ def run_setup(new_system_variables,auth_dict):
         return "Swift error."
     '''
 
-    #add the params to the *_node and the *_default db tables before we build out the new config files
-    #and start the services up. Values for ciac added at install time.
-    update_os_configs = node_db.update_openstack_config(input_dict) 
-
-    #add the ciac node info to the trans_nodes table
-    
+    #insert the controller info into trans_nodes db table
+    cc_insert_dict = {'node_id':node_id,
+                      'node_name':node_name,
+                      'node_type':'cc',
+                      'node_mgmt_ip':sys_vars['MGMT_IP'],
+                      'node_data_ip':'172.38.24.10',
+                      'node_controller':sys_vars['CLOUD_CONTROLLER'],
+                      'node_cloud_name':sys_vars['CLOUD_NAME'],
+                      'node_nova_zone':'nova',
+                      'node_iscsi_iqn':'NULL'}
+    insert_cc = node_db.insert_node(cc_insert_dict)
 
     #enable nova
     #write the nova config files
@@ -160,14 +166,52 @@ def run_setup(new_system_variables,auth_dict):
     nova_start = controller.nova(restart)
 
     #enable cinder
+    cinder_configs = node_db.get_node_cinder_config(node_id)
+    #take the array of cinder file decriptors and write the files
+    for config in cinder_configs:
+        write_cinder_config = util.write_new_config_file(config)
+        if(write_cinder_config != 'OK'):
+            #Exit the setup return to factory default
+            return 'ERROR'
+        else:
+            print "Cinder config file written."
+    #start the cinder service
+    cinder_start = controller.cinder(restart)
 
     #enable glance
+    glance_configs = node_db.get_node_glance_config(node_id)
+    #take the array of cinder file decriptors and write the files
+    for config in glance_configs:
+        write_glance_config = util.write_new_config_file(config)
+        if(write_glance_config != 'OK'):
+            #Exit the setup return to factory default
+            return 'ERROR'
+        else:
+            print "Glance config file written."
+    #start the cinder service
+    glance_start = controller.glance(restart)
 
-    #enable quantum
+    #enable neutron
+    neu_configs = node_db.get_node_neutron_config(node_id)
+    #take the array of cinder file decriptors and write the files
+    for config in neu_configs:
+        write_neutron_config = util.write_new_config_file(config)
+        if(write_neutron_config != 'OK'):
+            #Exit the setup return to factory default
+            return 'ERROR'
+        else:
+            print "Neutron config file written."
+    #start the cinder service
+    neutron_start = controller.neutron(restart)
 
     #after quantum enabled create the default_public ip range
 
+    #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
+    #this is pushed to alpo.1
+
     #if the node is set as multinode, enable multinode
+
+    
 
     #call tasks/change_admin_user_password
     #result = change_admin_password.delay(auth_dict,admin_pass)

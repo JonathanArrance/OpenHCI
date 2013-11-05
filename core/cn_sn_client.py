@@ -8,11 +8,17 @@ from time import sleep
 import select
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
-from transcirrus.common.service_control import service_controller
+import transcirrus.common.service_control as service_controller
 
 timeout_sec = 1
 retry_count = 5
 recv_buffer = 4096
+
+connect_pkt = {
+'Type' : 'connect',
+'Length': '1',
+'Value': 1
+}
 
 status_ready = {
 'Type':'status',
@@ -24,6 +30,23 @@ status_halt = {
 'Type':'status',
 'length':'1',
 'Value':'node_halt'
+}
+
+node_info = {
+'Type': 'Node_info', 
+'Length': 10, 
+'Value': {
+    'node_name':'box15',
+    'node_type':'cn',
+    'node_mgmt_ip':'10.10.10.10',
+    'node_data_ip':'172.16.16.16',
+    'node_controller':'ciac15',
+    'node_cloud_name':'cloud15',
+    'node_nova_zone':'',
+    'node_iscsi_iqn':'',
+    'node_swift_ring':'',
+    'node_id':'trans15'
+    }
 }
 
 def sendOk(sock):
@@ -45,6 +68,53 @@ def sendOk(sock):
             'Value': 'ok'
         }
     sock.sendall(pickle.dumps(status_ok, -1))
+
+def restartServices(node_id, node_type):
+
+    '''
+    @author         : Shashaa
+    comment         : restart node services 
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    if node_type == "sn":
+
+        # restart cinder services
+        ret = service_controller.cinder("restart")
+
+        if ret == "OK":
+            print "node_id: %s, services restart success" % node_id
+            return True
+        else:
+            print "node_id: %s, services restart failure" % node_id
+            return False
+    elif node_type == "cn":
+
+        # restart nova services
+        ret = service_controller.nova("restart")
+        if ret == "OK":
+
+            # restart openvswitch services
+            ret == service_controller.openvswitch("restart")
+
+            if ret == "OK":
+                print "node_id: %s, services restart success" % node_id
+                return True
+            else:
+                print "node_id: %s, openvswitch services restart failure" % node_id
+                return False
+        else:
+            print "node_id: %s, nova services restart failure" % node_id
+            return False
+    else:
+        print "node_id: %s, unknown node_type" % node_type
+        return False
+
 
 def recv_data(sock):
 
@@ -554,7 +624,6 @@ def processStorageConfig(sock, node_id):
     @author         :
     comments        :
     '''
-    print "TODO"
 
     # receive cinder config files
 
@@ -594,12 +663,12 @@ def processStorageConfig(sock, node_id):
 
 
     # create service_controller object: TODO auth_dict      
-    controller = service_controller(auth_dict)
+    #controller = service_controller(auth_dict)
     # check for post install tests
     post_install_status = True
 
     # restart services
-    sn_services = controller.cinder(restart)
+    sn_services = service_controller.cinder("restart")
     if sn_services == "NA" or sn_services == "ERROR":
         print "node_id: %s, error in restarting cinder services" % node_id
     elif sn_services == "OK":
@@ -637,7 +706,7 @@ def processStorageConfig(sock, node_id):
         while(retry >= 0):
 
             # restart services
-            sn_services = controller.cinder(restart)
+            sn_services = service_controller.cinder("restart")
             if sn_services == "NA" or sn_services == "ERROR":
                 print "node_id: %s, error in restarting cinder services" % node_id
             elif sn_services == "OK":
@@ -731,11 +800,6 @@ keep_alive_sec=10
 
 try:
     # send connect
-    connect_pkt = {
-            'Type' : 'connect',
-            'Length': '1',
-            'Value': 1
-            }
     print "sending connect_pkt"
     sock.sendall(pickle.dumps(connect_pkt, -1))
 
@@ -761,30 +825,11 @@ try:
             print "client received %s" % data['Value']
 
             # send node data
-            data = {
-                'Type': 'Node_info', 
-                'Length': 10, 
-                'Value': 
-                    {
-                    'node_name':'box15',
-                    'node_type':'cn',
-                    'node_mgmt_ip':'10.10.10.10',
-                    'node_data_ip':'172.16.16.16',
-                    'node_controller':'ciac15',
-                    'node_cloud_name':'cloud15',
-                    'node_nova_zone':'',
-                    'node_iscsi_iqn':'',
-                    'node_swift_ring':'',
-                    'node_id':'trans15'
-                    }
-                }
-    
-
-            node_type = 'cn'
-            node_id = data['Value']['node_id']
-            print "sending %s " % data
-            print "node_id = %s" % data['Value']['node_id']
-            sock.sendall(pickle.dumps(data, -1))
+            node_type = node_info['Value']['node_type']
+            node_id = node_info['Value']['node_id']
+            print "sending %s " % node_info
+            #print "node_id = %s" % node_id
+            sock.sendall(pickle.dumps(node_info, -1))
 
             # receive status message, retry_count
             data = recv_data(sock)
@@ -795,7 +840,11 @@ try:
                 if data['Type'] == 'status' and data['Value'] == 'ok':
                     print "client received %s" % data['Value']
                     # check for services TODO, based on node_type
-                    print "Node is setup and ready to use!!!"
+                    ret = restartServices(node_id, node_type)
+                    if ret == True:
+                        print "Node is setup and ready to use!!!"
+                    else:
+                        print "node_id: %s, failure to restart services"
                     keep_alive(sock)
 
                 elif data['Type'] == 'status' and data['Value'] == 'build':
