@@ -207,11 +207,14 @@ def run_setup(new_system_variables,auth_dict):
         write_neutron_config = util.write_new_config_file(config)
         if(write_neutron_config != 'OK'):
             #Exit the setup return to factory default
-            return 'ERROR'
+            return write_neutron_config
         else:
             print "Neutron config file written."
     #start the cinder service
     neutron_start = service.neutron('restart')
+    if(neutron_start != 'OK'):
+        #fire off revert
+        return cinder_start
 
     #after quantum enabled create the default_public ip range
 
