@@ -166,7 +166,6 @@ def run_setup(new_system_variables,auth_dict):
     if(nova_start != 'OK'):
         #fire off revert
         return nova_start
-    '''
 
     #enable cinder
     cinder_configs = node_db.get_node_cinder_config(node_id)
@@ -183,6 +182,7 @@ def run_setup(new_system_variables,auth_dict):
     if(cinder_start != 'OK'):
         #fire off revert
         return cinder_start
+    '''
 
     #enable glance
     glance_configs = node_db.get_node_glance_config(node_id)
