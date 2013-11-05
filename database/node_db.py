@@ -1,6 +1,7 @@
 from transcirrus.database.postgres import pgsql
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+
 #pushed to alpo.1
 #import transcirrus.common.status_codes as status
 
@@ -735,7 +736,63 @@ def get_node_cinder_config(node_id):
     r_array = [cin_conf,api_conf]
     return r_array
 
-def get_node_networking_config(node_id):
+def get_glance_config():
+    """
+    DESC: Get the glance config from the db and write the config on the controller/ciab node.
+    INPUT: None
+    OUTPUT: File descriptor used to write the glance config file on the ciac node.
+    ACCESS: wide open
+    NOTES: As of now this function will only write the info to the controller/ciab node. In the
+           future we will add the ability to move glance to a seperate node.
+    """
+    #connect to the db
+    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    logger.sys_info("Writing the Glance config file to the controller node.")
+
+    try:
+        get_api_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-api.conf'"}
+        glance_api = db.pg_select(get_api_dict)
+        get_reg_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry.conf'"}
+        glance_reg = db.pg_select(get_reg_dict)
+    except:
+        logger.sys_error('Could not get the Glance entries from the Transcirrus network db.')
+        raise Exception('Could not get the Glance entries from the Transcirrus network db.')
+
+    #disconnect from db
+    db.pg_close_connection()
+
+    r_array = []
+    api = []
+    api_conf = {}
+    for x in glance_api:
+        row = "=".join(x)
+        api.append(row)
+    api_conf['op'] = 'new'
+    #find user/group/perms
+    api_conf['file_owner'] = 'glance'
+    api_conf['file_group'] = 'glance'
+    api_conf['file_perm'] = '644'
+    api_conf['file_path'] = '/etc/glance'
+    api_conf['file_name'] = 'glance-api.conf'
+    api_conf['file_content'] = api
+    r_array.append(api_conf)
+
+    reg = []
+    reg_conf = {}
+    for x in glance_reg:
+        row = "=".join(x)
+        reg.append(row)
+    reg_conf['op'] = 'new'
+    #find user/group/perms
+    reg_conf['file_owner'] = 'glance'
+    reg_conf['file_group'] = 'glance'
+    reg_conf['file_perm'] = '644'
+    reg_conf['file_path'] = '/etc/glance'
+    reg_conf['file_name'] = 'glance-registry.conf'
+    reg_conf['file_content'] = reg
+    r_array.append(reg_conf)
+
+def get_node_netsysctl_config(node_id):
     """
     DESC: Pull the networking adapter config information and sysctl config out of the config DB.
     INPUT: node_id
@@ -789,7 +846,7 @@ def get_node_networking_config(node_id):
     sys_conf['file_perm'] = '644'
     sys_conf['file_path'] = '/home/builder/etc'
     sys_conf['file_name'] = 'sysctl.conf'
-    sys_conf['file_content'] = net_con
+    sys_conf['file_content'] = sys_con
     r_array.append(sys_conf)
 
 
