@@ -171,6 +171,7 @@ def _operator(service_array,action):
             out = subprocess.Popen('sudo service %s status | grep "running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         elif(act == 'stop'):
             out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print out.communicate()
         process = out.stdout.readlines()
         #look for process status the is not stop/waiting
         print "DEBUG %s"%(process)
@@ -179,7 +180,7 @@ def _operator(service_array,action):
             process = out.stdout.readlines()
             if(not process):
                 return 'ERROR'
-        if (process[0]):
+        if (process):
             logger.sys_info("Service operation complete.")
             print process[0]
         elif(process[0] == ""):
