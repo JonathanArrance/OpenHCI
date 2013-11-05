@@ -690,7 +690,8 @@ def get_node_cinder_config(node_id):
     #connect to the db
     db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
 
-    ovsraw = None
+    cinraw = None
+    apiraw = None
     if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'sn')):
         logger.sys_info("Node is a valid compute node or cloud in a can.")
         #query the novaconf table in transcirrus db
@@ -706,13 +707,13 @@ def get_node_cinder_config(node_id):
             raise Exception('Could not get the cinder.conf entries from the Transcirrus cinder db.')
         try:
             get_apidef_dict = {'select':"parameter,param_value",'from':"cinder_default",'where':"file_name='api-paste.ini'"}
-            apidefraw = db.pg_select(get_apidef_dict)
-            get_ovsnode_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='api-paste.ini'",'and':"node='%s'"%(node_id)}
-            apinoderaw = db.pg_select(get_apinode_dict)
-            apiraw = apidefraw + apinoderaw
+            apiraw = db.pg_select(get_apidef_dict)
+            #get_ovsnode_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='api-paste.ini'",'and':"node='%s'"%(node_id)}
+            #apinoderaw = db.pg_select(get_apinode_dict)
+            #apiraw = apidefraw + apinoderaw
         except:
             logger.sys_error('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
-            raise Exception('Could not get the api-paste.ini.ini entries from the Transcirrus cinder db.')
+            raise Exception('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
     else:
         logger.sys_error('Could not get cinder entries, node type invalid.')
         raise Exception('Could not get cinder entries, node type invalid.')
@@ -722,9 +723,9 @@ def get_node_cinder_config(node_id):
 
     cin_con = []
     cin_conf = {}
-    for x in netraw:
+    for x in cinraw:
         row = "=".join(x)
-        net_con.append(row)
+        cin_con.append(row)
     cin_conf['op'] = 'new'
     cin_conf['file_owner'] = 'cinder'
     cin_conf['file_group'] = 'cinder'
