@@ -158,14 +158,14 @@ def run_setup(new_system_variables,auth_dict):
         write_nova_config = util.write_new_config_file(config)
         if(write_nova_config != 'OK'):
             #Exit the setup return to factory default
-            return 'ERROR'
+            return write_nova_config
         else:
             print "Nova config file written."
     #start the NOVA service
     nova_start = service.nova('restart')
     if(nova_start != 'OK'):
         #fire off revert
-        return 'ERROR'
+        return nova_start
     '''
 
     #enable cinder
@@ -175,14 +175,14 @@ def run_setup(new_system_variables,auth_dict):
         write_cinder_config = util.write_new_config_file(config)
         if(write_cinder_config != 'OK'):
             #Exit the setup return to factory default
-            return 'ERROR'
+            return write_cinder_config
         else:
             print "Cinder config file written."
     #start the cinder service
     cinder_start = service.cinder('restart')
     if(cinder_start != 'OK'):
         #fire off revert
-        return 'ERROR'
+        return cinder_start
 
     #enable glance
     glance_configs = node_db.get_node_glance_config(node_id)
