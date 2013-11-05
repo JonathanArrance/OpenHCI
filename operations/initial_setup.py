@@ -135,7 +135,6 @@ def run_setup(new_system_variables,auth_dict):
         print "Swift endpoint set up complete."
     else:
         return "Swift error."
-    '''
 
     #insert the controller info into trans_nodes db table
     cc_insert_dict = {'node_id':node_id,
@@ -164,6 +163,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Nova config file written."
     #start the NOVA service
     nova_start = service.nova('restart')
+    '''
 
     #enable cinder
     cinder_configs = node_db.get_node_cinder_config(node_id)
