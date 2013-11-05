@@ -57,7 +57,6 @@ def run_setup(new_system_variables,auth_dict):
         #rollback = util.update_system_variables(rollback_sys_vars)
         raise Exception("Could not retrieve the system_variables.")
 
-    print sys_vars
     boot = node_util.check_first_time_boot()
     if(boot == 'FALSE'):
         return "System already set up."
