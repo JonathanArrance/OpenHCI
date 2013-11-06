@@ -763,14 +763,14 @@ def get_glance_config():
     db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     logger.sys_info("Writing the Glance config file to the controller node.")
 
-    #try:
-    get_api_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-api.conf'"}
-    glance_api = db.pg_select(get_api_dict)
-    get_reg_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry.conf'"}
-    glance_reg = db.pg_select(get_reg_dict)
-    #except:
-    #    logger.sys_error('Could not get the Glance entries from the Transcirrus db.')
-    #    raise Exception('Could not get the Glance entries from the Transcirrus db.')
+    try:
+        get_api_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-api.conf'"}
+        glance_api = db.pg_select(get_api_dict)
+        get_reg_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry.conf'"}
+        glance_reg = db.pg_select(get_reg_dict)
+    except:
+        logger.sys_error('Could not get the Glance entries from the Transcirrus db.')
+        raise Exception('Could not get the Glance entries from the Transcirrus db.')
 
     #disconnect from db
     db.pg_close_connection()
