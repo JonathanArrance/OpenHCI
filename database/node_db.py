@@ -806,6 +806,8 @@ def get_glance_config():
     reg_conf['file_content'] = reg
     r_array.append(reg_conf)
 
+    return r_array
+
 def get_node_netsysctl_config(node_id):
     """
     DESC: Pull the networking adapter config information and sysctl config out of the config DB.
