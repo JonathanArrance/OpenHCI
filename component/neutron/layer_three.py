@@ -71,52 +71,214 @@ class routing_ops:
         #close any open db connections
         self.db.close_connection()
 
-    #DESC: List the routers that are present in a project. All user types
-    #      can list the routers in a project.
-    #INPUT: self object
-    #OUTPUT: array of r_dict - router_name
-    #                        - router_status
-    #                        - router_id
-    #NOTE: this info can be gathered from the transcirrus db
     def list_routers(self):
-        print "not implemented"
-        
-    #DESC: Get the information for a specific router. All user types can get
-    #      the information for a router.
-    #INPUT: router_name
-    #OUTPUT: r_dict - router_name
-    #               - router_status
-    #               - router_id
-    #               - project_id
-    #               - networks - array of attached network ids
-    #NOTE: this info can be gathered from the transcirrus db
-    def get_router(self,router_name):
-        print "not implemented"
-        
-    #DESC: Add a new router to a project. Only admins can add a new
-    #      router to their project.
-    #INPUT: router_name
-    #OUTPUT: r_dict - router_name
-    #               - router_id
-    def add_routers(self,router_name):
-        print "not implemented"
-        
-    #DESC: Update the basic router information. Only an admin can
-    #      update a routers info. 
-    #INPUT: toggle_dict - router_name - req
-    #                   - router_admin_state(up/down) - op
-    #OUTPUT: r_dict - router_name
-    #               - router_admin_state
-    def update_routers(self,toggle_dict):
-        print "not implemented"
+        """
+        DESC: List the routers that are present in a project.
+        INPUT: self object
+        OUTPUT: array of r_dict - router_name
+                                - router_status
+                                - router_id
+        ACCESS:All user types can list the routers in a project. Admin can list all virtual routers.
+        NOTE: this info can be gathered from the transcirrus db
+        """
+        try:
+            if(self.is_admin == 1):
+                self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers"}
+            else:
+                self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers",'where':"proj_id='%s'"%(self.project_id)}
+            routers = self.db.pg_select(self.select_router)
+        except:
+            logger.sql_error("Could not find routers in project %s"%(self.project_id))
+            raise Exception("Could not find routers in project %s"%(self.project_id))
+
+        r_array = []
+        for router in routers:
+            r_dict = {'router_name':router['router_name'],'router_id':router['router_id'],'router_status':router['router_status']}
+            r_array.append(r_dict)
+
+        if(len(r_array) == 0):
+            logger.sys_info('No routers were found in project %s' %(self.project_id))
+
+        return r_array
+
+    def get_router(self,router_id):
+        """
+        DESC: Get the information for a specific router.
+        INPUT: router_id
+        OUTPUT: r_dict - router_name
+                       - router_status
+                       - router_id
+                       - project_id
+                       - network_id
+                       - external_gateway
+                       - external_ip
+                       - admin_state_up
+        ACCESS: All user types can get the information for a router in their project. Admin can
+                get info on any router.
+        NOTE: this info can be gathered from the transcirrus db
+        """
+        try:
+            if(self.is_admin == 1):
+                self.get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(router_id)}
+            else:
+                self.get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(router_id),'and':"proj_id='%s'"%(self.project_id)}
+            router = self.db.pg_select(self.get_router)
+        except:
+            logger.sql_error("Could not find router %s"%(router_id))
+            raise Exception("Could not find router %s"%(router_id))
+
+        r_dict = {'router_name':router[0][1],'router_status':router[0][8],'router_id':router[0][2],'project_id':self.project_id,'network_id':router[0][3],'external_gateway':router[0][5],
+                  'external_ip':router[0][6],'admin_state_up':router[0][9],'internal_port':router[0][7]}
+
+        return r_dict
+
+    def add_router(self,router_name):
+        """
+        DESC: Add a new router to a project.
+        INPUT: - router_name
+        OUTPUT: r_dict - router_name
+                       - router_id
+        ACCESS: Admin can create a router in their project
+        NOTES:
+        """
+        #curl -i http://192.168.10.30:9696/v2.0/routers.json -X POST -d '{"router": {"tenant_id": "cfc66ab189244f66bf3de56f55ebe72d", "name": "jonarrance", "admin_state_up": true}}'
+        if(router_name == ''):
+            logger.sys_error("A router name was not specified.")
+            raise Exception("A router name was not specified.")
+
+        if(self.user_level <= 1):
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                #add the new user to openstack
+                body = '{"router": {"tenant_id": "%s", "name": "%s", "admin_state_up": true}}' %(self.project_id,router_name)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/routers'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 201
+                if(rest['response'] == 201):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    load = json.loads(rest['data'])
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    insert_dict = {"router_name":router_name,"router_id":load['router']['id'],"proj_id":self.project_id,"router_status":'ACTIVE',
+                                   "router_admin_state_up":"true"}
+                    self.db.pg_insert("trans_network_settings",insert_dict)
+                    self.db.pg_transaction_commit()
+                    r_dict = {'router_name':router_name,'router_id':load['router']['id']}
+                    return r_dict
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add a new public network to Neutron.")
+                raise Exception("Could not add a new public network to Neutron.")
+        else:
+            logger.sys_error("Only an admin or a power user can create a new router.")
+            raise Exception("Only an admin or a power user can create a new router.")
+
+    def update_router(self,update_dict):
+        """
+        DESC: Update the basic router information.
+        INPUT: update_dict - router_id - req
+                           - router_name - op
+                           - router_external_gateway - op - ext_netwok_id
+                           - router_snat - not used
+                           - router_admin_state_up(true/false) - op - default true
+        OUTPUT: r_dict - router_name
+                       - router_admin_state
+        ACCESS: Only an admin can update a routers info.
+        NOTES:
+        """
+        if(('router_id' not in update_dict) or (update_dict['router_id'] == '')):
+            logger.sys_error("No router id given.")
+            raise Exception("No router id given.")
+
+        if(self.user_level <= 1):
+            #get the original info
+            router = self.get_router(update_dict['router_id'])
+            if(router['router_name'] != update_dict['router_name']):
+                self.name = update_dict['router_name']
+            else:
+                self.name = router['router_name']
+
+            if('router_external_gateway' not in update_dict):
+                self.ext_gateway = router['external_gateway']
+            else:
+                self.ext_gateway = update['external_gateway']
+
+            if('router_admin_state_up' not in update_dict):
+                self.state == 'true'
+            else:
+                self.state = update_dict['router_admin_state_up'].lower()
+
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                #add the new user to openstack
+                body = '{"router": {"external_gateway_info": {"network_id": "%s","enable_snat": true}, "name": "%s", "admin_state_up": "%s"}}' %(self.ext_gateway,self.name,self.state)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/routers/%s' %(update_dict['router_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 201
+                if(rest['response'] == 200):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    load = json.loads(rest['data'])
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    update = {'table':'trans_router','set':"router_name='%s',router_ext_gateway='%s',router_admin_state_up='%s'"%(self.name,self.ext_gateway,self.state),'where':"router_id='%s'"%(update_dict['router_id'])}
+                    self.db.pg_update(update)
+                    self.db.pg_transaction_commit()
+                    r_dict = {'router_name':self.name,'router_admin_state':self.state}
+                    return r_dict
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add a new public network to Neutron.")
+                raise Exception("Could not add a new public network to Neutron.")
+        else:
+            logger.sys_error("Only an admin or a power user can create a new network.")
+            raise Exception("Only an admin or a power user can create a new network.")
 
     #DESC: Remove a router from the project. Only admins can remove
     #      routers from a project. If any networks are attached an error
     #      will occure.
     #INPUT: router_name
     #OUTPUT: OK or error
-    def delete_routers(self,router_name):
-        print "not implemented"
+    def delete_router(self,router_name):
+        """
+        DESC: Remove a router from the project.
+        INPUT: router_name
+        OUTPUT: OK or ERROR
+        ACCESS: Only admins can remove routers from a project. If any networks are attached an error
+                will occure.
+        NOTES: none
+        """
         
     #DESC: Add an internal router network interface to the virtual layer3
     #      router. Only admins can add an internal interface to the router.
