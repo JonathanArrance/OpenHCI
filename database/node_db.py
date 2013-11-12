@@ -860,7 +860,7 @@ def get_node_netsysctl_config(node_id):
     sys_conf['file_owner'] = 'quantum'
     sys_conf['file_group'] = 'quantum'
     sys_conf['file_perm'] = '644'
-    sys_conf['file_path'] = '/home/builder/etc'
+    sys_conf['file_path'] = '/etc'
     sys_conf['file_name'] = 'sysctl.conf'
     sys_conf['file_content'] = sys_con
     r_array.append(sys_conf)

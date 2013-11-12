@@ -178,7 +178,6 @@ def _get_token(username,password,project_id):
     #submit the values passed in 
     try:
         api_dict = {"username":username, "password":password, "project_id":project_id}
-        print api_dict
         api = caller(api_dict)
         #       body - body of the rest call
         #       Function - POST,PUT,GET,HEAD,DELETE,INSERT
@@ -187,14 +186,12 @@ def _get_token(username,password,project_id):
         #       sec - TRUE/FALSE, use https = True
         logger.sys_info("Tenant id was passwed in %s." %(username))
         body = '{"auth":{"passwordCredentials":{"username": "%s", "password":"%s"}, "tenantId":"%s"}}' %(username,password,project_id)
-        print body
         header = {"Content-Type": "application/json"}
         function = 'POST'
         api_path = '/v2.0/tokens'
         token = ""
         sec = 'FALSE'
         rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-        print rest_dict
         rest = api.call_rest(rest_dict)
     except Exception as e:
         logger.sys_error("%s" %(e))
