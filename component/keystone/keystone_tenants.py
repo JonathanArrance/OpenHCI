@@ -319,15 +319,45 @@ class tenant_ops:
             else:
                 raise Exception("Users can only get information on their own projects.")
 
-    #DESC: list the users that are members of the project. Admins and power users can do this.
-    #INPUT: project_name
-    #OUTPUT: array of r_dict - username
-    #                        - user_id
     def list_tenant_users(self,project_name):
-        print "not implemented"
+        """
+        DESC: list the users that are members of the project. Admins and power users can do this.
+        INPUT: project_name
+        OUTPUT: array of r_dict - username
+                                - user_id
+        ACCESS: All users can list project users in the project they belong to. Admins can list users
+                in any project.
+        NOTE:none
+        """
+        if(project_name == ""):
+            logger.sys_error("Must specify the project name.")
+            raise Exception("Must specify the project name.")
+
+        try:
+            #Try to connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sys_error("Could not connect to db with error: %s" %(e))
+            raise Exception("Could not connect to db with error: %s" %(e))
+
+        try:
+            if(self.is_admin == 1):
+                self.get_users = {'select':'user_name,keystone_user_uuid','from':'trans_user_info','where':"user_primary_project='%s'"%(project_name)}
+            else:
+                self.get_users = {'select':'user_name,keystone_user_uuid','from':'trans_user_info','where':"user_primary_project='%s'"%(project_name),'and':"user_project_id='%s'"%(self.project_id)}
+            self.users = self.db.pg_select(self.get_users)
+        except:
+            logger.sys_error("Could not get user list for %s."%(project_name))
+            raise Exception("Could not get user list for %s."%(project_name))
+
+        r_array = []
+        for user in self.users:
+            r_dict = {'username':user[0],'user_id':user[1]}
+            r_array.append(r_dict)
+        return r_array
 
     def update_tenant(self):
-        print "not implemented"
+        pass
         
 ######Internal defs#######
 def _http_codes(code,reason):

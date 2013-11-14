@@ -178,7 +178,6 @@ def _get_token(username,password,project_id):
     #submit the values passed in 
     try:
         api_dict = {"username":username, "password":password, "project_id":project_id}
-        
         api = caller(api_dict)
         #       body - body of the rest call
         #       Function - POST,PUT,GET,HEAD,DELETE,INSERT
@@ -231,7 +230,7 @@ def _get_token(username,password,project_id):
 
 def _get_admin_token(db,project_id):
     #retrieve the default system token from the Transcirrus DB
-    #get the host system where the prject lives
+    #get the host system where the project lives
     try:
         host_dict = {"select":"host_system_name", "from":"projects", "where":"proj_id='%s'" %(project_id)}
         host = db.pg_select(host_dict)

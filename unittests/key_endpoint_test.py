@@ -21,14 +21,15 @@ print "Instantiating user_ops object."
 end = endpoint_ops(d)
 
 print "Create a new service endpoint with a cloud name."
-new_endpoint_dict = {"cloud_name":'joncloud',"service_name":"s3"}
+new_endpoint_dict = {"cloud_name":'joncloud',"service_name":"swift"}
 create = end.create_endpoint(new_endpoint_dict)
 print create
 print "---------------------------------------------"
 
+'''
 time.sleep(1)
 print "Create a new service endpoint with out a cloud name."
-new_endpoint_dict2 = {"service_name":"ec2"}
+new_endpoint_dict2 = {"service_name":"keystone"}
 create2 = end.create_endpoint(new_endpoint_dict2)
 print create2
 print "---------------------------------------------"
@@ -39,13 +40,13 @@ listservice = end.list_service_catalog()
 print listservice
 print "----------------------------------------------"
 
-'''
+
 print "Create a new service endpoint with a fake service name."
 new_endpoint_dict3 = {"service_name":"blah"}
 create3 = end.create_endpoint(new_endpoint_dict3)
 print create3
 print "---------------------------------------------"
-'''
+
 
 time.sleep(1)
 print "listing the service endpoints"
@@ -65,3 +66,4 @@ new_endpoint_dict2 = {"service_name":"s3"}
 create2 = end.delete_endpoint(new_endpoint_dict2)
 print create2
 print "---------------------------------------------"
+'''

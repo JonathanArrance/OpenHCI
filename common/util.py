@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 
-from confparse import properties
+#from confparse import properties
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -56,6 +56,7 @@ def write_new_config_file(file_dict):
                      - file_owner - req
                      - file_group - req
                      - file_perm - default 644
+                     - file_op - new/append
     OUTPUT: A file written out to the proper location with the proper permissions
             raise exceptions on fail
             OK - file written
@@ -64,19 +65,23 @@ def write_new_config_file(file_dict):
     ACCESS: wide open
     NOTES: Note the file permissions come in the bit format, ex. 644
            The defualt file permissions should be sufficient for any config
-           file written.
+           file written. Default file operation is write. -Need to add the ability to append to a config file
     """
     #make sure none of the values are empty
     for key, val in file_dict.items():
         #skip over these
         if(key == 'file_permissions'):
             continue
+        if(key == 'file_op'):
+            continue
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
-            raise Exception("The value %s was left blank" %(val))
+            #raise Exception("The value %s was left blank" %(val))
+            return 'ERROR'
         if(key not in file_dict):
             logger.sys_error("Required info not specified for file creation.")
-            raise Exception ("Required info not specified for file creation.")
+            #raise Exception ("Required info not specified for file creation.")
+            return 'ERROR'
 
     permissions = None
     if(('file_permissions' not in file_dict) or (file_dict['file_permissions'])):
@@ -98,18 +103,30 @@ def write_new_config_file(file_dict):
     if(check_fqp == False):
         logger.sys_warning("The file %s does not exists, Creating..." %(fqp))
         os.system('sudo mkdir -p %s' %(file_dict['file_path']))
-        config = open(scratch, 'w')
     else:
         logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))
         date = strftime("%Y-%m-%d", gmtime())
         old = '%s_%s' %(fqp,date)
         os.system('sudo cp -f %s %s' %(fqp,old))
+
+    #decide if we append the scratch file or write it as
+    #an entire new file
+    if('file_op' in file_dict):
+        ops = file_dict['file_op'].lower()
+        if(ops == 'new'):
+            config = open(scratch, 'w')
+        elif(ops == 'append'):
+            config = open(fqp, 'a')
+        else:
+            config = open(scratch, 'w')
+    else:
         config = open(scratch, 'w')
 
     #check that the array of lines is not empty
     if(len(file_dict['file_content']) == 0):
         logger.sys_warning("No file input was given. Can not write out the file.")
-        raise Exception("No file input was given. Can not write out the file.")
+        #raise Exception("No file input was given. Can not write out the file.")
+        return 'ERROR'
 
     try:
         for line in file_dict['file_content']:
@@ -130,7 +147,8 @@ def write_new_config_file(file_dict):
         #move the backup copy back to the original copy
         #shutil.move('%s_%s','%s') %(fqp,date,fqp)
         logger.sys_error("Could not write the config file at path %s" %(fqp))
-        raise Exception("Could not write the config file at path %s" %(fqp))
+        #raise Exception("Could not write the config file at path %s" %(fqp))
+        return 'ERROR'
 
     #confirm the file was written and return OK if it was ERROR if not
     check_new_path = os.path.exists(fqp)
@@ -381,6 +399,16 @@ def get_cloud_controller_id():
     """
     return config.CLOUD_CONTROLLER_ID
 
+def get_api_ip():
+    """
+    DESC: get the system name from the config.py file.
+    INPUT: None
+    OUTPUT: node_name
+    ACCESS: Wide open
+    NOTE: The cloud controller name and the system name on a ciac node will be the same.
+    """
+    return config.API_IP
+
 def get_cloud_name():
     """
     DESC: get the cloud name from the transcirrus db
@@ -504,6 +532,7 @@ def get_system_variables(node_id):
                    - MEMBER_ROLE_ID
                    - ADMIN_ROLE_ID
                    - NODE_ID
+                   - NODE_TYPE
     ACCESS: Wide open
     NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
           config.py file descriptor to write out the config.py that is in transcirrus.common by calling write_new_config.py
@@ -532,7 +561,7 @@ def get_system_variables(node_id):
     r_dict = {}
     for x in sys:
         r = iter(x)
-        key = r.next()
+        key = r.next().upper()
         val = r.next()
         r_dict[key] = val
 
