@@ -188,7 +188,7 @@ CREATE TABLE glance_defaults (
     parameter character varying,
     param_value character varying,
     host_name character varying,
-    file_name character varying,
+    file_path character varying,
     index integer NOT NULL
 );
 
@@ -1947,6 +1947,7 @@ INSERT INTO trans_service_settings VALUES ('swift_admin', 8080, NULL, 'object-st
 -- Dependencies: 201
 -- Data for Name: trans_subnets; Type: TABLE DATA; Schema: public; Owner: transuser
 --
+-- Need to populate with 1024 subnet prototypes
 
 
 --
