@@ -14,6 +14,8 @@ import transcirrus.common.config as config
 from transcirrus.common.api_caller import caller
 
 from transcirrus.database.postgres import pgsql
+
+
 class image:
     #DESC:
     #INPUT:
@@ -36,7 +38,7 @@ class image:
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
-                
+
             #get the default cloud controller info
             self.controller = config.DEFAULT_CLOUD_CONTROLER
             self.api_ip = config.DEFAULT_API_IP
@@ -133,7 +135,7 @@ class image:
     #DESC: Create a new operating system binary from an .iso file. Only admins can build
     #      new binaries and and them to the Glance catalog.
     #INPUT: self object
-    #OUTPUT: 
+    #OUTPUT:
     #NOTE:http://docs.openstack.org/trunk/openstack-image/content/ch_creating_images_manually.html
     def create_new_os_binary(self):
         print "not implemented"
