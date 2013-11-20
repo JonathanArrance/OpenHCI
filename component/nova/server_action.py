@@ -104,123 +104,217 @@ class server_actions:
         ACCESS: Admin and authenticted users can use this operation
         NOTE:none
         """
+        if (action_type == ''):
+            logger.sys_error("No action_type was specified.")
+            raise Exception("No action_type was specified.")
+        if (server_id == ''):
+            logger.sys_error("No server id was specified.")
+            raise Exception("No server id was specified.")
+
+
+        # check if the server_id is in the power user project: TODO
+
         if(self.user_level <= 1):
-            get_nets = {}
-            if(self.is_admin == 1):
-                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings"}
-            else:
-                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id)}
-    
-            nets = self.db.pg_select(get_nets)
-            r_array = []
-            for net in nets:
-                r_dict = {}
-                r_dict['net_name'] = net[0]
-                r_dict['net_id'] = net[1]
-                r_dict['project_id'] = net[2]
-                r_array.append(r_dict)
-            return r_array
-        
-    def change_server_password(self,input_dict):
+            # Create an API connection with the Admin
+            try:
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                # construct request header and body
+                body='{"reboot":{"type": "%s"}}' % (action_type)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/servers/%s/action' % (server_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
+                rest = api.call_rest(rest_dict)
+
+                # check the response code
+                if(rest['response'] == 202):
+                    # this method does not return any response body
+                    logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                logger.sys_logger("Error in sending reboot request.")
+                raise Exception("Error in sending reboot request")
+        else:
+            logger.sys_error("Only an admin or a power user can reboot the server.")
+            raise Exception("Only an admin or a power user can reboot the server.")
+
+
+    def resize_server(self, server_id, server_name, flavor_id):
         """
-        DESC: Change the administrative password on the virtual server.
-        INPUT: input_dict - new_pass
-                          - server_id
-        OUTPUT: OK - success
-                ERROR - failure
-                NA - unknown
-        ACCESS: Admins can chnage the admin password for any virtual server, power users
-                can change passwords for virtual servers in their project
-        NOTE:
+        DESC:The resize operation converts an existing server to a
+        different flavor, in essence, scaling the server up or down. The
+        original server is saved for a period of time to allow rollback
+        if a problem occurs. You should test and explicitly confirm all
+        resizes. When you confirm a resize, the original server is
+        removed. All resizes are automatically confirmed after 24 hours
+        if you do not explicitly confirm or revert them.
+        INPUT: server_id, flavor_id
+        OUTPUT: This operation does not return a response body
+        ACCESS: Admin and authenticted users can use this operation
+        NOTE:none
         """
-        #Use the thrans_instances table to get the virtual server info.
-    
-    def rebuild_server(self,input_dict):
+        if (server_id == ''):
+            logger.sys_error("No server_id was provided")
+            raise Exception("No server_id was provided")
+        if (flavor_id == ''):
+            logger.sys_error("No flavor_id was provided")
+            raise Exception("No flavor_id was provided")
+        if (server_name == ''):
+            logger.sys_error("No server name was provided.")
+            raise Exception("No server name was provided.")
+
+        if(self.user_level <= 1):
+            # Create an API connection with the Admin
+            try:
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                # construct request header and body
+                body='{"resize": {"name": "%s", "flavorRef": "%s"}}' % (server_name, flavor_id)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/servers/%s/action' % (server_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
+                rest = api.call_rest(rest_dict)
+
+                # check the response code
+                if(rest['response'] == 202):
+                    # this method does not return any response body
+                    logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                logger.sys_logger("Error in sending resize request to server.")
+                raise Exception("Error in sending resize request to server.")
+        else:
+            logger.sys_error("Only an admin or a power user can resize the server.")
+            raise Exception("Only an admin or a power user can resize the server.")
+
+
+
+    def confirm_resize(self, server_id):
         """
-        DESC: The rebuild operation removes all data on the server and replaces it
-              with the specified image
-        INPUT: input_dict - server_name - req
-                          - server_image_id - req
-                          - server_admin_pass - req
-                          - server_ip - op
-                          - server_metadata - op
-                          - server_personality - not used
-        OUTPUT: OK - success
-                ERROR - failure
-                NA - unknown
-        ACCESS: Admins can rebuild any server power users can only rebuild a server
-                in their project.
-        NOTE: Personalities are pushed to alpo.1
-        """
-    
-    def resize_server(self,input_dict):
-        """
-        DESC: The resize operation converts an existing server to a different flavor, in essence,
-              scaling the server up or down
-        INPUT: input_dict - server_id
-                          - flavor_id
-        OUTPUT: OK - success
-                ERROR - failure
-                NA - unknow
-        ACCESS: Only admins can resize a server.
-        NOTE:
-        """
-        #After the server resize is completed confirm the resize so that the vm stabalizes at that size.
-    
-    def revert_resized_server(self,server_id):
-        """
-        DESC: Used to revert a resized server if there is an issue.
+        During a resize operation, the original server is saved for a
+        period of time to allow roll back if a problem exists. Once the
+        newly resized server is tested and has been confirmed to be
+        functioning properly, use this operation to confirm the resize.
+        After confirmation, the original server is removed and cannot be
+        rolled back to. All resizes are automatically confirmed after 24
+        hours if they are not explicitly confirmed or reverted
         INPUT: server_id
-        OUTPUT: OK - success
-                ERROR - failure
-                NA - unknown
-        ACCESS: Only admins can revert the server if there is an issue.
-        NOTE: transcirrus db will have to be updated accordingly
+        OUTPUT: This operation does not return a response body.
+        ACCESS: Admin and authenticated users can use this operation
+        NOTE: none
         """
 
-    def create_server_image():
+        if (server_id == ''):
+            logger.sys_error("No server id was provided.")
+            raise Exception("No server id was provided.")
+
+        if(self.user_level <= 1):
+            # Create an API connection with the Admin
+            try:
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+
+            try:
+                # construct request header and body
+                body='{"confirmResize": "null"}'
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/servers/%s/action' % (server_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
+                rest = api.call_rest(rest_dict)
+
+                # check the response code
+                if(rest['response'] == 204):
+                    # this method does not return any response body
+                    logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                logger.sys_logger("Error in sending resize confirm request to server.")
+                raise Exception("Error in sending resize confirm request to server.")
+        else:
+            logger.sys_error("Only an admin or a power user can confirm resize the server.")
+            raise Exception("Only an admin or a power user can confirm resize the server.")
+
+
+
+    def revert_resize(self, server_id):
         """
-        DESC: Creates an image from a server.
-        INPUT: create_dict - server_id
-                           - image_name
-        OUTPUT: OK - success
-                ERROR - failure
-                NA - unknown
-        ACCESS: Admins can create an image of any server, power users can only
-                create images of servers in their project.
-        NOTE:
+        During a resize operation, the original server is saved for a
+        period of time to allow for roll back if a problem occurs. If
+        the resized server has a problem, use the revert resize
+        operation to revert the resize and roll back to the original
+        server. All resizes are automatically confirmed after 24 hours
+        if you do not confirm or revert them.
+        INPUT: server_id
+        OUTPUT: This operation does not return a response body.
+        ACCESS: Admin and authenticated users can use this operation
+        NOTE: none
         """
 
-#######reserved for alpo.1#######
-#not needed for the prototype
-#http://docs.openstack.org/api/openstack-network/2.0/content/Ports.html
+        if (server_id == ''):
+            logger.sys_error("No server id was passed.")
+            raise Exception("No server id was passed.")
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
-    def list_net_ports():
-        print "not implemented"
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
-    def get_net_port():
-        print "not implemented"
+        if(self.user_level <= 1):
+            # Create an API connection with the Admin
+            try:
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
-    def add_net_port():
-        print "not implemented"
+            try:
+                # construct request header and body
+                body='{"revertResize": "null"}'
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/servers/%s/action' % (server_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
+                rest = api.call_rest(rest_dict)
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
-    def update_net_port():
-        print "not implemented"
+                # check the response code
+                if(rest['response'] == 202):
+                    # this method does not return any response body
+                    logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                logger.sys_logger("Error in sending revert resize request to server.")
+                raise Exception("Error in sending revert resize request to server.")
+        else:
+            logger.sys_error("Only an admin or a power user can revert resize request to the server.")
+            raise Exception("Only an admin or a power user can revert resize request to the server.")
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
-    def remove_net_port():
-        print "not implemented"
