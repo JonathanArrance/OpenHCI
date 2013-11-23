@@ -138,9 +138,10 @@ SELECT pg_catalog.setval('cinder_node_index_seq', 3, true);
 --
 
 CREATE TABLE factory_defaults (
-    index integer NOT NULL,
     parameter character varying,
-    param_value character varying
+    param_value character varying,
+    host_system character varying,
+    index integer NOT NULL
 );
 
 
@@ -2274,6 +2275,14 @@ ALTER TABLE ONLY trans_user_info
 ALTER TABLE ONLY trans_user_info
     ADD CONSTRAINT trans_user_info_pkey PRIMARY KEY (index);
 
+
+--
+-- TOC entry 2032 (class 2606 OID 150082)
+-- Name: factory_defaults_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY factory_defaults
+    ADD CONSTRAINT factory_defaults_pkey PRIMARY KEY (index);
 
 --
 -- TOC entry 2129 (class 2606 OID 41697)

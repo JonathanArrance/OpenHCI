@@ -1,16 +1,16 @@
 mkdir -p /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding common to Transcirrus dir'
-cp -Rf ./common /usr/local/lib/python2.7/dist-packages/transcirrus/
+cp -Rf common /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding component to Transcirrus dir'
-cp -Rf ./component /usr/local/lib/python2.7/dist-packages/transcirrus/
+cp -Rf component /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding core to Transcirrus dir'
-cp -Rf ./core /usr/local/lib/python2.7/dist-packages/transcirrus/
+cp -Rf core /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding database to Transcirrus dir'
-cp -Rf ./database /usr/local/lib/python2.7/dist-packages/transcirrus/
+cp -Rf database /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding operations to Transcirrus dir'
-cp -Rf ./operations /usr/local/lib/python2.7/dist-packages/transcirrus/
+cp -Rf operations /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding ha to Transcirrus dir'
-cp -Rf ./ha /usr/local/lib/python2.7/dist-packages/transcirrus/
+cp -Rf ha /usr/local/lib/python2.7/dist-packages/transcirrus/
 cp -f __init__.py /usr/local/lib/python2.7/dist-packages/transcirrus/
 
 #check to see if the log file exists

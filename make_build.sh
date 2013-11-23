@@ -1,1 +1,1 @@
-tar -cvf alpo.tar ./make.sh ./component ./database ./SQL_files ./common ./interfaces ./operations ./core ./ha ./__init__.py 
+tar -cvf alpo.tar ./common ./component ./core ./database ./ha ./__init__.py ./interfaces ./operations ./SQL_files ./sys_setup ./make.sh 
