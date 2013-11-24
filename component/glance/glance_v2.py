@@ -16,7 +16,7 @@ from transcirrus.common.api_caller import caller
 from transcirrus.database.postgres import pgsql
 
 
-class image:
+class glance_ops:
     #DESC:
     #INPUT:
     #OUTPUT:
@@ -106,7 +106,7 @@ class image:
 
         try:
             body = ""
-            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token":self.token, "x-image-meta-name": create_dict['image_name'], "x-image-meta-disk_format": create_dict['image_disk_format'], "x-image-meta-container_format": create_dict['image_container_format'], "x-image-meta-is_public": False]}
+            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token": self.token, "x-image-meta-name": create_dict['image_name'], "x-image-meta-disk_format": create_dict['image_disk_format'], "x-image-meta-container_format": create_dict['image_container_format'], "x-image-meta-is_public": False}
             function = 'POST'
             api_path = '/v1/%s/images' %(self.project_id)
             token = self.token
@@ -239,5 +239,20 @@ class image:
     #               - image_link
     #               - schema
     def get_image(self,image_name):
-        print "not implemented"
-        #GET v2/images/{image_id}
+        images = list_images(self)
+        for image in images:
+            if(image['name'] == image_name):
+                return image
+
+
+def main():
+    i = image
+    print i
+
+    l = i.list_images(i)
+    print l
+
+    sys.exit(0)
+
+
+if __name__ == "__main__": main()
