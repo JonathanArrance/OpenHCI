@@ -14,18 +14,23 @@ from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.glance.glance_v2 import glance_ops
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","test")
+c= authorization("admin","builder")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()
 
 print "Image"
 i= glance_ops(b)
+print i
 
-li = b.list_images()
+print "List Images"
+li = i.list_images()
 print li
 
-print i
+print "Get Image %s" % (str(li[1]['image_id']))
+gi = i.get_image(str(li[1]['image_id']))
+print gi
+
 
 #print "Instantiating authorization object for an admin"
 #e = authorization("jonadmin","test")

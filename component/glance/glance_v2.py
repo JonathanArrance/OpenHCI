@@ -8,6 +8,7 @@
 import sys
 import json
 
+import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
@@ -40,8 +41,8 @@ class glance_ops:
                 self.sec = 'FALSE'
 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLLER
+            self.api_ip = config.API_IP
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -127,7 +128,7 @@ class glance_ops:
                     img_array.append(line)
                 return img_array
             else:
-                _http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
@@ -208,7 +209,7 @@ class glance_ops:
             body = ""
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "User-Agent": "python/glanceclient"}
             function = 'GET'
-            api_path = '/v1/%s/images/detail' %(self.project_id)
+            api_path = '/v1/images/detail'
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
@@ -220,13 +221,13 @@ class glance_ops:
                 load = json.loads(rest['data'])
                 img_array = []
                 for image in load['images']:
-                    line = {"image_name": str(image['name']), "image_id": str(image['id']), "image_link":str(image['links'][1]['href'])}
+                    line = {"image_name": str(image['name']), "image_id": str(image['id'])}
                     img_array.append(line)
                 return img_array
             else:
-                _http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not list images %s" %(e))
             raise e
 
     #DESC: Get detailed information about a Glance image. All users can
@@ -235,24 +236,47 @@ class glance_ops:
     #OUTPUT: r_dict - image_name
     #               - image_id
     #               - image_status
-    #               - file_link
-    #               - image_link
+    #               - container_format
+    #               - disk_format
+    #               - visibility
+    #               - min_disk
+    #               - size
+    #               - min_ram
     #               - schema
-    def get_image(self,image_name):
-        images = list_images(self)
-        for image in images:
-            if(image['name'] == image_name):
-                return image
+    def get_image(self,image_id):
+        #print "not implemented"
+        #GET v2/images
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
 
+        #connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
 
-def main():
-    i = image
-    print i
-
-    l = i.list_images(i)
-    print l
-
-    sys.exit(0)
-
-
-if __name__ == "__main__": main()
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/images/%s' % (image_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 200 or 201
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                r_dict = {"image_name": str(load['name']), "image_id": str(load['id']),"image_status": str(load['status']), "container_format": str(load['container_format']), "disk_format": str(load['disk_format']), "visibility": str(load['visibility']), "min_disk": str(load['min_disk']), "size": str(load['size']), "min_ram": str(load['min_ram']), "schema": str(load['schema'])}
+                return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error("Could not get image %s" %(e))
+            raise e
