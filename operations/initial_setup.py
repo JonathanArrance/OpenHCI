@@ -69,7 +69,7 @@ def run_setup(new_system_variables,auth_dict):
         content.append(row)
 
     #build the new config.py file
-    config_dict = {'file_path':'/home/builder/common/',
+    config_dict = {'file_path':'/usr/',
                    'file_name':'config.py',
                    'file_content':content,
                    'file_owner':'transuser',
@@ -86,7 +86,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
-    '''
+
     #reset the keystone endpoint
     key_input = {'service_name':'keystone'}
     del_keystone = endpoint.delete_endpoint(key_input)
@@ -182,7 +182,6 @@ def run_setup(new_system_variables,auth_dict):
     if(cinder_start != 'OK'):
         #fire off revert
         return cinder_start
-    '''
 
     #enable glance
     glance_configs = node_db.get_glance_config()
@@ -222,7 +221,6 @@ def run_setup(new_system_variables,auth_dict):
     #this is pushed to alpo.1
 
     #if the node is set as multinode, enable multinode
-
     
 
     #call tasks/change_admin_user_password
