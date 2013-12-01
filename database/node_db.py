@@ -1,6 +1,7 @@
 from transcirrus.database.postgres import pgsql
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+#import transcirrus.common.util as util
 
 #pushed to alpo.1
 #import transcirrus.common.status_codes as status
@@ -539,9 +540,9 @@ def get_node_neutron_config(node_id):
             raise Exception('Could not get the dhcp_agent.ini entries from the Transcirrus neutron db.')
 
         try:
-            get_apidef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='api_paste.ini'"}
+            get_apidef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='api-paste.ini'"}
             apidefraw = db.pg_select(get_apidef_dict)
-            get_apinode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='api_paste.ini'",'and':"node='%s'"%(node_id)}
+            get_apinode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='api-paste.ini'",'and':"node='%s'"%(node_id)}
             apinoderaw = db.pg_select(get_apinode_dict)
             apiraw = apidefraw + apinoderaw
         except:
@@ -632,7 +633,7 @@ def get_node_neutron_config(node_id):
         api_conf['file_group'] = 'quantum'
         api_conf['file_perm'] = '644'
         api_conf['file_path'] = '/etc/quantum'
-        api_conf['file_name'] = 'api_paste.ini'
+        api_conf['file_name'] = 'api-paste.ini'
         api_conf['file_content'] = api_con
         r_array.append(api_conf)
 
@@ -808,8 +809,10 @@ def get_glance_config():
 
     return r_array
 
+"""
+Most likely will not use
 def get_node_netsysctl_config(node_id):
-    """
+    '''
     DESC: Pull the networking adapter config information and sysctl config out of the config DB.
     INPUT: node_id
     OUTPUT: Array of file descriptors containing file entries,write operations, and file name.
@@ -819,7 +822,7 @@ def get_node_netsysctl_config(node_id):
            node id. util.write_new_config_file can then be used to write
            out the new config file if desired
            default file operation can be new(write new file) or append(append to existing)
-    """
+    '''
     if(node_id == ""):
         logger.sys_error("The node id was not specified")
         raise Exception("The node id was not specified")
@@ -864,7 +867,7 @@ def get_node_netsysctl_config(node_id):
     sys_conf['file_name'] = 'sysctl.conf'
     sys_conf['file_content'] = sys_con
     r_array.append(sys_conf)
-
+"""
 
 def db_connect(host,port,dbname,user,password):
     """
@@ -876,7 +879,8 @@ def db_connect(host,port,dbname,user,password):
            password - user password
     OUTPUT: db connection object
     ACCESS: Open to everything
-    NOTES: This function is open to all, only the transcirrus db can be connected to.
+    NOTES: This function is open to all, only the transcirrus db can be connected to. May
+           use the generic DB connect funtion found in common.util at somepoint.
     """
     #make sure that only the transcirrus db is connected to
     #NOTE!!! need to change this to transcirrus from cac_system
