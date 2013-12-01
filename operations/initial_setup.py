@@ -69,7 +69,7 @@ def run_setup(new_system_variables,auth_dict):
         content.append(row)
 
     #build the new config.py file
-    config_dict = {'file_path':'/usr/',
+    config_dict = {'file_path':'/usr/local/lib/python2.7/dist-packages/transcirrus/common',
                    'file_name':'config.py',
                    'file_content':content,
                    'file_owner':'transuser',
