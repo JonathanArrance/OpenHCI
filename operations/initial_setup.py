@@ -65,7 +65,7 @@ def run_setup(new_system_variables,auth_dict):
     #properly format the key values to an array.
     content = []
     for key, val in sys_vars.items():
-        row = key+"="+val
+        row = key+'='+ '"'+ val + '"'
         content.append(row)
 
     #build the new config.py file
@@ -222,6 +222,8 @@ def run_setup(new_system_variables,auth_dict):
 
     #if the node is set as multinode, enable multinode
     
+
+    #Set the node info in the trans_nodes table
 
     #call tasks/change_admin_user_password
     #result = change_admin_password.delay(auth_dict,admin_pass)
