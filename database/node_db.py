@@ -157,7 +157,7 @@ def insert_node(input_dict):
             db.pg_transaction_begin()
             db.pg_insert('neutron_node',neutron)
             db.pg_transaction_commit()
-        return 'OK'
+        #return 'OK'
     except:
         db.pg_transaction_rollback()
         logger.sys_error("Could not insert node specific neutron config into Transcirrus db.")
