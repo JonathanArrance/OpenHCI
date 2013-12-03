@@ -171,9 +171,9 @@ def _operator(service_array,action):
         #    out = subprocess.Popen('sudo service %s status | grep "start/running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out = commands.getoutput('sudo service %s status'%(service))
             print out
-        elif(action.lower() == 'stop'):
+        #elif(action.lower() == 'stop'):
         #    out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out = commands.getoutput('sudo service %s stop | grep "start/running"'%(service))
+        #    out = commands.getoutput('sudo service %s stop | grep "start/running"'%(service))
         #if(not process):
             #out = subprocess.Popen('sudo service %s status | grep "NOT"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #    process = out.stdout.readlines()
