@@ -189,7 +189,7 @@ CREATE TABLE glance_defaults (
     parameter character varying,
     param_value character varying,
     host_name character varying,
-    file_path character varying,
+    file_name character varying,
     index integer NOT NULL
 );
 
@@ -1691,11 +1691,11 @@ INSERT INTO neutron_default VALUES ('nova_metadata_port', '8775', 'metadata_agen
 INSERT INTO neutron_default VALUES ('interface_driver', 'quantum.agent.linux.interface.OVSInterfaceDriver', 'l3_agent.ini', 23);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'l3_agent.ini', 24);
 INSERT INTO neutron_default VALUES ('external_network_bridge', 'br-ex', 'l3_agent.ini', 25);
-INSERT INTO neutron_default VALUES ('paste.filter_factory', 'keystoneclient.middleware.auth_token:filter_factory', 'api_paste.ini', 27);
-INSERT INTO neutron_default VALUES ('auth_port', '35357', 'api_paste.ini', 29);
-INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'api_paste.ini', 30);
-INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'api_paste.ini', 31);
-INSERT INTO neutron_default VALUES ('admin_user', 'tranuser', 'api_paste.ini', 32);
+INSERT INTO neutron_default VALUES ('paste.filter_factory', 'keystoneclient.middleware.auth_token:filter_factory', 'api-paste.ini', 27);
+INSERT INTO neutron_default VALUES ('auth_port', '35357', 'api-paste.ini', 29);
+INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'api-paste.ini', 30);
+INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'api-paste.ini', 31);
+INSERT INTO neutron_default VALUES ('admin_user', 'tranuser', 'api-paste.ini', 32);
 INSERT INTO neutron_default VALUES ('rabbit_userid', 'transuser', 'quantum.conf', 9);
 INSERT INTO neutron_default VALUES ('rabbit_port', '5672', 'quantum.conf', 33);
 INSERT INTO neutron_default VALUES ('lock_path', '$state_path/lock', 'quantum.conf', 34);
@@ -1841,37 +1841,6 @@ INSERT INTO nova_default VALUES ('libvirt_use_virtio_for_bridges', 'True', 'nova
 -- Data for Name: system_default_settings; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
---INSERT INTO system_default_settings VALUES ('uplink_ip', '0.0.0.0', 'integration', 51);
---INSERT INTO system_default_settings VALUES ('node_type', 'cc', 'integration', 7);
---INSERT INTO system_default_settings VALUES ('cloud_name', 'RegionOne', 'integration', 30);
---INSERT INTO system_default_settings VALUES ('single_node', '1', 'integration', 31);
---INSERT INTO system_default_settings VALUES ('tran_db_user', 'transuser', 'integration', 34);
---INSERT INTO system_default_settings VALUES ('tran_db_pass', 'builder', 'integration', 35);
---INSERT INTO system_default_settings VALUES ('tran_db_name', 'transcirrus', 'integration', 36);
---INSERT INTO system_default_settings VALUES ('tran_db_port', '5432', 'integration', 37);
---INSERT INTO system_default_settings VALUES ('vm_ip_min', '0.0.0.0', 'integration', 41);
---INSERT INTO system_default_settings VALUES ('vm_ip_max', '0.0.0.0', 'integration', 42);
---INSERT INTO system_default_settings VALUES ('os_db_pass', 'builder', 'integration', 44);
---INSERT INTO system_default_settings VALUES ('os_db_port', '5432', 'integration', 45);
---INSERT INTO system_default_settings VALUES ('hosted_flav', '84', 'integration', 4);
---INSERT INTO system_default_settings VALUES ('cloud_controller_id', '000-12345678-12345', 'integration', 38);
---INSERT INTO system_default_settings VALUES ('node_id', '000-12345678-12345', 'integration', 46);
---INSERT INTO system_default_settings VALUES ('admin_pass_set', '0', 'integration', 24);
---INSERT INTO system_default_settings VALUES ('hosted_os', '7c172289-fcf0-465b-a265-a052e87e061c', 'integration', 48);
---INSERT INTO system_default_settings VALUES ('first_time_boot', '0', 'integration', 25);
---INSERT INTO system_default_settings VALUES ('cloud_controller', 'integration', 'integration', 50);
---INSERT INTO system_default_settings VALUES ('member_role_id', 'b23107f585994a8eb1f3bf8fdee11277', 'integration', 1);
---INSERT INTO system_default_settings VALUES ('admin_token', 'builder', 'integration', 2);
---INSERT INTO system_default_settings VALUES ('mgmt_ip', '192.168.10.41', 'integration', 3);
---INSERT INTO system_default_settings VALUES ('api_ip', '192.168.10.41', 'integration', 5);
---INSERT INTO system_default_settings VALUES ('admin_api_ip', '192.168.10.41', 'integration', 22);
---INSERT INTO system_default_settings VALUES ('int_api_ip', '192.168.10.41', 'integration', 23);
---INSERT INTO system_default_settings VALUES ('transcirrus_db', '192.168.10.41', 'integration', 33);
---INSERT INTO system_default_settings VALUES ('os_db', '192.168.10.41', 'integration', 40);
---INSERT INTO system_default_settings VALUES ('os_db_user', 'transuser', 'integration', 43);
---INSERT INTO system_default_settings VALUES ('admin_role_id', '16307f626dde42c8adc4693d632aeffa', 'integration', 6);
-
-
 --
 -- TOC entry 2146 (class 0 OID 41510)
 -- Dependencies: 185
@@ -1956,36 +1925,6 @@ INSERT INTO trans_service_settings VALUES ('swift_admin', 8080, NULL, 'object-st
 -- Dependencies: 203
 -- Data for Name: trans_system_settings; Type: TABLE DATA; Schema: public; Owner: transuser
 --
-
---INSERT INTO trans_system_settings VALUES ('member_role_id', 'b23107f585994a8eb1f3bf8fdee11277', 'integration', 1);
---INSERT INTO trans_system_settings VALUES ('admin_role_id', '16307f626dde42c8adc4693d632aeffa', 'integration', 6);
---INSERT INTO trans_system_settings VALUES ('api_ip', '192.168.10.41', 'integration', 5);
---INSERT INTO trans_system_settings VALUES ('hosted_flav', '84', 'integration', 4);
---INSERT INTO trans_system_settings VALUES ('admin_token', 'builder', 'integration', 2);
---INSERT INTO trans_system_settings VALUES ('node_type', 'cc', 'integration', 7);
---INSERT INTO trans_system_settings VALUES ('admin_pass_set', '0', 'integration', 24);
---INSERT INTO trans_system_settings VALUES ('single_node', '1', 'integration', 31);
---INSERT INTO trans_system_settings VALUES ('mgmt_ip', '192.168.10.41', 'integration', 3);
---INSERT INTO trans_system_settings VALUES ('admin_api_ip', '192.168.10.41', 'integration', 22);
---INSERT INTO trans_system_settings VALUES ('cloud_name', 'RegionOne', 'integration', 30);
---INSERT INTO trans_system_settings VALUES ('int_api_ip', '192.168.10.41', 'integration', 23);
---INSERT INTO trans_system_settings VALUES ('transcirrus_db', '192.168.10.41', 'integration', 33);
---INSERT INTO trans_system_settings VALUES ('tran_db_pass', 'builder', 'integration', 35);
---INSERT INTO trans_system_settings VALUES ('tran_db_user', 'transuser', 'integration', 34);
---INSERT INTO trans_system_settings VALUES ('tran_db_port', '5432', 'integration', 37);
---INSERT INTO trans_system_settings VALUES ('tran_db_name', 'transcirrus', 'integration', 36);
---INSERT INTO trans_system_settings VALUES ('cloud_controller_id', '000-12345678-12345', 'integration', 38);
---INSERT INTO trans_system_settings VALUES ('vm_ip_min', '0.0.0.0', 'integration', 41);
---INSERT INTO trans_system_settings VALUES ('os_db', '192.168.10.41', 'integration', 40);
---INSERT INTO trans_system_settings VALUES ('os_db_user', 'transuser', 'integration', 43);
---INSERT INTO trans_system_settings VALUES ('vm_ip_max', '0.0.0.0', 'integration', 42);
---INSERT INTO trans_system_settings VALUES ('os_db_port', '5432', 'integration', 45);
---INSERT INTO trans_system_settings VALUES ('os_db_pass', 'builder', 'integration', 44);
---INSERT INTO trans_system_settings VALUES ('node_id', '000-12345678-12345', 'integration', 46);
---INSERT INTO trans_system_settings VALUES ('cloud_controller', 'integration', 'integration', 50);
---INSERT INTO trans_system_settings VALUES ('hosted_os', '7c172289-fcf0-465b-a265-a052e87e061c', 'integration', 48);
---INSERT INTO trans_system_settings VALUES ('uplink_ip', '0.0.0.0', 'integration', 51);
---INSERT INTO trans_system_settings VALUES ('first_time_boot', '1', 'integration', 25);
 
 
 --

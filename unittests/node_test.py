@@ -8,6 +8,7 @@ print inserter
 
 print "---------------------------------------"
 
+'''
 print "listing nodes"
 lister = node.list_nodes()
 print lister
@@ -56,5 +57,4 @@ print "---------------------------------------"
 print "checking if node 11 still exists"
 checker2 = node.check_node_exists('11')
 print checker2
-
-
+'''
