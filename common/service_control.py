@@ -183,7 +183,7 @@ def _operator(service_array,action):
             process = out.stdout.readlines()
             if(not process):
                 return 'ERROR'
-        if (len(process) == 1):
+        if (len(process) == 2):
             logger.sys_info("Service operation complete.")
             #print process[0]
         elif(process[0] == ""):
