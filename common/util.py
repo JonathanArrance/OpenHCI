@@ -72,7 +72,7 @@ def write_new_config_file(file_dict):
         #skip over these
         if(key == 'file_permissions'):
             continue
-        if(key == 'file_op'):
+        if(key == 'op'):
             continue
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
@@ -111,8 +111,8 @@ def write_new_config_file(file_dict):
 
     #decide if we append the scratch file or write it as
     #an entire new file
-    if('file_op' in file_dict):
-        ops = file_dict['file_op'].lower()
+    if('op' in file_dict):
+        ops = file_dict['op'].lower()
         if(ops == 'new'):
             config = open(scratch, 'w')
         elif(ops == 'append'):
