@@ -1,6 +1,7 @@
 import os
-import subprocess
+#import subprocess
 import time
+import commands
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -164,20 +165,15 @@ def _operator(service_array,action):
         process = []
         out = None
         #os.system('sudo /etc/init.d/%s %s'%(service,action))
-        #os.system('sudo service %s %s'%(service,action))
-        #time.sleep(1)
-        #if(action.lower() == 'start' or action.lower() == 'restart'):
-        #    out = subprocess.Popen('sudo service %s status | grep "start/running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #elif(action.lower() == 'stop'):
-        #    out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #process = out.stdout.readlines()
-        #look for process status the is not stop/waiting
+        os.system('sudo service %s %s'%(service,action))
+        time.sleep(1)
         if(action.lower() == 'start' or action.lower() == 'restart'):
-            out = subprocess.Popen('sudo service %s restart'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #    out = subprocess.Popen('sudo service %s status | grep "start/running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out = commands.getoutput('sudo service %s status | grep "start/running"'%(service))
+            print out
         elif(action.lower() == 'stop'):
-            out = subprocess.Popen('sudo service %s stop'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process = out.stdout.readlines()
-        print "DEBUG %s"%(process)
+        #    out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out = commands.getoutput('sudo service %s stop | grep "start/running"'%(service))
         if(not process):
             out = subprocess.Popen('sudo service %s status | grep "NOT"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             process = out.stdout.readlines()
