@@ -403,6 +403,7 @@ def get_node_nova_config(node_id):
     #build out the dictionaries
     nova_con = []
     nova_conf = {}
+    nova_con.append('[DEFAULT]')
     for x in novaraw:
         row = "=".join(x)
         nova_con.append(row)
