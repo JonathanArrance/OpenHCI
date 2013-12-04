@@ -1601,7 +1601,7 @@ INSERT INTO cinder_default VALUES ('service_port', '5000', 'api-paste.ini', 6);
 INSERT INTO cinder_default VALUES ('service_protocol', 'http', 'api-paste.ini', 7);
 INSERT INTO cinder_default VALUES ('admin_tenant_name', 'service', 'api-paste.ini', 8);
 INSERT INTO cinder_default VALUES ('admin_user', 'transuser', 'api-paste.ini', 9);
-INSERT INTO cinder_default VALUES ('admin_passowrd', 'transcirrus1', 'api-paste.ini', 10);
+INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 10);
 INSERT INTO cinder_default VALUES ('signing_dir', '/var/lib/cinder', 'api-paste.ini', 11);
 INSERT INTO cinder_default VALUES ('rootwrap_config', '/etc/cinder/rootwrap.conf', 'cinder.conf', 12);
 INSERT INTO cinder_default VALUES ('api_paste_config', '/etc/cinder/api-paste.ini', 'cinder.conf', 13);
