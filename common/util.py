@@ -111,16 +111,21 @@ def write_new_config_file(file_dict):
 
     #decide if we append the scratch file or write it as
     #an entire new file
+    ops = None
+    config_new = None
+    print file_dict['op']
     if('op' in file_dict):
         ops = file_dict['op'].lower()
         if(ops == 'new'):
             config = open(scratch, 'w')
-        elif(ops == 'append'):
-            config = open(fqp, 'a')
-        else:
-            config = open(scratch, 'w')
+        elif((ops == 'append') or (ops == 'update')):
+            #need to add automation to move file prototype into place and append on new info
+            config = open(fqp, 'r')
+            config_new = open(scratch,'w')
     else:
-        config = open(scratch, 'w')
+        #config = open(scratch, 'w')
+        logger.sys_error("No operation specified in the file descriptor.")
+        return 'ERROR'
 
     #check that the array of lines is not empty
     if(len(file_dict['file_content']) == 0):
@@ -129,12 +134,34 @@ def write_new_config_file(file_dict):
         return 'ERROR'
 
     try:
-        for line in file_dict['file_content']:
-            config.write(line)
-            config.write('\n')
-        os.system('sudo mv %s %s' %(scratch,fqp))
-        config.close()
-        os.system('rm -f %s' %(scratch))
+        if(ops == 'new'):
+            for line in file_dict['file_content']:
+                config.write(line)
+                config.write('\n')
+            os.system('sudo mv %s %s' %(scratch,fqp))
+            config.close()
+            os.system('sudo rm -f %s' %(scratch))
+
+        else:
+            for line in config:
+                flag = 0
+                for x in file_dict['file_content']:
+                    split = line.split('=')
+                    split2 = x.split('=')
+                    if(split[0].rstrip() == split2[0]):
+                        flag = 1
+                        config_new.write(line.replace(line,x))
+                        config_new.write('\n')
+                    else:
+                        continue
+                if(flag == 1):
+                    continue
+                else:
+                    config_new.write(line)
+            os.system('sudo mv %s %s' %(scratch,fqp))
+            config.close()
+            config_new.close()
+            os.system('sudo rm -f %s' %(scratch))
 
         #set ownership
         os.system('sudo chown %s:%s %s' %(file_dict['file_owner'],file_dict['file_group'],fqp))
@@ -144,6 +171,7 @@ def write_new_config_file(file_dict):
 
     except IOError:
         config.close()
+        config_new.close()
         #move the backup copy back to the original copy
         #shutil.move('%s_%s','%s') %(fqp,date,fqp)
         logger.sys_error("Could not write the config file at path %s" %(fqp))
