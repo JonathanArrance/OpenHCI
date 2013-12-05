@@ -154,7 +154,8 @@ def write_new_config_file(file_dict):
                         config_new.write(line.replace(line,x))
                         config_new.write('\n')
                     else:
-                        flag = 1 #HACK
+                        #this will not write new lines to the config file
+                        #Enhancement needed to add that functionality.
                         config_new.write(x)
                         config_new.write('\n')
                         continue
