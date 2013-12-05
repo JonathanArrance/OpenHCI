@@ -75,7 +75,7 @@ def run_setup(new_system_variables,auth_dict):
                    'file_owner':'transuser',
                    'file_group':'transystem',
                    'file_perm':'644',
-                   'file_op':'new'
+                   'op':'new'
                    }
 
     write_config = util.write_new_config_file(config_dict)
