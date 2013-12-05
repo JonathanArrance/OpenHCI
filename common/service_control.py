@@ -174,14 +174,16 @@ def _operator(service_array,action):
         if(not process):
             out = subprocess.Popen('sudo service %s status | grep "NOT"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             process = out.stdout.readlines()
-            if(not process):
-                return 'ERROR'
+            #f(not process):
+                #return 'ERROR'
         print len(process)
         if (len(process) == 1):
             logger.sys_info("Service operation complete.")
             #print process[0]
         elif(process[0] == ""):
-            return 'ERROR'
+            #return 'ERROR'
+            logger.sys_error("Possible service error: %s" %(service))
         else:
-            return 'NA'
+            #return 'NA'
+            logger.sys_error("Possible service error: %s" %(service))
     return 'OK'
