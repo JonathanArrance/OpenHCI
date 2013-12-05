@@ -156,9 +156,9 @@ def write_new_config_file(file_dict):
                     else:
                         #this will not write new lines to the config file
                         #Enhancement needed to add that functionality.
-                        config_new.write(x)
-                        config_new.write('\n')
-                        #continue
+                        #config_new.write(x)
+                        #config_new.write('\n')
+                        continue
                 if(flag == 1):
                     continue
                 else:
