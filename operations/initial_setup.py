@@ -216,7 +216,7 @@ def run_setup(new_system_variables,auth_dict):
     neutron_start = service.neutron('restart')
     if(neutron_start != 'OK'):
         #fire off revert
-        return cinder_start
+        return neutron_start
 
     #after quantum enabled create the default_public ip range
 

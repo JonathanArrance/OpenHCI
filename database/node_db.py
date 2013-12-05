@@ -151,7 +151,7 @@ def insert_node(input_dict):
             return 'ERROR'
     try:
         insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
-        insert_neutron_localip = {"parameter":"auth_region","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+        insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
         neutron_array = [insert_neutron_region,insert_neutron_localip]
         for neutron in neutron_array:
             db.pg_transaction_begin()
@@ -572,7 +572,7 @@ def get_node_neutron_config(node_id):
     for x in netraw:
         row = "=".join(x)
         net_con.append(row)
-    net_conf['op'] = 'new'
+    net_conf['op'] = 'append'
     net_conf['file_owner'] = 'quantum'
     net_conf['file_group'] = 'quantum'
     net_conf['file_perm'] = '644'
@@ -586,7 +586,7 @@ def get_node_neutron_config(node_id):
     for x in ovsraw:
         row = "=".join(x)
         ovs_con.append(row)
-    ovs_conf['op'] = 'new'
+    ovs_conf['op'] = 'append'
     ovs_conf['file_owner'] = 'quantum'
     ovs_conf['file_group'] = 'quantum'
     ovs_conf['file_perm'] = '644'
@@ -601,7 +601,7 @@ def get_node_neutron_config(node_id):
         for x in dhcpraw:
             row = "=".join(x)
             dhcp_con.append(row)
-        dhcp_conf['op'] = 'new'
+        dhcp_conf['op'] = 'append'
         dhcp_conf['file_owner'] = 'quantum'
         dhcp_conf['file_group'] = 'quantum'
         dhcp_conf['file_perm'] = '644'
@@ -615,7 +615,7 @@ def get_node_neutron_config(node_id):
         for x in metaraw:
             row = "=".join(x)
             meta_con.append(row)
-        meta_conf['op'] = 'new'
+        meta_conf['op'] = 'append'
         meta_conf['file_owner'] = 'quantum'
         meta_conf['file_group'] = 'quantum'
         meta_conf['file_perm'] = '644'
@@ -643,7 +643,7 @@ def get_node_neutron_config(node_id):
         for x in l3raw:
             row = "=".join(x)
             l3_con.append(row)
-        l3_conf['op'] = 'new'
+        l3_conf['op'] = 'append'
         l3_conf['file_owner'] = 'quantum'
         l3_conf['file_group'] = 'quantum'
         l3_conf['file_perm'] = '644'
