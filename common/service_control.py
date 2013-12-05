@@ -164,20 +164,19 @@ def _operator(service_array,action):
     for service in service_array:
         process = []
         out = None
-        #os.system('sudo /etc/init.d/%s %s'%(service,action))
         os.system('sudo service %s %s'%(service,action))
         time.sleep(1)
         if(action.lower() == 'start' or action.lower() == 'restart'):
-           out = subprocess.Popen('sudo service %s status | grep "start/running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #out = commands.getoutput('sudo service %s status'%(service))
+            out = subprocess.Popen('sudo service %s status | grep "start/running"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         elif(action.lower() == 'stop'):
             out = subprocess.Popen('sudo service %s status | grep "stop/waiting"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #out = commands.getoutput('sudo service %s stop | grep "start/running"'%(service))
+        process = out.stdout.readlines()
         if(not process):
             out = subprocess.Popen('sudo service %s status | grep "NOT"'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             process = out.stdout.readlines()
             if(not process):
                 return 'ERROR'
+        print len(process)
         if (len(process) == 2):
             logger.sys_info("Service operation complete.")
             #print process[0]
