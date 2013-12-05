@@ -121,7 +121,7 @@ def write_new_config_file(file_dict):
         elif((ops == 'append') or (ops == 'update')):
             #need to add automation to move file prototype into place and append on new info
             config = open(fqp, 'r')
-            config_new = open(scratch,'w')
+            config_new = open(scratch,'a')
     else:
         #config = open(scratch, 'w')
         logger.sys_error("No operation specified in the file descriptor.")
@@ -158,7 +158,7 @@ def write_new_config_file(file_dict):
                         #Enhancement needed to add that functionality.
                         config_new.write(x)
                         config_new.write('\n')
-                        continue
+                        #continue
                 if(flag == 1):
                     continue
                 else:
