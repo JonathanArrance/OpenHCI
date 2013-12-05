@@ -177,13 +177,13 @@ def _operator(service_array,action):
             #f(not process):
                 #return 'ERROR'
         print len(process)
-        if (len(process) == 1):
-            logger.sys_info("Service operation complete.")
-            #print process[0]
-        elif(process[0] == ""):
-            #return 'ERROR'
-            logger.sys_error("Possible service error: %s" %(service))
-        else:
-            #return 'NA'
-            logger.sys_error("Possible service error: %s" %(service))
+        #if (len(process) == 1):
+        #    logger.sys_info("Service operation complete.")
+        #    #print process[0]
+        #elif(process[0] == ""):
+        #    #return 'ERROR'
+        #    logger.sys_error("Possible service error: %s" %(service))
+        #else:
+        #    #return 'NA'
+        #    logger.sys_error("Possible service error: %s" %(service))
     return 'OK'
