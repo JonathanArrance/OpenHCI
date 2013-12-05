@@ -128,10 +128,8 @@ def write_new_config_file(file_dict):
         return 'ERROR'
 
     #check that the array of lines is not empty
-    print file_dict['file_name']
-    print file_dict['file_content']
     if(len(file_dict['file_content']) == 0):
-        logger.sys_warning("No file input was given. Can not write out the file.")
+        logger.sys_warning("No file input was given. Can not write out the file %s." %(file_dict['file_name']))
         #raise Exception("No file input was given. Can not write out the file.")
         return 'ERROR'
 
@@ -155,8 +153,8 @@ def write_new_config_file(file_dict):
                         config_new.write(line.replace(line,x))
                         config_new.write('\n')
                     else:
-                        config_new.write(line)
-                        config_new.write('\n')
+                        #config_new.write(line)
+                        #config_new.write('\n')
                         continue
                 if(flag == 1):
                     continue

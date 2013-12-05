@@ -598,10 +598,11 @@ def get_node_neutron_config(node_id):
     if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'nn')):
         dhcp_con = []
         dhcp_conf = {}
+        dhcp_con.append('[DEFAULT]')
         for x in dhcpraw:
             row = "=".join(x)
             dhcp_con.append(row)
-        dhcp_conf['op'] = 'append'
+        dhcp_conf['op'] = 'new'
         dhcp_conf['file_owner'] = 'quantum'
         dhcp_conf['file_group'] = 'quantum'
         dhcp_conf['file_perm'] = '644'
@@ -612,10 +613,11 @@ def get_node_neutron_config(node_id):
 
         meta_con = []
         meta_conf = {}
+        meta_con.append('[DEFAULT]')
         for x in metaraw:
             row = "=".join(x)
             meta_con.append(row)
-        meta_conf['op'] = 'append'
+        meta_conf['op'] = 'new'
         meta_conf['file_owner'] = 'quantum'
         meta_conf['file_group'] = 'quantum'
         meta_conf['file_perm'] = '644'
@@ -784,7 +786,7 @@ def get_glance_config():
     for x in glance_api:
         row = "=".join(x)
         api.append(row)
-    api_conf['op'] = 'new'
+    api_conf['op'] = 'append'
     #find user/group/perms
     api_conf['file_owner'] = 'glance'
     api_conf['file_group'] = 'glance'
@@ -799,7 +801,7 @@ def get_glance_config():
     for x in glance_reg:
         row = "=".join(x)
         reg.append(row)
-    reg_conf['op'] = 'new'
+    reg_conf['op'] = 'append'
     #find user/group/perms
     reg_conf['file_owner'] = 'glance'
     reg_conf['file_group'] = 'glance'
