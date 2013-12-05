@@ -177,7 +177,7 @@ def _operator(service_array,action):
             if(not process):
                 return 'ERROR'
         print len(process)
-        if (len(process) == 2):
+        if (len(process) == 1):
             logger.sys_info("Service operation complete.")
             #print process[0]
         elif(process[0] == ""):
