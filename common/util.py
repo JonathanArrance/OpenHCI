@@ -144,6 +144,7 @@ def write_new_config_file(file_dict):
 
         else:
             for line in config:
+                #Set a flag to continue out of the inner loop
                 flag = 0
                 for x in file_dict['file_content']:
                     split = line.split('=')
@@ -153,8 +154,9 @@ def write_new_config_file(file_dict):
                         config_new.write(line.replace(line,x))
                         config_new.write('\n')
                     else:
-                        #config_new.write(line)
-                        #config_new.write('\n')
+                        flag = 1 #HACK
+                        config_new.write(x)
+                        config_new.write('\n')
                         continue
                 if(flag == 1):
                     continue
