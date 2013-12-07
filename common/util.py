@@ -831,7 +831,7 @@ def set_network_variables(input_dict):
     conf['file_owner'] = 'jonathan'
     conf['file_group'] = 'users'
     conf['file_perm'] = '644'
-    conf['file_path'] = '/home/jonathan'
+    conf['file_path'] = '/etc/network'
     conf['file_name'] = 'interfaces'
     conf['file_content'] = config_array
 
