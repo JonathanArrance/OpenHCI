@@ -407,7 +407,7 @@ def get_node_nova_config(node_id):
     for x in novaraw:
         row = "=".join(x)
         nova_con.append(row)
-    nova_conf['op'] = 'new'
+    nova_conf['op'] = 'append'
     nova_conf['file_owner'] = 'nova'
     nova_conf['file_group'] = 'nova'
     nova_conf['file_perm'] = '644'
@@ -420,7 +420,7 @@ def get_node_nova_config(node_id):
     for x in compraw:
         row = "=".join(x)
         comp_con.append(row)
-    comp_conf['op'] = 'new'
+    comp_conf['op'] = 'append'
     comp_conf['file_owner'] = 'nova'
     comp_conf['file_group'] = 'nova'
     comp_conf['file_perm'] = '644'
@@ -602,7 +602,7 @@ def get_node_neutron_config(node_id):
         for x in dhcpraw:
             row = "=".join(x)
             dhcp_con.append(row)
-        dhcp_conf['op'] = 'new'
+        dhcp_conf['op'] = 'append'
         dhcp_conf['file_owner'] = 'quantum'
         dhcp_conf['file_group'] = 'quantum'
         dhcp_conf['file_perm'] = '644'
@@ -617,7 +617,7 @@ def get_node_neutron_config(node_id):
         for x in metaraw:
             row = "=".join(x)
             meta_con.append(row)
-        meta_conf['op'] = 'new'
+        meta_conf['op'] = 'append'
         meta_conf['file_owner'] = 'quantum'
         meta_conf['file_group'] = 'quantum'
         meta_conf['file_perm'] = '644'
@@ -731,7 +731,7 @@ def get_node_cinder_config(node_id):
     for x in cinraw:
         row = "=".join(x)
         cin_con.append(row)
-    cin_conf['op'] = 'new'
+    cin_conf['op'] = 'append'
     cin_conf['file_owner'] = 'cinder'
     cin_conf['file_group'] = 'cinder'
     cin_conf['file_perm'] = '644'

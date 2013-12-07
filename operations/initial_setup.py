@@ -2,6 +2,9 @@
 #from celery import task
 #import rollback
 
+import os
+import time
+
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.node_util as node_util
@@ -164,6 +167,10 @@ def run_setup(new_system_variables,auth_dict):
             return write_nova_config
         else:
             print "Nova config file written."
+            logger.sys_info("Nova config file written.")
+    time.sleep(1)
+    os.system("nova-manage db sync")
+    time.sleep(1)
     #start the NOVA service
     nova_start = service.nova('restart')
     if(nova_start != 'OK'):
@@ -180,6 +187,10 @@ def run_setup(new_system_variables,auth_dict):
             return write_cinder_config
         else:
             print "Cinder config file written."
+            logger.sys_info("Cinder config file written.")
+    time.sleep(1)
+    os.system("cinder-manage db sync")
+    time.sleep(1)
     #start the cinder service
     cinder_start = service.cinder('restart')
     if(cinder_start != 'OK'):
@@ -200,7 +211,12 @@ def run_setup(new_system_variables,auth_dict):
     glance_start = service.glance('restart')
     if(glance_start != 'OK'):
         #fire off revert
-        return cinder_start
+        return glance_start
+    else:
+        time.sleep(1)
+        logger.sys_info("Syncing the Glance DB.")
+        os.system("glance-manage db_sync")
+        #download glance images?
 
     #enable neutron
     neu_configs = node_db.get_node_neutron_config(node_id)
@@ -218,15 +234,14 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
 
+    #set up br-ex and enable ovs.
+
     #after quantum enabled create the default_public ip range
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
 
     #if the node is set as multinode, enable multinode
-    
-
-    #Set the node info in the trans_nodes table
 
     #call tasks/change_admin_user_password
     #result = change_admin_password.delay(auth_dict,admin_pass)

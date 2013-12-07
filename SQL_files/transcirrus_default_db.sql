@@ -1675,6 +1675,11 @@ INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-reg
 INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'glance-registry-paste.ini', 22);
 INSERT INTO glance_defaults VALUES ('admin_user', 'transuser', 'NULL', 'glance-registry-paste.ini', 23);
 INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-registry-paste.ini', 24);
+INSERT INTO glance_defaults VALUES ('rabbit_host', '172.38.24.10', 'NULL', 'glance-api.conf', 25);
+INSERT INTO glance_defaults VALUES ('rabbit_user', 'transuser', 'NULL', 'glance-api.conf', 26);
+INSERT INTO glance_defaults VALUES ('rabbit_password', 'transcirrus1', 'NULL', 'glance-api.conf', 27);
+INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-api.conf', 28);
+INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-registry.conf', 29);
 --
 -- TOC entry 2170 (class 0 OID 16423)
 -- Dependencies: 169
@@ -1725,7 +1730,7 @@ INSERT INTO neutron_default VALUES ('metadata_proxy_shared_secret', 'transcirrus
 INSERT INTO neutron_default VALUES ('rabbit_password', 'transcirrus1', 'quantum.conf', 8);
 INSERT INTO neutron_default VALUES ('rabbit_host', '172.38.24.10', 'quantum.conf', 10);
 INSERT INTO neutron_default VALUES ('auth_host', '172.38.24.10', 'quantum.conf', 11);
-INSERT INTO neutron_default VALUES ('sql_connection', 'postgresql://transuser:builder@172.38.24.10/quantum', 'ovs_quantum_plugin.ini', 14);
+INSERT INTO neutron_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/quantum', 'ovs_quantum_plugin.ini', 14);
 INSERT INTO neutron_default VALUES ('auth_url', 'http://172.38.24.10:35357/v2.0', 'metadata_agent.ini', 47);
 INSERT INTO neutron_default VALUES ('nova_metadata_ip', '172.38.24.10', 'metadata_agent.ini', 48);
 INSERT INTO neutron_default VALUES ('admin_password', 'transcirrus1', 'quantum.conf', 49);
@@ -1736,8 +1741,8 @@ INSERT INTO neutron_default VALUES ('auth_port', '35357', 'api-paste.ini', 29);
 INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'api-paste.ini', 30);
 INSERT INTO neutron_default VALUES ('admin_user', 'transuser', 'api-paste.ini', 32);
 INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'api-paste.ini', 31);
-INSERT INTO neutron_default VALUES ('admin_passowrd', 'transcirrus1', 'api-paste.ini', 51);
-
+INSERT INTO neutron_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 51);
+INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'quantum.conf', 52);
 
 --
 -- TOC entry 2173 (class 0 OID 16446)
@@ -1760,14 +1765,14 @@ INSERT INTO nova_default VALUES ('lock_path', '/run/lock/nova', 'nova.conf', 4);
 INSERT INTO nova_default VALUES ('verbose', 'True', 'nova.conf', 5);
 INSERT INTO nova_default VALUES ('api_paste_config', '/etc/nova/api-paste.ini', 'nova.conf', 6);
 INSERT INTO nova_default VALUES ('compute_scheduler_driver', 'nova.scheduler.simple.SimpleScheduler', 'nova.conf', 7);
-INSERT INTO nova_default VALUES ('rabbit_password', 'transcirrus1!', 'nova.conf', 10);
+INSERT INTO nova_default VALUES ('rabbit_password', 'transcirrus1', 'nova.conf', 10);
 INSERT INTO nova_default VALUES ('rabbit_user', 'transuser', 'nova.conf', 9);
 INSERT INTO nova_default VALUES ('root_helper', 'sudo nova-rootwrap /etc/nova/rootwrap.conf', 'nova.conf', 11);
 INSERT INTO nova_default VALUES ('multi_host', 'False', 'nova.conf', 12);
 INSERT INTO nova_default VALUES ('enable_instance_password', 'true', 'nova.conf', 13);
 INSERT INTO nova_default VALUES ('use_deprecated_auth', 'false', 'nova.conf', 14);
 INSERT INTO nova_default VALUES ('auth_stratagy', 'keystone', 'nova.conf', 15);
-INSERT INTO nova_default VALUES ('rabbit_host', '172.24.38.10', 'nova.conf', 8);
+INSERT INTO nova_default VALUES ('rabbit_host', '172.38.24.10', 'nova.conf', 8);
 INSERT INTO nova_default VALUES ('image_service', 'nova.image.glance.GlanceImageService', 'nova.conf', 16);
 INSERT INTO nova_default VALUES ('novnc_enabled', 'true', 'nova.conf', 17);
 INSERT INTO nova_default VALUES ('novncproxy_port', '6080', 'nova.conf', 19);
@@ -1781,7 +1786,7 @@ INSERT INTO nova_default VALUES ('linuxnet_interface_driver', 'nova.network.linu
 INSERT INTO nova_default VALUES ('firewall_driver', 'nova.virt.firewall.NoopFirewallDriver', 'nova.conf', 32);
 INSERT INTO nova_default VALUES ('security_group_api', 'quantum', 'nova.conf', 33);
 INSERT INTO nova_default VALUES ('service_quantum_metadata_proxy', 'True', 'nova.conf', 34);
-INSERT INTO nova_default VALUES ('quantum_metadata_proxy_shared_secret', 'builder', 'nova.conf', 35);
+INSERT INTO nova_default VALUES ('quantum_metadata_proxy_shared_secret', 'transcirrus1', 'nova.conf', 35);
 INSERT INTO nova_default VALUES ('metadata_listen_port', '8775', 'nova.conf', 38);
 INSERT INTO nova_default VALUES ('compute_driver', 'libvirt.LibvirtDriver', 'nova.conf', 39);
 INSERT INTO nova_default VALUES ('connection_type', 'libvirt', 'nova.conf', 40);

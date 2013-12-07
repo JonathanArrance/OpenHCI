@@ -34,7 +34,7 @@ def neutron(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: These only work on the ciac node for now
     """
-    neu_array = ['quantum-dhcp-agent','quantum-l3-agent','quantum-metadata-agent','quantum-plugin-openvswitch-agent','quantum-server']
+    neu_array = ['quantum-server','quantum-plugin-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent']
     out = _operator(neu_array,action)
     return out
 
