@@ -1814,7 +1814,7 @@ INSERT INTO nova_default VALUES ('glance_api_servers', '172.38.24.10:9292', 'nov
 INSERT INTO nova_default VALUES ('quantum_admin_auth_url', 'http://172.38.24.10:35357/v2.0', 'nova.conf', 29);
 INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 36);
 INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 37);
-
+INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 57);
 
 --
 -- TOC entry 2175 (class 0 OID 16462)

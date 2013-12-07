@@ -86,7 +86,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_error("Could not write the new config file.")
         #Perform the rollback to the original values
         #rollback = util.update_system_variables(rollback_sys_vars)
-
+    """
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
 
@@ -207,6 +207,7 @@ def run_setup(new_system_variables,auth_dict):
             return write_glance_config
         else:
             print "Glance config file written."
+            logger.sys_info("Glance config file written.")
     #start the cinder service
     glance_start = service.glance('restart')
     if(glance_start != 'OK'):
@@ -228,13 +229,65 @@ def run_setup(new_system_variables,auth_dict):
             return write_neutron_config
         else:
             print "Neutron config file written."
+            logger.sys_info("Neutron config file written.")
     #start the cinder service
     neutron_start = service.neutron('restart')
     if(neutron_start != 'OK'):
         #fire off revert
         return neutron_start
+    """
+
+    #set up openvswitch
+    br_input = {'br_name':'br-ex','br_port':'bond2'}
+    br_input2 = {'br_name':'br-int'}
+    bridge = util.ovs_add_br(br_input)
+    if(bridge == 'ERROR'):
+        logger.sys_error('Could not set up external bridge during initial setup. Check open-vswitch.')
+    bridge_int = util.ovs_add_br(br_input2)
+    if(bridge_int == 'ERROR'):
+        logger.sys_error('Could not set up internal bridge during initial setup. Check open-vswitch.')
 
     #set up br-ex and enable ovs.
+    net_input = {'node_id':node_id,
+                 'net_adapter':'uplink',
+                 'net_ip':sys_vars['UPLINK_IP'],
+                 'net_subnet':sys_vars['UPLINK_SUBNET'],
+                 'net_gateway':sys_vars['UPLINK_GATEWAY'],
+                 'net_dns1':sys_vars['UPLINK_DNS'],
+                 'net_domain':sys_vars['DOMAIN_NAME'],
+                 'net_dhcp':'static'
+                }
+
+    uplink = util.set_network_variables(net_input)
+    write_net_config = util.write_new_config_file(uplink)
+    time.sleep(1)
+    if(write_net_config != 'OK'):
+        #Exit the setup return to factory default
+        return write_net_config
+    else:
+        print "Net config file written."
+        logger.sys_info("Net config file written.")
+
+    #restart adapters
+    time.sleep(1)
+    logger.sys_info("Restarting the uplink adapter")
+    bond = util.restart_network_card('bond2')
+    if(bond != 'OK'):
+        logger.sys_error("Could not restart Bond2.")
+        return bond
+    time.sleep(1)
+    br = util.restart_network_card('br-ex')
+    if(br != 'OK'):
+        logger.sys_error("Could not restart BR-EX.")
+        return br
+
+    #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
+    logger.sys_info("Setting up iptables entries.")
+    os.system("iptables -A FORWARD -i bond2 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
+    time.sleep(1)
+    os.system("iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+    time.sleep(1)
+    os.system("iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
 
     #after quantum enabled create the default_public ip range
 

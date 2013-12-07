@@ -517,15 +517,16 @@ def get_system_defaults(node_id):
 
     db = db_connect()
     #get the system name
-    try:
-        get_sys_name = {'select':'host_system', 'from':'trans_system_settings','where':"parameter='node_id'", 'and':"param_value='%s'"%(node_id)}
-        node_name = db.pg_select(get_sys_name)
-    except:
-        logger.sql_error("Could not get the system name/node name for node id %s" %(node_id))
-        raise Exception("Could not get the system name/node name for node id %s" %(node_id))
+    #try:
+    #    get_sys_name = {'select':'host_system', 'from':'trans_system_settings','where':"parameter='node_id'", 'and':"param_value='%s'"%(node_id)}
+    #    node_name = db.pg_select(get_sys_name)
+    #except:
+    #    logger.sql_error("Could not get the system name/node name for node id %s" %(node_id))
+    #    raise Exception("Could not get the system name/node name for node id %s" %(node_id))
 
+    node_name = get_system_name()
     try:
-        find_node_dict = {'select':"parameter,param_value",'from':"factory_defaults",'where':"host_system='%s'" %(node_name[0][0])}
+        find_node_dict = {'select':"parameter,param_value",'from':"factory_defaults",'where':"host_system='%s'" %(node_name)}
         sys = db.pg_select(find_node_dict)
     except:
         logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
@@ -545,27 +546,7 @@ def get_system_variables(node_id):
     """
     DESC: Return the system settings from the transcirrus system settings db.
     INPUT: system_name
-    OUTPUT: r_dict - TRANSCIRRUS_DB
-                   - TRAN_DB_USER
-                   - TRAN_DB_PASS
-                   - TRAN_DB_NAME
-                   - TRAN_DB_PORT
-                   - ADMIN_TOKEN
-                   - API_IP - "public api ip"
-                   - MGMT_IP
-                   - INT_API_IP
-                   - ADMIN_API_IP
-                   - CLOUD_CONTROLLER
-                   - CLOUD_CONTROLLER_ID
-                   - CLOUD_NAME
-                   - OS_DB
-                   - OS_DB_USER
-                   - OS_DB_PASS
-                   - OS_DB_PORT
-                   - MEMBER_ROLE_ID
-                   - ADMIN_ROLE_ID
-                   - NODE_ID
-                   - NODE_TYPE
+    OUTPUT: r_dict - all system vas in the trans_system_settings table
     ACCESS: Wide open
     NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
           config.py file descriptor to write out the config.py that is in transcirrus.common by calling write_new_config.py
@@ -577,6 +558,7 @@ def get_system_variables(node_id):
     db = db_connect()
     #get the system name
     try:
+        #change to use config.py
         get_sys_name = {'select':'host_system', 'from':'trans_system_settings','where':"parameter='node_id'", 'and':"param_value='%s'"%(node_id)}
         node_name = db.pg_select(get_sys_name)
     except:
@@ -1001,6 +983,32 @@ def disable_network_card(net_adapter):
         return 'OK'
     else:
         return 'ERROR'
+
+def ovs_add_br(br_input):
+    """
+    DESC: Set up the bridges needed in openstack.
+    INPUT: br_input - br_name
+                    - br_port - op
+    OUTPUT: OK - success
+            ERROR - fail
+    ACCESS: Wide Open
+    NOTE: br_port is the port to add. If none is given the bridge is set up and no port
+          is added.
+    """
+    if('br_name' not in br_input):
+        logger.sys_error("Bridge name is requird when setting up a bridge.")
+        return 'ERROR'
+    os.system("ovs-vsctl add-br %s" %(br_input['br_name']))
+    if('br_port' in br_input):
+        logger.sys_info("Adding port %s to bridge %s" %(br_input['br_port'],br_input['br_name']))
+        os.system("ovs-vsctl add-port %s %s" %(br_input['br_name'],br_input['br_port']))
+    return 'OK'
+
+def ovs_update_br(br_input):
+    pass
+
+def ovs_delete_br(br):
+    pass
 
 def get_adapter_ip(net_adapter):
     """
