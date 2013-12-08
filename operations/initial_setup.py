@@ -217,7 +217,8 @@ def run_setup(new_system_variables,auth_dict):
         time.sleep(1)
         logger.sys_info("Syncing the Glance DB.")
         os.system("glance-manage db_sync")
-        #download glance images?
+        #load default glance images shipped on ssd.
+        
 
     #enable neutron
     neu_configs = node_db.get_node_neutron_config(node_id)
@@ -235,14 +236,13 @@ def run_setup(new_system_variables,auth_dict):
     if(neutron_start != 'OK'):
         #fire off revert
         return neutron_start
-
+    """
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
-    os.system("ovs-vsctl add-br br-ex")
-    os.system("ovs-vsctl add-bond br-ex bond1 eth2 eth3")
+    os.system("sudo ovs-vsctl add-br br-ex")
+    os.system("sudo ovs-vsctl add-bond br-ex bond1 eth2 eth3")
     logger.sys_info("Setting up the internal br-int")
-    os.system("ovs-vsctl add-br br-int")
-    """
+    os.system("sudo ovs-vsctl add-br br-int")
 
     #set up br-ex and enable ovs.
     net_input = {'node_id':node_id,
@@ -281,13 +281,18 @@ def run_setup(new_system_variables,auth_dict):
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
-    os.system("iptables -A FORWARD -i bond1 -o br-ex -s "fuck - uplink_ip/cidr" -m conntrack --ctstate NEW -j ACCEPT")
-    time.sleep(1)
-    os.system("iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
-    time.sleep(1)
-    os.system("iptables -A POSTROUTING -s "fuck - uplink_ip/cidr" -t nat -j MASQUERADE")
+    os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
+    os.system("sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+    os.system("sudo iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
+
+    logger.sys_info("Saving the iptables entries.")
+    os.system("sudo iptables-save > /etc/iptables.conf")
 
     #after quantum enabled create the default_public ip range
+    #check to make sure default public is the same range as the uplink ip
+    
+    #if in the same range create the default public range in quantum/neutron
+    
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
