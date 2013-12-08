@@ -256,6 +256,7 @@ def run_setup(new_system_variables,auth_dict):
                 }
 
     uplink = util.set_network_variables(net_input)
+    print uplink
     write_net_config = util.write_new_config_file(uplink)
     time.sleep(1)
     if(write_net_config != 'OK'):
