@@ -679,7 +679,6 @@ def set_network_variables(input_dict):
     #name of the network link
     link = None
     mtu = None
-    print input_dict['net_adapter'].lower()
     if(input_dict['net_adapter'].lower() == 'mgmt'):
         link = 'bond0'
         mtu = '1500'
@@ -699,7 +698,7 @@ def set_network_variables(input_dict):
             db.pg_insert("net_adapter_settings",ins_adpt)
         elif(adapter[0][0]):
             #update the adapter row
-            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',mtu='%s'"
+            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
                       %(input_dict['net_ip'],input_dict['net_subnet'],input_dict['net_gateway'],inet,input_dict['net_dns1'],input_dict['net_dns2'],input_dict['net_dns3'],input_dict['net_domain'],mtu),'where':"net_adapter='%s'"%(link),
                       'and':"node_id='%s'"%(input_dict['node_id'])}
             db.pg_update(update)
@@ -827,9 +826,9 @@ def set_network_variables(input_dict):
         config_array = eth + bond0 + data_bond
 
     conf = {}
-    conf['op'] = 'append'
-    conf['file_owner'] = 'jonathan'
-    conf['file_group'] = 'users'
+    conf['op'] = 'new'
+    conf['file_owner'] = 'root'
+    conf['file_group'] = 'root'
     conf['file_perm'] = '644'
     conf['file_path'] = '/etc/network'
     conf['file_name'] = 'interfaces'
