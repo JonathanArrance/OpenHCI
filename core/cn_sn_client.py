@@ -9,10 +9,12 @@ import select
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
 import transcirrus.common.service_control as service_controller
+import transcirrus.common.logger as logger
 
 timeout_sec = 1
 retry_count = 5
 recv_buffer = 4096
+dhcp_retry = 5
 
 connect_pkt = {
 'Type' : 'connect',
@@ -48,6 +50,45 @@ node_info = {
     'node_id':'trans15'
     }
 }
+
+
+def getDhcpServer():
+    '''
+    @author         : Shashaa
+    comment         : get DHCP server IP address from dhcp.bond1.leases
+                      file. bond1 interface of the machine connects to
+                      data network of the cloud.
+    return value    : dhcp_server ip
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
+    dhcp_server = ""
+
+    while dhcp_retry:
+
+        out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        data = out.stdout.readlines()
+        if (data):
+            line = data[0].trim()
+            line = line.split(" ")
+            dhcp_server = line[2] 
+        else:
+            # TODO: can initiate a command to acquire dhcp assigned IP
+            logger.sys_warning("Trying to get DHCP server IP")
+            dhcp_retry = dhcp_retry-1
+            time.sleep(1)
+
+    if (dhcp_server == ""):
+        logger.sys_error("Error in getting DHCP server IP")
+        sys.exit()
+    else :
+        return dhcp_server
+
 
 def sendOk(sock):
 
@@ -788,8 +829,18 @@ def keep_alive(sock):
 # Create socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Get ciac ip address
+ciac_ip = getDhcpServer()
+
+# data network ip
+data_ip = "172.38.24.11"
+
+# Bind it to data network interface
+sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
+#sock.bind((data_ip,0))                             # bind's it an IP address 
+
 # Connect to the server socket
-server_address = ('127.0.0.1', 6161)
+server_address = (ciac_ip, 6161)
 print "connecting to %s port %s " % server_address
 sock.connect(server_address)
 sock.setblocking(0)
