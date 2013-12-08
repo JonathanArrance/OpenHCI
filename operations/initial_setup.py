@@ -235,17 +235,14 @@ def run_setup(new_system_variables,auth_dict):
     if(neutron_start != 'OK'):
         #fire off revert
         return neutron_start
-    """
 
     #set up openvswitch
-    br_input = {'br_name':'br-ex','br_port':'bond2'}
-    br_input2 = {'br_name':'br-int'}
-    bridge = util.ovs_add_br(br_input)
-    if(bridge == 'ERROR'):
-        logger.sys_error('Could not set up external bridge during initial setup. Check open-vswitch.')
-    bridge_int = util.ovs_add_br(br_input2)
-    if(bridge_int == 'ERROR'):
-        logger.sys_error('Could not set up internal bridge during initial setup. Check open-vswitch.')
+    logger.sys_info("Setting up br-ex")
+    os.system("ovs-vsctl add-br br-ex")
+    os.system("ovs-vsctl add-bond br-ex bond2 eth4 eth5")
+    logger.sys_info("Setting up the internal br-int")
+    os.system("ovs-vsctl add-br br-int")
+    """
 
     #set up br-ex and enable ovs.
     net_input = {'node_id':node_id,

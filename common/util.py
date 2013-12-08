@@ -983,12 +983,14 @@ def disable_network_card(net_adapter):
         return 'OK'
     else:
         return 'ERROR'
-
+'''
+IMPLEMENT LATER alpo.1
 def ovs_add_br(br_input):
     """
     DESC: Set up the bridges needed in openstack.
     INPUT: br_input - br_name
-                    - br_port - op
+                    - br_port - array of ports
+                    - port_type bond/port
     OUTPUT: OK - success
             ERROR - fail
     ACCESS: Wide Open
@@ -1000,9 +1002,17 @@ def ovs_add_br(br_input):
         return 'ERROR'
     os.system("ovs-vsctl add-br %s" %(br_input['br_name']))
     if('br_port' in br_input):
-        logger.sys_info("Adding port %s to bridge %s" %(br_input['br_port'],br_input['br_name']))
-        os.system("ovs-vsctl add-port %s %s" %(br_input['br_name'],br_input['br_port']))
+        ports = br_port['br_port']
+        if('port_type' in br_input):
+            if(br_input['br_type'] == 'bond'):
+                logger.sys_info("Adding bond %s to bridge %s" %(br_input['br_port'],br_input['br_name']))
+                os.system("ovs-vsctl add-bond %s %s %s %s" %(br_input['br_name'],br_input['br_port']))
+            elif(br_input['br_type'] == 'port'):
+                logger.sys_info("Adding port %s to bridge %s" %(ports[0],br_input['br_name']))
+                os.system("ovs-vsctl add-port %s %s" %(br_input['br_name'],ports[0]))
     return 'OK'
+'''
+
 
 def ovs_update_br(br_input):
     pass
