@@ -54,3 +54,16 @@ print stuff2
 update_dict = {'old_name':'cloud','new_name':'integration'}
 sys = util.update_cloud_controller_name(update_dict)
 print sys
+
+
+print "Test compare_vm_range..."
+node = util.get_node_id();
+system_variables = util.get_system_variables(node)
+sys_vm_ip_min = system_variables['VM_IP_MIN']
+sys_vm_ip_max = system_variables['VM_IP_MAX']
+print "Current range: %s to %s" % (sys_vm_ip_min, sys_vm_ip_max)
+new_min = "0.0.0.1"
+new_max = "0.0.0.10"
+print "Test using %s to %s" % (new_min, new_max)
+invalid_range = util.compare_vm_range(util, new_min, new_max)
+print invalid_range
