@@ -1058,3 +1058,59 @@ def power_off_system():
     NOTE: VERY DANGEROUS. THIS IS WIDE OPEN AS OF NOW
     """
     os.system('sudo shutdown -P')
+
+def compare_vm_range(new_start, new_end):
+    """
+    DESC: Checks to see if new ip endpoints will conflict with current state
+    INPUT: new vm ip endpoints
+    OUTPUT: current vm range that will become invalid given new endpoints or -1 if no conflicts
+            form is array of dictionaries [{'start': -1, 'end': -1}]
+    """
+    node = self.get_node_id()
+
+    system_variables = self.get_system_variables(node)
+
+    sys_vm_ip_min = system_variables['vm_ip_min']
+    sys_vm_ip_max = system_variables['vm_ip_max']
+
+    problem_start = -1
+    problem_end = -1
+    problem_mid_1 = -1
+    problem_mid_2 = -1
+
+    new_start_bytes = new_start.split('.')
+    new_end_bytes = new_end.split('.')
+    sys_vm_ip_min_bytes = sys_vm_ip_min.split('.')
+    sys_vm_ip_max_bytes = sys_vm_ip_max.split('.')
+
+    new_start_parts = [int(b) for b in new_start_bytes]
+    new_end_parts = [int(b) for b in new_end_bytes]
+    sys_vm_ip_min_parts = [int(b) for b in sys_vm_ip_min_bytes]
+    sys_vm_ip_max_parts = [int(b) for b in sys_vm_ip_max_bytes]
+
+    start = new_start_parts[3]
+    end = new_end_parts[3]
+    vm_min = sys_vm_ip_min_parts[3]
+    vm_max = sys_vm_ip_max_parts[3]
+
+    for x in range(0, 3):
+        if(new_start_parts[x] != sys_vm_ip_min_parts[x] or
+           new_end_parts[x] != sys_vm_ip_max_parts[x]):
+            print [{'start': vm_min, 'end': vm_max}]
+            return [{'start': vm_min, 'end': vm_max}]
+
+    for x in range(vm_min, vm_max + 1):
+        if(x < start or x > end):
+            if(problem_start == -1):
+                problem_start = x
+            problem_end = x
+    if(problem_start < start and problem_end > end):
+        problem_mid_1 = start - 1
+        problem_mid_2 = end + 1
+    if(problem_mid_1 == -1):
+        print [{'start': problem_start, 'end': problem_end}]
+        return [{'start': problem_start, 'end': problem_end}]
+    else:
+        print [{'start': problem_start, 'end': problem_mid_1}, {'start': problem_mid_2, 'end': problem_end}]
+        return [{'start': problem_start, 'end': problem_mid_1}, {'start': problem_mid_2, 'end': problem_end}]
+
