@@ -1830,7 +1830,7 @@ INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:trans
 -- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
-INSERT INTO projects VALUES ('8740516cbfd84837bcec4d297478134c', 'trans_default', NULL, NULL, NULL, NULL, 'ciac-13599', '172.38.24.10', NULL, NULL);
+
 
 
 --
