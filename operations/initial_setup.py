@@ -86,7 +86,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_error("Could not write the new config file.")
         #Perform the rollback to the original values
         #rollback = util.update_system_variables(rollback_sys_vars)
-    """
+
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
 
@@ -236,7 +236,7 @@ def run_setup(new_system_variables,auth_dict):
     if(neutron_start != 'OK'):
         #fire off revert
         return neutron_start
-    """
+
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
     os.system("sudo ovs-vsctl add-br br-ex")
