@@ -65,5 +65,5 @@ print "Current range: %s to %s" % (sys_vm_ip_min, sys_vm_ip_max)
 new_min = "0.0.0.1"
 new_max = "0.0.0.10"
 print "Test using %s to %s" % (new_min, new_max)
-invalid_range = util.compare_vm_range(util, new_min, new_max)
+invalid_range = util.compare_vm_range(new_min, new_max)
 print invalid_range

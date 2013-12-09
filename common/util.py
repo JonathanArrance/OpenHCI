@@ -1059,7 +1059,7 @@ def power_off_system():
     """
     os.system('sudo shutdown -P')
 
-def compare_vm_range(self, new_start, new_end):
+def compare_vm_range(new_start, new_end):
     """
     DESC: Checks to see if new ip endpoints will conflict with current state
     INPUT: new vm ip endpoints
@@ -1068,9 +1068,9 @@ def compare_vm_range(self, new_start, new_end):
     NOTE: Returns only the last part of the address, example: 192.168.10.XXX <- the XXX part
           This does not validate if the ip addresses are in valid ip format or not
     """
-    node = self.get_node_id()
+    node = get_node_id()
 
-    system_variables = self.get_system_variables(node)
+    system_variables = get_system_variables(node)
 
     sys_vm_ip_min = system_variables['VM_IP_MIN']
     sys_vm_ip_max = system_variables['VM_IP_MAX']

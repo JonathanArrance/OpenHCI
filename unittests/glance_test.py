@@ -11,7 +11,7 @@ import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_users import user_ops
-from transcirrus.component.glance.glance_v2 import glance_ops
+from transcirrus.component.glance.glance_ops import glance_ops
 
 print "Instantiating authorization object for an default admin"
 c= authorization("admin","builder")
