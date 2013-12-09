@@ -268,16 +268,17 @@ def run_setup(new_system_variables,auth_dict):
 
     #restart adapters
     time.sleep(1)
-    logger.sys_info("Restarting the uplink adapter")
-    bond = util.restart_network_card('bond2')
-    if(bond != 'OK'):
-        logger.sys_error("Could not restart Bond2.")
-        return bond
-    time.sleep(1)
-    br = util.restart_network_card('br-ex')
-    if(br != 'OK'):
-        logger.sys_error("Could not restart BR-EX.")
-        return br
+    
+    #logger.sys_info("Restarting the uplink adapter")
+    #bond = util.restart_network_card('bond2')
+    #if(bond != 'OK'):
+    #    logger.sys_error("Could not restart Bond2.")
+    #    return bond
+    #time.sleep(1)
+    #br = util.restart_network_card('br-ex')
+    #if(br != 'OK'):
+    #    logger.sys_error("Could not restart BR-EX.")
+    #    return br
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")

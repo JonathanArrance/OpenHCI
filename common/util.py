@@ -784,20 +784,20 @@ def set_network_variables(input_dict):
             else:
                 iface = 'iface %s inet dhcp' %(netadpt[0][1])
                 br.append(iface)
-            slaves = '    slaves none'
-            br.append(slaves)
-            mtu = '    mtu %s' %(netadpt['net_mtu'])
-            br.append(mtu)
-            bondmode = '    bond-mode balance-rr'
-            br.append(bondmode)
+            #slaves = '    slaves none'
+            #br.append(slaves)
+            #mtu = '    mtu %s' %(netadpt['net_mtu'])
+            #br.append(mtu)
+            #bondmode = '    bond-mode balance-rr'
+            #br.append(bondmode)
             bridge_ports = '    bridge_ports bond1'
             br.append(bridge_ports)
-            miimon = '    bond-miimon 100'
-            br.append(miimon)
-            downdelay = '    bond-downdelay 200'
-            br.append(downdelay)
-            updelay = '    bond-updelay 200'
-            br.append(updelay)
+            #miimon = '    bond-miimon 100'
+            #br.append(miimon)
+            #downdelay = '    bond-downdelay 200'
+            #br.append(downdelay)
+            #updelay = '    bond-updelay 200'
+            #br.append(updelay)
             dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
             br.append(dns)
             if(netadpt['net_dns_domain'] != 'NULL' or netadpt['net_dns_domain'] != ''):
@@ -809,7 +809,7 @@ def set_network_variables(input_dict):
                'auto eth3','iface eth3 inet manual','    bond-master bond1','','auto eth4','iface eth4 inet manual','    bond-master bond2','','auto eth5','iface eth5 inet manual','    bond-master bond2','']
 
         #uplink bonded interface for br-ex
-        up_bond = ['auto bond1','iface bond1 inet manual','    up ifconfig $"IFACE" 0.0.0.0 up','    up ip link set $IFACE up','    down ip link set $"IFACE" promisc off','    down ifconfig $"IFACE" down','    slaves none',
+        up_bond = ['auto bond1','iface bond1 inet manual','    up ifconfig $IFACE 0.0.0.0 up','    up ip link set $IFACE up','    down ip link set $IFACE promisc off','    down ifconfig $IFACE down','    slaves none',
                    '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
         #datanet config for ciac node
         data_bond = ['auto bond2','iface bond2 inet static','    address 172.38.24.10','    netmask 255.255.255.0','    network 172.38.24.0','    slaves none', '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
