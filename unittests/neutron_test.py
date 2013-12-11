@@ -11,7 +11,22 @@ d = a.get_auth()
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
 
+"""
 print"----------------------------------------"
+print "createin a new external network"
+create = {'net_name':"thistest10",'admin_state':"true", 'shared':"true"}
+newnet = net.add_public_network(create)
+print newnet
+"""
+time.sleep(1)
+print"-----------------------------------------"
+print "Setting a subnet on new network"
+dns = ["192.168.190.20"]
+input_dict = {'net_name':"thistest10",'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.168.10','subnet_end_range':'192.168.168.40','public_ip':'192.168.168.2','public_gateway':'192.168.168.1','public_subnet_mask':'255.255.255.0'}
+getsubnet = net.add_public_subnet(input_dict)
+print getsubnet
+
+"""
 print "creating a new network"
 create = {'net_name':"thistest8",'admin_state':"true", 'shared':"true"}
 newnet = net.add_private_network(create)
@@ -81,3 +96,4 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_networks()
 print newnet
+"""

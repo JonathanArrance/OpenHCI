@@ -934,17 +934,21 @@ def restart_network_card(net_adapter):
             ERROR - fail
     ACCESS: Wide open
     NOTE: This should be used after the network card config files have been written.
+          If all is given as net_adapter then all net adapters are restarted.
     """
 
-    down = os.system('sudo ifdown %s' %(net_adapter))
-    print down
-    #if(down == ''):
-    #    return 'ERROR'
-
-    up = os.system('sudo ifup %s' %(net_adapter))
-    print up
-    if(up != 0):
-        return 'ERROR'
+    if(net_adapter.lower() == 'all'):
+        os.system('sudo /etc/init.d/networking restart')
+    else:
+        down = os.system('sudo ifdown %s' %(net_adapter))
+        print down
+        #if(down == ''):
+        #    return 'ERROR'
+    
+        up = os.system('sudo ifup %s' %(net_adapter))
+        print up
+        if(up != 0):
+            return 'ERROR'
 
     return 'OK'
 
@@ -1113,3 +1117,29 @@ def compare_vm_range(new_start, new_end):
     else:
         return [{'start': problem_start, 'end': problem_mid_1}, {'start': problem_mid_2, 'end': problem_end}]
 
+def check_gateway_in_range(input_dict):
+    """
+    DESC: Check if the uplink ip gateway is on the same network as the uplink ip
+    INPUT: input_dict - uplink_ip
+                        uplink_gateway
+                        uplink_subnet
+    OUTPUT: OK - success
+            ERROR - fail
+            NA
+    NOTE: All veriables are rquiered.
+    """
+    return 'OK'
+
+def check_public_with_uplink(input_dict):
+    """
+    DESC: Check to make sure that the default public ip range is on the same subnet as the uplink ip.
+    INPUT: input_dict - uplink_ip
+                        public_start
+                        public_end
+                        public_subnet
+    OUTPUT: OK - success
+            ERROR - fail
+            NA
+    NOTE: All veriables are required.
+    """
+    return 'OK'

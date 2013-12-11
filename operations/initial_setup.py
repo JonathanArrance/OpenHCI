@@ -4,6 +4,7 @@
 
 import os
 import time
+import subprocess
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -218,7 +219,6 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_info("Syncing the Glance DB.")
         os.system("glance-manage db_sync")
         #load default glance images shipped on ssd.
-        
 
     #enable neutron
     neu_configs = node_db.get_node_neutron_config(node_id)
@@ -244,6 +244,12 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info("Setting up the internal br-int")
     os.system("sudo ovs-vsctl add-br br-int")
 
+    g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
+    gateway = util.check_gateway_in_range(g_input)
+    if(gateway != 'OK'):
+        logger.sys_error('Uplink gateway is not on the same subnet as the uplink ip.')
+        return gateway
+
     #set up br-ex and enable ovs.
     net_input = {'node_id':node_id,
                  'net_adapter':'uplink',
@@ -268,17 +274,15 @@ def run_setup(new_system_variables,auth_dict):
 
     #restart adapters
     time.sleep(1)
-    
-    #logger.sys_info("Restarting the uplink adapter")
-    #bond = util.restart_network_card('bond2')
-    #if(bond != 'OK'):
-    #    logger.sys_error("Could not restart Bond2.")
-    #    return bond
-    #time.sleep(1)
-    #br = util.restart_network_card('br-ex')
-    #if(br != 'OK'):
-    #    logger.sys_error("Could not restart BR-EX.")
-    #    return br
+    #reconfig ips
+    out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = out.stdout.readlines()
+    os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
+    logger.sys_info("Restarting the network adapters.")
+    ints = util.restart_network_card('all')
+    if(ints != 'OK'):
+        logger.sys_error("Could not restart network interfaces.")
+        return ints
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
@@ -291,8 +295,31 @@ def run_setup(new_system_variables,auth_dict):
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
-    
+    #public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
+    #pub_check = util.check_public_with_uplink(public_dict)
+    #if(pub_check != 'OK'):
+    #    logger.sys_error('The public network given does not match the uplink subnet.')
+    #    return pub_check
+
     #if in the same range create the default public range in quantum/neutron
+    time.sleep(2)
+    neu_net = neutron_net_ops(auth_dict)
+    p_create_dict = {'net_name':'default_public','admin_state':'up','shared':'true'}
+    default_public = neu_net.add_public_network(p_create_dict)
+    if('net_id' not in default_public):
+        logger.sys_error("Could not create the default public network.")
+        return 'ERROR'
+    else:
+        #add the new public net to the sys_vars_table
+        def_array = [{'system_name': sys_vars['NODE_NAME'],'parameter':'default_pub_net_id', 'param_value':default_public['net_id']}]
+        update_def_pub_net = util.update_system_variables(def_array)
+        if((pdate_def_pub_net == 'ERROR') or (pdate_def_pub_net == 'NA')):
+            logger.sys_error("Could not update the default public network id, Setup has failed.")
+            return 'ERROR'
+
+    #create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
+    #or the vms will not be able to reach the outside.
+    
     
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
