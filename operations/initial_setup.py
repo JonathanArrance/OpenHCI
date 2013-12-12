@@ -320,7 +320,7 @@ def run_setup(new_system_variables,auth_dict):
     #create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
     #or the vms will not be able to reach the outside.
     
-    
+    #add router id to quantum l3agent.conf
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
