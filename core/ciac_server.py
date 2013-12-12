@@ -267,7 +267,9 @@ def recv_data(conn):
     @author         :
     comments        :
     '''
-    count=0
+    global count=0
+    global timeout_sec
+    global retry_count
     while True:
         ready = select.select([conn], [], [], timeout_sec)
         if ready[0]:
