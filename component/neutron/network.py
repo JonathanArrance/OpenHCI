@@ -645,7 +645,6 @@ class neutron_net_ops:
         if(('subnet_dhcp_enable' not in subnet_dict) or (subnet_dict['subnet_dhcp_enable'] == '')):
             logger.sys_error("Could not activate the dhcp service.")
             raise Exception("Could not activate the dhcp service.")
-        print subnet_dict
         if(self.is_admin == 1):
             #strings
             self.enable_dhcp = subnet_dict['subnet_dhcp_enable'].lower()
@@ -715,9 +714,7 @@ class neutron_net_ops:
             try:
                 #body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%('4',subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],self.project_id,cidr,self.dns_string)
                 body = '{"subnet": {"ip_version": 4, "allocation_pools": [{"start": "%s", "end": "%s"}], "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(subnet_dict['subnet_start_range'],subnet_dict['subnet_end_range'],subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],self.project_id,cidr,self.dns_string)
-                print body
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                print header
                 function = 'POST'
                 api_path = '/v2.0/subnets'
                 token = self.token
@@ -730,7 +727,6 @@ class neutron_net_ops:
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                     load = json.loads(rest['data'])
                     self.db.pg_transaction_begin()
-                    print load
                     #insert new net info
                     insert_dict = {"subnet_dhcp_enable":self.enable_dhcp,"subnet_id":load['subnet']['id'],"subnet_range_start":subnet_dict['subnet_start_range'],"subnet_range_end":subnet_dict['subnet_end_range'],"subnet_gateway":subnet_dict['public_gateway'],
                                    "subnet_mask":subnet_dict['public_subnet_mask'],"subnet_ip_ver":"4","proj_id":self.project_id,"net_id":net['net_id']}
