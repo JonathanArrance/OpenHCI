@@ -525,7 +525,10 @@ def client_thread(conn, client_addr):
 # Create socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# bind the socket
+# Bind it to data network interface bind's it to physical interface
+sock.setsockopt(socket.SOL_SOCKET, 25, "bond2"+'\0')
+
+# bind the socket on all interfaces
 sock.bind(('', _server_port))
 
 sock.listen(5)
