@@ -6,6 +6,7 @@ import socket
 import pickle
 from time import sleep
 import select
+import subprocess
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
 import transcirrus.common.service_control as service_controller
@@ -68,15 +69,20 @@ def getDhcpServer():
 
     dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
     dhcp_server = ""
+    global dhcp_retry
 
     while dhcp_retry:
 
         out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         data = out.stdout.readlines()
         if (data):
-            line = data[0].trim()
-            line = line.split(" ")
-            dhcp_server = line[2] 
+            #print data[0].split(" ")
+            data = data[0].split(" ")
+            dhcp_server = data[4].strip()
+            dhcp_server = dhcp_server.strip(";")
+            logger.sys_info("dhcp_server IP: %s" % dhcp_server)
+            dhcp_retry=0
+            #sys.exit()
         else:
             # TODO: can initiate a command to acquire dhcp assigned IP
             logger.sys_warning("Trying to get DHCP server IP")
@@ -86,7 +92,7 @@ def getDhcpServer():
     if (dhcp_server == ""):
         logger.sys_error("Error in getting DHCP server IP")
         sys.exit()
-    else :
+    else:
         return dhcp_server
 
 
