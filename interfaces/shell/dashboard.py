@@ -167,7 +167,7 @@ def projects(d, projectList):
 
 def users(d, userList):
     addChoice = ("Add", "Add a User", 0)
-    delChoice = ("Remove", "Remove a User", 0)
+    #delChoice = ("Remove", "Remove a User", 0)
     dashChoice = ("Dashboard", "Return to Dashboard", 1)
     allChoices = []
     counter = 0
@@ -176,7 +176,7 @@ def users(d, userList):
         choice = (str(counter), entry['name'], 0)
         allChoices.append(choice)
     allChoices.append(addChoice)
-    allChoices.append(delChoice)
+    #allChoices.append(delChoice)
     allChoices.append(dashChoice)
     while True:
         (code, tag) = d.radiolist("Users - Select User to Manage",
@@ -185,13 +185,16 @@ def users(d, userList):
             break
     return tag
 
-
+"""
 def userRemove(d, userList):
     backChoice = ("Back", "Return to Users", 1)
     allChoices = []
+    counter = 0
 
     for entry in userList:
-        allChoices.append(entry)
+        counter+=1
+        choice = (str(counter), entry['name'], 0)
+        allChoices.append(choice)
     allChoices.append(backChoice)
     while True:
         (code, tag) = d.radiolist("Users - Select User to Remove",
@@ -199,7 +202,7 @@ def userRemove(d, userList):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
-
+"""
 
 def projectAdd(d):
     d.msgbox("Project Name: \n"
@@ -261,9 +264,20 @@ def projUsers(d, project):
 
 
 def userAdd(d):
-    d.msgbox("User Name: \n"
-            "Role: \n"
-            "Whatever Else Is Needed to Create a User: ", width=50)
+    while True:
+        elements = [
+            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
+            ("ID:", 2, 1, "", 2, 24, 16, 16, 0x0),
+            ("Email Address:", 3, 1, "", 3, 24, 16, 16, 0x0),
+            ("Enabled (true/false):", 4, 1, "", 4, 24, 16, 16, 0x0)]
+
+        (code, fields) = d.mixedform(
+            "Add User:", elements, width=77)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+
+    return fields
 
 
 def userDel(d, user):
@@ -994,7 +1008,7 @@ def dash(d):
                     elif(int(selection) >= 1 and int(selection) <= len(nodeList)):
                         node = nodeList[int(selection) - 1]
                         nodeDel(d, node)
-                        selection = "Remove"
+                        selection = "Nodes"
                         continue
 
 #----------------------------Node Remove End--------------------------/
@@ -1019,9 +1033,11 @@ def dash(d):
 
 #----------------------------Node Manage End--------------------------/
 
+                    elif(selection == d.DIALOG_CANCEL):
+                        selection = "Nodes"
+                        continue
+
 #----------------------------Node Info End--------------------------/
-
-
 
 #============================Nodes End=========================/
 
@@ -1372,21 +1388,16 @@ def dash(d):
             if(selection == "Dashboard"):
                 continue
 
-#/----------------------------User Remove Start--------------------------
+            elif(selection == "Add"):
+                while(selection == "Add"):
+                    
+#/----------------------------User Add Start--------------------------
 
-            elif(selection == "Remove"):
-                while(selection == "Remove"):
-                    selection = userRemove(d, userList)
-                    if(selection == "Back"):
-                        selection = "Users"
-                        continue
-                    elif(int(selection) >= 1 and int(selection) <= len(userList)):
-                        user = userList[int(selection) - 1]
-                        userDel(d, user)
-                        selection = "Remove"
-                        continue
+                    userAdd(d)
+                    selection = "Users"
+                    continue
 
-#----------------------------User Remove End--------------------------/
+#----------------------------User Add End--------------------------/
 
             elif(int(selection) >= 1 and int(selection) <= len(userList)):
                 user = userList[int(selection) - 1]
@@ -1396,17 +1407,16 @@ def dash(d):
 #/----------------------------User Info Start-------------------------
 
                     selection = userInfo(d, user)
-                    if(selection == d.DIALOG_OK):
-                        selection = "UserManage"
-                        while(selection == "UserManage"):
-
-#/----------------------------User Manage Start--------------------------
-
-                            userManage(d, user)
-                            selection = "UserInfo"
-                            continue
-
-#----------------------------User Manage End--------------------------/
+                    if(selection == "Manage"):
+                        selection = userManage(d, user)
+                        selection = "Users"
+                    elif(selection == "Delete"):
+                        userDel(d, user)
+                        selection = "Users"
+                        continue
+                    elif(selection == "Back"):
+                        selection = "Users"
+                        continue
 
 #----------------------------User Info End--------------------------/
 
