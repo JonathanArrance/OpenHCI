@@ -88,11 +88,13 @@ def dashboard(d):
 
 
 def nodes(d, nodeList):
+    delChoice = ("Remove", "Remove Node from Cloud", 0)
     dashChoice = ("Dashboard", "Return to Dashboard", 1)
     allChoices = []
 
     for entry in nodeList:
         allChoices.append(entry)
+    allChoices.append(delChoice)
     allChoices.append(dashChoice)
     while True:
         (code, tag) = d.radiolist("Nodes - Select Node to Manage",
@@ -100,6 +102,49 @@ def nodes(d, nodeList):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
+
+def nodeRemove(d, nodeList):
+    backChoice = ("Back", "Return to Nodes", 1)
+    allChoices = []
+
+    for entry in nodeList:
+        allChoices.append(entry)
+    allChoices.append(backChoice)
+    while True:
+        (code, tag) = d.radiolist("Nodes - Select Node to Remove",
+        width=65, choices=allChoices)
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    return tag
+
+
+def nodeDel(d, node):
+    return d.yesno("Are you sure you would like to remove this Node?",
+         yes_label="Yes, I'm sooo sure",
+         no_label="No, not yet", width=80)
+
+
+def nodeInfo(d, node):
+    return d.yesno(("Overview\n\n" + node[1]),
+    yes_label="Manage this Node",
+    no_label="Return to Nodes", width=50)
+
+
+def nodeManage(d, node):
+    while True:
+        elements = [
+            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
+            ("Type:", 2, 1, "", 2, 24, 16, 16, 0x0),
+            ("Node IP:", 3, 1, "", 3, 24, 16, 16, 0x0),
+            ("Management IP:", 4, 1, "", 4, 24, 16, 16, 0x0)]
+
+        (code, fields) = d.mixedform(
+            "Update Node Info:", elements, width=77)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+
+    return fields
 
 
 def projects(d, projectList):
@@ -122,12 +167,16 @@ def projects(d, projectList):
 
 def users(d, userList):
     addChoice = ("Add", "Add a User", 0)
+    #delChoice = ("Remove", "Remove a User", 0)
     dashChoice = ("Dashboard", "Return to Dashboard", 1)
     allChoices = []
-
+    counter = 0
     for entry in userList:
-        allChoices.append(entry)
+        counter += 1
+        choice = (str(counter), entry['name'], 0)
+        allChoices.append(choice)
     allChoices.append(addChoice)
+    #allChoices.append(delChoice)
     allChoices.append(dashChoice)
     while True:
         (code, tag) = d.radiolist("Users - Select User to Manage",
@@ -135,6 +184,25 @@ def users(d, userList):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
+
+"""
+def userRemove(d, userList):
+    backChoice = ("Back", "Return to Users", 1)
+    allChoices = []
+    counter = 0
+
+    for entry in userList:
+        counter+=1
+        choice = (str(counter), entry['name'], 0)
+        allChoices.append(choice)
+    allChoices.append(backChoice)
+    while True:
+        (code, tag) = d.radiolist("Users - Select User to Remove",
+        width=65, choices=allChoices)
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    return tag
+"""
 
 def projectAdd(d):
     d.msgbox("Project Name: \n"
@@ -196,9 +264,20 @@ def projUsers(d, project):
 
 
 def userAdd(d):
-    d.msgbox("User Name: \n"
-            "Role: \n"
-            "Whatever Else Is Needed to Create a User: ", width=50)
+    while True:
+        elements = [
+            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
+            ("ID:", 2, 1, "", 2, 24, 16, 16, 0x0),
+            ("Email Address:", 3, 1, "", 3, 24, 16, 16, 0x0),
+            ("Enabled (true/false):", 4, 1, "", 4, 24, 16, 16, 0x0)]
+
+        (code, fields) = d.mixedform(
+            "Add User:", elements, width=77)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+
+    return fields
 
 
 def userDel(d, user):
@@ -889,9 +968,23 @@ def dash(d):
                     'networks':[{'name':"network_1"},
                                {'name':"network_2"}]}]
 
-    userList = [("1", "White, Snow", 0),
-                ("2", "Hontas, Poca", 0),
-                ("3", "That Other One", 0)]
+    userList = [{'name':"Snow White",
+                 'role':"User",
+                 'status':2,
+                 'isAdmin':False},
+                {'name':"Pocahontas",
+                 'role':"PowerUser",
+                 'status':1,
+                 'isAdmin':False},
+                {'name':"Rapunzel",
+                 'role':"PowerUser",
+                 'status':1,
+                 'isAdmin':False},
+                {'name':"Tiana",
+                 'role':"PowerUser",
+                 'status':1,
+                 'isAdmin':False}]
+
     controls(d)
 
     while True:
@@ -901,7 +994,52 @@ def dash(d):
 #/============================Nodes Start=========================
 
             selection = nodes(d, nodeList)
+            if(selection == "Dashboard"):
+                continue
 
+#/----------------------------Node Remove Start--------------------------
+
+            elif(selection == "Remove"):
+                while(selection == "Remove"):
+                    selection = nodeRemove(d, nodeList)
+                    if(selection == "Back"):
+                        selection = "Nodes"
+                        continue
+                    elif(int(selection) >= 1 and int(selection) <= len(nodeList)):
+                        node = nodeList[int(selection) - 1]
+                        nodeDel(d, node)
+                        selection = "Nodes"
+                        continue
+
+#----------------------------Node Remove End--------------------------/
+
+            elif(int(selection) >= 1 and int(selection) <= len(nodeList)):
+                node = nodeList[int(selection) - 1]
+                selection = "NodeInfo"
+                while(selection == "NodeInfo"):
+
+#/----------------------------Node Info Start-------------------------
+
+                    selection = nodeInfo(d, node)
+                    if(selection == d.DIALOG_OK):
+                        selection = "NodeManage"
+                        while(selection == "NodeManage"):
+
+#/----------------------------Node Manage Start--------------------------
+
+                            nodeManage(d, node)
+                            selection = "NodeInfo"
+                            continue
+
+#----------------------------Node Manage End--------------------------/
+
+                    elif(selection == d.DIALOG_CANCEL):
+                        selection = "Nodes"
+                        continue
+
+#----------------------------Node Info End--------------------------/
+
+#============================Nodes End=========================/
 
         while(selection == "Projects"):
 
@@ -1247,8 +1385,44 @@ def dash(d):
 #/============================Users Start=========================
 
             selection = users(d, userList)
+            if(selection == "Dashboard"):
+                continue
 
-#=============================Users End========================/
+            elif(selection == "Add"):
+                while(selection == "Add"):
+                    
+#/----------------------------User Add Start--------------------------
+
+                    userAdd(d)
+                    selection = "Users"
+                    continue
+
+#----------------------------User Add End--------------------------/
+
+            elif(int(selection) >= 1 and int(selection) <= len(userList)):
+                user = userList[int(selection) - 1]
+                selection = "UserInfo"
+                while(selection == "UserInfo"):
+
+#/----------------------------User Info Start-------------------------
+
+                    selection = userInfo(d, user)
+                    if(selection == "Manage"):
+                        selection = userManage(d, user)
+                        selection = "Users"
+                    elif(selection == "Delete"):
+                        userDel(d, user)
+                        selection = "Users"
+                        continue
+                    elif(selection == "Back"):
+                        selection = "Users"
+                        continue
+
+#----------------------------User Info End--------------------------/
+
+
+
+#============================Users End=========================/
 
     clear_screen(d)
 
