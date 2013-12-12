@@ -267,7 +267,7 @@ def recv_data(conn):
     @author         :
     comments        :
     '''
-    global count=0
+    global count
     global timeout_sec
     global retry_count
     while True:
@@ -535,7 +535,7 @@ sock.listen(5)
 
 try:
     while True:
-        print "waiting for connection...on %s of ciac server, port: %s" % ("all NICs", "6161")
+        print "waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
         conn, client_addr = sock.accept()
         print "connection from ", client_addr
         start_new_thread(client_thread, (conn, client_addr))
