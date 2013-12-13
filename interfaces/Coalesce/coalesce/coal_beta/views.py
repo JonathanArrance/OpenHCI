@@ -61,7 +61,8 @@ def project_view(request, project_name):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_name)
-    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, }))
+    users=to.list_tenant_users(project_name)
+    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, 'users': users}))
 
 
 def manage_projects(request):
