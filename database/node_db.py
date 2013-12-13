@@ -97,7 +97,7 @@ def insert_node(input_dict):
         if(key not in input_dict):
             logger.sys_error("Node info not specified")
             raise Exception ("Node info not specified")
-        if(key == 'node_controller' and value == ''):
+        if(key == 'node_controller' and val == ''):
             logger.sys_info("setting node controller name")
             input_dict['node_controller'] = config.CLOUD_CONTROLLER
 

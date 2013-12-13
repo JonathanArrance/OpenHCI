@@ -353,9 +353,8 @@ def client_thread(conn, client_addr):
     @author         :
     comments        :
     '''
-    logger.sys_info("Thread created for a connection from host: %s" %(client_addr))
-    if __debug__:
-        print "Thread created for a connection from host:", client_addr
+    #logger.sys_info("Thread created for a connection from host: %s" %(client_addr))
+    print "Thread created for a connection from host:", client_addr
     try:
         while True:
 
@@ -594,9 +593,8 @@ try:
         if __debug__ :
             print "waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
         conn, client_addr = sock.accept()
-        logger.sys_info("connection from: %s" %(client_addr))
-        if __debug__ :
-            print "connection from ", client_addr
+        #logger.sys_info("connection from: ", (client_addr))
+        print "connection from ", client_addr
         start_new_thread(client_thread, (conn, client_addr))
 except socket.error , msg:
     logger.sys_error('Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
