@@ -19,19 +19,6 @@ count=0
 retry_count=5
 recv_buffer=4096
 keep_alive_sec=10
-# make a DB compatible dictionary 
-input_dict = {
-        'node_id':data['Value']['node_id'],
-        'node_name':data['Value']['node_name'],
-        'node_type':data['Value']['node_type'],
-        'node_data_ip':data['Value']['node_data_ip'],
-        'node_mgmt_ip':data['Value']['node_mgmt_ip'],
-        'node_controller':data['Value']['node_controller'],
-        'node_cloud_name':data['Value']['node_cloud_name'],
-        'node_nova_zone':data['Value']['node_nova_zone'],
-        'node_iscsi_iqn':data['Value']['node_iscsi_iqn'],
-        'node_swift_ring':data['Value']['node_swift_ring']
-        }
 
 def setDbFlag(node_id, flag):
     '''
@@ -489,7 +476,21 @@ def client_thread(conn, client_addr):
                             if __debug__ :
                                 print "new node being inserted in DB"
 
-                            global input_dict
+                            #global input_dict
+                            # make a DB compatible dictionary 
+                            input_dict = {
+                                    'node_id':data['Value']['node_id'],
+                                    'node_name':data['Value']['node_name'],
+                                    'node_type':data['Value']['node_type'],
+                                    'node_data_ip':data['Value']['node_data_ip'],
+                                    'node_mgmt_ip':data['Value']['node_mgmt_ip'],
+                                    'node_controller':data['Value']['node_controller'],
+                                    'node_cloud_name':data['Value']['node_cloud_name'],
+                                    'node_nova_zone':data['Value']['node_nova_zone'],
+                                    'node_iscsi_iqn':data['Value']['node_iscsi_iqn'],
+                                    'node_swift_ring':data['Value']['node_swift_ring']
+                                    }
+
                             # insert into ciac DB
                             insert = node_db.insert_node(input_dict)
 
