@@ -89,17 +89,17 @@ def insert_node(input_dict):
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
-        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or (key == 'node_swift_ring') or key == 'cloud_name'):
+        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or (key == 'node_swift_ring') or (key == 'cloud_name') or (key == 'node_mgmt_ip')):
             continue
+        if(key == 'node_controller' and val == ''):
+            logger.sys_info("setting node controller name")
+            input_dict['node_controller'] = config.CLOUD_CONTROLLER
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
             raise Exception("The value %s was left blank" %(val))
         if(key not in input_dict):
             logger.sys_error("Node info not specified")
             raise Exception ("Node info not specified")
-        if(key == 'node_controller' and val == ''):
-            logger.sys_info("setting node controller name")
-            input_dict['node_controller'] = config.CLOUD_CONTROLLER
 
     #static assign nova availability zone for now
     input_dict['node_nova_zone'] = 'nova'
