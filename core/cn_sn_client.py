@@ -6,18 +6,95 @@ import socket
 import pickle
 from time import sleep
 import select
+import subprocess
 import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
+import transcirrus.common.service_control as service_controller
+import transcirrus.common.logger as logger
 
 timeout_sec = 1
 retry_count = 5
 recv_buffer = 4096
+dhcp_retry = 5
+
+connect_pkt = {
+'Type' : 'connect',
+'Length': '1',
+'Value': 1
+}
 
 status_ready = {
 'Type':'status',
 'Length':'1',
 'Value':'node_ready'
 }
+
+status_halt = {
+'Type':'status',
+'length':'1',
+'Value':'node_halt'
+}
+
+node_info = {
+'Type': 'Node_info', 
+'Length': 10, 
+'Value': {
+    'node_name':'box15',
+    'node_type':'cn',
+    'node_mgmt_ip':'10.10.10.10',
+    'node_data_ip':'172.16.16.16',
+    'node_controller':'ciac15',
+    'node_cloud_name':'cloud15',
+    'node_nova_zone':'',
+    'node_iscsi_iqn':'',
+    'node_swift_ring':'',
+    'node_id':'trans15'
+    }
+}
+
+
+def getDhcpServer():
+    '''
+    @author         : Shashaa
+    comment         : get DHCP server IP address from dhcp.bond1.leases
+                      file. bond1 interface of the machine connects to
+                      data network of the cloud.
+    return value    : dhcp_server ip
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
+    dhcp_server = ""
+    global dhcp_retry
+
+    while dhcp_retry:
+
+        out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        data = out.stdout.readlines()
+        if (data):
+            #print data[0].split(" ")
+            data = data[0].split(" ")
+            dhcp_server = data[4].strip()
+            dhcp_server = dhcp_server.strip(";")
+            logger.sys_info("dhcp_server IP: %s" % dhcp_server)
+            dhcp_retry=0
+            #sys.exit()
+        else:
+            # TODO: can initiate a command to acquire dhcp assigned IP
+            logger.sys_warning("Trying to get DHCP server IP")
+            dhcp_retry = dhcp_retry-1
+            time.sleep(1)
+
+    if (dhcp_server == ""):
+        logger.sys_error("Error in getting DHCP server IP")
+        sys.exit()
+    else:
+        return dhcp_server
+
 
 def sendOk(sock):
 
@@ -38,6 +115,53 @@ def sendOk(sock):
             'Value': 'ok'
         }
     sock.sendall(pickle.dumps(status_ok, -1))
+
+def restartServices(node_id, node_type):
+
+    '''
+    @author         : Shashaa
+    comment         : restart node services 
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    if node_type == "sn":
+
+        # restart cinder services
+        ret = service_controller.cinder("restart")
+
+        if ret == "OK":
+            print "node_id: %s, services restart success" % node_id
+            return True
+        else:
+            print "node_id: %s, services restart failure" % node_id
+            return False
+    elif node_type == "cn":
+
+        # restart nova services
+        ret = service_controller.nova("restart")
+        if ret == "OK":
+
+            # restart openvswitch services
+            ret == service_controller.openvswitch("restart")
+
+            if ret == "OK":
+                print "node_id: %s, services restart success" % node_id
+                return True
+            else:
+                print "node_id: %s, openvswitch services restart failure" % node_id
+                return False
+        else:
+            print "node_id: %s, nova services restart failure" % node_id
+            return False
+    else:
+        print "node_id: %s, unknown node_type" % node_type
+        return False
+
 
 def recv_data(sock):
 
@@ -416,7 +540,7 @@ def processComputeConfig(sock, node_id):
 
     post_install_status = True
 
-    # restart Nova and ovs services TODO
+    # restart Nova and ovs services
     restartNovaServices(node_id)
     restartOvsServices(node_id)
 
@@ -472,11 +596,6 @@ def processComputeConfig(sock, node_id):
         if post_install_status != True:
 
             # send node_halt status message to cc
-            status_halt = {
-                    'Type':'status',
-                    'length':1,
-                    'Value':'node_halt'
-                    }
             sock.sendall(pickle.dumps(status_halt, -1))
 
             # listen for ok message, ack -- loop infinetly
@@ -510,6 +629,34 @@ def processComputeConfig(sock, node_id):
     # receive keep alive messages
     keep_alive(sock)
 
+def restartStorageServices(node_id):
+    '''
+    @author         : Shashaa
+    description     : restart storage cinder/swift services
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    print "TODO"
+
+def checkStorageServices(node_id):
+    '''
+    @author         : Shashaa
+    description     : check for status of cinder/swift services
+    return value    :
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+
+    print "TODO"
+
 def processStorageConfig(sock, node_id):
 
     '''
@@ -524,7 +671,135 @@ def processStorageConfig(sock, node_id):
     @author         :
     comments        :
     '''
-    print "TODO"
+
+    # receive cinder config files
+
+    sn_config = recv_data(sock)
+
+    if sn_config:
+        sn_config = pickle.loads(sn_config)
+
+        # send ok, ack
+        sendOk(sock)
+
+        # parse config file packet
+        for i in range(0, len(sn_config)-1):
+            if sn_config[i]['file_name'] == 'api-paste.ini':
+                api_conf = sn_config[i]
+            elif sn_config[i]['file_name'] == 'cinder.conf':
+                cin_conf = sn_config[i]
+    else:
+        print "node_id: %s client did not receive cinder config files" % node_id
+        sys.exit()
+
+
+    # write config files
+    ret = util.write_new_config_file(api_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "node_id: %s error in writing api conf, exiting!!!" %  node_id
+        sys.exit()
+    else:
+        print "node_id: %s write success, api conf" % node_id
+
+    ret = util.write_new_config_file(cin_conf)
+    if ret == "ERROR" or ret == "NA":
+        print "node_id: %s error in writing cinder conf, exiting!!!" % node_id
+        sys.exit()
+    else:
+        print "write success, cinder conf"
+
+
+    # create service_controller object: TODO auth_dict      
+    #controller = service_controller(auth_dict)
+    # check for post install tests
+    post_install_status = True
+
+    # restart services
+    sn_services = service_controller.cinder("restart")
+    if sn_services == "NA" or sn_services == "ERROR":
+        print "node_id: %s, error in restarting cinder services" % node_id
+    elif sn_services == "OK":
+        sn_services = True
+    #restartStorageServices(node_id)
+
+    # Here we do not check for services explicitly as restart would
+    # also check the services running
+    #sn_services = checkStorageServices(node_id)
+
+    if sn_services == True:
+        print "node_id: %s All services in storage node are running" % node_id
+        post_install_status = True
+    else:
+        post_install_status = False
+
+    if post_install_status == True:
+        # send node ready status to cc
+        sock.sendall(pickle.loads(status_ready, -1))
+
+        # listen for ok ack message -- loop infinetly
+        while True:
+            data = recv_data(sock)
+
+            if data:
+                data = pickle.loads(data)
+                print "node_id: %s client received %s" % (node_id, data)
+                break
+            else:
+                print "listening for ok ack message for status ready message"
+    else:
+        # retry
+        retry = 5
+
+        while(retry >= 0):
+
+            # restart services
+            sn_services = service_controller.cinder("restart")
+            if sn_services == "NA" or sn_services == "ERROR":
+                print "node_id: %s, error in restarting cinder services" % node_id
+            elif sn_services == "OK":
+                sn_services = True
+            #restartStorageServices(node_id)
+
+            # check services
+            #sn_services = checkStorageServices(node_id)
+
+            if sn_services==True:
+                post_install_status=True
+                break
+            retry = retry-1
+            print "node_id: %s ********* retrying services ********* %s" % (node_id, retry)
+
+        # check after stipulated retry's
+        if post_install_status != True:
+            # send node halt mesage to cc
+            sock.sendall(pickle.loads(status_halt, -1))
+
+            # listen for ok ack message
+            while True:
+                data = recv_data(sock)
+
+                if data:
+                    data = pickle.loads(data)
+                    print "node_id: %s client received: %s" % (node_id,data)
+                else:
+                    print "node_id: %s listening for status_halt ack" % (node_id)
+        else:
+            # send node ready status message to cc
+            sock.sendall(pickle.loads(status_ready, -1))
+
+            # listen for ok ack message
+            while True:
+                data = recv_data(sock)
+
+                if data:
+                    data = pickle.loads(data)
+                    print "node_id: %s client received: %s" % (node_id,data)
+                else:
+                    print "node_id: %s listening for status_ready ack" % (node_id)
+
+    # keep alive check       
+    keep_alive_check(sock)
+            
 
 def keep_alive(sock):
 
@@ -560,8 +835,18 @@ def keep_alive(sock):
 # Create socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Get ciac ip address
+ciac_ip = getDhcpServer()
+
+# data network ip
+data_ip = "172.38.24.11"
+
+# Bind it to data network interface
+sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
+#sock.bind((data_ip,0))                             # bind's it an IP address 
+
 # Connect to the server socket
-server_address = ('127.0.0.1', 6161)
+server_address = (ciac_ip, 6161)
 print "connecting to %s port %s " % server_address
 sock.connect(server_address)
 sock.setblocking(0)
@@ -572,11 +857,6 @@ keep_alive_sec=10
 
 try:
     # send connect
-    connect_pkt = {
-            'Type' : 'connect',
-            'Length': '1',
-            'Value': 1
-            }
     print "sending connect_pkt"
     sock.sendall(pickle.dumps(connect_pkt, -1))
 
@@ -602,30 +882,11 @@ try:
             print "client received %s" % data['Value']
 
             # send node data
-            data = {
-                'Type': 'Node_info', 
-                'Length': 10, 
-                'Value': 
-                    {
-                    'node_name':'box15',
-                    'node_type':'cn',
-                    'node_mgmt_ip':'10.10.10.10',
-                    'node_data_ip':'172.16.16.16',
-                    'node_controller':'ciac15',
-                    'node_cloud_name':'cloud15',
-                    'node_nova_zone':'',
-                    'node_iscsi_iqn':'',
-                    'node_swift_ring':'',
-                    'node_id':'trans15'
-                    }
-                }
-    
-
-            node_type = 'cn'
-            node_id = data['Value']['node_id']
-            print "sending %s " % data
-            print "node_id = %s" % data['Value']['node_id']
-            sock.sendall(pickle.dumps(data, -1))
+            node_type = node_info['Value']['node_type']
+            node_id = node_info['Value']['node_id']
+            print "sending %s " % node_info
+            #print "node_id = %s" % node_id
+            sock.sendall(pickle.dumps(node_info, -1))
 
             # receive status message, retry_count
             data = recv_data(sock)
@@ -635,8 +896,12 @@ try:
                 print "client received %s" % data
                 if data['Type'] == 'status' and data['Value'] == 'ok':
                     print "client received %s" % data['Value']
-                    # check for services TODO
-                    print "Node is setup and ready to use!!!"
+                    # check for services TODO, based on node_type
+                    ret = restartServices(node_id, node_type)
+                    if ret == True:
+                        print "Node is setup and ready to use!!!"
+                    else:
+                        print "node_id: %s, failure to restart services"
                     keep_alive(sock)
 
                 elif data['Type'] == 'status' and data['Value'] == 'build':

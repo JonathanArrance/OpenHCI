@@ -133,6 +133,29 @@ def sendStorageConfig(conn, node_id):
     comments        :
     '''
     print "In sendStorageConfig TODO"
+
+    # get cinder config
+    config = node_db.get_node_cinder_config(node_id)
+
+    if config:
+        # send config files
+        conn.sendall(pickle.dumps(config, -1))
+        print "node_id: %s, sent storage node config files"
+
+        # listen for ok ack message
+        data = recv_data(conn)
+        if data:
+            data = pickle.loads(data)
+            print "node_id: %s, ciac server received %s" % (node_id, data)
+        else:
+            print "node_id: %s, ciac server did not receiv ok ack for config files" % node_id
+            sys.exit()
+
+    else:
+        print "node_id: %s, ciac server failure in extracting storage node config files" % node_id
+
+    print "node_id: %s, ciac server done with sending storage config files" % node_id
+
 def sendComputeConfig(conn, node_id):
 
     '''
@@ -244,7 +267,9 @@ def recv_data(conn):
     @author         :
     comments        :
     '''
-    count=0
+    global count
+    global timeout_sec
+    global retry_count
     while True:
         ready = select.select([conn], [], [], timeout_sec)
         if ready[0]:
@@ -500,14 +525,17 @@ def client_thread(conn, client_addr):
 # Create socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# bind the socket
+# Bind it to data network interface bind's it to physical interface
+sock.setsockopt(socket.SOL_SOCKET, 25, "bond2"+'\0')
+
+# bind the socket on all interfaces
 sock.bind(('', _server_port))
 
 sock.listen(5)
 
 try:
     while True:
-        print "waiting for connection...on %s of ciac server, port: %s" % ("all NICs", "6161")
+        print "waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
         conn, client_addr = sock.accept()
         print "connection from ", client_addr
         start_new_thread(client_thread, (conn, client_addr))

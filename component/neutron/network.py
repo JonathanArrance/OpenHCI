@@ -6,6 +6,7 @@
 import sys
 import json
 import socket
+import subprocess
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -259,7 +260,7 @@ class neutron_net_ops:
               create networks.
         INPUT: create_dict - net_name
                            - admin_state (up/down)
-                           - shared (true/false)
+                           - shared (true/false) change to 1 for shared 0 for not shared?????
         OUTPUT: r_dict - net_name
                        - net_id
         NOTE: need to update the transcirrus db with the new network.
@@ -619,6 +620,135 @@ class neutron_net_ops:
 
         return 'OK'
 
+    def add_public_subnet(self,subnet_dict):
+        """
+        DESC: Add a new subnet to a project public network. Only admins can add a subnet to
+              a public network.
+        INPUT: subnet_dict - net_name
+                           - subnet_dhcp_enable true/false
+                           - subnet_dns[]
+                           - subnet_start_range
+                           - subnet_end_range
+                           - public_ip
+                           - public_gateway
+                           - public_subnet_mask
+        OUTPUT: r_dict - subnet_name
+                       - subnet_id
+                       - subnet_cidr
+        ACCESS: Only an admin can create a public faceing subnet on a public faceing network.
+        NOTE: REST API will throw a 409 error if there is a conflict. Default google dns used if no DNS server specified.
+              Up to 2 more DNS servers can be specified. Only support IPv4 at this time.
+        """
+        if(('net_name' not in subnet_dict) or (subnet_dict['net_name'] == '')):
+            logger.sys_error("Could not create subnet. No network name given.")
+            raise Exception("Could not create subnet. No network name given.")
+        if(('subnet_dhcp_enable' not in subnet_dict) or (subnet_dict['subnet_dhcp_enable'] == '')):
+            logger.sys_error("Could not activate the dhcp service.")
+            raise Exception("Could not activate the dhcp service.")
+        if(self.is_admin == 1):
+            #strings
+            self.enable_dhcp = subnet_dict['subnet_dhcp_enable'].lower()
+            if((self.enable_dhcp == 'true') or (self.enable_dhcp == 'false')):
+                logger.sys_info("enable_dhcp passed")
+            else:
+                #HACK hate this
+                logger.sys_error("Invalid value given for enable_dhcp.")
+                raise Exception("Invalid value given for enable_dhcp.")
+    
+            self.dns_string = []
+            if('subnet_dns' in subnet_dict):
+                """
+                Ned to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
+                counter = 3
+                for dns in subnet_dict['subnet_dns']:
+                    while(counter <= 3):
+                        try:
+                            socket.inet_aton(dns)
+                        except socket.error:
+                            logger.sys_error("Public subnet dns server address is not a valid format.")
+                            raise Exception("Public subnet dns server address is not a valid format.")
+                        yo = '"'+dns+'"'
+                        #self.dns_string.append(yo)
+                        counter = counter+1
+                        raw = yo+ ','
+                """
+                self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+            else:
+                self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+    
+            #get the network info
+            net = self.get_network(subnet_dict['net_name'])
+            if(len(net) == 0):
+                logger.sys_error("No network with the name %s was found."%(subnet_dict['net_name']))
+                raise Exception("No network with the name %s was found."%(subnet_dict['net_name']))
+    
+            if(net['net_internal'] == 'true'):
+                logger.sys_error("Can not add a public faceing subnet to a private network.")
+                raise Exception("Can not add a public faceing subnet to a private network.")
+
+            #check to see if the public ip given is in the same subnet as the range.
+            public_dict = {'uplink_ip':subnet_dict['public_ip'],'public_start':subnet_dict['subnet_start_range'],'public_end':subnet_dict['subnet_end_range'],'public_subnet':subnet_dict['public_subnet_mask']}
+            pub_check = util.check_public_with_uplink(public_dict)
+            if(pub_check != 'OK'):
+                logger.sys_error('The public network given does not match the uplink subnet.')
+                return pub_check
+
+            #get the cidr
+            out = subprocess.Popen('ipcalc -b %s/%s'%(subnet_dict['subnet_start_range'],subnet_dict['public_subnet_mask']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = out.stdout.readlines()
+            x = process[4]
+            y = x.split(':')
+            cidr = y[1].strip()
+
+            #build the subnet name
+            name = subnet_dict['net_name'] + '_sub'
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                #body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%('4',subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],self.project_id,cidr,self.dns_string)
+                body = '{"subnet": {"ip_version": 4, "allocation_pools": [{"start": "%s", "end": "%s"}], "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(subnet_dict['subnet_start_range'],subnet_dict['subnet_end_range'],subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],self.project_id,cidr,self.dns_string)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/subnets'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 201
+                if(rest['response'] == 201):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    load = json.loads(rest['data'])
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    insert_dict = {"subnet_dhcp_enable":self.enable_dhcp,"subnet_id":load['subnet']['id'],"subnet_range_start":subnet_dict['subnet_start_range'],"subnet_range_end":subnet_dict['subnet_end_range'],"subnet_gateway":subnet_dict['public_gateway'],
+                                   "subnet_mask":subnet_dict['public_subnet_mask'],"subnet_ip_ver":"4","proj_id":self.project_id,"net_id":net['net_id']}
+                    self.db.pg_insert("trans_public_subnets",insert_dict)
+                    if(subnet_dict['net_name'] == 'default_public'):
+                        update_dict = {'table':"trans_system_settings",'set':"param_value='%s'"%(subnet_dict['subnet_start_range']),'where':"parameter='vm_ip_min'"}
+                        self.db.pg_update(update_dict)
+                        update_dict2 = {'table':"trans_system_settings",'set':"param_value='%s'"%(subnet_dict['subnet_end_range']),'where':"parameter='vm_ip_max'"}
+                        self.db.pg_update(update_dict2)
+                    self.db.pg_transaction_commit()
+                    r_dict = {'subnet_name':name,'subnet_id':load['subnet']['id'],'subnet_cidr':cidr}
+                    return r_dict
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add a new public subnet to Neutron.")
+                raise Exception("Could not add a new public subnet to Neutron.")
+        else:
+            logger.sys_error("Only an admin or a power user can add a new subnet.")
+            raise Exception("Only an admin or a power user can add a new subnet.")
+
     def add_net_subnet(self,subnet_dict):
         """
         DESC: Add a new subnet to a project subnet. Only admins can add a subnet to
@@ -721,8 +851,8 @@ class neutron_net_ops:
                 logger.sql_error("Could not add a new subnet to Neutron.")
                 raise Exception("Could not add a new subnet to Neutron.")
         else:
-            logger.sys_error("Only an admin or a power user can create a new network.")
-            raise Exception("Only an admin or a power user can create a new network.")
+            logger.sys_error("Only an admin or a power user can add a new subnet.")
+            raise Exception("Only an admin or a power user can add a new subnet.")
 
     def update_net_subnet(self,update_dict):
         """
