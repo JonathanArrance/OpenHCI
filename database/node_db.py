@@ -89,11 +89,12 @@ def insert_node(input_dict):
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
-        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or (key == 'node_swift_ring') or (key == 'cloud_name') or (key == 'node_mgmt_ip')):
+        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or (key == 'node_swift_ring') or (key == 'node_cloud_name') or (key == 'node_mgmt_ip')):
             continue
         if(key == 'node_controller' and val == ''):
             logger.sys_info("setting node controller name")
             input_dict['node_controller'] = config.CLOUD_CONTROLLER
+            continue
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
             raise Exception("The value %s was left blank" %(val))
