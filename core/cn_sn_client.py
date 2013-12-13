@@ -906,6 +906,7 @@ try:
 
                 elif data['Type'] == 'status' and data['Value'] == 'build':
                     print "client received %s" % data['Value']
+                    sys.exit(1) # TEST
 
                     if node_type == 'cn':
                         processComputeConfig(sock, node_id)
