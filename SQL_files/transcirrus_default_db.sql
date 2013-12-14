@@ -1360,7 +1360,8 @@ CREATE TABLE trans_system_vols (
     vol_from_snapshot character varying DEFAULT false,
     vol_set_bootable character varying DEFAULT false,
     vol_attached character varying DEFAULT false,
-    vol_attached_to_inst character varying
+    vol_attached_to_inst character varying,
+    vol_mount_location character varying(5)
 );
 
 
@@ -1443,6 +1444,92 @@ ALTER TABLE public.user_seq OWNER TO transuser;
 
 SELECT pg_catalog.setval('user_seq', 1, false);
 
+
+--
+-- TOC entry 213 (class 1259 OID 25179)
+-- Name: trans_public_subnets; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE trans_public_subnets (
+    index integer NOT NULL,
+    subnet_dhcp_enable character varying,
+    subnet_id character varying,
+    subnet_range_start character varying,
+    subnet_range_end character varying,
+    subnet_gateway character varying,
+    subnet_mask character varying,
+    subnet_ip_ver character(1) DEFAULT 4,
+    proj_id character varying,
+    net_id character varying
+);
+
+
+ALTER TABLE public.trans_public_subnets OWNER TO transuser;
+
+--
+-- TOC entry 214 (class 1259 OID 25182)
+-- Name: trans_public_subnets_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_public_subnets_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_public_subnets_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 2054 (class 0 OID 0)
+-- Dependencies: 214
+-- Name: trans_public_subnets_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_public_subnets_index_seq OWNED BY trans_public_subnets.index;
+
+
+--
+-- TOC entry 2055 (class 0 OID 0)
+-- Dependencies: 214
+-- Name: trans_public_subnets_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_public_subnets_index_seq', 1, false);
+
+
+--
+-- TOC entry 2044 (class 2604 OID 25184)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_public_subnets ALTER COLUMN index SET DEFAULT nextval('trans_public_subnets_index_seq'::regclass);
+
+
+--
+-- TOC entry 2049 (class 0 OID 25179)
+-- Dependencies: 213
+-- Data for Name: trans_public_subnets; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+
+
+--
+-- TOC entry 2047 (class 2606 OID 25193)
+-- Name: trans_public_subnets_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_public_subnets
+    ADD CONSTRAINT trans_public_subnets_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 2048 (class 1259 OID 25194)
+-- Name: trans_public_subnets_subnet_id_idx; Type: INDEX; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE INDEX trans_public_subnets_subnet_id_idx ON trans_public_subnets USING btree (subnet_id);
 
 --
 -- TOC entry 2066 (class 2604 OID 16615)

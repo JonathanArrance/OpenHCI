@@ -66,16 +66,18 @@ class volume_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-    #DESC: Create a new volume in a project
-    #All user levels can spin up new volumes.
-    #Users can only create volumes in their primary projects
-    #INPUTS: self object
-    #        create_vol - dictionary containing the
-    #                volume_name - REQ
-    #                volume_size - REQ
-    #                description - Optional
-    #OUTPUTS: dictionary containing the volume name and ID
     def create_volume(self,create_vol):
+        """
+        DESC: Create a new volume in a project
+        All user levels can spin up new volumes.
+        Users can only create volumes in their primary projects
+        INPUTS: self object
+                create_vol - dictionary containing the
+                        volume_name - REQ
+                        volume_size - REQ
+                        description - Optional
+        OUTPUTS: dictionary containing the volume name and ID
+        """
         #check to make sure all params have been passed
         if(not create_vol):
             logger.sys_error("Did not pass in create_vol dictionary to create volume operation.")

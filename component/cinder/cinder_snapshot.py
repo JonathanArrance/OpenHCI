@@ -143,7 +143,7 @@ class snapshot_ops:
                 if(rest['response'] == 200):
                     #read the json that is returned
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    #NOTE: his has to work
+                    #NOTE: this has to work - Celery?
                     #loop until snap becomes available
                     #available = False
                     #x = 0
@@ -161,12 +161,14 @@ class snapshot_ops:
                     load = json.loads(rest['data'])
                     try:
                         #insert the volume info into the DB
+                        self.db.pg_transaction_begin()
                         insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snap_name'],"snap_desc": create_snap['snap_desc']}
-                        print insert_snap
                         self.db.pg_insert("trans_system_snapshots",insert_snap)
+                        self.db.pg_transaction_commit()
                         self.db.pg_close_connection()
                         r_dict = {"snap_name": create_snap['snap_name'],"snap_id": load['snapshot']['id'], "vol_id": load['snapshot']['volume_id']}
                     except:
+                        self.db.pg_transaction_rollback()
                         logger.sql_error("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
                         raise Exception("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
                 else:
