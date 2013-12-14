@@ -108,6 +108,8 @@ def insert_node(input_dict):
 
     if('node_cloud_name' not in input_dict):
         input_dict['node_cloud_name'] = 'RegionOne'
+    if(input_dict['node_cloud_name'] == ''):
+        input_dict['node_cloud_name'] = 'RegionOne' 
 
     if((input_dict['node_iscsi_iqn'] == "") or ('node_iscsi_iqn' not in input_dict)):
         input_dict['node_iscsi_iqn'] = 'NULL'
