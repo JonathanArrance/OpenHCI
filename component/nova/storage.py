@@ -110,7 +110,7 @@ class server_storage_ops:
         if(self.is_admin != 1):
         #check if the volume/instance given is owned by the user
             try:
-                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid=%s"%(self.user_id),'and':"vol_id=%s"%(input_dict['volume_id'])}
+                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid='%s'"%(self.user_id),'and':"vol_id='%s'"%(input_dict['volume_id'])}
                 vol_name = self.db.pg_select(select_vol)
                 if(vol_name == ''):
                     logger.sys_error("The user does not own the volume.")
@@ -121,7 +121,7 @@ class server_storage_ops:
 
             try:
                 #username needs to be changed to keystone user uuid
-                select_instance = {'select':'inst_name','from':'trans_instances','where':"inst_id=%s"%(input_dict['instance_id']),'and':"inst_username=%s"%(self.username)}
+                select_instance = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']),'and':"inst_username='%s'"%(self.username)}
                 inst_name = self.db.pg_select(select_instance)
                 if(inst_name == ''):
                     logger.sys_error("The user does not own the instance.")
@@ -197,7 +197,7 @@ class server_storage_ops:
         if(self.is_admin != 1):
         #check if the volume/instance given is owned by the user
             try:
-                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid=%s"%(self.user_id),'and':"vol_id=%s"%(input_dict['volume_id'])}
+                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid=%s"%(self.user_id),'and':"vol_id='%s'"%(input_dict['volume_id'])}
                 vol_name = self.db.pg_select(select_vol)
                 if(vol_name == ''):
                     logger.sys_error("The user does not own the volume.")
@@ -208,7 +208,7 @@ class server_storage_ops:
 
             try:
                 #username needs to be changed to keystone user uuid
-                select_instance = {'select':'inst_name','from':'trans_instances','where':"inst_id=%s"%(input_dict['instance_id']),'and':"inst_username=%s"%(self.username)}
+                select_instance = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']),'and':"inst_username='%s'"%(self.username)}
                 inst_name = self.db.pg_select(select_instance)
                 if(inst_name == ''):
                     logger.sys_error("The user does not own the instance.")

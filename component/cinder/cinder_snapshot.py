@@ -48,8 +48,8 @@ class snapshot_ops:
                 self.sec = 'FALSE'
                 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLLER
+            self.api_ip = config.API_IP
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -291,7 +291,6 @@ class snapshot_ops:
         try:
             select_snap = {"select":'*',"from":'trans_system_snapshots',"where":"proj_id='%s'" %(self.project_id)}
             snaps = self.db.pg_select(select_snap)
-            self.db.pg_close_connection()
         except:
             logger.sys_error("Could not list snapshots.")
             raise Exception("Could not list snapshots.")
@@ -299,12 +298,13 @@ class snapshot_ops:
         r_array = []
         for snap in snaps:
             try:
-                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"vol_id=%s"%(snap[0])}
+                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"vol_id='%s'"%(snap[1])}
                 vol_name = self.db.pg_select(select_vol)
             except:
                 logger.sys_error("Could not get the volume name.")
                 raise Exception("Could not get the volume name.")
             snap_dict = {"vol_name":vol_name[0][0],"vol_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
+            self.db.pg_close_connection()
             r_array.append(snap_dict)
 
         return r_array

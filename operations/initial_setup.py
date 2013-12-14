@@ -306,7 +306,7 @@ def run_setup(new_system_variables,auth_dict):
     #if in the same range create the default public range in quantum/neutron
     time.sleep(2)
     neu_net = neutron_net_ops(auth_dict)
-    p_create_dict = {'net_name':'default_public','admin_state':'up','shared':'true'}
+    p_create_dict = {'net_name':'default_public','admin_state':'true','shared':'true'}
     default_public = neu_net.add_public_network(p_create_dict)
     if('net_id' not in default_public):
         logger.sys_error("Could not create the default public network.")
