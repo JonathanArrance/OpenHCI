@@ -35,32 +35,50 @@ def setDbFlag(node_id, flag):
     if flag == 'node_ready':
         r_dict = node_util.set_node_ready_flag(node_id)
         if r_dict['ready_flag_set'] == 'SET':
-            print "ready flag set success, node_id: %s" % node_id
+            logger.sys_info("ready flag set success, node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set success, node_id: %s" % node_id
         else:
-            print "ready flag set failure !!! node_id: %s" % node_id
+            logger.sys_error("ready flag set failure !!! node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set failure !!! node_id: %s" % node_id
             # TODO
         r_dict = node_util.clear_node_fault_flag(node_id)
         if r_dict['fault_flag_set'] == 'UNSET':
-            print "fault flag clear success"
+            logger.sys_info("fault flag clear success")
+            if __debug__ :
+                print "fault flag clear success"
         else:
-            print "fault flag clear failure !!!, node_id: %s" % node_id
+            logger.sys_error("fault flag clear failure !!!, node_id: %s" %(node_id))
+            if __debug__
+                print "fault flag clear failure !!!, node_id: %s" % node_id
             # TODO
 
     elif flag == 'node_halt':
         r_dict = node_util.set_node_fault_flag(node_id)
         if r_dict['fault_flag_set'] == 'SET':
-            print "fault flag set success, node_id: %s" % node_id
+            logger.sys_info("fault flag set success, node_id: %s" %(node_id))
+            if __debug__ :
+                print "fault flag set success, node_id: %s" % node_id
         else:
-            print "fault flag set failure!!!, node_id: %s" % node_id
+            logger.sys_error("fault flag set failure!!!, node_id: %s" %(node_id))
+            if __debug__ :
+                print "fault flag set failure!!!, node_id: %s" % node_id
             # TODO
         r_dict = node_util.set_node_ready_flag(node_id)
         if r_dict['ready_flag_set'] == 'SET':
-            print "ready flag set success, node_id: %s" % node_id
+            logger.sys_info("ready flag set success, node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set success, node_id: %s" % node_id
         else:
-            print "ready flag set failure!!!, node_id: %s" % node_id
+            logger.sys_error("ready flag set failure!!!, node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set failure!!!, node_id: %s" % node_id
             # TODO
     else:
-        print "ERROR:received %s in staus message from node_id: %s" % (data['Value'], node_id)
+        logger.sys_error("ERROR:received %s in staus message from node_id: %s" %(data['Value'], node_id))
+        if __debug__ :
+            print "ERROR:received %s in staus message from node_id: %s" % (data['Value'], node_id)
 
 def check_node_update(data):
 
