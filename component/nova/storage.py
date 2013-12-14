@@ -130,6 +130,14 @@ class server_storage_ops:
                 logger.sys_error("The instance given does not exist. Can not attach.")
                 raise Exception("The instance given does not exist. Can not attach")
 
+        #get the name of the project based on the id
+        try:
+            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(self.project_id)}
+            proj_name = self.db.pg_select(select)
+        except:
+            logger.sql_error("Could not get the project name from Transcirrus DB.")
+            raise Exception("Could not get the project name from Transcirrus DB.")
+
         if(self.user_level <= 1):
             try:
                 #build an api connection
@@ -154,7 +162,7 @@ class server_storage_ops:
                 if(rest['response'] == 202):
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    update_vol = {'table':'trans_system_vol',"vol_attached_to_inst": insert_dict['instance_id'],"vol_attached": 'true',"vol_mount_location": input_dict['mount_point']}
+                    update_vol = {'table':'trans_system_vols',"vol_attached_to_inst": insert_dict['instance_id'],"vol_attached": 'true',"vol_mount_location": input_dict['mount_point']}
                     self.db.pg_update(update_vol)
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
@@ -171,6 +179,7 @@ class server_storage_ops:
         DESC: Check if the uplink ip gateway is on the same network as the uplink ip
         INPUT: input_dict - project_id
                           - server_id
+                          - volume_id
         OUTPUT: OK - success
                 raise error
         NOTE: All veriables are rquiered. Admins and power users can detach a volume from any instance in their project. Users
@@ -194,8 +203,8 @@ class server_storage_ops:
                     logger.sys_error("The user does not own the volume.")
                     raise Exception("The user does not own the volume.")
             except:
-                logger.sys_error("The volume given does not exist. Can not attach.")
-                raise Exception("The volume given does not exist. Can not attach")
+                logger.sys_error("The volume given does not exist. Can not detach.")
+                raise Exception("The volume given does not exist. Can not detach")
 
             try:
                 #username needs to be changed to keystone user uuid
@@ -205,8 +214,16 @@ class server_storage_ops:
                     logger.sys_error("The user does not own the instance.")
                     raise Exception("The user does not own the instance.")
             except:
-                logger.sys_error("The instance given does not exist. Can not attach.")
-                raise Exception("The instance given does not exist. Can not attach")
+                logger.sys_error("The instance given does not exist. Can not detach.")
+                raise Exception("The instance given does not exist. Can not detach")
+
+         #get the name of the project based on the id
+        try:
+            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(self.project_id)}
+            proj_name = self.db.pg_select(select)
+        except:
+            logger.sql_error("Could not get the project name from Transcirrus DB.")
+            raise Exception("Could not get the project name from Transcirrus DB.")
 
         try:
             #build an api connection
@@ -218,12 +235,12 @@ class server_storage_ops:
 
         try:
             #add the new user to openstack 
-            body = '{"volumeAttachment": {"device": "%s", "volumeId": "%s"}}'%(input_dict['mount_point'],input_dict['volume_id'])
+            body = ''
             token = self.token
             #NOTE: if token is not converted python will pass unicode and not a string
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
-            function = 'POST'
-            api_path = '/v2/%s/servers/%s/os-volume_attachments' %(input_dict['project_id'],input_dict['instance_id'])
+            function = 'DELETE'
+            api_path = '/v2/%s/servers/%s/os-volume_attachments/%s' %(input_dict['project_id'],input_dict['instance_id'],input_dict['volume_id'])
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
             rest = api.call_rest(rest_dict)
@@ -231,7 +248,7 @@ class server_storage_ops:
             if(rest['response'] == 202):
                 #insert the volume info into the DB
                 self.db.pg_transaction_begin()
-                update_vol = {'table':'trans_system_vol',"vol_attached_to_inst": insert_dict['instance_id'],"vol_attached": 'true',"vol_mount_location": input_dict['mount_point']}
+                update_vol = {'table':'trans_system_vols',"vol_attached_to_inst": 'NULL',"vol_attached": 'false',"vol_mount_location": 'NULL'}
                 self.db.pg_update(update_vol)
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()

@@ -270,8 +270,45 @@ class snapshot_ops:
             raise Exception("The snapshot: %s does not exist." %(delete_snap))
 
     def list_snapshots(self):
-        print "yo"
-    
+        """
+        DESC: List all of the snapshots in a project
+        INPUT: None
+        OUTPUT: array of r_dict - volume_name
+                                - volume_id
+                                - snapshot_name
+                                - snapshot_id
+        NOTE: This will only list out the snapshots that are for volume in the users project. All users
+              can list the snapshots
+        """
+        #connect to the transcirrus DB
+        try:
+            #connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sql_error("Could not connect to the Transcirrus DB ")
+            raise e
+
+        try:
+            select_snap = {"select":'*',"from":'trans_system_snapshots',"where":"proj_id='%s'" %(self.project_id)}
+            snaps = self.db.pg_select(select_snap)
+            self.db.pg_close_connection()
+        except:
+            logger.sys_error("Could not list snapshots.")
+            raise Exception("Could not list snapshots.")
+
+        r_array = []
+        for snap in snaps:
+            try:
+                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"vol_id=%s"%(snap[0])}
+                vol_name = self.db.pg_select(select_vol)
+            except:
+                logger.sys_error("Could not get the volume name.")
+                raise Exception("Could not get the volume name.")
+            snap_dict = {"vol_name":vol_name[0][0],"vol_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
+            r_array.append(snap_dict)
+
+        return r_array
+
     #DESC: Get the details of a specific snapshot
     #INPUT: snap_name
     #OUTPUT: dictionary containing

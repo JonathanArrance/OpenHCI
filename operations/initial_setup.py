@@ -278,7 +278,9 @@ def run_setup(new_system_variables,auth_dict):
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
-    logger.sys_info("Restarting the network adapters.")
+    
+    #this may have to be moved to the end
+    #logger.sys_info("Restarting the network adapters.")
     #ints = util.restart_network_card('all')
     #if(ints != 'OK'):
     #    logger.sys_error("Could not restart network interfaces.")
@@ -295,11 +297,11 @@ def run_setup(new_system_variables,auth_dict):
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
-    #public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
-    #pub_check = util.check_public_with_uplink(public_dict)
-    #if(pub_check != 'OK'):
-    #    logger.sys_error('The public network given does not match the uplink subnet.')
-    #    return pub_check
+    public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
+    pub_check = util.check_public_with_uplink(public_dict)
+    if(pub_check != 'OK'):
+        logger.sys_error('The public network given does not match the uplink subnet.')
+        return pub_check
 
     #if in the same range create the default public range in quantum/neutron
     time.sleep(2)
