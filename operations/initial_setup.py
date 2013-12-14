@@ -90,7 +90,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
-
+    """
     #reset the keystone endpoint
     key_input = {'service_name':'keystone'}
     del_keystone = endpoint.delete_endpoint(key_input)
@@ -139,7 +139,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Swift endpoint set up complete."
     else:
         return "Swift error."
-
+    """
     #insert the controller info into trans_nodes db table
     cc_insert_dict = {'node_id':node_id,
                       'node_name':node_name,

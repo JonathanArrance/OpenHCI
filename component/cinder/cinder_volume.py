@@ -156,8 +156,8 @@ class volume_ops:
 
         return r_dict
 
-    def create_vol_from_snap(self):
-        print "yo"
+    def create_vol_from_snapshot(self):
+        print "not implemented"
 
     #DESC: Delete a volume from the environmnet.
     #users  and power users can only delete the volumes they created in a project
