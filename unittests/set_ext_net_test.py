@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 
+from transcirrus.common.auth import authorization
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.node_util as node_util
@@ -12,10 +13,13 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 from transcirrus.database import node_db
 
+auth = authorization("admin","password")
+b = auth.get_auth()
 
 node_id = util.get_node_id()
 node_name = util.get_system_name()
 sys_vars = util.get_system_variables(node_id)
+auth_dict['api_ip'] = util.get_api_ip()
 
 #set up openvswitch
 logger.sys_info("Setting up br-ex")
