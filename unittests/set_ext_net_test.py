@@ -14,7 +14,7 @@ from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 from transcirrus.database import node_db
 
 auth = authorization("admin","password")
-b = auth.get_auth()
+auth_dict = auth.get_auth()
 
 node_id = util.get_node_id()
 node_name = util.get_system_name()
