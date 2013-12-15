@@ -38,6 +38,7 @@ net_input1 = {'node_id':node_id,
              'net_adapter':'mgmt',
              'net_ip':sys_vars['MGMT_IP'],
              'net_domain':sys_vars['DOMAIN_NAME'],
+             'net_dns1':sys_vars['UPLINK_DNS'],
              'net_dhcp':'static'
             }
 
