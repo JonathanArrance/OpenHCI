@@ -22,17 +22,37 @@ sys_vars = util.get_system_variables(node_id)
 auth_dict['api_ip'] = util.get_api_ip()
 
 #set up openvswitch
-logger.sys_info("Setting up br-ex")
-os.system("sudo ovs-vsctl add-br br-ex")
-os.system("sudo ovs-vsctl add-bond br-ex bond1 eth2 eth3")
-logger.sys_info("Setting up the internal br-int")
-os.system("sudo ovs-vsctl add-br br-int")
+#logger.sys_info("Setting up br-ex")
+#os.system("sudo ovs-vsctl add-br br-ex")
+#os.system("sudo ovs-vsctl add-bond br-ex bond1 eth2 eth3")
+#logger.sys_info("Setting up the internal br-int")
+#os.system("sudo ovs-vsctl add-br br-int")
 
 g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
 gateway = util.check_gateway_in_range(g_input)
 if(gateway != 'OK'):
     logger.sys_error('Uplink gateway is not on the same subnet as the uplink ip.')
     print gateway
+
+net_input1 = {'node_id':node_id,
+             'net_adapter':'mgmt',
+             'net_ip':sys_vars['MGMT_IP'],
+             'net_domain':sys_vars['DOMAIN_NAME'],
+             'net_dhcp':'static'
+            }
+
+uplink1 = util.set_network_variables(net_input1)
+print uplink1
+write_net_config1 = util.write_new_config_file(uplink1)
+
+time.sleep(1)
+if(write_net_config1 != 'OK'):
+    #Exit the setup return to factory default
+    print write_net_config1
+else:
+    print "Net config file written."
+    logger.sys_info("Net config file written.")
+
 
 #set up br-ex and enable ovs.
 net_input = {'node_id':node_id,
@@ -48,6 +68,7 @@ net_input = {'node_id':node_id,
 uplink = util.set_network_variables(net_input)
 print uplink
 write_net_config = util.write_new_config_file(uplink)
+
 time.sleep(1)
 if(write_net_config != 'OK'):
     #Exit the setup return to factory default

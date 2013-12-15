@@ -756,40 +756,40 @@ def set_network_variables(input_dict):
     config_array = []
     bond0 = []
     #bond0 is the mgmt interface on the nodes and the ciac
-    #if(input_dict['net_adapter'] == 'mgmt'):
-    bond = 'auto bond0'
-    bond0.append(bond)
-    if(netadpt['inet_setting'] == 'static'):
-        iface = 'iface bond0 inet static'
-        bond0.append(iface)
-        address = '    address %s'%(netadpt['net_ip'])
-        bond0.append(address)
-        netmask = '    netmask %s' %(netadpt['net_mask'])
-        bond0.append(netmask)
-        if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
-            logger.sys_info("No gateway set for Bond0")
-            #gateway = '    gateway %s' %(netadpt['net_gateway'])
-            #bond0.append(gateway)
-    else:
-        iface = 'iface bond0 inet dhcp'
-        bond0.append(iface)
-    slaves = '    slaves none'
-    bond0.append(slaves)
-    mtu = '    mtu %s' %(netadpt['net_mtu'])
-    bond0.append(mtu)
-    bondmode = '    bond-mode balance-rr'
-    bond0.append(bondmode)
-    miimon = '    bond-miimon 100'
-    bond0.append(miimon)
-    downdelay = '    bond-downdelay 200'
-    bond0.append(downdelay)
-    updelay = '    bond-updelay 200'
-    bond0.append(updelay)
-    dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
-    bond0.append(dns)
-    search = '    dns-search %s'%(netadpt['net_dns_domain'])
-    bond0.append(search)
-    bond0.append('')
+    if(input_dict['net_adapter'] == 'mgmt'):
+        bond = 'auto bond0'
+        bond0.append(bond)
+        if(netadpt['inet_setting'] == 'static'):
+            iface = 'iface bond0 inet static'
+            bond0.append(iface)
+            address = '    address %s'%(netadpt['net_ip'])
+            bond0.append(address)
+            netmask = '    netmask %s' %(netadpt['net_mask'])
+            bond0.append(netmask)
+            if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
+                logger.sys_info("No gateway set for Bond0")
+                #gateway = '    gateway %s' %(netadpt['net_gateway'])
+                #bond0.append(gateway)
+        else:
+            iface = 'iface bond0 inet dhcp'
+            bond0.append(iface)
+        slaves = '    slaves none'
+        bond0.append(slaves)
+        mtu = '    mtu %s' %(netadpt['net_mtu'])
+        bond0.append(mtu)
+        bondmode = '    bond-mode balance-rr'
+        bond0.append(bondmode)
+        miimon = '    bond-miimon 100'
+        bond0.append(miimon)
+        downdelay = '    bond-downdelay 200'
+        bond0.append(downdelay)
+        updelay = '    bond-updelay 200'
+        bond0.append(updelay)
+        dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
+        bond0.append(dns)
+        search = '    dns-search %s'%(netadpt['net_dns_domain'])
+        bond0.append(search)
+        bond0.append('')
 
     #we know the node type based on the ID
     #000 - ciac
@@ -858,7 +858,7 @@ def set_network_variables(input_dict):
         config_array = eth + bond0 + data_bond
 
     conf = {}
-    conf['op'] = 'new'
+    conf['op'] = 'append'
     conf['file_owner'] = 'root'
     conf['file_group'] = 'root'
     conf['file_perm'] = '644'
