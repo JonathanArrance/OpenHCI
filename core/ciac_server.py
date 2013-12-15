@@ -35,32 +35,50 @@ def setDbFlag(node_id, flag):
     if flag == 'node_ready':
         r_dict = node_util.set_node_ready_flag(node_id)
         if r_dict['ready_flag_set'] == 'SET':
-            print "ready flag set success, node_id: %s" % node_id
+            logger.sys_info("ready flag set success, node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set success, node_id: %s" % node_id
         else:
-            print "ready flag set failure !!! node_id: %s" % node_id
+            logger.sys_error("ready flag set failure !!! node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set failure !!! node_id: %s" % node_id
             # TODO
         r_dict = node_util.clear_node_fault_flag(node_id)
         if r_dict['fault_flag_set'] == 'UNSET':
-            print "fault flag clear success"
+            logger.sys_info("fault flag clear success")
+            if __debug__ :
+                print "fault flag clear success"
         else:
-            print "fault flag clear failure !!!, node_id: %s" % node_id
+            logger.sys_error("fault flag clear failure !!!, node_id: %s" %(node_id))
+            if __debug__
+                print "fault flag clear failure !!!, node_id: %s" % node_id
             # TODO
 
     elif flag == 'node_halt':
         r_dict = node_util.set_node_fault_flag(node_id)
         if r_dict['fault_flag_set'] == 'SET':
-            print "fault flag set success, node_id: %s" % node_id
+            logger.sys_info("fault flag set success, node_id: %s" %(node_id))
+            if __debug__ :
+                print "fault flag set success, node_id: %s" % node_id
         else:
-            print "fault flag set failure!!!, node_id: %s" % node_id
+            logger.sys_error("fault flag set failure!!!, node_id: %s" %(node_id))
+            if __debug__ :
+                print "fault flag set failure!!!, node_id: %s" % node_id
             # TODO
         r_dict = node_util.set_node_ready_flag(node_id)
         if r_dict['ready_flag_set'] == 'SET':
-            print "ready flag set success, node_id: %s" % node_id
+            logger.sys_info("ready flag set success, node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set success, node_id: %s" % node_id
         else:
-            print "ready flag set failure!!!, node_id: %s" % node_id
+            logger.sys_error("ready flag set failure!!!, node_id: %s" %(node_id))
+            if __debug__ :
+                print "ready flag set failure!!!, node_id: %s" % node_id
             # TODO
     else:
-        print "ERROR:received %s in staus message from node_id: %s" % (data['Value'], node_id)
+        logger.sys_error("ERROR:received %s in staus message from node_id: %s" %(data['Value'], node_id))
+        if __debug__ :
+            print "ERROR:received %s in staus message from node_id: %s" % (data['Value'], node_id)
 
 def check_node_update(data):
 
@@ -82,7 +100,9 @@ def check_node_update(data):
     node = node_db.get_node(node_id)
 
     if node == 'NA' or node == 'ERROR':
-        print "node_id : %s not found in the DB, exiting !!!" % node_id
+        logger.sys_error("node_id : %s not found in the DB, exiting !!!" %(node_id))
+        if __debug__ :
+            print "node_id : %s not found in the DB, exiting !!!" % node_id
         sys.exit()
     else:
         if node['status'] == 'OK':
@@ -141,21 +161,31 @@ def sendStorageConfig(conn, node_id):
     if config:
         # send config files
         conn.sendall(pickle.dumps(config, -1))
-        print "node_id: %s, sent storage node config files"
+        logger.sys_info("node_id: %s, sent storage node config files")
+        if __debug__ :
+            print "node_id: %s, sent storage node config files"
 
         # listen for ok ack message
         data = recv_data(conn)
         if data:
             data = pickle.loads(data)
-            print "node_id: %s, ciac server received %s" % (node_id, data)
+            logger.sys_info("node_id: %s, ciac server received %s" %(node_id, data))
+            if __debug__ :
+                print "node_id: %s, ciac server received %s" % (node_id, data)
         else:
-            print "node_id: %s, ciac server did not receiv ok ack for config files" % node_id
+            logger.sys_error("node_id: %s, ciac server did not receiv ok ack for config files" %(node_id))
+            if __debug__ :
+                print "node_id: %s, ciac server did not receiv ok ack for config files" % node_id
             sys.exit()
 
     else:
-        print "node_id: %s, ciac server failure in extracting storage node config files" % node_id
+        logger.sys_error("node_id: %s, ciac server failure in extracting storage node config files" %(node_id))
+        if __debug__ :
+            print "node_id: %s, ciac server failure in extracting storage node config files" % node_id
 
-    print "node_id: %s, ciac server done with sending storage config files" % node_id
+    logger.sys_info("node_id: %s, ciac server done with sending storage config files" %(node_id))
+    if __debug__ :
+        print "node_id: %s, ciac server done with sending storage config files" % node_id
 
 def sendComputeConfig(conn, node_id):
 
@@ -174,19 +204,27 @@ def sendComputeConfig(conn, node_id):
     # get compute node nova config
     config = node_db.get_node_nova_config(node_id)
     if config:
-        print "node_id: %s nova config %s" % (node_id, config)
+        logger.sys_info("node_id: %s nova config %s" %(node_id, config))
+        if __debug__ :
+            print "node_id: %s nova config %s" % (node_id, config)
 
         # send config
         conn.sendall(pickle.dumps(config, -1))
-        print "sent compute node, node_id: %s nova config!!" % node_id
+        logger.sys_info("sent compute node, node_id: %s nova config!!" %(node_id))
+        if __debug__ :
+            print "sent compute node, node_id: %s nova config!!" % node_id
 
         # listen for ok message, ack
         data = recv_data(conn)
         if data:
             data = pickle.loads(data)
-            print "ciac server received %s from node_id: %s" % (data, node_id)
+            logger.sys_info("ciac server received %s from node_id: %s" %(data, node_id))
+            if __debug__ :
+                print "ciac server received %s from node_id: %s" % (data, node_id)
         else:
-            print "server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" % (node_id)
+            logger.sys_error("server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" %(node_id))
+            if __debug__ :
+                print "server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" % (node_id)
             sys.exit()
 
         # get ovs config for compute node
@@ -200,23 +238,34 @@ def sendComputeConfig(conn, node_id):
             '''
             #print "sending ovs conf %s" % config
             conn.sendall(pickle.dumps(config, -1))
-            print "sent compute node ovs config, node_id: %s" % (node_id)
+            logger.sys_info("sent compute node ovs config, node_id: %s" %(node_id))
+            if __debug__ :
+                print "sent compute node ovs config, node_id: %s" % (node_id)
 
             # listen for ok message, ack
             data = recv_data(conn)
             if data:
                 data = pickle.loads(data)
-                print "ciac server received %s from node_id: %s" % (data, node_id)
+                logger.sys_info("ciac server received %s from node_id: %s" %(data, node_id))
+                if __debug__ :
+                    print "ciac server received %s from node_id: %s" % (data, node_id)
             else:
-                print "ciac serve did not receive ack for sent ovs config structure for compute node_id:%s,\
+                logger.sys_error("ciac serve did not receive ack forsent ovs config structure for compute \
+                        node_id:%s," %(node_id))
+                if __debug__ :
+                    print "ciac serve did not receive ack for sent ovs config structure for compute node_id:%s,\
 		 exiting" % (node_id)
                 sys.exit()
 
     else:
-        print "ciac server did not extract nova config for node_id:%s, exiting" % (node_id)
+        logger.sys_error("ciac server did not extract nova config for node_id:%s, exiting" %(node_id))
+        if __debug__ :
+            print "ciac server did not extract nova config for node_id:%s, exiting" % (node_id)
         sys.exit()
 
-    print "ciac server done with sending config files for node_id:%s" % (node_id)
+    logger.sys_info("ciac server done with sending config files for node_id:%s" %(node_id))
+    if __debug__ :
+        print "ciac server done with sending config files for node_id:%s" % (node_id)
     
 def handle():
 
@@ -279,9 +328,13 @@ def recv_data(conn):
         else:
             count = count + 1
             if count >= retry_count:
-                print "retry count expired..exiting!!"
+                logger.sys_error("retry count expired..exiting!!")
+                if __debug__ :
+                    print "retry count expired..exiting!!"
                 sys.exit(1)
-            print "retrying... ", count
+            logger.sys_warning("retrying...%s" %(count))
+            if __debug__ :
+                print "retrying... ", count
 
     return data
 
@@ -308,7 +361,9 @@ def keep_alive_check(conn):
         conn.sendall(pickle.dumps(status_alive, -1))
 
         # sleep for keep_alive_sec
-        print "***keep_alive***"
+        logger.sys_info("***keep_alive***")
+        if __debug__ :
+            print "***keep_alive***"
         sleep(keep_alive_sec)
 
 
@@ -333,7 +388,9 @@ def sendBuild(conn):
     try:
         conn.sendall(pickle.dumps(status_build, -1))
     except socket.error , msg:
-        print 'Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+        logger.sys_error('Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+        if __debug__ :
+            print 'Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
         sys.exit()
 
 
