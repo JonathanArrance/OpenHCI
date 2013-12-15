@@ -90,7 +90,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
-    """
+
     #reset the keystone endpoint
     key_input = {'service_name':'keystone'}
     del_keystone = endpoint.delete_endpoint(key_input)
@@ -139,7 +139,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Swift endpoint set up complete."
     else:
         return "Swift error."
-    """
+
     #insert the controller info into trans_nodes db table
     cc_insert_dict = {'node_id':node_id,
                       'node_name':node_name,
@@ -237,6 +237,7 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
 
+    """
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
     os.system("sudo ovs-vsctl add-br br-ex")
@@ -278,11 +279,13 @@ def run_setup(new_system_variables,auth_dict):
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
-    logger.sys_info("Restarting the network adapters.")
-    ints = util.restart_network_card('all')
-    if(ints != 'OK'):
-        logger.sys_error("Could not restart network interfaces.")
-        return ints
+    
+    #this may have to be moved to the end
+    #logger.sys_info("Restarting the network adapters.")
+    #ints = util.restart_network_card('all')
+    #if(ints != 'OK'):
+    #    logger.sys_error("Could not restart network interfaces.")
+    #    return ints
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
@@ -295,16 +298,16 @@ def run_setup(new_system_variables,auth_dict):
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
-    #public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
-    #pub_check = util.check_public_with_uplink(public_dict)
-    #if(pub_check != 'OK'):
-    #    logger.sys_error('The public network given does not match the uplink subnet.')
-    #    return pub_check
+    public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
+    pub_check = util.check_public_with_uplink(public_dict)
+    if(pub_check != 'OK'):
+        logger.sys_error('The public network given does not match the uplink subnet.')
+        return pub_check
 
     #if in the same range create the default public range in quantum/neutron
     time.sleep(2)
     neu_net = neutron_net_ops(auth_dict)
-    p_create_dict = {'net_name':'default_public','admin_state':'up','shared':'true'}
+    p_create_dict = {'net_name':'default_public','admin_state':'true','shared':'true'}
     default_public = neu_net.add_public_network(p_create_dict)
     if('net_id' not in default_public):
         logger.sys_error("Could not create the default public network.")
@@ -316,7 +319,7 @@ def run_setup(new_system_variables,auth_dict):
         if((pdate_def_pub_net == 'ERROR') or (pdate_def_pub_net == 'NA')):
             logger.sys_error("Could not update the default public network id, Setup has failed.")
             return 'ERROR'
-
+    """
     #create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
     #or the vms will not be able to reach the outside.
     

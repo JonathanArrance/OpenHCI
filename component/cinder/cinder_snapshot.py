@@ -48,8 +48,8 @@ class snapshot_ops:
                 self.sec = 'FALSE'
                 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLLER
+            self.api_ip = config.API_IP
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -143,7 +143,7 @@ class snapshot_ops:
                 if(rest['response'] == 200):
                     #read the json that is returned
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    #NOTE: his has to work
+                    #NOTE: this has to work - Celery?
                     #loop until snap becomes available
                     #available = False
                     #x = 0
@@ -161,12 +161,14 @@ class snapshot_ops:
                     load = json.loads(rest['data'])
                     try:
                         #insert the volume info into the DB
+                        self.db.pg_transaction_begin()
                         insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snap_name'],"snap_desc": create_snap['snap_desc']}
-                        print insert_snap
                         self.db.pg_insert("trans_system_snapshots",insert_snap)
+                        self.db.pg_transaction_commit()
                         self.db.pg_close_connection()
                         r_dict = {"snap_name": create_snap['snap_name'],"snap_id": load['snapshot']['id'], "vol_id": load['snapshot']['volume_id']}
                     except:
+                        self.db.pg_transaction_rollback()
                         logger.sql_error("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
                         raise Exception("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
                 else:
@@ -268,8 +270,45 @@ class snapshot_ops:
             raise Exception("The snapshot: %s does not exist." %(delete_snap))
 
     def list_snapshots(self):
-        print "yo"
-    
+        """
+        DESC: List all of the snapshots in a project
+        INPUT: None
+        OUTPUT: array of r_dict - volume_name
+                                - volume_id
+                                - snapshot_name
+                                - snapshot_id
+        NOTE: This will only list out the snapshots that are for volume in the users project. All users
+              can list the snapshots
+        """
+        #connect to the transcirrus DB
+        try:
+            #connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sql_error("Could not connect to the Transcirrus DB ")
+            raise e
+
+        try:
+            select_snap = {"select":'*',"from":'trans_system_snapshots',"where":"proj_id='%s'" %(self.project_id)}
+            snaps = self.db.pg_select(select_snap)
+        except:
+            logger.sys_error("Could not list snapshots.")
+            raise Exception("Could not list snapshots.")
+
+        r_array = []
+        for snap in snaps:
+            try:
+                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"vol_id='%s'"%(snap[1])}
+                vol_name = self.db.pg_select(select_vol)
+            except:
+                logger.sys_error("Could not get the volume name.")
+                raise Exception("Could not get the volume name.")
+            snap_dict = {"vol_name":vol_name[0][0],"vol_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
+            self.db.pg_close_connection()
+            r_array.append(snap_dict)
+
+        return r_array
+
     #DESC: Get the details of a specific snapshot
     #INPUT: snap_name
     #OUTPUT: dictionary containing

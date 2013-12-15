@@ -15,3 +15,7 @@ Add the ability of a user to belong to multiple projects
 Need to add the ability to add more then one dns server to network.py add_network_subnet. Right now sets the default to 8.8.8.8
 
 trans_service_settings table should be revamped to include a admin_port and admin_api colum so that all services set in one table entry and not 2 or more. example keystone keystone_admin
+
+All resources belonging to a user should be identified by keystone_user_id NOT by username. Poor design that needs to be fixed.
+
+open db up in auth and close when log out
