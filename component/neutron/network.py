@@ -313,6 +313,7 @@ class neutron_net_ops:
             try:
                 #add the new user to openstack
                 body = '{"network": {"router:external": "True", "tenant_id": "%s", "name": "%s", "admin_state_up": %s, "shared": "%s"}}' %(self.project_id,create_dict['net_name'],admin_state.lower(),shared.lower())
+                logger.sys_info(body)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/networks'
@@ -320,6 +321,7 @@ class neutron_net_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
+                logger.sys_info(rest)
                 #check the response and make sure it is a 201
                 if(rest['response'] == 201):
                     #read the json that is returned

@@ -3,25 +3,24 @@ import time
 # get the user level from the transcirrus system DB
 #passes the user level out 
 import sys
+import time
 
-sys.path.append('../common')
-import logger
-import config
-from auth import authorization
-
-sys.path.append('/home/jonathan/alpo.0/component/cinder')
-from cinder_snapshot import snapshot_ops
-from cinder_volume import volume_ops
-sys.path.append('/home/jonathan/alpo.0/component/keystone')
-from keystone_tenants import tenant_ops
+#from auth import authorization
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
+from transcirrus.database.postgres import pgsql
+from transcirrus.common.auth import authorization
+from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 
 a = authorization("admin","builder")
 #get the user dict
 d = a.get_auth()
+snap = snapshot_ops(d)
 
-print "instantiating a volume abject."
-vol = volume_ops(d)
+lis = snap.list_snapshots()
 
+print lis 
+"""
 print "createing a new volume"
 create = {'volume_name':'testvol','volume_size':'1'}
 create_vol = vol.create_volume(create)
@@ -58,3 +57,4 @@ print "-----------------------------------------"
 print "deleteing snapshot"
 delete = snap.delete_snapshot("snaptest")
 print delete
+"""
