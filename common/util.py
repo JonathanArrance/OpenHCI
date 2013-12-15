@@ -432,6 +432,37 @@ def get_cloud_controller_id():
     """
     return config.CLOUD_CONTROLLER_ID
 
+def get_node_name():
+    """
+    DESC: get the node name from the config.py file.
+    INPUT: None
+    OUTPUT: node_name
+    ACCESS: Wide open
+    NOTE: node name is the factory default, which can be changed later.
+    """
+    return config.NODE_NAME
+
+def get_node_id():
+    """
+    DESC: get the node id from the config.py file.
+    INPUT: None
+    OUTPUT: node_id
+    ACCESS: Wide open
+    NOTE: node id is the factory default unique which can NOT be changed later.
+    """
+    return config.NODE_ID
+
+def get_node_type():
+    """
+    DESC: get the node type from the config.py file.
+    INPUT: None
+    OUTPUT: node type
+    ACCESS: Wide open
+    NOTE: node type may be compute(cn)/storage(sn)/hybrid(hd) and its a
+    factory default
+    """
+    return config.NODE_TYPE
+
 def get_api_ip():
     """
     DESC: get the system name from the config.py file.
