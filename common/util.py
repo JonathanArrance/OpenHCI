@@ -757,7 +757,7 @@ def set_network_variables(input_dict):
     bond0 = []
     #bond0 is the mgmt interface on the nodes and the ciac
     if(input_dict['net_adapter'] == 'mgmt'):
-        print "FUCK OFF"
+        logger.sys_error('FUCK OFF')
         bond = 'auto bond0'
         bond0.append(bond)
         if(netadpt['inet_setting'] == 'static'):
