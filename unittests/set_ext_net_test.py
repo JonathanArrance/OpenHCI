@@ -84,7 +84,7 @@ time.sleep(1)
 out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 process = out.stdout.readlines()
 os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
-
+'''
 #this may have to be moved to the end
 #logger.sys_info("Restarting the network adapters.")
 #ints = util.restart_network_card('all')
@@ -121,6 +121,7 @@ else:
     #add the new public net to the sys_vars_table
     def_array = [{'system_name': sys_vars['NODE_NAME'],'parameter':'default_pub_net_id', 'param_value':default_public['net_id']}]
     update_def_pub_net = util.update_system_variables(def_array)
-    if((pdate_def_pub_net == 'ERROR') or (pdate_def_pub_net == 'NA')):
+    if((update_def_pub_net == 'ERROR') or (update_def_pub_net == 'NA')):
         logger.sys_error("Could not update the default public network id, Setup has failed.")
         print 'ERROR'
+'''
