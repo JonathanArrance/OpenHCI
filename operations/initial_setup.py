@@ -237,6 +237,7 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
 
+    """
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
     os.system("sudo ovs-vsctl add-br br-ex")
@@ -318,7 +319,7 @@ def run_setup(new_system_variables,auth_dict):
         if((pdate_def_pub_net == 'ERROR') or (pdate_def_pub_net == 'NA')):
             logger.sys_error("Could not update the default public network id, Setup has failed.")
             return 'ERROR'
-
+    """
     #create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
     #or the vms will not be able to reach the outside.
     

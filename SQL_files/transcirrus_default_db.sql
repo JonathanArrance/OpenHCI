@@ -1797,7 +1797,7 @@ INSERT INTO neutron_default VALUES ('nova_metadata_port', '8775', 'metadata_agen
 INSERT INTO neutron_default VALUES ('interface_driver', 'quantum.agent.linux.interface.OVSInterfaceDriver', 'l3_agent.ini', 23);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'l3_agent.ini', 24);
 INSERT INTO neutron_default VALUES ('external_network_bridge', 'br-ex', 'l3_agent.ini', 25);
-INSERT INTO neutron_default VALUES ('rabbit_userid', 'transuser', 'quantum.conf', 9);
+INSERT INTO neutron_default VALUES ('rabbit_userid', 'guest', 'quantum.conf', 9);
 INSERT INTO neutron_default VALUES ('rabbit_port', '5672', 'quantum.conf', 33);
 INSERT INTO neutron_default VALUES ('lock_path', '$state_path/lock', 'quantum.conf', 34);
 INSERT INTO neutron_default VALUES ('bind_host', '0.0.0.0', 'quantum.conf', 35);
