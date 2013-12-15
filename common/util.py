@@ -736,8 +736,9 @@ def set_network_variables(input_dict):
         netmask = '    netmask %s' %(netadpt['net_mask'])
         bond0.append(netmask)
         if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
-            gateway = '    gateway %s' %(netadpt['net_gateway'])
-            bond0.append(gateway)
+            logger.sys_info("No gateway set for Bond0")
+            #gateway = '    gateway %s' %(netadpt['net_gateway'])
+            #bond0.append(gateway)
     else:
         iface = 'iface bond0 inet dhcp'
         bond0.append(iface)
