@@ -113,7 +113,6 @@ def write_new_config_file(file_dict):
     #an entire new file
     ops = None
     config_new = None
-    print file_dict['op']
     if('op' in file_dict):
         ops = file_dict['op'].lower()
         if(ops == 'new'):
@@ -143,6 +142,7 @@ def write_new_config_file(file_dict):
             os.system('sudo rm -f %s' %(scratch))
 
         else:
+            print file_dict['file_content']
             for line in config:
                 #Set a flag to continue out of the inner loop
                 flag = 0
@@ -682,7 +682,7 @@ def set_network_variables(input_dict):
         input_dict['net_dns3'] = '204.85.3.3'
     if('net_domain' not in input_dict):
         input_dict['net_domain'] = 'localdomain'
-    
+    print input_dict
     #dhcp string
     inet = None
     if('net_dhcp' in input_dict):
