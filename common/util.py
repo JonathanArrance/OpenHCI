@@ -142,7 +142,6 @@ def write_new_config_file(file_dict):
             os.system('sudo rm -f %s' %(scratch))
 
         else:
-            print file_dict['file_content']
             for line in config:
                 #Set a flag to continue out of the inner loop
                 flag = 0
@@ -151,6 +150,8 @@ def write_new_config_file(file_dict):
                     split2 = x.split('=')
                     if(split[0].rstrip() == split2[0]):
                         flag = 1
+                        print "line %s"%(line)
+                        print "x %s"%(x)
                         config_new.write(line.replace(line,x))
                         config_new.write('\n')
                     else:
@@ -757,7 +758,6 @@ def set_network_variables(input_dict):
     bond0 = []
     #bond0 is the mgmt interface on the nodes and the ciac
     if(input_dict['net_adapter'] == 'mgmt'):
-        logger.sys_error('FUCK OFF')
         bond = 'auto bond0'
         bond0.append(bond)
         if(netadpt['inet_setting'] == 'static'):
