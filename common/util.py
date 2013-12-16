@@ -113,7 +113,6 @@ def write_new_config_file(file_dict):
     #an entire new file
     ops = None
     config_new = None
-    print file_dict['op']
     if('op' in file_dict):
         ops = file_dict['op'].lower()
         if(ops == 'new'):
@@ -151,6 +150,8 @@ def write_new_config_file(file_dict):
                     split2 = x.split('=')
                     if(split[0].rstrip() == split2[0]):
                         flag = 1
+                        print "line %s"%(line)
+                        print "x %s"%(x)
                         config_new.write(line.replace(line,x))
                         config_new.write('\n')
                     else:
@@ -682,7 +683,7 @@ def set_network_variables(input_dict):
         input_dict['net_dns3'] = '204.85.3.3'
     if('net_domain' not in input_dict):
         input_dict['net_domain'] = 'localdomain'
-    
+    print input_dict
     #dhcp string
     inet = None
     if('net_dhcp' in input_dict):
@@ -756,39 +757,40 @@ def set_network_variables(input_dict):
     config_array = []
     bond0 = []
     #bond0 is the mgmt interface on the nodes and the ciac
-    #if(input_dict['net_adapter'] == 'mgmt'):
-    bond = 'auto bond0'
-    bond0.append(bond)
-    if(netadpt['inet_setting'] == 'static'):
-        iface = 'iface bond0 inet static'
-        bond0.append(iface)
-        address = '    address %s'%(netadpt['net_ip'])
-        bond0.append(address)
-        netmask = '    netmask %s' %(netadpt['net_mask'])
-        bond0.append(netmask)
-        if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
-            gateway = '    gateway %s' %(netadpt['net_gateway'])
-            bond0.append(gateway)
-    else:
-        iface = 'iface bond0 inet dhcp'
-        bond0.append(iface)
-    slaves = '    slaves none'
-    bond0.append(slaves)
-    mtu = '    mtu %s' %(netadpt['net_mtu'])
-    bond0.append(mtu)
-    bondmode = '    bond-mode balance-rr'
-    bond0.append(bondmode)
-    miimon = '    bond-miimon 100'
-    bond0.append(miimon)
-    downdelay = '    bond-downdelay 200'
-    bond0.append(downdelay)
-    updelay = '    bond-updelay 200'
-    bond0.append(updelay)
-    dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
-    bond0.append(dns)
-    search = '    dns-search %s'%(netadpt['net_dns_domain'])
-    bond0.append(search)
-    bond0.append('')
+    if(input_dict['net_adapter'] == 'mgmt'):
+        bond = 'auto bond0'
+        bond0.append(bond)
+        if(netadpt['inet_setting'] == 'static'):
+            iface = 'iface bond0 inet static'
+            bond0.append(iface)
+            address = '    address %s'%(netadpt['net_ip'])
+            bond0.append(address)
+            netmask = '    netmask %s' %(netadpt['net_mask'])
+            bond0.append(netmask)
+            if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
+                logger.sys_info("No gateway set for Bond0")
+                #gateway = '    gateway %s' %(netadpt['net_gateway'])
+                #bond0.append(gateway)
+        else:
+            iface = 'iface bond0 inet dhcp'
+            bond0.append(iface)
+        slaves = '    slaves none'
+        bond0.append(slaves)
+        mtu = '    mtu %s' %(netadpt['net_mtu'])
+        bond0.append(mtu)
+        bondmode = '    bond-mode balance-rr'
+        bond0.append(bondmode)
+        miimon = '    bond-miimon 100'
+        bond0.append(miimon)
+        downdelay = '    bond-downdelay 200'
+        bond0.append(downdelay)
+        updelay = '    bond-updelay 200'
+        bond0.append(updelay)
+        dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
+        bond0.append(dns)
+        search = '    dns-search %s'%(netadpt['net_dns_domain'])
+        bond0.append(search)
+        bond0.append('')
 
     #we know the node type based on the ID
     #000 - ciac
@@ -846,8 +848,13 @@ def set_network_variables(input_dict):
         data_bond = ['auto bond2','iface bond2 inet static','    address 172.38.24.10','    netmask 255.255.255.0','    network 172.38.24.0','    slaves none', '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
 
         #concat the big arrays
-        config_array = eth + bond0 + up_bond + br + data_bond
-        
+        if((node[0][0] == 'cc') and (input_dict['net_adapter'] == 'mgmt')):
+            #config_array = eth + bond0 + up_bond + br + data_bond
+            config_array = bond0
+
+        if((node[0][0] == 'cc') and (input_dict['net_adapter'] == 'uplink')):
+            config_array = up_bond + br
+
     if((node[0][0] == 'cn') or (node[0][0] == 'sn')):
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
                'auto eth3','iface eth3 inet manual','    bond-master bond1','']
@@ -857,7 +864,7 @@ def set_network_variables(input_dict):
         config_array = eth + bond0 + data_bond
 
     conf = {}
-    conf['op'] = 'new'
+    conf['op'] = 'append'
     conf['file_owner'] = 'root'
     conf['file_group'] = 'root'
     conf['file_perm'] = '644'
