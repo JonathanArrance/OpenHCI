@@ -20,7 +20,7 @@ node_id = util.get_node_id()
 node_name = util.get_system_name()
 sys_vars = util.get_system_variables(node_id)
 
-print sys_vars
+#print sys_vars
 
 auth_dict['api_ip'] = util.get_api_ip()
 
