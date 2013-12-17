@@ -37,27 +37,6 @@ if(gateway != 'OK'):
     logger.sys_error('Uplink gateway is not on the same subnet as the uplink ip.')
     print gateway
 
-net_input1 = {'node_id':node_id,
-             'net_adapter':'mgmt',
-             'net_ip':sys_vars['MGMT_IP'],
-             'net_domain':sys_vars['DOMAIN_NAME'],
-             'net_dns1':sys_vars['UPLINK_DNS'],
-             'net_dhcp':'static'
-            }
-
-uplink1 = util.set_network_variables(net_input1)
-print uplink1
-write_net_config1 = util.write_new_config_file(uplink1)
-
-time.sleep(1)
-if(write_net_config1 != 'OK'):
-    #Exit the setup return to factory default
-    print write_net_config1
-else:
-    print "Net config file written."
-    logger.sys_info("Net config file written.")
-
-
 #set up br-ex and enable ovs.
 uplink_dict = {
                 'up_ip':sys_vars['UPLINK_IP'],
