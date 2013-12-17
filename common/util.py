@@ -804,7 +804,7 @@ def set_network_variables(input_dict):
     bond0.append(slaves)
     mtu = '    mtu %s' %(m_netadpt['net_mtu'])
     bond0.append(mtu)
-    bondmode = '    bond-mode balance-rr'
+    bondmode = '    bond-mode active-backup'
     bond0.append(bondmode)
     miimon = '    bond-miimon 100'
     bond0.append(miimon)
