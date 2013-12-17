@@ -713,8 +713,10 @@ def set_network_variables(input_dict):
     #Note - no try block - this is meerly a check to see if the adapter is in the db 
     get_upadpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='uplink'"}
     up_adapter = db.pg_select(get_upadpt)
+    print up_adapter
     get_madpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='mgmt'"}
     m_adapter = db.pg_select(get_madpt)
+    print m_adapter
 
     try:
         get_node = {'select':'node_type,node_mgmt_ip','from':'trans_nodes','where':"node_id='%s'"%(input_dict['node_id'])}
