@@ -853,6 +853,7 @@ def set_network_variables(input_dict):
 
         #concat the big arrays
         config_array = eth + bond0 + up_bond + br + data_bond
+        print config_array
 
     if((node[0][0] == 'cn') or (node[0][0] == 'sn')):
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
