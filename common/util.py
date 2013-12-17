@@ -847,9 +847,9 @@ def set_network_variables(input_dict):
 
         #uplink bonded interface for br-ex
         up_bond = ['auto bond1','iface bond1 inet manual','    up ifconfig $IFACE 0.0.0.0 up','    up ip link set $IFACE up','    down ip link set $IFACE promisc off','    down ifconfig $IFACE down','    slaves none',
-                   '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
+                   '    bond-mode active-backup', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
         #datanet config for ciac node
-        data_bond = ['auto bond2','iface bond2 inet static','    address 172.38.24.10','    netmask 255.255.255.0','    network 172.38.24.0','    slaves none', '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
+        data_bond = ['auto bond2','iface bond2 inet static','    address 172.38.24.10','    netmask 255.255.255.0','    network 172.38.24.0','    slaves none', '    bond-mode active-backup', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
 
         #concat the big arrays
         config_array = eth + bond0 + up_bond + br + data_bond
@@ -858,7 +858,7 @@ def set_network_variables(input_dict):
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
                'auto eth3','iface eth3 inet manual','    bond-master bond1','']
 
-        data_bond = ['auto bond1','iface bond1 inet dhcp','    slaves none', '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
+        data_bond = ['auto bond1','iface bond1 inet dhcp','    slaves none', '    bond-mode active-backup', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
         #concat the big arrays
         config_array = eth + bond0 + data_bond
 
