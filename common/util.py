@@ -150,8 +150,6 @@ def write_new_config_file(file_dict):
                     split2 = x.split('=')
                     if(split[0].rstrip() == split2[0]):
                         flag = 1
-                        print "line %s"%(line)
-                        print "x %s"%(x)
                         config_new.write(line.replace(line,x))
                         config_new.write('\n')
                     else:
@@ -623,83 +621,98 @@ def set_network_variables(input_dict):
     DESC: Change the ip address for the given adapter. Only cloud admins can
           perform this operation.
     INPUT: input_dict - node_id
-                      - net_adapter mgmt/uplink
-                      - net_ip
-                      - net_subnet - op
-                      - net_gateway - op
-                      - net_dns1 - req default 8.8.8.8
-                      - net_dns2 - op default 8.8.4.4
-                      - net_dns3 - op default 204.85.3.3
-                      - net_domain - op default localhost
-                      - net_dhcp - dhcp/static - def static
+                      - uplink_dict - dictionary of uplink params
+                            - up_ip - req
+                            - up_subnet - req
+                            - up_gateway - req
+                            - up_dns1 - req default 8.8.8.8
+                            - up_dns2 - op default 8.8.4.4
+                            - up_dns3 - op default 204.85.3.3
+                            - up_domain - op default localhost
+                      - mgmt_dict - dictionary of mgmt_net params
+                            - mgmt_ip - op
+                            - mgmt_subnet - op
+                            - mgmt_dns1 -  op
+                            - mgmt_dns2 - op
+                            - mgmt_dns3 - op
+                            - mgmt_domain - op
+                            - mgmt_dhcp - dhcp/static - def dhcp
     OUTPUT: file descriptor used to write the interfaces file
             ERROR - fail
             NA - unknown
     ACCESS - wide open
     NOTE: This is used to set the net adapters on the physical machines - neutron libs for virtual environments
           The defualt subnet is 255.255.255.0 and the gateway will be set to None if a gateway is not specified.
-          This is cumbersome but it just builds descriptors to re-rite the entire interface file. 
+          This is cumbersome but it just builds descriptors to re-rite the entire interface file. THIS WILL REWRITE THE
+          /ETC/NETWORK/INTERFACE FILE EVERY TIME.
     """
 
     #do this today!
     #make sure none of the values are empty
     for key, value in input_dict.items():
-        if(key == 'net_subnet'):
-            continue
-        if(key == 'net_gateway'):
-            continue
-        if(key == 'net_dns1'):
-            continue
-        if(key == 'net_dns2'):
-            continue
-        if(key == 'net_dns3'):
-            continue
-        if(key == 'net_domain'):
-            continue
         if((value == '') or (value == None)):
-            logger.sys_error('Can not have an empty required value.')
-            raise Exception('Can not have an empty required value.')
+            logger.sys_error('%s was empty, required value.' %(key))
+            raise Exception('%s was empty, required value.' %(key))
 
-    if('net_adapter' not in input_dict):
-        logger.sys_error('No net adapter was specified.')
-        raise Exception('No net adapter was specified.')
-    if('net_ip' not in input_dict):
-        logger.sys_error('No net ip was specified.')
-        raise Exception('No net ip was specified.')
-    if('node_id' not in input_dict):
-        logger.sys_error('No node id was specified.')
-        raise Exception('No node id was specified.')
-    if((input_dict['net_dns1'] == '') or ('net_dns1' not in input_dict)):
-        input_dict['net_dns1'] = '8.8.8.8'
+    mgmt_dict = input_dict['mgmt_dict']
+    uplink_dict = input_dict['uplink_dict']
 
-    #values for gateway and subnet dns
-    if('net_subnet' not in input_dict):
-        input_dict['net_subnet'] = "255.255.255.0"
-    if('net_gateway' not in input_dict):
-        input_dict['net_gateway'] = None
-    if('net_dns2' not in input_dict):
-        input_dict['net_dns2'] = '8.8.4.4'
-    if('net_dns3' not in input_dict):
-        input_dict['net_dns3'] = '204.85.3.3'
-    if('net_domain' not in input_dict):
-        input_dict['net_domain'] = 'localdomain'
-    print input_dict
-    #dhcp string
-    inet = None
-    if('net_dhcp' in input_dict):
-        inet = input_dict['net_dhcp'].lower()
-        if(inet == 'static') or (inet == 'dhcp'):
-            logger.sys_info('Dhcp option set')
-    else:
-        inet = 'static'
+    up_inet = 'static'
+    for key,value in uplink_dict.items():
+        if('up_ip' not in uplink_dict):
+            logger.sys_error('No net adapter was specified.')
+            raise Exception('No net adapter was specified.')
+        if('up_subnet' not in uplink_dict):
+            logger.sys_error('No uplink subnet was specified.')
+            raise Exception('No uplink subnet was specified.')
+        if('up_gateway' not in uplink_dict):
+            logger.sys_error('No uplink gateway was specified.')
+            raise Exception('No uplink gateway was specified.')
+        #dns stuff
+        if((uplink_dict['up_dns1'] == '') or ('up_dns1' not in uplink_dict)):
+            uplink_dict['up_dns1'] = '8.8.8.8'
+        if('up_dns2' not in uplink_dict):
+            uplink_dict['up_dns2'] = '8.8.4.4'
+        if('up_dns3' not in uplink_dict):
+            uplink_dict['up_dns3'] = '204.85.3.3'
+        if('up_domain' not in uplink_dict):
+            uplink_dict['up_domain'] = 'localdomain'
+
+    mgmt_inet = None
+    for key,value in mgmt_dict.items():
+        if('mgmt_dhcp' in mgmt_dict):
+            if(mgmt_dict['m_dhcp'].lower() == 'dhcp'):
+                mgmt_inet = 'dhcp'
+                break
+            if(mgmt_dict['m_dhcp'].lower() == 'static'):
+                mgmt_inet = 'static'
+            if('mgmt_ip' not in mgmt_dict):
+                logger.sys_error('No mgmt ip was specified.')
+                raise Exception('No mgmt ip was specified.')
+            if('mgmt_subnet' not in mgmt_dict):
+                logger.sys_error('No mgmt subnet was specified.')
+                raise Exception('No mgmt subnet was specified.')
+            if('mgmt_gateway' in mgmt_dict):
+                logger.sys_error('No gateway used on mgmt network.')
+            #dns stuff
+            if((mgmt_dict['m_dns1'] == '') or ('mgmt_dns1' not in mgmt_dict)):
+                mgmt_dict['m_dns1'] = '8.8.8.8'
+            if('mgmt_dns2' not in mgmt_dict):
+                mgmt_dict['mgmt_dns2'] = '8.8.4.4'
+            if('mgmt_dns3' not in mgmt_dict):
+                mgmt_dict['mgmt_dns3'] = '204.85.3.3'
+            if('mgmt_domain' not in mgmt_dict):
+                mgmt_dict['mgmt_domain'] = 'localdomain'
 
     #connect to the db
     db = db_connect()
 
     #check if the adapter already exsists on the system
     #Note - no try block - this is meerly a check to see if the adapter is in the db 
-    get_adpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id'])}
-    adapter = db.pg_select(get_adpt)
+    get_upadpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='uplink'"}
+    up_adapter = db.pg_select(get_upadpt)
+    get_madpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='mgmt'"}
+    m_adapter = db.pg_select(get_madpt)
 
     try:
         get_node = {'select':'node_type,node_mgmt_ip','from':'trans_nodes','where':"node_id='%s'"%(input_dict['node_id'])}
@@ -708,39 +721,41 @@ def set_network_variables(input_dict):
         logger.sys_error("Could not get the node type from the Transcirrus db.")
         raise Exception("Could not get the node type from the Transcirrus db.")
 
-    #name of the network link
-    link = None
-    mtu = None
-    if(input_dict['net_adapter'].lower() == 'mgmt'):
-        link = 'bond0'
-        mtu = '1500'
-    elif(input_dict['net_adapter'].lower() == 'uplink'):
-        link = 'br-ex'
-        mtu = '9000'
-    else:
-        return "ERROR"
-
-    #add new config to the DB
+    #add new config to the DB - This is a freaking hack but it is going away when the redhat switch happens
     try:
         db.pg_transaction_begin()
-        if(adapter == None):
+        if(up_adapter == None):
             #insert the new adapter
             ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
-                        %(input_dict['net_ip'],input_dict['net_adapter'],input_dict['net_subnet'],input_dict['net_gateway'],link,inet,input_dict['net_dns1'],input_dict['net_dns2'],input_dict['net_dns3'],input_dict['net_domain'],mtu)}
+                        %(uplink_dict['up_ip'],'br-ex',uplink_dict['up_subnet'],uplink_dict['up_gateway'],'br-ex',up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000')}
             db.pg_insert("net_adapter_settings",ins_adpt)
-        elif(adapter[0][0]):
+        elif(up_adapter[0][0]):
             #update the adapter row
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
-                      %(input_dict['net_ip'],input_dict['net_subnet'],input_dict['net_gateway'],inet,input_dict['net_dns1'],input_dict['net_dns2'],input_dict['net_dns3'],input_dict['net_domain'],mtu),'where':"net_adapter='%s'"%(link),
+                      %(uplink_dict['up_ip'],uplink_dict['up_subnet'],uplink_dict['up_gateway'],up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000'),'where':"net_adapter='br-ex'",
+                      'and':"node_id='%s'"%(uplink_dict['node_id'])}
+            db.pg_update(update)
+        else:
+            return 'NA'
+
+        if(m_adapter == None):
+            #insert the new adapter
+            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
+                        %(mgmt_dict['net_ip'],mgmt_dict['net_adapter'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],bond0,mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500')}
+            db.pg_insert("net_adapter_settings",ins_adpt)
+        elif(m_adapter[0][0]):
+            #update the adapter row
+            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
+                      %(mgmt_dict['net_ip'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500'),'where':"net_adapter='bond0'",
                       'and':"node_id='%s'"%(input_dict['node_id'])}
             db.pg_update(update)
         else:
             return 'NA'
-        #update the node_mgmt_ip field in trans_nodes
-        if(link == 'bond0'):
-            update_node_table = {'table':'trans_nodes','set':"node_mgmt_ip='%s'"%(input_dict['net_ip'])}
-            db.pg_update(update_node_table)
 
+        #update the node_mgmt_ip field in trans_nodes
+        #if(link == 'bond0'):
+        #update_node_table = {'table':'trans_nodes','set':"node_mgmt_ip='%s'"%(input_dict['net_ip']),'where':"node_id='%s'"%(input_dict['node_id'])}
+        #db.pg_update(update_node_table)
     except:
         db.pg_transaction_rollback()
         logger.sql_error("Could not set the network adapter settings.")
@@ -751,46 +766,47 @@ def set_network_variables(input_dict):
         db.pg_close_connection()
 
     #"net adapters" are always bonds unless noted, uplink will be a bridge adapter
-    get_adapter = {'node_id':input_dict['node_id'],'net_adapter':input_dict['net_adapter'].lower()}
-    netadpt = get_network_variables(get_adapter)
+    get_up_adapter = {'node_id':input_dict['node_id'],'net_adapter':'uplink'}
+    up_netadpt = get_network_variables(get_up_adapter)
+
+    get_m_adapter = {'node_id':input_dict['node_id'],'net_adapter':'mgmt'}
+    m_netadpt = get_network_variables(get_m_adapter)
 
     config_array = []
     bond0 = []
     #bond0 is the mgmt interface on the nodes and the ciac
-    if(input_dict['net_adapter'] == 'mgmt'):
-        bond = 'auto bond0'
-        bond0.append(bond)
-        if(netadpt['inet_setting'] == 'static'):
-            iface = 'iface bond0 inet static'
-            bond0.append(iface)
-            address = '    address %s'%(netadpt['net_ip'])
-            bond0.append(address)
-            netmask = '    netmask %s' %(netadpt['net_mask'])
-            bond0.append(netmask)
-            if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
-                logger.sys_info("No gateway set for Bond0")
-                #gateway = '    gateway %s' %(netadpt['net_gateway'])
-                #bond0.append(gateway)
-        else:
-            iface = 'iface bond0 inet dhcp'
-            bond0.append(iface)
-        slaves = '    slaves none'
-        bond0.append(slaves)
-        mtu = '    mtu %s' %(netadpt['net_mtu'])
-        bond0.append(mtu)
-        bondmode = '    bond-mode balance-rr'
-        bond0.append(bondmode)
-        miimon = '    bond-miimon 100'
-        bond0.append(miimon)
-        downdelay = '    bond-downdelay 200'
-        bond0.append(downdelay)
-        updelay = '    bond-updelay 200'
-        bond0.append(updelay)
-        dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
-        bond0.append(dns)
-        search = '    dns-search %s'%(netadpt['net_dns_domain'])
-        bond0.append(search)
-        bond0.append('')
+    #if(input_dict['net_adapter'] == 'mgmt'):
+    bond = 'auto bond0'
+    bond0.append(bond)
+    if(m_netadpt['inet_setting'] == 'static'):
+        iface = 'iface bond0 inet static'
+        bond0.append(iface)
+        address = '    address %s'%(m_netadpt['net_ip'])
+        bond0.append(address)
+        netmask = '    netmask %s' %(m_netadpt['net_mask'])
+        bond0.append(netmask)
+        if(m_netadpt['net_gateway'] != 'NULL' or m_netadpt['net_gateway'] != ''):
+            logger.sys_info("No gateway set for Bond0")
+    else:
+        iface = 'iface bond0 inet dhcp'
+        bond0.append(iface)
+    slaves = '    slaves none'
+    bond0.append(slaves)
+    mtu = '    mtu %s' %(m_netadpt['net_mtu'])
+    bond0.append(mtu)
+    bondmode = '    bond-mode balance-rr'
+    bond0.append(bondmode)
+    miimon = '    bond-miimon 100'
+    bond0.append(miimon)
+    downdelay = '    bond-downdelay 200'
+    bond0.append(downdelay)
+    updelay = '    bond-updelay 200'
+    bond0.append(updelay)
+    dns = '    dns-nameservers %s %s %s' %(m_netadpt['net_dns1'],m_netadpt['net_dns2'],m_netadpt['net_dns3'])
+    bond0.append(dns)
+    search = '    dns-search %s'%(m_netadpt['net_dns_domain'])
+    bond0.append(search)
+    bond0.append('')
 
     #we know the node type based on the ID
     #000 - ciac
@@ -801,42 +817,30 @@ def set_network_variables(input_dict):
     data_bond = []
     up_bond = []
     if(node[0][0] == 'cc'):
-        if(input_dict['net_adapter'] == 'uplink'):
-            bridge = 'auto %s' %(netadpt['net_phy_adapter'])
-            br.append(bridge)
-            if(netadpt['inet_setting'] == 'static'):
-                iface = 'iface %s inet static' %(netadpt['net_phy_adapter'])
-                br.append(iface)
-                address = '    address %s'%(netadpt['net_ip'])
-                br.append(address)
-                netmask = '    netmask %s' %(netadpt['net_mask'])
-                br.append(netmask)
-                if(netadpt['net_gateway'] != 'NULL' or netadpt['net_gateway'] != ''):
-                    gateway = '    gateway %s' %(netadpt['net_gateway'])
-                    br.append(gateway)
-            else:
-                iface = 'iface %s inet dhcp' %(netadpt[0][1])
-                br.append(iface)
-            #slaves = '    slaves none'
-            #br.append(slaves)
-            #mtu = '    mtu %s' %(netadpt['net_mtu'])
-            #br.append(mtu)
-            #bondmode = '    bond-mode balance-rr'
-            #br.append(bondmode)
-            bridge_ports = '    bridge_ports bond1'
-            br.append(bridge_ports)
-            #miimon = '    bond-miimon 100'
-            #br.append(miimon)
-            #downdelay = '    bond-downdelay 200'
-            #br.append(downdelay)
-            #updelay = '    bond-updelay 200'
-            #br.append(updelay)
-            dns = '    dns-nameservers %s %s %s' %(netadpt['net_dns1'],netadpt['net_dns2'],netadpt['net_dns3'])
-            br.append(dns)
-            if(netadpt['net_dns_domain'] != 'NULL' or netadpt['net_dns_domain'] != ''):
-                search = '    dns-search %s'%(netadpt['net_dns_domain'])
-                br.append(search)
-            br.append('')
+        #if(input_dict['net_adapter'] == 'uplink'):
+        bridge = 'auto %s' %(up_netadpt['net_phy_adapter'])
+        br.append(bridge)
+        if(up_netadpt['inet_setting'] == 'static'):
+            iface = 'iface %s inet static' %(up_netadpt['net_phy_adapter'])
+            br.append(iface)
+            address = '    address %s'%(up_netadpt['net_ip'])
+            br.append(address)
+            netmask = '    netmask %s' %(up_netadpt['net_mask'])
+            br.append(netmask)
+            if(up_netadpt['net_gateway'] != 'NULL' or up_netadpt['net_gateway'] != ''):
+                gateway = '    gateway %s' %(up_netadpt['net_gateway'])
+                br.append(gateway)
+        else:
+            iface = 'iface %s inet dhcp' %(up_netadpt[0][1])
+            br.append(iface)
+        bridge_ports = '    bridge_ports bond1'
+        br.append(bridge_ports)
+        dns = '    dns-nameservers %s %s %s' %(up_netadpt['net_dns1'],up_netadpt['net_dns2'],up_netadpt['net_dns3'])
+        br.append(dns)
+        if(up_netadpt['net_dns_domain'] != 'NULL' or up_netadpt['net_dns_domain'] != ''):
+            search = '    dns-search %s'%(up_netadpt['net_dns_domain'])
+            br.append(search)
+        br.append('')
 
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
                'auto eth3','iface eth3 inet manual','    bond-master bond1','','auto eth4','iface eth4 inet manual','    bond-master bond2','','auto eth5','iface eth5 inet manual','    bond-master bond2','']
@@ -848,12 +852,7 @@ def set_network_variables(input_dict):
         data_bond = ['auto bond2','iface bond2 inet static','    address 172.38.24.10','    netmask 255.255.255.0','    network 172.38.24.0','    slaves none', '    bond-mode balance-rr', '    bond-miimon 100', '    bond-downdelay 200', '    bond-updelay 200','']
 
         #concat the big arrays
-        if((node[0][0] == 'cc') and (input_dict['net_adapter'] == 'mgmt')):
-            #config_array = eth + bond0 + up_bond + br + data_bond
-            config_array = bond0
-
-        if((node[0][0] == 'cc') and (input_dict['net_adapter'] == 'uplink')):
-            config_array = up_bond + br
+        config_array = eth + bond0 + up_bond + br + data_bond
 
     if((node[0][0] == 'cn') or (node[0][0] == 'sn')):
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
@@ -864,7 +863,7 @@ def set_network_variables(input_dict):
         config_array = eth + bond0 + data_bond
 
     conf = {}
-    conf['op'] = 'append'
+    conf['op'] = 'new'
     conf['file_owner'] = 'root'
     conf['file_group'] = 'root'
     conf['file_perm'] = '644'
