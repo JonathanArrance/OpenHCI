@@ -681,10 +681,10 @@ def set_network_variables(input_dict):
     mgmt_inet = None
     for key,value in mgmt_dict.items():
         if('mgmt_dhcp' in mgmt_dict):
-            if(mgmt_dict['m_dhcp'].lower() == 'dhcp'):
+            if(mgmt_dict['mgmt_dhcp'].lower() == 'dhcp'):
                 mgmt_inet = 'dhcp'
                 break
-            if(mgmt_dict['m_dhcp'].lower() == 'static'):
+            if(mgmt_dict['mgmt_dhcp'].lower() == 'static'):
                 mgmt_inet = 'static'
             if('mgmt_ip' not in mgmt_dict):
                 logger.sys_error('No mgmt ip was specified.')
