@@ -20,7 +20,7 @@ new_system_variables = [
     {"system_name":"ciac-34961","parameter":"uplink_gateway","param_value":"192.168.10.1"},
     {"system_name":"ciac-34961","parameter":"uplink_domain_name","param_value":"rtp.transcirrus.com"},
     {"system_name":"ciac-34961","parameter":"uplink_subnet","param_value":"255.255.255.0"},
-    {"system_name":"ciac-34961","parameter":"mgmt_domain_name","param_value":"rtp.transcirrus.com"},
+    {"system_name":"ciac-34961","parameter":"mgmt_domain_name","param_value":"int.transcirrus.com"},
     {"system_name":"ciac-34961","parameter":"mgmt_subnet","param_value":"255.255.255.0"},
     {"system_name":"ciac-34961","parameter":"mgmt_dns","param_value":"8.8.8.8"},
     {"system_name":"ciac-34961","parameter":"vm_ip_min","param_value":"192.168.10.10"},
