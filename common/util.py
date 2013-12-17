@@ -656,6 +656,8 @@ def set_network_variables(input_dict):
 
     mgmt_dict = input_dict['mgmt_dict']
     uplink_dict = input_dict['uplink_dict']
+    print mgmt_dict
+    print uplink_dict
 
     up_inet = 'static'
     for key,value in uplink_dict.items():
@@ -720,7 +722,7 @@ def set_network_variables(input_dict):
     except:
         logger.sys_error("Could not get the node type from the Transcirrus db.")
         raise Exception("Could not get the node type from the Transcirrus db.")
-
+    print node
     #add new config to the DB - This is a freaking hack but it is going away when the redhat switch happens
     try:
         db.pg_transaction_begin()
@@ -728,12 +730,14 @@ def set_network_variables(input_dict):
             #insert the new adapter
             ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
                         %(uplink_dict['up_ip'],'br-ex',uplink_dict['up_subnet'],uplink_dict['up_gateway'],'br-ex',up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000')}
+            print ins_adpt
             db.pg_insert("net_adapter_settings",ins_adpt)
         elif(up_adapter[0][0]):
             #update the adapter row
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
                       %(uplink_dict['up_ip'],uplink_dict['up_subnet'],uplink_dict['up_gateway'],up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000'),'where':"net_adapter='br-ex'",
                       'and':"node_id='%s'"%(uplink_dict['node_id'])}
+            print update
             db.pg_update(update)
         else:
             return 'NA'
@@ -742,12 +746,14 @@ def set_network_variables(input_dict):
             #insert the new adapter
             ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
                         %(mgmt_dict['net_ip'],mgmt_dict['net_adapter'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],bond0,mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500')}
+            print ins_adpt
             db.pg_insert("net_adapter_settings",ins_adpt)
         elif(m_adapter[0][0]):
             #update the adapter row
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
                       %(mgmt_dict['net_ip'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500'),'where':"net_adapter='bond0'",
                       'and':"node_id='%s'"%(input_dict['node_id'])}
+            print update
             db.pg_update(update)
         else:
             return 'NA'
@@ -768,9 +774,11 @@ def set_network_variables(input_dict):
     #"net adapters" are always bonds unless noted, uplink will be a bridge adapter
     get_up_adapter = {'node_id':input_dict['node_id'],'net_adapter':'uplink'}
     up_netadpt = get_network_variables(get_up_adapter)
+    print up_netadpt
 
     get_m_adapter = {'node_id':input_dict['node_id'],'net_adapter':'mgmt'}
     m_netadpt = get_network_variables(get_m_adapter)
+    print m_netadpt
 
     config_array = []
     bond0 = []
@@ -808,6 +816,7 @@ def set_network_variables(input_dict):
     bond0.append(search)
     bond0.append('')
 
+    print bond0
     #we know the node type based on the ID
     #000 - ciac
     #001 - compute
@@ -841,6 +850,7 @@ def set_network_variables(input_dict):
             search = '    dns-search %s'%(up_netadpt['net_dns_domain'])
             br.append(search)
         br.append('')
+        print br
 
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
                'auto eth3','iface eth3 inet manual','    bond-master bond1','','auto eth4','iface eth4 inet manual','    bond-master bond2','','auto eth5','iface eth5 inet manual','    bond-master bond2','']
