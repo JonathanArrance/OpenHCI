@@ -734,7 +734,7 @@ def set_network_variables(input_dict):
                         %(uplink_dict['up_ip'],'br-ex',uplink_dict['up_subnet'],uplink_dict['up_gateway'],'br-ex',up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000')}
             print ins_adpt
             db.pg_insert("net_adapter_settings",ins_adpt)
-        elif(up_adapter[0][0]):
+        elif(up_adapter[0][0] == 'uplink'):
             #update the adapter row
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
                       %(uplink_dict['up_ip'],uplink_dict['up_subnet'],uplink_dict['up_gateway'],up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000'),'where':"net_adapter='br-ex'",
@@ -750,7 +750,7 @@ def set_network_variables(input_dict):
                         %(mgmt_dict['net_ip'],mgmt_dict['net_adapter'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],bond0,mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500')}
             print ins_adpt
             db.pg_insert("net_adapter_settings",ins_adpt)
-        elif(m_adapter[0][0]):
+        elif(m_adapter[0][0] == 'mgmt'):
             #update the adapter row
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
                       %(mgmt_dict['net_ip'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500'),'where':"net_adapter='bond0'",
