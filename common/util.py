@@ -695,8 +695,8 @@ def set_network_variables(input_dict):
             if('mgmt_gateway' in mgmt_dict):
                 logger.sys_error('No gateway used on mgmt network.')
             #dns stuff
-            if((mgmt_dict['m_dns1'] == '') or ('mgmt_dns1' not in mgmt_dict)):
-                mgmt_dict['m_dns1'] = '8.8.8.8'
+            if((mgmt_dict['mgmt_dns1'] == '') or ('mgmt_dns1' not in mgmt_dict)):
+                mgmt_dict['mgmt_dns1'] = '8.8.8.8'
             if('mgmt_dns2' not in mgmt_dict):
                 mgmt_dict['mgmt_dns2'] = '8.8.4.4'
             if('mgmt_dns3' not in mgmt_dict):
