@@ -59,14 +59,25 @@ else:
 
 
 #set up br-ex and enable ovs.
+uplink_dict = {
+                'up_ip':sys_vars['UPLINK_IP'],
+                'up_subnet':sys_vars['UPLINK_SUBNET'],
+                'up_gateway':sys_vars['UPLINK_GATEWAY'],
+                'up_dns1':sys_vars['UPLINK_DNS'],
+                'up_domain':sys_vars['UPLINK_DOMAIN_NAME']
+                }
+
+mgmt_dict = {
+                'mgmt_ip':sys_vars['MGMT_IP'],
+                'mgmt_subnet':sys_vars['MGMT_SUBNET'],
+                'mgmt_dns1':sys_vars['MGMT_DNS'],
+                'mgmt_domain':sys_vars['MGMT_DOMAIN_NAME'],
+                'mgmt_dhcp':'static'
+                }
+
 net_input = {'node_id':node_id,
-             'net_adapter':'uplink',
-             'net_ip':sys_vars['UPLINK_IP'],
-             'net_subnet':sys_vars['UPLINK_SUBNET'],
-             'net_gateway':sys_vars['UPLINK_GATEWAY'],
-             'net_dns1':sys_vars['UPLINK_DNS'],
-             'net_domain':sys_vars['DOMAIN_NAME'],
-             'net_dhcp':'static'
+             'uplink_dict':uplink_dict,
+             'mgmt_dict':mgmt_dict
             }
 
 uplink = util.set_network_variables(net_input)
