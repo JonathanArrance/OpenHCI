@@ -747,13 +747,13 @@ def set_network_variables(input_dict):
     if(m_adapter == None):
         #insert the new adapter
         ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
-                    %(mgmt_dict['net_ip'],mgmt_dict['net_adapter'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],bond0,mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500')}
+                    %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_adapter'],mgmt_dict['mgmt_subnet'],'NULL',bond0,mgmt_inet,mgmt_dict['mgmt_dns1'],mgmt_dict['mgmt_dns2'],mgmt_dict['mgmt_dns3'],mgmt_dict['mgmt_domain'],'1500')}
         print ins_adpt
         db.pg_insert("net_adapter_settings",ins_adpt)
     elif(m_adapter[0][0] == 'mgmt'):
         #update the adapter row
-        update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
-                  %(mgmt_dict['net_ip'],mgmt_dict['net_subnet'],mgmt_dict['net_gateway'],mgmt_inet,mgmt_dict['net_dns1'],mgmt_dict['net_dns2'],mgmt_dict['net_dns3'],mgmt_dict['net_domain'],'1500'),'where':"net_adapter='bond0'",
+        update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
+                  %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_subnet'],mgmt_inet,mgmt_dict['mgmt_dns1'],mgmt_dict['mgmt_dns2'],mgmt_dict['mgmt_dns3'],mgmt_dict['mgmt_domain'],'1500'),'where':"net_adapter='bond0'",
                   'and':"node_id='%s'"%(input_dict['node_id'])}
         print update
         db.pg_update(update)
