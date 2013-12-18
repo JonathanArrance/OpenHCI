@@ -713,10 +713,10 @@ def set_network_variables(input_dict):
     #Note - no try block - this is meerly a check to see if the adapter is in the db 
     get_upadpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='uplink'"}
     up_adapter = db.pg_select(get_upadpt)
-    print up_adapter
+
     get_madpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='mgmt'"}
     m_adapter = db.pg_select(get_madpt)
-    print m_adapter
+
 
     try:
         get_node = {'select':'node_type,node_mgmt_ip','from':'trans_nodes','where':"node_id='%s'"%(input_dict['node_id'])}
@@ -724,63 +724,61 @@ def set_network_variables(input_dict):
     except:
         logger.sys_error("Could not get the node type from the Transcirrus db.")
         raise Exception("Could not get the node type from the Transcirrus db.")
-    print node
-    #add new config to the DB - This is a freaking hack but it is going away when the redhat switch happens
-    #try:
-    db.pg_transaction_begin()
-    if(up_adapter == None):
-        #insert the new adapter
-        ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
-                    %(uplink_dict['up_ip'],'br-ex',uplink_dict['up_subnet'],uplink_dict['up_gateway'],'br-ex',up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000')}
-        print ins_adpt
-        db.pg_insert("net_adapter_settings",ins_adpt)
-    elif(up_adapter[0][0] == 'uplink'):
-        #update the adapter row
-        update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
-                  %(uplink_dict['up_ip'],uplink_dict['up_subnet'],uplink_dict['up_gateway'],up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000'),'where':"net_adapter='br-ex'",
-                  'and':"node_id='%s'"%(input_dict['node_id'])}
-        print update
-        db.pg_update(update)
-    else:
-        return 'NA'
 
-    if(m_adapter == None):
-        #insert the new adapter
-        ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
-                    %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_adapter'],mgmt_dict['mgmt_subnet'],'NULL',bond0,mgmt_inet,mgmt_dict['mgmt_dns1'],mgmt_dict['mgmt_dns2'],mgmt_dict['mgmt_dns3'],mgmt_dict['mgmt_domain'],'1500')}
-        print ins_adpt
-        db.pg_insert("net_adapter_settings",ins_adpt)
-    elif(m_adapter[0][0] == 'mgmt'):
-        #update the adapter row
-        update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
-                  %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_subnet'],mgmt_inet,mgmt_dict['mgmt_dns1'],mgmt_dict['mgmt_dns2'],mgmt_dict['mgmt_dns3'],mgmt_dict['mgmt_domain'],'1500'),'where':"net_adapter='bond0'",
-                  'and':"node_id='%s'"%(input_dict['node_id'])}
-        print update
-        db.pg_update(update)
-    else:
-        return 'NA'
+    #add new config to the DB - This is a freaking hack but it is going away when the redhat switch happens
+    try:
+        db.pg_transaction_begin()
+        if(up_adapter == None):
+            #insert the new adapter
+            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
+                        %(uplink_dict['up_ip'],'br-ex',uplink_dict['up_subnet'],uplink_dict['up_gateway'],'br-ex',up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000')}
+    
+            db.pg_insert("net_adapter_settings",ins_adpt)
+        elif(up_adapter[0][0] == 'uplink'):
+            #update the adapter row
+            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
+                      %(uplink_dict['up_ip'],uplink_dict['up_subnet'],uplink_dict['up_gateway'],up_inet,uplink_dict['up_dns1'],uplink_dict['up_dns2'],uplink_dict['up_dns3'],uplink_dict['up_domain'],'9000'),'where':"net_adapter='br-ex'",
+                      'and':"node_id='%s'"%(input_dict['node_id'])}
+    
+            db.pg_update(update)
+        else:
+            return 'NA'
+    
+        if(m_adapter == None):
+            #insert the new adapter
+            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_dns1':"%s",'net_dns2':"%s",'net_dns3':"%s",'net_dns_domain':"%s",'net_mtu':"%s"
+                        %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_adapter'],mgmt_dict['mgmt_subnet'],'NULL',bond0,mgmt_inet,mgmt_dict['mgmt_dns1'],mgmt_dict['mgmt_dns2'],mgmt_dict['mgmt_dns3'],mgmt_dict['mgmt_domain'],'1500')}
+    
+            db.pg_insert("net_adapter_settings",ins_adpt)
+        elif(m_adapter[0][0] == 'mgmt'):
+            #update the adapter row
+            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='%s',net_dns1='%s',net_dns2='%s',net_dns3='%s',net_dns_domain='%s',net_mtu='%s'"
+                      %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_subnet'],mgmt_inet,mgmt_dict['mgmt_dns1'],mgmt_dict['mgmt_dns2'],mgmt_dict['mgmt_dns3'],mgmt_dict['mgmt_domain'],'1500'),'where':"net_adapter='bond0'",
+                      'and':"node_id='%s'"%(input_dict['node_id'])}
+    
+            db.pg_update(update)
+        else:
+            return 'NA'
 
     #update the node_mgmt_ip field in trans_nodes
     #if(link == 'bond0'):
     #update_node_table = {'table':'trans_nodes','set':"node_mgmt_ip='%s'"%(input_dict['net_ip']),'where':"node_id='%s'"%(input_dict['node_id'])}
     #db.pg_update(update_node_table)
-    #except:
-    db.pg_transaction_rollback()
-    #    logger.sql_error("Could not set the network adapter settings.")
-         #return 'ERROR'
-    #finally:
-    db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not set the network adapter settings.")
+        return 'ERROR'
+    finally:
+        db.pg_transaction_commit()
         #disconnect from db
-    db.pg_close_connection()
+        db.pg_close_connection()
 
     #"net adapters" are always bonds unless noted, uplink will be a bridge adapter
     get_up_adapter = {'node_id':input_dict['node_id'],'net_adapter':'uplink'}
     up_netadpt = get_network_variables(get_up_adapter)
-    print up_netadpt
 
     get_m_adapter = {'node_id':input_dict['node_id'],'net_adapter':'mgmt'}
     m_netadpt = get_network_variables(get_m_adapter)
-    print m_netadpt
 
     config_array = []
     bond0 = []
@@ -818,7 +816,6 @@ def set_network_variables(input_dict):
     bond0.append(search)
     bond0.append('')
 
-    print bond0
     #we know the node type based on the ID
     #000 - ciac
     #001 - compute
@@ -852,7 +849,7 @@ def set_network_variables(input_dict):
             search = '    dns-search %s'%(up_netadpt['net_dns_domain'])
             br.append(search)
         br.append('')
-        print br
+
 
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
                'auto eth3','iface eth3 inet manual','    bond-master bond1','','auto eth4','iface eth4 inet manual','    bond-master bond2','','auto eth5','iface eth5 inet manual','    bond-master bond2','']
@@ -865,7 +862,11 @@ def set_network_variables(input_dict):
 
         #concat the big arrays
         config_array = eth + bond0 + up_bond + br + data_bond
-        print config_array
+
+        #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
+        os.system('sudo cp /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+        os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(mgmt_dict['mgmt_ip']))
+        os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(uplink_dict['up_ip']))
 
     if((node[0][0] == 'cn') or (node[0][0] == 'sn')):
         eth = ['auto eth0','iface eth0 inet manual','    bond-master bond0','','auto eth1','iface eth1 inet manual','    bond-master bond0','','auto eth2','iface eth2 inet manual','    bond-master bond1','',
