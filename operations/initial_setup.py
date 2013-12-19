@@ -66,7 +66,7 @@ def run_setup(new_system_variables,auth_dict):
     if(boot == 'FALSE'):
         return "System already set up."
 
-
+    '''
     #properly format the key values to an array.
     content = []
     for key, val in sys_vars.items():
@@ -250,7 +250,7 @@ def run_setup(new_system_variables,auth_dict):
     if(gateway != 'OK'):
         logger.sys_error('Uplink gateway is not on the same subnet as the uplink ip.')
         return gateway
-
+    '''
     #set up br-ex and enable ovs.
     uplink_dict = {
                 'up_ip':sys_vars['UPLINK_IP'],
