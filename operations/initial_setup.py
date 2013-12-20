@@ -43,7 +43,7 @@ def run_setup(new_system_variables,auth_dict):
     node_id = util.get_node_id()
     node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
-    
+
     #get the original system vars from the DB - used in case we need to rollback
     #rollback_sys_vars = util.get_system_variables(node_id)
 
@@ -61,7 +61,7 @@ def run_setup(new_system_variables,auth_dict):
         #do the rollback procedure
         #rollback = util.update_system_variables(rollback_sys_vars)
         raise Exception("Could not retrieve the system_variables.")
-    """
+
     boot = node_util.check_first_time_boot()
     if(boot == 'FALSE'):
         return "System already set up."
@@ -287,7 +287,7 @@ def run_setup(new_system_variables,auth_dict):
     else:
         print "Net config file written."
         logger.sys_info("Net config file written.")
-    """
+
     #restart postgres
     pgsql_start = service.postgresql('restart')
     if(pgsql_start != 'OK'):
@@ -295,7 +295,7 @@ def run_setup(new_system_variables,auth_dict):
         return pgsql_start
 
     #restart adapters
-    time.sleep(1)
+    time.sleep(5)
     #reconfig ips
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
@@ -326,7 +326,7 @@ def run_setup(new_system_variables,auth_dict):
         return pub_check
 
     #if in the same range create the default public range in quantum/neutron
-    time.sleep(2)
+    time.sleep(3)
     neu_net = neutron_net_ops(auth_dict)
     p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
     default_public = neu_net.add_public_network(p_create_dict)
@@ -337,7 +337,7 @@ def run_setup(new_system_variables,auth_dict):
         #add the new public net to the sys_vars_table
         def_array = [{'system_name': sys_vars['NODE_NAME'],'parameter':'default_pub_net_id', 'param_value':default_public['net_id']}]
         update_def_pub_net = util.update_system_variables(def_array)
-        if((pdate_def_pub_net == 'ERROR') or (pdate_def_pub_net == 'NA')):
+        if((update_def_pub_net == 'ERROR') or (update_def_pub_net == 'NA')):
             logger.sys_error("Could not update the default public network id, Setup has failed.")
             return 'ERROR'
 
