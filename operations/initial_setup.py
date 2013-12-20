@@ -287,6 +287,11 @@ def run_setup(new_system_variables,auth_dict):
     else:
         print "Net config file written."
         logger.sys_info("Net config file written.")
+    #restart postgres
+    pgsql_start = service.postgresql('restart')
+    if(psql_start != 'OK'):
+        #fire off revert
+        return psql_start
 
     #restart adapters
     time.sleep(1)
