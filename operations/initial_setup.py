@@ -61,7 +61,7 @@ def run_setup(new_system_variables,auth_dict):
         #do the rollback procedure
         #rollback = util.update_system_variables(rollback_sys_vars)
         raise Exception("Could not retrieve the system_variables.")
-
+    """
     boot = node_util.check_first_time_boot()
     if(boot == 'FALSE'):
         return "System already set up."
@@ -287,6 +287,7 @@ def run_setup(new_system_variables,auth_dict):
     else:
         print "Net config file written."
         logger.sys_info("Net config file written.")
+    """
     #restart postgres
     pgsql_start = service.postgresql('restart')
     if(pgsql_start != 'OK'):
@@ -379,6 +380,8 @@ def run_setup(new_system_variables,auth_dict):
     #    logger.error("Could not reset the admin password. Check the interface and try again.")
     #else:
     #    logger.info("The admin password has been updated.")
+
+    #set the first time boot flag
 
     return 'OK'
 
