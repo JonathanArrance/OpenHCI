@@ -4,20 +4,18 @@ from transcirrus.component.neutron.network import neutron_net_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","builder")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
 
-"""
 print"----------------------------------------"
 print "createin a new external network"
 create = {'net_name':"thistest10",'admin_state':"true", 'shared':"true"}
 newnet = net.add_public_network(create)
 print newnet
-"""
 time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"

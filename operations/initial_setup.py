@@ -328,7 +328,7 @@ def run_setup(new_system_variables,auth_dict):
     #if in the same range create the default public range in quantum/neutron
     time.sleep(2)
     neu_net = neutron_net_ops(auth_dict)
-    p_create_dict = {'net_name':'default_public','admin_state':'true','shared':'false'}
+    p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
     default_public = neu_net.add_public_network(p_create_dict)
     if('net_id' not in default_public):
         logger.sys_error("Could not create the default public network.")
@@ -345,7 +345,7 @@ def run_setup(new_system_variables,auth_dict):
     #or the vms will not be able to reach the outside.
     time.sleep(1)
     s_create_dict = {
-                     'net_name': 'default_public',
+                     'net_name': 'DefaultPublic',
                      'subnet_dhcp_enable':'true',
                      'subnet_dns':[sys_vars['UPLINK_DNS']],
                      'subnet_start_range':sys_vars['VM_IP_MIN'],
