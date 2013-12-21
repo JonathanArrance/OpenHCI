@@ -135,10 +135,14 @@ def restartServices(node_id, node_type):
         ret = service_controller.cinder("restart")
 
         if ret == "OK":
-            print "node_id: %s, services restart success" % node_id
+            logger.sys_info("node_id: %s, services restart success" %(node_id))
+            f __debug__ :
+                print "node_id: %s, services restart success" % node_id
             return True
         else:
-            print "node_id: %s, services restart failure" % node_id
+            logger.sys_error("node_id: %s, services restart failure" %(node_id))
+            if __debug__ :
+                print "node_id: %s, services restart failure" % node_id
             return False
     elif node_type == "cn":
 
@@ -150,16 +154,24 @@ def restartServices(node_id, node_type):
             ret == service_controller.openvswitch("restart")
 
             if ret == "OK":
-                print "node_id: %s, services restart success" % node_id
+                logger.sys_info("node_id: %s, services restart success" %(node_id))
+                if __debug__ :
+                    print "node_id: %s, services restart success" % node_id
                 return True
             else:
-                print "node_id: %s, openvswitch services restart failure" % node_id
+                logger.sys_error("node_id: %s, openvswitch services restart failure" %(node_id))
+                if __debug__ :
+                    print "node_id: %s, openvswitch services restart failure" % node_id
                 return False
         else:
-            print "node_id: %s, nova services restart failure" % node_id
+            logger.sys_error("node_id: %s, nova services restart failure" %(node_id))
+            if __debug__ :
+                print "node_id: %s, nova services restart failure" % node_id
             return False
     else:
-        print "node_id: %s, unknown node_type" % node_type
+        logger.sys_error("node_id: %s, unknown node_type" %(node_id))
+        if __debug__ :
+            print "node_id: %s, unknown node_type" % node_type
         return False
 
 
@@ -185,9 +197,13 @@ def recv_data(sock):
         else:
             count = count + 1
             if count >= retry_count:
-                print "retry count expired..exiting!!"
+                logger.sys_error("retry count expired..exiting!!")
+                if __debug__ :
+                    print "retry count expired..exiting!!"
                 sys.exit(1)
-            print "retrying... ", count
+            logger.sys_warning("retrying...%s" %(count))
+            if __debug__ :
+                print "retrying... ", count
 
     return data
 
@@ -212,13 +228,21 @@ def restartNovaServices(node_id):
     out_array = status.split('\n')
 
     if out_array[0] == "nova-compute stop/waiting":
-        print "nova-compute stopped!! node_id %s" % node_id
+        logger.sys_error("nova-compute stopped!! node_id %s" %(node_id))
+        if __debug__ :
+            print "nova-compute stopped!! node_id %s" % node_id
         if out_array[1].find("nova-compute start/running") != -1:
-            print "nova-compute re-started!!! node_id: %s" % node_id
+            logger.sys_info("nova-compute re-started!!! node_id: %s" %(node_id))
+            if __debug__ :
+                print "nova-compute re-started!!! node_id: %s" % node_id
         else:
-            print "failure to re-start nova-compute!!! node_id: %s" % node_id
+            logger.sys_error("failure to re-start nova-compute!!! node_id: %s" %(node_id))
+            if __debug__ :
+                print "failure to re-start nova-compute!!! node_id: %s" % node_id
     else:
-        print "failure to stop nova-compute!!! node_id: %s" % node_id
+        logger.sys_error("failure to stop nova-compute!!! node_id: %s" %(node_id))
+        if __debug__ :
+            print "failure to stop nova-compute!!! node_id: %s" % node_id
 
 def restartOvsServices(node_id):    
     '''
@@ -242,9 +266,13 @@ def restartOvsServices(node_id):
     out_array = status.split('\n')
 
     if out_array[1].find("start/running") != -1:
-        print "node_id: %s, quantum server re-started!!!" % node_id
+        logger.sys_info("node_id: %s, quantum server re-started!!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s, quantum server re-started!!!" % node_id
     else:
-        print "node_id: %s, failure in starting quantum server!!!" % node_id
+        logger.sys_error("node_id: %s, failure in starting quantum server!!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s, failure in starting quantum server!!!" % node_id
 
 
     # check openvswitch
@@ -258,13 +286,21 @@ def restartOvsServices(node_id):
 
     for i in range(0, len(out_array)-1):
         if out_array[i].find("Killing ovs-vswitchd") != -1:
-            print "node_id: %s, ovs-vswitchd killed" % (node_id)
+            logger.sys_info("node_id: %s, ovs-vswitchd killed" %(node_id))
+            if __debug__ :
+                print "node_id: %s, ovs-vswitchd killed" % (node_id)
         elif out_array[i].find("Killing ovsdb-server") != -1:
-            print "node_id: %s, ovsdb-server killed" % (node_id)
+            logger.sys_info("node_id: %s, ovsdb-server killed" %(node_id))
+            if __debug__ :
+                print "node_id: %s, ovsdb-server killed" % (node_id)
         elif out_array[i].find("Starting ovsdb-server") != -1:
-            print "node_id: %s, ovsdb-server re-started !!!" % node_id
+            logger.sys_info("node_id: %s, ovsdb-server re-started !!!" %(node_id))
+            if __debug__ :
+                print "node_id: %s, ovsdb-server re-started !!!" % node_id
         elif out_array[i].find("Starting ovs-vswitchd") != -1:
-            print "node_id: %s, ovs-switchd re-started !!!" % node_id
+            logger.sys_info("node_id: %s, ovs-switchd re-started !!!" %(node_id))
+            if _debug__ :
+                print "node_id: %s, ovs-switchd re-started !!!" % node_id
 
 
 
@@ -304,27 +340,37 @@ def checkNovaManage(status):
             if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
                 ret = ret+1
             else:
-                print "nova-conductor is not running"
+                logger.sys_error("nova-conductor is not running")
+                if __debug__ :
+                    print "nova-conductor is not running"
         elif line_array[i].find('nova-scheduler') != -1:
             if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
                 ret = ret+1
             else:
-                print "nova-scheduler is not running"
+                logger.sys_error("nova-scheduler is not running")
+                if __debug__ :
+                    print "nova-scheduler is not running"
         elif line_array[i].find('nova-consoleauth') != -1:
             if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
                 ret = ret+1
             else:
-                print "nova-consoleauth is not running"
+                logger.sys_error("nova-consoleauth is not running")
+                if __debug__ :
+                    print "nova-consoleauth is not running"
         elif line_array[i].find('nova-cert') != -1: 
             if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
                 ret = ret+1
             else:
-                print "nova-cert is not running"
+                logger.sys_error("nova-cert is not running")
+                if __debug__ :
+                    print "nova-cert is not running"
         elif line_array[i].find('nova-compute') != -1:
             if line_array[i].find('enabled') != -1 and line_array[i].find(':-)') != -1:
                 ret = ret+1
             else:
-                print "nova-compute is not running"
+                logger.sys_error("nova-compute is not running")
+                if __debug__ :
+                    `print "nova-compute is not running"
 
 
     # make sure all services are listed            
@@ -347,7 +393,9 @@ def checkOpenvswitch(status):
     if status.find('start/running') != -1:
         return True
     else:
-        print "quantum-plugin-openvswitch-agent stopped/halted !!!"
+        logger.sys_error("quantum-plugin-openvswitch-agent stopped/halted !!!")
+        if __debug__ :
+            print "quantum-plugin-openvswitch-agent stopped/halted !!!"
         return False
 
 def checkOvs(node_id, status):
@@ -364,7 +412,9 @@ def checkOvs(node_id, status):
     line_array = status.split('\n')
     for i in range(0, len(line_array)-1):
         if line_array[i].find("br-int") != -1:
-            print "node_id: %s, bridge exists : %s" % (node_id,line_array[i])
+            logger.sys_info("node_id: %s, bridge exists : %s" %(node_id,line_array[i]))
+            if __debug__ :
+                print "node_id: %s, bridge exists : %s" % (node_id,line_array[i])
             return True
         else:
             return False
@@ -387,14 +437,18 @@ def checkNovaServices(node_id):
     #print "nova compute :: %s" % status
     ret = checkNovaCompute(status)
     if ret == False:
-        print "node_id: %s, nova-compute status failure !!!" % node_id
+        logger.sys_error("node_id: %s, nova-compute status failure !!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s, nova-compute status failure !!!" % node_id
         return ret
 
     out = os.popen('nova-manage service list')
     status = out.read()
     ret = checkNovaManage(status)
     if ret == False:
-        print "node_id: %s, nova-manage services failure !!!" % node_id
+        logger.sys_error("node_id: %s, nova-manage services failure !!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s, nova-manage services failure !!!" % node_id
         return ret
 
     out = os.popen('service quantum-plugin-openvswitch-agent status')
@@ -402,7 +456,9 @@ def checkNovaServices(node_id):
     #print "quantun-plugin :: %s" % status
     ret = checkOpenvswitch(status)
     if ret == False:
-        print "node_id: %s, quantum openvswitch agent failure !!!" % node_id
+        logger.sys_error("node_id: %s, quantum openvswitch agent failure !!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s, quantum openvswitch agent failure !!!" % node_id
         return ret
 
     # export environment variables TODO
@@ -430,7 +486,9 @@ def checkOvsServices(node_id):
     #print "ovs-vsctl :: %s" % status
     ret = checkOvs(node_id, status)
     if ret == False:
-        print "node_id: %s, ovs services failure !!!" % node_id
+        logger.sys_error("node_id: %s, ovs services failure !!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s, ovs services failure !!!" % node_id
         return ret
     else:
         #print "node_id: %s, ovs services success !!!" % node_id
@@ -468,7 +526,9 @@ def processComputeConfig(sock, node_id):
             elif cn_config[i]['file_name'] == 'api-paste.ini' :
                 api_conf = cn_config[i]
     else:
-        print "compute node did not receive nova config file, exiting!!!"
+        logger.sys_error("compute node did not receive nova config file, exiting!!!")
+        if __debug__ :
+            print "compute node did not receive nova config file, exiting!!!"
         sys.exit()
 
     # receive ovs config structures
@@ -488,7 +548,9 @@ def processComputeConfig(sock, node_id):
                 net_conf = cn_config[i]
 
     else:
-        print "compute node did not receive ovs config file, exiting!!!"
+        logger.sys_error("compute node did not receive ovs config file, exiting!!!")
+        if __debug__ :
+            print "compute node did not receive ovs config file, exiting!!!"
         sys.exit()
                 
 
@@ -502,40 +564,60 @@ def processComputeConfig(sock, node_id):
 
     ret = util.write_new_config_file(nova_conf)
     if ret == "ERROR" or ret == "NA":
-        print "eror in writing nova conf, exiting!!!"
+        logger.sys_error("eror in writing nova conf, exiting!!!")
+        if __debug__ :
+            print "eror in writing nova conf, exiting!!!"
         sys.exit()
     else:
-        print "write success, nova conf"
+        logger.sys_info("write success, nova conf")
+        if __debug__ :
+            print "write success, nova conf"
 
     ret = util.write_new_config_file(comp_conf)
     if ret == "ERROR" or ret == "NA":
-        print "error in writing comp conf, exiting!!!"
+        logger.sys_error("error in writing comp conf, exiting!!!")
+        if __debug__ :
+            print "error in writing comp conf, exiting!!!"
         sys.exit()
     else:
-        print "write success, comp conf"
+        logger.sys_info("write success, comp conf")
+        if __debug__ :
+            print "write success, comp conf"
 
     ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
-        print "error in writing api conf, exiting!!!"
+        logger.sys_error("error in writing api conf, exiting!!!")
+        if __debug__ :
+            print "error in writing api conf, exiting!!!"
         sys.exit()
     else:
-        print "write success, api conf"
+        logger.sys_info("write success, api conf")
+        if __debug__ :
+            print "write success, api conf"
 
     # write compute nodes ovs config file
 
     ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
-        print "error in writing ovs conf, exiting!!!"
+        logger.sys_error("error in writing ovs conf, exiting!!!")
+        if __debug__ :
+            print "error in writing ovs conf, exiting!!!"
         sys.exit()
     else:
-        print "write success, ovs conf"
+        logger.sys_info("write success, ovs conf")
+        if __debug__ :
+            print "write success, ovs conf"
 
     ret = util.write_new_config_file(net_conf)
     if ret == "ERROR" or ret == "NA":
-        print "error in writing net conf, exiting!!!"
+        logger.sys_error("error in writing net conf, exiting!!!")
+        if __debug__ :
+            print "error in writing net conf, exiting!!!"
         sys.exit()
     else:
-        print "write success, net_conf"
+        logger.sys_info("write success, net_conf")
+        if __debug__ :
+            print "write success, net_conf"
                                                                                    
 
     post_install_status = True
@@ -549,7 +631,9 @@ def processComputeConfig(sock, node_id):
     ovs_services = checkOvsServices(node_id)
 
     if nova_services==True and ovs_services==True:
-        print "All services are up and running !!!"
+        logger.sys_info("All services are up and running !!!")
+        if __debug__ :
+            print "All services are up and running !!!"
         post_install_status=True
     else:
         post_install_status=False
@@ -567,10 +651,14 @@ def processComputeConfig(sock, node_id):
 
             if data:
                 data = pickle.loads(data)
-                print "client received %s" % data
+                logger.sys_info("client received %s" %(data))
+                if __debug__ :
+                    print "client received %s" % data
                 break
             else:
-                print "listening for status_ready ack"
+                logger.sys_info("listening for status_ready ack")
+                if __debug__ :
+                    print "listening for status_ready ack"
 
     else:
 
@@ -591,7 +679,9 @@ def processComputeConfig(sock, node_id):
                 post_install_status = True 
                 break;
             retry = retry-1
-            print "node_id: %s, ******retrying services******* %s" % (node_id, retry)
+            logger.sys_warning("node_id: %s, ******retrying services******* %s" %(node_id, retry))
+            if __debug__ :
+                print "node_id: %s, ******retrying services******* %s" % (node_id, retry)
 
         if post_install_status != True:
 
@@ -604,10 +694,14 @@ def processComputeConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    print "client received %s" % data
+                    logger.sys_info("client received %s" %(data))
+                    if __debug__ :
+                        print "client received %s" % data
                     break
                 else:
-                    print "listening for status_halt ack"
+                    logger.sys_info("listening for status_halt ack")
+                    if __debug__ :
+                        print "listening for status_halt ack"
         else:
              
             # send node_ready status message to cc
@@ -620,10 +714,14 @@ def processComputeConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    print "client received %s" % data
+                    logger.sys_info("client received %s" %(data))
+                    if __debug__ :
+                        print "client received %s" % data
                     break
                 else:
-                    print "listening for status_ready ack"
+                    logger.sys_info("listening for status_ready ack")
+                    if __debug__ :
+                        print "listening for status_ready ack"
 
 
     # receive keep alive messages
@@ -689,24 +787,34 @@ def processStorageConfig(sock, node_id):
             elif sn_config[i]['file_name'] == 'cinder.conf':
                 cin_conf = sn_config[i]
     else:
-        print "node_id: %s client did not receive cinder config files" % node_id
+        logger.sys_error("node_id: %s client did not receive cinder config files" %(node_id))
+        if __debug__ :
+            print "node_id: %s client did not receive cinder config files" % node_id
         sys.exit()
 
 
     # write config files
     ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
-        print "node_id: %s error in writing api conf, exiting!!!" %  node_id
+        logger.sys_error("node_id: %s error in writing api conf, exiting!!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s error in writing api conf, exiting!!!" %  node_id
         sys.exit()
     else:
-        print "node_id: %s write success, api conf" % node_id
+        logger.sys_info("node_id: %s write success, api conf" %(node_id))
+        if __debug__ :
+            print "node_id: %s write success, api conf" % node_id
 
     ret = util.write_new_config_file(cin_conf)
     if ret == "ERROR" or ret == "NA":
-        print "node_id: %s error in writing cinder conf, exiting!!!" % node_id
+        logger.sys_error("node_id: %s error in writing cinder conf, exiting!!!" %(node_id))
+        if __debug__ :
+            print "node_id: %s error in writing cinder conf, exiting!!!" % node_id
         sys.exit()
     else:
-        print "write success, cinder conf"
+        logger.sys_info("write success, cinder conf")
+        if __debug__ :
+            print "write success, cinder conf"
 
 
     # create service_controller object: TODO auth_dict      
@@ -717,7 +825,9 @@ def processStorageConfig(sock, node_id):
     # restart services
     sn_services = service_controller.cinder("restart")
     if sn_services == "NA" or sn_services == "ERROR":
-        print "node_id: %s, error in restarting cinder services" % node_id
+        logger.sys_error("node_id: %s, error in restarting cinder services")
+        if __debug__ :
+            print "node_id: %s, error in restarting cinder services" % node_id
     elif sn_services == "OK":
         sn_services = True
     #restartStorageServices(node_id)
@@ -727,7 +837,9 @@ def processStorageConfig(sock, node_id):
     #sn_services = checkStorageServices(node_id)
 
     if sn_services == True:
-        print "node_id: %s All services in storage node are running" % node_id
+        logger.sys_info("node_id: %s All services in storage node are running" %(node_id))
+        if __debug__ :
+            print "node_id: %s All services in storage node are running" % node_id
         post_install_status = True
     else:
         post_install_status = False
@@ -742,10 +854,14 @@ def processStorageConfig(sock, node_id):
 
             if data:
                 data = pickle.loads(data)
-                print "node_id: %s client received %s" % (node_id, data)
+                logger.sys_info("ode_id: %s client received %s" %(node_id, data))
+                if __debug__ :
+                    print "node_id: %s client received %s" % (node_id, data)
                 break
             else:
-                print "listening for ok ack message for status ready message"
+                logger.sys_info("listening for ok ack message for status ready message")
+                if __debug__ :
+                    print "listening for ok ack message for status ready message"
     else:
         # retry
         retry = 5
@@ -755,7 +871,9 @@ def processStorageConfig(sock, node_id):
             # restart services
             sn_services = service_controller.cinder("restart")
             if sn_services == "NA" or sn_services == "ERROR":
-                print "node_id: %s, error in restarting cinder services" % node_id
+                logger.sys_error("node_id: %s, error in restarting cinder services" %(node_id))
+                if __debug__ :
+                    print "node_id: %s, error in restarting cinder services" % node_id
             elif sn_services == "OK":
                 sn_services = True
             #restartStorageServices(node_id)
@@ -767,7 +885,9 @@ def processStorageConfig(sock, node_id):
                 post_install_status=True
                 break
             retry = retry-1
-            print "node_id: %s ********* retrying services ********* %s" % (node_id, retry)
+            logger.sys_warning("node_id: %s ********* retrying services ********* %s" %(node_id, retry))
+            if __debug__ :
+                print "node_id: %s ********* retrying services ********* %s" % (node_id, retry)
 
         # check after stipulated retry's
         if post_install_status != True:
@@ -780,9 +900,13 @@ def processStorageConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    print "node_id: %s client received: %s" % (node_id,data)
+                    logger.sys_info("node_id: %s client received: %s" %(node_id,data))
+                    if __debug__ :
+                        print "node_id: %s client received: %s" % (node_id,data)
                 else:
-                    print "node_id: %s listening for status_halt ack" % (node_id)
+                    logger.sys_info("node_id: %s listening for status_halt ack" %(node_id))
+                    if __debug__ :
+                        print "node_id: %s listening for status_halt ack" % (node_id)
         else:
             # send node ready status message to cc
             sock.sendall(pickle.loads(status_ready, -1))
@@ -793,9 +917,13 @@ def processStorageConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    print "node_id: %s client received: %s" % (node_id,data)
+                    logger.sys_info("node_id: %s client received: %s" %(node_id, data))
+                    if __debug__ :
+                        print "node_id: %s client received: %s" % (node_id,data)
                 else:
-                    print "node_id: %s listening for status_ready ack" % (node_id)
+                    logger.sys_info("node_id: %s listening for status_ready ack" %(node_id))
+                    if __debug__ :
+                        print "node_id: %s listening for status_ready ack" % (node_id)
 
     # keep alive check       
     keep_alive_check(sock)
@@ -821,15 +949,23 @@ def keep_alive(sock):
 
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
-                print "***%s***" % data['Value']
+                logger.sys_info("***%s***" % (data['Value']))
+                if __debug__ :
+                    print "***%s***" % data['Value']
             elif data['Type'] == 'status' and data['Value'] == 'node_ready':
-                print "received %s " % data['Value']
+                logger.sys_info("received %s " %(data['Value']))
+                if __debug__ :
+                    print "received %s " % data['Value']
                 keep_alive(sock)
             else:
-                print "received %s " % data
+                logger.sys_info("received %s" %(data))
+                if __debug__ :
+                    print "received %s " % data
                 keep_alive(sock)
         else:
-            print "client waiting for keep alive messages"
+            logger.sys_info("client waiting for keep alive messages")
+            if __debug__ :
+                print "client waiting for keep alive messages"
 
 
 # Create socket
@@ -857,7 +993,9 @@ keep_alive_sec=10
 
 try:
     # send connect
-    print "sending connect_pkt"
+    logger.sys_info("sending connect_pkt")
+    if __debug__ :
+        print "sending connect_pkt"
     sock.sendall(pickle.dumps(connect_pkt, -1))
 
     # receive packet using select, retry_count
@@ -869,22 +1007,32 @@ try:
         else:
             count = count + 1
             if count == retry_count:
-                print "retry count expired..exiting!!"
+                logger.sys_error("retry count expired..exiting!!")
+                if __debug__ :
+                    print "retry count expired..exiting!!"
                 sys.exit(1)
-            print "retrying... ", count
+            logger.sys_warning("retrying...%s" %(count))
+            if __debug__ :
+                print "retrying... ", count
 
     if data:
         data = pickle.loads(data)
-        print "client received %s" % data
+        logger.sys_info("client received %s" %(data))
+        if __debug__ :
+            print "client received %s" % data
 
         # check for status ok
         if data['Type'] == 'status' and data['Value'] == 'ok':
-            print "client received %s" % data['Value']
+            logger.sys_info("client received %s" %(data['Value']))
+            if __debug__ :
+                print "client received %s" % data['Value']
 
             # send node data
             node_type = node_info['Value']['node_type']
             node_id = node_info['Value']['node_id']
-            print "sending %s " % node_info
+            logger.sys_info("sending %s " %(node_info))
+            if __debug__ :
+                print "sending %s " % node_info
             #print "node_id = %s" % node_id
             sock.sendall(pickle.dumps(node_info, -1))
 
@@ -893,19 +1041,27 @@ try:
 
             if data:
                 data = pickle.loads(data)
-                print "client received %s" % data
+                #print "client received %s" % data
                 if data['Type'] == 'status' and data['Value'] == 'ok':
-                    print "client received %s" % data['Value']
+                    logger.sys_info("client received %s" %(data['Value']))
+                    if __debug__ :
+                        print "client received %s" % data['Value']
                     # check for services TODO, based on node_type
                     ret = restartServices(node_id, node_type)
                     if ret == True:
-                        print "Node is setup and ready to use!!!"
+                        logger.sys_info("Node is setup and ready to use!!!")
+                        if __debug__ :
+                            print "Node is setup and ready to use!!!"
                     else:
-                        print "node_id: %s, failure to restart services"
+                        logger.sys_error("node_id: %s, failure to restart services")
+                        if __debug__ :
+                            print "node_id: %s, failure to restart services"
                     keep_alive(sock)
 
                 elif data['Type'] == 'status' and data['Value'] == 'build':
-                    print "client received %s" % data['Value']
+                    logger.sys_info("client received %s" %(data['Value']))
+                    if __debug__ :
+                        print "client received %s" % data['Value']
                     sys.exit(1) # TEST
 
                     if node_type == 'cn':
@@ -914,17 +1070,27 @@ try:
                         processStorageConfig(sock, node_id)
 
                 else:
-                    print "client received invalid status message"
+                    logger.sys_error("client received invalid status message")
+                    if __debug__ :
+                        print "client received invalid status message"
             else:
-                print "client did not receive status message, exiting!!!"
+                logger.sys_error("client did not receive status message, exiting!!!")
+                if __debug__ :
+                    print "client did not receive status message, exiting!!!"
                 sys.exit(1)
 
         else:
-            print "client did not received status ok"
+            logger.sys_error("client did not received status ok")
+            if __debug__ :
+                print "client did not received status ok"
     else:
-        print "client received no data for connect packet"
+        logger.sys_error("client received no data for connect packet")
+        if __debug__ :
+            print "client received no data for connect packet"
 
 finally:
-    print "closing client socket"
+    logger.sys_error("closing client socket")
+    if __debug__ :
+        print "closing client socket"
     sock.close()
 
