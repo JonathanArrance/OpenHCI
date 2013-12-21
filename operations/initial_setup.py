@@ -12,6 +12,7 @@ import transcirrus.common.node_util as node_util
 import transcirrus.common.service_control as service
 
 from transcirrus.component.neutron.network import neutron_net_ops
+#from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 from transcirrus.database import node_db
@@ -42,7 +43,7 @@ def run_setup(new_system_variables,auth_dict):
     node_id = util.get_node_id()
     node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
-    
+
     #get the original system vars from the DB - used in case we need to rollback
     #rollback_sys_vars = util.get_system_variables(node_id)
 
@@ -237,13 +238,14 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
 
-    """
+
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
     os.system("sudo ovs-vsctl add-br br-ex")
     os.system("sudo ovs-vsctl add-bond br-ex bond1 eth2 eth3")
     logger.sys_info("Setting up the internal br-int")
     os.system("sudo ovs-vsctl add-br br-int")
+
 
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
@@ -252,14 +254,27 @@ def run_setup(new_system_variables,auth_dict):
         return gateway
 
     #set up br-ex and enable ovs.
+    uplink_dict = {
+                'up_ip':sys_vars['UPLINK_IP'],
+                'up_subnet':sys_vars['UPLINK_SUBNET'],
+                'up_gateway':sys_vars['UPLINK_GATEWAY'],
+                'up_dns1':sys_vars['UPLINK_DNS'],
+                'up_domain':sys_vars['UPLINK_DOMAIN_NAME']
+                }
+    print uplink_dict
+
+    mgmt_dict = {
+                'mgmt_ip':sys_vars['MGMT_IP'],
+                'mgmt_subnet':sys_vars['MGMT_SUBNET'],
+                'mgmt_dns1':sys_vars['MGMT_DNS'],
+                'mgmt_domain':sys_vars['MGMT_DOMAIN_NAME'],
+                'mgmt_dhcp':'static'
+                }
+    print mgmt_dict
+    
     net_input = {'node_id':node_id,
-                 'net_adapter':'uplink',
-                 'net_ip':sys_vars['UPLINK_IP'],
-                 'net_subnet':sys_vars['UPLINK_SUBNET'],
-                 'net_gateway':sys_vars['UPLINK_GATEWAY'],
-                 'net_dns1':sys_vars['UPLINK_DNS'],
-                 'net_domain':sys_vars['DOMAIN_NAME'],
-                 'net_dhcp':'static'
+                 'uplink_dict':uplink_dict,
+                 'mgmt_dict':mgmt_dict
                 }
 
     uplink = util.set_network_variables(net_input)
@@ -273,8 +288,19 @@ def run_setup(new_system_variables,auth_dict):
         print "Net config file written."
         logger.sys_info("Net config file written.")
 
-    #restart adapters
-    time.sleep(1)
+    #restart postgres
+    pgsql_start = service.postgresql('restart')
+    if(pgsql_start != 'OK'):
+        #fire off revert
+        return pgsql_start
+
+    #restart keystone so neutron does not go nuts
+    keystone_restart = service.keystone('restart')
+    if(keystone_restart != 'OK'):
+        #fire off revert
+        return keystone_restart
+
+    time.sleep(5)
     #reconfig ips
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
@@ -305,9 +331,9 @@ def run_setup(new_system_variables,auth_dict):
         return pub_check
 
     #if in the same range create the default public range in quantum/neutron
-    time.sleep(2)
+    time.sleep(3)
     neu_net = neutron_net_ops(auth_dict)
-    p_create_dict = {'net_name':'default_public','admin_state':'true','shared':'true'}
+    p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
     default_public = neu_net.add_public_network(p_create_dict)
     if('net_id' not in default_public):
         logger.sys_error("Could not create the default public network.")
@@ -316,25 +342,53 @@ def run_setup(new_system_variables,auth_dict):
         #add the new public net to the sys_vars_table
         def_array = [{'system_name': sys_vars['NODE_NAME'],'parameter':'default_pub_net_id', 'param_value':default_public['net_id']}]
         update_def_pub_net = util.update_system_variables(def_array)
-        if((pdate_def_pub_net == 'ERROR') or (pdate_def_pub_net == 'NA')):
+        if((update_def_pub_net == 'ERROR') or (update_def_pub_net == 'NA')):
             logger.sys_error("Could not update the default public network id, Setup has failed.")
             return 'ERROR'
-    """
+
     #create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
     #or the vms will not be able to reach the outside.
-    
-    #add router id to quantum l3agent.conf
+    time.sleep(1)
+    s_create_dict = {
+                     'net_name': 'DefaultPublic',
+                     'subnet_dhcp_enable':'true',
+                     'subnet_dns':[sys_vars['UPLINK_DNS']],
+                     'subnet_start_range':sys_vars['VM_IP_MIN'],
+                     'subnet_end_range':sys_vars['VM_IP_MAX'],
+                     'public_ip':sys_vars['UPLINK_IP'],
+                     'public_gateway':sys_vars['UPLINK_GATEWAY'],
+                     'public_subnet_mask':sys_vars['UPLINK_SUBNET']
+                     }
+    default_pub_subnet = neu_net.add_public_subnet(s_create_dict)
+    if('subnet_id' not in default_pub_subnet):
+        logger.sys_error("Could not create the default public subnet.")
+        return 'ERROR'
+
+    #add ext net id to quantum l3agent.conf
+    os.system('echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
 
     #if the node is set as multinode, enable multinode
+    if(sys_vars['SINGLE_NODE'] == '0'):
+        status = node_util.enable_multi_node()
+        if(status != 'OK'):
+            logger.error("Could not enable multi-node. Check the interface and try again.")
+        else:
+            logger.info("Multi-node configuration enabled.")
 
     #call tasks/change_admin_user_password
     #result = change_admin_password.delay(auth_dict,admin_pass)
     #check the status of the task_id
     #if(result.status != 'SUCCESS'):
-    #    raise "Could not chnage the admin password, initial setup has failed."
+    #    logger.error("Could not reset the admin password. Check the interface and try again.")
+    #else:
+    #    logger.info("The admin password has been updated.")
+
+    #set the first time boot flag
+
+    return 'OK'
 
 def check_setup():
     pass

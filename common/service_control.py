@@ -109,7 +109,20 @@ def ceilometer(action):
     print "not implemented"
 
 def postgresql(action):
-    print "not implemented"
+    """
+    DESC: Control the open vswitch services
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: This does not work - These only work on the ciac node for now
+    """
+    psql_array = ['postgresql']
+    out = _operator(psql_array,action)
+    return out
 
 def openvswitch(action):
     """

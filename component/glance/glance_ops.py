@@ -79,16 +79,18 @@ class glance_ops:
     #      The binary image file needs to be created and then uploaded. If the
     #      image binary to use is already created and has a id, the id can be specified.
     #      All users can create an image.
-    #INPUT: create_dict - image_name
-    #                   - image_is_public -op
-    #                   - image_tags - op
-    #                   - image_id - op
+    #INPUT: create_dict - "create": array of dictionaries of parameters to change and the new values
+    #                     example:
+    #                     "create": [{"x-image-meta-name": new_name, "x-image-meta-id": new_id, "x-image-meta-property-*": new_custom_property}]
     #OUTPUT: r_dict - image_name
     #               - image_id
     #               - image_status
-    #               - file_link
-    #               - image_link
-    #               - schema
+    #               - container_format
+    #               - disk_format
+    #               - is_public
+    #               - min_disk
+    #               - size
+    #               - min_ram
     def create_image(self,create_dict):
         #print "not implemented"
         #POST v2/images
@@ -106,16 +108,17 @@ class glance_ops:
             raise Exception("Could not connect to the API caller")
 
         try:
-            #build the body
-            body_dict = {"name": create_dict['image_name']}
             body = ""
-            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token": self.token, "x-image-meta-name": create_dict['image_name'], "x-image-meta-disk_format": create_dict['image_disk_format'], "x-image-meta-container_format": create_dict['image_container_format'], "x-image-meta-is_public": False}
+            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token": self.token}
+            for p in create_dict['create']:
+                header.update(p)
             function = 'POST'
-            api_path = '/v2/images'
+            api_path = '/v1/images'
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
             rest = api.call_rest(rest_dict)
+            print rest
             #
             #BELOW IS COPIED FROM LIST_IMAGES, working on modifying it for create_image
             #
@@ -124,11 +127,7 @@ class glance_ops:
                 #build up the return dictionary and return it if everything is good to go
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
-                img_array = []
-                for image in load['images']:
-                    line = {"image_name": str(image['name']), "image_id": str(image['id']), "image_link":str(image['links'][1]['href'])}
-                    img_array.append(line)
-                return img_array
+                return load
             else:
                 util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
@@ -175,7 +174,7 @@ class glance_ops:
             body = ""
             header = {"X-Auth-Token":self.token, "Content-Type": "application/octet-stream"}
             function = 'PUT'
-            api_path = '/v2/images/%s/file' % (image_id)
+            api_path = '/v1/images/%s' % (image_id)
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
@@ -267,13 +266,13 @@ class glance_ops:
             body = ""
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'DELETE'
-            api_path = '/v2/images/%s' % (image_id)
+            api_path = '/v1/images/%s' % (image_id)
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 204
-            if(rest['response'] == 204):
+            #check the response and make sure it is a 200
+            if(rest['response'] == 200):
                 return "OK"
             else:
                 util.http_codes(rest['response'],rest['reason'])
