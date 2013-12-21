@@ -238,14 +238,14 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
 
-    '''
+
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
     os.system("sudo ovs-vsctl add-br br-ex")
     os.system("sudo ovs-vsctl add-bond br-ex bond1 eth2 eth3")
     logger.sys_info("Setting up the internal br-int")
     os.system("sudo ovs-vsctl add-br br-int")
-    '''
+
 
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)

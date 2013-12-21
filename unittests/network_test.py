@@ -25,5 +25,8 @@ import transcirrus.common.util as util
 #write_net_config = util.write_new_config_file(uplink)
 #print write_net_config
 
-net = util.restart_network_card('all')
+#net = util.restart_network_card('all')
+#print net
+
+net = util.get_adapter_ip('eth4')
 print net
