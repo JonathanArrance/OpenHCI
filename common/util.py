@@ -865,6 +865,11 @@ def set_network_variables(input_dict):
 
         #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
         os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+        #get the current ip settings
+        b0 = get_adapter_ip('bond0')
+        b1 = get_adapter_ip('bond1')
+        os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b0))
+        os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b1))
         os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(mgmt_dict['mgmt_ip']))
         os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(uplink_dict['up_ip']))
 
