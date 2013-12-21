@@ -294,7 +294,12 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return pgsql_start
 
-    #restart adapters
+    #restart keystone so neutron does not go nuts
+    keystone_restart = service.keystone('restart')
+    if(keystone_restart != 'OK'):
+        #fire off revert
+        return keystone_restart
+
     time.sleep(5)
     #reconfig ips
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
