@@ -166,6 +166,4 @@ def logout(request, next_page=None,
 
 @never_cache
 def password_change(request):
-
-
-        return render_to_response('coal/change-password.html', RequestContext(request, {  }))
+    return render_to_response('coal/change-password.html', RequestContext(request, {  }))
