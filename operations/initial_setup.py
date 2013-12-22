@@ -261,7 +261,6 @@ def run_setup(new_system_variables,auth_dict):
                 'up_dns1':sys_vars['UPLINK_DNS'],
                 'up_domain':sys_vars['UPLINK_DOMAIN_NAME']
                 }
-    print uplink_dict
 
     mgmt_dict = {
                 'mgmt_ip':sys_vars['MGMT_IP'],
@@ -270,15 +269,13 @@ def run_setup(new_system_variables,auth_dict):
                 'mgmt_domain':sys_vars['MGMT_DOMAIN_NAME'],
                 'mgmt_dhcp':'static'
                 }
-    print mgmt_dict
-    
+
     net_input = {'node_id':node_id,
                  'uplink_dict':uplink_dict,
                  'mgmt_dict':mgmt_dict
                 }
 
     uplink = util.set_network_variables(net_input)
-    print uplink
     write_net_config = util.write_new_config_file(uplink)
     time.sleep(1)
     if(write_net_config != 'OK'):
