@@ -1,6 +1,6 @@
 from celery import task
-from transcirrus.common.util import get_cloud_controller_name, update_system_variables
-from transcirus.operations.change_adminuser_password import update_admin_password
+from transcirrus.operations.initial_setup import run_setup
+from transcirrus.operations.change_adminuser_password import change_admin_password
 
 @task()
 def send_setup_info(management_ip, uplink_ip, vm_ip_min, vm_ip_max, uplink_dns, uplink_gateway, uplink_domain_name, uplink_subnet, mgmt_domain_name, mgmt_subnet, mgmt_dns, cloud_name, single_node, admin_password):
@@ -10,6 +10,8 @@ def send_setup_info(management_ip, uplink_ip, vm_ip_min, vm_ip_max, uplink_dns, 
     #logger = send_setup_info.get_logger()
     #logger.info("calling box setup with the following parameters: %s | %s |%s |%s |%s |%s |%s" % (management_ip, uplink_ip, min_vm_ip, max_vm_ip,
                                                                                          #cloud_name, single_node, admin_password))
+                                                                                         
+    auth = request.session['auth']
 
     system = get_cloud_controller_name()
     system_var_array = [
@@ -31,7 +33,7 @@ def send_setup_info(management_ip, uplink_ip, vm_ip_min, vm_ip_max, uplink_dns, 
 			{"system_name": system, "parameter": "mgmt_dns",           "param_value": "8.8.8.8"},
                         ]
 
-    update_system_variables(system_var_array)
-    #update_admin_password (admin_password)
+    run_setup(system_var_array, auth)
+    change_admin_password (admin_password)
 
     return "box setup complete"

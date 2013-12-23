@@ -14,8 +14,8 @@ class SetupForm(forms.Form):
 
     management_ip = forms.IPAddressField(label = 'Management IP Address', help_text = 'IPv4 Ip address for the management network.')
     uplink_ip = forms.IPAddressField(label = 'Uplink IP Address', help_text = 'IPv4 Ip address for the uplink.')
-    min_vm_ip = forms.IPAddressField(label = 'Virtual Machine IP Address Range (Minimum)', help_text = 'VMs will be allowed to use addresses between this and the maximum, inclusive.')
-    max_vm_ip = forms.IPAddressField(label = 'Virtual Machine IP Address Range (Maximum)')
+    vm_ip_min = forms.IPAddressField(label = 'Virtual Machine IP Address Range (Minimum)', help_text = 'VMs will be allowed to use addresses between this and the maximum, inclusive.')
+    vm_ip_max = forms.IPAddressField(label = 'Virtual Machine IP Address Range (Maximum)')
     uplink_dns = forms.IPAddressField(label = 'Uplink DNS')
     uplink_gateway = forms.IPAddressField(label = 'Uplink Gateway')
     uplink_domain_name = forms.CharField(min_length = 1, max_length = 64, label='Uplink Domain Name')
