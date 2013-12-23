@@ -80,13 +80,20 @@ def setup(request):
             uplink_ip = form.cleaned_data['uplink_ip']
             min_vm_ip = form.cleaned_data['min_vm_ip']
             max_vm_ip = form.cleaned_data['max_vm_ip']
+            uplink_dns = form.cleaned_data['uplink_dns']
+            uplink_gateway = form.cleaned_data['uplink_gateway']
+            uplink_domain_name = form.cleaned_data['uplink_domain_name']
+            uplink_subnet = form.cleaned_data['uplink_subnet']
+            mgmt_domain_name = form.cleaned_data['mgmt_domain_name']
+            mgmt_subnet = form.cleaned_data['mgmt_subnet']
+            mgmt_dns = form.cleaned_data['mgmt_dns']
             cloud_name  = form.cleaned_data['cloud_name']
             single_node = form.cleaned_data['single_node']
             admin_password = form.cleaned_data['admin_password']
             admin_password_confirm = form.cleaned_data['admin_password_confirm']
 
             from coalesce.coal_beta.tasks import send_setup_info
-            send_setup_info.delay(management_ip, uplink_ip, min_vm_ip, max_vm_ip, cloud_name, single_node, admin_password)
+            send_setup_info.delay(management_ip, uplink_ip, min_vm_ip, max_vm_ip, uplink_dns, uplink_gateway, uplink_domain_name, uplink_subnet, mgmt_domain_name, mgmt_subnet, mgmt_dns, cloud_name, single_node, admin_password)
 
             if request.POST.get('cancel'):
                 return HttpResponseRedirect('/')
