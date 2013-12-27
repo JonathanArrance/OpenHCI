@@ -302,13 +302,6 @@ def run_setup(new_system_variables,auth_dict):
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
-    
-    #this may have to be moved to the end
-    #logger.sys_info("Restarting the network adapters.")
-    #ints = util.restart_network_card('all')
-    #if(ints != 'OK'):
-    #    logger.sys_error("Could not restart network interfaces.")
-    #    return ints
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
@@ -317,7 +310,7 @@ def run_setup(new_system_variables,auth_dict):
     os.system("sudo iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
 
     logger.sys_info("Saving the iptables entries.")
-    os.system("sudo iptables-save > /etc/iptables.conf")
+    os.system("iptables-save > /transcirrus/iptables.conf")
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
@@ -375,15 +368,10 @@ def run_setup(new_system_variables,auth_dict):
         else:
             logger.info("Multi-node configuration enabled.")
 
-    #call tasks/change_admin_user_password
-    #result = change_admin_password.delay(auth_dict,admin_pass)
-    #check the status of the task_id
-    #if(result.status != 'SUCCESS'):
-    #    logger.error("Could not reset the admin password. Check the interface and try again.")
-    #else:
-    #    logger.info("The admin password has been updated.")
-
     #set the first time boot flag
+    first_boot = node_util.set_first_time_boot('UNSET')
+    if(boot == 'ERROR'):
+        logger.error("Could not set the first time boot flag to the UNSET status.")
 
     return 'OK'
 
