@@ -7,6 +7,7 @@
 #######standard impots#######
 import sys
 import json
+import subprocess
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -79,9 +80,11 @@ class glance_ops:
     #      The binary image file needs to be created and then uploaded. If the
     #      image binary to use is already created and has a id, the id can be specified.
     #      All users can create an image.
-    #INPUT: create_dict - "create": array of dictionaries of parameters to change and the new values
-    #                     example:
-    #                     "create": [{"x-image-meta-name": new_name, "x-image-meta-id": new_id, "x-image-meta-property-*": new_custom_property}]
+    #INPUT: create_dict - image_name
+    #                   - disk_format
+    #                   - container_format
+    #                   - is_public
+    #                   - file_location
     #OUTPUT: r_dict - image_name
     #               - image_id
     #               - image_status
@@ -100,6 +103,8 @@ class glance_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         #connect to the rest api caller.
+        #NOTE: read DB for image info
+        """
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             api = caller(api_dict)
@@ -109,9 +114,7 @@ class glance_ops:
 
         try:
             body = ""
-            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token": self.token}
-            for p in create_dict['create']:
-                header.update(p)
+            header = {"User-Agent": "python/glanceclient", "Content-Type": "application/octet-stream", "X-Auth-Token": self.token, "x-image-meta-name": create_dict['image_name'], "x-image-meta-disk-format": create_dict['disk_format'], "x-image-meta-container-format": create_dict['container_format'], "x-image-meta-is-public": create_dict['is_public']}
             function = 'POST'
             api_path = '/v1/images'
             token = self.token
@@ -130,6 +133,18 @@ class glance_ops:
                 return load
             else:
                 util.http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
+        """
+        try:
+            #subprocess
+            out = subprocess.Popen('glance image-create --is-public %s --disk-format %s --container-format %s --name %s < %s' % (create_dict['is_public'], create_dict['disk_format'], create_dict['container_format'], create_dict['image_name'], create_dict['file_location']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            image = out.stdout.readlines()
+            if(image[0]):
+                return 'OK'
+            else:
+                return 'ERROR'
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
@@ -156,7 +171,9 @@ class glance_ops:
     #                   - file_link
     #OUTPUT: OK if uploaded else http error
     #NOTE: refer to http://docs.openstack.org/api/openstack-image-service/2.0/content/upload-binary-image-data.html
-    def upload_image(self,image_id):
+    def upload_image(self,upload_dict):
+        print "not implemented"
+        """
         #PUT v2/images/{image_id}/file
         if ((self.status_level > 2) or (self.status_level < 0)):
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
@@ -171,10 +188,12 @@ class glance_ops:
             raise Exception("Could not connect to the API caller")
 
         try:
-            body = ""
+            with open(upload_dict['file_location'], 'rb') as content_file:
+                content = content_file.read()
+            body = content
             header = {"X-Auth-Token":self.token, "Content-Type": "application/octet-stream"}
             function = 'PUT'
-            api_path = '/v1/images/%s' % (image_id)
+            api_path = '/v1/images/%s' % (upload_dict['image_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
@@ -187,6 +206,7 @@ class glance_ops:
         except Exception as e:
             logger.sys_error("Could not get image %s" %(e))
             raise e
+        """
 
     #DESC: Updates the image information. Only admins and power users can update the image info
     #      for images in their projects.

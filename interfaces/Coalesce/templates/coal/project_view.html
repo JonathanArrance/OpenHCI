@@ -19,88 +19,45 @@
 {% endblock %}
 
 {% block content %}
-{{project}}
+
     <div class="span12 well legend-header">
-        <b>{{ project.project_name}}</b> <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
+        {{ project.project_name}} ({{project.project_id}}) <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
     </div>
 
-    <div class="row-fluid">
-
+    <!--<b>def_security_group_name</b>: {{project.def_security_group_name}}<br>
+    <b>def_security_key_name</b>: {{project.def_security_key_name}}<br>
+    <b>host_system_name</b>: {{project.host_system_name}}<br>
+    <b>project_name</b>: {{project.project_name}}<br>
+    <b>def_network_id</b>: {{project.def_network_id}}<br>
+    <b>def_security_key_id</b>: {{project.def_security_key_id}}<br>
+    <b>host_system_ip</b>: {{project.host_system_ip}}<br>
+    <b>def_network_name</b>: {{project.def_network_name}}<br>
+    <b>project_id</b>: {{project.project_id}}<br>
+    <b>def_security_group_id</b>: {{project.def_security_group_id}}<br>-->
+    
+    <!--  Begin Row One -->
+    <div class="row-fluid"> 
+    
       <!-- Begin user widget-->
-      <div class="span3">
+      <div class="span4">
         <div class="well">
           <div class="legend">
-             {{users}}
+             Users   <a href="create_user"  class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New User</a>
+             <a href="add_user_to_project"  class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Add Existing User</a>
           </div>
+          
           <table class="paleblue">
-                <tr> <th>User</th>  <th>email</th>  </tr>
+                <tr> <th>User</th>  <th>Actions</th>  </tr>
                 {% for pu in users %}
-                <tr> <td>{{user}}</td>  </tr>
+                <tr> <td>{{pu.username}}</td>  <td><a href="get_user_info">view</a> | <a href="remove_user" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| <a href="toggle_user">toggle</a>    | <a href="remove_user_from_project">remove user from proj</a> | <a href="update_user_password">update password</a></td></tr>
                 {% endfor %}
           </table>
-                         
+          
         </div>
       </div>
-
-    <!-- Begin instance widget-->
-      <div class="span3">
-        <div class="well">
-          <div class="legend">
-             Instances
-          </div>
-          <table class="paleblue">
-                <tr> <th>Instance</th>  <th>something interesting about instances</th>  </tr>
-          </table>
-                         instances go here
-        </div>
-      </div>
-
-    <!-- Begin volume widget-->
-      <div class="span3">
-        <div class="well">
-          <div class="legend">
-             Volumes
-          </div>
-          <table class="paleblue">
-                <tr> <th>Volume</th>  <th>something interesting about volumes</th>  </tr>
-
-          </table>
-                         volumes go here
-        </div>
-      </div>
-
-    <!-- Begin snapshots widget-->
-      <div class="span3">
-        <div class="well">
-          <div class="legend">
-             Snapshots
-          </div>
-          <table class="paleblue">
-                <tr> <th>snapshots</th>  <th>something interesting about snapshots</th>  </tr>
-          </table>
-          snapshots go here
-        </div>
-      </div>
-
-    </div><!-- end row-fluid-->
-
-    <div class="row-fluid">
-
-      <!-- Begin image widget-->
-      <div class="span3">
-        <div class="well">
-          <div class="legend">
-             Images
-          </div>
-          <table class="paleblue">
-                <tr> <th>Image</th>  <th>Image goodies</th>  </tr>
-          </table>
-                         images go here
-        </div>
-      </div>
-
-    <!-- Begin Security Groups widget-->
-      <div class="span3">
+      
+      <!-- Begin Security Groups widget-->
+      <div class="span4">
         <div class="well">
           <div class="legend">
              Security Groups
@@ -113,7 +70,7 @@
       </div>
 
     <!-- Begin Key Pairs widget-->
-      <div class="span3">
+      <div class="span4">
         <div class="well">
           <div class="legend">
              Key Pairs
@@ -126,28 +83,62 @@
         </div>
       </div>
 
-    <!-- Begin Floating IP widget-->
-      <div class="span3">
+    </div>
+    <!-- end row one-->
+    
+    <!-- begin row two -->
+    <div class="row-fluid">  
+    
+      <!-- Begin volume widget-->
+      <div class="span4">
         <div class="well">
           <div class="legend">
-             Floating IP's
+             Volume Storage
           </div>
           <table class="paleblue">
-                <tr> <th>Floating IP</th>  <th>What can yoy really say about a floating IP?</th>  </tr>
+                <tr> <th>Volumes</th>  <th>something interesting about volumes</th>  </tr>
+
           </table>
-          floating IP's go here
+                         volumes go here
+        </div>
+      </div>
+      
+      <!-- Begin Containers widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Object Containers
+          </div>
+          <table class="paleblue">
+                <tr> <th>Container</th>  <th>Contain in the membrane</th>  </tr>
+          </table>
+          containers 'R' Us
+        </div>
+      </div>
+      
+      <!-- Begin snapshots widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Snapshots
+          </div>
+          <table class="paleblue">
+                <tr> <th>snapshots</th>  <th>something interesting about snapshots</th>  </tr>
+          </table>
+          snapshots go here
         </div>
       </div>
 
-    </div><!-- end row-fluid-->
-
-    <div class="row-fluid">
-
-      <!-- Begin Network widget-->
-      <div class="span3">
+    </div>
+    <!-- end row two-->
+    <!-- begin row three -->
+    <div class="row-fluid">  
+    
+     <!-- Begin Network widget-->
+      <div class="span4">
         <div class="well">
           <div class="legend">
-             Networks
+             External Networks
           </div>
           <table class="paleblue">
                 <tr> <th>Network</th>  <th>Network info</th>  </tr>
@@ -155,9 +146,22 @@
                          networks go here
         </div>
       </div>
+      
+      <!-- Begin Routers widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Routers
+          </div>
+          <table class="paleblue">
+            <tr> <th>Routers</th>  <th>Router Bits</th>  </tr>
+          </table>
+                         Routers go here
+        </div>
+      </div>
 
     <!-- Begin Private Networks widget-->
-      <div class="span3">
+      <div class="span4">
         <div class="well">
           <div class="legend">
              Private Networks
@@ -168,35 +172,58 @@
                          Private Networks go here
         </div>
       </div>
-
-    <!-- Begin Routers widget-->
-      <div class="span3">
+    
+    </div>
+    <!-- end row three-->
+    <!-- begin row four -->
+    <div class="row-fluid">  
+    
+     <!-- Begin instance widget-->
+      <div class="span4">
         <div class="well">
           <div class="legend">
-             Routers
+             Instances
           </div>
           <table class="paleblue">
-                <tr> <th>Routers</th>  <th>Router Bits</th>  </tr>
-
+                <tr> <th>Instance</th>  <th>something interesting about instances</th>  </tr>
           </table>
-                         Routers go here
+                         instances go here
+        </div>
+      </div>
+      
+      <!-- Begin Floating IP widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Floating IP's
+          </div>
+          <table class="paleblue">
+                <tr> <th>Floating IP</th>  <th>What can yoy really say about a floating IP?</th>  </tr>
+          </table>
+          floating IP's go here
+        </div>
+      </div>
+      
+      <!-- Begin image widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Images
+          </div>
+          <table class="paleblue">
+                <tr> <th>Image</th>  <th>Image goodies</th>  </tr>
+          </table>
+                         images go here
         </div>
       </div>
 
-    <!-- Begin Containers widget-->
-      <div class="span3">
-        <div class="well">
-          <div class="legend">
-             Containers
-          </div>
-          <table class="paleblue">
-                <tr> <th>Container</th>  <th>Contain in the membrane</th>  </tr>
-          </table>
-          containers 'R' Us
-        </div>
-      </div>
+    </div>
+    <!-- end row four-->
+       
 
-    </div><!-- end row-fluid-->
+      
+
+   
 
 
 {% endblock %}
