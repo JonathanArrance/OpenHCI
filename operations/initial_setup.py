@@ -310,7 +310,7 @@ def run_setup(new_system_variables,auth_dict):
     os.system("sudo iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
 
     logger.sys_info("Saving the iptables entries.")
-    os.system("iptables-save > /transcirrus/iptables.conf")
+    os.system("sudo iptables-save > /transcirrus/iptables.conf")
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
@@ -355,7 +355,7 @@ def run_setup(new_system_variables,auth_dict):
         return 'ERROR'
 
     #add ext net id to quantum l3agent.conf
-    os.system('echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
+    os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
