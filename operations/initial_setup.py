@@ -171,8 +171,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Nova config file written."
             logger.sys_info("Nova config file written.")
     time.sleep(1)
-    os.system('sudo chmod 664 /var/log/nova/nova-manage.log')
-    os.system("nova-manage db sync")
+    os.system("sudo nova-manage db sync")
     time.sleep(1)
     #start the NOVA service
     nova_start = service.nova('restart')
@@ -192,7 +191,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Cinder config file written."
             logger.sys_info("Cinder config file written.")
     time.sleep(1)
-    os.system("cinder-manage db sync")
+    os.system("sudo cinder-manage db sync")
     time.sleep(1)
     #start the cinder service
     cinder_start = service.cinder('restart')
@@ -213,14 +212,13 @@ def run_setup(new_system_variables,auth_dict):
             logger.sys_info("Glance config file written.")
     #start the cinder service
     glance_start = service.glance('restart')
-    os.system('sudo chmod 664 /var/log/glance/registry.log')
     if(glance_start != 'OK'):
         #fire off revert
         return glance_start
     else:
         time.sleep(1)
         logger.sys_info("Syncing the Glance DB.")
-        os.system("glance-manage db_sync")
+        os.system("sudo glance-manage db_sync")
         #load default glance images shipped on ssd.
 
     #enable neutron
