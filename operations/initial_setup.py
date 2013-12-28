@@ -43,7 +43,7 @@ def run_setup(new_system_variables,auth_dict):
     node_id = util.get_node_id()
     node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
-    new_cloud_name = new_system_variables['cloud_name']
+    #new_cloud_name = new_system_variables['cloud_name']
     del new_system_variables['cloud_name']
 
     #get the original system vars from the DB - used in case we need to rollback
@@ -373,10 +373,10 @@ def run_setup(new_system_variables,auth_dict):
             logger.info("Multi-node configuration enabled.")
 
     #set the cloudname
-    updatename = {'old_name':'TransCirrusCloud', 'new_name':new_cloud_name}
-    new_cloud_name = util.update_cloud_controller_name(updatename)
-    if(new_cloud_name != 'OK'):
-        logger.error('Cloud name was not chnaged.')
+    #updatename = {'old_name':'TransCirrusCloud', 'new_name':new_cloud_name}
+    #new_cloud_name = util.update_cloud_controller_name(updatename)
+    #if(new_cloud_name != 'OK'):
+    #    logger.error('Cloud name was not chnaged.')
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
