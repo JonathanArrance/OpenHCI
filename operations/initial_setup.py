@@ -171,6 +171,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Nova config file written."
             logger.sys_info("Nova config file written.")
     time.sleep(1)
+    os.system('sudo chmod 664 /var/log/nova/nova-manage.log')
     os.system("nova-manage db sync")
     time.sleep(1)
     #start the NOVA service
@@ -212,6 +213,7 @@ def run_setup(new_system_variables,auth_dict):
             logger.sys_info("Glance config file written.")
     #start the cinder service
     glance_start = service.glance('restart')
+    os.system('sudo chmod 664 /var/log/glance/registry.log')
     if(glance_start != 'OK'):
         #fire off revert
         return glance_start
@@ -355,7 +357,8 @@ def run_setup(new_system_variables,auth_dict):
         return 'ERROR'
 
     #add ext net id to quantum l3agent.conf
-    os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
+    os.system('sudo chmod 664 /etc/quantum/l3_agent.ini')
+    os.system('echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
@@ -367,6 +370,12 @@ def run_setup(new_system_variables,auth_dict):
             logger.error("Could not enable multi-node. Check the interface and try again.")
         else:
             logger.info("Multi-node configuration enabled.")
+
+    #set the cloudname
+    updatename = {'old_name':'TransCirrusCloud', 'new_name':sys_vars['CLOUD_NAME']}
+    new_cloud_name = util.update_cloud_controller_name(updatename)
+    if(new_cloud_name != 'OK'):
+        logger.error('Cloud name was not chnaged.')
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
