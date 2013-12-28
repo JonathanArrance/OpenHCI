@@ -301,7 +301,7 @@ def run_setup(new_system_variables,auth_dict):
     #reconfig ips
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
-    os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
+    os.system("sudo ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
@@ -371,10 +371,10 @@ def run_setup(new_system_variables,auth_dict):
             logger.info("Multi-node configuration enabled.")
 
     #set the cloudname
-    updatename = {'old_name':'TransCirrusCloud', 'new_name':sys_vars['CLOUD_NAME']}
-    new_cloud_name = util.update_cloud_controller_name(updatename)
-    if(new_cloud_name != 'OK'):
-        logger.error('Cloud name was not chnaged.')
+    #updatename = {'old_name':'TransCirrusCloud', 'new_name':sys_vars['CLOUD_NAME']}
+    #new_cloud_name = util.update_cloud_controller_name(updatename)
+    #if(new_cloud_name != 'OK'):
+    #    logger.error('Cloud name was not chnaged.')
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
