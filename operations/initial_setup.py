@@ -356,6 +356,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #add ext net id to quantum l3agent.conf
     os.system('sudo chmod 664 /etc/quantum/l3_agent.ini')
+    time.sleep(1)
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
