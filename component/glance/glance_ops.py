@@ -76,25 +76,27 @@ class glance_ops:
         #close any open db connections
         self.db.close_connection()
 
-    #DESC: Builds out a new empty container for an image binary image file.
-    #      The binary image file needs to be created and then uploaded. If the
-    #      image binary to use is already created and has a id, the id can be specified.
-    #      All users can create an image.
-    #INPUT: create_dict - image_name
-    #                   - disk_format
-    #                   - container_format
-    #                   - is_public
-    #                   - file_location
-    #OUTPUT: r_dict - image_name
-    #               - image_id
-    #               - image_status
-    #               - container_format
-    #               - disk_format
-    #               - is_public
-    #               - min_disk
-    #               - size
-    #               - min_ram
     def create_image(self,create_dict):
+        """
+        DESC: Builds out a new empty container for an image binary image file.
+              The binary image file needs to be created and then uploaded. If the
+              image binary to use is already created and has an id, the id can be specified.
+              All users can create an image.
+        INPUT: create_dict - image_name
+                           - disk_format
+                           - container_format
+                           - is_public
+                           - file_location
+        OUTPUT: r_dict - image_name
+                       - image_id
+                       - image_status
+                       - container_format
+                       - disk_format
+                       - is_public
+                       - min_disk
+                       - size
+                       - min_ram
+        """
         #print "not implemented"
         #POST v2/images
         #Check user status level for valid range
@@ -149,12 +151,14 @@ class glance_ops:
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
 
-    #DESC: Create a new operating system binary from an .iso file. Only admins can build
-    #      new binaries and and them to the Glance catalog.
-    #INPUT: self object
-    #OUTPUT:
-    #NOTE:http://docs.openstack.org/trunk/openstack-image/content/ch_creating_images_manually.html
     def create_new_os_binary(self):
+        """
+        DESC: Create a new operating system binary from an .iso file. Only admins can build
+              new binaries and and them to the Glance catalog.
+        INPUT: self object
+        OUTPUT:
+        NOTE:http://docs.openstack.org/trunk/openstack-image/content/ch_creating_images_manually.html
+        """
         print "not implemented"
         # qemu-img create -f qcow2 /tmp/precise.qcow2 10G
         # virt-install --virt-type kvm --name precise --ram 1024 \
@@ -164,14 +168,16 @@ class glance_ops:
         #--graphics vnc,listen=0.0.0.0 --noautoconsole \
         #--os-type=linux --os-variant=ubuntuprecise
 
-    #DESC: Uploads an image created with create_new_os_binary to an image built
-    #      with create_image. All users can upload a new binary to the glance catalog.
-    #INPUT: upload_dict - os_binary_location
-    #                   - image_id
-    #                   - file_link
-    #OUTPUT: OK if uploaded else http error
-    #NOTE: refer to http://docs.openstack.org/api/openstack-image-service/2.0/content/upload-binary-image-data.html
     def upload_image(self,upload_dict):
+        """
+        DESC: Uploads an image created with create_new_os_binary to an image built
+              with create_image. All users can upload a new binary to the glance catalog.
+        INPUT: upload_dict - os_binary_location
+                           - image_id
+                           - file_link
+        OUTPUT: OK if uploaded else http error
+        NOTE: refer to http://docs.openstack.org/api/openstack-image-service/2.0/content/upload-binary-image-data.html
+        """
         print "not implemented"
         """
         #PUT v2/images/{image_id}/file
@@ -208,22 +214,24 @@ class glance_ops:
             raise e
         """
 
-    #DESC: Updates the image information. Only admins and power users can update the image info
-    #      for images in their projects.
-    #INPUT: update_dict - image_id
-    #                   - "update": array of dictionaries of parameters to change and the new values
-    #                     example:
-    #                     "update": [{"x-image-meta-name": new_name, "x-image-meta-id": new_id, "x-image-meta-property-*": new_custom_property}]
-    #OUTPUT: r_dict - image_name
-    #               - image_id
-    #               - image_status
-    #               - container_format
-    #               - disk_format
-    #               - is_public
-    #               - min_disk
-    #               - size
-    #               - min_ram
     def update_image(self,update_dict):
+        """
+        DESC: Updates the image information. Only admins and power users can update the image info
+              for images in their projects.
+        INPUT: update_dict - image_id
+                           - "update": array of dictionaries of parameters to change and the new values
+                             example:
+                             "update": [{"x-image-meta-name": new_name, "x-image-meta-id": new_id, "x-image-meta-property-*": new_custom_property}]
+        OUTPUT: r_dict - image_name
+                       - image_id
+                       - image_status
+                       - container_format
+                       - disk_format
+                       - is_public
+                       - min_disk
+                       - size
+                       - min_ram
+        """
         #PUT v1/images/{image_id}
         #Check user status level for valid range
         if ((self.status_level > 2) or (self.status_level < 0)):
@@ -263,11 +271,13 @@ class glance_ops:
             logger.sys_error("Could not get image %s" %(e))
             raise e
 
-    #DESC: Deletes an image from the Glance catalog.Protected images can not be deleted. Only admins can delete
-    #      an image from the catalog for their project.
-    #INPUT: image_id
-    #OUTPUT: OK if deleted else http error
     def delete_image(self,image_id):
+        """
+        DESC: Deletes an image from the Glance catalog.Protected images can not be deleted. Only admins can delete
+              an image from the catalog for their project.
+        INPUT: image_id
+        OUTPUT: OK if deleted else http error
+        """
         #DELETE v2/images/{image_id}
         #Check user status level for valid range
         if ((self.status_level > 2) or (self.status_level < 0)):
@@ -300,13 +310,15 @@ class glance_ops:
             logger.sys_error("Could not get image %s" %(e))
             raise e
 
-    #DESC: List all of the images in a project as well as any images in the Glance
-    #      catalog that may be set to public. All users can list the images in a
-    #      project.
-    #INPUT: self object
-    #OUTPUT: array of r_dict - image_name
-    #                        - image_id
     def list_images(self):
+        """
+        DESC: List all of the images in a project as well as any images in the Glance
+              catalog that may be set to public. All users can list the images in a
+              project.
+        INPUT: self object
+        OUTPUT: array of r_dict - image_name
+                                - image_id
+        """
         #GET v2/images
         #Check user status level for valid range
         if ((self.status_level > 2) or (self.status_level < 0)):
@@ -346,20 +358,22 @@ class glance_ops:
             logger.sys_error("Could not list images %s" %(e))
             raise e
 
-    #DESC: Get detailed information about a Glance image. All users can
-    #      get information regarding images in their project.
-    #INPUT: image_id
-    #OUTPUT: r_dict - image_name
-    #               - image_id
-    #               - image_status
-    #               - container_format
-    #               - disk_format
-    #               - visibility
-    #               - min_disk
-    #               - size
-    #               - min_ram
-    #               - schema
     def get_image(self,image_id):
+        """
+        DESC: Get detailed information about a Glance image. All users can
+              get information regarding images in their project.
+        INPUT: image_id
+        OUTPUT: r_dict - image_name
+                       - image_id
+                       - image_status
+                       - container_format
+                       - disk_format
+                       - visibility
+                       - min_disk
+                       - size
+                       - min_ram
+                       - schema
+        """
         #GET v2/images/{image_id}
         #Check user status level for valid range
         if ((self.status_level > 2) or (self.status_level < 0)):

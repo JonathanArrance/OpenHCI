@@ -35,8 +35,8 @@ class nova_image_ops:
                 self.sec = 'FALSE'
                 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLLER
+            self.api_ip = config.API_IP
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
