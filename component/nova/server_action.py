@@ -169,7 +169,6 @@ class server_actions:
 
         return 'OK'
 
-
     def resize_server(self, input_dict):
         """
         DESC:The resize operation converts an existing server to a
@@ -203,14 +202,6 @@ class server_actions:
                     logger.sys_error("The virtual server instance cannot be rebooted.")
                     raise Exception("The virtual server instance cannot be rebooted.")
 
-            #get the server name
-            #try:
-            #    get_name = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['server_id'])}
-            #    server_name = self.db.pg_select(get_name)
-            #except:
-            #    logger.sys_error('Could not get the server name, resize failed.')
-            #   raise('Could not get the server name, resize failed.')
-
             #get the new flavor name
             flavor_info = self.flavor.get_flavor(input_dict['flavor_id'])
 
@@ -235,9 +226,9 @@ class server_actions:
                 # check the response code
                 if(rest['response'] == 202):
                     #update the instance with the new flavor and set confirm flag to 1
+                    stamp = util.time_stamp()
                     self.db.pg_transaction_begin()
-                    update_inst = {'table':'trans_instances','set':"inst_flav_name='%s',inst_confirm_resize=1"%(flavor_info['flavor_name']),'where':"inst_id='%s'"%(input_dict['server_id'])}
-                    #print update_inst
+                    update_inst = {'table':'trans_instances','set':"inst_flav_name='%s',inst_confirm_resize=1,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%(flavor_info['flavor_name'],stamp['julian'],stamp['raw']),'where':"inst_id='%s'"%(input_dict['server_id'])}
                     self.db.pg_update(update_inst)
                     self.db.pg_transaction_commit()
                 else:
@@ -274,6 +265,18 @@ class server_actions:
             logger.sys_error("No server id was provided.")
             raise Exception("No server id was provided.")
 
+        #check to make sure non admins can perofrm the task
+        if(self.is_admin == 0):
+            self.get_server = None
+            if(self.user_level == 1):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(self.project_id)}
+            elif(self.user_level == 2):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(self.project_id),'and':"inst_user_id='%s'"%(self.user_id)}
+            server = self.db.pg_select(self.get_server)
+            if(server[0][0] == ''):
+                logger.sys_error('The current user can not confirm the snapshot resize operation.')
+                raise Exception('The current user can not confirm the snapshot resize operation.')
+
         # Create an API connection with the Admin
         try:
             # build an API connection for the admin user
@@ -297,7 +300,7 @@ class server_actions:
             if(rest['response'] == 204):
                 # this method does not return any response body
                 self.db.pg_transaction_begin()
-                update_inst = {'table':'trans_instances','set':"inst_confirm_resize=0",'where':"inst_id='%s'"%(server_id)}
+                update_inst = {'table':'trans_instances','set':"inst_confirm_resize=0,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%('NULL','NULL'),'where':"inst_id='%s'"%(server_id)}
                 self.db.pg_update(update_inst)
                 self.db.pg_transaction_commit()
             else:
@@ -311,15 +314,16 @@ class server_actions:
 
     def revert_resize(self, server_id):
         """
-        During a resize operation, the original server is saved for a
-        period of time to allow for roll back if a problem occurs. If
-        the resized server has a problem, use the revert resize
-        operation to revert the resize and roll back to the original
-        server. All resizes are automatically confirmed after 24 hours
-        if you do not confirm or revert them.
+        DESC: During a resize operation, the original server is saved for a
+              period of time to allow for roll back if a problem occurs. If
+              the resized server has a problem, use the revert resize
+              operation to revert the resize and roll back to the original
+              server. All resizes are automatically confirmed after 24 hours
+              if you do not confirm or revert them.
         INPUT: server_id
         OUTPUT: This operation does not return a response body.
-        ACCESS: Admin and authenticated users can use this operation
+        ACCESS: Admins can revert any vm, power users can on;y revert vms in their
+                project, users can nonly revert their own vms.
         NOTE: none
         """
 
@@ -327,40 +331,52 @@ class server_actions:
             logger.sys_error("No server id was passed.")
             raise Exception("No server id was passed.")
 
+        #check to make sure non admins can perofrm the task
+        if(self.is_admin == 0):
+            self.get_server = None
+            if(self.user_level == 1):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(self.project_id)}
+            elif(self.user_level == 2):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(self.project_id),'and':"inst_user_id='%s'"%(self.user_id)}
+            server = self.db.pg_select(self.get_server)
+            if(server[0][0] == ''):
+                logger.sys_error('The current user can not confirm the snapshot resize operation.')
+                raise Exception('The current user can not confirm the snapshot resize operation.')
 
-        if(self.user_level <= 1):
-            # Create an API connection with the Admin
-            try:
-                # build an API connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                api = caller(api_dict)
-            except:
-                logger.sys_logger("Could not connect to the API")
-                raise Exception("Could not connect to the API")
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
 
-            try:
-                # construct request header and body
-                body='{"revertResize": "null"}'
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'POST'
-                api_path = '/v2.0/servers/%s/action' % (server_id)
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
-                rest = api.call_rest(rest_dict)
+        try:
+            # construct request header and body
+            body='{"revertResize": null}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (self.project_id,server_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+            if(rest['response'] == 202):
+                # this method does not return any response body
+                self.db.pg_transaction_begin()
+                update_inst = {'table':'trans_instances','set':"inst_confirm_resize=0,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%('NULL','NULL'),'where':"inst_id='%s'"%(server_id)}
+                self.db.pg_update(update_inst)
+                self.db.pg_transaction_commit()
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+        except:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Error in sending revert resize request to server.")
+            raise Exception("Error in sending revert resize request to server.")
 
-                # check the response code
-                if(rest['response'] == 202):
-                    # this method does not return any response body
-                    logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
-            except:
-                logger.sys_logger("Error in sending revert resize request to server.")
-                raise Exception("Error in sending revert resize request to server.")
-        else:
-            logger.sys_error("Only an admin or a power user can revert resize request to the server.")
-            raise Exception("Only an admin or a power user can revert resize request to the server.")
+        return 'OK'
 
     def check_status(self):
         pass

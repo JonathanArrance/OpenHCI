@@ -25,7 +25,12 @@ resize = action.resize_server(input_dict)
 print resize
 
 time.sleep(60)
-
+'''
 print 'Confirming server resize'
 confirm = action.confirm_resize('3e8e74fa-cd4d-41d6-9e34-73614418b3db')
 print confirm
+'''
+
+print 'Revert server resize'
+revert = action.revert_resize('3e8e74fa-cd4d-41d6-9e34-73614418b3db')
+print revert

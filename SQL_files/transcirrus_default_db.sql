@@ -843,7 +843,9 @@ CREATE TABLE trans_instances (
     inst_int_net_name character varying,
     inst_image_name character varying,
     inst_name character varying,
-    inst_confirm_resize integer DEFAULT 0
+    inst_confirm_resize integer DEFAULT 0,
+    inst_resize_julian_date character varying,
+    inst_resize_hr_date character varying
 );
 
 
