@@ -29,7 +29,7 @@ else :
     sys.exit()
 
 # invoke zero client process
-out = subprocess.call(" python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+out = subprocess.Popen(" python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 #os.system("python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py")
 console_out = out.stdout.readlines()
 console_err = out.stderr.readlines()
