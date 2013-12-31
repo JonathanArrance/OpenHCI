@@ -3,6 +3,8 @@ import sys
 import os
 import shutil
 import subprocess
+import datetime
+import time
 
 #from confparse import properties
 
@@ -1199,3 +1201,9 @@ def check_public_with_uplink(input_dict):
     NOTE: All veriables are required.
     """
     return 'OK'
+
+def time_stamp():
+    raw = datetime.datetime.now()
+    julian = time.mktime(raw.timetuple())
+    stamp = {'raw':datetime.datetime.now(), 'julian':julian}
+    return stamp

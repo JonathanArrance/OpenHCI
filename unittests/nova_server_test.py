@@ -5,24 +5,42 @@
 import sys
 import time
 
-sys.path.append('../common')
-import logger
-import config
-from auth import authorization
-
-sys.path.append('/home/jonathan/alpo.0/component/nova')
-from server import server_ops
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
+from transcirrus.common.auth import authorization
+from transcirrus.component.nova.server import server_ops
+from transcirrus.component.nova.storage import server_storage_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("admin","builder")
+auth = authorization("admin","password")
 #get the user dict
 perms = auth.get_auth()
+store = server_storage_ops(perms)
 
 nova = server_ops(perms)
 print "Createing a new virtual instance"
-server = {'sec_group_name':'jontest','avail_zone':'nova','sec_key_name':'keys_new','network_name':'test','image_name':'cirros-0.3.1-x86_64-uec','flavor_name':'m1.tiny','name':'testvm'}
+server = {'sec_group_name':'testgroup','avail_zone':'nova','sec_key_name':'testkey','network_name':'testnet','image_name':'cirros-64','flavor_name':'m1.tiny','name':'testvm2'}
 nova.create_server(server)
+
+'''
+input_dict = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': '3e8e74fa-cd4d-41d6-9e34-73614418b3db','volume_id': '15ecae50-0975-408c-b69a-b54e6530bf4b','mount_point': '/dev/vdc'}
+attach = store.attach_vol_to_server(input_dict)
+
+print attach
+
+time.sleep(10)
+
+input_dict2 = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': '3e8e74fa-cd4d-41d6-9e34-73614418b3db','volume_id': '15ecae50-0975-408c-b69a-b54e6530bf4b'}
+detach = store.detach_vol_from_server(input_dict2)
+
+print detach
+
+nova = server_ops(perms)
+print "Createing a new virtual instance"
+server = {'sec_group_name':'testgroup','avail_zone':'nova','sec_key_name':'testkey','network_name':'testnet','image_name':'cirros-64','flavor_name':'m1.tiny','name':'testvm'}
+nova.create_server(server)
+
 print "---------------------------------------"
 time.sleep(2)
 
@@ -49,3 +67,4 @@ time.sleep(2)
 print "Deleteing the virtual instance"
 delete = nova.delete_server('testtest20')
 print delete
+'''

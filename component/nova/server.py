@@ -29,6 +29,7 @@ class server_ops:
         # user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token}
         else:
             self.username = user_dict['username']
+            self.user_id = user_dict['user_id']
             self.password = user_dict['password']
             self.project_id = user_dict['project_id']
             self.token = user_dict['token']
@@ -42,8 +43,8 @@ class server_ops:
                 self.sec = 'FALSE'
                 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLLER
+            self.api_ip = config.API_IP
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -256,7 +257,7 @@ class server_ops:
                 load = json.loads(rest['data'])
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
-                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':"NULL",'inst_floating_ip':"NULL",'proj_id':self.project_id,'in_use':"1",'floating_ip_id':"NULL",'inst_id':load['server']['id'],'inst_port_id':"NULL",'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_int_net_id':self.net_id,'inst_ext_net_id':"NULL",'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
+                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':"NULL",'inst_floating_ip':"NULL",'proj_id':self.project_id,'in_use':"1",'floating_ip_id':"NULL",'inst_id':load['server']['id'],'inst_port_id':"NULL",'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':"NULL",'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
                 self.db.pg_insert("trans_instances",ins_dict)
                 #commit the db transaction
                 self.db.pg_transaction_commit()

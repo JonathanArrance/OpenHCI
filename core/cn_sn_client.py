@@ -518,7 +518,7 @@ def processComputeConfig(sock, node_id):
 
         # send ok, ack 
         sendOk(sock)
-        for i in range(0,len(cn_config)): # 2 - since three arrays are received
+        for i in range(0,len(cn_config)):
             if cn_config[i]['file_name'] == 'nova.conf':
                 nova_conf = cn_config[i]
             elif cn_config[i]['file_name'] == 'nova-compute.conf':
@@ -854,7 +854,7 @@ def processStorageConfig(sock, node_id):
 
             if data:
                 data = pickle.loads(data)
-                logger.sys_info("ode_id: %s client received %s" %(node_id, data))
+                logger.sys_info("node_id: %s client received %s" %(node_id, data))
                 if __debug__ :
                     print "node_id: %s client received %s" % (node_id, data)
                 break
@@ -926,7 +926,7 @@ def processStorageConfig(sock, node_id):
                         print "node_id: %s listening for status_ready ack" % (node_id)
 
     # keep alive check       
-    keep_alive_check(sock)
+    keep_alive(sock)
             
 
 def keep_alive(sock):
@@ -961,7 +961,7 @@ def keep_alive(sock):
                 logger.sys_info("received %s" %(data))
                 if __debug__ :
                     print "received %s " % data
-                keep_alive(sock)
+                #keep_alive(sock)
         else:
             logger.sys_info("client waiting for keep alive messages")
             if __debug__ :
@@ -1062,7 +1062,7 @@ try:
                     logger.sys_info("client received %s" %(data['Value']))
                     if __debug__ :
                         print "client received %s" % data['Value']
-                    sys.exit(1) # TEST
+                    #sys.exit(1) # TEST
 
                     if node_type == 'cn':
                         processComputeConfig(sock, node_id)

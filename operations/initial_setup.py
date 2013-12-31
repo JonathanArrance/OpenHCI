@@ -43,6 +43,8 @@ def run_setup(new_system_variables,auth_dict):
     node_id = util.get_node_id()
     node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
+    #new_cloud_name = new_system_variables['cloud_name']
+    del new_system_variables['cloud_name']
 
     #get the original system vars from the DB - used in case we need to rollback
     #rollback_sys_vars = util.get_system_variables(node_id)
@@ -171,7 +173,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Nova config file written."
             logger.sys_info("Nova config file written.")
     time.sleep(1)
-    os.system("nova-manage db sync")
+    os.system("sudo nova-manage db sync")
     time.sleep(1)
     #start the NOVA service
     nova_start = service.nova('restart')
@@ -191,7 +193,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Cinder config file written."
             logger.sys_info("Cinder config file written.")
     time.sleep(1)
-    os.system("cinder-manage db sync")
+    os.system("sudo cinder-manage db sync")
     time.sleep(1)
     #start the cinder service
     cinder_start = service.cinder('restart')
@@ -218,7 +220,7 @@ def run_setup(new_system_variables,auth_dict):
     else:
         time.sleep(1)
         logger.sys_info("Syncing the Glance DB.")
-        os.system("glance-manage db_sync")
+        os.system("sudo glance-manage db_sync")
         #load default glance images shipped on ssd.
 
     #enable neutron
@@ -301,14 +303,7 @@ def run_setup(new_system_variables,auth_dict):
     #reconfig ips
     out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
-    os.system("ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
-    
-    #this may have to be moved to the end
-    #logger.sys_info("Restarting the network adapters.")
-    #ints = util.restart_network_card('all')
-    #if(ints != 'OK'):
-    #    logger.sys_error("Could not restart network interfaces.")
-    #    return ints
+    os.system("sudo ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
@@ -317,7 +312,7 @@ def run_setup(new_system_variables,auth_dict):
     os.system("sudo iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
 
     logger.sys_info("Saving the iptables entries.")
-    os.system("sudo iptables-save > /etc/iptables.conf")
+    os.system("sudo iptables-save > /transcirrus/iptables.conf")
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
@@ -362,7 +357,9 @@ def run_setup(new_system_variables,auth_dict):
         return 'ERROR'
 
     #add ext net id to quantum l3agent.conf
-    os.system('echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
+    os.system('sudo chmod 664 /etc/quantum/l3_agent.ini')
+    time.sleep(1)
+    os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
     #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
     #this is pushed to alpo.1
@@ -375,15 +372,16 @@ def run_setup(new_system_variables,auth_dict):
         else:
             logger.info("Multi-node configuration enabled.")
 
-    #call tasks/change_admin_user_password
-    #result = change_admin_password.delay(auth_dict,admin_pass)
-    #check the status of the task_id
-    #if(result.status != 'SUCCESS'):
-    #    logger.error("Could not reset the admin password. Check the interface and try again.")
-    #else:
-    #    logger.info("The admin password has been updated.")
+    #set the cloudname
+    #updatename = {'old_name':'TransCirrusCloud', 'new_name':new_cloud_name}
+    #new_cloud_name = util.update_cloud_controller_name(updatename)
+    #if(new_cloud_name != 'OK'):
+    #    logger.error('Cloud name was not chnaged.')
 
     #set the first time boot flag
+    first_boot = node_util.set_first_time_boot('UNSET')
+    if(boot == 'ERROR'):
+        logger.error("Could not set the first time boot flag to the UNSET status.")
 
     return 'OK'
 
