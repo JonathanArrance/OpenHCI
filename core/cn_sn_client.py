@@ -977,6 +977,7 @@ ciac_ip = getDhcpServer()
 
 # TEST
 print ciac_ip
+sys.exit()
 # TEST
 
 # data network ip
