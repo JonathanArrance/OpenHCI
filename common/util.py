@@ -14,7 +14,7 @@ import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 from time import gmtime, strftime
 from ifconfig import ifconfig
-
+dhcp_retry=5
 ######Transcirrus utils#######
 
 #DESC: Logs and rasies excpetions from the OpenStack REST API
