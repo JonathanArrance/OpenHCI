@@ -1207,3 +1207,58 @@ def time_stamp():
     julian = time.mktime(raw.timetuple())
     stamp = {'raw':datetime.datetime.now(), 'julian':julian}
     return stamp
+
+def restart_dhclient():
+    """
+    DESC: restart dhclient service
+    INPUT: 
+    OUTPUT: 
+    NOTE: 
+    """
+
+    out = subprocess.Popen('sudo dhclient', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    console = out.stdout.readlines()
+    logger.sys_info(console)
+
+def getDhcpServer():
+    '''
+    @author         : Shashaa
+    comment         : get DHCP server IP address from dhcp.bond1.leases
+                      file. bond1 interface of the machine connects to
+                      data network of the cloud.
+    return value    : dhcp_server ip
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        : should be used by cn/sn client process
+    '''
+
+    dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
+    dhcp_server = ""
+    global dhcp_retry
+
+    while dhcp_retry:
+
+        out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        data = out.stdout.readlines()
+        if (data):
+            #print data[0].split(" ")
+            data = data[0].split(" ")
+            dhcp_server = data[4].strip()
+            dhcp_server = dhcp_server.strip(";")
+            logger.sys_info("dhcp_server IP: %s" % dhcp_server)
+            dhcp_retry=0
+            #sys.exit()
+        else:
+            logger.sys_warning("Trying to get DHCP server IP")
+            restart_dhclient()
+            dhcp_retry = dhcp_retry-1
+            time.sleep(1)
+
+    if (dhcp_server == ""):
+        logger.sys_error("Error in getting DHCP server IP")
+        sys.exit()
+    else:
+        return dhcp_server
+
