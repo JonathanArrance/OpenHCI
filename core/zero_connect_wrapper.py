@@ -21,8 +21,6 @@ NOTE:
 dhcp_server = util.getDhcpServer()
 
 # ping test
-# TEST
-"""
 status = util.ping_ip(dhcp_server)
 if status != 'OK' :
     logger.sys_info("dhcp server ping success")
@@ -30,9 +28,12 @@ else :
     logger.sys_error("dhcp server ping failure")
     sys.exit()
 
-"""
-# TEST
 # invoke zero client process
-#subprocess.call(" python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-os.system("python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py")
-
+out = subprocess.call(" python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+#os.system("python /usr/local/lib/python2.7/dist-packages/transcirrus/core/cn_sn_client.py")
+console_out = out.stdout.readlines()
+console_err = out.stderr.readlines()
+print "**********console out************"
+print console_out
+print "**********console out************"
+print console_err

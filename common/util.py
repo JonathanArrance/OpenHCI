@@ -965,7 +965,7 @@ def ping_ip(ip):
             ERROR - fail
             NA - unknown
     """
-    out = os.system('sudo ping %s'  %(ip))
+    out = os.system('sudo ping %s -c 5'  %(ip))
     if(out):
         return 'OK'
     elif(not out):
