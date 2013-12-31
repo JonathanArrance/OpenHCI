@@ -968,11 +968,16 @@ def keep_alive(sock):
                 print "client waiting for keep alive messages"
 
 
-# Create socket
+# start of client process
+# create socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Get ciac ip address
 ciac_ip = getDhcpServer()
+
+# TEST
+print ciac_ip
+# TEST
 
 # data network ip
 data_ip = "172.38.24.11"
