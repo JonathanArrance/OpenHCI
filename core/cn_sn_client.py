@@ -976,8 +976,8 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ciac_ip = util.getDhcpServer()
 
 # TEST
-print ciac_ip
-sys.exit()
+#print ciac_ip
+#sys.exit()
 # TEST
 
 # data network ip
@@ -1068,7 +1068,7 @@ try:
                     logger.sys_info("client received %s" %(data['Value']))
                     if __debug__ :
                         print "client received %s" % data['Value']
-                    #sys.exit(1) # TEST
+                    sys.exit(1) # TEST
 
                     if node_type == 'cn':
                         processComputeConfig(sock, node_id)
