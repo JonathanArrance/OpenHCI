@@ -136,7 +136,7 @@ def restartServices(node_id, node_type):
 
         if ret == "OK":
             logger.sys_info("node_id: %s, services restart success" %(node_id))
-            f __debug__ :
+            if __debug__ :
                 print "node_id: %s, services restart success" % node_id
             return True
         else:
@@ -370,7 +370,7 @@ def checkNovaManage(status):
             else:
                 logger.sys_error("nova-compute is not running")
                 if __debug__ :
-                    `print "nova-compute is not running"
+                    print "nova-compute is not running"
 
 
     # make sure all services are listed            
