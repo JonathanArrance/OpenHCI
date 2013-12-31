@@ -48,7 +48,7 @@ node_info = {
     'node_nova_zone':'',
     'node_iscsi_iqn':'',
     'node_swift_ring':'',
-    'node_id':'trans15'
+    'node_id':'trans01'
     }
 }
 
@@ -973,7 +973,7 @@ def keep_alive(sock):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Get ciac ip address
-ciac_ip = getDhcpServer()
+ciac_ip = util.getDhcpServer()
 
 # TEST
 print ciac_ip
