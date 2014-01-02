@@ -15,6 +15,8 @@ from django.views.decorators.cache import never_cache
 
 from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.component.nova.server import server_ops
+from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
@@ -66,9 +68,23 @@ def manage_nodes(request):
 def project_view(request, project_name):
     auth = request.session['auth']
     to = tenant_ops(auth)
+    so = server_ops(auth)
+    no = neutron_net_ops(auth)
+    
     project = to.get_tenant(project_name)
-    users=to.list_tenant_users(project_name)
-    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, 'users': users}))
+    users = to.list_tenant_users(project_name)
+    network_list = no.list_networks()
+    networks={}
+    for net in network_list:
+      networks[net['net_name']]= no.get_network(net['net_name'])
+    sec_groups = so.list_sec_group()
+    sec_keys = so.list_sec_keys()
+    print '~~~~~~~~~~~~~~~~~~~~~~~'
+    print sec_groups
+    print '~~~~~~~~~~~~~~~~~~~~~~~'
+    print sec_keys
+    print '~~~~~~~~~~~~~~~~~~~~~~~'
+    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, 'users': users, 'sec_groups': sec_groups,  'sec_keys': sec_keys, 'networks': networks}))
 
 
 def manage_projects(request):

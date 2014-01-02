@@ -62,10 +62,17 @@
           <div class="legend">
              Security Groups
           </div>
-          <table class="paleblue">
-                <tr> <th>Security Group</th>  <th>Totally secure info</th>  </tr>
-          </table>
-                         security groups go here
+	    <table class="paleblue">
+		{% if sec_groups %}
+		  <tr> <th>Security Group</th>  <th>Group Id</th>  <th>Owner</th></tr>
+		    {% for sg in sec_groups %}
+		      <tr> <td>{{sg}}</td>  <td></td>  <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		
+		<p><i>This project has no security groups</i></p>
+		{% endif %}
+	  </table>
         </div>
       </div>
 
@@ -76,10 +83,16 @@
              Key Pairs
           </div>
           <table class="paleblue">
-                <tr> <th>Key Pairs</th>  <th>I prefer Au Pairs</th>  </tr>
-
+	    {% if sec_keys %}
+                <tr> <th>key_name</th> <th>key_id</th> <th>owner_name</th></tr>
+                    {% for key in sec_keys %}
+		      <tr> <td>{{key}}</td>  <td></td>  <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		  <p><i>This project has no keys</i></p>
+		{% endif %}
           </table>
-                         Key Pairs go here
+
         </div>
       </div>
 
@@ -140,10 +153,22 @@
           <div class="legend">
              External Networks
           </div>
-          <table class="paleblue">
+          {% if networks %}
+	    <table class="paleblue">
+	    
                 <tr> <th>Network</th>  <th>Network info</th>  </tr>
-          </table>
-                         networks go here
+                
+                {% for key,value in networks.items %}
+		  {% if value.net_internal == 'false' %}
+		    <tr> <td>{{key}}</td>  <td>{{value}}</td>  </tr>
+		  {% endif %}
+		  
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no external networks</i></p>
+	  {% endif %}
+                         
         </div>
       </div>
       
@@ -166,10 +191,21 @@
           <div class="legend">
              Private Networks
           </div>
-          <table class="paleblue">
-                <tr> <th>Private Network</th>  <th>Shhh... this is private</th>  </tr>
-          </table>
-                         Private Networks go here
+          {% if networks %}
+	    <table class="paleblue">
+	    
+                <tr> <th>Network</th>  <th>Network info</th>  </tr>
+                
+                {% for key,value in networks.items %}
+		  {% if value.net_internal == 'true' %}
+		    <tr> <td>{{key}}</td>  <td>{{value}}</td>  </tr>
+		  {% endif %}
+		  
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no private networks</i></p>
+	  {% endif %}
         </div>
       </div>
     
