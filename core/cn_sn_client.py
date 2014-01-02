@@ -41,8 +41,8 @@ node_info = {
 'Value': {
     'node_name':'box15',
     'node_type':'cn',
-    'node_mgmt_ip':'192.168.10.10',
-    'node_data_ip':'172.38.24.11',
+    'node_mgmt_ip':'',
+    'node_data_ip':'',
     'node_controller':'',
     'node_cloud_name':'',
     'node_nova_zone':'',
@@ -1062,6 +1062,7 @@ try:
                 print "client received %s" % data['Value']
 
             # send node data
+            getNodeInfo()
             node_type = node_info['Value']['node_type']
             node_id = node_info['Value']['node_id']
             logger.sys_info("sending %s " %(node_info))
