@@ -41,8 +41,8 @@ node_info = {
 'Value': {
     'node_name':'box15',
     'node_type':'cn',
-    'node_mgmt_ip':'192.168.10.10',
-    'node_data_ip':'172.38.24.11',
+    'node_mgmt_ip':'',
+    'node_data_ip':'',
     'node_controller':'',
     'node_cloud_name':'',
     'node_nova_zone':'',
@@ -51,6 +51,34 @@ node_info = {
     'node_id':'trans01'
     }
 }
+
+
+def getNodeInfo():
+    '''
+    @author         : Shashaa
+    comment         : this function will fetch default factory default
+                      information from a node and then construts a node info dictionary.
+                      changes are made to global dictionary node_info 
+    return value    : 
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    global node_info
+
+    node_info['Value']['node_id'] = util.get_node_id()
+    node_info['Value']['node_name'] = util.get_node_name()
+    node_info['Value']['node_type'] = util.get_node_type()
+    node_info['Value']['node_data_ip'] = util.get_node_data_ip()
+
+    # node_mgmt_ip is left as default, NOT set to any predefined ip
+    # for reasons of ip clashes in the mgmgt network
+
+    # node_cloud_name, node_controller, node_nova_zone, node_iscsi_iqn,
+    # node_swift_ring set to null values; as the node added to the
+    # cluster is cloud information agnostic. 
 
 
 def getDhcpServer():
@@ -1034,6 +1062,7 @@ try:
                 print "client received %s" % data['Value']
 
             # send node data
+            getNodeInfo()
             node_type = node_info['Value']['node_type']
             node_id = node_info['Value']['node_id']
             logger.sys_info("sending %s " %(node_info))

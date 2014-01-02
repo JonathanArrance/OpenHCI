@@ -464,6 +464,18 @@ def get_node_type():
     """
     return config.NODE_TYPE
 
+def get_node_data_ip():
+    """
+    DESC: get the system data ip from bond1 ethernet interface
+    INPUT: None
+    OUTPUT: node_data_ip
+    ACCESS: Wide open
+    NOTE: bond1 interface is the default data network interface for any
+    node added to the cloud cluster
+    """
+    data_network = get_adapter_ip('bond1')
+    return data_network['net_ip']
+
 def get_api_ip():
     """
     DESC: get the system name from the config.py file.
@@ -505,15 +517,6 @@ def get_system_name():
     """
     return config.NODE_NAME
 
-def get_node_id():
-    """
-    DESC: get the system id from the config.py file.
-    INPUT: None
-    OUTPUT: node_name
-    ACCESS: Wide open
-    NOTE: The cloud controller id and the system id on a ciac node will be the same.
-    """
-    return config.NODE_ID
 
 def get_system_defaults(node_id):
     """
