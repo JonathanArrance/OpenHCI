@@ -94,8 +94,8 @@ def insert_node(input_dict):
                 (key == 'node_mgmt_ip') or (key == 'node_controller')):
             continue
         if(val == ""):
-            logger.sys_error("The value %s was left blank" %(val))
-            raise Exception("The value %s was left blank" %(val))
+            logger.sys_error("The value %s::%s was left blank" %(key, val))
+            raise Exception("The value %s::%s was left blank" %(key, val))
         if(key not in input_dict):
             logger.sys_error("Node info not specified")
             raise Exception ("Node info not specified")
