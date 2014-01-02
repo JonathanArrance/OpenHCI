@@ -109,15 +109,15 @@ def setup(request):
                         {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
                         {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
                         {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
-                        {"system_name": system, "parameter": "cloud_name",         "param_value": cloud_name},
+                        #{"system_name": system, "parameter": "cloud_name",         "param_value": cloud_name},
                         {"system_name": system, "parameter": "single_node",        "param_value": single_node},
                         {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
-			{"system_name": system, "parameter": "uplink_gateway",     "param_value": "192.168.10.1"},
-			{"system_name": system, "parameter": "uplink_domain_name", "param_value": "rtp.transcirrus.com"},
-			{"system_name": system, "parameter": "uplink_subnet",      "param_value": "255.255.255.0"},
-			{"system_name": system, "parameter": "mgmt_domain_name",   "param_value": "int.transcirrus.com"},
-			{"system_name": system, "parameter": "mgmt_subnet",        "param_value": "255.255.255.0"},
-			{"system_name": system, "parameter": "mgmt_dns",           "param_value": "8.8.8.8"},
+			{"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
+			{"system_name": system, "parameter": "uplink_domain_name", "param_value": uplink_domain_name},
+			{"system_name": system, "parameter": "uplink_subnet",      "param_value": uplink_subnet},
+			{"system_name": system, "parameter": "mgmt_domain_name",   "param_value": mgmt_domain_name},
+			{"system_name": system, "parameter": "mgmt_subnet",        "param_value": mgmt_subnet},
+			{"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
                         ]
 
 	    run_setup(system_var_array, auth)
