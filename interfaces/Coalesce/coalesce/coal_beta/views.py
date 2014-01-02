@@ -109,7 +109,6 @@ def setup(request):
                         {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
                         {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
                         {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
-                        #{"system_name": system, "parameter": "cloud_name",         "param_value": cloud_name},
                         {"system_name": system, "parameter": "single_node",        "param_value": single_node},
                         {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
 			{"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
