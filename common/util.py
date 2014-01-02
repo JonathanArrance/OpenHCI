@@ -3,6 +3,8 @@ import sys
 import os
 import shutil
 import subprocess
+import datetime
+import time
 
 #from confparse import properties
 
@@ -12,7 +14,7 @@ import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 from time import gmtime, strftime
 from ifconfig import ifconfig
-
+dhcp_retry=5
 ######Transcirrus utils#######
 
 #DESC: Logs and rasies excpetions from the OpenStack REST API
@@ -462,6 +464,18 @@ def get_node_type():
     """
     return config.NODE_TYPE
 
+def get_node_data_ip():
+    """
+    DESC: get the system data ip from bond1 ethernet interface
+    INPUT: None
+    OUTPUT: node_data_ip
+    ACCESS: Wide open
+    NOTE: bond1 interface is the default data network interface for any
+    node added to the cloud cluster
+    """
+    data_network = get_adapter_ip('bond1')
+    return data_network['net_ip']
+
 def get_api_ip():
     """
     DESC: get the system name from the config.py file.
@@ -503,15 +517,6 @@ def get_system_name():
     """
     return config.NODE_NAME
 
-def get_node_id():
-    """
-    DESC: get the system id from the config.py file.
-    INPUT: None
-    OUTPUT: node_name
-    ACCESS: Wide open
-    NOTE: The cloud controller id and the system id on a ciac node will be the same.
-    """
-    return config.NODE_ID
 
 def get_system_defaults(node_id):
     """
@@ -963,7 +968,7 @@ def ping_ip(ip):
             ERROR - fail
             NA - unknown
     """
-    out = os.system('sudo ping %s'  %(ip))
+    out = os.system('sudo ping %s -c 5'  %(ip))
     if(out):
         return 'OK'
     elif(not out):
@@ -1199,3 +1204,64 @@ def check_public_with_uplink(input_dict):
     NOTE: All veriables are required.
     """
     return 'OK'
+
+def time_stamp():
+    raw = datetime.datetime.now()
+    julian = time.mktime(raw.timetuple())
+    stamp = {'raw':datetime.datetime.now(), 'julian':julian}
+    return stamp
+
+def restart_dhclient():
+    """
+    DESC: restart dhclient service
+    INPUT: 
+    OUTPUT: 
+    NOTE: 
+    """
+
+    out = subprocess.Popen('sudo dhclient', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    console = out.stdout.readlines()
+    logger.sys_info(console)
+
+def getDhcpServer():
+    '''
+    @author         : Shashaa
+    comment         : get DHCP server IP address from dhcp.bond1.leases
+                      file. bond1 interface of the machine connects to
+                      data network of the cloud.
+    return value    : dhcp_server ip
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        : should be used by cn/sn client process
+    '''
+
+    dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
+    dhcp_server = ""
+    global dhcp_retry
+
+    while dhcp_retry:
+
+        out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        data = out.stdout.readlines()
+        if (data):
+            #print data[0].split(" ")
+            data = data[0].split(" ")
+            dhcp_server = data[4].strip()
+            dhcp_server = dhcp_server.strip(";")
+            logger.sys_info("dhcp_server IP: %s" % dhcp_server)
+            dhcp_retry=0
+            #sys.exit()
+        else:
+            logger.sys_warning("Trying to get DHCP server IP")
+            restart_dhclient()
+            dhcp_retry = dhcp_retry-1
+            time.sleep(1)
+
+    if (dhcp_server == ""):
+        logger.sys_error("Error in getting DHCP server IP")
+        sys.exit()
+    else:
+        return dhcp_server
+

@@ -11,8 +11,14 @@ from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 from django.db import connection
 from django.views.decorators.cache import never_cache
+
+
 from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.operations.initial_setup import run_setup
+from transcirrus.operations.change_adminuser_password import change_admin_password
+import transcirrus.common.util as util
+
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -78,15 +84,44 @@ def setup(request):
         if form.is_valid():
             management_ip = form.cleaned_data['management_ip']
             uplink_ip = form.cleaned_data['uplink_ip']
-            min_vm_ip = form.cleaned_data['min_vm_ip']
-            max_vm_ip = form.cleaned_data['max_vm_ip']
+            vm_ip_min = form.cleaned_data['vm_ip_min']
+            vm_ip_max = form.cleaned_data['vm_ip_max']
+            uplink_dns = form.cleaned_data['uplink_dns']
+            uplink_gateway = form.cleaned_data['uplink_gateway']
+            uplink_domain_name = form.cleaned_data['uplink_domain_name']
+            uplink_subnet = form.cleaned_data['uplink_subnet']
+            mgmt_domain_name = form.cleaned_data['mgmt_domain_name']
+            mgmt_subnet = form.cleaned_data['mgmt_subnet']
+            mgmt_dns = form.cleaned_data['mgmt_dns']
             cloud_name  = form.cleaned_data['cloud_name']
             single_node = form.cleaned_data['single_node']
             admin_password = form.cleaned_data['admin_password']
             admin_password_confirm = form.cleaned_data['admin_password_confirm']
 
-            from coalesce.coal_beta.tasks import send_setup_info
-            send_setup_info.delay(management_ip, uplink_ip, min_vm_ip, max_vm_ip, cloud_name, single_node, admin_password)
+	    auth = request.session['auth']
+
+	    system = util.get_cloud_controller_name()
+	    system_var_array = [
+                        {"system_name": system, "parameter": "api_ip",             "param_value": management_ip},
+                        {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
+                        {"system_name": system, "parameter": "admin_api_ip",       "param_value": management_ip},
+                        {"system_name": system, "parameter": "int_api_id",         "param_value": management_ip},
+                        {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
+                        {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
+                        {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
+                        {"system_name": system, "parameter": "cloud_name",         "param_value": cloud_name},
+                        {"system_name": system, "parameter": "single_node",        "param_value": single_node},
+                        {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
+			{"system_name": system, "parameter": "uplink_gateway",     "param_value": "192.168.10.1"},
+			{"system_name": system, "parameter": "uplink_domain_name", "param_value": "rtp.transcirrus.com"},
+			{"system_name": system, "parameter": "uplink_subnet",      "param_value": "255.255.255.0"},
+			{"system_name": system, "parameter": "mgmt_domain_name",   "param_value": "int.transcirrus.com"},
+			{"system_name": system, "parameter": "mgmt_subnet",        "param_value": "255.255.255.0"},
+			{"system_name": system, "parameter": "mgmt_dns",           "param_value": "8.8.8.8"},
+                        ]
+
+	    run_setup(system_var_array, auth)
+	    change_admin_password (auth, admin_password)
 
             if request.POST.get('cancel'):
                 return HttpResponseRedirect('/')
@@ -166,6 +201,4 @@ def logout(request, next_page=None,
 
 @never_cache
 def password_change(request):
-
-
-        return render_to_response('coal/change-password.html', RequestContext(request, {  }))
+    return render_to_response('coal/change-password.html', RequestContext(request, {  }))

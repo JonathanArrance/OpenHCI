@@ -48,9 +48,37 @@ node_info = {
     'node_nova_zone':'',
     'node_iscsi_iqn':'',
     'node_swift_ring':'',
-    'node_id':'trans15'
+    'node_id':'trans01'
     }
 }
+
+
+def getNodeInfo():
+    '''
+    @author         : Shashaa
+    comment         : this function will fetch default factory default
+                      information from a node and then construts a node info dictionary.
+                      changes are made to global dictionary node_info 
+    return value    : 
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        :
+    '''
+    global node_info
+
+    node_info['Value']['node_id'] = util.get_node_id()
+    node_info['Value']['node_name'] = util.get_node_name()
+    node_info['Value']['node_type'] = util.get_node_type()
+    node_info['Value']['node_data_ip'] = util.get_node_data_ip()
+
+    # node_mgmt_ip is left as default, NOT set to any predefined ip
+    # for reasons of ip clashes in the mgmgt network
+
+    # node_cloud_name, node_controller, node_nova_zone, node_iscsi_iqn,
+    # node_swift_ring set to null values; as the node added to the
+    # cluster is cloud information agnostic. 
 
 
 def getDhcpServer():
@@ -136,7 +164,7 @@ def restartServices(node_id, node_type):
 
         if ret == "OK":
             logger.sys_info("node_id: %s, services restart success" %(node_id))
-            f __debug__ :
+            if __debug__ :
                 print "node_id: %s, services restart success" % node_id
             return True
         else:
@@ -370,7 +398,7 @@ def checkNovaManage(status):
             else:
                 logger.sys_error("nova-compute is not running")
                 if __debug__ :
-                    `print "nova-compute is not running"
+                    print "nova-compute is not running"
 
 
     # make sure all services are listed            
@@ -518,7 +546,7 @@ def processComputeConfig(sock, node_id):
 
         # send ok, ack 
         sendOk(sock)
-        for i in range(0,len(cn_config)): # 2 - since three arrays are received
+        for i in range(0,len(cn_config)):
             if cn_config[i]['file_name'] == 'nova.conf':
                 nova_conf = cn_config[i]
             elif cn_config[i]['file_name'] == 'nova-compute.conf':
@@ -854,7 +882,7 @@ def processStorageConfig(sock, node_id):
 
             if data:
                 data = pickle.loads(data)
-                logger.sys_info("ode_id: %s client received %s" %(node_id, data))
+                logger.sys_info("node_id: %s client received %s" %(node_id, data))
                 if __debug__ :
                     print "node_id: %s client received %s" % (node_id, data)
                 break
@@ -926,7 +954,7 @@ def processStorageConfig(sock, node_id):
                         print "node_id: %s listening for status_ready ack" % (node_id)
 
     # keep alive check       
-    keep_alive_check(sock)
+    keep_alive(sock)
             
 
 def keep_alive(sock):
@@ -961,18 +989,24 @@ def keep_alive(sock):
                 logger.sys_info("received %s" %(data))
                 if __debug__ :
                     print "received %s " % data
-                keep_alive(sock)
+                #keep_alive(sock)
         else:
             logger.sys_info("client waiting for keep alive messages")
             if __debug__ :
                 print "client waiting for keep alive messages"
 
 
-# Create socket
+# start of client process
+# create socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Get ciac ip address
-ciac_ip = getDhcpServer()
+ciac_ip = util.getDhcpServer()
+
+# TEST
+#print ciac_ip
+#sys.exit()
+# TEST
 
 # data network ip
 data_ip = "172.38.24.11"

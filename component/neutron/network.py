@@ -315,6 +315,7 @@ class neutron_net_ops:
                 body = '{"network": {"router:external": "True", "tenant_id": "%s", "name": "%s", "admin_state_up": %s, "shared": "%s"}}' %(self.project_id,create_dict['net_name'],admin_state.lower(),shared.lower())
                 logger.sys_info(body)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                logger.sys_info(header)
                 function = 'POST'
                 api_path = '/v2.0/networks'
                 token = self.token

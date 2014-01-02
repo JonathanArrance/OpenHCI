@@ -624,8 +624,7 @@ ALTER TABLE public.psql_buildout OWNER TO transuser;
 CREATE TABLE swift_default (
     paramter character varying,
     param_value character varying,
-    host_name character varying,
-    file_path character varying,
+    file_name character varying,
     index integer NOT NULL
 );
 
@@ -835,6 +834,7 @@ CREATE TABLE trans_instances (
     inst_key_name character varying,
     inst_sec_group_name character varying,
     inst_username character varying,
+    inst_user_id character varying,
     inst_flav_name character varying,
     inst_floating_ip character varying,
     inst_ext_net_id character varying,
@@ -842,7 +842,10 @@ CREATE TABLE trans_instances (
     inst_int_net_id character varying,
     inst_int_net_name character varying,
     inst_image_name character varying,
-    inst_name character varying
+    inst_name character varying,
+    inst_confirm_resize integer DEFAULT 0,
+    inst_resize_julian_date character varying,
+    inst_resize_hr_date character varying
 );
 
 
@@ -1361,7 +1364,7 @@ CREATE TABLE trans_system_vols (
     vol_set_bootable character varying DEFAULT false,
     vol_attached character varying DEFAULT false,
     vol_attached_to_inst character varying,
-    vol_mount_location character varying(5)
+    vol_mount_location character varying
 );
 
 
@@ -1901,6 +1904,9 @@ INSERT INTO nova_default VALUES ('quantum_admin_auth_url', 'http://172.38.24.10:
 INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 54);
 INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 55);
 INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 56);
+INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 57);
+INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AllHostsFilter', 'nova.conf', 58);
+
 --maybe add novaurl? find out what it does first
 
 

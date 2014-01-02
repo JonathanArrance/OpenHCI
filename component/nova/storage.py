@@ -44,8 +44,8 @@ class server_storage_ops:
                 self.sec = 'FALSE'
                 
             #get the default cloud controller info
-            self.controller = config.DEFAULT_CLOUD_CONTROLER
-            self.api_ip = config.DEFAULT_API_IP
+            self.controller = config.CLOUD_CONTROLLER
+            self.api_ip = config.API_IP
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -84,7 +84,7 @@ class server_storage_ops:
         #close any open db connections
         self.db.pg_close_connection()
         
-    def attach_vol_to_server(input_dict):
+    def attach_vol_to_server(self,input_dict):
         #curl -i http://192.168.10.30:8774/v2/7c9b14b98b7944e7a829a2abdab12e02/servers/1d0abaa2-e981-449b-a3b2-7e52f400cb30/os-volume_attachments -X POST -H "X-Auth-Project-Id: demo"
         #-d '{"volumeAttachment": {"device": "/dev/vdc", "volumeId": "a5d6820b-140b-4a35-b5a3-57f05e3b23f6"}}'
         """
@@ -159,26 +159,26 @@ class server_storage_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
                 rest = api.call_rest(rest_dict)
                 print rest
-                if(rest['response'] == 202):
+                if(rest['response'] == 200):
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    update_vol = {'table':'trans_system_vols',"vol_attached_to_inst": insert_dict['instance_id'],"vol_attached": 'true',"vol_mount_location": input_dict['mount_point']}
+                    update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='%s',vol_attached=true,vol_mount_location='%s'"%(input_dict['instance_id'],input_dict['mount_point']),'where':"vol_id='%s'"%(input_dict['volume_id'])}
                     self.db.pg_update(update_vol)
                     self.db.pg_transaction_commit()
-                    self.db.pg_close_connection()
                 else:
                     util.http_codes(rest['response'],rest['reason'])
             except Exception as e:
+                self.db.pg_transaction_rollback()
                 print "%s" %(e)
                 raise e
         return "OK"
 
-    def detach_vol_from_server(input_dict):
+    def detach_vol_from_server(self,input_dict):
         #curl -i http://192.168.10.30:8774/v2/7c9b14b98b7944e7a829a2abdab12e02/servers/1d0abaa2-e981-449b-a3b2-7e52f400cb30/os-volume_attachments/a5d6820b-140b-4a35-b5a3-57f05e3b23f6 -X DELETE -H "X-Auth-Project-Id: demo"
         """
         DESC: Check if the uplink ip gateway is on the same network as the uplink ip
         INPUT: input_dict - project_id
-                          - server_id
+                          - instance_id
                           - volume_id
         OUTPUT: OK - success
                 raise error
@@ -228,6 +228,7 @@ class server_storage_ops:
         try:
             #build an api connection
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            print api_dict
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the api caller.")
@@ -239,8 +240,10 @@ class server_storage_ops:
             token = self.token
             #NOTE: if token is not converted python will pass unicode and not a string
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
+            print header
             function = 'DELETE'
             api_path = '/v2/%s/servers/%s/os-volume_attachments/%s' %(input_dict['project_id'],input_dict['instance_id'],input_dict['volume_id'])
+            print api_path
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
             rest = api.call_rest(rest_dict)
@@ -248,13 +251,13 @@ class server_storage_ops:
             if(rest['response'] == 202):
                 #insert the volume info into the DB
                 self.db.pg_transaction_begin()
-                update_vol = {'table':'trans_system_vols',"vol_attached_to_inst": 'NULL',"vol_attached": 'false',"vol_mount_location": 'NULL'}
+                update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='NULL',vol_attached=false,vol_mount_location='NULL'",'where':"vol_id='%s'"%(input_dict['volume_id'])}
                 self.db.pg_update(update_vol)
                 self.db.pg_transaction_commit()
-                self.db.pg_close_connection()
             else:
                 util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
+            self.db.pg_transaction_rollback()
             print "%s" %(e)
             raise e
         return "OK"

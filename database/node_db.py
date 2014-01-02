@@ -775,6 +775,11 @@ def get_glance_config():
         glance_api = db.pg_select(get_api_dict)
         get_reg_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry.conf'"}
         glance_reg = db.pg_select(get_reg_dict)
+
+        get_apip_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-api-paste.ini'"}
+        glance_apip = db.pg_select(get_apip_dict)
+        get_regp_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry-paste.ini'"}
+        glance_regp = db.pg_select(get_regp_dict)
     except:
         logger.sys_error('Could not get the Glance entries from the Transcirrus db.')
         raise Exception('Could not get the Glance entries from the Transcirrus db.')
@@ -812,6 +817,36 @@ def get_glance_config():
     reg_conf['file_name'] = 'glance-registry.conf'
     reg_conf['file_content'] = reg
     r_array.append(reg_conf)
+
+    apip = []
+    apip_conf = {}
+    for x in glance_apip:
+        row = "=".join(x)
+        apip.append(row)
+    apip_conf['op'] = 'append'
+    #find user/group/perms
+    apip_conf['file_owner'] = 'glance'
+    apip_conf['file_group'] = 'glance'
+    apip_conf['file_perm'] = '644'
+    apip_conf['file_path'] = '/etc/glance'
+    apip_conf['file_name'] = 'glance-api-paste.ini'
+    apip_conf['file_content'] = apip
+    r_array.append(apip_conf)
+
+    regp = []
+    regp_conf = {}
+    for x in glance_regp:
+        row = "=".join(x)
+        regp.append(row)
+    regp_conf['op'] = 'append'
+    #find user/group/perms
+    regp_conf['file_owner'] = 'glance'
+    regp_conf['file_group'] = 'glance'
+    regp_conf['file_perm'] = '644'
+    regp_conf['file_path'] = '/etc/glance'
+    regp_conf['file_name'] = 'glance-registry-paste.ini'
+    regp_conf['file_content'] = regp
+    r_array.append(regp_conf)
 
     return r_array
 
