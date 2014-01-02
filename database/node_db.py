@@ -95,6 +95,7 @@ def insert_node(input_dict):
             continue
         if(val == ""):
             logger.sys_error("The value %s::%s was left blank" %(key, val))
+            print key
             raise Exception("The value %s::%s was left blank" %(key, val))
         if(key not in input_dict):
             logger.sys_error("Node info not specified")
