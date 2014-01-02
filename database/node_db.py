@@ -89,7 +89,9 @@ def insert_node(input_dict):
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
-        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or (key == 'node_swift_ring') or key == 'cloud_name'):
+        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or \
+                (key == 'node_swift_ring') or (key == 'cloud_name') or \
+                (key == 'node_mgmt_ip') or (key == 'node_controller')):
             continue
         if(val == ""):
             logger.sys_error("The value %s was left blank" %(val))
