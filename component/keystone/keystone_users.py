@@ -474,9 +474,9 @@ class user_ops:
             try:
                 #get the role_id for admin or Member from db
                 if(user_role_dict['user_role'] == 'admin'):
-                    select_id = {"select":"param_value","from":"trans_system_settings","where":"parameter='default_admin_role_id'"}
+                    select_id = {"select":"param_value","from":"trans_system_settings","where":"parameter='admin_role_id'"}
                 else:
-                    select_id = {"select":"param_value","from":"trans_system_settings","where":"parameter='default_member_role_id'"}
+                    select_id = {"select":"param_value","from":"trans_system_settings","where":"parameter='member_role_id'"}
                 key_role = self.db.pg_select(select_id)
             except:
                 logger.sql_error("Could not get the default role id for the %s ." %(user_role_dict['user_role']))
@@ -581,9 +581,9 @@ class user_ops:
             #get the keystone role_id
             try:
                 if(user_id[0][2] == 'admin'):
-                    param = 'default_admin_role_id'
+                    param = 'admin_role_id'
                 else:
-                    param = 'default_member_role_id'
+                    param = 'member_role_id'
 
                 get_key_role_id = {"select":'param_value',"from":'trans_system_settings',"where":"parameter='%s'" %(param)}
                 role_id = self.db.pg_select(get_key_role_id)
@@ -615,7 +615,7 @@ class user_ops:
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                     try:
                         self.db.pg_transaction_begin()
-                        up_dict = {'table':"trans_user_info",'set':"keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"user_name='%s'" %(remove_role['username'])}
+                        up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"user_name='%s'" %(remove_role['username'])}
                         self.db.pg_update(up_dict)
                         self.db.pg_transaction_commit()
                         self.db.pg_close_connection()
@@ -631,7 +631,7 @@ class user_ops:
             r_dict = {"response":rest['response'],"reason":rest['reason']}
             return r_dict
         else:
-            logger.sys_error("Admin flag not set, could not create the new user.")
+            logger.sys_error("Admin flag not set, could not remove the user from the DB.")
 
     def get_user_info(self,user_dict):
         """
@@ -927,6 +927,45 @@ class user_ops:
     #however one role must be the default admin, or Member role.
     def list_user_roles():
         print "not implemented"
+        
+    def list_orphaned_users(self):
+        """
+        DESC: List all of the orphaned or unaffiliated users in the system.
+        INPUT: none
+        OUTPUT: array of r_dict - user_name
+                                - user_group
+                                - user_enabled
+                                - keystone_user_id
+                                - user_email
+        ACCESS: Only admins can list orphaned users. Power user and users can not
+        NOTE: This is used by admins to find users to add to a project, only admins can use it
+              since only admins can add a user to a project.
+        """
+        if(self.is_admin == 1):
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except:
+                logger.sql_error("Could not connect to the DB.")
+                raise Exception("Could not connect to the DB.")
+
+            try:
+                get_users = {'select':'*', 'from':'trans_user_info', 'where':"user_project_id='NULL'"}
+                users = self.db.pg_select(get_users)
+            except:
+                logger.sql_error('Could not get a list of orphaned users.')
+                raise Exception('Could not get a list of orphaned users.')
+
+            r_array = []
+            for user in users:
+                r_dict = {'user_name':user[1],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
+                r_array.append(r_dict)
+
+            print r_array
+        else:
+            logger.error('Only admins can list the orphaned users.')
+            raise Exception('Only admins can list the orphaned users.')
 
 ######Internal defs#######
 def _http_codes(code,reason):

@@ -5,17 +5,15 @@
 import sys
 import time
 
-sys.path.append('../common')
-import logger
-import config
-from auth import authorization
+import transcirrus.common.logger
+import transcirrus.common.config
+from transcirrus.common.auth import authorization
 
-sys.path.append('/home/jonathan/alpo.0/component/keystone')
-from keystone_users import user_ops
+from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","builder")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
@@ -23,18 +21,24 @@ print "Instantiating user_ops object."
 use = user_ops(d)
 
 
+
+print "listing orphaned users"
+orph = use.list_orphaned_users()
+print orph
+
+"""
 update_dict = {'username':"yo",'toggle':"enable",'email':"test@domain.com",'new_username':"testuser",'new_project':"unittest",'new_role':"pu"}
 yo = use.update_user(update_dict)
 print yo
-"""
+
 print "Create a new standard user with no project."
-new_user_dict = {"username":'testuser15',"password":"test","userrole":"user","email":"test15@domain.com"}
+new_user_dict = {"username":'jarrance',"password":"test","userrole":"user","email":"arrance@domain.com"}
 create = use.create_user(new_user_dict)
 print create
 
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
-add_user_dict = {"username":"testuser15","user_role":'user',"project_name":'demo'}
+add_user_dict = {"username":"jarrance","user_role":'user',"project_name":'trans_default'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
