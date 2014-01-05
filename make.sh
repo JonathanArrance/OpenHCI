@@ -9,6 +9,8 @@ echo 'Adding database to Transcirrus dir'
 cp -Rf database /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding operations to Transcirrus dir'
 cp -Rf operations /usr/local/lib/python2.7/dist-packages/transcirrus/
+echo 'Adding Interfaces to Transcirrus dir'
+cp -Rf interfaces /usr/local/lib/python2.7/dist-packages/transcirrus/
 echo 'Adding ha to Transcirrus dir'
 cp -Rf ha /usr/local/lib/python2.7/dist-packages/transcirrus/
 cp -f __init__.py /usr/local/lib/python2.7/dist-packages/transcirrus/
