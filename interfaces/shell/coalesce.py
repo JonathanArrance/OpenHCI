@@ -109,19 +109,19 @@ def info(d):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, "", 1, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 2, 1, "", 2, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 3, 1, "", 3, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 4, 1, "", 4, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 5, 1, "", 5, 24, 40, 40, 0x0),
-            ("Management IP:", 6, 1, "", 6, 24, 40, 40, 0x0),
+            ("Uplink IP:", 1, 1, "192.168.10.45", 1, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 2, 1, "255.255.255.0", 2, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 3, 1, "192.168.10.1", 3, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 4, 1, "8.8.8.8", 4, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 5, 1, "0.0.0.0", 5, 24, 40, 40, 0x0),
+            ("Management IP:", 6, 1, "192.168.4.4", 6, 24, 40, 40, 0x0),
             ("Management Subnet Mask:", 7, 1, "", 7, 24, 40, 40, 0x0),
-            ("Management DNS:", 8, 1, "", 8, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 9, 1, "", 9, 24, 40, 40, 0x0),
-            ("VM Range Start-Point:", 10, 1, "", 10, 24, 40, 40, 0x0),
-            ("VM Range End-Point:", 11, 1, "", 11, 24, 40, 40, 0x0),
-            ("New Admin password:", 12, 1, "", 12, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
+            ("Management DNS:", 8, 1, "8.8.8.8", 8, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 9, 1, "0.0.0.0", 9, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 10, 1, "192.168.10.50", 10, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 11, 1, "192.168.10.60", 11, 24, 40, 40, 0x0),
+            ("New Admin password:", 12, 1, "test", 12, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 13, 1, "test", 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77)
@@ -287,37 +287,37 @@ def setup(d):
             continue
         break
 
-    try:
-        system = util.get_cloud_controller_name()
-        new_system_variables = [
-            {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
-            {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
-            {"system_name":system,"parameter":"admin_api_ip","param_value": uplink_ip},
-            {"system_name":system,"parameter":"int_api_ip","param_value": uplink_ip},
-            {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
-            {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
-            {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
-            {"system_name":system,"parameter":"uplink_domain_name","param_value": uplink_domain},
-            {"system_name":system,"parameter":"uplink_subnet","param_value": uplink_subnet},
-            {"system_name":system,"parameter":"mgmt_domain_name","param_value": mgmt_domain},
-            {"system_name":system,"parameter":"mgmt_subnet","param_value": mgmt_subnet},
-            {"system_name":system,"parameter":"mgmt_dns","param_value": mgmt_dns},
-            {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
-            {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
+    #try:
+    system = util.get_cloud_controller_name()
+    new_system_variables = [
+        {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
+        {"system_name":system,"parameter":"admin_api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"int_api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
+        {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
+        {"system_name":system,"parameter":"uplink_domain_name","param_value": uplink_domain},
+        {"system_name":system,"parameter":"uplink_subnet","param_value": uplink_subnet},
+        {"system_name":system,"parameter":"mgmt_domain_name","param_value": mgmt_domain},
+        {"system_name":system,"parameter":"mgmt_subnet","param_value": mgmt_subnet},
+        {"system_name":system,"parameter":"mgmt_dns","param_value": mgmt_dns},
+        {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
+        {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-        ran = run_setup(new_system_variables, a)
-        timeout = 20
+    ran = run_setup(new_system_variables, a)
+    timeout = 20
 
-        if(ran == "OK"):
-            success(d, timeout)
-            clear_screen(d)
+    if(ran == "OK"):
+        success(d, timeout)
+        clear_screen(d)
 
-        else:
-            rollback(d, timeout)
-            clear_screen(d)
+    else:
+        rollback(d, timeout)
+        clear_screen(d)
 
-    except Exception as e:
-        d.msgbox("Error when updating database: " + str(e))
+    #except Exception as e:
+        #d.msgbox("Error when updating database: " + str(e))
 """
     node = util.get_node_id()
     system_variables = util.get_system_variables(node)
