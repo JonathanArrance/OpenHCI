@@ -115,7 +115,7 @@ def info(d):
             ("Uplink DNS:", 4, 1, "8.8.8.8", 4, 24, 40, 40, 0x0),
             ("Uplink Domain Name:", 5, 1, "0.0.0.0", 5, 24, 40, 40, 0x0),
             ("Management IP:", 6, 1, "192.168.4.4", 6, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 7, 1, "", 7, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 7, 1, "255.255.255.0", 7, 24, 40, 40, 0x0),
             ("Management DNS:", 8, 1, "8.8.8.8", 8, 24, 40, 40, 0x0),
             ("Management Domain Name:", 9, 1, "0.0.0.0", 9, 24, 40, 40, 0x0),
             ("VM Range Start-Point:", 10, 1, "192.168.10.50", 10, 24, 40, 40, 0x0),
