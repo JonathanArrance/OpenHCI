@@ -109,17 +109,17 @@ def info(d):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, "0.0.0.0", 1, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 2, 1, "0.0.0.0", 2, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 3, 1, "0.0.0.0", 3, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 4, 1, "0.0.0.0", 4, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 5, 1, "0.0.0.0", 5, 24, 40, 40, 0x0),
-            ("Management IP:", 6, 1, "0.0.0.0", 6, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 7, 1, "0.0.0.0", 7, 24, 40, 40, 0x0),
-            ("Management DNS:", 8, 1, "0.0.0.0", 8, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 9, 1, "0.0.0.0", 9, 24, 40, 40, 0x0),
-            ("VM Range Start-Point:", 10, 1, "0.0.0.0", 10, 24, 40, 40, 0x0),
-            ("VM Range End-Point:", 11, 1, "0.0.0.0", 11, 24, 40, 40, 0x0),
+            ("Uplink IP:", 1, 1, "", 1, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 2, 1, "", 2, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 3, 1, "", 3, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 4, 1, "", 4, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 5, 1, "", 5, 24, 40, 40, 0x0),
+            ("Management IP:", 6, 1, "", 6, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 7, 1, "", 7, 24, 40, 40, 0x0),
+            ("Management DNS:", 8, 1, "", 8, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 9, 1, "", 9, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 10, 1, "", 10, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 11, 1, "", 11, 24, 40, 40, 0x0),
             ("New Admin password:", 12, 1, "", 12, 24, 40, 40, HIDDEN),
             ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
 
@@ -310,13 +310,15 @@ def setup(d):
 
         if(ran == "OK"):
             success(d, timeout)
+            clear_screen(d)
 
         else:
             rollback(d, timeout)
+            clear_screen(d)
 
     except Exception as e:
         d.msgbox("Error when updating database: " + str(e))
-
+"""
     node = util.get_node_id()
     system_variables = util.get_system_variables(node)
     sys_api_ip = system_variables['api_ip']
@@ -346,7 +348,7 @@ def setup(d):
     success(d, timeout)
 
     clear_screen(d)
-
+"""
 
 def valid_ip(address):
     """
