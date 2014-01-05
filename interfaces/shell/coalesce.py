@@ -290,23 +290,21 @@ def setup(d):
 
     try:
         system = util.get_cloud_controller_name()
-
-    new_system_variables = [
-        {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
-        {"system_name":system,"parameter":"admin_api_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"int_api_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
-        {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
-        {"system_name":system,"parameter":"uplink_domain_name","param_value": uplink_domain},
-        {"system_name":system,"parameter":"uplink_subnet","param_value": uplink_subnet},
-        {"system_name":system,"parameter":"mgmt_domain_name","param_value": mgmt_domain},
-        {"system_name":system,"parameter":"mgmt_subnet","param_value": mgmt_subnet},
-        {"system_name":system,"parameter":"mgmt_dns","param_value": mgmt_dns},
-        {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
-        {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}
-    ]
+        new_system_variables = [
+            {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
+            {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
+            {"system_name":system,"parameter":"admin_api_ip","param_value": uplink_ip},
+            {"system_name":system,"parameter":"int_api_ip","param_value": uplink_ip},
+            {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
+            {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
+            {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
+            {"system_name":system,"parameter":"uplink_domain_name","param_value": uplink_domain},
+            {"system_name":system,"parameter":"uplink_subnet","param_value": uplink_subnet},
+            {"system_name":system,"parameter":"mgmt_domain_name","param_value": mgmt_domain},
+            {"system_name":system,"parameter":"mgmt_subnet","param_value": mgmt_subnet},
+            {"system_name":system,"parameter":"mgmt_dns","param_value": mgmt_dns},
+            {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
+            {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
     ran = run_setup(new_system_variables)
     timeout = 20
