@@ -202,6 +202,7 @@ def setup(d):
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
         "interface tool for your TransCirrus system.", width=60, height=10)
     controls(d)
+    a = None
     while(True):
         user = userbox(d)
         password = passwordbox(d)
@@ -304,7 +305,7 @@ def setup(d):
             {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
             {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-        ran = run_setup(new_system_variables)
+        ran = run_setup(new_system_variables, a)
         timeout = 20
 
         if(ran == "OK"):
