@@ -306,14 +306,14 @@ def setup(d):
             {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
             {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    ran = run_setup(new_system_variables)
-    timeout = 20
+        ran = run_setup(new_system_variables)
+        timeout = 20
 
-    if(ran == "OK"):
-        success(d, timeout)
+        if(ran == "OK"):
+            success(d, timeout)
 
-    else:
-        rollback(d, timeout)
+        else:
+            rollback(d, timeout)
 
     except Exception as e:
         d.msgbox("Error when updating database: " + str(e))
