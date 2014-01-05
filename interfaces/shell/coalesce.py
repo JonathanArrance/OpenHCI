@@ -231,9 +231,7 @@ def setup(d):
         d.msgbox("Continue to first time setup.")
 
     while(True):
-        uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, 
-        mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, 
-        vm_ip_min, vm_ip_max, pwd, cnfrm = info(d)
+        uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d)
         # Validate uplink ip
         if(valid_ip(uplink_ip) is False):
             d.msgbox("Invalid Uplink IP, try again.", width=60, height=10)
