@@ -9,6 +9,7 @@ import sys, os, time, getopt, subprocess, dialog
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
+from transcirrus.operations.initial_setup import run_setup
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -108,13 +109,19 @@ def info(d):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, "", 1, 24, 16, 15, 0x0),
-            ("Management IP:", 2, 1, "", 2, 24, 16, 16, 0x0),
-            ("VM Range Start-Point:", 3, 1, "", 3, 24, 16, 16, 0x0),
-            ("VM Range End-Point:", 4, 1, "", 4, 24, 16, 16, 0x0),
-            ("Cloud (Region) Name:", 5, 1, "", 5, 24, 16, 16, 0x0),
-            ("New Admin password:", 6, 1, "", 6, 24, 16, 16, HIDDEN),
-            ("Confirm Password:", 7, 1, "", 7, 24, 16, 15, HIDDEN)]
+            ("Uplink IP:", 1, 1, "192.168.10.45", 1, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 2, 1, "255.255.255.0", 2, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 3, 1, "192.168.10.1", 3, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 4, 1, "8.8.8.8", 4, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 5, 1, "0.0.0.0", 5, 24, 40, 40, 0x0),
+            ("Management IP:", 6, 1, "192.168.4.4", 6, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 7, 1, "255.255.255.0", 7, 24, 40, 40, 0x0),
+            ("Management DNS:", 8, 1, "8.8.8.8", 8, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 9, 1, "0.0.0.0", 9, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 10, 1, "192.168.10.50", 10, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 11, 1, "192.168.10.60", 11, 24, 40, 40, 0x0),
+            ("New Admin password:", 12, 1, "test", 12, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 13, 1, "test", 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77)
@@ -160,6 +167,13 @@ Setup has completed successfully.  The system will now restart in %u seconds\
 % seconds, height=15, seconds=seconds)
 
 
+def rollback(d, seconds):
+    d.pause("""\
+Setup has encountered an issue.  The system will now rollback in %u seconds\
+ to factory defaults.  Attempt to rerun setup."""
+% seconds, height=15, seconds=seconds)
+
+
 def clear_screen(d):
     program = "clear"
 
@@ -188,6 +202,7 @@ def setup(d):
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
         "interface tool for your TransCirrus system.", width=60, height=10)
     controls(d)
+    a = None
     while(True):
         user = userbox(d)
         password = passwordbox(d)
@@ -217,14 +232,42 @@ def setup(d):
         d.msgbox("Continue to first time setup.")
 
     while(True):
-        uplink_ip, mgmt_ip, vm_ip_min, vm_ip_max, cloud_name, pwd, cnfrm, = info(d)
+        uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d)
         # Validate uplink ip
         if(valid_ip(uplink_ip) is False):
             d.msgbox("Invalid Uplink IP, try again.", width=60, height=10)
             continue
+        # Validate uplink subnet
+        if(valid_ip(uplink_subnet) is False):
+            d.msgbox("Invalid Uplink Subnet, try again.", width=60, height=10)
+            continue
+        # Validate uplink gateway
+        if(valid_ip(uplink_gateway) is False):
+            d.msgbox("Invalid Uplink Gateway, try again.", width=60, height=10)
+            continue
+        # Validate uplink dns
+        if(valid_ip(uplink_dns) is False):
+            d.msgbox("Invalid Uplink DNS, try again.", width=60, height=10)
+            continue
+        # Validate uplink domain
+        if(valid_ip(uplink_domain) is False):
+            d.msgbox("Invalid Uplink Domain, try again.", width=60, height=10)
+            continue
         # Validate mgmt ip
         if(valid_ip(mgmt_ip) is False):
             d.msgbox("Invalid Management IP, try again.", width=60, height=10)
+            continue
+        # Validate mgmt subnet
+        if(valid_ip(mgmt_subnet) is False):
+            d.msgbox("Invalid Management Subnet, try again.", width=60, height=10)
+            continue
+        # Validate mgmt dns
+        if(valid_ip(mgmt_dns) is False):
+            d.msgbox("Invalid Management DNS, try again.", width=60, height=10)
+            continue
+        # Validate mgmt domain
+        if(valid_ip(mgmt_domain) is False):
+            d.msgbox("Invalid Management Domain, try again.", width=60, height=10)
             continue
         # Validate start point
         if(valid_ip_within(uplink_ip, vm_ip_min) is False):
@@ -244,61 +287,44 @@ def setup(d):
             continue
         break
 
-    try:
-        system = util.get_cloud_controller_name()
-
-        util.update_system_variables(
-            [{'system_name':system, 'parameter':"api_ip", 'param_value':mgmt_ip},
-             {'system_name':system, 'parameter':"mgmt_ip", 'param_value':mgmt_ip},
-             {'system_name':system, 'parameter':"admin_api_ip", 'param_value':mgmt_ip},
-             {'system_name':system, 'parameter':"int_api_ip", 'param_value':mgmt_ip},
-             {'system_name':system, 'parameter':"transcirrus_db", 'param_value':mgmt_ip},
-             {'system_name':system, 'parameter':"uplink_ip", 'param_value':uplink_ip},
-             {'system_name':system, 'parameter':"vm_ip_min", 'param_value':vm_ip_min},
-             {'system_name':system, 'parameter':"vm_ip_max", 'param_value':vm_ip_max},
-             {'system_name':system, 'parameter':"cloud_name", 'param_value':cloud_name}])
-
-    except Exception as e:
-        d.msgbox("Error when updating database: " + str(e))
-
-    node = util.get_node_id()
-    system_variables = util.get_system_variables(node)
-    sys_api_ip = system_variables['api_ip']
-    sys_mgmt_ip = system_variables['mgmt_ip']
-    sys_int_api_ip = system_variables['int_api_ip']
-    sys_admin_api_ip = system_variables['admin_api_ip']
-    sys_cloud_name = system_variables['cloud_name']
-    sys_vm_ip_min = system_variables['vm_ip_min']
-    sys_vm_ip_max = system_variables['vm_ip_max']
-    sys_uplink_ip = system_variables['uplink_ip']
-
-    d.msgbox("API_IP: " + sys_api_ip + "\n" +
-             "MGMT_IP: " + sys_mgmt_ip + "\n" +
-             "INT_API_IP: " + sys_int_api_ip + "\n" +
-             "ADMIN_API_IP: " + sys_admin_api_ip + "\n" +
-             "CLOUD_NAME: " + sys_cloud_name + "\n" +
-             "VM_IP_MIN: " + sys_vm_ip_min + "\n"
-             "VM_IP_MAX: " + sys_vm_ip_max + "\n"
-             "UPLINK IP: " + sys_uplink_ip + "\n", width=80, height=40)
-
+    #try:
     system = util.get_cloud_controller_name()
-    util.update_system_variables(
-            [{'system_name':system, 'parameter':"api_ip", 'param_value':"192.168.10.37"},
-             {'system_name':system, 'parameter':"mgmt_ip", 'param_value':"192.168.10.37"},
-             {'system_name':system, 'parameter':"admin_api_ip", 'param_value':"192.168.10.37"},
-             {'system_name':system, 'parameter':"int_api_ip", 'param_value':"192.168.10.37"},
-             {'system_name':system, 'parameter':"uplink_ip", 'param_value':"0.0.0.0"},
-             {'system_name':system, 'parameter':"vm_ip_min", 'param_value':"0.0.0.0"},
-             {'system_name':system, 'parameter':"vm_ip_max", 'param_value':"0.0.0.0"},
-             {'system_name':system, 'parameter':"cloud_name", 'param_value':"integration"}])
+    new_system_variables = [
+        {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
+        {"system_name":system,"parameter":"admin_api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"int_api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
+        {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
+        {"system_name":system,"parameter":"uplink_domain_name","param_value": uplink_domain},
+        {"system_name":system,"parameter":"uplink_subnet","param_value": uplink_subnet},
+        {"system_name":system,"parameter":"mgmt_domain_name","param_value": mgmt_domain},
+        {"system_name":system,"parameter":"mgmt_subnet","param_value": mgmt_subnet},
+        {"system_name":system,"parameter":"mgmt_dns","param_value": mgmt_dns},
+        {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
+        {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
+    ran = run_setup(new_system_variables, a)
+    timeout = 20
+
+    if(ran == "OK"):
+        success(d, timeout)
+        clear_screen(d)
+
+    else:
+        rollback(d, timeout)
+        clear_screen(d)
+
+    #except Exception as e:
+        #d.msgbox("Error when updating database: " + str(e))
+"""
     node = util.get_node_id()
     system_variables = util.get_system_variables(node)
     sys_api_ip = system_variables['api_ip']
     sys_mgmt_ip = system_variables['mgmt_ip']
     sys_int_api_ip = system_variables['int_api_ip']
     sys_admin_api_ip = system_variables['admin_api_ip']
-    sys_cloud_name = system_variables['cloud_name']
     sys_vm_ip_min = system_variables['vm_ip_min']
     sys_vm_ip_max = system_variables['vm_ip_max']
     sys_uplink_ip = system_variables['uplink_ip']
@@ -307,23 +333,22 @@ def setup(d):
              "MGMT_IP: " + sys_mgmt_ip + "\n" +
              "INT_API_IP: " + sys_int_api_ip + "\n" +
              "ADMIN_API_IP: " + sys_admin_api_ip + "\n" +
-             "CLOUD_NAME: " + sys_cloud_name + "\n" +
              "VM_IP_MIN: " + sys_vm_ip_min + "\n"
              "VM_IP_MAX: " + sys_vm_ip_max + "\n"
              "UPLINK IP: " + sys_uplink_ip + "\n", width=80, height=40)
 
-    single_node = singleNode(d)
+    #single_node = singleNode(d)
     # Check to determine is system is single node
     # If not, enable DHCP
-    if (single_node == d.DIALOG_CANCEL):
-        dhcp(d)
+    #if (single_node == d.DIALOG_CANCEL):
+        #dhcp(d)
         # Enable DHCP
 
     timeout = 20
     success(d, timeout)
 
     clear_screen(d)
-
+"""
 
 def valid_ip(address):
     """

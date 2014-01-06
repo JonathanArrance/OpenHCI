@@ -15,6 +15,8 @@ from django.views.decorators.cache import never_cache
 
 from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.component.nova.server import server_ops
+from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
@@ -66,9 +68,23 @@ def manage_nodes(request):
 def project_view(request, project_name):
     auth = request.session['auth']
     to = tenant_ops(auth)
+    so = server_ops(auth)
+    no = neutron_net_ops(auth)
+    
     project = to.get_tenant(project_name)
-    users=to.list_tenant_users(project_name)
-    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, 'users': users}))
+    users = to.list_tenant_users(project_name)
+    network_list = no.list_networks()
+    networks={}
+    for net in network_list:
+      networks[net['net_name']]= no.get_network(net['net_name'])
+    sec_groups = so.list_sec_group()
+    sec_keys = so.list_sec_keys()
+    print '~~~~~~~~~~~~~~~~~~~~~~~'
+    print sec_groups
+    print '~~~~~~~~~~~~~~~~~~~~~~~'
+    print sec_keys
+    print '~~~~~~~~~~~~~~~~~~~~~~~'
+    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, 'users': users, 'sec_groups': sec_groups,  'sec_keys': sec_keys, 'networks': networks}))
 
 
 def manage_projects(request):
@@ -102,22 +118,21 @@ def setup(request):
 
 	    system = util.get_cloud_controller_name()
 	    system_var_array = [
-                        {"system_name": system, "parameter": "api_ip",             "param_value": management_ip},
+                        {"system_name": system, "parameter": "api_ip",             "param_value": uplink_ip},
                         {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
-                        {"system_name": system, "parameter": "admin_api_ip",       "param_value": management_ip},
-                        {"system_name": system, "parameter": "int_api_id",         "param_value": management_ip},
+                        {"system_name": system, "parameter": "admin_api_ip",       "param_value": uplink_ip},
+                        {"system_name": system, "parameter": "int_api_id",         "param_value": uplink_ip},
                         {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
                         {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
                         {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
-                        {"system_name": system, "parameter": "cloud_name",         "param_value": cloud_name},
                         {"system_name": system, "parameter": "single_node",        "param_value": single_node},
                         {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
-			{"system_name": system, "parameter": "uplink_gateway",     "param_value": "192.168.10.1"},
-			{"system_name": system, "parameter": "uplink_domain_name", "param_value": "rtp.transcirrus.com"},
-			{"system_name": system, "parameter": "uplink_subnet",      "param_value": "255.255.255.0"},
-			{"system_name": system, "parameter": "mgmt_domain_name",   "param_value": "int.transcirrus.com"},
-			{"system_name": system, "parameter": "mgmt_subnet",        "param_value": "255.255.255.0"},
-			{"system_name": system, "parameter": "mgmt_dns",           "param_value": "8.8.8.8"},
+			{"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
+			{"system_name": system, "parameter": "uplink_domain_name", "param_value": uplink_domain_name},
+			{"system_name": system, "parameter": "uplink_subnet",      "param_value": uplink_subnet},
+			{"system_name": system, "parameter": "mgmt_domain_name",   "param_value": mgmt_domain_name},
+			{"system_name": system, "parameter": "mgmt_subnet",        "param_value": mgmt_subnet},
+			{"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
                         ]
 
 	    run_setup(system_var_array, auth)

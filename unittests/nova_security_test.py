@@ -5,17 +5,15 @@
 import sys
 import time
 
-sys.path.append('../common')
-import logger
-import config
-from auth import authorization
+import transcirrus.common.logger as logger
+import transcirrus.common.config as config
+from transcirrus.common.auth import authorization
 
-sys.path.append('/home/jonathan/alpo.0/component/nova')
-from server import server_ops
+from transcirrus.component.nova.server import server_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","builder")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
@@ -30,10 +28,10 @@ nova = server_ops(d)
     #                     name - req - name of the server
 #server = {}
 #nova.creater_server()
-
+'''
 print "Createing security group with default ports - default"
 #create a security group with default ports
-create_group = {"group_name": 'jon',"group_desc": 'This is a test'}
+create_group = {"group_name": 'trans_default',"group_desc": 'This is a test'}
 sec_group = nova.create_sec_group(create_group)
 print sec_group
 print "------------------------------------------------"
@@ -65,13 +63,13 @@ list_key = nova.list_sec_keys()
 print list_key
 print "-------------------------------------------------"
 time.sleep(3)
-
+'''
 print "listing the security groups"
 list_group = nova.list_sec_group()
 print list_group
 print "-------------------------------------------------"
 time.sleep(3)
-
+'''
 print "Get detailed security group info"
 get_group = nova.get_sec_group("jon")
 print get_group
@@ -134,3 +132,4 @@ del_key2 = nova.delete_sec_group("default_keys")
 print del_key2
 print "-------------------------------------------------"
 time.sleep(2)
+'''

@@ -6,9 +6,10 @@ from transcirrus.component.keystone.keystone_users import user_ops
 import subprocess
 import transcirrus.common.config as config
 import transcirrus.common.logger as logger
+import transcirrus.common.util as util
 
 #Activate the amqp
-celery = Celery('change_adminuser_password', backend='amqp', broker='amqp://guest:builder@%s/'%(config.API_IP))
+celery = Celery('change_adminuser_password', backend='amqp', broker='amqp://guest:transcirrus1@%s/'%(config.API_IP))
 
 @celery.task(name='change_admin_password')
 def change_admin_password(auth_dict,new_password):
@@ -30,6 +31,19 @@ def change_admin_password(auth_dict,new_password):
             #instantiate the object
             new = user_ops(auth_dict)
             change = new.update_user_password(new_password)
+            print change
+            #update the factory default credentials file in transuser
+            file_dict = {'file_path':'/home/transcirrus',
+                         'file_name':'factory_creds',
+                         'file_content':['export OS_PASSWORD='+new_password],
+                         'file_owner':'transuser',
+                         'file_group':'transuser',
+                         'file_perm':664,
+                         'op':'append'
+                        }
+            write_creds = util.write_new_config_file(file_dict)
+            if(write_creds != 'OK'):
+                logger.sys_warning('Could not write the new credentials file in transuser home directory.')
     else:
         logger.sys_error("Could not change the admin user passowrd")
         return 'ERROR'

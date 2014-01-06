@@ -742,11 +742,18 @@ class server_ops:
     def list_sec_group(self):
         #This only queries the transcirrus db
         #get the security group info from the db.
-        get_group_dict = ""
-        if((self.user_level == 0) or (self.user_level == 1)):
+        get_group_dict = None
+
+        if(self.is_admin == 1):
+            get_group_dict = {"select":'*',"from":'trans_security_group'}
+            logger.sys_info("%s"%(get_group_dict))
+            print get_group_dict
+        elif(self.user_level == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(self.project_id)}
-        else:
+        elif(self.user_level == 2):
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'","and":"user_name='%s'" %(self.project_id,self.username)}
+        else:
+            logger.sys_error('Could not determin user type for sysgroup listing.')
 
         try:
             groups = self.db.pg_select(get_group_dict)
