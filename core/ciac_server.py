@@ -50,7 +50,7 @@ def setDbFlag(node_id, flag):
                 print "fault flag clear success"
         else:
             logger.sys_error("fault flag clear failure !!!, node_id: %s" %(node_id))
-            if __debug__
+            if __debug__ :
                 print "fault flag clear failure !!!, node_id: %s" % node_id
             # TODO
 
