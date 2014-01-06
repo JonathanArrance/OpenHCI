@@ -16,6 +16,7 @@ timeout_sec = 1
 retry_count = 5
 recv_buffer = 4096
 dhcp_retry = 5
+services_retry = 5
 
 connect_pkt = {
 'Type' : 'connect',
@@ -179,7 +180,7 @@ def restartServices(node_id, node_type):
         if ret == "OK":
 
             # restart openvswitch services
-            ret == service_controller.openvswitch("restart")
+            ret = service_controller.openvswitch("restart")
 
             if ret == "OK":
                 logger.sys_info("node_id: %s, services restart success" %(node_id))
@@ -654,26 +655,34 @@ def processComputeConfig(sock, node_id):
     sys.exit()
     # TEST
     # restart Nova and ovs services
+    """
+    # old code to restart services
     restartNovaServices(node_id)
     restartOvsServices(node_id)
 
     nova_services = checkNovaServices(node_id)
 
     ovs_services = checkOvsServices(node_id)
+    """
+    nova_services = service_controller.nova("restart")
+    ovs_services = service_controller.openvswitch("restart")
 
-    if nova_services==True and ovs_services==True:
+    if nova_services=='OK' and ovs_services=='OK':
         logger.sys_info("All services are up and running !!!")
         if __debug__ :
             print "All services are up and running !!!"
+        logger.sys_info("All services are up and running")
         post_install_status=True
     else:
+        if __debug__ :
+            print "nova/ovs services restart failure"
+        logger.sys_error("nova/ovs services restart failure")
         post_install_status=False
 
 
     if post_install_status == True:
 
         # send node_ready status message to cc
-
         sock.sendall(pickle.dumps(status_ready, -1))
 
         # listen for ok message, ack -- loops infinetly
@@ -694,25 +703,32 @@ def processComputeConfig(sock, node_id):
     else:
 
         # retry  TODO
-        retry=5
+        global services_retry
 
         # loop 
-        while(retry >= 0):
+        while(services_retry >= 0):
 
             # restart services
+            """
+            # old code to restart services
             restartNovaServices(node_id)
             restartOvsServices(node_id)
 
             # check services
             nova_services = checkNovaServices(node_id)
             ovs_services = checkOvsServices(node_id)
-            if nova_services == True and ovs_services == True:
+            """
+
+            nova_services = service_controller.nova("restart")
+            ovs_services = service_controller.openvswitch("restart")
+
+            if nova_services == 'OK' and ovs_services == 'OK':
                 post_install_status = True 
                 break;
-            retry = retry-1
-            logger.sys_warning("node_id: %s, ******retrying services******* %s" %(node_id, retry))
+            services_retry = services_retry-1
+            logger.sys_warning("node_id: %s, ******retrying services******* %s" %(node_id, services_retry))
             if __debug__ :
-                print "node_id: %s, ******retrying services******* %s" % (node_id, retry)
+                print "node_id: %s, ******retrying services******* %s" %(node_id,services_retry)
 
         if post_install_status != True:
 
@@ -736,7 +752,6 @@ def processComputeConfig(sock, node_id):
         else:
              
             # send node_ready status message to cc
-
             sock.sendall(pickle.dumps(status_ready, -1))
 
             # listen for ok message, ack -- loops infinetly
