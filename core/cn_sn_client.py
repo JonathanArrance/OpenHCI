@@ -652,7 +652,7 @@ def processComputeConfig(sock, node_id):
     post_install_status = True
 
     # TEST
-    sys.exit()
+   # sys.exit()
     # TEST
     # restart Nova and ovs services
     """
