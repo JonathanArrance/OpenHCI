@@ -650,6 +650,9 @@ def processComputeConfig(sock, node_id):
 
     post_install_status = True
 
+    # TEST
+    sys.exit()
+    # TEST
     # restart Nova and ovs services
     restartNovaServices(node_id)
     restartOvsServices(node_id)
@@ -1097,7 +1100,7 @@ try:
                     logger.sys_info("client received %s" %(data['Value']))
                     if __debug__ :
                         print "client received %s" % data['Value']
-                    sys.exit(1) # TEST
+                    #sys.exit(1) # TEST
 
                     if node_type == 'cn':
                         processComputeConfig(sock, node_id)
