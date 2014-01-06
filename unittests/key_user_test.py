@@ -13,114 +13,100 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("testuser","test")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating user_ops object."
 use = user_ops(d)
-
-
-
+'''
 print "listing orphaned users"
 orph = use.list_orphaned_users()
 print orph
 
-"""
-update_dict = {'username':"yo",'toggle':"enable",'email':"test@domain.com",'new_username':"testuser",'new_project':"unittest",'new_role':"pu"}
-yo = use.update_user(update_dict)
-print yo
-
 print "Create a new standard user with no project."
-new_user_dict = {"username":'jarrance',"password":"test","userrole":"user","email":"arrance@domain.com"}
+new_user_dict = {"username":'keven',"password":"test","userrole":"pu","email":"keven@domain.com"}
 create = use.create_user(new_user_dict)
 print create
 
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
-add_user_dict = {"username":"jarrance","user_role":'user',"project_name":'trans_default'}
+add_user_dict = {"username":"keven","user_role":'pu',"project_name":'testproj6'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
 
 print "Create a new standard user."
-new_user_dict = {"username":'testuser20',"password":"test","userrole":"user","email":"test20@domain.com","project_name":"demo"}
+new_user_dict = {"username":'keven2',"password":"test","userrole":"user","email":"keven2@domain.com","project_name":"testproj"}
 create = use.create_user(new_user_dict)
 print create
 
 print "getting user info"
-user_info = {"username":'testuser',"project_name":'demo'}
+user_info = {"username":'keven2',"project_name":'testproj'}
 get = use.get_user_info(user_info)
 print get
 time.sleep(2)
 print "---------------------------------------------"
 
 print "Create a new power user."
-new_pu_dict = {"username":'testpuser',"password":"test","userrole":"pu","email":"testpu@domain.com"}
+new_pu_dict = {"username":'keven4',"password":"test","userrole":"pu","email":"testpu@domain.com","project_name":"testproj"}
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
 print "getting test power user info"
-user_info = {"username":'testpuser',"project_name":'demo'}
+user_info = {"username":'keven4',"project_name":'testproj'}
 get_p = use.get_user_info(user_info)
 print get_p
 time.sleep(2)
 print "---------------------------------------------"
 
 print "Create a new admin user."
-new_admin_dict = {"username":'testadmin',"password":"test","userrole":"admin","email":"testadmin@domain.com"}
+new_admin_dict = {"username":'testadmin',"password":"test","userrole":"admin","email":"testadmin@domain.com","project_name":"testproj"}
 create_admin = use.create_user(new_admin_dict)
 print create_admin
 
 print "getting testadmin info"
-user_info = {"username":'testadmin',"project_name":'demo'}
+user_info = {"username":'testadmin',"project_name":'testproj'}
 get_a = use.get_user_info(user_info)
 print get_a
 time.sleep(2)
 print "---------------------------------------------"
 
-#ROLES NEED TO BE FIXED keep getting 404 error when attempting to add a new role
-
-#add a keystone role to the user
-print "Add the Member role to the testuser."
-user_role_dict = {"username":"testuser","project_id":"26c877c1d5f7449c93001cc9187754dd","role":"Member"}
-role = use.add_role_to_user(user_role_dict)
-print role
-time.sleep(2)
-print "--------------------------------------------"
-
-#remove role from user in a tenant
-remove_role = {"username":'testuser15',"project_name":'demo'}
-remove = use.remove_user_from_project(remove_role)
-print remove
-time.sleep(2)
-
-print "---------------------------------------------"
-
-
 print "toggle user to disable"
-toggle = {"username":'testuser',"toggle":'disable'}
+toggle = {"username":'keven4',"toggle":'disable'}
 tog = use.toggle_user(toggle)
 print tog
 
-print "getting testadmin info"
-user_info = {"username":'testuser',"project_name":'demo'}
+print "getting poweruser info"
+user_info = {"username":'keven4',"project_name":'testproj'}
 get_t = use.get_user_info(user_info)
 print get_t
 
 time.sleep(2)
 if(get_t['user_enabled'] == 'FALSE'):
     print "toggle user back to enable"
-    toggle = {"username":'testuser',"toggle":'enable'}
+    toggle = {"username":'keven4',"toggle":'enable'}
     tog_e = use.toggle_user(toggle)
     print tog_e
 time.sleep(2)
 print "---------------------------------------------"
 
-print "Deleteing a testuser"
-delete = {"username":"testuser","userid":get_t['user_id']}
-blah = use.remove_user(delete)
-print blah
+print "Updateing user password"
+pas_dict = {'new_password':'testtest','project_id':'da54c5efa79841f0888c0c4ea35d9895','user_id':get_t['user_id']}
+pas = use.update_user_password(pas_dict)
+time.sleep(2)
+print "----------------------------------------------"
 
+print "Removeing user from project"
+remove_user_dict = {"username":"keven4","project_name":'testproj6'}
+remove = use.remove_user_from_project(remove_user_dict)
+print add
+'''
+
+print "Deleteing a testuser"
+delete = {"username":"keven","userid":'9fc785117a914c31ada6b49479b2600e'}
+blah = use.delete_user(delete)
+print blah
+time.sleep(2)
 print "---------------------------------------------"
-"""
+

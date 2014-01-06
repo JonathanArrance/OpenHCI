@@ -13,14 +13,14 @@ from transcirrus.component.nova.storage import server_storage_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("admin","password")
+auth = authorization("testuser","test")
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
 
 nova = server_ops(perms)
 print "Createing a new virtual instance"
-server = {'sec_group_name':'testgroup','avail_zone':'nova','sec_key_name':'testkey','network_name':'testnet','image_name':'cirros-64','flavor_name':'m1.tiny','name':'testvm2'}
+server = {'sec_group_name':'testproj','avail_zone':'nova','sec_key_name':'test_keys','network_name':'testnet','image_name':'cirros-64','flavor_name':'m1.tiny','name':'testvm'}
 nova.create_server(server)
 
 '''

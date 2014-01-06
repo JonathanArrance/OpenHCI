@@ -5,15 +5,14 @@ import random
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
 
 from transcirrus.database.postgres import pgsql
 
 class flavor_ops:
-    #DESC:
-    #INPUT:
-    #OUTPUT:
+    #UPDATED/UNIT TESTED
     def __init__(self,user_dict):
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
@@ -27,7 +26,12 @@ class flavor_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            self.adm_token = user_dict['adm_token']
+
+            if('adm_token' in user_dict):
+                self.adm_token = user_dict['adm_token']
+            else:
+                self.adm_token = 'NULL'
+
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
@@ -41,10 +45,6 @@ class flavor_ops:
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
 
-        if(self.adm_token == ''):
-            logger.sys_error("No admin tokens passed.")
-            raise Exception("No admin tokens passed.")
-
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
             raise Exception("No tokens passed, or token was in error")
@@ -53,14 +53,16 @@ class flavor_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-    #DESC: Get a list of all flavors associated with a project
-    #      users and admin can only get flavors associated with their
-    #      projects
-    #INPUT: self object
-    #OUTPUT: An array of dictionaries
-    #        r_dict - flavor_name
-    #               - flav_id
     def list_flavors(self):
+        """
+        DESC: Get a list of all flavors associated with a project
+              users and admin can only get flavors associated with their
+              projects
+        INPUT: self object
+        OUTPUT: array of r_dict - flavor_name
+                                - flav_id
+        ACCESS: All users can use this function
+        """
         #connec to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -78,33 +80,36 @@ class flavor_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 200) or (rest['response'] == 203)):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                flav_array = []
-                for flavor in load['flavors']:
-                    line = {"flavor_name": str(flavor['name']), "flav_id": str(flavor['id'])}
-                    flav_array.append(line)
-                return flav_array
-            else:
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not get the defined instance flavors: %s" %(e))
 
-    #DESC: Get the information for a specific flavor users and admins can only
-    #      get flavor info for flavors in their project
-    #INPUT: flavor_id - id of the flavor
-    #OUTPUT: r_dict - flavor_name
-    #               - flav_id
-    #               - memory(MB)
-    #               - disk_space(GB)
-    #               - ephemeral(GB)
-    #               - swap(GB)
-    #               - cpus
-    #               - flav_link
+        #check the response and make sure it is a 200 or 203
+        if((rest['response'] == 200) or (rest['response'] == 203)):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            load = json.loads(rest['data'])
+            flav_array = []
+            for flavor in load['flavors']:
+                line = {"flavor_name": str(flavor['name']), "flav_id": str(flavor['id'])}
+                flav_array.append(line)
+            return flav_array
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
     def get_flavor(self,flavor_id):
+        """
+        DESC: Get the information for a specific flavor users and admins can only
+              get flavor info for flavors in their project
+        INPUT: flav_id of the flavor
+        OUTPUT: r_dict - flavor_name
+                       - flav_id
+                       - memory(MB)
+                       - disk_space(GB)
+                       - ephemeral(GB)
+                       - swap(GB)
+                       - cpus
+                       - flav_link
+        """
         #connec to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -122,33 +127,36 @@ class flavor_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 200) or (rest['response'] == 203)):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                r_dict = {"flavor_name": str(load['flavor']['name']), "flav_id": str(load['flavor']['id']), "memory(MB)": str(load['flavor']['ram']), "disk_space(GB)": str(load['flavor']['disk']), "ephemeral(GB)": str(load['flavor']['OS-FLV-EXT-DATA:ephemeral']), "swap(GB)": str(load['flavor']['swap']), "cpus": str(load['flavor']['vcpus']), "link": str(load['flavor']['links'][1]['href'])}
-                return r_dict
-            else:
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not get the flavor info %s" %(e))
+            raise
 
-    #DESC: create a new flavor in the openstack cloud
-    #      only an admin can create a flavor
-    #      if the admin sets public to FALSE the flavor is
-    #      only visable to the admins primary project
-    #INPUT: flav_dict - name - req
-    #                - ram - req
-    #                - boot_disk - req (GB)
-    #                - cpus - req
-    #                - swap - op - default 0 (MB)
-    #                - ephemeral - op - default 0 (GB)
-    #                - public - op - default false (true/false)
-    #OUTPUT: r_dict - status - ok (may change after proto)
-    #                 flav_name
-    #                 flav_id
+        if((rest['response'] == 200) or (rest['response'] == 203)):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            load = json.loads(rest['data'])
+            r_dict = {"flavor_name": str(load['flavor']['name']), "flav_id": str(load['flavor']['id']), "memory(MB)": str(load['flavor']['ram']), "disk_space(GB)": str(load['flavor']['disk']), "ephemeral(GB)": str(load['flavor']['OS-FLV-EXT-DATA:ephemeral']), "swap(GB)": str(load['flavor']['swap']), "cpus": str(load['flavor']['vcpus']), "link": str(load['flavor']['links'][1]['href'])}
+            return r_dict
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
     def create_flavor(self,flav_dict):
+        """
+        DESC: create a new flavor in the openstack cloud
+              only an admin can create a flavor
+              if the admin sets public to FALSE the flavor is
+              only visable to the admins primary project
+        INPUT: flav_dict - name - req
+                        - ram - req
+                        - boot_disk - req (GB)
+                        - cpus - req
+                        - swap - op - default 0 (MB)
+                        - ephemeral - op - default 0 (GB)
+                        - public - op - default false (true/false)
+        OUTPUT: r_dict - status - ok (may change after proto)
+                         flav_name
+                         flav_id
+        """
         #connect to the rest api caller.
         if(self.is_admin == 1):
             try:
@@ -194,18 +202,18 @@ class flavor_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                 rest = api.call_rest(rest_dict)
-                #check the response and make sure it is a 200 or 201
-                if((rest['response'] == 200) or (rest['response'] == 203)):
-                    #build up the return dictionary and return it if everythig is good to go
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
-                    print load
-                    r_dict = {"flavor_name": str(load['flavor']['name']), "flav_id": str(load['flavor']['id']), "status": "OK"}
-                    return r_dict
-                else:
-                    _http_codes(rest['response'],rest['reason'])
             except Exception as e:
                 logger.sys_error("Could not remove the project %s" %(e))
+                raise e
+
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                r_dict = {"flavor_name": str(load['flavor']['name']), "flav_id": str(load['flavor']['id']), "status": "OK"}
+                return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'])
         else:
             logger.sys_error("Only admin can create a flavor user: %s" %(self.username))
             raise Exception("Only admin can create a flavor user: %s" %(self.username))
@@ -233,24 +241,17 @@ class flavor_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                 rest = api.call_rest(rest_dict)
-                #check the response and make sure it is a 200 or 202
-                if((rest['response'] == 200) or (rest['response'] == 202)):
-                    #build up the return dictionary and return it if everythig is good to go
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    return "OK"
-                else:
-                    _http_codes(rest['response'],rest['reason'])
             except Exception as e:
                 logger.sys_error("Could not remove the project %s" %(e))
+                raise e
+
+            #check the response and make sure it is a 200 or 202
+            if((rest['response'] == 200) or (rest['response'] == 202)):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                return "OK"
+            else:
+                util.http_codes(rest['response'],rest['reason'])
         else:
             logger.sys_error("Only admin can create a flavor user: %s" %(self.username))
             raise Exception("Only admin can create a flavor user: %s" %(self.username))
-        
-######Internal defs#######
-def _http_codes(code,reason):
-    if(code):
-        logger.sys_error("Response %s with Reason %s" %(code,reason))
-        raise Exception("Response %s with Reason %s" %(code,reason))
-    else:
-        logger.sys_error("Error for unknown reason.")
-        raise Exception("Error for unknown reason.")

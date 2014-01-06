@@ -34,7 +34,16 @@ class layer_three_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            self.adm_token = user_dict['adm_token']
+            self.user_id = user_dict['user_id']
+
+            if('adm_token' in user_dict):
+                self.adm_token = user_dict['adm_token']
+                if(self.adm_token == ''):
+                    logger.sys_error('Admin user had no admin token passed.')
+                    raise Exception('Admin user had no admin token passed.')
+            else:
+                self.adm_token = 'NULL'
+
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
@@ -47,10 +56,6 @@ class layer_three_ops:
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
-
-        if(self.adm_token == ''):
-            logger.sys_error("No admin tokens passed.")
-            raise Exception("No admin tokens passed.")
 
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
@@ -669,46 +674,166 @@ class layer_three_ops:
 
 #Refer to http://docs.openstack.org/api/openstack-network/2.0/content/router_ext_ops_floatingip.html
 
-    #DESC: List the availabel floating ips in a project. Any user type can list
-    #      the floating ips in a project.
-    #INPUT: self object
-    #OUTPUT: array of r_dict - fixed_ip
-    #                        - floating_ip
-    #                        - router_id
-    #                        - floating_ip_id
-    #NOTE: this info can be obtained from the transcirrus db
     def list_floating_ips(self):
-        print "not implemented"
-        
-    #DESC: Return the mappings between the floating ip and the virtual instance
-    #      fixed ip.
-    #INPUT: floating_ip_id
-    #OUTPUT: r_dict - floating_ip
-    #               - fixed_ip
+        """
+        DESC: List the availabel floating ips in a project. Any user type can list
+              the floating ips in a project.
+        INPUT: self object
+        OUTPUT: array of r_dict - floating_ip
+                                - floating_ip_id
+        ACCESS: Admin will be able to list floatingips in the system,
+                power users and standard users will only be able to list
+                floating ips in their project.
+        NOTE: This info can be obtained from the transcirrus db
+        """
+        get_floating = None
+        try:
+            if(self.is_admin == 1):
+                get_floating = {'select':"*",'from':"trans_floating_ip order by index ASC"}
+            else:
+                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s' order by index ASC"%(self.project_id)}
+            floating = self.db.pg_select(get_floating)
+        except:
+            sys_error("Could not get list of floating ips.")
+            raise Exception("Could not get list of floating ips.")
+
+        r_array = []
+        for floater in floating:
+            r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2]}
+            r_array.push(r_dict)
+
+        return r_array
+
     def get_floating_ip(self,floating_ip_id):
-        print "not implemented"
-        
-    #DESC: Add a new floating ip to a project. Only admins can add a new floating ip
-    #      to the project.
-    #INPUT: ext_network_name
-    #OUTPUT: r_dict - floating_ip
-    #               - floating_ip_id
-    #NOTE: update the transcirrus db accoridingly
-    def add_floating_ip(self):
-        print "not implemented"
-        
-    #DESC: Update the floating ip attachments in the project. Admins and power users can
-    #      attach floating ip addresses to instances in their project.
-    #INPUT: update_dict - floating_ip - req
-    #                   - instance_name - req
-    #OUTPUT: r_dict - floating_ip
-    #               - instance_name
-    #               - instance_id
-    #NOTE: since the ports are not implemented in alpo.0 we will use the nova call.
-    #body = '{"addFloatingIp": {"address": "%s"}}' port 8774
+        """
+        DESC: Return the mappings between the floating ip and the virtual instance
+              fixed ip.
+        INPUT: floating_ip_id
+        ACCESS: Admins can get the info for any floating ip. Power users and standard
+                users can only get info for floating ip in their project.
+        OUTPUT: r_dict - floating_ip
+                       - fixed_ip
+                       - router_id
+        NOTE: none
+        """
+        if(floating_ip == ''):
+            logger.sys_error('No floating ip ID given.')
+            raise Exception('No floating ip ID given.')
+
+        get_floating = None
+        try:
+            if(self.is_admin == 1):
+                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"floating_ip_id='%s' order by index ASC"%(floating_ip_id)}
+            else:
+                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s'"%(self.project_id),'and':"floating_ip_id='%s' order by index ASC"%(floating_ip_id)}
+            floating = self.db.pg_select(get_floating)
+        except:
+            sys_error("Could not get of floating ip with id %s."%(floating_ip_id))
+            raise Exception("Could not get of floating ip with id %s."%(floating_ip_id))
+
+        r_dict = {'floating_ip':floater[1],'fixed_ip':floater[5],'router_id':floater[4]}
+
+        return r_dict
+
+    def allocate_floating_ip(self,input_dict):
+        """
+        DESC: Allocate a new floating ip to a project. Only admins can allocate a new floating ip
+              to the project.
+        INPUT: input_dict - ext_net_id
+                          - project_id
+        OUTPUT: r_dict - floating_ip
+                       - floating_ip_id
+        ACCESS: Admins can allocate a floating ip to any project, power users
+                can only allocate a floating ip to their project. Standard users
+                can not allocate a floating IP.
+        NOTE: update the transcirrus db accoridingly
+        """
+        if((input_dict['ext_net_id'] == '') or ('ext_net_id' not in input_dict)):
+            logger.sys_error('No external net id given.')
+            raise Exception('No external net id given.')
+        if((input_dict['project_id'] == '') or ('project_id' not in input_dict)):
+            logger.sys_error('No project id given.')
+            raise Exception('No project id given.')
+
+        #if a power user make sure given id is the same as the user id
+        if(self.user_level == 1):
+            if(input_dict['project_id'] != self.project_id):
+                    logger.sys_error('User project ID is invalid.')
+                    raise Exception('User project ID is invalid.')
+        elif(self.user_level == 2):
+            logger.sys_error('Users can not allocate floating ip addresses.')
+            raise Exception('Users can not allocate floating ip addresses.')
+
+        #make sure the project ID is valid and the user can allocate floating ip - sanity
+        get_proj = None
+        try:
+            get_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error('Project does not exist.')
+            raise Exception('Project does not exist.')
+
+        #Create an API connection with the admin
+        try:
+            #build an api connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_logger("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        #New way to do API calls - experiment
+        try:
+            body = '{"floatingip": {"floating_network_id": "%s", "tenant_id": "%s"}}'%(input_dict['ext_net_id'],input_dict['project_id'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2.0/floatingips'
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+        except:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not assign a floating ip to %s."%(input_dict['project_id']))
+            raise Exception("Could not assign a floating ip to %s."%(input_dict['project_id']))
+
+        #new way to process db transaction after API call - experiment
+        load = None
+        if(rest['response'] == 201):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            self.db.pg_transaction_begin()
+            load = json.loads(rest['data'])
+            try:
+                insert_dict = {"floating_ip":load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id'],"proj_id":input_dict['project_id'],"router_id":"NULL",
+                               "fixed_ip":"NULL"}
+                self.db.pg_insert("trans_floating_ip",insert_dict)
+                self.db.pg_transaction_commit()
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not update Transcirrus DB with floating Ip info")
+                raise Exception("Could not update Transcirrus DB with floating Ip info")
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+            return 'ERROR'
+
+        r_dict = {'floating_ip':load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id']}
+        return r_dict
+
     def update_floating_ip(self,update_dict):
-        print "not implemented"
+        """
+        DESC: Update the floating ip attachments in the project. Admins and power users can
+              attach floating ip addresses to instances in their project.
+        INPUT: update_dict - floating_ip - req
+                           - instance_name - req
+        OUTPUT: r_dict - floating_ip
+                       - instance_name
+                       - instance_id
+        NOTE: since the ports are not implemented in alpo.0 we will use the nova call.
+        body = '{"addFloatingIp": {"address": "%s"}}' port 8774
+        """
         
+
     #DESC: Removes a floating ip from the tenant. Only admins can delete a floating
     #      ip from the project
     #INPUT: floating_ip

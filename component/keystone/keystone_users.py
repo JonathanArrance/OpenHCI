@@ -16,6 +16,7 @@ from transcirrus.common.api_caller import caller
 from transcirrus.database.postgres import pgsql
 
 class user_ops:
+    #UPDATED/UNIT TESTED
     def __init__(self,user_dict):
         """
         DESC: Constructor to build out the tokens object
@@ -43,15 +44,18 @@ class user_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            self.adm_token = user_dict['adm_token']
             self.user_id = user_dict['user_id']
+
+            if('adm_token' in user_dict):
+                self.adm_token = user_dict['adm_token']
+            else:
+                self.adm_token = config.ADMIN_TOKEN
+
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
 
-            #Retrieve all default values from the DB????
-            #Screw a config file????
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
@@ -181,18 +185,19 @@ class user_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
                 new_user_id = None
-                #check the response and make sure it is a 200 or 201
-                if((rest['response'] == 201) or (rest['response'] == 200)):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
-                    new_user_id = load['user']['id']
-                else:
-                    _http_codes(rest['response'],rest['reason'])
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise e
+
+            #check the response and make sure it is a 200 or 201
+            if((rest['response'] == 201) or (rest['response'] == 200)):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                new_user_id = load['user']['id']
+            else:
+                util.http_codes(rest['response'],rest['reason'])
 
             if(self.new_user_proj_id != "NULL"):
                 self.proj_name = new_user_dict['project_name']
@@ -204,13 +209,14 @@ class user_ops:
                 #insert data in transcirrus DB
                 ins_dict = {"user_name":new_user_dict['username'],"user_group_membership":new_user_dict['userrole'],"user_group_id":group_id,"user_enabled":'TRUE',"keystone_role":key_role,"user_primary_project":self.proj_name,"user_project_id":self.new_user_proj_id,"keystone_user_uuid":new_user_id,"user_email":new_user_dict['email']}
                 insert = self.db.pg_insert("trans_user_info",ins_dict)
-                self.db.pg_transaction_commit()
-                self.db.pg_close_connection()
             except Exception as e:
                 self.db.pg_transaction_rollback()
                 logger.sql_error("%s" %(e))
                 #back the user out if an exception is thrown
                 raise e
+            else:
+                self.db.pg_transaction_commit()
+                self.db.pg_close_connection()
 
             r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":self.new_user_proj_id}
             return r_dict
@@ -219,7 +225,7 @@ class user_ops:
             logger.sys_error("Admin flag not set, could not create the new user.")
             raise Exception("Admin flag not set, could not create the new user.")
 
-    def remove_user(self,delete_dict):
+    def delete_user(self,delete_dict):
         """
         DESC: Removes a user from the Keystone Db and th Transcirrus DB
               Admin must be in the same project as user they are removeing
@@ -257,11 +263,11 @@ class user_ops:
                 logger.sys_error("%s" %(e))
                 raise
 
-            #Compare the admin project id to the user project id
+            #Compare the admin project id to the user project id - used when we have specific project admins - not in prototype
             #only an admin in the same project can disable a user in a project
-            if((self.project_id != proj_id[0][0]) or (self.user_level >= 1)):
-                logger.sys_error("Admin and User not in the same project, can not remove user.")
-                raise Exception("Admin and User not in the same project, can not remove user.")
+            #if((self.project_id != proj_id[0][0]) or (self.user_level >= 1)):
+            #    logger.sys_error("Admin and User not in the same project, can not remove user.")
+            #    raise Exception("Admin and User not in the same project, can not remove user.")
 
             #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
             if(self.status_level <= 1):
@@ -269,10 +275,14 @@ class user_ops:
                 raise Exception("User status not sufficient for remove user operation.")
 
             try:
-                #build an api connection for the admin user
+                #build an api connection for the admin user. NOTE project ID is the admin user project id
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
+            try:
                 #add the new user to openstack
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
@@ -282,24 +292,33 @@ class user_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
-                #check the response and make sure it is a 200 or 201
-                if((rest['response'] == 200) or (rest['response'] == 204)):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-
-                    #update the transcirrus db
-                    del_dict = {"table":'trans_user_info',"where":"user_name='%s'" %(delete_dict['username'])}
-                    self.db.pg_delete(del_dict)
-                    self.db.pg_close_connection()
-                    return "OK"
-                else:
-                    _http_codes(rest['response'],rest['reason'])
             except Exception as e:
-                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
+                logger.sys_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise
+
+            #check the response and make sure it is a 200 or 201
+            if((rest['response'] == 200) or (rest['response'] == 204)):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                #update the transcirrus db
+                try:
+                    del_dict = {"table":'trans_user_info',"where":"user_name='%s'" %(delete_dict['username'])}
+                    self.db.pg_transaction_begin()
+                    self.db.pg_delete(del_dict)
+                except Exception as e:
+                    self.db.pg_transaction_rollback()
+                    self.db.pg_close_connection()
+                    logger.sql_error("%s"%(e))
+                    raise
+                else:
+                    self.db.pg_transaction_commit()
+                    self.db.pg_close_connection()
+                    return "OK"
+            else:
+                util.http_codes(rest['response'],rest['reason'])
         else:
-            logger.sys_error("Admin flag not set, could not create the new user.")
+            logger.sys_error("Admin flag not set, could not delete the user.")
 
     #Not sure why I called it disable dict???????
     def toggle_user(self,disable_dict):
@@ -362,10 +381,14 @@ class user_ops:
         #Create an API connection with the admin
         if(self.is_admin == 1):
             try:
-                #build an api connection for the admin user
+                #build an api connection for the admin user. NOTE project ID is the admin user project id
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
+            try:
                 #add the new user to openstack
                 body = '{"user": {"enabled": %s, "id":"%s"}}' %(toggle,disable_dict['userid'])
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
@@ -375,27 +398,33 @@ class user_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error("%s"%(e))
+                #back the user out of the transcirrus DB if the db works and the REST API fails
+                raise
 
-                #check the response and make sure it is a 200 or 201
-                if(rest['response'] == 200):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            #check the response and make sure it is a 200 or 201
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                try:
                     self.db.pg_transaction_begin()
                     #update the transcirrus db
                     update_dict = {'table':"trans_user_info",'set':"user_enabled='%s'" %(toggle.upper()),'where':"keystone_user_uuid='%s'" %(disable_dict['userid'])}
                     self.db.pg_update(update_dict)
+                except Exception as e:
+                    self.db.pg_transaction_rollback()
+                    self.db.pg_close_connection()
+                    logger.sql_error("%s"%(e))
+                    raise e
+                else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
+            else:
+                util.http_codes(rest['response'],rest['reason'])
 
-                    r_dict = {"username":disable_dict['username'],"userid":disable_dict['userid'],"toggle":disable_dict['toggle']}
-                    return r_dict
-                else:
-                    _http_codes(rest['response'],rest['reason'])
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not get the project_id from the Transcirrus DB.")
-                #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise Exception("Could not get the project_id from the Transcirrus DB.")
+                r_dict = {"username":disable_dict['username'],"userid":disable_dict['userid'],"toggle":disable_dict['toggle']}
+                return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
@@ -501,28 +530,37 @@ class user_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
                 rest = api.call_rest(rest_dict)
                 new_user_id = ""
-                #check the response and make sure it is a 200
-                if(rest['response'] == 200):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
-                    self.db.pg_transaction_begin()
-                    #need to update trans_usr_table
-                    update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s'" %(user_role_dict['project_name'],proj[0][0]),'where':"keystone_user_uuid='%s'" %(user[0][0])}
-                    self.db.pg_update(update_dict)
-                    self.db.pg_transaction_commit()
-                    #close any open db connections
-                    self.db.pg_close_connection()
-                else:
-                    _http_codes(rest['response'],rest['reason'])
             except Exception as e:
-                self.db.pg_transaction_rollback()
                 logger.sys_error('%s' %(e))
-                raise e
+                raise
+
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                if(user_role_dict['user_role'] != 'admin'):
+                    try:
+                        load = json.loads(rest['data'])
+                        self.db.pg_transaction_begin()
+                        #need to update trans_usr_table
+                        update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s'" %(user_role_dict['project_name'],proj[0][0]),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                        self.db.pg_update(update_dict)
+                    except Exception as e:
+                        self.db.pg_transaction_rollback()
+                        self.db.pg_close_connection()
+                        logger.sql_error('%s' %(e))
+                        raise e
+                    else:
+                        self.db.pg_transaction_commit()
+                        self.db.pg_close_connection()
+                else:
+                    logger.sys_info('Added admin to project %s'%(user_role_dict['project_name']))
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+
             r_dict = {"project":user_role_dict['project_name'],"project_id":proj[0][0]}
             return r_dict
         else:
-            logger.sys_error("Admin flag not set, could not create the new user.")
+            logger.sys_error("Admin flag not set, could not add user to project.")
 
     def remove_user_from_project(self,remove_role):
         """
@@ -563,8 +601,8 @@ class user_ops:
                 self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
                 logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
 
-                self.key_db = pgsql(config.OS_DB,config.OS_DB_PORT,config.KEYSTONE_DB_NAME,config.KEYSTONE_DB_USER,config.KEYSTONE_DB_PASS)
-                logger.sql_info("Connected to the Keystone DB to do keystone user operations.")
+                #self.key_db = pgsql(config.OS_DB,config.OS_DB_PORT,config.OS_DB_NAME,config.OS_DB_USER,config.OS_DB_PASS)
+                #logger.sql_info("Connected to the Keystone DB to do keystone user operations.")
             except:
                 logger.sql_error("Could not connect to the DB.")
                 raise Exception("Could not connect to the DB.")
@@ -573,7 +611,6 @@ class user_ops:
             try:
                 get_user_id = {"select":"keystone_user_uuid,user_project_id,keystone_role","from":"trans_user_info","where":"user_name='%s'" %(remove_role['username'])}
                 user_id = self.db.pg_select(get_user_id)
-
             except:
                 logger.sql_error("Could not connect to the DB.")
                 raise Exception("Could not connect to the DB.")
@@ -599,35 +636,39 @@ class user_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            try:
-                #remove the role from the user on the tenant
-                body = ""
-                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
-                function = 'DELETE'
-                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][1],user_id[0][0],role_id[0][0])
-                token = self.adm_token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-                rest = api.call_rest(rest_dict)
-                #check the response and make sure it is a 200 or 201
-                if(rest['response'] == 204):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    try:
-                        self.db.pg_transaction_begin()
-                        up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"user_name='%s'" %(remove_role['username'])}
-                        self.db.pg_update(up_dict)
-                        self.db.pg_transaction_commit()
-                        self.db.pg_close_connection()
-                    except:
-                        self.db.pg_transaction_rollback()
-                        logger.sql_error("Could not update user information in the Transcirrus DB.")
-                        raise Exception("Could not update user information in the Transcirrus DB.")
+            #try:
+            #remove the role from the user on the tenant
+            body = ""
+            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][1],user_id[0][0],role_id[0][0])
+            print api_path
+            token = self.adm_token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+            rest = api.call_rest(rest_dict)
+            #except Exception as e:
+            #    logger.sys_error('%s' %(e))
+            #    raise
+
+            if(rest['response'] == 204):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                try:
+                    self.db.pg_transaction_begin()
+                    up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"user_name='%s'" %(remove_role['username'])}
+                    self.db.pg_update(up_dict)
+                except Exception as e:
+                    self.db.pg_transaction_rollback()
+                    self.db.pg_close_connection()
+                    logger.sql_error("%s"%(e))
+                    raise e
                 else:
-                    _http_codes(rest['response'],rest['reason'])
-            except Exception as e:
-                logger.sys_error('%s' %(e))
-                raise
+                    self.db.pg_transaction_commit()
+                    self.db.pg_close_connection()
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+
             r_dict = {"response":rest['response'],"reason":rest['reason']}
             return r_dict
         else:
@@ -681,54 +722,49 @@ class user_ops:
                 logger.sql_error("Could not find user information in Transcirrus DB., %s" %(e))
                 raise
 
-            #call the REST api to get info from keystone - used as a check more then anything else.
-            try:
-                #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                api = caller(api_dict)
+            r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"primary_project":user_info[0][6],"primary_proj_id":user_info[0][7],"user_role":user_info[0][2],"email":user_info[0][9],"user_enabled":user_info[0][4]}
+            return r_dict
 
-                #remove the role from the user on the tenant
-                body = ""
-                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
-                function = 'GET'
-                api_path = '/v2.0/users/%s' %(user_info[0][5])
-                token = self.adm_token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-                rest = api.call_rest(rest_dict)
-                #check the response and make sure it is a 200 or 201
-                if((rest['response'] == 200) or (rest['response'] == 203)):
-                    #read the json that is returned
-                    load = json.loads(rest['data'])
-                    r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"primary_project":user_info[0][6],"primary_proj_id":user_info[0][7],"user_role":user_info[0][2],"email":str(load['user']['email']),"user_enabled":user_info[0][4]}
-                    return r_dict
-                else:
-                    _http_codes(rest['response'],rest['reason'])
-            except Exception as e:
-                logger.sys_error('%s' %(e))
-                raise
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
-    def update_user_password(self,new_password):
+    def update_user_password(self,passwd_dict):
         """
         DESC: Change the user password.
-        INPUT: new_password
-        OUTPUT: OK
-        ACCESS: admins can change any user password, powerusers/users can only
+        INPUT: passwd_dict -new_password
+                           -project_id
+                           -user_id
+        OUTPUT: OK - success
+                ERROR - fail
+        ACCESS: Admins can change any user password, powerusers/users can only
                 change their own passwords.
         NOTE: We are going to re-engineer the openstack paradigm and let all users update the passwords. This
               function only changes the keystone password for the user. You must use the change_admin_user_password
               task in order to update the admin user password correctly.
         """
-        if(new_password == ""):
+        if((passwd_dict['new_password'] == "") or ('new_password' not in passwd_dict)):
             logger.sys_error("Can not change user password for user %s" %(self.username))
             raise Exception("Can not change user password for user %s" %(self.username))
+        if((passwd_dict['project_id'] == "") or ('project_id' not in passwd_dict)):
+            logger.sys_error("Can not change user password for user %s" %(self.username))
+            raise Exception("Can not change user password for user %s" %(self.username))
+
+        userid = None
+        if(('user_id' in passwd_dict['user_id']) and (passwd_dict['user_id'] != '')):
+            userid = passwd_dict['user_id']
+        else:
+            userid = self.user_id
+
+        if(self.is_admin == 0):
+            if(passwd_dict['project_id'] != self.project_id):
+                logger.sys_error('User project is invalid, can not change password.')
+                raise Exception('User project is invalid, can not change password.')
 
         #call the REST api to get info from keystone - used as a check more then anything else.
         try:
             #build an api connection for the admin user
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            #api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":passwd_dict['project_id']}
             api = caller(api_dict)
         except:
             logger.sys_error("Could not change user %s password."%(self.username))
@@ -736,22 +772,24 @@ class user_ops:
 
         try:
             #remove the role from the user on the tenant
-            body = '{"user": {"password": "%s", "id": "%s"}}' %(new_password,self.user_id)
+            body = '{"user": {"password": "%s", "id": "%s"}}' %(passwd_dict['new_password'],userid)
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
             function = 'PUT'
-            api_path = '/v2.0/users/%s/OS-KSADM/password' %(self.user_id)
+            api_path = '/v2.0/users/%s/OS-KSADM/password' %(userid)
             token = self.adm_token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 200):
-                #read the json that is returned
-                return 'OK'
-            else:
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             logger.sys_error('%s' %(e))
+            raise
+
+        #check the response and make sure it is a 200
+        if(rest['response'] == 200):
+            #read the json that is returned
+            return 'OK'
+        else:
+            util.http_codes(rest['response'],rest['reason'])
             return 'ERROR'
 
     def remove_user_credentials():
@@ -779,7 +817,7 @@ class user_ops:
                        - user_enabled
                        - user_project
                        - user_role
-        ACCESS: Only an admin can toggle the user status.
+        ACCESS: Only the admin can update the user info.
         NOTE: Unless specified the user will remian in the same user role when transfered to a new project.
         """
         #Check to make sure required params are given
@@ -879,7 +917,6 @@ class user_ops:
             try:
                 #add the new user to openstack
                 body = '{"user": {"enabled": %s, "id":"%s", "username":"%s", "email":"%s","name":"%s"}}' %(self.toggle,user[0][5],self.new_username,self.email,self.new_username)
-                print body
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/v2.0/users/%s' %(user[0][5])
@@ -887,27 +924,33 @@ class user_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
-                print rest
-                #check the response and make sure it is a 200 or 201
-                if(rest['response'] == 200):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    self.db.pg_transaction_begin()
-                    #update the transcirrus db
-                    update = {'table':"trans_user_info",'set':"user_name='%s',user_group_membership='%s',user_group_id='%s',user_enabled='%s',user_primary_project='%s',user_project_id='%s',keystone_role='%s',user_email='%s'"
-                                   %(self.new_username,self.new_role,self.role_id,self.toggle.upper(),self.new_project,self.new_proj_id,self.new_key_role,self.email),'where':"keystone_user_uuid='%s'" %(user[0][5])}
-                    self.db.pg_update(update)
-                    self.db.pg_transaction_commit()
-                    self.db.pg_close_connection()
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
             except:
                 self.db.pg_transaction_rollback()
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.")
                 raise Exception("Could not get the project_id from the Transcirrus DB.")
 
+            #check the response and make sure it is a 200 or 201
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                try:
+                    self.db.pg_transaction_begin()
+                    #update the transcirrus db
+                    update = {'table':"trans_user_info",'set':"user_name='%s',user_group_membership='%s',user_group_id='%s',user_enabled='%s',user_primary_project='%s',user_project_id='%s',keystone_role='%s',user_email='%s'"
+                                   %(self.new_username,self.new_role,self.role_id,self.toggle.upper(),self.new_project,self.new_proj_id,self.new_key_role,self.email),'where':"keystone_user_uuid='%s'" %(user[0][5])}
+                    self.db.pg_update(update)
+                except Exception as e:
+                    self.db.pg_transaction_rollback()
+                    self.db.pg_close_connection()
+                    logger.sql_error("%s"%(e))
+                    raise
+                else:
+                    self.db.pg_transaction_commit()
+                    self.db.pg_close_connection()
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+
             #add the user to a new project if it needs to be.
-            print update_dict
             if('new_project' in update_dict):
                 user_info = {'username':self.new_username,'user_role':update_dict['new_role'],'project_name':self.new_project}
                 self.add_user_to_project(user_info)

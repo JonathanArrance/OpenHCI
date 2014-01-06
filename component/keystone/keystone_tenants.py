@@ -9,12 +9,12 @@ import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
+from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.common.api_caller import caller
-
 from transcirrus.database.postgres import pgsql
 
 class tenant_ops:
-    
+    #UPDATED/UNIT TESTED
     #DESC: Constructor to build out the tokens object
     #INPUT: user_dict dictionary containing - built in auth.py
     #           username
@@ -38,7 +38,10 @@ class tenant_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            self.adm_token = user_dict['adm_token']
+
+            if('adm_token' in user_dict):
+                self.adm_token = user_dict['adm_token']
+
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
@@ -63,6 +66,8 @@ class tenant_ops:
         if ((self.status_level > 2) or (self.status_level < 0)):
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        self.keystone_users = user_ops(user_dict)
 
     #DESC: create a new project in Openstack. Only admins can perform this operation.
     #      calls the rest api in OpenStack and updates applicable fields in Transcirrus
@@ -103,57 +108,77 @@ class tenant_ops:
             if(self.user_level >= 1):
                 logger.sys_error("Only admins and power users can may list endpoints.")
                 raise Exception("Only admins and power users can may list endpoints.")
-    
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            api = caller(api_dict)
 
-            body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s project"}}' %(project_name,project_name)
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/tenants'
-            token = self.adm_token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-            rest = api.call_rest(rest_dict)
+            try:
+                #build an api connection for the admin user. NOTE project ID is the admin user project id
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 201) or (rest['response'] == 200)):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                tenant_id = load['tenant']['id']
-            else:
-                _http_codes(rest['response'],rest['reason'])
-
+            try:
+                #Build the new project in OpenStack
+                body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s project"}}' %(project_name,project_name)
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/tenants'
+                token = self.adm_token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sys_logger("Could not build the new project %s"%(project_name))
+                raise Exception("Could not build the new project %s"%(project_name))
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
 
-        # need to update the project_id info to the relevent transcirrus db tables
+        #check the response and make sure it is a 200 or 201
+        tenant_id = None
+        if((rest['response'] == 201) or (rest['response'] == 200)):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            load = json.loads(rest['data'])
+            tenant_id = load['tenant']['id']
+            # need to update the project_id info to the relevent transcirrus db tables
+            try:
+                self.db.pg_transaction_begin()
+                #insert the new project into the db
+                proj_ins_dict = {"proj_id":tenant_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
+                self.db.pg_insert("projects",proj_ins_dict)
+            except Exception as e:
+                logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
+                self.db.pg_transaction_rollback()
+                self.db.pg_close_connection()
+                #simple cleanup of failed project create
+                raise e
+            else:
+                self.db.pg_transaction_commit()
+                self.db.pg_close_connection()
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+
         try:
-            self.db.pg_transaction_begin()
-            #insert the new project into the db
-            proj_ins_dict = {"proj_id":tenant_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
-            self.db.pg_insert("projects",proj_ins_dict)
-
-            #Update the user table
-            #user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='%s',user_project_id='%s'"""%(project_name,tenant_id),'where':"user_name='%s'" %(self.username)}
-            #self.db.pg_update(user_up_dict)
-
-            self.db.pg_transaction_commit()
-            self.db.pg_close_connection()
+            #add the admin to the project as an admin - admingets added to all projects in the system
+            add_admin = {'username':'admin','user_role':'pu','project_name':project_name}
+            admin = self.keystone_users.add_user_to_project(add_admin)
         except Exception as e:
-            logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
-            self.db.pg_transaction_rollback()
-            #simple cleanup of failed project create
-            raise
+            logger.sys_error('Could not add the admin to %s'%(project_name))
+            raise Exception('Could not add the admin to %s'%(project_name))
+
         r_dict = {"response":200,"reason":"OK","project_name":project_name,"tenant_id":tenant_id}
         return r_dict
 
-    #DESC: remove a tenant from the OpenStack system and from the Transcirrus DB
-    #INPUT: self object
-    #       project_name
-    #OUTPUT: dictionary containg the rest API response,reason and status of "OK' if task completed successfully
     def remove_tenant(self,project_name):
+        """
+        DESC: Remove a tenant from the OpenStack system and from the Transcirrus DB
+        INPUT: project_name
+        ACCESS: Only the admin can remove the project
+        OUTPUT: r_dict -response
+                       -reason
+                       -status - 'OK' if task completed successfully
+        """
         if((not project_name) or (project_name == "")):
             logger.sys_error("No project name was specified for the new project.")
             raise EXception("No project name was specified for the new project.")
@@ -188,10 +213,14 @@ class tenant_ops:
                 raise
 
             try:
+                #build an api connection for the admin user.
                 api_dict = {"username":self.username, "password":self.password, "project_id":select[0][0]}
                 api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
-                #body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s dev project", "id": "%s"}}' %(project_name,project_name,select[0][0])
+            try:
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
@@ -231,11 +260,13 @@ class tenant_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
 
-    #DESC: Get all of the project names and IDs from the Transcirrus Db
-    #INPUT: self - object
-    #Output:dictionary containing all of the projects and project ids
-    #This operation is only available to admins
     def list_all_tenants(self):
+        """
+        DESC: Get all of the project names and IDs from the Transcirrus Db
+        INPUT: None
+        Output: Dictionary containing all of the projects and project ids
+        ACCESS: This operation is only available to admins
+        """
         # create a new project in OpenStack. This can only be done by and Admin
         # we need to make sure that the user is a transcirrus admin and an openstack admin.
         # if not reject and throw an exception

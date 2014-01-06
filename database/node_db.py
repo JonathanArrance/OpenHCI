@@ -105,9 +105,9 @@ def insert_node(input_dict):
     #input_dict['node_swift_ring'] = 'NULL'
 
     if('node_cloud_name' not in input_dict):
-        input_dict['node_cloud_name'] = 'RegionOne'
+        input_dict['node_cloud_name'] = 'TransCirrusCloud'
     if(input_dict['node_cloud_name'] == ''):
-        input_dict['node_cloud_name'] = 'RegionOne' 
+        input_dict['node_cloud_name'] = 'TransCirrusCloud'
 
     if((input_dict['node_iscsi_iqn'] == "") or ('node_iscsi_iqn' not in input_dict)):
         input_dict['node_iscsi_iqn'] = 'NULL'

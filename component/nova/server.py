@@ -36,8 +36,13 @@ class server_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            self.adm_token = user_dict['adm_token']
-            if 'sec' in user_dict:
+            
+            if('adm_token' in user_dict):
+                self.adm_token = user_dict['adm_token']
+            else:
+                self.adm_token = 'NULL'
+            
+            if('sec' in user_dict):
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
@@ -49,10 +54,6 @@ class server_ops:
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
-
-        if(self.adm_token == ''):
-            logger.sys_error("No admin tokens passed.")
-            #raise Exception("No admin tokens passed.")
 
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")

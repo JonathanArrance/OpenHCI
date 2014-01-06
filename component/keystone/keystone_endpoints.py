@@ -174,12 +174,17 @@ class endpoint_ops:
             if(self.api_ip):
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
-            if(rest['response'] == 200):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                #update service table with ips and service id
-                self.service_id = load['OS-KSADM:service']['id']
+        except:
+            logger.sys_error("Could not add a new service catalog entry.")
+            raise Exception("Could not add a new service catalog entry.")
+
+        if(rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            load = json.loads(rest['data'])
+            #update service table with ips and service id
+            self.service_id = load['OS-KSADM:service']['id']
+            try:
                 self.db.pg_transaction_begin()
                 update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.ep_ip[0][0]),'where':"service_name='%s'" %(input_dict['service_name'])}
                 self.db.pg_update(update)
@@ -189,13 +194,14 @@ class endpoint_ops:
                 if(input_dict['service_name'] == 'swift'):
                     update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.ep_ip[0][0]),'where':"service_name='swift_admin'"}
                     self.db.pg_update(update)
-                self.db.pg_transaction_commit()
-            else:
+            except Exception as e:
                 self.db.pg_transaction_rollback()
-                util.http_codes(rest['response'],rest['reason'])
-        except:
-            logger.sys_error("Could not add a new service catalog entry.")
-            raise Exception("Could not add a new service catalog entry.")
+                logger.sql_error("%s"%(e))
+                raise
+            else:
+                self.db.pg_transaction_commit()
+        else:
+            util.http_codes(rest['response'],rest['reason'])
 
         try:
             ep_body = '{"endpoint": {"adminurl": "%s", "service_id": "%s", "region": "%s", "internalurl": "%s", "publicurl": "%s"}}' %(self.admin_api,self.service_id,input_dict['cloud_name'],internal_api,public_api)
@@ -206,11 +212,17 @@ class endpoint_ops:
             ep_sec = 'FALSE'
             ep_rest_dict = {"body":ep_body, "header":ep_header, "function":ep_function, "api_path":ep_api_path, "token":ep_token, "sec":ep_sec}
             ep_rest = api.call_rest(ep_rest_dict)
-            if(ep_rest['response'] == 200):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(ep_rest['response'],ep_rest['reason']))
-                load = json.loads(ep_rest['data'])
-                ep_id = load['endpoint']['id']
+        except:
+            logger.sys_error("Could not add a new service endpoint.")
+            raise Exception("Could not add a new service endpoint.")
+
+        if(ep_rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(ep_rest['response'],ep_rest['reason']))
+            load = json.loads(ep_rest['data'])
+            ep_id = load['endpoint']['id']
+            try:
+                self.db.pg_transaction_begin()
                 update = {'table':"trans_service_settings",'set':"service_endpoint_id='%s'" %(ep_id),'where':"service_name='%s'" %(input_dict['service_name'])}
                 self.db.pg_update(update)
                 if(input_dict['service_name'] == 'keystone'):
@@ -219,15 +231,16 @@ class endpoint_ops:
                 if(input_dict['service_name'] == 'swift'):
                     update = {'table':"trans_service_settings",'set':"service_endpoint_id='%s'" %(ep_id),'where':"service_name='swift_admin'"}
                     self.db.pg_update(update)
+            except Exception as e:
+                logger.sql_error("%s"%(e))
+                raise
+            else:
                 self.db.pg_transaction_commit()
                 r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':self.admin_api,'internal_url':internal_api,'public_url':public_api}
                 return r_dict
-            else:
-                self.db.pg_transaction_rollback()
-                util.http_codes(ep_rest['response'],ep_rest['reason'])
-        except:
-            logger.sys_error("Could not add a new service endpoint.")
-            raise Exception("Could not add a new service endpoint.")
+        else:
+            self.db.pg_transaction_rollback()
+            util.http_codes(ep_rest['response'],ep_rest['reason'])
 
     def delete_endpoint(self,input_dict):
         """
@@ -286,56 +299,39 @@ class endpoint_ops:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
         
-        #try:
-        body = ""
-        header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json"}
-        function = 'DELETE'
-        api_path = '/v2.0/OS-KSADM/services/%s' %(self.get_service[0][0])
-        print api_path
-        token = self.adm_token
-        sec = 'FALSE'
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-        if(self.api_ip):
-            print self.api_ip
-            rest_dict['api_ip'] = self.api_ip
-        rest = api.call_rest(rest_dict)
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/OS-KSADM/services/%s' %(self.get_service[0][0])
+            token = self.adm_token
+            sec = 'FALSE'
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+            if(self.api_ip):
+                rest_dict['api_ip'] = self.api_ip
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
+            raise Exception("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
+
         if(rest['response'] == 204):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             #update service table with ips and service id
-            self.db.pg_transaction_begin()
-            update = {'table':"trans_service_settings",'set':"service_id='NULL',service_admin_ip='NULL',service_int_ip='NULL',service_public_ip='NULL',service_endpoint_id='NULL'",'where':"service_name='%s'" %(input_dict['service_name'])}
-            self.db.pg_update(update)
-            self.db.pg_transaction_commit()
-            return 'OK'
+            try:
+                self.db.pg_transaction_begin()
+                update = {'table':"trans_service_settings",'set':"service_id='NULL',service_admin_ip='NULL',service_int_ip='NULL',service_public_ip='NULL',service_endpoint_id='NULL'",'where':"service_name='%s'" %(input_dict['service_name'])}
+                self.db.pg_update(update)
+            except Exception as e:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("%s"%(e))
+                raise
+            else:
+                self.db.pg_transaction_commit()
+                return 'OK'
         else:
-            self.db.pg_transaction_rollback()
             util.http_codes(rest['response'],rest['reason'])
-        #except Exception as e:
-        #    logger.sys_error("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
-        #    raise Exception("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
-        """
-        WHEN THE SERVICE IS DELETED IT APPEARS AS THOUGH THE ENDPOINT IS DELETED AUTOMATICALLY
-        KEEPING THIS JUST IN CASE SOMETHING CHANGES
-        ep_body = ""
-        ep_header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json"}
-        ep_function = 'DELETE'
-        ep_api_path = '/v2.0/endpoints/%s' %(self.get_service[0][1])
-        ep_token = self.adm_token
-        ep_sec = 'FALSE'
-        ep_rest_dict = {"body": ep_body, "header": ep_header, "function":ep_function, "api_path":ep_api_path, "token":ep_token, "sec":ep_sec}
-        ep_rest = api.call_rest(ep_rest_dict)
-        print ep_rest
-        if(ep_rest['response'] == 204):
-            #read the json that is returned
-            logger.sys_info("Response %s with Reason %s" %(ep_rest['response'],ep_rest['reason']))
-            update = {'table':"trans_service_settings",'set':"service_endpoint_id='NULL'",'where':"service_name='%s'" %(input_dict['service_name'])}
-            self.db.pg_update(update)
-            return "OK"
-        else:
-            util.http_codes(ep_rest['response'],ep_rest['reason'])
-        """
-    
+
     def get_endpoint(self,service_name):
         """
         DESC: Get the attribute info for a specific cloud service endpoint
@@ -564,20 +560,25 @@ class endpoint_ops:
                 if(self.api_ip):
                     rest_dict['api_ip'] = self.api_ip
                 rest = api.call_rest(rest_dict)
-                if(rest['response'] == 204):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    #update service table with ips and service id
-                    load = json.load(rest['data'])
-                    self.db.pg_transaction_begin()
-                    update = {'table':"trans_service_settings",'set':"service_id='NULL'",'where':"service_name='%s'" %(service_name)}
-                    print update
-                    self.db.pg_update(update)
-                    self.db.pg_transaction_commit()
-                    return 'OK'
-                else:
-                    self.db.pg_transaction_rollback()
-                    util.http_codes(rest['response'],rest['reason'])
             except:
                 logger.sys_error("Could not remove the service catalog entry.")
                 raise Exception("Could not remove the service catalog entry.")
+
+            if(rest['response'] == 204):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                #update service table with ips and service id
+                load = json.load(rest['data'])
+                try:
+                    self.db.pg_transaction_begin()
+                    update = {'table':"trans_service_settings",'set':"service_id='NULL'",'where':"service_name='%s'" %(service_name)}
+                    self.db.pg_update(update)
+                except Exception as e:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("%s"%(e))
+                    raise
+                else:
+                    self.db.pg_transaction_commit()
+                    return 'OK'
+            else:
+                util.http_codes(rest['response'],rest['reason'])

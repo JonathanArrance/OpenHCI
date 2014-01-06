@@ -21,27 +21,28 @@ time.sleep(1)
 print "----------------------------------------"
 
 print "creating test project"
-proj = ten.create_tenant("testproj")
+proj = ten.create_tenant("yo")
 print proj
 time.sleep(1)
 print "----------------------------------------"
-"""
+
 print "listing projects"
 listit = ten.list_all_tenants()
 print listit
 time.sleep(1)
 print "----------------------------------------"
-
-print "Get the project Demo"
-get = ten.get_tenant("unittest")
+"""
+print "Get the project"
+get = ten.get_tenant("testproj7")
 print get
 print "----------------------------------------"
 time.sleep(1)
 
 print "deleting testproject"
-delproj = ten.remove_tenant("testproj")
+delproj = ten.remove_tenant("testproj7")
 print delproj
 
-lis = ten.list_tenant_users("demo")
+lis = ten.list_tenant_users("testproj")
 print lis
+
 """

@@ -47,8 +47,16 @@ class neutron_net_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            self.adm_token = user_dict['adm_token']
             self.user_id = user_dict['user_id']
+
+            if('adm_token' in user_dict):
+                self.adm_token = user_dict['adm_token']
+                if(self.adm_token == ''):
+                    logger.sys_error('Admin user had no admin token passed.')
+                    raise Exception('Admin user had no admin token passed.')
+            else:
+                self.adm_token = 'NULL'
+
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
@@ -64,11 +72,6 @@ class neutron_net_ops:
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
-
-        #if(self.adm_token == ''):
-        #    logger.sys_error("No admin tokens passed.")
-        #    raise Exception("No admin tokens passed.")
-            #self.adm_token = config.ADMIN_TOKEN
 
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
@@ -589,34 +592,34 @@ class neutron_net_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            #add the new user to openstack
-            body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'DELETE'
-            api_path = '/v2.0/subnets/%s' %(sub['subnet_id'])
-            print api_path
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            print rest
-            #check the response and make sure it is a 204
-            if(rest['response'] == 204):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                self.db.pg_transaction_begin()
-                #insert new net info
-                update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id='NULL',proj_id='NULL',subnet_id='NULL'",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
-                print update_dict
-                self.db.pg_update(update_dict)
-                self.db.pg_transaction_commit()
-            else:
-                util.http_codes(rest['response'],rest['reason'])
-            #except:
-            #    self.db.pg_transaction_rollback()
-            #    logger.sql_error("Could not remove the subnet from Neutron.")
-            #    raise Exception("Could not remove the subnet from Neutron.")
+            try:
+                #add the new user to openstack
+                body = ''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/subnets/%s' %(sub['subnet_id'])
+                print api_path
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                print rest
+                #check the response and make sure it is a 204
+                if(rest['response'] == 204):
+                    #read the json that is returned
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id='NULL',proj_id='NULL',subnet_id='NULL'",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
+                    print update_dict
+                    self.db.pg_update(update_dict)
+                    self.db.pg_transaction_commit()
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not remove the subnet from Neutron.")
+                raise Exception("Could not remove the subnet from Neutron.")
         else:
             logger.sys_error("Only an admin or a power user can remove a new network.")
             raise Exception("Only an admin or a power user can remove a new network.")

@@ -13,7 +13,7 @@ from transcirrus.component.nova.server import server_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("testuser","test")
 #get the user dict
 d = a.get_auth()
 
@@ -28,15 +28,15 @@ nova = server_ops(d)
     #                     name - req - name of the server
 #server = {}
 #nova.creater_server()
-'''
+
 print "Createing security group with default ports - default"
 #create a security group with default ports
-create_group = {"group_name": 'trans_default',"group_desc": 'This is a test'}
+create_group = {"group_name": 'testproj',"group_desc": 'This is a test'}
 sec_group = nova.create_sec_group(create_group)
 print sec_group
 print "------------------------------------------------"
 time.sleep(3)
-
+'''
 print "Createing security group with custom ports"
 #create a security group with the defualt ports
 create_group2 = {"group_name": 'test_group2',"group_desc": 'This is a test2',"ports":[139,22,80]}
@@ -46,7 +46,7 @@ print "------------------------------------------------"
 time.sleep(3)
 
 print "creating a new default security key"
-create_def_key = nova.create_sec_keys("default_keys")
+create_def_key = nova.create_sec_keys("test_keys")
 print create_def_key
 print "------------------------------------------------"
 time.sleep(3)
@@ -63,13 +63,13 @@ list_key = nova.list_sec_keys()
 print list_key
 print "-------------------------------------------------"
 time.sleep(3)
-'''
+
 print "listing the security groups"
 list_group = nova.list_sec_group()
 print list_group
 print "-------------------------------------------------"
 time.sleep(3)
-'''
+
 print "Get detailed security group info"
 get_group = nova.get_sec_group("jon")
 print get_group

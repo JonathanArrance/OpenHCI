@@ -33,8 +33,8 @@ class caller:
         else:
             self.project_id = 'NULL'
             #grab the default admin token from the config file
-            self.adm_token = config.DEFAULT_ADMIN_TOKEN
-            self.api_ip = config.DEFAULT_API_IP
+            self.adm_token = config.ADMIN_TOKEN
+            self.api_ip = config.API_IP
 
         if (self.username == ""):
             logger.sys_error("Username entered in class.__init__ is blank")
