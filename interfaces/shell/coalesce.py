@@ -378,7 +378,8 @@ def valid_ip_vm(uplink, vm):
         if (valid_uplink[0] == valid_vm[0] and
         valid_uplink[1] == valid_vm[1] and
         valid_uplink[2] == valid_vm[2] and
-        valid_uplink[3] != valid_vm[3]):
+        valid_uplink[3] != valid_vm[3] and
+        valid_vm[3] != 0):
             return True
         else:
             return False
