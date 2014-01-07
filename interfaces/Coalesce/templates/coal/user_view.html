@@ -1,0 +1,26 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %} Details for {{user_info.username}}{% endblock %}
+
+{% block content %}
+
+    <div class="row-fluid">
+      <div class="span6">
+        <div class="well">
+          <div class="legend">
+              Details for {{ user_info.username }}
+          </div>
+          <table class="paleblue">
+              <tr><th>Id</th><td>{{user_info.user_id}}</td></tr>
+              <tr><th>Role</th><td>{{user_info.user_role}}</td></tr>
+              <tr><th>Primary Project</th><td>{{user_info.primary_project}}</td></tr>
+              <tr><th>User Enabled?</th><td>{{user_info.user_enabled}}</td></tr>
+              <tr><th>Email</th><td><a href="mailto:{{user_info.email}}">{{user_info.email}}</a></td></tr>              
+          </table>
+        </div>
+      </div><!-- end span5-->
+
+    </div><!-- end row-fluid-->
+
+
+{% endblock %}
