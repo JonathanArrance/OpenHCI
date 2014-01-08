@@ -13,7 +13,7 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("testuser","test")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
@@ -47,12 +47,17 @@ get = use.get_user_info(user_info)
 print get
 time.sleep(2)
 print "---------------------------------------------"
-
+'''
 print "Create a new power user."
-new_pu_dict = {"username":'keven4',"password":"test","userrole":"pu","email":"testpu@domain.com","project_name":"testproj"}
+new_pu_dict = {"username":'shitbird2',"password":"test","userrole":"pu","email":"testpu@domain.com"}
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
+
+add_user_dict = {"username":"shitbird2","user_role":'pu',"project_name":'ffvc'}
+add = use.add_user_to_project(add_user_dict)
+print add
+'''
 print "getting test power user info"
 user_info = {"username":'keven4',"project_name":'testproj'}
 get_p = use.get_user_info(user_info)
@@ -101,7 +106,7 @@ print "Removeing user from project"
 remove_user_dict = {"username":"keven4","project_name":'testproj6'}
 remove = use.remove_user_from_project(remove_user_dict)
 print add
-'''
+
 
 print "Deleteing a testuser"
 delete = {"username":"keven","userid":'9fc785117a914c31ada6b49479b2600e'}
@@ -109,4 +114,4 @@ blah = use.delete_user(delete)
 print blah
 time.sleep(2)
 print "---------------------------------------------"
-
+'''

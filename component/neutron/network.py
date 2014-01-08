@@ -49,7 +49,7 @@ class neutron_net_ops:
             self.is_admin = user_dict['is_admin']
             self.user_id = user_dict['user_id']
 
-            if('adm_token' in user_dict):
+            if(self.is_admin == 1):
                 self.adm_token = user_dict['adm_token']
                 if(self.adm_token == ''):
                     logger.sys_error('Admin user had no admin token passed.')

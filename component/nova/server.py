@@ -5,6 +5,7 @@ import json
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
 
@@ -19,6 +20,7 @@ from image import nova_image_ops
 #from security import net_security_ops
 
 class server_ops:
+    #UPDATED/UNIT TESTED
     #DESC:
     #INPUT:
     #OUTPUT:
@@ -37,7 +39,7 @@ class server_ops:
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
             
-            if('adm_token' in user_dict):
+            if(self.is_admin == 1):
                 self.adm_token = user_dict['adm_token']
             else:
                 self.adm_token = 'NULL'
@@ -84,51 +86,97 @@ class server_ops:
         #close any open db connections
         self.db.pg_close_connection()
 
-    #DESC: List the virtual servers in the project. Users and power users can list the servers
-    #      in a project they own. Admins can list all virtual servers in the project.
-    #INPUT:self object.
-    #OUTPUT: array or r_dict - server_name
-    #                        - server_id
     def list_servers(self):
+        """
+        DESC: List the virtual servers in the project.
+        INPUT: None
+        OUTPUT: array or r_dict - server_name
+                                - server_id
+                                - project_id
+        ACCESS: Admins can list all servers in the cloud
+                Power users can list the servers in a project.
+                Users can list all virtual servers in the project they own .
+        """
         #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list virtual servers.")
             raise Exception("Status level not sufficient to list virtual servers.")
 
         #get the instances from the transcirrus DB for admins
-        get_inst = ""
-        if(self.is_admin == 1):
-            get_inst = {'select':"inst_name,inst_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
-        else:
-            get_inst = {'select':"inst_name,inst_id", 'from':"trans_instances", 'where':"proj_id=%s" %(self.project_id), 'and':"username=%s" %(self.username)}
-        instances = self.db.pg_select(get_inst)
+        get_inst = None
+        try:
+            if(self.user_level == 0):
+                get_inst = {'select':"inst_name,inst_id,proj_id",'from':"trans_instances"}
+            elif(self.user_level == 1):
+                get_inst = {'select':"inst_name,inst_id,proj_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
+            elif(self.user_level == 2):
+                get_inst = {'select':"inst_name,inst_id,proj_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id), 'and':"inst_user_id='%s'" %(self.user_id)}
+            instances = self.db.pg_select(get_inst)
+        except:
+            logger.sql_error('Could not retrieve the server instances for user %s.'%(self.username))
+            raise Exception('Could not retrieve the server instances for user %s.'%(self.username))
 
         #build the array of r_dict
         inst_array = []
         for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1]}
+            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2]}
             inst_array.append(r_dict)
 
         return inst_array
 
-    #DESC: Build a nee virtual instance. Users can only build servers
-    #      in the projects that they are members of includeing admin users
-    #INPUT: create_dict - config_script - op
-    #                     sec_group_name - default project security group if none specified
-    #                     sec_key_name - default project security key if none specified.
-    #                     avail_zone - default availability zone - nova
-    #                     network_name - default project net used if none specified
-    #                     image_name - default system image used if none specified
-    #                     flavor_name - default system flavor used if none specifed
-    #                     name - req - name of the server
+    def list_all_servers(self):
+        """
+        DESC: List all virtual servers in the system.
+        INPUT: None
+        OUTPUT: array or r_dict - server_name
+                                - server_id
+                                - project_id
+                                - user_id
+        ACCESS: Only admins can use this function
+        """
+        #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
+        if(self.is_admin == 0):
+            logger.sys_error("Only admins can list all of the servers on the system")
+            raise Exception("Only admins can list all of the servers on the system")
 
-    #OUTPUT: r_dict - vm_name - vm name
-    #               - vm_id - vm id
-    #               - sec_key_name - security key name
-    #               - sec_group_name - security group name
-    #               - created_by - name of creater
-    #               - project_id - id of project
+        try:
+            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id", 'from':"trans_instances"}
+            instances = self.db.pg_select(get_inst)
+        except Exception as e:
+            logger.sql_error("%s"%(e))
+            raise
+
+        #build the array of r_dict
+        inst_array = []
+        for inst in instances:
+            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3]}
+            inst_array.append(r_dict)
+        return inst_array
+
+    def create_server_snapshot():
+        pass
+    def delete_server_snapshot():
+        pass
+
     def create_server(self,create_dict):
+        """
+        DESC: Build a new virtual instance.
+        INPUT: create_dict - config_script - op
+                             sec_group_name - default project security group if none specified
+                             sec_key_name - default project security key if none specified.
+                             avail_zone - default availability zone - nova
+                             network_name - default project net used if none specified
+                             image_name - default system image used if none specified
+                             flavor_name - default system flavor used if none specifed
+                             name - req - name of the server
+        OUTPUT: r_dict - vm_name - vm name
+                       - vm_id - vm id
+                       - sec_key_name - security key name
+                       - sec_group_name - security group name
+                       - created_by - name of creater
+                       - project_id - id of project
+        ACCESS: Users can only build servers in the projects that they are members of includeing admin users.
+        """
         #do variable checks
         if(not create_dict):
             logger.sys_error("No dictionary passed into create_server operation.")
@@ -223,7 +271,7 @@ class server_ops:
                 raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
 
         #verify the image requested exsists
-        image_list = self.image.nova_list_images()
+        image_list = self.image.nova_list_images(self.project_id)
         for image in image_list:
             if(image['image_name'] == 'None'):
                 continue
@@ -252,38 +300,45 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 202
-            if(rest['response'] == 202):
-                #NOTE: need to add in a polling mechanism to report back status of the creation
-                load = json.loads(rest['data'])
-                self.db.pg_transaction_begin()
-                #add the instance values to the transcirrus DB
-                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':"NULL",'inst_floating_ip':"NULL",'proj_id':self.project_id,'in_use':"1",'floating_ip_id':"NULL",'inst_id':load['server']['id'],'inst_port_id':"NULL",'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':"NULL",'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
-                self.db.pg_insert("trans_instances",ins_dict)
-                #commit the db transaction
-                self.db.pg_transaction_commit()
-                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':self.project_id}
-                return r_dict
-            else:
-                self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             self.db.pg_transaction_rollback()
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
 
-    #DESC:Used to get detailed info for a specific virtual server.
-    #     All users can get information for a virtual server in their project they own.
-    #     Admins can get info on any virtual server in their project.
-    #INPUT: server_name
-    #OUTPUT: r_dict - server_name
-    #               - server_id
-    #               - sec_key_name
-    #               - sec_group_name
-    #               - server_flavor
-    #               - server_os
-    def get_server(self,server_name):
-        if((not server_name) or (server_name == "")):
+        if(rest['response'] == 202):
+            #NOTE: need to add in a polling mechanism to report back status of the creation
+            load = json.loads(rest['data'])
+            try:
+                self.db.pg_transaction_begin()
+                #add the instance values to the transcirrus DB
+                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':"NULL",'inst_floating_ip':"NULL",'proj_id':self.project_id,'in_use':"1",'floating_ip_id':"NULL",'inst_id':load['server']['id'],'inst_port_id':"NULL",'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':"NULL",'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
+                self.db.pg_insert("trans_instances",ins_dict)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error('Could not add the new virtual instance to the Transcirrus DB.')
+                raise Exception('Could not add the new virtual instance to the Transcirrus DB.')
+            else:
+                #commit the db transaction
+                self.db.pg_transaction_commit()
+                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':self.project_id}
+                return r_dict
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+    def get_server(self,server_id):
+        """
+        DESC:Used to get detailed info for a specific virtual server.
+        INPUT: server_name
+        OUTPUT: r_dict - server_name
+                       - server_id
+                       - sec_key_name
+                       - sec_group_name
+                       - server_flavor
+                       - server_os
+        ACCESS: All users can get information for a virtual server in their project they own.
+                Admins can get info on any virtual server.
+        """
+        if((not server_id) or (server_id == "")):
             logger.sys_error("The virtual server name was not specifed or is blank.")
             raise Exception("The virtual server name was not specifed or is blank.")
 
@@ -291,27 +346,36 @@ class server_ops:
             logger.sys_error("Status level not sufficient to get virtual servers.")
             raise Exception("Status level not sufficient to get virtual servers.")
 
-        get_server = ""
+        get_server = None
         if(self.is_admin == 1):
-            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_name='%s'" %(server_name), 'and':"proj_id='%s'" %(self.project_id)}
+            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
         else:
-            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_name='%s'" %(server_name), 'and':"inst_username='%s'" %(self.username)}
+            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
         server = self.db.pg_select(get_server)
-        
+
         #build the return dictionary
         r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
         return r_dict
 
-    #DESC: Used to update a virtual servers name.
-    #      users can only update their servers admins
-    #      can update any server in the project
-    #INPUT: update_dict - server_name
-    #                   - new_server_name
-    #OUTPUT: r_dict - server_name
-    #               - server_id
-    #NOTE: at this time update canonly update the server name per the Grizzly Rest API
     def update_server(self,update_dict):
-        if(('server_name' not in update_dict) or (update_dict['server_name'] == "")):
+        """
+        DESC: Used to update a virtual servers name.
+              users can only update their servers admins
+              can update any server in the project
+        INPUT: update_dict - server_id
+                           - project_id
+                           - new_server_name
+        OUTPUT: r_dict - server_name
+                       - server_id
+        NOTE: at this time update can only update the server name per the Grizzly Rest API
+        """
+        if(('new_server_name' not in update_dict) or (update_dict['new_server_name'] == "")):
+            logger.sys_error("The virtual server name was not specifed or is blank.")
+            raise Exception("The virtual server name was not specifed or is blank.")
+        if(('server_id' not in update_dict) or (update_dict['server_id'] == "")):
+            logger.sys_error("The virtual server name was not specifed or is blank.")
+            raise Exception("The virtual server name was not specifed or is blank.")
+        if(('project_id' not in update_dict) or (update_dict['project_id'] == "")):
             logger.sys_error("The virtual server name was not specifed or is blank.")
             raise Exception("The virtual server name was not specifed or is blank.")
 
@@ -319,9 +383,21 @@ class server_ops:
             logger.sys_error("Status level not sufficient to get virtual servers.")
             raise Exception("Status level not sufficient to get virtual servers.")
 
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(update_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != update_dict['project_id']):
+                logger.sys_error("Users can only update virtual serves in their project.")
+                raise Exception("Users can only update virtual serves in their project.")
+
         #get the server id based on the name and the project
         try:
-            select_id = {'select':"inst_id,inst_username", 'from':"trans_instances", 'where':"inst_name='%s'" %(update_dict['server_name']), 'and':"proj_id='%s'" %(self.project_id)}
+            select_id = {'select':"inst_user_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(update_dict['server_id']), 'and':"proj_id='%s'" %(update_dict['project_id'])}
             serv_id = self.db.pg_select(select_id)
         except:
             logger.sql_error("Could not get the instance id or username from Transcirrus db fo update_server operation")
@@ -329,7 +405,7 @@ class server_ops:
 
         #check the user name can update server name
         if(self.user_level != 0):
-            if(self.username != serv_id[0][1]):
+            if(self.user_id != serv_id[0][0]):
                 logger.sys_error("Users can only update virtual servers they own.")
                 raise Exceptopn("Users can only update virtual servers they own.")
 
@@ -346,54 +422,75 @@ class server_ops:
             body = '{"server": {"name": "%s"}}' %(update_dict['new_server_name'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'PUT'
-            api_path = '/v2/%s/servers/%s' %(self.project_id,serv_id[0][0])
+            api_path = '/v2/%s/servers/%s' %(update_dict['project_id'],update_dict['server_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 200):
-                load = json.loads(rest['data'])
-                self.db.pg_transaction_begin()
-                #add the instance values to the transcirrus DB
-                up_dict = {'table':"trans_instances",'set':"inst_name='%s'" %(update_dict['new_server_name']),'where':"proj_id='%s'" %(self.project_id),'and':"inst_name='%s'" %(update_dict['server_name'])}
-                self.db.pg_update(up_dict)
-                #commit the db transaction
-                self.db.pg_transaction_commit()
-                r_dict = {'server_name':update_dict['new_server_name'],'server_id':load['server']['id']}
-                return r_dict
-            else:
-                self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             self.db.pg_transaction_rollback()
             logger.sys_error("Could not create the project %s" %(e))
             raise e
 
-    #DESC: Deletes a virtual server. Users can only delete the servers they own.
-    #      Admins can delete any server in their project.
-    #INPUT: server_name
-    #OUTPUT: OK if deleted or error
-    def delete_server(self,server_name):
-        if(not 'server_name'):
-            logger.sys_error("The virtual server name was not specifed or is blank.")
-            raise Exception("The virtual server name was not specifed or is blank.")
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            try:
+                self.db.pg_transaction_begin()
+                #add the instance values to the transcirrus DB
+                up_dict = {'table':"trans_instances",'set':"inst_name='%s'" %(update_dict['new_server_name']),'where':"proj_id='%s'" %(update_dict['project_id']),'and':"inst_id='%s'" %(update_dict['server_id'])}
+                self.db.pg_update(up_dict)
+                #commit the db transaction
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error('Could not update instance %s from Transcirrus DB.'%(delete_dict['server_id']))
+                raise Exception('Could not update instance %s from Transcirrus DB.'%(delete_dict['server_id']))
+            else:
+                self.db.pg_transaction_commit()
+                r_dict = {'server_name':update_dict['new_server_name'],'server_id':load['server']['id']}
+                return r_dict
+        else:
+            self.db.pg_transaction_rollback()
+            util.http_codes(rest['response'],rest['reason'])
+
+    def delete_server(self,delete_dict):
+        """
+        DESC: Deletes a virtual server. Users can only delete the servers they own.
+              Admins can delete any server in their project.
+        INPUT: delete_dict - server_id
+                           - project_id
+        OUTPUT: OK if deleted or error
+        """
+        if(not 'server_id'):
+            logger.sys_error("The virtual server id was not specifed or is blank.")
+            raise Exception("The virtual server id was not specifed or is blank.")
 
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to delete virtual servers.")
             raise Exception("Status level not sufficient to delete virtual servers.")
 
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(delete_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != delete_dict['project_id']):
+                logger.sys_error("Users can only delete virtual serves in their project.")
+                raise Exception("Users can only delete virtual serves in their project.")
+
         #get the server id based on the name and the project
         try:
-            select_id = {'select':"inst_id,inst_username", 'from':"trans_instances", 'where':"inst_name='%s'" %(server_name), 'and':"proj_id='%s'" %(self.project_id)}
-            serv_id = self.db.pg_select(select_id)
+            select_id = {'select':"inst_user_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(delete_dict['server_id']), 'and':"proj_id='%s'" %(delete_dict['project_id'])}
+            user_id = self.db.pg_select(select_id)
         except:
             logger.sql_error("Could not get the instance id or username from Transcirrus db fo update_server operation")
             raise Exception("Could not get the instance id or username from Transcirrus db fo update_server operation")
 
         #check the user name can delete server name
         if(self.user_level != 0):
-            if(self.username != serv_id[0][1]):
+            if(self.user_id != user_id[0][0]):
                 logger.sys_error("Users can only delete virtual servers they own.")
                 raise Exceptopn("Users can only delete virtual servers they own.")
 
@@ -410,37 +507,48 @@ class server_ops:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'DELETE'
-            api_path = '/v2/%s/servers/%s' %(self.project_id,serv_id[0][0])
+            api_path = '/v2/%s/servers/%s' %(delete_dict['project_id'],delete_dict['server_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 204
-            if(rest['response'] == 204):
-                self.db.pg_transaction_begin()
-                del_dict = {"table":'trans_instances',"where":"inst_name='%s'" %(server_name), "and":"proj_id='%s'" %(self.project_id)}
-                self.db.pg_delete(del_dict)
-                self.db.pg_transaction_commit()
-                return "OK"
-            else:
-                self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             self.db.pg_transaction_rollback()
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
 
-#######Nova security#######
+        #check the response and make sure it is a 204
+        if(rest['response'] == 204):
+            try:
+                self.db.pg_transaction_begin()
+                del_dict = {"table":'trans_instances',"where":"inst_id='%s'" %(delete_dict['server_id']), "and":"proj_id='%s'" %(delete_dict['project_id'])}
+                self.db.pg_delete(del_dict)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error('Could not remove instance %s from Transcirrus DB.'%(delete_dict['server_id']))
+                raise Exception('Could not remove instance %s from Transcirrus DB.'%(delete_dict['server_id']))
+            else:
+                self.db.pg_transaction_commit()
+                return "OK"
+        else:
+            util.http_codes(rest['response'],rest['reason'])
 
-    #DESC:Create a new security group with ports the ports specified,
-    #     if no ports are specifed the default ports 22,80,443 are used
-    #     users can create security groups on in their project
-    #INPUT: dictionary create_sec - ports[] - op
-    #                             - group_name - req
-    #                             - group_desc - req
-    #OUTPUT: r_dict - sec_group_name
-    #               - sec_group_id
+#######Nova security#######
     def create_sec_group(self,create_sec):
+        """
+        DESC: Create a new security group with ports the ports specified,
+              if no ports are specifed the default ports 22,80,443 are used
+              users can create security groups on in their project
+        INPUT: dictionary create_sec - ports[] - op
+                                     - group_name - req
+                                     - group_desc - req
+                                     - project_id - req
+        OUTPUT: r_dict - sec_group_name
+                       - sec_group_id
+        ACCESS: Admins can create a security group in any prject, users and power
+                users can only create security groups in their own projects.
+        """
+        
         #NOTE: after prototype we will want to have the ability to have more then one security group in a project
         #      for now building out 1 in enough. Will also have to make a table in the DB to track them.
         #do variable checks
@@ -450,6 +558,19 @@ class server_ops:
         if(('group_name' not in create_sec) or ('group_desc' not in create_sec)):
             logger.sys_error("Required value not passed to create_sec_group operation")
             raise Exception("Required value not passed to create_sec_group operation")
+        
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(create_sec['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != create_sec['project_id']):
+                logger.sys_error("Users can only create security groups in their project.")
+                raise Exception("Users can only create security groups in their project.")
+
         #account for optional params
         ports = []
         if('ports' not in create_sec):
@@ -470,40 +591,46 @@ class server_ops:
             body = '{"security_group": {"name": "%s", "description": "%s"}}' %(create_sec['group_name'],create_sec['group_desc'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
-            api_path = '/v2/%s/os-security-groups' %(self.project_id)
+            api_path = '/v2/%s/os-security-groups' %(create_sec['project_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 200) or (rest['response'] == 203)):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                security = json.loads(rest['data'])
-                get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(self.project_id)}
-                def_group = self.db.pg_select(get_def_group)
-                self.db.pg_transaction_begin()
-                #if the default is empty and the user is an admin add a default
-                if((def_group[0][0] == "NULL") and (self.is_admin == 1)):
-                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(self.project_id)}
-                    self.db.pg_update(update_dict)
-                #add the security group info to the database
-                insert_dict = {"proj_id":self.project_id,"user_name":self.username,"sec_group_id":str(security['security_group']['id']),"sec_group_name":str(security['security_group']['name'])}
-                self.db.pg_insert("trans_security_group",insert_dict)
-                self.sec_group_id = str(security['security_group']['id'])
-            else:
-                self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             self.db.pg_transaction_rollback()
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
 
+        if((rest['response'] == 200) or (rest['response'] == 203)):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            security = json.loads(rest['data'])
+            get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(create_sec['project_id'])}
+            def_group = self.db.pg_select(get_def_group)
+            try:
+                self.db.pg_transaction_begin()
+                #if the default is empty and the user is an admin add a default
+                if((def_group[0][0] == "NULL") and (self.is_admin == 1)):
+                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
+                    self.db.pg_update(update_dict)
+                #add the security group info to the database
+                insert_dict = {"proj_id":create_sec['project_id'],"user_name":self.username,"user_id":self.user_id,"sec_group_id":str(security['security_group']['id']),"sec_group_name":str(security['security_group']['name']),"sec_group_desc":create_sec['group_desc']}
+                self.db.pg_insert("trans_security_group",insert_dict)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add in the new security group")
+                raise Exception("Could not add in the new security group")
+            else:
+                self.db.pg_transaction_commit()
+                self.sec_group_id = str(security['security_group']['id'])
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
         #add the ports to the sec group NOTE need to determin if we move this to the
         #network libs, it uses the quantum REST API for time sake keeping function here
         try:
             for i in range(len(ports)):
-                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "tcp", "security_group_id": "%s"}}' %(ports[i],self.project_id,ports[i],self.sec_group_id)
+                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "tcp", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],self.sec_group_id)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/security-group-rules'
@@ -517,7 +644,7 @@ class server_ops:
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                     logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
                 else:
-                    _http_codes(rest['response'],rest['reason'])
+                    util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
@@ -526,20 +653,37 @@ class server_ops:
         r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
         return r_dict
 
-
-    #DESC: Build out security keys used to connect to the cloud instances. Users and admins
-    #      can only build key in their own project. All project users should have their own
-    #      key especially in the case of VDI setups. If the default fields in the project table are
-    #      empty then a default key will be added to the projects table. The Public and private key
-    #      will be stored in the datbase.
-    #INPUT: key_name
-    #OUTPUT: dictionary r_dict - key_name
-    #                          - key_id
-    def create_sec_keys(self,key_name):
+    def create_sec_keys(self,key_dict):
+        """
+        DESC: Build out security keys used to connect to the cloud instances. Users and admins
+              can only build key in their own project. All project users should have their own
+              key especially in the case of VDI setups. If the default fields in the project table are
+              empty then a default key will be added to the projects table. The Public and private key
+              will be stored in the datbase.
+        INPUT: key_dict - key_name
+                        - project_id
+        OUTPUT: dictionary r_dict - key_name
+                                  - key_id
+        """
         #sanity
-        if((not key_name) or (key_name == "")):
+        if((key_dict['key_name'] == '') or ('key_name' not in key_dict)):
             logger.sys_error("Key name was either blank or not specified for create security key operation.")
             raise Exception("Key name was either blank or not specified for create security key operation.")
+        if((key_dict['project_id'] == '') or ('project_id' not in key_dict)):
+            logger.sys_error("Project id was either blank or not specified for create security key operation.")
+            raise Exception("Project id was either blank or not specified for create security key operation.")
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(key_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != key_dict['project_id']):
+                logger.sys_error("Users can only create security groups in their project.")
+                raise Exception("Users can only create security groups in their project.")
 
         #connect to the rest api caller.
         try:
@@ -550,71 +694,95 @@ class server_ops:
             raise Exception("Could not connect to the API caller")
 
         try:
-            body = '{"keypair": {"name": "%s"}}' %(key_name)
+            body = '{"keypair": {"name": "%s"}}' %(key_dict['key_name'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
             function = 'POST'
-            api_path = '/v2/%s/os-keypairs' %(self.project_id)
+            api_path = '/v2/%s/os-keypairs' %(key_dict['project_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 200):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                seckey = json.loads(rest['data'])
-                #check to see if there is a default key
-                get_def_key = {"select":"def_security_key_id", "from":"projects", "where":"proj_id='%s'" %(self.project_id)}
-                def_key = self.db.pg_select(get_def_key)
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not create the keys %s in project %s" %(key_name, key_dict['project_id']))
+            raise e
+
+        if(rest['response'] == 200):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            seckey = json.loads(rest['data'])
+            #check to see if there is a default key
+            get_def_key = {"select":"def_security_key_id", "from":"projects", "where":"proj_id='%s'" %(key_dict['project_id'])}
+            def_key = self.db.pg_select(get_def_key)
+            try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
                 if((def_key[0][0] == "NULL") and (self.is_admin == 1)):
-                    update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(self.project_id)}
+                    update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(key_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #insert all of the relevent info into the transcirrus db
-                insert_dict = {"proj_id":self.project_id,"user_name":self.username,"sec_key_id":str(seckey['keypair']['fingerprint']),"sec_key_name":str(seckey['keypair']['name']),"public_key":str(seckey['keypair']['public_key']),"private_key":str(seckey['keypair']['private_key'])}
+                insert_dict = {"proj_id":self.project_id,"user_name":self.username,"user_id":self.user_id,"sec_key_id":str(seckey['keypair']['fingerprint']),"sec_key_name":str(seckey['keypair']['name']),"public_key":str(seckey['keypair']['public_key']),"private_key":str(seckey['keypair']['private_key'])}
                 self.db.pg_insert("trans_security_keys",insert_dict)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add the security key to the Transcirrus DB.")
+                raise Exception("Could not add the security key to the Transcirrus DB.")
+            else:
                 self.db.pg_transaction_commit()
-
                 r_dict = {"key_name":str(seckey['keypair']['name']), "key_id":str(seckey['keypair']['fingerprint'])}
                 return r_dict
-            else:
-                self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
-        except Exception as e:
-            self.db.pg_transaction_rollback()
-            logger.sys_error("Could not create the keys %s in project %s" %(key_name, self.project_id))
-            raise e
+        else:
+            util.http_codes(rest['response'],rest['reason'])
 
-    #DESC: Only an admin can delete the default security group for the project.
-    #      Users can only delete the groups that they have created, admins and
-    #      power users can delete any security group
-    #INPUT: sec_group_name - string containing the security group name
-    #OUTPUT: OK if deleted or error
-    def delete_sec_group(self,sec_group_name):
+    def delete_sec_group(self,sec_dict):
+        """
+        DESC: Only an admin can delete the default security group for the project.
+              Users can only delete the groups that they have created, admins and
+              power users can delete any security group
+        INPUT: sec_dict - sec_group_id
+                        - project_id
+        OUTPUT: OK if deleted or error
+        ACCESS: Admins can delete any security group, users and power users can only
+                delete security groups in their project.
+        """
         #sanity
-        if((not sec_group_name) or (sec_group_name == "")):
+        if((sec_dict['sec_group_id'] == "") or ('sec_group_id' not in sec_dict)):
+            logger.sys_error("Security group id was either blank or not specified for delete security group operation.")
+            raise Exception("Security group id was either blank or not specified for delete security group operation.")
+        if((sec_dict['project_id'] == "") or ('project_id' not in sec_dict)):
             logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
             raise Exception("Security group name was either blank or not specified for delete security group operation.")
 
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(sec_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != sec_dict['project_id']):
+                logger.sys_error("Users can only create security groups in their project.")
+                raise Exception("Users can only create security groups in their project.")
+
         #get the security group info from the db.
         try:
-            get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_name='%s'" %(str(sec_group_name)),'and':"proj_id='%s'" %(self.project_id)}
+            get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_id='%s'" %(sec_dict['sec_group_id']),'and':"proj_id='%s'" %(sec_dict['project_id'])}
             get_group = self.db.pg_select(get_group_dict)
         except:
-            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(sec_group_name,self.project_id))
-            raise Exception("Could not get the security group info for sec_group: %s in project: %s" %(sec_group_name,self.project_id))
+            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(get_group[0][4],sec_dict['project_id']))
+            raise Exception("Could not get the security group info for sec_group: %s in project: %s" %(get_group[0][4],sec_dict['project_id']))
 
         #if the group does not belong to the user raise exception
         if(get_group[0][2] != self.username):
-            logger.sys_error("The security group %s does not belong to the user %s" %(sec_group_name,self.username))
-            raise Exception("The security group %s does not belong to the user %s" %(sec_group_name,self.username))
+            logger.sys_error("The security group %s does not belong to the user %s" %(get_group[0][4],self.username))
+            raise Exception("The security group %s does not belong to the user %s" %(get_group[0][4],self.username))
 
         #if the user is and admin or power user check if the group is the default
         #if so set the flag
         flag = 0
         if((self.user_level == 0) or (self.user_level == 1)):
-            check_def_dict = {"select":'def_security_group_id',"from":'projects', "where":"proj_id='%s'" %(self.project_id),"and":"def_security_group_name='%s'" %(get_group[0][4])}
+            check_def_dict = {"select":'def_security_group_id',"from":'projects', "where":"proj_id='%s'" %(sec_dict['project_id']),"and":"def_security_group_id='%s'" %(get_group[0][3])}
             check_def = self.db.pg_select(check_def_dict)
             if(check_def):
                 flag = 1
@@ -632,64 +800,86 @@ class server_ops:
             body = ""
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'DELETE'
-            api_path = '/v2/%s/os-security-groups/%s' %(self.project_id,get_group[0][3])
+            api_path = '/v2/%s/os-security-groups/%s' %(sec_dict['project_id'],sec_dict['sec_group_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 202):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+        except Exception as e:
+            logger.sys_error("Could not remove the security group %s" %(get_group[0][4]))
+            raise e
+
+        #check the response and make sure it is a 200 or 201
+        if(rest['response'] == 202):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            try:
                 self.db.pg_transaction_begin()
                 #set the default security group back to NULL
                 if(flag == 1):
-                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(self.project_id)}
+                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(sec_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #delete the security group from the db
-                delete_dict = {"table":'trans_security_group',"where":"sec_group_id='%s'" %(get_group[0][3])}
+                delete_dict = {"table":'trans_security_group',"where":"sec_group_id='%s'" %(sec_dict['sec_group_id'])}
                 self.db.pg_delete(delete_dict)
-            else:
+            except:
                 self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
-        except Exception as e:
-            self.db.pg_transaction_rollback()
-            logger.sys_error("Could not remove the security group %s" %(sec_group_name))
-            raise e
+                logger.sql_error('Could not remove the security group from the Transcirrus DB.')
+                raise Exception('Could not remove the security group from the Transcirrus DB.')
+            else:
+                self.db.pg_transaction_commit()
+                return "OK"
+        else:
+            util.http_codes(rest['response'],rest['reason'])
 
-        return "OK"
-
-    #DESC: Delete the specified key admins and power users can delete any key in
-    #      the project they are a member of. Users can only delete the keys they own.
-    #      Only an Admin can delete the default security key
-    #INPUT: sec_key_name - string containing the security key name
-    #OUTPUT: OK if deleted
-    def delete_sec_keys(self,sec_key_name):
+    def delete_sec_keys(self,delete_dict):
+        """
+        DESC: Delete the specified key 
+        INPUT: delete_dict - sec_key_name
+                           - project_id
+        OUTPUT: OK if deleted
+        ACCESS: Admins and power users can delete any key in
+                the project they are a member of. Users can only delete the keys they own.
+                Only an Admin can delete the default security key
+        """
         #sanity
-        if((not sec_key_name) or (sec_key_name == "")):
+        if(('sec_key_name' not in delete_dict) or (delete_dict['sec_key_name'] == "")):
+            logger.sys_error("Security key name was either blank or not specified for delete security key operation.")
+            raise Exception("Security key name was either blank or not specified for delete security key operation.")
+        if(('project_id' not in delete_dict) or (delete_dict['project_id'] == "")):
             logger.sys_error("Security key name was either blank or not specified for delete security key operation.")
             raise Exception("Security key name was either blank or not specified for delete security key operation.")
 
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(delete_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != delete_dict['project_id']):
+                logger.sys_error("Users can only create security groups in their project.")
+                raise Exception("Users can only create security groups in their project.")
+
         #get the security group info from the db.
-        #try:
-        get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"sec_key_name='%s'" %(sec_key_name),"and":"proj_id='%s'" %(self.project_id)}
-        print get_key_dict
-        get_key = self.db.pg_select(get_key_dict)
-        print get_key
-        #except:
-        #    logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
-        #    raise Exception("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
+        try:
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"sec_key_name='%s'" %(delete_dict['sec_key_name']),"and":"proj_id='%s'" %(delete_dict['project_id'])}
+            get_key = self.db.pg_select(get_key_dict)
+        except:
+            logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
+            raise Exception("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
 
         #if the group does not belong to the user raise exception
         if(get_key[0][1] != self.username):
-            logger.sys_error("The security key %s does not belong to the user %s" %(sec_key_name,self.username))
-            raise Exception("The security key %s does not belong to the user %s" %(sec_key_name,self.username))
+            logger.sys_error("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
+            raise Exception("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
 
         #if the user is and admin or power user check if the group is the default
         #if so set the flag
         flag = 0
         if((self.user_level == 0) or (self.user_level == 1)):
-            check_def_dict = {"select":'def_security_key_id',"from":'projects', "where":"proj_id='%s'" %(self.project_id),"and":"def_security_key_name='%s'" %(get_key[0][3])}
+            check_def_dict = {"select":'def_security_key_id',"from":'projects', "where":"proj_id='%s'" %(delete_dict['project_id']),"and":"def_security_key_name='%s'" %(get_key[0][3])}
             check_def = self.db.pg_select(check_def_dict)
             if(check_def):
                 flag = 1
@@ -707,40 +897,47 @@ class server_ops:
             body = ""
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'DELETE'
-            api_path = '/v2/%s/os-keypairs/%s' %(self.project_id,sec_key_name)
+            api_path = '/v2/%s/os-keypairs/%s' %(delete_dict['project_id'],delete_dict['sec_key_name'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 202):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not remove the security key %s" %(delete_dict['sec_key_name']))
+            raise e
+
+        if(rest['response'] == 202):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            try:
                 self.db.pg_transaction_begin()
                 #set the default security group back to NULL
                 if(flag == 1):
-                    update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(self.project_id)}
+                    update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(delete_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #delete the security group from the db
-                delete_dict = {"table":'trans_security_keys',"where":"sec_key_id='%s'" %(get_key[0][3])}
-                print delete_dict
-                self.db.pg_delete(delete_dict)
-            else:
+                del_dict = {"table":'trans_security_keys',"where":"sec_key_id='%s'" %(get_key[0][2])}
+                self.db.pg_delete(del_dict)
+            except:
                 self.db.pg_transaction_rollback()
-                _http_codes(rest['response'],rest['reason'])
-        except Exception as e:
-            self.db.pg_transaction_rollback()
-            logger.sys_error("Could not remove the security key %s" %(sec_key_name))
-            raise e
+                logger.sql_error("Could not remove the security key from the Transcirrus DB.")
+                raise Exception("Could not remove the security key from the Transcirrus DB.")
+            else:
+                self.db.pg_transaction_commit()
+                return "OK"
+        else:
+            util.http_codes(rest['response'],rest['reason'])
 
-        return "OK"
-    #DESC: list the security groups that belong to a user
-    #      admins and power users can list all of the security groups.
-    #INPUT: self object
-    #OUTPUT: array of r_dict - sec_group_name
-    #                        - sec_group_id
-    #                        - owner_name
     def list_sec_group(self):
+        """
+        DESC: list the security groups that belong to a user
+        INPUT: self object
+        OUTPUT: array of r_dict - sec_group_name
+                                - sec_group_id
+                                - owner_name
+        ACCESS: admins and power users can list all of the security groups.
+        """
         #This only queries the transcirrus db
         #get the security group info from the db.
         get_group_dict = None
@@ -748,11 +945,10 @@ class server_ops:
         if(self.is_admin == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group'}
             logger.sys_info("%s"%(get_group_dict))
-            print get_group_dict
         elif(self.user_level == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(self.project_id)}
         elif(self.user_level == 2):
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'","and":"user_name='%s'" %(self.project_id,self.username)}
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
         else:
             logger.sys_error('Could not determin user type for sysgroup listing.')
 
@@ -767,24 +963,30 @@ class server_ops:
         for group in groups:
             r_dict = {"sec_group_name":group[4],"sec_group_id":group[3],"username":group[2]}
             group_array.append(r_dict)
-            
+
         #return the array
         return group_array
 
-    #DESC: list the security keys that belong to a user
-    #      admins and power users can list all of the keys.
-    #INPUT: self object
-    #OUTPUT: array of r_dict - key_name
-    #                        - key_id - sec key fingerprint
-    #                        - owner_name
     def list_sec_keys(self):
+        """
+        DESC: List the security keys that belong to a user
+        INPUT: None
+        OUTPUT: Array of r_dict - key_name
+                                - key_id - sec key fingerprint
+                                - owner_name
+        ACCESS: Admins can list all of the keys, power users can list all of the
+                keys in the project, users can only list their keys.
+        """
+
         #This only queries the transcirrus db
         #get the security group info from the db.
-        get_key_dict = ""
-        if((self.user_level == 0) or (self.user_level == 1)):
+        get_key_dict = None
+        if(self.user_level == 0):
+            get_key_dict = {"select":'*',"from":'trans_security_keys'}
+        elif(self.user_level == 1):
             get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(self.project_id)}
         else:
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'","and":"user_name='%s'" %(self.project_id,self.username)}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
 
         try:
             keys = self.db.pg_select(get_key_dict)
@@ -801,33 +1003,51 @@ class server_ops:
         #return the array
         return key_array
 
-    #DESC: Get detailed info for a specific security group
-    #      admins can get info on all groups in a project, users
-    #      can only get info on the groups they own
-    #INPUT: sec_group_name
-    #OUTPUT: r_dict - sec_group_name
-    #               - sec_group_id
-    #               - sec_group_desc
-    #               - ports - array of ports
-    #NOTE: we will use a combination of the openstack and transcirrus db
-    def get_sec_group(self,sec_group_name):
+    def get_sec_group(self,sec_dict):
+        """
+        DESC: Get detailed info for a specific security group
+              admins can get info on all groups in a project, users
+              can only get info on the groups they own
+        INPUT: sec_dict - sec_group_id
+                        - project_id
+        OUTPUT: r_dict - sec_group_name
+                       - sec_group_id
+                       - sec_group_desc
+                       - ports - array of ports
+        NOTE: we will use a combination of the openstack and transcirrus db
+        """
          #sanity
-        if((not sec_group_name) or (sec_group_name == "")):
+        if((sec_dict['sec_group_id'] == '') or ('sec_group_id' not in sec_dict)):
             logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
             raise Exception("Security group name was either blank or not specified for delete security group operation.")
+        if((sec_dict['project_id'] == '') or ('project_id' not in sec_dict)):
+            logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
+            raise Exception("Security group name was either blank or not specified for delete security group operation.")
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(sec_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != sec_dict['project_id']):
+                logger.sys_error("Users can only create security groups in their project.")
+                raise Exception("Users can only create security groups in their project.")
 
         #get the security group info from the db.
         try:
             #users can only get their own security groups
-            get_group_dict = ""
+            get_group_dict = None
             if(self.user_level != 0):
-                get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_name='%s'" %(str(sec_group_name)),'and':"user_name='%s'" %(self.username)}
+                get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_id='%s'" %(str(sec_dict['sec_group_id'])),'and':"user_id='%s'" %(self.user_id)}
             else:
-                get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_name='%s'" %(str(sec_group_name)),'and':"proj_id='%s'" %(self.project_id)}
+                get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_id='%s'" %(str(sec_dict['sec_group_id'])),'and':"proj_id='%s'" %(sec_dict['project_id'])}
             get_group = self.db.pg_select(get_group_dict)
         except:
-            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(sec_group_name,self.project_id))
-            raise Exception("Could not get the security group info for sec_group: %s in project: %s" %(sec_group_name,self.project_id))
+            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(sec_dict['sec_group_id'],sec_dict['project_id']))
+            raise Exception("Could not get the security group info for sec_group: %s in project: %s" %(sec_dict['sec_group_id'],sec_dict['project_id']))
 
         #connect to the rest api caller.
         try:
@@ -837,67 +1057,61 @@ class server_ops:
             logger.sys_error("Could not connect to the API caller")
             raise Exception("Could not connect to the API caller")
 
-        #create a new security group in the project
         try:
             body = ""
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'GET'
-            api_path = '/v2/%s/os-security-groups/%s' %(self.project_id,get_group[0][3])
+            api_path = '/v2/%s/os-security-groups/%s' %(sec_dict['project_id'],sec_dict['sec_group_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if(rest['response'] == 200):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                rule_array = []
-                for rule in load['security_group']['rules']:
-                    rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr'])}
-                    rule_array.append(rule_dict)
-                r_dict = {'sec_group_name':sec_group_name, 'sec_group_id': get_group[0][3], 'sec_group_desc':str(load['security_group']['description']),'ports':rule_array}
-                return r_dict
-            else:
-                _http_codes(rest['response'],rest['reason'])
         except Exception as e:
             logger.sys_error("Could not remove the security group %s" %(sec_group_name))
             raise e
 
-    #DESC: Get detailed info for a specific security key
-    #      admins can get info on all keys in the project,
-    #      users can only get info on the keys they own admins 
-    #INPUT: sec_key_name
-    #OUTPUT: r_dict - sec_key_name
-    #               - sec_key_id
-    #               - rsa_public_key
-    def get_sec_keys(self,sec_key_name):
-         #sanity
-        if((not sec_key_name) or (sec_key_name == "")):
-            logger.sys_error("Security key name was either blank or not specified for get security key operation.")
-            raise Exception("Security key name was either blank or not specified for get security key operation.")
+        #check the response and make sure it is a 200 or 201
+        if(rest['response'] == 200):
+            #build up the return dictionary and return it if everythig is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            load = json.loads(rest['data'])
+            rule_array = []
+            for rule in load['security_group']['rules']:
+                rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr'])}
+                rule_array.append(rule_dict)
+            r_dict = {'sec_group_name':get_group[0][4], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array}
+            return r_dict
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+    def get_sec_keys(self,sec_key_id):
+        """
+        DESC: Get detailed info for a specific security key
+        INPUT: sec_key_name
+        OUTPUT: r_dict - sec_key_name
+                       - user_name
+                       - sec_key_id
+                       - rsa_public_key
+        ACCESS: Admins can get info on all keys in the project,
+                users and power users can only get info on the keys they own
+        """
+        if((not sec_key_id) or (sec_key_id == "")):
+            logger.sys_error("Security key id was either blank or not specified for get security key operation.")
+            raise Exception("Security key id was either blank or not specified for get security key operation.")
 
         #get the security group info from the db.
         try:
             #users can only get their own security groups
-            get_key_dict = ""
-            if(self.user_level != 0):
-                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key",'from':"trans_security_keys",'where':"proj_id='%s'" %(self.project_id),'and':"user_name='%s'" %(self.username)}
+            get_key_dict = None
+            if(self.is_admin == 0):
+                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(self.project_id),'and':"user_id='%s' and sec_key_id='%s'" %(self.user_id,sec_key_id)}
             else:
-                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key",'from':"trans_security_keys",'where':"proj_id='%s'" %(self.project_id)}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(self.project_id),'and':"sec_key_id='%s'"%(sec_key_id)}
             get_key = self.db.pg_select(get_key_dict)
+            print get_key
         except:
-            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(sec_group_name,self.project_id))
-            raise Exception("Could not get the security group info for sec_group: %s in project: %s" %(sec_group_name,self.project_id))
+            logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(sec_key_name,self.project_id))
+            raise Exception("Could not get the security group info for sec_key_name: %s in project: %s" %(sec_key_name,self.project_id))
 
-        r_dict = {'sec_key_name':get_key[0][0],'sec_key_id':get_key[0][1],'public_key':get_key[0][2]}
+        r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2]}
         return r_dict
-
-######Internal defs#######
-def _http_codes(code,reason):
-    if(code):
-        logger.sys_error("Response %s with Reason %s" %(code,reason))
-        raise Exception("Response %s with Reason %s" %(code,reason))
-    else:
-        logger.sys_error("Error for unknown reason.")
-        raise Exception("Error for unknown reason.")

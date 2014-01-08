@@ -107,6 +107,18 @@ class server_storage_ops:
                 logger.sys_error("Volume mount info not specified")
                 raise Exception ("Volume mount info not specified")
 
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            proj_name = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only reboot virtual serves in their project.")
+                raise Exception("Users can only reboot virtual serves in their project.")
+
         if(self.is_admin != 1):
         #check if the volume/instance given is owned by the user
             try:
@@ -129,14 +141,6 @@ class server_storage_ops:
             except:
                 logger.sys_error("The instance given does not exist. Can not attach.")
                 raise Exception("The instance given does not exist. Can not attach")
-
-        #get the name of the project based on the id
-        try:
-            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(self.project_id)}
-            proj_name = self.db.pg_select(select)
-        except:
-            logger.sql_error("Could not get the project name from Transcirrus DB.")
-            raise Exception("Could not get the project name from Transcirrus DB.")
 
         if(self.user_level <= 1):
             try:
@@ -194,10 +198,22 @@ class server_storage_ops:
                 logger.sys_error("Volume mount info not specified")
                 raise Exception ("Volume mount info not specified")
 
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            proj_name = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only reboot virtual serves in their project.")
+                raise Exception("Users can only reboot virtual serves in their project.")
+
         if(self.is_admin != 1):
         #check if the volume/instance given is owned by the user
             try:
-                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid=%s"%(self.user_id),'and':"vol_id='%s'"%(input_dict['volume_id'])}
+                select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid='%s'"%(self.user_id),'and':"vol_id='%s'"%(input_dict['volume_id'])}
                 vol_name = self.db.pg_select(select_vol)
                 if(vol_name == ''):
                     logger.sys_error("The user does not own the volume.")
@@ -217,18 +233,9 @@ class server_storage_ops:
                 logger.sys_error("The instance given does not exist. Can not detach.")
                 raise Exception("The instance given does not exist. Can not detach")
 
-         #get the name of the project based on the id
-        try:
-            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(self.project_id)}
-            proj_name = self.db.pg_select(select)
-        except:
-            logger.sql_error("Could not get the project name from Transcirrus DB.")
-            raise Exception("Could not get the project name from Transcirrus DB.")
-
         try:
             #build an api connection
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            print api_dict
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the api caller.")
@@ -240,14 +247,11 @@ class server_storage_ops:
             token = self.token
             #NOTE: if token is not converted python will pass unicode and not a string
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
-            print header
             function = 'DELETE'
             api_path = '/v2/%s/servers/%s/os-volume_attachments/%s' %(input_dict['project_id'],input_dict['instance_id'],input_dict['volume_id'])
-            print api_path
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
             rest = api.call_rest(rest_dict)
-            print rest
             if(rest['response'] == 202):
                 #insert the volume info into the DB
                 self.db.pg_transaction_begin()
@@ -258,6 +262,5 @@ class server_storage_ops:
                 util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
             self.db.pg_transaction_rollback()
-            print "%s" %(e)
             raise e
         return "OK"

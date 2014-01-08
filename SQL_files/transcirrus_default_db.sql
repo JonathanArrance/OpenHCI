@@ -1024,8 +1024,10 @@ CREATE TABLE trans_security_group (
     index integer NOT NULL,
     proj_id character varying,
     user_name character varying,
+    user_id character varying,
     sec_group_id character varying,
-    sec_group_name character varying
+    sec_group_name character varying,
+    sec_group_desc character varying
 );
 
 
@@ -1120,6 +1122,7 @@ SELECT pg_catalog.setval('trans_security_key_index_seq', 1, false);
 CREATE TABLE trans_security_keys (
     proj_id character varying,
     user_name character varying,
+    user_id character varying,
     sec_key_id character varying,
     sec_key_name character varying,
     public_key text,

@@ -93,6 +93,8 @@ class user_ops:
         ACCESS: Only an admin can create a new user account.
         NOTE: If the project is not specified then the user project is set to NULL. The user can then be added to a project later.
               If the project name is not specified the user will be default be set to an ordinary user.
+              
+              NOTE: project_name will have to be changed to project_id in a future release.
         """
         #check to make sure that new_user_dict is present
         if(not new_user_dict):
@@ -118,9 +120,9 @@ class user_ops:
                 raise Exception("User status not sufficient.")
 
             #standard users can create a project
-            if(self.user_level >= 1):
-                logger.sys_error("Only admins can create a project")
-                raise Exception("Only admins can create a project.")
+            #if(self.user_level >= 1):
+            #    logger.sys_error("Only admins can create a project")
+            #    raise Exception("Only admins can create a project.")
 
             try:
                 #Try to connect to the transcirrus db
@@ -511,6 +513,13 @@ class user_ops:
                 logger.sql_error("Could not get the default role id for the %s ." %(user_role_dict['user_role']))
                 raise Exception("Could not get the default role id for the %s ." %(user_role_dict['user_role']))
 
+            #set the user level
+            user_group_id = 2
+            if(user_role_dict['user_role'] == 'admin'):
+                user_group_id = 0
+            elif(user_role_dict['user_role'] == 'pu'):
+                user_group_id = 1
+
             try:
                 #build an api connection for the admin user. NOTE project ID is the admin user project id
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -542,7 +551,7 @@ class user_ops:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
-                        update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s'" %(user_role_dict['project_name'],proj[0][0]),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                        update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(user_role_dict['project_name'],proj[0][0],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
                         self.db.pg_update(update_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
@@ -681,7 +690,7 @@ class user_ops:
                          - project_name
         OUTPUT: r_dict - username
                        - user_id
-                       - prinmary_project
+                       - primary_project
                        - primary_proj_id
                        - user_role
                        - email
