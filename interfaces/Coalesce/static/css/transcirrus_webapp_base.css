@@ -3755,3 +3755,7 @@ table.subtable {border: 0px solid gray;}
 table.subtable th {color:#A1A7AD}
 
 th > small {font-weight: normal}
+
+.user_disabled {
+  background-color: #F9D6CF
+}

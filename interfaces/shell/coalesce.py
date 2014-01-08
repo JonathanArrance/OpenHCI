@@ -109,19 +109,19 @@ def info(d):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, "192.168.10.45", 1, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 2, 1, "255.255.255.0", 2, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 3, 1, "192.168.10.1", 3, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 4, 1, "8.8.8.8", 4, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 5, 1, "0.0.0.0", 5, 24, 40, 40, 0x0),
-            ("Management IP:", 6, 1, "192.168.4.4", 6, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 7, 1, "255.255.255.0", 7, 24, 40, 40, 0x0),
-            ("Management DNS:", 8, 1, "8.8.8.8", 8, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 9, 1, "0.0.0.0", 9, 24, 40, 40, 0x0),
-            ("VM Range Start-Point:", 10, 1, "192.168.10.50", 10, 24, 40, 40, 0x0),
-            ("VM Range End-Point:", 11, 1, "192.168.10.60", 11, 24, 40, 40, 0x0),
-            ("New Admin password:", 12, 1, "test", 12, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 13, 1, "test", 13, 24, 40, 40, HIDDEN)]
+            ("Uplink IP:", 1, 1, "", 1, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 2, 1, "", 2, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 3, 1, "", 3, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 4, 1, "", 4, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 5, 1, "", 5, 24, 40, 40, 0x0),
+            ("Management IP:", 6, 1, "", 6, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 7, 1, "", 7, 24, 40, 40, 0x0),
+            ("Management DNS:", 8, 1, "", 8, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 9, 1, "", 9, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 10, 1, "", 10, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 11, 1, "", 11, 24, 40, 40, 0x0),
+            ("New Admin password:", 12, 1, "", 12, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77)
@@ -202,7 +202,7 @@ def setup(d):
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
         "interface tool for your TransCirrus system.", width=60, height=10)
     controls(d)
-    a = None
+    user_dict = None
     while(True):
         user = userbox(d)
         password = passwordbox(d)
@@ -249,10 +249,6 @@ def setup(d):
         if(valid_ip(uplink_dns) is False):
             d.msgbox("Invalid Uplink DNS, try again.", width=60, height=10)
             continue
-        # Validate uplink domain
-        if(valid_ip(uplink_domain) is False):
-            d.msgbox("Invalid Uplink Domain, try again.", width=60, height=10)
-            continue
         # Validate mgmt ip
         if(valid_ip(mgmt_ip) is False):
             d.msgbox("Invalid Management IP, try again.", width=60, height=10)
@@ -265,16 +261,16 @@ def setup(d):
         if(valid_ip(mgmt_dns) is False):
             d.msgbox("Invalid Management DNS, try again.", width=60, height=10)
             continue
-        # Validate mgmt domain
-        if(valid_ip(mgmt_domain) is False):
-            d.msgbox("Invalid Management Domain, try again.", width=60, height=10)
-            continue
-        # Validate start point
-        if(valid_ip_within(uplink_ip, vm_ip_min) is False):
+        # Validate start point not equal to uplink
+        if(valid_ip_vm(uplink_ip, vm_ip_min) is False):
             d.msgbox("Invalid VM Range Start-Point, try again.", width=60, height=10)
             continue
-        # Validate end point
-        if(valid_ip_within(vm_ip_min, vm_ip_max) is False):
+        # Validate end point greater than start point
+        if(valid_ip_max(vm_ip_min, vm_ip_max) is False):
+            d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
+            continue
+        # Validate end point not equal to uplink
+        if(valid_ip_vm(uplink_ip, vm_ip_max) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
         # Validate new password
@@ -305,7 +301,7 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    ran = run_setup(new_system_variables, a)
+    ran = run_setup(new_system_variables, user_dict)
     timeout = 20
 
     if(ran == "OK"):
@@ -368,21 +364,44 @@ def valid_ip(address):
         return False
 
 
-def valid_ip_within(broad, narrow):
+def valid_ip_vm(uplink, vm):
     """
-    Validate that the narrow IP address has the same network prefix of the broad IP address
-    and that the host part of the narrow IP address is greater than or equal to that of the
-    broad IP address
+    Validate that the vm IP address has the same network prefix of the uplink IP address
+    and that the host part of the vm IP address is not equal to that of the
+    uplink IP address
     """
     try:
-        broad_bytes = broad.split('.')
-        narrow_bytes = narrow.split('.')
-        valid_broad = [int(b) for b in broad_bytes]
-        valid_narrow = [int(b) for b in narrow_bytes]
-        if (valid_broad[0] == valid_narrow[0] and
-        valid_broad[1] == valid_narrow[1] and
-        valid_broad[2] == valid_narrow[2] and
-        valid_broad[3] <= valid_narrow[3]):
+        uplink_bytes = uplink.split('.')
+        vm_bytes = vm.split('.')
+        valid_uplink = [int(b) for b in uplink_bytes]
+        valid_vm = [int(b) for b in vm_bytes]
+        if (valid_uplink[0] == valid_vm[0] and
+        valid_uplink[1] == valid_vm[1] and
+        valid_uplink[2] == valid_vm[2] and
+        valid_uplink[3] != valid_vm[3] and
+        valid_vm[3] != 0):
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def valid_ip_max(min_ip, max_ip):
+    """
+    Validate that the max_ip IP address has the same network prefix of the min_ip IP address
+    and that the host part of the max_ip IP address is greater than or equal to that of the
+    min_ip IP address
+    """
+    try:
+        min_ip_bytes = min_ip.split('.')
+        max_ip_bytes = max_ip.split('.')
+        valid_min_ip = [int(b) for b in min_ip_bytes]
+        valid_max_ip = [int(b) for b in max_ip_bytes]
+        if (valid_min_ip[0] == valid_max_ip[0] and
+        valid_min_ip[1] == valid_max_ip[1] and
+        valid_min_ip[2] == valid_max_ip[2] and
+        valid_min_ip[3] <= valid_max_ip[3]):
             return True
         else:
             return False

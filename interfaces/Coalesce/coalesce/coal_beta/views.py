@@ -11,12 +11,17 @@ from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 from django.db import connection
 from django.views.decorators.cache import never_cache
+from django.core import serializers
 
 
 from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.neutron.network import neutron_net_ops
+from transcirrus.component.neutron.layer_three import layer_three_ops
+from transcirrus.component.cinder.cinder_volume import volume_ops
+from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
@@ -28,11 +33,15 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, Set
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.models import get_current_site
 from django.template.response import TemplateResponse
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+
 
 # Python imports
 from datetime import datetime
 from collections import defaultdict
 import csv
+import json
+
 # Custom imports
 from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
@@ -70,21 +79,82 @@ def project_view(request, project_name):
     to = tenant_ops(auth)
     so = server_ops(auth)
     no = neutron_net_ops(auth)
-    
+    l3o = layer_three_ops(auth)
+    vo = volume_ops(auth)
+    sno = snapshot_ops(auth)
+
     project = to.get_tenant(project_name)
     users = to.list_tenant_users(project_name)
+    userinfo = {}
+    uo = user_ops(auth)
+
+    for user in users:
+        user_dict = {'username': user['username'], 'project_name': project_name}
+        user_info = uo.get_user_info(user_dict)
+        userinfo[user['username']] = user_info
     network_list = no.list_networks()
+    routers= l3o.list_routers()
+    volumes = vo.list_volumes()
+    snapshots=sno.list_snapshots()
+
     networks={}
     for net in network_list:
       networks[net['net_name']]= no.get_network(net['net_name'])
     sec_groups = so.list_sec_group()
     sec_keys = so.list_sec_keys()
-    print '~~~~~~~~~~~~~~~~~~~~~~~'
-    print sec_groups
-    print '~~~~~~~~~~~~~~~~~~~~~~~'
-    print sec_keys
-    print '~~~~~~~~~~~~~~~~~~~~~~~'
-    return render_to_response('coal/project_view.html', RequestContext(request, {'project': project, 'users': users, 'sec_groups': sec_groups,  'sec_keys': sec_keys, 'networks': networks}))
+
+    return render_to_response('coal/project_view.html',
+                               RequestContext(request, { 'project': project,
+                                                        'users': users,
+                                                        'userinfo':userinfo,
+                                                        'sec_groups': sec_groups,
+                                                        'sec_keys': sec_keys,
+                                                        'networks': networks,
+                                                        'routers': routers,
+                                                        'volumes': volumes,
+                                                        'snapshots':snapshots,
+                                                        }))
+
+def user_view(request, project_name, user_name):
+    auth = request.session['auth']
+    uo = user_ops(auth)
+    user_dict = {'username': user_name, 'project_name': project_name}
+    user_info = uo.get_user_info(user_dict)
+
+    return render_to_response('coal/user_view.html',
+                               RequestContext(request, { 'project_name': project_name,
+                                                        'user_info': user_info,
+                                                        }))
+			       
+			       
+
+def ajax_create_user(request, username, password, userrole, email, project_name = None):
+    try:
+	auth = request.session['auth']
+	uo = user_ops(auth)
+	user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
+	uo.create_user(user_dict)
+	return HttpResponse("user added")
+    except:
+        return HttpResponse(status=500)
+      
+      
+def ajax_toggle_user(request, username, toggle):
+    try:
+	auth = request.session['auth']
+	uo = user_ops(auth)
+	user_dict = {'username': username, 'toggle':toggle}
+	uo.toggle_user(user_dict)
+	from urlparse import urlsplit
+	referer = request.META.get('HTTP_REFERER', None)
+	redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        return HttpResponse(status=500)
+      
+        
+
 
 
 def manage_projects(request):
@@ -217,3 +287,4 @@ def logout(request, next_page=None,
 @never_cache
 def password_change(request):
     return render_to_response('coal/change-password.html', RequestContext(request, {  }))
+

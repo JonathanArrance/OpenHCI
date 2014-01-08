@@ -1,5 +1,5 @@
     
-from django.template import Library, , resolve_variable, TemplateSyntaxError, Variable
+from django.template import Library, resolve_variable, TemplateSyntaxError, Variable
 register = Library()
 
 
@@ -25,3 +25,7 @@ def colgroup_headers(self, col_group_info):
     return colheader
     
 register.tag('colgroup_headers', colgroup_headers)
+
+@register.filter(name='access')
+def access(value, arg):
+    return value[arg]

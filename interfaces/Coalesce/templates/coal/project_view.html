@@ -2,23 +2,30 @@
 
 {% block title %} Project View{% endblock %}
 {% block javascripts %}
-<script>
-    $(document).ready(function() {
-	$('a[data-confirm]').click(function(ev) {
-		var href = $(this).attr('href');
-		if (!$('#dataConfirmModal').length) {
-			$('body').append('<div id="dataConfirmModal" class="modal" role="dialog" aria-labelledby="dataConfirmLabel" aria-hidden="true"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button><h3 id="dataConfirmLabel">Please Confirm</h3></div><div class="modal-body"></div><div class="modal-footer"><button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button><a class="btn btn-primary" id="dataConfirmOK">OK</a></div></div>');
-		}
-		$('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
-		$('#dataConfirmOK').attr('href', href);
-		$('#dataConfirmModal').modal({show:true});
-		return false;
-	});
-});
-</script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/confirm_modal.js"/></script>
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/jquery-1.9.1.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/create_user.js"/></script>
+    <script>
+      var PROJECT = "{{ project.project_name}}";
+    </script>
+
+    
+
 {% endblock %}
 
 {% block content %}
+{% load extratags %}
 
     <div class="span12 well legend-header">
         {{ project.project_name}} ({{project.project_id}}) <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
@@ -42,14 +49,53 @@
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Users   <a href="create_user"  class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New User</a>
-             <a href="add_user_to_project"  class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Add Existing User</a>
+             Users   <a href="#"  id="create-user" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New User</a>
+             <a href="add_user_to_project" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Add Existing User</a>
+             
           </div>
           
-          <table class="paleblue">
+          
+          <div id="dialog-form" title="Create new user">
+	<p class="validateTips">All form fields are required.</p>
+
+	<form>
+	{% csrf_token %}
+	<fieldset>
+		<label for="name">Name</label>
+		<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+		<label for="email">Email</label>
+		<input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="password">Password</label>
+		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
+                <select name="role" id="role">
+		  <option value="user">User</option>
+		  <option value="pu">Power User</option>
+		  <option value="admin">Admin</option>
+		</select>
+	</fieldset>
+	</form>
+</div>
+
+
+
+          
+          <table class="paleblue" id="users">
                 <tr> <th>User</th>  <th>Actions</th>  </tr>
                 {% for pu in users %}
-                <tr> <td>{{pu.username}}</td>  <td><a href="get_user_info">view</a> | <a href="remove_user" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| <a href="toggle_user">toggle</a>    | <a href="remove_user_from_project">remove user from proj</a> | <a href="update_user_password">update password</a></td></tr>
+                  {% with pu.username as username %}
+		    {% with userinfo|access:username as ui %}
+			<tr id="{{username}}" {% if ui.user_enabled == "FALSE" %} class="user_disabled" {% endif %}> 
+			  <td id="{{username}}_info">
+			    {% if ui.user_enabled == "FALSE" %} 
+			      <i class="icon-warning-sign"></i> 
+			    {% endif %}
+			    <b>{{username}}</b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
+			  </td>  
+
+			  <td id="{{username}}_actions"><a href="/projects/{{ project.project_name}}/user/{{pu.username}}/view/">view</a> | <a href="remove_user" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| {% include "coal/toggle_user.html" %}    | <a href="remove_user_from_project">remove user from proj</a> | <a href="update_user_password">update password</a></td></tr>
+                
+                    {% endwith %}
+                  {% endwith %}
                 {% endfor %}
           </table>
           
@@ -108,11 +154,16 @@
           <div class="legend">
              Volume Storage
           </div>
-          <table class="paleblue">
-                <tr> <th>Volumes</th>  <th>something interesting about volumes</th>  </tr>
-
+           <table class="paleblue">
+	    {% if volumes %}
+                <tr> <th>volume</th> <th></th> <th></th></tr>
+                    {% for volume in volumes %}
+		      <tr> <td>{{volume}}</td>  <td></td>  <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		  <p><i>This project has no volumes</i></p>
+		{% endif %}
           </table>
-                         volumes go here
         </div>
       </div>
       
@@ -122,10 +173,7 @@
           <div class="legend">
              Object Containers
           </div>
-          <table class="paleblue">
-                <tr> <th>Container</th>  <th>Contain in the membrane</th>  </tr>
-          </table>
-          containers 'R' Us
+          <p> Not yet implemented.</p>
         </div>
       </div>
       
@@ -136,9 +184,15 @@
              Snapshots
           </div>
           <table class="paleblue">
-                <tr> <th>snapshots</th>  <th>something interesting about snapshots</th>  </tr>
+	    {% if snapshots %}
+                <tr> <th>snapshots</th> <th></th> <th></th></tr>
+                    {% for snapshot in snapshots %}
+		      <tr> <td>{{snapshot}}</td>  <td></td>  <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		  <p><i>This project has no snapshots</i></p>
+		{% endif %}
           </table>
-          snapshots go here
         </div>
       </div>
 
@@ -178,11 +232,22 @@
           <div class="legend">
              Routers
           </div>
-          <table class="paleblue">
-            <tr> <th>Routers</th>  <th>Router Bits</th>  </tr>
-          </table>
-                         Routers go here
-        </div>
+	  {% if routers %}
+	    <table class="paleblue">
+	    
+                <tr> <th>Router</th>  <th>Router Status</th>  </tr>
+                
+                {% for router in routers %}
+		  
+		    <tr> <td>{{router}}</td>  <td></td>  </tr>
+		  
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no routers</i></p>
+	  {% endif %}
+	  
+         </div>                
       </div>
 
     <!-- Begin Private Networks widget-->
@@ -220,10 +285,20 @@
           <div class="legend">
              Instances
           </div>
-          <table class="paleblue">
-                <tr> <th>Instance</th>  <th>something interesting about instances</th>  </tr>
-          </table>
-                         instances go here
+	  {% if instances %}
+	    <table class="paleblue">
+	    
+                <tr> <th>Instance</th>  <th></th>  </tr>
+                
+                {% for instance in instances %}
+		  
+		    <tr> <td>{{instance}}</td>  <td></td>  </tr>
+		  
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no instances</i></p>
+	  {% endif %}
         </div>
       </div>
       
@@ -233,10 +308,7 @@
           <div class="legend">
              Floating IP's
           </div>
-          <table class="paleblue">
-                <tr> <th>Floating IP</th>  <th>What can yoy really say about a floating IP?</th>  </tr>
-          </table>
-          floating IP's go here
+          <p> Not yet implemented.</p>
         </div>
       </div>
       
@@ -246,10 +318,20 @@
           <div class="legend">
              Images
           </div>
-          <table class="paleblue">
-                <tr> <th>Image</th>  <th>Image goodies</th>  </tr>
-          </table>
-                         images go here
+          {% if images %}
+	    <table class="paleblue">
+	    
+                <tr> <th>Image</th>  <th></th>  </tr>
+                
+                {% for image in images %}
+		  
+		    <tr> <td>{{image}}</td>  <td></td>  </tr>
+		  
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no images.</i></p>
+	  {% endif %}
         </div>
       </div>
 

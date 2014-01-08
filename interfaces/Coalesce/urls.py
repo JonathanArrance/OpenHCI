@@ -42,10 +42,24 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 
+        url(r'^projects/(?P<project_name>\w+)/user/(?P<user_name>\w+)/view/$',
+            'coalesce.coal_beta.views.user_view',
+            name='user_view'),
+
 
         url(r'^projects/manage/$',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
+	
+	# --- User actions ----
+	url(r'^AJAX/create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_name>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_create_user',
+            name='create_user'),
+	
+	url(r'^AJAX/toggle_user/(?P<username>[^/]+)/(?P<toggle>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_toggle_user',
+            name='toggle_user'),
+
 
         # --- Setup ----
         url(r'^setup/$',
