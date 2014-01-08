@@ -60,6 +60,13 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.ajax_toggle_user',
             name='toggle_user'),
 
+	url(r'^AJAX/delete_user/(?P<username>[^/]+)/(?P<userid>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_delete_user',
+            name='delete_user'),
+	
+	url(r'^AJAX/remove_user_from_project/(?P<username>[^/]+)/(?P<project_name>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_remove_user_from_project',
+            name='remove_user_from_project'),
 
         # --- Setup ----
         url(r'^setup/$',

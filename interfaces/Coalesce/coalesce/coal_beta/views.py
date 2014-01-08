@@ -41,6 +41,7 @@ from datetime import datetime
 from collections import defaultdict
 import csv
 import json
+from urlparse import urlsplit
 
 # Custom imports
 from coalesce.coal_beta.models import *
@@ -133,8 +134,8 @@ def ajax_create_user(request, username, password, userrole, email, project_name 
 	auth = request.session['auth']
 	uo = user_ops(auth)
 	user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
-	uo.create_user(user_dict)
-	return HttpResponse("user added")
+	newuser= uo.create_user(user_dict)
+	return HttpResponse(newuser['user_id'])
     except:
         return HttpResponse(status=500)
       
@@ -145,13 +146,40 @@ def ajax_toggle_user(request, username, toggle):
 	uo = user_ops(auth)
 	user_dict = {'username': username, 'toggle':toggle}
 	uo.toggle_user(user_dict)
-	from urlparse import urlsplit
 	referer = request.META.get('HTTP_REFERER', None)
 	redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
 
     except:
         return HttpResponse(status=500)
+      
+def ajax_delete_user(request, username, userid):
+    try:
+	auth = request.session['auth']
+	uo = user_ops(auth)
+	user_dict = {'username': username, 'userid':userid}
+	#import pdb; pdb.set_trace()
+	uo.delete_user(user_dict)
+	referer = request.META.get('HTTP_REFERER', None)
+	redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        return HttpResponse('error')
+      
+def ajax_remove_user_from_project(request, username, project_name):
+    try:
+	auth = request.session['auth']
+	uo = user_ops(auth)
+	user_dict = {'username': username, 'project_name':project_name}
+	#import pdb; pdb.set_trace()
+	uo.remove_user_from_project(user_dict)
+	referer = request.META.get('HTTP_REFERER', None)
+	redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        raise
       
         
 
