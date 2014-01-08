@@ -645,20 +645,20 @@ class user_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
+            try:
             #remove the role from the user on the tenant
-            body = ""
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
-            function = 'DELETE'
-            api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][1],user_id[0][0],role_id[0][0])
-            print api_path
-            token = self.adm_token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-            rest = api.call_rest(rest_dict)
-            #except Exception as e:
-            #    logger.sys_error('%s' %(e))
-            #    raise
+                body = ""
+                header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][1],user_id[0][0],role_id[0][0])
+                logger.info("%s"%(api_path))
+                token = self.adm_token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error('%s' %(e))
+                raise
 
             if(rest['response'] == 204):
                 #read the json that is returned

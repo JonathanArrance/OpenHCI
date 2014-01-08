@@ -47,7 +47,7 @@ get = use.get_user_info(user_info)
 print get
 time.sleep(2)
 print "---------------------------------------------"
-'''
+
 print "Create a new power user."
 new_pu_dict = {"username":'shitbird2',"password":"test","userrole":"pu","email":"testpu@domain.com"}
 create_pu = use.create_user(new_pu_dict)
@@ -57,7 +57,7 @@ print create_pu
 add_user_dict = {"username":"shitbird2","user_role":'pu',"project_name":'ffvc'}
 add = use.add_user_to_project(add_user_dict)
 print add
-'''
+
 print "getting test power user info"
 user_info = {"username":'keven4',"project_name":'testproj'}
 get_p = use.get_user_info(user_info)
@@ -101,12 +101,12 @@ pas_dict = {'new_password':'testtest','project_id':'da54c5efa79841f0888c0c4ea35d
 pas = use.update_user_password(pas_dict)
 time.sleep(2)
 print "----------------------------------------------"
-
+'''
 print "Removeing user from project"
-remove_user_dict = {"username":"keven4","project_name":'testproj6'}
+remove_user_dict = {"username":"bill2","project_name":'ffvc'}
 remove = use.remove_user_from_project(remove_user_dict)
-print add
-
+print remove
+'''
 
 print "Deleteing a testuser"
 delete = {"username":"keven","userid":'9fc785117a914c31ada6b49479b2600e'}
