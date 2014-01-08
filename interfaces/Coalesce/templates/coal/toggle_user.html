@@ -1,0 +1,5 @@
+{% if ui.user_enabled == "TRUE" %}
+  <a href="/AJAX/toggle_user/{{username}}/disable/" id="{{username}}_toggle">disable</a>
+{% else %}
+  <a href="/AJAX/toggle_user/{{username}}/enable/" id="{{username}}_toggle">enable</a>
+{% endif %}

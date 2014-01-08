@@ -85,6 +85,13 @@ def project_view(request, project_name):
 
     project = to.get_tenant(project_name)
     users = to.list_tenant_users(project_name)
+    userinfo = {}
+    uo = user_ops(auth)
+
+    for user in users:
+        user_dict = {'username': user['username'], 'project_name': project_name}
+        user_info = uo.get_user_info(user_dict)
+        userinfo[user['username']] = user_info
     network_list = no.list_networks()
     routers= l3o.list_routers()
     volumes = vo.list_volumes()
@@ -99,6 +106,7 @@ def project_view(request, project_name):
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
                                                         'users': users,
+                                                        'userinfo':userinfo,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'networks': networks,
@@ -119,22 +127,33 @@ def user_view(request, project_name, user_name):
                                                         }))
 			       
 			       
-@login_required
-@csrf_exempt
+
 def ajax_create_user(request, username, password, userrole, email, project_name = None):
     try:
 	auth = request.session['auth']
 	uo = user_ops(auth)
 	user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
-	create_user(user_dict)
+	uo.create_user(user_dict)
+	return HttpResponse("user added")
     except:
         return HttpResponse(status=500)
-        
-    try:    
-        comp_json = serializers.serialize("json", [username])
-        return HttpResponse(comp_json, mimetype="application/json")
+      
+      
+def ajax_toggle_user(request, username, toggle):
+    try:
+	auth = request.session['auth']
+	uo = user_ops(auth)
+	user_dict = {'username': username, 'toggle':toggle}
+	uo.toggle_user(user_dict)
+	from urlparse import urlsplit
+	referer = request.META.get('HTTP_REFERER', None)
+	redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
     except:
-            HttpResponse(status=405)
+        return HttpResponse(status=500)
+      
+        
 
 
 

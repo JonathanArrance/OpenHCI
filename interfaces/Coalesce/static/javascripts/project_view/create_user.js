@@ -1,10 +1,45 @@
 $(function() {  
+		// must obtain csrf cookie for AJAX call
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie != '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i++) {
+					var cookie = jQuery.trim(cookies[i]);
+					// Does this cookie string begin with the name we want?
+					if (cookie.substring(0, name.length + 1) == (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+		var csrftoken = getCookie('csrftoken');
+		
+		$(function() {
+
+		
+		function csrfSafeMethod(method) {
+		// these HTTP methods do not require CSRF protection
+		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+		$.ajaxSetup({
+			crossDomain: false, // obviates need for sameOrigin test
+			beforeSend: function(xhr, settings) {
+				if (!csrfSafeMethod(settings.type)) {
+					xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				}
+			}
+		});
+		
+		
+		
 		var 	name = $( "#name" ),
 			email = $( "#email" ),
 			password = $( "#password" ),
-			project = $( "#project" ),
 			role =$( "#role" ),
-			allFields = $( [] ).add( name ).add( email ).add( password ).add( role ).add( project ),
+			allFields = $( [] ).add( name ).add( email ).add( password ).add( role ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -39,7 +74,7 @@ $(function() {
 
 		$( "#dialog-form" ).dialog({
 			autoOpen: false,
-			height: 500,
+			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
@@ -58,12 +93,11 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					  
-						$.post('/AJAX/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/testproj/');
+						$.post('/AJAX/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT + '/');
 					  
 						$( "#users tbody" ).append( "<tr>" +
 							"<td>" + name.val() + "</td>" +
-							"<td><a href='/projects/" + project.val() + "/user/" + name.val() + "/view/'>view</a> | <a href='remove_user' data-confirm='This will completely erase " + name.val() + " from all projects. Are you sure?'> delete</a>| <a href='toggle_user'>toggle</a>    | <a href='remove_user_from_project'>remove user from proj</a> | <a href='update_user_password'>update password</a></td>" +
+							"<td><a href='/projects/" + PROJECT + "/user/" + name.val() + "/view/'>view</a> | <a href='remove_user' data-confirm='This will completely erase " + name.val() + " from all projects. Are you sure?'> delete</a>| <a href='toggle_user'>toggle</a>    | <a href='remove_user_from_project'>remove user from proj</a> | <a href='update_user_password'>update password</a></td>" +
 						"</tr>" );
 						$( this ).dialog( "close" );
 					}
@@ -84,4 +118,5 @@ $(function() {
 			});
 			
 			
+	});
 	});

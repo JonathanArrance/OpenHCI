@@ -16,16 +16,16 @@
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/create_user.js"/></script>
-    <!--<script>
-      $(function() {
-      $( "#role" ).buttonset();
-      });
-    </script>-->
+    <script>
+      var PROJECT = "{{ project.project_name}}";
+    </script>
+
     
 
 {% endblock %}
 
 {% block content %}
+{% load extratags %}
 
     <div class="span12 well legend-header">
         {{ project.project_name}} ({{project.project_id}}) <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
@@ -54,10 +54,12 @@
              
           </div>
           
+          
           <div id="dialog-form" title="Create new user">
 	<p class="validateTips">All form fields are required.</p>
 
 	<form>
+	{% csrf_token %}
 	<fieldset>
 		<label for="name">Name</label>
 		<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
@@ -70,7 +72,6 @@
 		  <option value="pu">Power User</option>
 		  <option value="admin">Admin</option>
 		</select>
-		<input type="hidden" name="project" id="project" value="{{ project.project_name}}"  />
 	</fieldset>
 	</form>
 </div>
@@ -81,7 +82,20 @@
           <table class="paleblue" id="users">
                 <tr> <th>User</th>  <th>Actions</th>  </tr>
                 {% for pu in users %}
-                <tr> <td>{{pu.username}}</td>  <td><a href="/projects/{{ project.project_name}}/user/{{pu.username}}/view/">view</a> | <a href="remove_user" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| <a href="toggle_user">toggle</a>    | <a href="remove_user_from_project">remove user from proj</a> | <a href="update_user_password">update password</a></td></tr>
+                  {% with pu.username as username %}
+		    {% with userinfo|access:username as ui %}
+			<tr id="{{username}}" {% if ui.user_enabled == "FALSE" %} class="user_disabled" {% endif %}> 
+			  <td id="{{username}}_info">
+			    {% if ui.user_enabled == "FALSE" %} 
+			      <i class="icon-warning-sign"></i> 
+			    {% endif %}
+			    <b>{{username}}</b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
+			  </td>  
+
+			  <td id="{{username}}_actions"><a href="/projects/{{ project.project_name}}/user/{{pu.username}}/view/">view</a> | <a href="remove_user" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| {% include "coal/toggle_user.html" %}    | <a href="remove_user_from_project">remove user from proj</a> | <a href="update_user_password">update password</a></td></tr>
+                
+                    {% endwith %}
+                  {% endwith %}
                 {% endfor %}
           </table>
           
