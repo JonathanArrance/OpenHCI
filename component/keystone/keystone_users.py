@@ -85,14 +85,15 @@ class user_ops:
                              - password - req
                              - userrole - req - admin,pu,user
                              - email - req
-                             - project_name - op - if project_name is not set, project is set to the NULL state
+                             - project_id - op - if project_id is not set, project is set to the NULL state
         OUTPUT: r_dict - user_name
                        - user_id
-                       - project_id
+                       - project_name
                        
         ACCESS: Only an admin can create a new user account.
         NOTE: If the project is not specified then the user project is set to NULL. The user can then be added to a project later.
-              If the project name is not specified the user will be default be set to an ordinary user.
+              If the project name is not specified the user will be set to an ordinary user.If a project is not specified then the
+              user is added to the catch all _member_ group. You must use add_user_to_project.
               
               NOTE: project_name will have to be changed to project_id in a future release.
         """
@@ -120,9 +121,9 @@ class user_ops:
                 raise Exception("User status not sufficient.")
 
             #standard users can create a project
-            #if(self.user_level >= 1):
-            #    logger.sys_error("Only admins can create a project")
-            #    raise Exception("Only admins can create a project.")
+            if(self.user_level >= 1):
+                logger.sys_error("Only admins can create a user.")
+                raise Exception("Only admins can create a user.")
 
             try:
                 #Try to connect to the transcirrus db
@@ -134,7 +135,7 @@ class user_ops:
 
             group_id = None
             key_role = None
-            if('project_name' in new_user_dict):
+            if('project_id' in new_user_dict):
                 #need to figure out the group id based on the role given
                 #NOTE for now we are sticking with the default admin,Member roles in Keystone.
                 #all access is controlled with Transcirrus permissions. Later we will add the
@@ -145,18 +146,19 @@ class user_ops:
                 elif(new_user_dict['userrole'] == 'pu'):
                     group_id = 1
                     key_role = 'Member'
-                else:
+                elif(new_user_dict['userrole'] == 'user'):
                     group_id = 2
                     key_role = 'Member'
 
+                #make sure the project_id exists
                 try:
-                    #get the project ID if not using the admins
-                    select_proj_id = {"select":"proj_id","from":"projects","where":"proj_name='%s'" %(new_user_dict['project_name'])}
-                    proj_id = self.db.pg_select(select_proj_id)
-                    self.new_user_proj_id = proj_id[0][0]
+                    get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(new_user_dict['project_id'])}
+                    project = self.db.pg_select(get_proj)
                 except:
-                    logger.sql_error("Could not get the project ID for project %s" %(new_user_dict['project_name']))
-                    raise Exception("Could not get the project ID for project %s" %(new_user_dict['project_name']))
+                    logger.sys_error("Project could not be found.")
+                    raise Exception("Project could not be found.")
+                else:
+                    self.new_user_proj_id = new_user_dict['project_id']
             else:
                 #This is the default case if the user is being created
                 #without a project. When we add the user to a project then
@@ -175,10 +177,12 @@ class user_ops:
 
             try:
                 #add the new user to openstack
-                if('project_name' not in new_user_dict):
-                    body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": null}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'])
-                else:
+                body = None
+                if('project_id' in new_user_dict):
                     body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": "%s"}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'],self.new_user_proj_id)
+                else:
+                    body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": null}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'])
+                logger.sys_info("%s"%(body))
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/users'
@@ -186,12 +190,12 @@ class user_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
-                new_user_id = None
             except Exception as e:
-                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
+                logger.sql_error("Could not add new user. %s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise e
 
+            new_user_id = None
             #check the response and make sure it is a 200 or 201
             if((rest['response'] == 201) or (rest['response'] == 200)):
                 #read the json that is returned
@@ -201,10 +205,10 @@ class user_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'])
 
-            if(self.new_user_proj_id != "NULL"):
-                self.proj_name = new_user_dict['project_name']
-            else:
+            if(self.new_user_proj_id == "NULL"):
                 self.proj_name = "NULL"
+            else:
+                self.proj_name = project[0][0]
 
             try:
                 self.db.pg_transaction_begin()
@@ -220,9 +224,18 @@ class user_ops:
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
 
+            if(self.new_user_proj_id != "NULL"):
+                user_role_dict = {'username':new_user_dict['username'],
+                                  'user_role':new_user_dict['userrole'],
+                                  'project_name':self.proj_name
+                                  }
+                add_role = self.add_user_to_project(user_role_dict)
+                if(not add_role):
+                    logger.sys_error("Could not add the user to the role.")
+                    raise Excption("Could not add the user to the role.")
+
             r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":self.new_user_proj_id}
             return r_dict
-
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
             raise Exception("Admin flag not set, could not create the new user.")
@@ -432,6 +445,7 @@ class user_ops:
 
     def add_user_to_project(self, user_role_dict):
         """
+        This all needs to be changed to work on IDs
         DESC: Add a user to a project. Only an admin can perform this operation
         INPUT: user_role_dict - username - req
                               - user_role - req - admin/pu/user
@@ -618,7 +632,8 @@ class user_ops:
 
             #get the userid and tenant id from the transcirrus db
             try:
-                get_user_id = {"select":"keystone_user_uuid,user_project_id,keystone_role","from":"trans_user_info","where":"user_name='%s'" %(remove_role['username'])}
+                get_user_id = {"select":"keystone_user_uuid,user_project_id,keystone_role","from":"trans_user_info","where":"user_name='%s'" %(remove_role['username']),
+                               'and':"user_primary_project='%s'"%(remove_role['project_name'])}
                 user_id = self.db.pg_select(get_user_id)
             except:
                 logger.sql_error("Could not connect to the DB.")
