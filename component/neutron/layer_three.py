@@ -900,22 +900,132 @@ class layer_three_ops:
               Admins and power users can attach floating ip addresses to instances in their project.
         INPUT: update_dict - floating_ip - req
                            - instance_id - req
+                           - project_id - req
                            - action - req add/remove
         OUTPUT: r_dict - floating_ip
+                       - floating_ip_id
                        - instance_name
                        - instance_id
+        ACCESS: Admin can add a floating ip to any instance
+                power users can add a floating ip to any instance in their project
+                users can only add a floating ip to an instance they own
         NOTE: since the ports are not implemented in alpo.0 we will use the nova call.
         body = '{"addFloatingIp": {"address": "%s"}}' port 8774
         {"removeFloatingIp": {"address": "192.168.10.14"}}
         """
-        
+        if((update_dict['floating_ip'] == '') or ('floating_ip' not in update_dict)):
+            logger.sys_error('No floating ip given.')
+            raise Exception('No floating ip given.')
+        if((update_dict['instance_id'] == '') or ('instance_id' not in update_dict)):
+            logger.sys_error('No instance id given.')
+            raise Exception('No instance id given.')
+        if((update_dict['action'] == '') or ('action' not in update_dict)):
+            logger.sys_error('No action given.')
+            raise Exception('No action given.')
 
-    def deallocate_floating_ip(self,floating_ip):
+        action = update_dict['action'].lower()
+        if((action == 'add') or (action == 'remove')):
+            logger.sys_info('%s action specified for update floating ip.'%(action))
+        else:
+            logger.sys_error('%s is not a valid floating ip action.'%(action))
+            raise Exception('%s is not a valid floating ip action.'%(action))
+
+        #see if the instance exists
+        try:
+            get_inst = {'select':"inst_name,inst_user_id",'from':"trans_instances",'where':"inst_id='%s'"%(update_dict['instance_id'])}
+            inst = self.db.pg_select(get_inst)
+        except:
+            logger.sys_error('%s does not exist.'%(update_dict['instance_id']))
+            raise Exception('%s does not exist.'%(update_dict['instance_id']))
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(update_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.user_level >= 1):
+            if(self.project_id != update_dict['project_id']):
+                logger.sys_error("Power user can only update floating ips in their project.")
+                raise Exception("Power user can only update floating ips in their project.")
+        elif(self.user_level == 2):
+            #check to see if the instance belongs to the user
+            if(self.user_id != inst[0][1]):
+                logger.sys_error("User can only update floating ips in their project on instances they own.")
+                raise Exception("User can only update floating ips in their project on instances they own.")
+
+        #make sure the floating ip is in the project
+        try:
+            get_float = {'select':"floating_ip_id",'from':"trans_floating_ip",'where':"proj_id='%s'"%(update_dict['project_id']),'and':"floating_ip='%s'"%(update_dict['floating_ip'])}
+            floater = self.db.pg_select(get_float)
+        except:
+            logger.sys_error("Floating ip no in project %s"%(update_dict['project_id']))
+            raise Exception("Floating ip no in project %s"%(update_dict['project_id']))
+
+        try:
+            if(action == 'remove'):
+                body = '{"removeFloatingIp": {"address": "%s"}}'%(update_dict['floating_ip'])
+            elif(action == 'add'):
+                body = '{"addFloatingIp": {"address": "%s"}}'%(update_dict['floating_ip'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action'%(update_dict['project_id'],update_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Could not assign a floating ip to %s."%(input_dict['project_id']))
+            raise Exception("Could not assign a floating ip to %s."%(input_dict['project_id']))
+
+        if(rest['response'] == 202):
+            try:
+                self.db.pg_transaction_begin()
+                update = {'table':'trans_instances','set':"floating_ip_id='%s',inst_floating_ip='%s'"%(floater[0][0],update_dict['floating_ip']),'where':"inst_id='%s'"%(update_dict['instance_id'])}
+                self.db.pg_update(update)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sys_error("Could not update floating ip in the Transcirrus DB")
+                raise Exception("Could not update floating ip in the Transcirrus DB")
+            else:
+                self.db.pg_transaction_commit()
+                r_dict = {'floating_ip':update_dict['floating_ip'],'floating_ip_id':floater[0][0],'instance_name':inst[0][0],'instance_id':inst[0][1]}
+                return r_dict
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+    def deallocate_floating_ip(self,del_dict):
         """
         DESC: Removes a floating ip from the tenant. Only admins can delete a floating
               ip from the project
-        INPUT: floating_ip
+        INPUT: del_dict - floating_ip
+                        - project_id
         OUTPUT: OK is successful or error
+        ACCESS: Admins can deallocate a floating ip to any project
+                Power users can only deallocate a floating ip to their project
+                Standard users can not deallocate a floating IP.
         NOTE: the nova api is used to remove a floating ip from a specific virtual instance.
         """
-        print "not implemented"
+        if((del_dict['floating_ip'] == '') or ('floating_ip' not in del_dict)):
+            logger.sys_error('No floating ip given.')
+            raise Exception('No floating ip given.')
+        if((del_dict['project_id'] == '') or ('project_id' not in del_dict)):
+            logger.sys_error('No project id given.')
+            raise Exception('No project id given.')
+
+        get_proj = None
+        try:
+            get_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error('Project does not exist.')
+            raise Exception('Project does not exist.')
+
+        #make sure the floating ip is in the project
+        try:
+            get_float = {'select':"floating_ip_id",'from':"trans_floating_ip",'where':"proj_id='%s'"%(update_dict['project_id']),'and':"floating_ip='%s'"%(update_dict['floating_ip'])}
+            floater = self.db.pg_select(get_float)
+        except:
+            logger.sys_error("Floating ip no in project %s"%(update_dict['project_id']))
+            raise Exception("Floating ip no in project %s"%(update_dict['project_id']))
