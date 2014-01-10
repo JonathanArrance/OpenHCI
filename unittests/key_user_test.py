@@ -103,7 +103,7 @@ time.sleep(2)
 print "----------------------------------------------"
 '''
 print "Removeing user from project"
-remove_user_dict = {"username":"bill2","project_name":'ffvc'}
+remove_user_dict = {"username":"shitbird","project_name":'testproj'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
 '''

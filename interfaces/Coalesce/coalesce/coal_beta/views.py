@@ -93,6 +93,17 @@ def project_view(request, project_name):
         user_dict = {'username': user['username'], 'project_name': project_name}
         user_info = uo.get_user_info(user_dict)
         userinfo[user['username']] = user_info
+        
+    ousers = uo.list_orphaned_users()
+    userinfo = []
+
+    for ouser in ousers:
+        user_dict = {'username': user['username'], 'project_name': project_name}
+        user_info = uo.get_user_info(user_dict)
+        userinfo[user['username']] = user_info     
+        
+        
+        
     network_list = no.list_networks()
     routers= l3o.list_routers()
     volumes = vo.list_volumes()
