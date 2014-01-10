@@ -155,9 +155,14 @@ class neutron_net_ops:
         except:
             logger.sql_error("Could not get the net_id %s from from the Transcirrus db."%(net_id))
             raise Exception("Could not get the net_id %s from from the Transcirrus db."%(net_id))
+
         #get the subnets
+        get_sub = None
         try:
-            get_sub = {'select':"subnet_id",'from':"trans_subnets",'where':"net_id='%s'" %(net_id),'and':"proj_id='%s'" %(net[0][6])}
+            if(net[0][4] == 'false'):
+                get_sub = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
+            elif(net[0][4] == 'true'):
+                get_sub = {'select':"subnet_id",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
             subs = self.db.pg_select(get_sub)
         except:
             logger.sys_error('Could not get the subnets for net_id %s'%(net_id))
