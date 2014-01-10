@@ -19,6 +19,7 @@ from transcirrus.common.api_caller import caller
 from transcirrus.database.postgres import pgsql
 
 class server_actions:
+    #UPDATED and Unit tested
     #DESC:
     #INPUT:
     #OUTPUT:

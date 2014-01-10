@@ -20,6 +20,7 @@ from image import nova_image_ops
 #from security import net_security_ops
 
 class server_storage_ops:
+    #UPDATED/UNITTESTED
     #DESC:
     #INPUT:
     #OUTPUT:

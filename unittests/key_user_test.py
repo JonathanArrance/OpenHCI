@@ -49,12 +49,34 @@ time.sleep(2)
 print "---------------------------------------------"
 
 print "Create a new power user."
-new_pu_dict = {"username":'shitbird2',"password":"test","userrole":"pu","email":"testpu@domain.com"}
+new_pu_dict = {"username":'shitbird6',"password":"test","userrole":"user","email":"testpu@domain.com"}
+create_pu = use.create_user(new_pu_dict)
+print create_pu
+
+'''
+print "Create a new standard user."
+new_user_dict = {"username":'POWER4',"password":"test","userrole":"pu","email":"power@domain.com","project_id":"523e5098be6c4438b428d7f3f94b3a2d"}
+create = use.create_user(new_user_dict)
+print create
+
+print "Create a new standard user."
+new_user_dict = {"username":'POWER5',"password":"test","userrole":"user","email":"power2@domain.com","project_id":"523e5098be6c4438b428d7f3f94b3a2d"}
+create = use.create_user(new_user_dict)
+print create
+
+print "Create a new standard user."
+new_user_dict = {"username":'POWER6',"password":"test","userrole":"admin","email":"power3@domain.com","project_id":"523e5098be6c4438b428d7f3f94b3a2d"}
+create = use.create_user(new_user_dict)
+print create
+
+'''
+print "Create a new power user."
+new_pu_dict = {"username":'shitbird5',"password":"test","userrole":"pu","email":"testpu@domain.com"}
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
 
-add_user_dict = {"username":"shitbird2","user_role":'pu',"project_name":'ffvc'}
+add_user_dict = {"username":"shitbird5","user_role":'pu',"project_name":'ffvc'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
@@ -101,12 +123,11 @@ pas_dict = {'new_password':'testtest','project_id':'da54c5efa79841f0888c0c4ea35d
 pas = use.update_user_password(pas_dict)
 time.sleep(2)
 print "----------------------------------------------"
-'''
+
 print "Removeing user from project"
 remove_user_dict = {"username":"shitbird","project_name":'testproj'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
-'''
 
 print "Deleteing a testuser"
 delete = {"username":"keven","userid":'9fc785117a914c31ada6b49479b2600e'}
