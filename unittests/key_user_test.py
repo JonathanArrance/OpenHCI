@@ -24,6 +24,7 @@ print "listing orphaned users"
 orph = use.list_orphaned_users()
 print orph
 
+
 print "Create a new standard user with no project."
 new_user_dict = {"username":'keven',"password":"test","userrole":"pu","email":"keven@domain.com"}
 create = use.create_user(new_user_dict)
@@ -31,15 +32,16 @@ print create
 
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
-add_user_dict = {"username":"keven","user_role":'pu',"project_name":'testproj6'}
+add_user_dict = {"username":"admin","user_role":'pu',"project_name":'testproj6'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
 
 print "Create a new standard user."
-new_user_dict = {"username":'keven2',"password":"test","userrole":"user","email":"keven2@domain.com","project_name":"testproj"}
+new_user_dict = {"username":'ralph',"password":"test","userrole":"user","email":"ralph@domain.com","project_id":"5b5a1f8784a742bc8bae98021d7e884b"}
 create = use.create_user(new_user_dict)
 print create
+
 
 print "getting user info"
 user_info = {"username":'keven2',"project_name":'testproj'}
@@ -53,7 +55,6 @@ new_pu_dict = {"username":'shitbird6',"password":"test","userrole":"user","email
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
-'''
 print "Create a new standard user."
 new_user_dict = {"username":'POWER4',"password":"test","userrole":"pu","email":"power@domain.com","project_id":"523e5098be6c4438b428d7f3f94b3a2d"}
 create = use.create_user(new_user_dict)
@@ -69,7 +70,7 @@ new_user_dict = {"username":'POWER6',"password":"test","userrole":"admin","email
 create = use.create_user(new_user_dict)
 print create
 
-'''
+
 print "Create a new power user."
 new_pu_dict = {"username":'shitbird5',"password":"test","userrole":"pu","email":"testpu@domain.com"}
 create_pu = use.create_user(new_pu_dict)
@@ -124,13 +125,15 @@ pas = use.update_user_password(pas_dict)
 time.sleep(2)
 print "----------------------------------------------"
 
-print "Removeing user from project"
-remove_user_dict = {"username":"shitbird","project_name":'testproj'}
+print "Removing user from project"
+
+remove_user_dict = {"user_id":"e38e8a6ebf2c4331830892622d36cc91","project_id":'5b5a1f8784a742bc8bae98021d7e884b'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
 
+
 print "Deleteing a testuser"
-delete = {"username":"keven","userid":'9fc785117a914c31ada6b49479b2600e'}
+delete = {"user_id":"53f9b62ef34c46b3a53e8fa1e5308b2f","project_id":'523e5098be6c4438b428d7f3f94b3a2d'}
 blah = use.delete_user(delete)
 print blah
 time.sleep(2)

@@ -49,7 +49,6 @@ from coalesce.coal_beta.forms import *
 
 
 def welcome(request):
-
     return render_to_response('coal/welcome.html', RequestContext(request, ))
 
 
@@ -62,7 +61,6 @@ def disclaimer(request):
 
 def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
-
 
 
 def node_view(request, node_name):
@@ -95,14 +93,12 @@ def project_view(request, project_name):
         userinfo[user['username']] = user_info
         
     ousers = uo.list_orphaned_users()
-    userinfo = []
 
-    for ouser in ousers:
-        user_dict = {'username': user['username'], 'project_name': project_name}
-        user_info = uo.get_user_info(user_dict)
-        userinfo[user['username']] = user_info     
-        
-        
+    if ousers:
+        ouserinfo = []
+        for ouser in ousers:
+            ouserinfo.append(ouser['user_name'])     
+
         
     network_list = no.list_networks()
     routers= l3o.list_routers()
@@ -111,13 +107,14 @@ def project_view(request, project_name):
 
     networks={}
     for net in network_list:
-      networks[net['net_name']]= no.get_network(net['net_name'])
+        networks[net['net_name']]= no.get_network(net['net_name'])
     sec_groups = so.list_sec_group()
     sec_keys = so.list_sec_keys()
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
                                                         'users': users,
+                                                        'ousers': ousers,
                                                         'userinfo':userinfo,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
@@ -137,28 +134,27 @@ def user_view(request, project_name, user_name):
                                RequestContext(request, { 'project_name': project_name,
                                                         'user_info': user_info,
                                                         }))
-			       
-			       
+	       
 
 def ajax_create_user(request, username, password, userrole, email, project_name = None):
     try:
-	auth = request.session['auth']
-	uo = user_ops(auth)
-	user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
-	newuser= uo.create_user(user_dict)
-	return HttpResponse(newuser['user_id'])
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
+        newuser= uo.create_user(user_dict)
+        return HttpResponse(newuser['user_id'])
     except:
         return HttpResponse(status=500)
       
       
 def ajax_toggle_user(request, username, toggle):
     try:
-	auth = request.session['auth']
-	uo = user_ops(auth)
-	user_dict = {'username': username, 'toggle':toggle}
-	uo.toggle_user(user_dict)
-	referer = request.META.get('HTTP_REFERER', None)
-	redirect_to = urlsplit(referer, 'http', False)[2]
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        user_dict = {'username': username, 'toggle':toggle}
+        uo.toggle_user(user_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
 
     except:
@@ -166,13 +162,13 @@ def ajax_toggle_user(request, username, toggle):
       
 def ajax_delete_user(request, username, userid):
     try:
-	auth = request.session['auth']
-	uo = user_ops(auth)
-	user_dict = {'username': username, 'userid':userid}
-	#import pdb; pdb.set_trace()
-	uo.delete_user(user_dict)
-	referer = request.META.get('HTTP_REFERER', None)
-	redirect_to = urlsplit(referer, 'http', False)[2]
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        user_dict = {'username': username, 'userid':userid}
+        #import pdb; pdb.set_trace()
+        uo.delete_user(user_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
 
     except:
@@ -180,13 +176,13 @@ def ajax_delete_user(request, username, userid):
       
 def ajax_remove_user_from_project(request, username, project_name):
     try:
-	auth = request.session['auth']
-	uo = user_ops(auth)
-	user_dict = {'username': username, 'project_name':project_name}
-	#import pdb; pdb.set_trace()
-	uo.remove_user_from_project(user_dict)
-	referer = request.META.get('HTTP_REFERER', None)
-	redirect_to = urlsplit(referer, 'http', False)[2]
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        user_dict = {'username': username, 'project_name':project_name}
+        #import pdb; pdb.set_trace()
+        uo.remove_user_from_project(user_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
 
     except:
@@ -223,10 +219,9 @@ def setup(request):
             admin_password = form.cleaned_data['admin_password']
             admin_password_confirm = form.cleaned_data['admin_password_confirm']
 
-	    auth = request.session['auth']
-
-	    system = util.get_cloud_controller_name()
-	    system_var_array = [
+        auth = request.session['auth']
+        system = util.get_cloud_controller_name()
+        system_var_array = [
                         {"system_name": system, "parameter": "api_ip",             "param_value": uplink_ip},
                         {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
                         {"system_name": system, "parameter": "admin_api_ip",       "param_value": uplink_ip},
@@ -236,21 +231,21 @@ def setup(request):
                         {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
                         {"system_name": system, "parameter": "single_node",        "param_value": single_node},
                         {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
-			{"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
-			{"system_name": system, "parameter": "uplink_domain_name", "param_value": uplink_domain_name},
-			{"system_name": system, "parameter": "uplink_subnet",      "param_value": uplink_subnet},
-			{"system_name": system, "parameter": "mgmt_domain_name",   "param_value": mgmt_domain_name},
-			{"system_name": system, "parameter": "mgmt_subnet",        "param_value": mgmt_subnet},
-			{"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
+                        {"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
+                        {"system_name": system, "parameter": "uplink_domain_name", "param_value": uplink_domain_name},
+                        {"system_name": system, "parameter": "uplink_subnet",      "param_value": uplink_subnet},
+                        {"system_name": system, "parameter": "mgmt_domain_name",   "param_value": mgmt_domain_name},
+                        {"system_name": system, "parameter": "mgmt_subnet",        "param_value": mgmt_subnet},
+                        {"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
                         ]
 
-	    run_setup(system_var_array, auth)
-	    change_admin_password (auth, admin_password)
+        run_setup(system_var_array, auth)
+        change_admin_password (auth, admin_password)
 
-            if request.POST.get('cancel'):
-                return HttpResponseRedirect('/')
-            else:
-                return render_to_response('coal/setup_results.html', RequestContext(request, {'cloud_name':cloud_name, 'management_ip': management_ip}))
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect('/')
+        else:
+            return render_to_response('coal/setup_results.html', RequestContext(request, {'cloud_name':cloud_name, 'management_ip': management_ip}))
 
     else:
         form = SetupForm()

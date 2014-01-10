@@ -26,7 +26,6 @@ class layer_three_ops:
         else:
             #used to call other classes
             self.auth = user_dict
-
             self.username = user_dict['username']
             self.password = user_dict['password']
             self.project_id = user_dict['project_id']
@@ -36,11 +35,8 @@ class layer_three_ops:
             self.is_admin = user_dict['is_admin']
             self.user_id = user_dict['user_id']
 
-            if('adm_token' in user_dict):
+            if(self.is_admin == 1):
                 self.adm_token = user_dict['adm_token']
-                if(self.adm_token == ''):
-                    logger.sys_error('Admin user had no admin token passed.')
-                    raise Exception('Admin user had no admin token passed.')
             else:
                 self.adm_token = 'NULL'
 
@@ -101,8 +97,8 @@ class layer_three_ops:
                 self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers",'where':"proj_id='%s'"%(self.project_id)}
             routers = self.db.pg_select(self.select_router)
         except:
-            logger.sql_error("Could not find routers in project %s"%(self.project_id))
-            raise Exception("Could not find routers in project %s"%(self.project_id))
+            logger.sql_error("Could not find routers.")
+            raise Exception("Could not find routers.")
 
         r_array = []
         for router in routers:
@@ -145,19 +141,40 @@ class layer_three_ops:
 
         return r_dict
 
-    def add_router(self,router_name):
+    def add_router(self,router_dict):
         """
         DESC: Add a new router to a project.
-        INPUT: - router_name
+        INPUT: router_dict - router_name
+                           - project_id
         OUTPUT: r_dict - router_name
                        - router_id
-        ACCESS: Admin can create a router in their project
+        ACCESS: Admin can create a router in any network
+                Power users can create a router in their network.
+                Users can not create routers
         NOTES:
         """
         #curl -i http://192.168.10.30:9696/v2.0/routers.json -X POST -d '{"router": {"tenant_id": "cfc66ab189244f66bf3de56f55ebe72d", "name": "jonarrance", "admin_state_up": true}}'
-        if(router_name == ''):
+        if((router_dict['router_name'] == '') or ('router_name' not in router_dict)):
             logger.sys_error("A router name was not specified.")
             raise Exception("A router name was not specified.")
+        if((router_dict['project_id'] == '') or ('project_id' not in router_dict)):
+            logger.sys_error("A project id was not specified.")
+            raise Exception("A project id was not specified.")
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(router_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.user_level == 1):
+            if(self.project_id != router_dict['project_id']):
+                logger.sys_error("Power user can only create networks in their project.")
+                raise Exception("Power user can only create networks in their project.")
+        elif(self.user_level == 2):
+            logger.sys_error("Users can not remove networks in their project.")
+            raise Exception("Users can not remove networks in their project.")
 
         if(self.user_level <= 1):
             #Create an API connection with the admin
@@ -171,7 +188,7 @@ class layer_three_ops:
 
             try:
                 #add the new user to openstack
-                body = '{"router": {"tenant_id": "%s", "name": "%s", "admin_state_up": true}}' %(self.project_id,router_name)
+                body = '{"router": {"tenant_id": "%s", "name": "%s", "admin_state_up": true}}' %(router_dict['project_id'],router_dict['router_name'])
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/routers'
@@ -179,25 +196,32 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                #check the response and make sure it is a 201
-                if(rest['response'] == 201):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
-                    self.db.pg_transaction_begin()
-                    #insert new net info
-                    insert_dict = {"router_name":router_name,"router_id":load['router']['id'],"proj_id":self.project_id,"router_status":'ACTIVE',
-                                   "router_admin_state_up":"true"}
-                    self.db.pg_insert("trans_routers",insert_dict)
-                    self.db.pg_transaction_commit()
-                    r_dict = {'router_name':router_name,'router_id':load['router']['id']}
-                    return r_dict
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
             except:
                 self.db.pg_transaction_rollback()
                 logger.sql_error("Could not add a new layer 3 device to Neutron.")
                 raise Exception("Could not add a new layer 3 device to Neutron.")
+
+            #check the response and make sure it is a 201
+            if(rest['response'] == 201):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                try:
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    insert_dict = {"router_name":router_dict['router_name'],"router_id":load['router']['id'],"proj_id":router_dict['project_id'],"router_status":'ACTIVE',
+                                   "router_admin_state_up":'true'}
+                    self.db.pg_insert("trans_routers",insert_dict)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not add a new layer 3 device to the Transcirrus DB.")
+                    raise Exception("Could not add a new layer 3 device to the Transcirrus DB.")
+                else:
+                    self.db.pg_transaction_commit()
+                    r_dict = {'router_name':router_dict['router_name'],'router_id':load['router']['id']}
+                    return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'])
         else:
             logger.sys_error("Only an admin or a power user can create a new router.")
             raise Exception("Only an admin or a power user can create a new router.")
@@ -257,24 +281,30 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                if(rest['response'] == 200):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
-                    print load
-                    self.db.pg_transaction_begin()
-                    #insert new net info
-                    update = {'table':'trans_routers','set':"router_name='%s',router_ext_gateway='%s',router_admin_state_up='%s'"%(self.name,self.ext_gateway,self.state),'where':"router_id='%s'"%(update_dict['router_id'])}
-                    self.db.pg_update(update)
-                    self.db.pg_transaction_commit()
-                    r_dict = {'router_name':self.name,'router_admin_state':self.state}
-                    return r_dict
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
             except:
                 self.db.pg_transaction_rollback()
                 logger.sql_error("Could not update router params.")
                 raise Exception("Could not update router params.")
+
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                try:
+                    self.db.pg_transaction_begin()
+                    #insert new net info
+                    update = {'table':'trans_routers','set':"router_name='%s',router_ext_gateway='%s',router_admin_state_up='%s'"%(self.name,self.ext_gateway,self.state),'where':"router_id='%s'"%(update_dict['router_id'])}
+                    self.db.pg_update(update)
+                except:
+                    self.db.pg_rollback_commit()
+                    logger.sql_error("Could not update router params in Transcirrus DB.")
+                    raise Exception("Could not update router params in Transcirrus DB.")
+                else:
+                    self.db.pg_transaction_commit()
+                    r_dict = {'router_name':self.name,'router_admin_state':self.state}
+                    return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'])
         else:
             logger.sys_error("Only admins and power users can update router params.")
             raise Exception("Only admins and power users can update router params.")
@@ -324,23 +354,29 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                if(rest['response'] == 204):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
+            except:
+                logger.sql_error("Could not delete the router.")
+                raise Exception("Could not delete the router.")
+
+            if(rest['response'] == 204):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                try:
                     self.db.pg_transaction_begin()
                     #insert new net info
                     delete = {"table":'trans_routers',"where":"router_id='%s'"%(router_id)}
-                    self.db.pg.pg_delete(delete)
+                    self.db.pg_delete(delete)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not delete the router from Transcirrus DB.")
+                    raise Exception("Could not delete the router from Transcirrus DB.")
+                else:
                     self.db.pg_transaction_commit()
                     return 'OK'
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
-                    return 'ERROR'
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not delete the router.")
-                raise Exception("Could not delete the router.")
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+                return 'ERROR'
         else:
             logger.sys_error("Only an admin or a power user can delete a router.")
             raise Exception("Only an admin or a power user can delete a router.")
@@ -348,9 +384,10 @@ class layer_three_ops:
     def add_router_internal_interface(self,add_dict):
         """
         DESC: Add an internal router network interface to the virtual layer3
-              router. .
+              router.
         INPUT: add_dict - router_id
                         - subnet_name
+                        - project_id
         OUTPUT: r_dict - router_id
                        - router_name
                        - subnet_name
@@ -367,34 +404,54 @@ class layer_three_ops:
         if(('subnet_name' not in add_dict) or (add_dict['subnet_name'] == '')):
             logger.sys_error("Can not add internal port to router, no subnet id given.")
             raise Exception("Can not add internal port to router, no subnet id given.")
+        if(('project_id' not in add_dict) or (add_dict['project_id'] == '')):
+            logger.sys_error("Can not add internal port to router, no project id given.")
+            raise Exception("Can not add internal port to router, no project id given.")
+
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(add_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.user_level == 1):
+            if(self.project_id != add_dict['project_id']):
+                logger.sys_error("Power user can only create networks in their project.")
+                raise Exception("Power user can only create networks in their project.")
+        elif(self.user_level == 2):
+            logger.sys_error("Users can not remove networks in their project.")
+            raise Exception("Users can not remove networks in their project.")
 
         #get the subnet info
+        get_sub = {}
         try:
             if(self.is_admin == 1):
-                get_sub = {'select':"subnet_id,proj_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(add_dict['subnet_name'])}
-                self.subnet = self.db.pg_select(get_sub)
+                get_sub = {'select':"subnet_id,proj_id,net_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(add_dict['subnet_name'])}
+                #self.subnet = self.db.pg_select(get_sub)
             elif(self.user_level):
-                get_sub = {'select':"subnet_id,proj_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(add_dict['subnet_name']),'and':"proj_id='%s'"%(self.project_id)}
-                self.subnet = self.db.pg_select(get_sub)
+                get_sub = {'select':"subnet_id,proj_id,net_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(add_dict['subnet_name']),'and':"proj_id='%s'"%(add_dict['project_id'])}
+            self.subnet = self.db.pg_select(get_sub)
         except:
-            logger.sys_error("No subnet found in project %s."%(self.project_id))
-            raise Exception("No subnet found in project %s."%(self.project_id))
+            logger.sys_error("No subnet found in project %s."%(add_dict['project_id']))
+            raise Exception("No subnet found in project %s."%(add_dict['project_id']))
 
         try:
             if(self.is_admin == 1):
                 get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(add_dict['router_id'])}
                 self.router = self.db.pg_select(get_router)
             elif(self.user_level):
-                get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(add_dict['router_id']),'and':"proj_id='%s'"%(self.project_id)}
+                get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(add_dict['router_id']),'and':"proj_id='%s'"%(add_dict['project_id'])}
                 self.router = self.db.pg_select(get_router)
         except:
-            logger.sys_error("No router found in project %s."%(self.project_id))
-            raise Exception("No router found in project %s."%(self.project_id))
+            logger.sys_error("No router found in project %s."%(add_dict['project_id']))
+            raise Exception("No router found in project %s."%(add_dict['project_id']))
 
         #check if router and subnet are in the same project
         if(self.subnet[0][1] != self.router[0][4]):
-            logger.sys_error("Router %s and subnet %s not in project %s."%(add_dict['router_id'],add_dict['subnet_name'],self.project_id))
-            raise Exception("Router %s and subnet %s not in project %s."%(add_dict['router_id'],add_dict['subnet_name'],self.project_id))
+            logger.sys_error("Router %s and subnet %s not in project %s."%(add_dict['router_id'],add_dict['subnet_name'],add_dict['project_id']))
+            raise Exception("Router %s and subnet %s not in project %s."%(add_dict['router_id'],add_dict['subnet_name'],add_dict['project_id']))
 
         if(self.user_level <= 1):
             #Create an API connection with the admin
@@ -416,24 +473,29 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                if(rest['response'] == 200):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    load = json.loads(rest['data'])
+            except:
+                logger.sql_error("Could not add an internal port to router.")
+                raise Exception("Could not add an internal port to router.")
+
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    update = {'table':'trans_routers','set':"router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%(load['subnet_id'],load['id'],load['port_id']),'where':"router_id='%s'"%(add_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s',net_id='%s'"%(load['subnet_id'],load['id'],load['port_id'],self.subnet[0][2]),'where':"router_id='%s'"%(add_dict['router_id'])}
                     self.db.pg_update(update)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not add an internal port to router in Transcirrus DB.")
+                    raise Exception("Could not add an internal port to router in Transcirrus DB.")
+                else:
                     self.db.pg_transaction_commit()
                     r_dict = {'router_id': add_dict['router_id'],'router_name':self.router[0][1],'subnet_name': add_dict['subnet_name'],'subnet_id': load['subnet_id'],'port_id': load['port_id']}
                     return r_dict
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
-                    return 'ERROR'
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not add an internal port to router.")
-                raise Exception("Could not add an internal port to router.")
+            else:
+                util.http_codes(rest['response'],rest['reason'])
         else:
             logger.sys_error("Users can not add ports to routers.")
             raise Exception("Users can not add ports to routers.")
@@ -446,7 +508,7 @@ class layer_three_ops:
                            - subnet_name
         OUTPUT: OK - success
                 ERROR - failure
-        ACCESS: Only admins can remove an internal interface to the router. Power users
+        ACCESS: Admins can remove an internal interface to the router. Power users
                 can only remove interfaces for routers in their project.
         NOTE: transcirrus db will have to be updated accordingly
         """
@@ -459,12 +521,12 @@ class layer_three_ops:
 
         #get the subnet info
         try:
+            get_sub = None
             if(self.is_admin == 1):
                 get_sub = {'select':"subnet_id,proj_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(remove_dict['subnet_name'])}
-                self.subnet = self.db.pg_select(get_sub)
             elif(self.user_level):
                 get_sub = {'select':"subnet_id,proj_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(remove_dict['subnet_name']),'and':"proj_id='%s'"%(self.project_id)}
-                self.subnet = self.db.pg_select(get_sub)
+            self.subnet = self.db.pg_select(get_sub)
         except:
             logger.sys_error("No subnet found in project %s."%(self.project_id))
             raise Exception("No subnet found in project %s."%(self.project_id))
@@ -505,22 +567,28 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                if(rest['response'] == 200):
-                    #read the json that is returned
-                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            except:
+                logger.sql_error("Could not remove an internal port to the router.")
+                raise Exception("Could not remove an internal port to the router.")
+
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                try:
                     self.db.pg_transaction_begin()
                     #insert new net info
                     update = {'table':'trans_routers','set':"router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%('NULL','NULL','NULL'),'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not update the transcirrus DB.")
+                    raise Exception("Could not update the transcirrus DB.")
+                else:
                     self.db.pg_transaction_commit()
                     return 'OK'
-                else:
-                    util.http_codes(rest['response'],rest['reason'])
-                    return 'ERROR'
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not remove an internal port to the router.")
-                raise Exception("Could not remove an internal port to the router.")
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+
         else:
             logger.sys_error("Users can not remove ports to routers.")
             raise Exception("Users can not remove ports to routers.")
@@ -551,8 +619,8 @@ class layer_three_ops:
                     ext = self.db.pg_select(get_ext_net)
                     self.ext_net = add_dict['ext_net_id']
                 except:
-                    logger.sys_error("No external net found in project %s."%(self.project_id))
-                    raise Exception("No external net found in project %s."%(self.project_id))
+                    logger.sys_error("No external net found in project")
+                    raise Exception("No external net found in project")
             else:
                 self.ext_net = config.DEFAULT_PUB_NET_ID
 
@@ -560,8 +628,8 @@ class layer_three_ops:
                 get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(add_dict['router_id'])}
                 self.router = self.db.pg_select(get_router)
             except:
-                logger.sys_error("No router found in project %s."%(self.project_id))
-                raise Exception("No router found in project %s."%(self.project_id))
+                logger.sys_error("No router found in project.")
+                raise Exception("No router found in project.")
 
             #Create an API connection with the admin
             try:
@@ -572,41 +640,44 @@ class layer_three_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            body = '{"router": {"external_gateway_info": {"network_id": "%s", "enable_snat": true}}}'%(self.ext_net)
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'PUT'
-            api_path = '/v2.0/routers/%s'%(add_dict['router_id'])
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
+            try:
+                body = '{"router": {"external_gateway_info": {"network_id": "%s", "enable_snat": true}}}'%(self.ext_net)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/routers/%s'%(add_dict['router_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not add a gateway port to router.")
+                raise Exception("Could not add an gateway port to router.")
+
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
-                print load
-                self.db.pg_transaction_begin()
-                #get port device info - THIS NEEDS TO BE FIXED. NEED TO USE PORT ID
-                #port = port_ops(self.auth)
-                #get_port = port.get_port(PORT ID)
-                #raw = get_port['fixed_ips']
-                #possible to have multiple ip in the future
-                #for x in raw:
-                #    self.ip = x['ip_address']
-
-                #update the transcirrus router
-                update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],'NULL'),'where':"router_id='%s'"%(add_dict['router_id'])}
-                self.db.pg_update(update)
-                self.db.pg_transaction_commit()
-                return 'OK'
+                try:
+                    self.db.pg_transaction_begin()
+                    #get port device info - THIS NEEDS TO BE FIXED. NEED TO USE PORT ID
+                    #port = port_ops(self.auth)
+                    #get_port = port.get_port(PORT ID)
+                    #raw = get_port['fixed_ips']
+                    #possible to have multiple ip in the future
+                    #for x in raw:
+                    #    self.ip = x['ip_address']
+                    #update the transcirrus router
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],'NULL'),'where':"router_id='%s'"%(add_dict['router_id'])}
+                    self.db.pg_update(update)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not add a gateway port to router in Transcirrus DB.")
+                    raise Exception("Could not add an gateway port to router in Transcirrus DB.")
+                else:
+                    self.db.pg_transaction_commit()
+                    return 'OK'
             else:
                 util.http_codes(rest['response'],rest['reason'])
-                return 'ERROR'
-            #except:
-            #    self.db.pg_transaction_rollback()
-            #    logger.sql_error("Could not add a gateway port to router.")
-            #    raise Exception("Could not add an gateway port to router.")
         else:
             logger.sys_error("Users can not add gateways to routers.")
             raise Exception("Users can not add gateways to routers.")
@@ -631,8 +702,8 @@ class layer_three_ops:
                 get_router = {'select':"router_name",'from':"trans_routers",'where':"router_id='%s'"%(router_id)}
                 router = self.db.pg_select(get_router)
             except:
-                logger.sys_error("No router found in project %s."%(self.project_id))
-                raise Exception("No router found in project %s."%(self.project_id))
+                logger.sys_error("No router found in project.")
+                raise Exception("No router found in project.")
             
             #Create an API connection with the admin
             try:
@@ -643,31 +714,36 @@ class layer_three_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            body = '{"router": {"external_gateway_info": {}}}'
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'PUT'
-            api_path = '/v2.0/routers/%s'%(router_id)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
+            try:
+                body = '{"router": {"external_gateway_info": {}}}'
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/routers/%s'%(router_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not remove gateway from router.")
+                raise Exception("Could not remove gateway from router.")
+
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                self.db.pg_transaction_begin()
-                #update the transcirrus router
-                update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('NULL','NULL'),'where':"router_id='%s'"%(router_id)}
-                self.db.pg_update(update)
-                self.db.pg_transaction_commit()
-                return 'OK'
+                try:
+                    self.db.pg_transaction_begin()
+                    #update the transcirrus router
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('NULL','NULL'),'where':"router_id='%s'"%(router_id)}
+                    self.db.pg_update(update)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not remove gateway from router in Transcirrus DB.")
+                    raise Exception("Could not remove gateway from router in Transcirrus DB.")
+                else:
+                    self.db.pg_transaction_commit()
+                    return 'OK'
             else:
                 util.http_codes(rest['response'],rest['reason'])
-                return 'ERROR'
-            #except:
-            #    self.db.pg_transaction_rollback()
-            #    logger.sql_error("Could not remove gateway from router.")
-            #    raise Exception("Could not remove gateway from router.")
         else:
             logger.sys_error("Users can not remove ports to routers.")
             raise Exception("Users can not remove ports to routers.")
@@ -700,7 +776,7 @@ class layer_three_ops:
         r_array = []
         for floater in floating:
             r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2]}
-            r_array.push(r_dict)
+            r_array.append(r_dict)
 
         return r_array
 
@@ -716,7 +792,7 @@ class layer_three_ops:
                        - router_id
         NOTE: none
         """
-        if(floating_ip == ''):
+        if(floating_ip_id == ''):
             logger.sys_error('No floating ip ID given.')
             raise Exception('No floating ip ID given.')
 
@@ -731,7 +807,7 @@ class layer_three_ops:
             sys_error("Could not get of floating ip with id %s."%(floating_ip_id))
             raise Exception("Could not get of floating ip with id %s."%(floating_ip_id))
 
-        r_dict = {'floating_ip':floater[1],'fixed_ip':floater[5],'router_id':floater[4]}
+        r_dict = {'floating_ip':floating[0][1],'fixed_ip':floating[0][5],'router_id':floating[0][4]}
 
         return r_dict
 
@@ -793,7 +869,6 @@ class layer_three_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
         except:
-            self.db.pg_transaction_rollback()
             logger.sys_error("Could not assign a floating ip to %s."%(input_dict['project_id']))
             raise Exception("Could not assign a floating ip to %s."%(input_dict['project_id']))
 
@@ -808,36 +883,39 @@ class layer_three_ops:
                 insert_dict = {"floating_ip":load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id'],"proj_id":input_dict['project_id'],"router_id":"NULL",
                                "fixed_ip":"NULL"}
                 self.db.pg_insert("trans_floating_ip",insert_dict)
-                self.db.pg_transaction_commit()
             except:
                 self.db.pg_transaction_rollback()
                 logger.sql_error("Could not update Transcirrus DB with floating Ip info")
                 raise Exception("Could not update Transcirrus DB with floating Ip info")
+            else:
+                self.db.pg_transaction_commit()
+                r_dict = {'floating_ip':load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id']}
+                return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])
-            return 'ERROR'
-
-        r_dict = {'floating_ip':load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id']}
-        return r_dict
 
     def update_floating_ip(self,update_dict):
         """
-        DESC: Update the floating ip attachments in the project. Admins and power users can
-              attach floating ip addresses to instances in their project.
+        DESC: Update the floating ip attachments in the project to a virtual server.
+              Admins and power users can attach floating ip addresses to instances in their project.
         INPUT: update_dict - floating_ip - req
-                           - instance_name - req
+                           - instance_id - req
+                           - action - req add/remove
         OUTPUT: r_dict - floating_ip
                        - instance_name
                        - instance_id
         NOTE: since the ports are not implemented in alpo.0 we will use the nova call.
         body = '{"addFloatingIp": {"address": "%s"}}' port 8774
+        {"removeFloatingIp": {"address": "192.168.10.14"}}
         """
         
 
-    #DESC: Removes a floating ip from the tenant. Only admins can delete a floating
-    #      ip from the project
-    #INPUT: floating_ip
-    #OUTPUT: OK is successful or error
-    #NOTE: the nova api is used to remove a floating ip from a specific virtual instance.
-    def remove_floating_ip(self,floating_ip):
+    def deallocate_floating_ip(self,floating_ip):
+        """
+        DESC: Removes a floating ip from the tenant. Only admins can delete a floating
+              ip from the project
+        INPUT: floating_ip
+        OUTPUT: OK is successful or error
+        NOTE: the nova api is used to remove a floating ip from a specific virtual instance.
+        """
         print "not implemented"

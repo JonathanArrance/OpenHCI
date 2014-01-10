@@ -955,31 +955,17 @@ CREATE TABLE trans_routers (
     router_id character varying,
     net_id character varying,
     proj_id character varying,
-    router_status integer DEFAULT 1,
-    router_admin_state integer DEFAULT 1,
+    router_status character varying,
+    router_int_subnet_id character varying,
+    router_int_conn_id character varying,
+    router_int_port_id character varying,
+    router_admin_state_up character varying,
     router_ext_gateway character varying,
     router_ext_ip character varying
 );
 
 
 ALTER TABLE public.trans_routers OWNER TO transuser;
-
---
--- TOC entry 2240 (class 0 OID 0)
--- Dependencies: 194
--- Name: COLUMN trans_routers.router_status; Type: COMMENT; Schema: public; Owner: transuser
---
-
-COMMENT ON COLUMN trans_routers.router_status IS 'Active=1';
-
-
---
--- TOC entry 2241 (class 0 OID 0)
--- Dependencies: 194
--- Name: COLUMN trans_routers.router_admin_state; Type: COMMENT; Schema: public; Owner: transuser
---
-
-COMMENT ON COLUMN trans_routers.router_admin_state IS 'true=1';
 
 
 --

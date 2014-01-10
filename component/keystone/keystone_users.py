@@ -548,6 +548,7 @@ class user_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "python-keystoneclient"}
                 function = 'PUT'
                 api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(proj[0][0],user[0][0],key_role[0][0])
+                logger.sys_info("%s"%(api_path))
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
@@ -560,7 +561,7 @@ class user_ops:
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                if(user_role_dict['user_role'] != 'admin'):
+                if(user_role_dict['username'] != 'admin'):
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
@@ -585,25 +586,28 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not add user to project.")
 
-    def remove_user_from_project(self,remove_role):
+    def remove_user_from_project(self,delete_dict):
         """
         DESC: removes a specifc keystone role from a user on a project basis, if a role is not specified
               then all of the roles for that user in the project are removed.
-        INPUT: del_dict - username
-                        - project_name
+        INPUT: delete_dict - user_id
+                           - project_id
         OUTPUT: OK if successful
         ACCESS: Only an admin can remove a user from a project.
         NOTE: When a user is removed from a project by an admin, no matter what the role of that user is,
               they will be switched back to a standard user. When the user is added to a new project the user
               can then be added as a new role, admin/pu/user
         """
-        if(not remove_role):
+        if(not delete_dict):
             logger.sys_error("remove_role not specified for remove_role_from_user operation.")
             raise Exception("remove_role not specified for remove_role_from_user operation.")
         #Check to make sure that the username and keystone role are specified
-        if((not remove_role['username']) or (not remove_role['project_name'])):
-            logger.sys_error("Blank parametrs passed into remove_role_from_user operation, INVALID.")
-            raise Exception("Blank parametrs passed into remove_role_from_user, INVALID.")
+        if((delete_dict['user_id'] == '') or ('user_id' not in delete_dict)):
+            logger.sys_error("User id not passed into rmove user from project.")
+            raise Exception("User id not passed into rmove user from project.")
+        if((delete_dict['project_id'] == '') or ('project_id' not in delete_dict)):
+            logger.sys_error("Project id not passed into rmove user from project.")
+            raise Exception("Project id not passed into rmove user from project.")
 
         #check if the user creating a new account is an admin
         if(self.is_admin == 1):
@@ -623,17 +627,13 @@ class user_ops:
                 #Try to connect to the transcirrus db
                 self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
                 logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
-
-                #self.key_db = pgsql(config.OS_DB,config.OS_DB_PORT,config.OS_DB_NAME,config.OS_DB_USER,config.OS_DB_PASS)
-                #logger.sql_info("Connected to the Keystone DB to do keystone user operations.")
             except:
                 logger.sql_error("Could not connect to the DB.")
                 raise Exception("Could not connect to the DB.")
 
             #get the userid and tenant id from the transcirrus db
             try:
-                get_user_id = {"select":"keystone_user_uuid,user_project_id,keystone_role","from":"trans_user_info","where":"user_name='%s'" %(remove_role['username']),
-                               'and':"user_primary_project='%s'"%(remove_role['project_name'])}
+                get_user_id = {"select":"user_project_id,keystone_role","from":"trans_user_info","where":"keystone_user_uuid='%s'" %(delete_dict['user_id'])}
                 user_id = self.db.pg_select(get_user_id)
             except:
                 logger.sql_error("Could not connect to the DB.")
@@ -641,7 +641,7 @@ class user_ops:
 
             #get the keystone role_id
             try:
-                if(user_id[0][2] == 'admin'):
+                if(user_id[0][1] == 'admin'):
                     param = 'admin_role_id'
                 else:
                     param = 'member_role_id'
@@ -649,8 +649,8 @@ class user_ops:
                 get_key_role_id = {"select":'param_value',"from":'trans_system_settings',"where":"parameter='%s'" %(param)}
                 role_id = self.db.pg_select(get_key_role_id)
             except:
-                logger.sql_error("Could not find the UUID for Keystone role %s." %(user_id[0][2]))
-                raise Exception("Could not find the UUID for Keystone role %s." %(user_id[0][2]))
+                logger.sql_error("Could not find the UUID for Keystone role %s." %(user_id[0][1]))
+                raise Exception("Could not find the UUID for Keystone role %s." %(user_id[0][1]))
 
             try:
                 #build an api connection for the admin user
@@ -661,18 +661,18 @@ class user_ops:
                 raise Exception("Could not connect to the API")
 
             try:
-            #remove the role from the user on the tenant
+                #remove the role from the user on the tenant
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
-                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][1],user_id[0][0],role_id[0][0])
+                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][0],delete_dict['user_id'],role_id[0][0])
                 logger.sys_info("%s"%(api_path))
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error('%s' %(e))
+            #    logger.sys_error('%s' %(e))
                 raise
 
             if(rest['response'] == 204):
@@ -680,7 +680,7 @@ class user_ops:
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 try:
                     self.db.pg_transaction_begin()
-                    up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"user_name='%s'" %(remove_role['username'])}
+                    up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"keystone_user_uuid='%s'" %(delete_dict['user_id'])}
                     self.db.pg_update(up_dict)
                 except Exception as e:
                     self.db.pg_transaction_rollback()
@@ -690,11 +690,10 @@ class user_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
+                    r_dict = {"response":rest['response'],"reason":rest['reason']}
+                    return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
-
-            r_dict = {"response":rest['response'],"reason":rest['reason']}
-            return r_dict
         else:
             logger.sys_error("Admin flag not set, could not remove the user from the DB.")
 

@@ -92,7 +92,7 @@ class tenant_ops:
             raise Exception("Could not connect to db with error: %s" %(e))
 
         #declare tenant_id
-        tenant_id = ""
+        tenant_id = None
 
         #Need to create the new project then find the new project in OS then update transcirrus db
 
@@ -161,7 +161,7 @@ class tenant_ops:
 
         try:
             #add the admin to the project as an admin - admingets added to all projects in the system
-            add_admin = {'username':'admin','user_role':'pu','project_name':project_name}
+            add_admin = {'username':'admin','user_role':'admin','project_name':project_name}
             admin = self.keystone_users.add_user_to_project(add_admin)
         except Exception as e:
             logger.sys_error('Could not add the admin to %s'%(project_name))
