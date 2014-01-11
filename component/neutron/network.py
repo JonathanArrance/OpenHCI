@@ -368,6 +368,7 @@ class neutron_net_ops:
                     #insert new net info
                     insert_dict = {"net_name":create_dict['net_name'],"net_id":load['network']['id'],"user_id":self.user_id,"proj_id":self.project_id,"net_internal":"false","net_shared":create_dict['shared'],"net_admin_state":create_dict['admin_state']}
                     self.db.pg_insert("trans_network_settings",insert_dict)
+                    #need to update system settings table if the network is the DefaultPubli with NetId
                 except:
                     self.db.pg_transaction_rollback()
                     logger.sql_error('Could not insert the new public network into the Transcirrus DB.')
@@ -891,7 +892,6 @@ class neutron_net_ops:
         try:
             get_sub = {'select':"*",'from':"trans_subnets",'where':"in_use=0 order by index ASC"}
             sub = self.db.pg_select(get_sub)
-            print sub
         except:
             logger.sql_error("Could not get subnet information from the Transcirrus db.")
             raise Exception("Could not get subnet information from the Transcirrus db.")

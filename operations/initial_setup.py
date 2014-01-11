@@ -340,7 +340,7 @@ def run_setup(new_system_variables,auth_dict):
     #or the vms will not be able to reach the outside.
     time.sleep(1)
     s_create_dict = {
-                     'net_name': 'DefaultPublic',
+                     'net_id': default_public['net_id'],
                      'subnet_dhcp_enable':'true',
                      'subnet_dns':[sys_vars['UPLINK_DNS']],
                      'subnet_start_range':sys_vars['VM_IP_MIN'],
