@@ -750,6 +750,7 @@ class layer_three_ops:
 
 #Refer to http://docs.openstack.org/api/openstack-network/2.0/content/router_ext_ops_floatingip.html
 
+    #ALL floating iP stuff updated/UNITTESTED
     def list_floating_ips(self):
         """
         DESC: List the availabel floating ips in a project. Any user type can list
@@ -788,8 +789,12 @@ class layer_three_ops:
         ACCESS: Admins can get the info for any floating ip. Power users and standard
                 users can only get info for floating ip in their project.
         OUTPUT: r_dict - floating_ip
-                       - fixed_ip
-                       - router_id
+                       - floating_ip_id
+                       - instance_name
+                       - instance_id
+                       - internal_net_name
+                       - internal_net_id
+                       - project_id
         NOTE: none
         """
         if(floating_ip_id == ''):
@@ -797,18 +802,42 @@ class layer_three_ops:
             raise Exception('No floating ip ID given.')
 
         get_floating = None
-        try:
-            if(self.is_admin == 1):
-                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"floating_ip_id='%s' order by index ASC"%(floating_ip_id)}
-            else:
-                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s'"%(self.project_id),'and':"floating_ip_id='%s' order by index ASC"%(floating_ip_id)}
+        r_dict = None
+        if(self.is_admin == 1):
+            get_floating = {'select':"proj_id,inst_id,inst_name,inst_floating_ip,floating_ip_id,inst_int_net_id,inst_int_net_name",'from':"trans_instances",'where':"floating_ip_id='%s'"%(floating_ip_id)}
+        else:
+            get_floating = {'select':"proj_id,inst_id,inst_name,inst_floating_ip,floating_ip_id,inst_int_net_id,inst_int_net_name",'from':"trans_instances",'where':"proj_id='%s'"
+                            %(self.project_id),'and':"floating_ip_id='%s'"%(floating_ip_id)
+                            }
+        floating = self.db.pg_select(get_floating)
+
+        if(len(floating) == 0):
+            #need to build a join function if db lib
+            try:
+                get_floating = {'select':"floating_ip,proj_id",'from':"trans_floating_ip",'where':"floating_ip_id='%s'"%(floating_ip_id)}
+                floating = self.db.pg_select(get_floating)
+            except:
+                logger.sys_error("Could not get of floating ip with id %s."%(floating_ip_id))
+                raise Exception("Could not get of floating ip with id %s."%(floating_ip_id))
             floating = self.db.pg_select(get_floating)
-        except:
-            sys_error("Could not get of floating ip with id %s."%(floating_ip_id))
-            raise Exception("Could not get of floating ip with id %s."%(floating_ip_id))
-
-        r_dict = {'floating_ip':floating[0][1],'fixed_ip':floating[0][5],'router_id':floating[0][4]}
-
+            r_dict = {'floating_ip':floating[0][0],
+                      'floating_ip_id':floating_ip_id,
+                      'instance_name':'NULL',
+                      'instance_id':'NULL',
+                      'internal_net_name':'NULL',
+                      'internal_net_id':'NULL',
+                      'project_id':floating[0][1]
+                    }
+        elif(len(floating) == 1):
+            r_dict = {'floating_ip':floating[0][3],
+              'floating_ip_id':floating[0][4],
+              'instance_name':floating[0][2],
+              'instance_id':floating[0][1],
+              'internal_net_name':floating[0][6],
+              'internal_net_id':floating[0][5],
+              'project_id':floating[0][0]
+              }
+    
         return r_dict
 
     def allocate_floating_ip(self,input_dict):
@@ -963,26 +992,41 @@ class layer_three_ops:
             logger.sys_error("Floating ip no in project %s"%(update_dict['project_id']))
             raise Exception("Floating ip no in project %s"%(update_dict['project_id']))
 
+        #Create an API connection with the admin
         try:
+            #build an api connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_logger("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            body = None
             if(action == 'remove'):
                 body = '{"removeFloatingIp": {"address": "%s"}}'%(update_dict['floating_ip'])
             elif(action == 'add'):
                 body = '{"addFloatingIp": {"address": "%s"}}'%(update_dict['floating_ip'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id": project[0][0]}
             function = 'POST'
             api_path = '/v2/%s/servers/%s/action'%(update_dict['project_id'],update_dict['instance_id'])
             token = self.token
             sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest_dict = {"body": str(body), "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except:
-            logger.sys_error("Could not assign a floating ip to %s."%(input_dict['project_id']))
-            raise Exception("Could not assign a floating ip to %s."%(input_dict['project_id']))
+            logger.sys_error("Could not assign a floating ip to %s."%(update_dict['project_id']))
+            raise Exception("Could not assign a floating ip to %s."%(update_dict['project_id']))
 
         if(rest['response'] == 202):
+            update = None
             try:
                 self.db.pg_transaction_begin()
-                update = {'table':'trans_instances','set':"floating_ip_id='%s',inst_floating_ip='%s'"%(floater[0][0],update_dict['floating_ip']),'where':"inst_id='%s'"%(update_dict['instance_id'])}
+                if(action == 'add'):
+                    update = {'table':'trans_instances','set':"floating_ip_id='%s',inst_floating_ip='%s'"%(floater[0][0],update_dict['floating_ip']),'where':"inst_id='%s'"%(update_dict['instance_id'])}
+                elif(action == 'remove'):
+                    update = {'table':'trans_instances','set':"floating_ip_id='NULL',inst_floating_ip='NULL'",'where':"inst_id='%s'"%(update_dict['instance_id'])}
+                print update
                 self.db.pg_update(update)
             except:
                 self.db.pg_transaction_rollback()
@@ -1016,7 +1060,7 @@ class layer_three_ops:
 
         get_proj = None
         try:
-            get_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'"%(input_dict['project_id'])}
+            get_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'"%(del_dict['project_id'])}
             project = self.db.pg_select(get_proj)
         except:
             logger.sys_error('Project does not exist.')
@@ -1024,8 +1068,61 @@ class layer_three_ops:
 
         #make sure the floating ip is in the project
         try:
-            get_float = {'select':"floating_ip_id",'from':"trans_floating_ip",'where':"proj_id='%s'"%(update_dict['project_id']),'and':"floating_ip='%s'"%(update_dict['floating_ip'])}
+            get_float = {'select':"floating_ip_id",'from':"trans_floating_ip",'where':"proj_id='%s'"%(del_dict['project_id']),'and':"floating_ip='%s'"%(del_dict['floating_ip'])}
             floater = self.db.pg_select(get_float)
         except:
-            logger.sys_error("Floating ip no in project %s"%(update_dict['project_id']))
-            raise Exception("Floating ip no in project %s"%(update_dict['project_id']))
+            logger.sys_error("Floating ip no in project %s"%(del_dict['project_id']))
+            raise Exception("Floating ip no in project %s"%(del_dict['project_id']))
+
+        #see if the floating ip is attached
+        inst_name = None
+        get_inst = {'select':"inst_name",'from':"trans_instances",'where':"floating_ip_id='%s'"%(floater[0][0])}
+        inst_name = self.db.pg_select(get_inst)
+        print inst_name
+        if(inst_name):
+            logger.sys_error("Floating ip attached to instance %s"%(inst_name[0][0]))
+            raise Exception("Floating ip attached to inst %s"%(inst_name[0][0]))
+
+        #Create an API connection with the admin
+        try:
+            #build an api connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_logger("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+        
+        #New way to do API calls - experiment
+        #try:
+        body = ''
+        header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id": project[0][0]}
+        function = 'DELETE'
+        api_path = '/v2.0/floatingips/%s'%(floater[0][0])
+        print api_path
+        token = self.token
+        sec = self.sec
+        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+        print rest_dict
+        rest = api.call_rest(rest_dict)
+        #except:
+        #    logger.sys_error("Could not deallocate the floating ip.")
+        #    raise Exception("Could not deallocate the floating ip.")
+
+        #new way to process db transaction after API call - experiment
+        load = None
+        if(rest['response'] == 204):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            self.db.pg_transaction_begin()
+            try:
+                delete = {"table":'trans_floating_ip',"where":"floating_ip_id='%s'"%(floater[0][0])}
+                self.db.pg_delete(delete) 
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not remove the floating ip from the Transcirrus DB.")
+                raise Exception("Could not remove the floating ip from the Transcirrus DB.")
+            else:
+                self.db.pg_transaction_commit()
+                return "OK"
+        else:
+            util.http_codes(rest['response'],rest['reason'])
