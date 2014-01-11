@@ -10,6 +10,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
+from transcirrus.operations.change_adminuser_password import change_admin_password
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -283,11 +284,8 @@ def setup(d):
             continue
         break
 
-    try:
-        changed = change_admin_password(user_dict, pwd)
-        d.msgbox(str(changed))
-    except Exception as e:
-        d.msgbox("Error when updating password: " + str(e))
+    pass_dict = {"new_password": pwd, "project_id": user_dict['project_id'], "user_id": user_dict['user_id']}
+    changed = change_admin_password(user_dict, pass_dict)
 
     #try:
     system = util.get_cloud_controller_name()
