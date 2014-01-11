@@ -283,6 +283,12 @@ def setup(d):
             continue
         break
 
+    try:
+        changed = change_admin_password(user_dict, pwd)
+        d.msgbox(str(changed))
+    except Exception as e:
+        d.msgbox("Error when updating password: " + str(e))
+
     #try:
     system = util.get_cloud_controller_name()
     new_system_variables = [
