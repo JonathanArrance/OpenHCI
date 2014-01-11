@@ -10,6 +10,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
+from transcirrus.operations import change_admin_password
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
