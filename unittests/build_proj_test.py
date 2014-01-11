@@ -8,7 +8,7 @@ from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 
-a = authorization("bill","test")
+a = authorization("admin","password")
 
 #get the user dict
 d = a.get_auth()
@@ -29,7 +29,7 @@ print "Instantiating user_ops object."
 use = user_ops(d)
 
 print "Create a new standard user with no project."
-new_user_dict = {"username":'bill',"password":"test","userrole":"pu","email":"test@domain.com"}
+new_user_dict = {"username":'bill',"password":"test","userrole":"pu","email":"bill@domain.com"}
 create = use.create_user(new_user_dict)
 print create
 time.sleep(1)
@@ -52,16 +52,17 @@ add_user_dict = {"username":"bill2","user_role":'user',"project_name":'ffvc'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
-'''
-
 
 print "----------------------------------------"
 time.sleep(1)
 print "Instantiating neutron_net_ops object."
+'''
+
 net = neutron_net_ops(d)
 
+
 print "creating a new network"
-create = {'net_name':"ffvcnet",'admin_state':"true", 'shared':"true"}
+create = {'net_name':"ffvcnet",'admin_state':"true", 'shared':"true",'project_id':"daf2a16e972c4cf4aaa8f722acccdd70"}
 newnet = net.add_private_network(create)
 print newnet
 
@@ -70,6 +71,6 @@ print "----------------------------------------"
 time.sleep(1)
 print "Setting a subnet on new network"
 dns = ["192.168.190.20"]
-input_dict = {'net_name':"ffvcnet",'subnet_dhcp_enable':'true','subnet_dns':dns}
+input_dict = {'net_id':newnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns}
 getsubnet = net.add_net_subnet(input_dict)
 print getsubnet

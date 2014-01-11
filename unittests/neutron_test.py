@@ -35,13 +35,13 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_networks()
 print newnet
-
+'''
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
-getnet = net.get_network("4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae")
+getnet = net.get_network("03a730bb-72d1-4b32-ae13-15de60fbfef9")
 print getnet
-
+'''
 time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"
@@ -82,7 +82,7 @@ print "Listing the subnets in use for thistest8"
 listsub2 = net.list_net_subnet(getnet['net_id'])
 print listsub2
 
-'''
+
 t = {'subnet_name':'int-sub-3','net_id':'4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae'}
 tdel = net.remove_net_subnet(t)
 print tdel
@@ -99,3 +99,4 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_networks()
 print newnet
+'''

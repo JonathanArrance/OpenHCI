@@ -1028,7 +1028,7 @@ class user_ops:
                 r_dict = {'user_name':user[1],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
                 r_array.append(r_dict)
 
-            print r_array
+            return r_array
         else:
             logger.error('Only admins can list the orphaned users.')
             raise Exception('Only admins can list the orphaned users.')
