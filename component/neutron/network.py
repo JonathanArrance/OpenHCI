@@ -145,7 +145,7 @@ class neutron_net_ops:
             logger.sys_error("No net name was specified for the new network.")
             raise Exception("No net name was specified for the new network.")
 
-        get_net = {}
+        get_net = None
         try:
             if(self.is_admin == 1):
                 get_net = {'select':"net_name,net_id,user_id,net_admin_state,net_internal,net_shared,proj_id",'from':"trans_network_settings",'where':"net_id='%s'" %(net_id)}

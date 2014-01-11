@@ -3,18 +3,11 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.neutron.ports import port_ops
 import time
 
-auth = authorization('admin','password')
+auth = authorization('bill','test')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
 '''
-print "Test the ports"
-ports = port_ops(a)
-yo = ports.get_port("f9547289-182d-4c2a-acf2-5ec3497adec3")
-print yo
-time.sleep(1)
-print "------------------------------------------------"
-
 print "Adding a new router"
 r = {'router_name':'ffvcrouter1','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
 create = router.add_router(r)
@@ -59,14 +52,60 @@ del_ext = router.delete_router_gateway_interface("a195ec8b-5486-4cef-abc1-ecd995
 print del_ext
 time.sleep(1)
 print "--------------------------------------------------"
-
+'''
+print "Allocating a new floating ip"
 s = {'ext_net_id':"7bb5744c-c34b-48b5-83b5-5325e36f12ef",'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
 yo = router.allocate_floating_ip(s)
 print yo
-'''
+
+print "Listing floating ips"
 yo2 = router.list_floating_ips()
 print yo2
 
 for y in yo2:
+    print "Getting floating ip info"
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
+    
+
+print "attaching floating ip to instance"
+update_dict = {'floating_ip':yo['floating_ip'],'instance_id':"e25caef9-a5af-4496-80e6-58a57faa0856",'project_id':"523e5098be6c4438b428d7f3f94b3a2d",'action':"add"}
+yo4 = router.update_floating_ip(update_dict)
+print yo4
+
+print "Listing floating ips"
+yo5 = router.list_floating_ips()
+print yo5
+
+for z in yo5:
+    print "Getting floating ip info"
+    yo6 = router.get_floating_ip(z['floating_ip_id'])
+    print yo6
+
+print "detaching floating ip from instance"
+update_dict = {'floating_ip':yo['floating_ip'],'instance_id':"e25caef9-a5af-4496-80e6-58a57faa0856",'project_id':"523e5098be6c4438b428d7f3f94b3a2d",'action':"remove"}
+yo12 = router.update_floating_ip(update_dict)
+print yo12
+
+print "Listing floating ips"
+yo10 = router.list_floating_ips()
+print yo10
+
+for z2 in yo10:
+    print "Getting floating ip info"
+    yo11 = router.get_floating_ip(z2['floating_ip_id'])
+    print yo11
+
+print "deallocating a new floating ip"
+e = {'floating_ip':yo['floating_ip'],'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+yo7 = router.deallocate_floating_ip(e)
+print yo7
+
+print "Listing floating ips"
+yo13 = router.list_floating_ips()
+print yo13
+
+for z3 in yo13:
+    print "Getting floating ip info"
+    yo14 = router.get_floating_ip(z3['floating_ip_id'])
+    print yo14

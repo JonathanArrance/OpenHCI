@@ -346,6 +346,12 @@ class server_ops:
             logger.sys_error("Status level not sufficient to get virtual servers.")
             raise Exception("Status level not sufficient to get virtual servers.")
 
+        #get the detailed server info from openstack
+        #try:
+            
+        #except:
+        
+        
         get_server = None
         if(self.is_admin == 1):
             get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
