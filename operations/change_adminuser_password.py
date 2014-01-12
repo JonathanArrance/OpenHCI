@@ -33,7 +33,7 @@ def change_admin_password(auth_dict,pass_dict):
             change = new.update_user_password(pass_dict)
             print change
             #update the factory default credentials file in transuser
-            file_dict = {'file_path':'/home/transcirrus',
+            file_dict = {'file_path':'/home/transuser',
                          'file_name':'factory_creds',
                          'file_content':['export OS_PASSWORD='+pass_dict['new_password']],
                          'file_owner':'transuser',
