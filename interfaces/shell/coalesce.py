@@ -284,8 +284,8 @@ def setup(d):
             continue
         break
 
-    changed = change_admin_password(user_dict, pwd)
-    d.msgbox(str(changed))
+    pass_dict = {"new_password": pwd, "project_id": user_dict[project_id], "user_id": user_dict[user_id]}
+    changed = change_admin_password(user_dict, pass_dict)
 
     #try:
     system = util.get_cloud_controller_name()
