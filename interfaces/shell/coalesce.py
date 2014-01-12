@@ -10,7 +10,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
-from transcirrus.operations import change_adminuser_password
+from transcirrus.operations.change_adminuser_password import change_admin_password
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -284,7 +284,7 @@ def setup(d):
             continue
         break
 
-    changed = change_adminuser_password(user_dict, pwd)
+    changed = change_admin_password(user_dict, pwd)
     d.msgbox(str(changed))
 
     #try:
