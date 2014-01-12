@@ -601,7 +601,7 @@ class layer_three_ops:
                         - ext_net_id
         OUTPUT: OK -success
                 ERROR - failure
-        ACCESS: Only admins can add an extrnal interface to the router.
+        ACCESS: Admins and power users can add an extrnal interface to the router.
         NOTE: If an external net name is not specified the default_public will be used.
         """
         if(('router_id' not in add_dict) or (add_dict['router_id'] == '')):
@@ -611,7 +611,7 @@ class layer_three_ops:
             logger.sys_error("Can not add external gateway to router, no subnet id given.")
             raise Exception("Can not add external_gateway to router, no subnet id given.")
 
-        if(self.is_admin == 1):
+        if(self.user_level <= 1):
             #get the extnet info - confirmation
             if('ext_net_id' in add_dict):
                 try:
