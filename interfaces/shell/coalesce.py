@@ -10,6 +10,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
+from transcirrus.operations import change_adminuser_password
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -282,6 +283,9 @@ def setup(d):
             d.msgbox("Uplink IP and Management IP cannot match, try again.", width=60, height=10)
             continue
         break
+
+    changed = change_adminuser_password(user_dict, pwd)
+    d.msgbox(str(changed))
 
     #try:
     system = util.get_cloud_controller_name()

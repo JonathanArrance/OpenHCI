@@ -124,13 +124,14 @@ pas_dict = {'new_password':'testtest','project_id':'da54c5efa79841f0888c0c4ea35d
 pas = use.update_user_password(pas_dict)
 time.sleep(2)
 print "----------------------------------------------"
-'''
-print "Removeing user from project"
+
+print "Removing user from project"
+
 remove_user_dict = {"user_id":"e38e8a6ebf2c4331830892622d36cc91","project_id":'5b5a1f8784a742bc8bae98021d7e884b'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
 
-'''
+
 print "Deleteing a testuser"
 delete = {"user_id":"53f9b62ef34c46b3a53e8fa1e5308b2f","project_id":'523e5098be6c4438b428d7f3f94b3a2d'}
 blah = use.delete_user(delete)

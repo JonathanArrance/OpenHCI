@@ -35,11 +35,11 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_networks()
 print newnet
-
+'''
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
-getnet = net.get_network("4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae")
+getnet = net.get_network("03a730bb-72d1-4b32-ae13-15de60fbfef9")
 print getnet
 '''
 time.sleep(1)
