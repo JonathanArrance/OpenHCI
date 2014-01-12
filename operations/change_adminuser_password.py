@@ -12,11 +12,11 @@ import transcirrus.common.util as util
 celery = Celery('change_adminuser_password', backend='amqp', broker='amqp://guest:transcirrus1@%s/'%(config.API_IP))
 
 @celery.task(name='change_admin_password')
-def change_admin_password(auth_dict,new_password):
+def change_admin_password(auth_dict,pass_dict):
     #change the linux password
     if((auth_dict['is_admin'] == 1) and (auth_dict['adm_token'] != '') and (auth_dict['adm_token'] == config.ADMIN_TOKEN)):
         print "input"
-        p = subprocess.Popen(('mkpasswd', '-m', 'sha-512', new_password), stdout=subprocess.PIPE)
+        p = subprocess.Popen(('mkpasswd', '-m', 'sha-512', pass_dict['new_password']), stdout=subprocess.PIPE)
         print p
         shadow_password = p.communicate()[0].strip()
         if(p.returncode != 0):
@@ -30,12 +30,12 @@ def change_admin_password(auth_dict,new_password):
             logger.sys_info("Password for admin user successfully changed.")
             #instantiate the object
             new = user_ops(auth_dict)
-            change = new.update_user_password(new_password)
+            change = new.update_user_password(pass_dict)
             print change
             #update the factory default credentials file in transuser
             file_dict = {'file_path':'/home/transcirrus',
                          'file_name':'factory_creds',
-                         'file_content':['export OS_PASSWORD='+new_password],
+                         'file_content':['export OS_PASSWORD='+pass_dict['new_password']],
                          'file_owner':'transuser',
                          'file_group':'transuser',
                          'file_perm':664,
