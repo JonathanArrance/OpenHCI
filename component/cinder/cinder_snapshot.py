@@ -121,6 +121,8 @@ class snapshot_ops:
                 raise Exception("Users can not snapshot volumes outside of their project.")
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can snapshot any volume.")
+            if(create_snap['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_snap['project_id'])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
@@ -144,8 +146,6 @@ class snapshot_ops:
             #connect to the API
             try:
                 api_dict = {"username":self.username, "password":self.password, "project_id":create_snap['project_id']}
-                if(create_snap['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,create_snap['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
@@ -250,8 +250,10 @@ class snapshot_ops:
             else:
                 logger.sys_error("Users can not delete snapshots outside of their project.")
                 raise Exception("Users can not delete snapshots outside of their project.")
-        elif(self.user_level == 0):
+        elif(self.is_admin == 1):
             logger.sys_info("The user is an admin and can delete any snapshot.")
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, and can not delete snap.")
@@ -264,8 +266,6 @@ class snapshot_ops:
         if(snap_info['snap_id'] and (snap_status == 1)):
             try:
                 api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
-                if(input_dict['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
@@ -365,6 +365,7 @@ class snapshot_ops:
                 create_time
         ACCESS: Admins can list snapshots in any project, users and power users can list snapshots in their
                 project only
+        NOTE: This need to be changed to incorporate project_id
         """
         #check to make sure all params have been passed
         if(not snap_name):
@@ -411,6 +412,8 @@ class snapshot_ops:
                 raise Exception("Users can not get snapshots outside of their project.")
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can get the snap info on any snapshot.")
+            if(snap_id[0][1] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, and can not list snap info.")
