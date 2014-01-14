@@ -619,7 +619,7 @@ class server_ops:
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
-                if((def_group[0][0] == None) and (self.is_admin == 1)):
+                if((def_group[0][0] == '0') and (self.is_admin == 1)):
                     update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
                     self.db.pg_update(update_dict)
                 #add the security group info to the database
@@ -728,7 +728,7 @@ class server_ops:
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
-                if((def_key[0][0] == None) and (self.is_admin == 1)):
+                if((def_key[0][0] == '0') and (self.is_admin == 1)):
                     update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(key_dict['project_id'])}
                     logger.sys_info("%s"%(update_dict))
                     self.db.pg_update(update_dict)
