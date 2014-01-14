@@ -101,8 +101,7 @@ def project_view(request, project_name):
     if ousers:
         for ouser in ousers:
             ouserinfo.append(ouser['user_name'])     
-
-    #import pdb; pdb.set_trace()   
+  
     network_list = no.list_networks()
     routers= l3o.list_routers()
     volumes = vo.list_volumes()
@@ -138,7 +137,20 @@ def user_view(request, project_name, user_name):
                                RequestContext(request, { 'project_name': project_name,
                                                         'user_info': user_info,
                                                         }))
-	       
+def volume_view(request, project_id, vol_id):
+    auth = request.session['auth']
+    vo = volume_ops(auth)
+    sno = snapshot_ops(auth)
+    snapshots = sno.list_snapshots()
+    vol_dict = {'project_id': project_id, 'vol_id': vol_id}
+    volume_info = vo.get_volume_info(vol_dict)
+
+    return render_to_response('coal/volume_view.html',
+                               RequestContext(request, { 'project_id' : project_id,
+                                                        'volume_info': volume_info,
+							'snapshots': snapshots,
+                                                        }))
+	       	       
 
 def ajax_create_user(request, username, password, userrole, email, project_name = None):
     try:
@@ -146,7 +158,9 @@ def ajax_create_user(request, username, password, userrole, email, project_name 
         uo = user_ops(auth)
         user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
         newuser= uo.create_user(user_dict)
-        return HttpResponse(newuser['user_id'])
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
     except:
         return HttpResponse(status=500)
 
@@ -161,7 +175,46 @@ def ajax_create_security_group(request, groupname, groupdesc, ports, project_id)
         so = server_ops(auth)
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
         newgroup= so.create_sec_group(create_sec)  
-        return HttpResponse(newgroup['sec_group_id'])
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
+def ajax_create_keypair(request, key_name, project_id):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        key_dict = {'key_name': key_name, 'project_id': project_id}
+        newkey= so.create_sec_keys(key_dict)  
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
+def ajax_create_volume(request, volume_name, volume_size, description, project_id):
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
+        vo.create_volume(create_vol)  
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
+def ajax_take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
+    try:
+        auth = request.session['auth']
+        sno = snapshot_ops(auth)
+        create_snap = {'snap_name': snap_name, 'snap_desc': snap_desc, 'vol_id': vol_id, 'project_id': project_id}
+	import pdb; pdb.set_trace()
+        sno.create_snapshot(create_snap)  
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
     except:
         return HttpResponse(status=500)
       
