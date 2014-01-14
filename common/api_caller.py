@@ -90,18 +90,23 @@ class caller:
             #set the admin port defaults to 50000
             logger.sys_info("Setting api_caller.call_rest to  use admin port 35357.")
             port = '35357'
+        else:
+            logger.sys_info("Useing PKI token")
 
         #use the service port passed in - ex. cinder 8776
         if('port' in api_dict):
             port = api_dict['port']
+        logger.sys_info("Connecting to API endpoint on port %s"%(port))
 
         #overide the api_ip found in the db if needed
         #used mostly during init and re-init
         if('api_ip' in api_dict):
             self.api_ip = api_dict['api_ip']
+        logger.sys_info("Attaching to api_ip %s"%(self.api_ip))
 
         #set the url for the api caller
         url = "%s:%s" %(self.api_ip,port)
+        logger.sys_info("Connected to URL endpoint %s"%(url))
 
         sec = api_dict['sec']
         if(sec == 'TRUE'):

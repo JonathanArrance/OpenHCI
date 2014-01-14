@@ -8,6 +8,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -586,7 +587,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":create_sec['project_id']}
+            if(create_sec['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_sec['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -595,7 +598,7 @@ class server_ops:
         #create a new security group in the project
         try:
             body = '{"security_group": {"name": "%s", "description": "%s"}}' %(create_sec['group_name'],create_sec['group_desc'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id":project[0][0]}
             function = 'POST'
             api_path = '/v2/%s/os-security-groups' %(create_sec['project_id'])
             token = self.token
@@ -604,7 +607,7 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             self.db.pg_transaction_rollback()
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not create security group %s" %(e))
             raise e
 
         if((rest['response'] == 200) or (rest['response'] == 203)):
@@ -693,7 +696,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":key_dict['project_id']}
+            if(create_sec['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_sec['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -795,7 +800,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":sec_dict['project_id']}
+            if(create_sec['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_sec['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -892,7 +899,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":delete_dict['project_id']}
+            if(create_sec['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_sec['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -1057,7 +1066,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":sec_dict['project_id']}
+            if(create_sec['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_sec['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")

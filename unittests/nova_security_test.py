@@ -17,14 +17,14 @@ a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 nova = server_ops(d)
-
+'''
 print "Loggin in as the power user."
 #onlyt an admin can create a new user
 c = authorization("bill","test")
 #get the user dict
 e = c.get_auth()
 nova2 = server_ops(e)
-'''
+
 print "deleteing the security group"
 d = {'sec_group_id':"61789128-04a8-422e-b28f-1a20db1eb479", 'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
 del_group = nova.delete_sec_group(d)
@@ -81,15 +81,15 @@ create_def_key2 = nova.create_sec_keys(key2)
 print create_def_key2
 print "------------------------------------------------"
 time.sleep(1)
-
+'''
 print "Createing security group with default ports - default"
 #create a security group with default ports
-create_group = {"group_name": 'ffvcsec',"group_desc": 'This is a test','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+create_group = {"group_name": 'blah',"group_desc": 'This is a test','project_id':"66069dc297a449ca90582187011ac8e9"}
 sec_group = nova.create_sec_group(create_group)
 print sec_group
 print "------------------------------------------------"
 time.sleep(1)
-
+'''
 print "Createing security group with custom ports"
 #create a security group with the defualt ports
 create_group2 = {"group_name": 'ffvcsec2','project_id':"523e5098be6c4438b428d7f3f94b3a2d","group_desc": 'This is a test2',"ports":[139,22,80]}
@@ -97,7 +97,7 @@ sec_group2 = nova.create_sec_group(create_group2)
 print sec_group2
 print "------------------------------------------------"
 time.sleep(1)
-'''
+
 print "listing the security keys"
 list_key = nova.list_sec_keys()
 for lk in list_key:
@@ -107,7 +107,7 @@ for lk in list_key:
     except:
         pass
 time.sleep(1)
-
+'''
 print "listing the security groups"
 list_group = nova.list_sec_group()
 for lg in list_group:
@@ -155,7 +155,7 @@ sec_group4 = nova2.create_sec_group(create_group4)
 print sec_group4
 print "------------------------------------------------"
 time.sleep(1)
-'''
+
 print "listing the security keys"
 list_key2 = nova2.list_sec_keys()
 for lk2 in list_key2:
@@ -225,7 +225,6 @@ print create_def_key10
 print "------------------------------------------------"
 time.sleep(1)
 
-'''
 #try code path that does not include default key
 print "Get the detailed security key info"
 get_key2 = nova.get_sec_keys("keys_new")

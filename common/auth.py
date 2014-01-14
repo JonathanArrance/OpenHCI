@@ -86,7 +86,7 @@ class authorization:
                 token = ""
                 logger.sys_info("User: %s had a status level of 0. Could not get a token." %(self.username))
             elif (status_level == 2 and user_level >= 1 and exist[0][7] != ""):
-                token = _get_token(self.username,self.user_pass,exist[0][7])
+                token = get_token(self.username,self.user_pass,exist[0][7])
                 logger.sys_info("User: %s had a status level of %s. Retrieving API token." %(self.username,status_level))
             elif (status_level == 2 and user_level == 0 and is_admin == 1):
                 if(exist[0][7] == 'NULL'):
@@ -96,7 +96,7 @@ class authorization:
                     logger.sys_info("User: %s had a status level of %s. Retrieving OpenStack admin token for port 35357." %(self.username,status_level))
                     adm_token = _get_admin_token(self.db,exist[0][7])
                     logger.sys_info("User: %s had a status level of %s. Retrieving OpenStack token for port 5000." %(self.username,status_level))
-                    token = _get_token(self.username,self.user_pass,exist[0][7])
+                    token = get_token(self.username,self.user_pass,exist[0][7])
             else:
                 token = "error"
                 logger.sys_error("Could not get a token for the the user: %s. Check the system." %(self.username))
@@ -174,7 +174,7 @@ def _check_user_enabled(key,user_array):
 #       password
 #       project_id
 #OUTPUT: api_token used to run REST API commands
-def _get_token(username,password,project_id):
+def get_token(username,password,project_id):
     #submit the values passed in 
     try:
         api_dict = {"username":username, "password":password, "project_id":project_id}
@@ -186,6 +186,7 @@ def _get_token(username,password,project_id):
         #       sec - TRUE/FALSE, use https = True
         logger.sys_info("Tenant id was passwed in %s." %(username))
         body = '{"auth":{"passwordCredentials":{"username": "%s", "password":"%s"}, "tenantId":"%s"}}' %(username,password,project_id)
+        logger.sys_info("%s"%(body))
         header = {"Content-Type": "application/json"}
         function = 'POST'
         api_path = '/v2.0/tokens'
