@@ -724,12 +724,15 @@ class server_ops:
             seckey = json.loads(rest['data'])
             #check to see if there is a default key
             get_def_key = {"select":"def_security_key_id", "from":"projects", "where":"proj_id='%s'" %(key_dict['project_id'])}
+            logger.sys_info("%s"%(get_def_key))
             def_key = self.db.pg_select(get_def_key)
+            logger.sys_info("%s"%(def_key))
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
-                if((len(def_key[0]) == 0) and (self.is_admin == 1)):
+                if((len(def_key) == 0) and (self.is_admin == 1)):
                     update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(key_dict['project_id'])}
+                    logger.sys_info("%s"%(update_dict))
                     self.db.pg_update(update_dict)
                 #insert all of the relevent info into the transcirrus db
                 insert_dict = {"proj_id":self.project_id,"user_name":self.username,"user_id":self.user_id,"sec_key_id":str(seckey['keypair']['fingerprint']),"sec_key_name":str(seckey['keypair']['name']),"public_key":str(seckey['keypair']['public_key']),"private_key":str(seckey['keypair']['private_key'])}
