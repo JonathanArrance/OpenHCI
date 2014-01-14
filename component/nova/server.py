@@ -697,8 +697,8 @@ class server_ops:
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":key_dict['project_id']}
-            if(create_sec['project_id'] != self.project_id):
-                self.token = get_token(self.username,self.password,create_sec['project_id'])
+            if(key_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,key_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -801,8 +801,8 @@ class server_ops:
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":sec_dict['project_id']}
-            if(create_sec['project_id'] != self.project_id):
-                self.token = get_token(self.username,self.password,create_sec['project_id'])
+            if(sec_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,sec_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -900,8 +900,8 @@ class server_ops:
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":delete_dict['project_id']}
-            if(create_sec['project_id'] != self.project_id):
-                self.token = get_token(self.username,self.password,create_sec['project_id'])
+            if(delete_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,delete_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -1067,8 +1067,8 @@ class server_ops:
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":sec_dict['project_id']}
-            if(create_sec['project_id'] != self.project_id):
-                self.token = get_token(self.username,self.password,create_sec['project_id'])
+            if(sec_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,sec_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
