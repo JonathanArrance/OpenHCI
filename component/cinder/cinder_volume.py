@@ -116,6 +116,8 @@ class volume_ops:
                 create_flag = 1
                 print create_flag
         elif(self.is_admin == 1):
+            if(create_vol['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_vol['project_id'])
             create_flag = 1
 
         #get the name of the project based on the id
@@ -140,8 +142,6 @@ class volume_ops:
             try:
                 #build an api connection
                 api_dict = {"username":self.username, "password":self.password, "project_id":create_vol['project_id']}
-                if(create_vol['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,create_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -262,6 +262,8 @@ class volume_ops:
                 raise Exception("Users can not delete volumes outside of their project.")
         elif(self.is_admin == 1):
             logger.sys_info("The user is an admin and can delete any volume.")
+            if(delete_vol['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,delete_vol['project_id'])
             del_status = 1
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
@@ -269,7 +271,7 @@ class volume_ops:
 
         if(del_status == 1):
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":delete_vol['project_id']}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
@@ -413,11 +415,10 @@ class volume_ops:
         try:
             print get_vol_dict
             get_vol = self.db.pg_select(get_vol_dict)
-            print get_vol
         except:
             logger.sql_error("Could not get the volume info for %s" %(vol_id))
             raise Exception("Could not get the volume info for %s" %(vol_id))
 
         self.db.pg_close_connection()
-        r_dict = {'volume_name':get_vol[0][2],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
+        r_dict = {'volume_name':get_vol[0][1],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
         return r_dict

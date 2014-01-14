@@ -121,6 +121,8 @@ class snapshot_ops:
                 raise Exception("Users can not snapshot volumes outside of their project.")
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can snapshot any volume.")
+            if(create_snap['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_snap['project_id'])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
@@ -143,7 +145,7 @@ class snapshot_ops:
         if(snap_status == 1):
             #connect to the API
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":create_snap['project_id']}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
@@ -192,17 +194,23 @@ class snapshot_ops:
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
 
-    def delete_snapshot(self,snap_name):
+    def delete_snapshot(self,input_dict):
         """
         DESC: Delete a snapshot
-        INPUT: snap_name
+        INPUT: input_dict - snap_id
+                          - project_id
         OUTPUT: OK if successful
-        ACCESS: users can only snap volumes in their project, admins can snapshot any volume
+        ACCESS: Admins can delete any volume
+                Users can only snap volumes in their project.
         """
         #check to make sure all params have been passed
-        if(not snap_name):
-            logger.sys_error("Did not pass snap_name to get_snapshot operation.")
-            raise Exception("Did not pass snap_name to get_snapshot operation.")
+        if((input_dict['snap_id'] == '') or ('snap_id' not in input_dict)):
+            logger.sys_error("Did not pass snap_id to delete_snapshot operation.")
+            raise Exception("Did not pass snap_id to delete_snapshot operation.")
+        if((input_dict['project_id'] == '') or ('project_id' not in input_dict)):
+            logger.sys_error("Did not pass project_id to delete_snapshot operation.")
+            raise Exception("Did not pass project_id to delete_snapshot operation.")
+
         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to snapshot volumes.")
@@ -218,14 +226,14 @@ class snapshot_ops:
 
         #get the id of the snapshot based on the name
         try:
-            select = {"select":"snap_id,proj_id","from":"trans_system_snapshots","where":"snap_name='%s'" %(snap_name)}
-            snap_id = self.db.pg_select(select)
+            select = {"select":"snap_name","from":"trans_system_snapshots","where":"snap_id='%s'" %(input_dict['snap_id'])}
+            snap_name = self.db.pg_select(select)
         except:
-            logger.sql_error("Could not get the snap id from Transcirrus DB.")
-            raise Exception("Could not get the snap id from Transcirrus DB.")
+            logger.sql_error("Could not get the snap name from Transcirrus DB.")
+            raise Exception("Could not get the snap name from Transcirrus DB.")
 
         try:
-            select_proj = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(snap_id[0][1])}
+            select_proj = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(input_dict['project_id'])}
             proj_name = self.db.pg_select(select_proj)
         except:
             logger.sql_error("Could not get the project name from Transcirrus DB.")
@@ -235,19 +243,21 @@ class snapshot_ops:
         #default the del_status to 0 - DO NOT delete
         snap_status = 0
         #if the user proj id matches the volume proj_id they can delete the volume
-        if(self.user_level >=1):
-            if(self.project_id == snap_id[0][1]):
+        if(self.is_admin == 0):
+            if(self.project_id == input_dict['snap_id']):
                 #snap_status = 1 - list snap info
                 snap_status = 1
             else:
                 logger.sys_error("Users can not delete snapshots outside of their project.")
                 raise Exception("Users can not delete snapshots outside of their project.")
-        elif(self.user_level == 0):
+        elif(self.is_admin == 1):
             logger.sys_info("The user is an admin and can delete any snapshot.")
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             snap_status = 1
         else:
-            logger.sys_error("The user level is invalid, and can not list snap info.")
-            raise Exception("The user level is invalid, and can not list snap info.")
+            logger.sys_error("The user level is invalid, and can not delete snap.")
+            raise Exception("The user level is invalid, and can not delete snap.")
 
         #check to see if the snapshot exists
         snap_info = self.get_snapshot(snap_name)
@@ -255,7 +265,7 @@ class snapshot_ops:
         #if the snap exisits and you are allowed to delete it
         if(snap_info['snap_id'] and (snap_status == 1)):
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
@@ -268,7 +278,7 @@ class snapshot_ops:
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
                 function = 'DELETE'
-                api_path = '/v1/%s/snapshots/%s' %(snap_id[0][1],snap_id[0][0])
+                api_path = '/v1/%s/snapshots/%s' %(input_dict['project_id'],snap_info['snap_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -281,7 +291,7 @@ class snapshot_ops:
                 #remove snap info from the transcirrus db
                 try:
                     self.db.pg_transaction_begin()
-                    delete = {"table":'trans_system_snapshots',"where":"snap_id='%s'" %(snap_id[0][0])}
+                    delete = {"table":'trans_system_snapshots',"where":"snap_id='%s'" %(snap_info['snap_id'])}
                     self.db.pg_delete(delete)
                 except:
                     self.db.pg_transaction_rollback()
@@ -355,6 +365,7 @@ class snapshot_ops:
                 create_time
         ACCESS: Admins can list snapshots in any project, users and power users can list snapshots in their
                 project only
+        NOTE: This need to be changed to incorporate project_id
         """
         #check to make sure all params have been passed
         if(not snap_name):
@@ -401,6 +412,8 @@ class snapshot_ops:
                 raise Exception("Users can not get snapshots outside of their project.")
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can get the snap info on any snapshot.")
+            if(snap_id[0][1] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, and can not list snap info.")
