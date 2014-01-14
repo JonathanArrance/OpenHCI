@@ -202,6 +202,147 @@ class glance_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
+    def delete_image(self,image_id):
+        """
+        DESC: Deletes an image from the Glance catalog.Protected images can not be deleted. Only admins can delete
+              an image from the catalog for their project.
+        INPUT: image_id
+        OUTPUT: OK if deleted else http error
+        """
+        #DELETE v2/images/{image_id}
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        #connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v1/images/%s' % (image_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 200
+            if(rest['response'] == 200):
+                return "OK"
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error("Could not get image %s" %(e))
+            raise e
+
+    def list_images(self):
+        """
+        DESC: List all of the images in a project as well as any images in the Glance
+              catalog that may be set to public. All users can list the images in a
+              project.
+        INPUT: self object
+        OUTPUT: array of r_dict - image_name
+                                - image_id
+        """
+        #GET v2/images
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        #connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "User-Agent": "python/glanceclient"}
+            function = 'GET'
+            api_path = '/v1/images/detail'
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+            #check the response and make sure it is a 200 or 203
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #build up the return dictionary and return it if everything is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                img_array = []
+                for image in load['images']:
+                    line = {"image_name": str(image['name']), "image_id": str(image['id'])}
+                    img_array.append(line)
+                return img_array
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+        except Exception as e:
+            logger.sys_error("Could not list images %s" %(e))
+            raise e
+
+    def get_image(self,image_id):
+        """
+        DESC: Get detailed information about a Glance image. All users can
+              get information regarding images in their project.
+        INPUT: image_id
+        OUTPUT: r_dict - image_name
+                       - image_id
+                       - image_status
+                       - container_format
+                       - disk_format
+                       - visibility
+                       - min_disk
+                       - size
+                       - min_ram
+                       - schema
+        """
+        #GET v2/images/{image_id}
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        #connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/images/%s' % (image_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not get image %s" %(e))
+            raise e
+
+        #check the response and make sure it is a 200
+        if(rest['response'] == 200):
+            #build up the return dictionary and return it if everything is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            load = json.loads(rest['data'])
+            r_dict = {"image_name": str(load['image_name']), "image_id": image_id,"image_status": str(load['status']), "container_format": str(load['container_format']), "disk_format": str(load['disk_format']), "visibility": str(load['visibility']), "min_disk": str(load['min_disk']), "size": str(load['size']), "min_ram": str(load['min_ram']), "schema": str(load['schema'])}
+            return r_dict
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+    '''
     def create_image(self,create_dict):
         """
         DESC: Builds out a new empty container for an image binary image file.
@@ -396,142 +537,4 @@ class glance_ops:
         except Exception as e:
             logger.sys_error("Could not get image %s" %(e))
             raise e
-
-    def delete_image(self,image_id):
-        """
-        DESC: Deletes an image from the Glance catalog.Protected images can not be deleted. Only admins can delete
-              an image from the catalog for their project.
-        INPUT: image_id
-        OUTPUT: OK if deleted else http error
-        """
-        #DELETE v2/images/{image_id}
-        #Check user status level for valid range
-        if ((self.status_level > 2) or (self.status_level < 0)):
-            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
-            raise Exception("Invalid status level passed for user: %s" %(self.username))
-
-        #connect to the rest api caller.
-        try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            api = caller(api_dict)
-        except:
-            logger.sys_error("Could not connect to the API caller")
-            raise Exception("Could not connect to the API caller")
-
-        try:
-            body = ""
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'DELETE'
-            api_path = '/v1/images/%s' % (image_id)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
-            rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200
-            if(rest['response'] == 200):
-                return "OK"
-            else:
-                util.http_codes(rest['response'],rest['reason'])
-        except Exception as e:
-            logger.sys_error("Could not get image %s" %(e))
-            raise e
-
-    def list_images(self):
-        """
-        DESC: List all of the images in a project as well as any images in the Glance
-              catalog that may be set to public. All users can list the images in a
-              project.
-        INPUT: self object
-        OUTPUT: array of r_dict - image_name
-                                - image_id
-        """
-        #GET v2/images
-        #Check user status level for valid range
-        if ((self.status_level > 2) or (self.status_level < 0)):
-            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
-            raise Exception("Invalid status level passed for user: %s" %(self.username))
-
-        #connect to the rest api caller.
-        try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            api = caller(api_dict)
-        except:
-            logger.sys_error("Could not connect to the API caller")
-            raise Exception("Could not connect to the API caller")
-
-        try:
-            body = ""
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "User-Agent": "python/glanceclient"}
-            function = 'GET'
-            api_path = '/v1/images/detail'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
-            rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 203
-            if((rest['response'] == 200) or (rest['response'] == 203)):
-                #build up the return dictionary and return it if everything is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                img_array = []
-                for image in load['images']:
-                    line = {"image_name": str(image['name']), "image_id": str(image['id'])}
-                    img_array.append(line)
-                return img_array
-            else:
-                util.http_codes(rest['response'],rest['reason'])
-        except Exception as e:
-            logger.sys_error("Could not list images %s" %(e))
-            raise e
-
-    def get_image(self,image_id):
-        """
-        DESC: Get detailed information about a Glance image. All users can
-              get information regarding images in their project.
-        INPUT: image_id
-        OUTPUT: r_dict - image_name
-                       - image_id
-                       - image_status
-                       - container_format
-                       - disk_format
-                       - visibility
-                       - min_disk
-                       - size
-                       - min_ram
-                       - schema
-        """
-        #GET v2/images/{image_id}
-        #Check user status level for valid range
-        if ((self.status_level > 2) or (self.status_level < 0)):
-            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
-            raise Exception("Invalid status level passed for user: %s" %(self.username))
-
-        #connect to the rest api caller.
-        try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            api = caller(api_dict)
-        except:
-            logger.sys_error("Could not connect to the API caller")
-            raise Exception("Could not connect to the API caller")
-
-        try:
-            body = ""
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'GET'
-            api_path = '/v2/images/%s' % (image_id)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
-            rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200
-            if(rest['response'] == 200):
-                #build up the return dictionary and return it if everything is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
-                r_dict = {"image_name": str(load['name']), "image_id": str(load['id']),"image_status": str(load['status']), "container_format": str(load['container_format']), "disk_format": str(load['disk_format']), "visibility": str(load['visibility']), "min_disk": str(load['min_disk']), "size": str(load['size']), "min_ram": str(load['min_ram']), "schema": str(load['schema'])}
-                return r_dict
-            else:
-                util.http_codes(rest['response'],rest['reason'])
-        except Exception as e:
-            logger.sys_error("Could not get image %s" %(e))
-            raise e
+    '''

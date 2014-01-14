@@ -14,7 +14,7 @@ from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.glance.glance_ops import glance_ops
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","builder")
+c= authorization("bill","test")
 
 print "Get admin authorization dictionary..."
 b = c.get_auth()
@@ -22,20 +22,27 @@ b = c.get_auth()
 print "Image..."
 i= glance_ops(b)
 print i
-print
 
 print "List Images..."
 li = i.list_images()
 print li
 print
+'''
+for x in li:
+    print "Get Image %s..." % (str(li[1]['image_id']))
+    gi = i.get_image(str(li[1]['image_id']))
+    print gi
+    name = gi['image_name']
+    print name
+'''
 
-print "Get Image %s..." % (str(li[1]['image_id']))
-gi = i.get_image(str(li[1]['image_id']))
-print gi
-print
+get_image = {'img_name':'ffvcimage','img_disk_format':'ami','img_is_public':'true','img_is_protected':'true',
+             'project_id':'523e5098be6c4438b428d7f3f94b3a2d','url':'http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img'}
+yup = i.import_image(get_image)
+print yup
 
-name = gi['image_name']
 
+'''
 print "Update Image %s..." % (str(li[0]['image_id']))
 update = [
             {"x-image-meta-name": "test"}
@@ -59,24 +66,4 @@ create_dict = {"image_name": "TEST1", "disk_format": "vhd", "container_format": 
 ci = i.create_image(create_dict)
 print ci
 print
-
-print "List Images..."
-li = i.list_images()
-print li
-print
-
-print "Get Image %s..." % (str(li[0]['image_id']))
-gi = i.get_image(str(li[0]['image_id']))
-print gi
-print
-
-#print "Delete Image %s..." % (str(li[0]['image_id']))
-#di = i.delete_image(str(li[0]['image_id']))
-#print di
-#print
-
-print "List Images..."
-li = i.list_images()
-print li
-print
-
+'''

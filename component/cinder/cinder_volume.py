@@ -415,11 +415,10 @@ class volume_ops:
         try:
             print get_vol_dict
             get_vol = self.db.pg_select(get_vol_dict)
-            print get_vol
         except:
             logger.sql_error("Could not get the volume info for %s" %(vol_id))
             raise Exception("Could not get the volume info for %s" %(vol_id))
 
         self.db.pg_close_connection()
-        r_dict = {'volume_name':get_vol[0][2],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
+        r_dict = {'volume_name':get_vol[0][1],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
         return r_dict
