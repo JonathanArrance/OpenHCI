@@ -210,7 +210,6 @@ def ajax_take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
         auth = request.session['auth']
         sno = snapshot_ops(auth)
         create_snap = {'snap_name': snap_name, 'snap_desc': snap_desc, 'vol_id': vol_id, 'project_id': project_id}
-	import pdb; pdb.set_trace()
         sno.create_snapshot(create_snap)  
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]

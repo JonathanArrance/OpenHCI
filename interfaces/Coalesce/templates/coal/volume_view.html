@@ -62,7 +62,7 @@
 	    {% if snapshots %}
                 <tr> <th>snapshots</th> <th></th> <th></th></tr>
                     {% for snapshot in snapshots %}
-			{% if snapshot.volume_id == volume_info.volume_id %}
+			{% if snapshot.vol_id == volume_info.volume_id %}
 		      	    <tr> <td>{{snapshot}}</td>  <td></td>  <td></td></tr>
 			{% endif %}
 		    {% endfor %}
