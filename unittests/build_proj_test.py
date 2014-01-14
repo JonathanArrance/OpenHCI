@@ -14,14 +14,14 @@ a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 print d
-'''
+
 print "Instantiating a new tenant ops object."
 ten = tenant_ops(d)
 time.sleep(1)
 print "----------------------------------------"
 
 print "creating test project"
-proj = ten.create_tenant("ffvc")
+proj = ten.create_tenant("ffvc2")
 print proj
 time.sleep(1)
 print "----------------------------------------"
@@ -31,14 +31,18 @@ use = user_ops(d)
 nova = server_ops(d)
 
 print "Create a new standard user with no project."
+
 new_user_dict = {"username":'jill',"password":"test","userrole":"pu","email":"jill@domain.com"}
+
 create = use.create_user(new_user_dict)
 print create
 time.sleep(1)
 print "----------------------------------------"
 
 print "Adding user %s to test project" %(create['username'])
+
 add_user_dict = {"username":"jill","user_role":'pu',"project_name":'yo'}
+
 add = use.add_user_to_project(add_user_dict)
 print add
 time.sleep(1)
@@ -64,14 +68,14 @@ add2 = use.add_user_to_project(add_user_dict2)
 print add2
 '''
 print "Create a new standard user with no project."
-new_user_dict = {"username":'bill2',"password":"test","userrole":"user","email":"test@domain.com"}
+new_user_dict = {"username":'bill4',"password":"test","userrole":"user","email":"test@domain.com"}
 create = use.create_user(new_user_dict)
 print create
 time.sleep(1)
 print "----------------------------------------"
 
 print "Adding user %s to test project" %(create['username'])
-add_user_dict = {"username":"bill2","user_role":'user',"project_name":'ffvc'}
+add_user_dict = {"username":"bill4","user_role":'user',"project_name":'ffvc2'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
@@ -85,7 +89,7 @@ net = neutron_net_ops(d)
 
 
 print "creating a new network"
-create = {'net_name':"ffvcnet",'admin_state':"true", 'shared':"true",'project_id':"daf2a16e972c4cf4aaa8f722acccdd70"}
+create = {'net_name':"ffvcnet2",'admin_state':"true", 'shared':"true",'project_id':"proj['project_id']"}
 newnet = net.add_private_network(create)
 print newnet
 

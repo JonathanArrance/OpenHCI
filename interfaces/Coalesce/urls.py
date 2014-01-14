@@ -73,6 +73,15 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.ajax_remove_user_from_project',
             name='remove_user_from_project'),
 
+	url(r'^AJAX/update_user_password/(?P<user_id>[^/]+)/(?P<password>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_update_user_password',
+            name='update_user_password'),
+
+	# --- Security Group actions ----
+	url(r'^AJAX/create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_create_security_group',
+            name='create_security_group'),
+
         # --- Setup ----
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',
