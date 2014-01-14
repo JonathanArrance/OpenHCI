@@ -269,7 +269,9 @@ class volume_ops:
 
         if(del_status == 1):
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":delete_vol['project_id']}
+                if(delete_vol['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,delete_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
