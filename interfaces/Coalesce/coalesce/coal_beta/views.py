@@ -107,12 +107,13 @@ def project_view(request, project_name):
     routers= l3o.list_routers()
     volumes = vo.list_volumes()
     snapshots=sno.list_snapshots()
+    sec_groups = so.list_sec_group()
+    sec_keys = so.list_sec_keys()
 
     networks={}
     for net in network_list:
         networks[net['net_name']]= no.get_network(net['net_id'])
-    sec_groups = so.list_sec_group()
-    sec_keys = so.list_sec_keys()
+
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -146,6 +147,21 @@ def ajax_create_user(request, username, password, userrole, email, project_name 
         user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
         newuser= uo.create_user(user_dict)
         return HttpResponse(newuser['user_id'])
+    except:
+        return HttpResponse(status=500)
+
+
+def ajax_create_security_group(request, groupname, groupdesc, ports, project_id):
+    try:
+	portstrings    = ports.split(',')
+	portlist = []
+	for port in portstrings:
+	    portlist.append(int(port))
+        auth = request.session['auth']
+        so = server_ops(auth)
+        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
+        newgroup= so.create_sec_group(create_sec)  
+        return HttpResponse(newgroup['sec_group_id'])
     except:
         return HttpResponse(status=500)
       
@@ -199,7 +215,21 @@ def ajax_add_existing_user(request, username, user_role, project_name):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)     
+        return HttpResponse(status=500)  
+
+
+def ajax_update_user_password(request, user_id, project_id, new_password):
+    try:
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        user_dict = {'user_id': user_id, 'project_id':project_id}
+        uo.remove_user_from_project(user_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        return HttpResponse(status=500)  
 
 
 
