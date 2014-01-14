@@ -616,13 +616,14 @@ class server_ops:
             security = json.loads(rest['data'])
             get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(create_sec['project_id'])}
             def_group = self.db.pg_select(get_def_group)
+            logger.sys_info("%s"%(def_group))
             try:
-                print self.is_admin
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
-                if((def_group[0][0] == '0') and (self.is_admin == 1)):
-                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
-                    self.db.pg_update(update_dict)
+                if(def_group[0][0] == '0'):
+                    if(self.is_admin == 1):
+                        update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
+                        self.db.pg_update(update_dict)
                 #add the security group info to the database
                 insert_dict = {"proj_id":create_sec['project_id'],"user_name":self.username,"user_id":self.user_id,"sec_group_id":str(security['security_group']['id']),"sec_group_name":str(security['security_group']['name']),"sec_group_desc":create_sec['group_desc']}
                 self.db.pg_insert("trans_security_group",insert_dict)
