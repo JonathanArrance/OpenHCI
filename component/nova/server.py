@@ -8,6 +8,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -586,7 +587,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":create_sec['project_id']}
+            if(create_sec['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,create_sec['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -595,7 +598,7 @@ class server_ops:
         #create a new security group in the project
         try:
             body = '{"security_group": {"name": "%s", "description": "%s"}}' %(create_sec['group_name'],create_sec['group_desc'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id":project[0][0]}
             function = 'POST'
             api_path = '/v2/%s/os-security-groups' %(create_sec['project_id'])
             token = self.token
@@ -604,7 +607,7 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             self.db.pg_transaction_rollback()
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not create security group %s" %(e))
             raise e
 
         if((rest['response'] == 200) or (rest['response'] == 203)):
@@ -613,12 +616,14 @@ class server_ops:
             security = json.loads(rest['data'])
             get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(create_sec['project_id'])}
             def_group = self.db.pg_select(get_def_group)
+            logger.sys_info("%s"%(def_group))
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
-                if((def_group[0][0] == "NULL") and (self.is_admin == 1)):
-                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
-                    self.db.pg_update(update_dict)
+                if(def_group[0][0] == '0'):
+                    if(self.is_admin == 1):
+                        update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
+                        self.db.pg_update(update_dict)
                 #add the security group info to the database
                 insert_dict = {"proj_id":create_sec['project_id'],"user_name":self.username,"user_id":self.user_id,"sec_group_id":str(security['security_group']['id']),"sec_group_name":str(security['security_group']['name']),"sec_group_desc":create_sec['group_desc']}
                 self.db.pg_insert("trans_security_group",insert_dict)
@@ -693,7 +698,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":key_dict['project_id']}
+            if(key_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,key_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -720,11 +727,13 @@ class server_ops:
             #check to see if there is a default key
             get_def_key = {"select":"def_security_key_id", "from":"projects", "where":"proj_id='%s'" %(key_dict['project_id'])}
             def_key = self.db.pg_select(get_def_key)
+            print self.is_admin
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
-                if((def_key[0][0] == "NULL") and (self.is_admin == 1)):
-                    update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(key_dict['project_id'])}
+                if(def_key[0][0] == '0'):
+                    if(self.is_admin == 1):
+                        update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(key_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #insert all of the relevent info into the transcirrus db
                 insert_dict = {"proj_id":self.project_id,"user_name":self.username,"user_id":self.user_id,"sec_key_id":str(seckey['keypair']['fingerprint']),"sec_key_name":str(seckey['keypair']['name']),"public_key":str(seckey['keypair']['public_key']),"private_key":str(seckey['keypair']['private_key'])}
@@ -795,7 +804,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":sec_dict['project_id']}
+            if(sec_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,sec_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -885,14 +896,16 @@ class server_ops:
         #if so set the flag
         flag = 0
         if((self.user_level == 0) or (self.user_level == 1)):
-            check_def_dict = {"select":'def_security_key_id',"from":'projects', "where":"proj_id='%s'" %(delete_dict['project_id']),"and":"def_security_key_name='%s'" %(get_key[0][3])}
+            check_def_dict = {"select":'def_security_key_id',"from":'projects', "where":"proj_id='%s'" %(delete_dict['project_id']),"and":"def_security_key_name='%s'" %(get_key[0][4])}
             check_def = self.db.pg_select(check_def_dict)
             if(check_def):
                 flag = 1
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":delete_dict['project_id']}
+            if(delete_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,delete_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -923,7 +936,7 @@ class server_ops:
                     update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(delete_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #delete the security group from the db
-                del_dict = {"table":'trans_security_keys',"where":"sec_key_id='%s'" %(get_key[0][2])}
+                del_dict = {"table":'trans_security_keys',"where":"sec_key_id='%s'" %(get_key[0][3])}
                 self.db.pg_delete(del_dict)
             except:
                 self.db.pg_transaction_rollback()
@@ -950,7 +963,6 @@ class server_ops:
 
         if(self.is_admin == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group'}
-            logger.sys_info("%s"%(get_group_dict))
         elif(self.user_level == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(self.project_id)}
         elif(self.user_level == 2):
@@ -967,7 +979,7 @@ class server_ops:
         group_array = []
         #build an array of r_dict
         for group in groups:
-            r_dict = {"sec_group_name":group[4],"sec_group_id":group[3],"username":group[2]}
+            r_dict = {"sec_group_name":group[5],"sec_group_id":group[4],"username":group[2]}
             group_array.append(r_dict)
 
         #return the array
@@ -1003,7 +1015,7 @@ class server_ops:
         key_array = []
         #build an array of r_dict
         for key in keys:
-            r_dict = {"key_name":key[3],"key_id":key[2],"username":key[1]}
+            r_dict = {"key_name":key[4],"key_id":key[3],"username":key[1]}
             key_array.append(r_dict)
 
         #return the array
@@ -1057,7 +1069,9 @@ class server_ops:
 
         #connect to the rest api caller.
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":sec_dict['project_id']}
+            if(sec_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,sec_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API caller")
@@ -1085,7 +1099,7 @@ class server_ops:
             for rule in load['security_group']['rules']:
                 rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr'])}
                 rule_array.append(rule_dict)
-            r_dict = {'sec_group_name':get_group[0][4], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array}
+            r_dict = {'sec_group_name':get_group[0][5], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])
@@ -1119,5 +1133,5 @@ class server_ops:
             logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(sec_key_name,self.project_id))
             raise Exception("Could not get the security group info for sec_key_name: %s in project: %s" %(sec_key_name,self.project_id))
 
-        r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2]}
+        r_dict = {'sec_key_name':get_key[0][4],'user_name':get_key[0][1],'sec_key_id':get_key[0][3],'public_key':get_key[0][5]}
         return r_dict

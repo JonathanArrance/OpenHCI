@@ -10,12 +10,12 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 from transcirrus.common.auth import authorization
 from transcirrus.operations.change_adminuser_password import change_admin_password
-from celery.result import AsyncResult
-from celery import task
-from celery import Celery
+#from celery.result import AsyncResult
+#from celery import task
+#from celery import Celery
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","password")
+c= authorization("admin","builder")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()
@@ -26,8 +26,8 @@ b = c.get_auth()
 #while password.ready() == False:
 #    print "waiting"
 
-result = change_admin_password.delay(b,"builder")
+result = change_admin_password(b,"password")
 print result
 
-res = AsyncResult(result.task_id)
-print res.status
+#res = AsyncResult(result.task_id)
+#print res.status

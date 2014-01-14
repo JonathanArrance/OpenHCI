@@ -84,7 +84,8 @@ time.sleep(1)
 '''
 print "Createing security group with default ports - default"
 #create a security group with default ports
-create_group = {"group_name": 'ffvcsec5',"group_desc": 'This is a test','project_id':"daf2a16e972c4cf4aaa8f722acccdd70"}
+
+create_group = {"group_name": 'blah',"group_desc": 'This is a test','project_id':"66069dc297a449ca90582187011ac8e9"}
 sec_group = nova.create_sec_group(create_group)
 print sec_group
 print "------------------------------------------------"
@@ -107,7 +108,7 @@ for lk in list_key:
     except:
         pass
 time.sleep(1)
-
+'''
 print "listing the security groups"
 list_group = nova.list_sec_group()
 for lg in list_group:
@@ -224,7 +225,6 @@ create_def_key10 = nova3.create_sec_keys(key10)
 print create_def_key10
 print "------------------------------------------------"
 time.sleep(1)
-
 
 #try code path that does not include default key
 print "Get the detailed security key info"
