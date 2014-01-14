@@ -139,6 +139,8 @@ class volume_ops:
             try:
                 #build an api connection
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(create_vol['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,create_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")

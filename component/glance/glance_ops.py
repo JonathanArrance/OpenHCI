@@ -81,6 +81,127 @@ class glance_ops:
         #close any open db connections
         self.db.close_connection()
 
+    def import_image(self,input_dict):
+        """
+        DESC: Import a pre-made glance image .img file
+        INPUT: input_dict - img_name
+                          - img_disk_format
+                          - img_is_public (true/false)
+                          - img_is_protected(true/false)
+                          - project_id
+                          - url - op
+                          - file_location - op
+        OUTPUT: OK - success
+                ERROR - fail
+        ACCESS: Admins will be able to create universal images and images in projects
+                Power users will only be able to create images in their project, images are not
+                visible to other projects
+                Users can not import images.
+        NOTE: Either URL or file_location need to be specified it neither are specified and ERROR will be
+              thrown. Power users have defaults set for img_is_public,img_is_protected,img_disk_format,project_id.
+              If you specify both a file location and a url error will be thrown
+        """
+        #print "not implemented"
+        #POST v2/images
+        #Check user status level for valid range
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        if(self.user_level == 2):
+            logger.sys_error('Users can not import images.')
+            return 'ERROR'
+
+        #make the project exists
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sql_error('Could not get the project')
+            raise Exception('Could not get the project')
+
+        if(self.user_level == 1):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error('Power users can only create an image in their project.')
+                raise Exception('Power users can only create an image in their project.')
+            input_dict['img_is_public'] == 'false'
+            input_dict['img_is_protected'] == 'false'
+            input_dict['img_disk_format'] == 'qcow2'
+            input_dict['project_id'] == self.project_id
+
+        if(('img_name' not in input_dict) or (input_dict['img_name'] == '')):
+            logger.sys_error('Image name not specified')
+            raise Exception('Image name not specified')
+        if(('img_disk_format' not in input_dict) or (input_dict['img_disk_format'] == '')):
+            logger.sys_error('Image disk format not specified')
+            raise Exception('Image disk format not specified')
+        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
+            logger.sys_error('Image project not specified')
+            raise Exception('Image project not specified')
+        if(('img_is_public' not in input_dict) or (input_dict['img_is_public'] == '')):
+            logger.sys_error('Image public not specified')
+            raise Exception('Image public not specified')
+        if(('img_is_protected' not in input_dict) or (input_dict['img_is_protected'] == '')):
+            logger.sys_error('Image project not specified')
+            raise Exception('Image project not specified')
+
+        #HACK python and not working - to tired to troubleshoot
+        if(('url' not in input_dict) or (input_dict['url'] == '')):
+            if(('file_location' not in input_dict) or (input_dict['file_location'] == '')):
+                logger.sys_error('Must specify a file location or url')
+                raise Exception('Must specify a file location or url')
+        if(('file_location' not in input_dict) or (input_dict['file_location'] == '')):
+            if(('url' not in input_dict) or (input_dict['url'] == '')):
+                logger.sys_error('Must specify a file location or url')
+                raise Exception('Must specify a file location or url')
+
+        if(input_dict['file_location'] and input_dict['url']):
+            logger.sys_error('Can not specify both file location and a url for the same image.')
+            raise Exception('Can not specify both file location and a url for the same image.')
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        try:
+            body = None
+            if(input_dict['url']):
+                body = 'None'
+            else:
+                body = ''
+            header = {"User-Agent": "python/glanceclient",
+                      "Content-Type": "application/octet-stream",
+                      "X-Auth-Token": self.token,
+                      "x-image-meta-name": input_dict['img_name'],
+                      "x-image-meta-disk_format": input_dict['img_disk_format'],
+                      "x-image-meta-container-format": input_dict['img_disk_format'],
+                      "x-image-meta-is-public": input_dict['img_is_public'],
+                      "x-image-meta-location": input_dict['url'],
+                      "x-image-meta-owner": input_dict['project_id']
+                    }
+            function = 'POST'
+            api_path = '/v1/images'
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
+
+        if(rest['response'] == 201):
+            #build up the return dictionary and return it if everything is good to go
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            #load = json.loads(rest['data'])
+            return 'OK'
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
     def create_image(self,create_dict):
         """
         DESC: Builds out a new empty container for an image binary image file.
