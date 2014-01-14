@@ -10,6 +10,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -138,7 +139,7 @@ class volume_ops:
         if(create_flag == 1):
             try:
                 #build an api connection
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":create_vol['project_id']}
                 if(create_vol['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,create_vol['project_id'])
                 api = caller(api_dict)

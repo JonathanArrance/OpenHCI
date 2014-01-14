@@ -11,6 +11,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
