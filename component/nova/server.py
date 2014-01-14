@@ -617,6 +617,7 @@ class server_ops:
             get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(create_sec['project_id'])}
             def_group = self.db.pg_select(get_def_group)
             try:
+                print self.is_admin
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
                 if((def_group[0][0] == '0') and (self.is_admin == 1)):
@@ -725,6 +726,7 @@ class server_ops:
             #check to see if there is a default key
             get_def_key = {"select":"def_security_key_id", "from":"projects", "where":"proj_id='%s'" %(key_dict['project_id'])}
             def_key = self.db.pg_select(get_def_key)
+            print self.is_admin
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
