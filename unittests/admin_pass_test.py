@@ -15,7 +15,7 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 #from celery import Celery
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","builder")
+c= authorization("admin","password")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()
