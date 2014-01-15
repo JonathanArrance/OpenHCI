@@ -303,7 +303,7 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
     ran = run_setup(new_system_variables, user_dict)
-    pass_dict = {"new_password": pwd, "project_id": user_dict['project_id'], "user_id": user_dict['user_id']}
+    change_admin_password(user_dict, pwd)
     timeout = 20
 
     if(ran == "OK"):
