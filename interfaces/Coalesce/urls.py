@@ -32,7 +32,6 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.node_view',
             name='node_view'),
 
-
         url(r'^nodes/manage/$',
             'coalesce.coal_beta.views.manage_nodes',
             name='manage_nodes'),
@@ -46,10 +45,21 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.user_view',
             name='user_view'),
 
-
         url(r'^projects/manage/$',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
+
+        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<vol_id>[^/]+)/$',
+            'coalesce.coal_beta.views.volume_view',
+            name='view_volume'),
+
+	url(r'^AJAX/create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_create_volume',
+            name='create_volume'),
+
+	url(r'^AJAX/take_snapshot/(?P<snap_name>[^/]+)/(?P<snap_desc>[^/]+)/(?P<vol_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_take_snapshot',
+            name='take_snapshot'),
 	
 	# --- User actions ----
 	url(r'^AJAX/create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_name>[^/]+)/$',
@@ -77,10 +87,14 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.ajax_update_user_password',
             name='update_user_password'),
 
-	# --- Security Group actions ----
+	# --- Security actions ----
 	url(r'^AJAX/create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.ajax_create_security_group',
             name='create_security_group'),
+
+	url(r'^AJAX/create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.ajax_create_keypair',
+            name='create_keypair'),
 
         # --- Setup ----
         url(r'^setup/$',

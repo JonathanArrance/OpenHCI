@@ -17,6 +17,9 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/add_existing_user.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/update_user_password.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/volume-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-dialog-form.js"/></script>
     <script>
       var PROJECT = "{{ project.project_name}}";
     </script>
@@ -47,17 +50,6 @@ $(document).ready(function() {
     <div class="span12 well legend-header">
         {{ project.project_name}} ({{project.project_id}}) <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
     </div>
-
-    <!--<b>def_security_group_name</b>: {{project.def_security_group_name}}<br>
-    <b>def_security_key_name</b>: {{project.def_security_key_name}}<br>
-    <b>host_system_name</b>: {{project.host_system_name}}<br>
-    <b>project_name</b>: {{project.project_name}}<br>
-    <b>def_network_id</b>: {{project.def_network_id}}<br>
-    <b>def_security_key_id</b>: {{project.def_security_key_id}}<br>
-    <b>host_system_ip</b>: {{project.host_system_ip}}<br>
-    <b>def_network_name</b>: {{project.def_network_name}}<br>
-    <b>project_id</b>: {{project.project_id}}<br>
-    <b>def_security_group_id</b>: {{project.def_security_group_id}}<br>-->
     
     <!--  Begin Row One -->
     <div class="row-fluid"> 
@@ -193,7 +185,21 @@ $(document).ready(function() {
         <div class="well">
           <div class="legend">
              Key Pairs
+             <a href="#"  id="create-keypair" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Key Pair</a>
+ 		
           </div>
+
+	    <div id="keypair-dialog-form" title="Create new key pair">
+ 		<p class="validateTips">Enter a name for the key pair.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="name">Key Pair Name</label>
+                    <input type="text" name="key_name" id="key_name"  class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
+
           <table class="paleblue">
 	    {% if sec_keys %}
                 <tr> <th>key_name</th> <th>key_id</th> <th>owner_name</th></tr>
@@ -219,27 +225,36 @@ $(document).ready(function() {
         <div class="well">
           <div class="legend">
              Volume Storage
+		<a href="#"  id="create-volume" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Volume</a>	
           </div>
+
+	    <div id="volume-dialog-form" title="Create new volume">
+ 		<p class="validateTips">All fields except description are required.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="volume_name">Volume Name</label>
+                    <input type="text" name="volume_name" id="volume_name"  class="text ui-widget-content ui-corner-all" />
+                    <label for="volume_size">Volume Size</label>
+                    <input type="text" name="volume_size" id="volume_size"  class="text ui-widget-content ui-corner-all" />
+                    <label for="description">Description</label>
+                    <input type="text" name="description" id="description"  class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
+
+	
+
            <table class="paleblue">
 	    {% if volumes %}
                 <tr> <th>volume</th> <th></th> <th></th></tr>
                     {% for volume in volumes %}
-		      <tr> <td>{{volume}}</td>  <td></td>  <td></td></tr>
+		      <tr> <td>{{volume}}</td>  <td></td>  <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.vol_id}}/">view</a> </td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>
 		{% endif %}
           </table>
-        </div>
-      </div>
-      
-      <!-- Begin Containers widget-->
-      <div class="span4">
-        <div class="well">
-          <div class="legend">
-             Object Containers
-          </div>
-          <p> Not yet implemented.</p>
         </div>
       </div>
       
@@ -259,6 +274,16 @@ $(document).ready(function() {
 		  <p><i>This project has no snapshots</i></p>
 		{% endif %}
           </table>
+        </div>
+      </div>
+
+      <!-- Begin Containers widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Object Containers
+          </div>
+          <p> Not yet implemented.</p>
         </div>
       </div>
 
