@@ -15,7 +15,7 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 #from celery import Celery
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","password")
+c= authorization("admin","test")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()
@@ -26,7 +26,7 @@ b = c.get_auth()
 #while password.ready() == False:
 #    print "waiting"
 
-result = change_admin_password(b,"test")
+result = change_admin_password(b,"password")
 print result
 
 #res = AsyncResult(result.task_id)
