@@ -231,6 +231,9 @@ def setup(d):
         return
     else:
         d.msgbox("Continue to first time setup.")
+        flag_set = node_util.set_first_time_boot('SET')
+        if(flag_set != 'OK'):
+            d.msgbox("An error has occured in setting the first time boot flag.")
 
     while(True):
         uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d)
@@ -309,7 +312,7 @@ def setup(d):
     if(ran == "OK"):
         success(d, timeout)
         clear_screen(d)
-        os.system('sudo reboot')
+        util.reboot_system()
 
     else:
         rollback(d, timeout)

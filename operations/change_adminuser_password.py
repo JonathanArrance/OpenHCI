@@ -25,8 +25,8 @@ def change_admin_password(auth_dict,new_password):
         #    logger.sys_error('Error changing password for admin')
         #    return 'ERROR'
         #elif(r == 0):
-        print ('echo admin:'+new_password+' | chpasswd')
-        os.system('echo admin:'+new_password+' | chpasswd')
+        print ('echo -e '+new_password+'\n'+new_password+'\n | sudo passwd admin')
+        os.system('echo \''+new_password+'\n'+new_password+'\n\' | sudo passwd admin')
         logger.sys_info("Password for admin user successfully changed.")
         #instantiate the object
         new = user_ops(auth_dict)

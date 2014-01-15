@@ -26,7 +26,7 @@ b = c.get_auth()
 #while password.ready() == False:
 #    print "waiting"
 
-result = change_admin_password(b,"builder")
+result = change_admin_password(b,"test")
 print result
 
 #res = AsyncResult(result.task_id)
