@@ -77,7 +77,7 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					   $.post('/AJAX/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/');
+					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}
