@@ -87,7 +87,7 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/AJAX/update_user_password/' + name.val() + '/' + password1.val() + '/' + PROJECT_ID + '/');
+						$.post('/update_user_password/' + name.val() + '/' + password1.val() + '/' + PROJECT_ID + '/');
 					  
 						
 						$( this ).dialog( "close" );

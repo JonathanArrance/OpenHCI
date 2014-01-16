@@ -137,6 +137,7 @@ def user_view(request, project_name, user_name):
                                RequestContext(request, { 'project_name': project_name,
                                                         'user_info': user_info,
                                                         }))
+
 def volume_view(request, project_id, vol_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
@@ -152,7 +153,7 @@ def volume_view(request, project_id, vol_id):
                                                         }))
 	       	       
 
-def ajax_create_user(request, username, password, userrole, email, project_name = None):
+def create_user(request, username, password, userrole, email, project_name = None):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
@@ -165,7 +166,7 @@ def ajax_create_user(request, username, password, userrole, email, project_name 
         return HttpResponse(status=500)
 
 
-def ajax_create_security_group(request, groupname, groupdesc, ports, project_id):
+def create_security_group(request, groupname, groupdesc, ports, project_id):
     try:
 	portstrings    = ports.split(',')
 	portlist = []
@@ -181,7 +182,7 @@ def ajax_create_security_group(request, groupname, groupdesc, ports, project_id)
     except:
         return HttpResponse(status=500)
 
-def ajax_create_keypair(request, key_name, project_id):
+def create_keypair(request, key_name, project_id):
     try:
         auth = request.session['auth']
         so = server_ops(auth)
@@ -193,7 +194,7 @@ def ajax_create_keypair(request, key_name, project_id):
     except:
         return HttpResponse(status=500)
 
-def ajax_create_volume(request, volume_name, volume_size, description, project_id):
+def create_volume(request, volume_name, volume_size, description, project_id):
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
@@ -205,7 +206,7 @@ def ajax_create_volume(request, volume_name, volume_size, description, project_i
     except:
         return HttpResponse(status=500)
 
-def ajax_take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
+def take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
     try:
         auth = request.session['auth']
         sno = snapshot_ops(auth)
@@ -218,7 +219,7 @@ def ajax_take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
         return HttpResponse(status=500)
       
       
-def ajax_toggle_user(request, username, toggle):
+def toggle_user(request, username, toggle):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
@@ -231,7 +232,7 @@ def ajax_toggle_user(request, username, toggle):
     except:
         return HttpResponse(status=500)
       
-def ajax_delete_user(request, username, userid):
+def delete_user(request, username, userid):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
@@ -244,7 +245,7 @@ def ajax_delete_user(request, username, userid):
     except:
         return HttpResponse(status=500)
       
-def ajax_remove_user_from_project(request, user_id, project_id):
+def remove_user_from_project(request, user_id, project_id):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
@@ -257,7 +258,7 @@ def ajax_remove_user_from_project(request, user_id, project_id):
     except:
         return HttpResponse(status=500)
       
-def ajax_add_existing_user(request, username, user_role, project_name):
+def add_existing_user(request, username, user_role, project_name):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
@@ -270,7 +271,7 @@ def ajax_add_existing_user(request, username, user_role, project_name):
         return HttpResponse(status=500)  
 
 
-def ajax_update_user_password(request, user_id, project_id, new_password):
+def update_user_password(request, user_id, project_id, new_password):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
@@ -282,6 +283,28 @@ def ajax_update_user_password(request, user_id, project_id, new_password):
 
     except:
         return HttpResponse(status=500)  
+
+def network_view(request, net_id):
+    auth = request.session['auth']
+    no = neutron_net_ops(auth)
+    nw = no.get_network(net_id)
+
+    return render_to_response('coal/network_view.html',
+                               RequestContext(request, {
+                                                        'nw': nw,
+                                                        }))
+
+def add_private_network(request, net_name, admin_state, shared, project_id):
+    try:
+        auth = request.session['auth']
+        no = neutron_net_ops(auth)
+        create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
+        no.add_private_network(create_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
 
 
 
@@ -296,41 +319,41 @@ def setup(request):
     if request.method == 'POST':
         form = SetupForm(request.POST)
         if form.is_valid():
-            management_ip = form.cleaned_data['management_ip']
-            uplink_ip = form.cleaned_data['uplink_ip']
-            vm_ip_min = form.cleaned_data['vm_ip_min']
-            vm_ip_max = form.cleaned_data['vm_ip_max']
-            uplink_dns = form.cleaned_data['uplink_dns']
-            uplink_gateway = form.cleaned_data['uplink_gateway']
-            uplink_domain_name = form.cleaned_data['uplink_domain_name']
-            uplink_subnet = form.cleaned_data['uplink_subnet']
-            mgmt_domain_name = form.cleaned_data['mgmt_domain_name']
-            mgmt_subnet = form.cleaned_data['mgmt_subnet']
-            mgmt_dns = form.cleaned_data['mgmt_dns']
-            cloud_name  = form.cleaned_data['cloud_name']
-            single_node = form.cleaned_data['single_node']
-            admin_password = form.cleaned_data['admin_password']
-            admin_password_confirm = form.cleaned_data['admin_password_confirm']
+            management_ip 		= form.cleaned_data['management_ip']
+            uplink_ip 			= form.cleaned_data['uplink_ip']
+            vm_ip_min 			= form.cleaned_data['vm_ip_min']
+            vm_ip_max 			= form.cleaned_data['vm_ip_max']
+            uplink_dns 			= form.cleaned_data['uplink_dns']
+            uplink_gateway 		= form.cleaned_data['uplink_gateway']
+            uplink_domain_name 		= form.cleaned_data['uplink_domain_name']
+            uplink_subnet 		= form.cleaned_data['uplink_subnet']
+            mgmt_domain_name 		= form.cleaned_data['mgmt_domain_name']
+            mgmt_subnet 		= form.cleaned_data['mgmt_subnet']
+            mgmt_dns 			= form.cleaned_data['mgmt_dns']
+            cloud_name  		= form.cleaned_data['cloud_name']
+            single_node 		= form.cleaned_data['single_node']
+            admin_password 		= form.cleaned_data['admin_password']
+            admin_password_confirm 	= form.cleaned_data['admin_password_confirm']
 
         auth = request.session['auth']
         system = util.get_cloud_controller_name()
         system_var_array = [
-                        {"system_name": system, "parameter": "api_ip",             "param_value": uplink_ip},
-                        {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
-                        {"system_name": system, "parameter": "admin_api_ip",       "param_value": uplink_ip},
-                        {"system_name": system, "parameter": "int_api_id",         "param_value": uplink_ip},
-                        {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
-                        {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
-                        {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
-                        {"system_name": system, "parameter": "single_node",        "param_value": single_node},
-                        {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
-                        {"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
-                        {"system_name": system, "parameter": "uplink_domain_name", "param_value": uplink_domain_name},
-                        {"system_name": system, "parameter": "uplink_subnet",      "param_value": uplink_subnet},
-                        {"system_name": system, "parameter": "mgmt_domain_name",   "param_value": mgmt_domain_name},
-                        {"system_name": system, "parameter": "mgmt_subnet",        "param_value": mgmt_subnet},
-                        {"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
-                        ]
+		                {"system_name": system, "parameter": "api_ip",             "param_value": uplink_ip},
+		                {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
+		                {"system_name": system, "parameter": "admin_api_ip",       "param_value": uplink_ip},
+		                {"system_name": system, "parameter": "int_api_id",         "param_value": uplink_ip},
+		                {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
+		                {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
+		                {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},
+		                {"system_name": system, "parameter": "single_node",        "param_value": single_node},
+		                {"system_name": system, "parameter": "uplink_dns",         "param_value": uplink_dns},
+		                {"system_name": system, "parameter": "uplink_gateway",     "param_value": uplink_gateway},
+		                {"system_name": system, "parameter": "uplink_domain_name", "param_value": uplink_domain_name},
+		                {"system_name": system, "parameter": "uplink_subnet",      "param_value": uplink_subnet},
+		                {"system_name": system, "parameter": "mgmt_domain_name",   "param_value": mgmt_domain_name},
+		                {"system_name": system, "parameter": "mgmt_subnet",        "param_value": mgmt_subnet},
+		                {"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
+		           ]
 
         run_setup(system_var_array, auth)
         change_admin_password (auth, admin_password)

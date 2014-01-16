@@ -79,7 +79,7 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/AJAX/create_security_group/' + groupname.val() + '/' + groupdesc.val() + '/' + ports.val() + '/' + PROJECT_ID + '/');
+						$.post('/create_security_group/' + groupname.val() + '/' + groupdesc.val() + '/' + ports.val() + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}

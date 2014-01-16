@@ -93,11 +93,11 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/AJAX/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT + '/');
+						$.post('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT + '/');
 					  
 						$( "#users tbody" ).append( "<tr>" +
 							"<td>" + name.val() + "</td>" +
-							"<td><a href='/projects/" + PROJECT + "/user/" + name.val() + "/view/'>view</a> | <a href='remove_user' data-confirm='This will completely erase " + name.val() + " from all projects. Are you sure?'> delete</a>| <a href='/AJAX/toggle_user/" + name.val() + "/disable/' id=" + name.val() + "_toggle'>disable</a>    | <a href='remove_user_from_project'>remove user from proj</a> | <a href='update_user_password'>update password</a></td>" +
+							"<td><a href='/projects/" + PROJECT + "/user/" + name.val() + "/view/'>view</a> | <a href='remove_user' data-confirm='This will completely erase " + name.val() + " from all projects. Are you sure?'> delete</a>| <a href='/toggle_user/" + name.val() + "/disable/' id=" + name.val() + "_toggle'>disable</a>    | <a href='remove_user_from_project'>remove user from proj</a> | <a href='update_user_password'>update password</a></td>" +
 						"</tr>" );
 						$( this ).dialog( "close" );
 					}

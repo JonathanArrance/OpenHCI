@@ -53,47 +53,58 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.volume_view',
             name='view_volume'),
 
-	url(r'^AJAX/create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_create_volume',
+	url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
-	url(r'^AJAX/take_snapshot/(?P<snap_name>[^/]+)/(?P<snap_desc>[^/]+)/(?P<vol_id>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_take_snapshot',
+	url(r'^take_snapshot/(?P<snap_name>[^/]+)/(?P<snap_desc>[^/]+)/(?P<vol_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.take_snapshot',
             name='take_snapshot'),
+
+	# --- Network stuff ----
+
+	url(r'^network/(?P<net_id>[^/]+)/view/$',
+	    'coalesce.coal_beta.views.network_view',
+            name='network_view'),
+
+	url(r'^add_private_network/(?P<net_name>[^/]+)/(?P<admin_state>[^/]+)/(?P<shared>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.add_private_network',
+            name='add_private_network'),
+
 	
 	# --- User actions ----
-	url(r'^AJAX/create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_name>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_create_user',
+	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_name>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_user',
             name='create_user'),
     
-	url(r'^AJAX/add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_name>[^/]+)/$',
-        'coalesce.coal_beta.views.ajax_add_existing_user',
+	url(r'^add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_name>[^/]+)/$',
+        'coalesce.coal_beta.views.add_existing_user',
             name='add_existing_user'),
 	
 	
-	url(r'^AJAX/toggle_user/(?P<username>[^/]+)/(?P<toggle>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_toggle_user',
+	url(r'^toggle_user/(?P<username>[^/]+)/(?P<toggle>[^/]+)/$',
+	    'coalesce.coal_beta.views.toggle_user',
             name='toggle_user'),
 
-	url(r'^AJAX/delete_user/(?P<username>[^/]+)/(?P<userid>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_delete_user',
+	url(r'^delete_user/(?P<username>[^/]+)/(?P<userid>[^/]+)/$',
+	    'coalesce.coal_beta.views.delete_user',
             name='delete_user'),
 	
-	url(r'^AJAX/remove_user_from_project/(?P<user_id>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_remove_user_from_project',
+	url(r'^remove_user_from_project/(?P<user_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.remove_user_from_project',
             name='remove_user_from_project'),
 
-	url(r'^AJAX/update_user_password/(?P<user_id>[^/]+)/(?P<password>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_update_user_password',
+	url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<password>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.update_user_password',
             name='update_user_password'),
 
 	# --- Security actions ----
-	url(r'^AJAX/create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_create_security_group',
+	url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_security_group',
             name='create_security_group'),
 
-	url(r'^AJAX/create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.ajax_create_keypair',
+	url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),
 
         # --- Setup ----

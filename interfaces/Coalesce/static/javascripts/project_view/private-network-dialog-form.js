@@ -35,8 +35,10 @@ $(function() {
 		
 		
 		
-		var 	key_name = $( "#key_name" ),
-			allFields = $( [] ).add( key_name ),
+		var 	net_name = $( "#net_name" ),
+			admin_state = $( "#admin_state" ),
+			shared = $( "#shared" ),
+			allFields = $( [] ).add( net_name ).add( admin_state ).add( shared ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -61,21 +63,21 @@ $(function() {
 
 	
 
-		$( "#keypair-dialog-form" ).dialog({
+		$( "#private-network-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 300,
+			height: 350,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Create a key pair": function() {
+				"Add a Private Network": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 
-					bValid = bValid && checkLength( key_name, "key_name", 3, 16 );
+					bValid = bValid && checkLength( net_name, "net_name", 3, 56 );
 
 					if ( bValid ) {
 					  
-						$.post('/create_sec_keys/' + key_name.val() + '/' + PROJECT_ID + '/');
+					   $.post('/add_private_network/' + net_name.val() + '/' + admin_state.val() + '/' + shared.val() + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -89,9 +91,9 @@ $(function() {
 			}
 		});
 
-		$( "#create-keypair" )
+		$( "#create-private-network" )
 			.click(function() {
-				$( "#keypair-dialog-form" ).dialog( "open" );
+				$( "#private-network-dialog-form" ).dialog( "open" );
 			});
 			
 			

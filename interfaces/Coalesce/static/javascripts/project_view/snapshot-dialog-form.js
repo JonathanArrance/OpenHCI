@@ -76,7 +76,7 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					   $.post('/AJAX/take_snapshot/' + snap_name.val() + '/' + snap_desc.val() + '/' + VOL_ID + '/' + PROJECT_ID + '/');
+					   $.post('/take_snapshot/' + snap_name.val() + '/' + snap_desc.val() + '/' + VOL_ID + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}

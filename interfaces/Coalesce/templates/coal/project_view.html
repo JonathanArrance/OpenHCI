@@ -20,6 +20,7 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/keypair-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/volume-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-dialog-form.js"/></script>
     <script>
       var PROJECT = "{{ project.project_name}}";
     </script>
@@ -32,7 +33,7 @@ $(document).ready(function() {
 		var href = $(this).attr('href');
 		if (!$('#dataConfirmModal').length) {
 			$('body').append('<div id="dataConfirmModal" class="modal" role="dialog" aria-labelledby="dataConfirmLabel" aria-hidden="true"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button><h3 id="dataConfirmLabel">Please Confirm</h3></div><div class="modal-body"></div><div class="modal-footer"><button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button><a class="btn btn-primary" id="dataConfirmOK">OK</a></div></div>');
-		} 
+		}
 		$('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
 		$('#dataConfirmOK').attr('href', href);
 		$('#dataConfirmModal').modal({show:true});
@@ -50,10 +51,10 @@ $(document).ready(function() {
     <div class="span12 well legend-header">
         {{ project.project_name}} ({{project.project_id}}) <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
     </div>
-    
+
     <!--  Begin Row One -->
-    <div class="row-fluid"> 
-    
+    <div class="row-fluid">
+
       <!-- Begin user widget-->
       <div class="span4">
         <div class="well">
@@ -63,8 +64,8 @@ $(document).ready(function() {
                 <a href="#" id="add-existing-user" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Add Existing User</a>
              {% endif %}
           </div>
-          
-          
+
+
           <div id="dialog-form" title="Create new user">
                 <p class="validateTips">All form fields are required.</p>
                 <form>
@@ -84,7 +85,7 @@ $(document).ready(function() {
                 </fieldset>
                 </form>
             </div>
-            
+
             <div id="dialog-form-add-existing-user" title="Add Existing user">
                 <p class="validateTips">All form fields are required.</p>
                 <form>
@@ -104,49 +105,37 @@ $(document).ready(function() {
                 </fieldset>
                 </form>
             </div>
-            
-            <div id="dialog-form-update-password" title="Update Password">
-                <p class="validateTips">All form fields are required.</p>
-                <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="password1">Password</label>
-                    <input type="password" name="password1" id="password1" value="" class="text ui-widget-content ui-corner-all" />
-                    <label for="password2">Confirm Password</label>
-                    <input type="password" name="password2" id="password2" value="" class="text ui-widget-content ui-corner-all" />
-                </fieldset>
-                </form>
-            </div>
-          
+
           <table class="paleblue" id="users">
                 <tr> <th>User</th>  <th>Actions</th>  </tr>
                 {% for pu in users %}
                   {% with pu.username as username %}
 		    {% with userinfo|access:username as ui %}
-			<tr id="{{username}}" {% if ui.user_enabled == "FALSE" %} class="user_disabled" {% endif %}> 
+			<tr id="{{username}}" {% if ui.user_enabled == "FALSE" %} class="user_disabled" {% endif %}>
 			  <td id="{{username}}_info">
-			    {% if ui.user_enabled == "FALSE" %} 
-			      <i class="icon-warning-sign"></i> 
+			    {% if ui.user_enabled == "FALSE" %}
+			      <i class="icon-warning-sign"></i>
 			    {% endif %}
-			    <b>{{username}}</b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
-			    
-			  </td>  
+			    <b>{{username}}
+			    </b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
 
-			  <td id="{{username}}_actions"><a href="/projects/{{ project.project_name}}/user/{{pu.username}}/view/">view</a> | <a href="/AJAX/delete_user/{{pu.username}}/{{ui.user_id}}/" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| {% include "coal/toggle_user.html" %}    | <a href="/AJAX/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove user from project</a> | <a href="#" id="update-user-password">update password</a></td></tr>
-                
+			  </td>
+
+			  <td><a href="/projects/{{ project.project_name}}/user/{{pu.username}}/view/">view</a> | <a href="/delete_user/{{pu.username}}/{{ui.user_id}}/" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| {% include "coal/toggle_user.html" %}    | <a href="/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove user from project</a> </td></tr>
+
                     {% endwith %}
                   {% endwith %}
                 {% endfor %}
           </table>
-          
+
         </div>
       </div>
-      
+
       <!-- Begin Security Groups widget-->
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Security Groups 
+             Security Groups
 	     <a href="#"  id="create-security-group" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Security Group</a>
           </div>
 
@@ -168,9 +157,9 @@ $(document).ready(function() {
 
 	    <table class="paleblue">
 		{% if sec_groups %}
-		  <tr> <th>Security Group</th>  <th>Group Id</th>  <th>Owner</th></tr>
+		  <tr> <th>Security Group</th>  <th>Owner</th> <th>Actions</th>  </tr>
 		    {% for sg in sec_groups %}
-		      <tr> <td>{{sg}}</td>  <td></td>  <td></td></tr>
+		      <tr> <td>{{sg.sec_group_name}}</td>  <td>{{sg.username}}</td>  <td></td></tr>
 		    {% endfor %}
 		{% else %}
 		
@@ -202,9 +191,9 @@ $(document).ready(function() {
 
           <table class="paleblue">
 	    {% if sec_keys %}
-                <tr> <th>key_name</th> <th>key_id</th> <th>owner_name</th></tr>
+                <tr> <th>Key Name</th> <th>Owner</th> <th>Actions</th></tr>
                     {% for key in sec_keys %}
-		      <tr> <td>{{key}}</td>  <td></td>  <td></td></tr>
+		      <tr> <td>{{key.key_name}}</td>  <td>{{key.username}}</td> <td></td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no keys</i></p>
@@ -216,10 +205,10 @@ $(document).ready(function() {
 
     </div>
     <!-- end row one-->
-    
+
     <!-- begin row two -->
-    <div class="row-fluid">  
-    
+    <div class="row-fluid">
+
       <!-- Begin volume widget-->
       <div class="span4">
         <div class="well">
@@ -247,9 +236,9 @@ $(document).ready(function() {
 
            <table class="paleblue">
 	    {% if volumes %}
-                <tr> <th>volume</th> <th></th> <th></th></tr>
+                <tr> <th>Volume</th> <th>Actions</th></tr>
                     {% for volume in volumes %}
-		      <tr> <td>{{volume}}</td>  <td></td>  <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.vol_id}}/">view</a> </td></tr>
+		      <tr> <td>{{volume.vol_name}}</td>  <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.vol_id}}/">view</a> </td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>
@@ -257,7 +246,7 @@ $(document).ready(function() {
           </table>
         </div>
       </div>
-      
+
       <!-- Begin snapshots widget-->
       <div class="span4">
         <div class="well">
@@ -266,9 +255,9 @@ $(document).ready(function() {
           </div>
           <table class="paleblue">
 	    {% if snapshots %}
-                <tr> <th>snapshots</th> <th></th> <th></th></tr>
+                <tr> <th>Snapshot</th> <th>Volume</th> <th>Actions</th></tr>
                     {% for snapshot in snapshots %}
-		      <tr> <td>{{snapshot}}</td>  <td></td>  <td></td></tr>
+		      <tr> <td>{{snapshot.snapshot_name}}</td>  <td>{{snapshot.vol_name}}</td>  <td></td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no snapshots</i></p>
@@ -290,8 +279,8 @@ $(document).ready(function() {
     </div>
     <!-- end row two-->
     <!-- begin row three -->
-    <div class="row-fluid">  
-    
+    <div class="row-fluid">
+
      <!-- Begin Network widget-->
       <div class="span4">
         <div class="well">
@@ -300,23 +289,23 @@ $(document).ready(function() {
           </div>
           {% if networks %}
 	    <table class="paleblue">
-	    
-                <tr> <th>Network</th>  <th>Network info</th>  </tr>
-                
+
+                <tr> <th>Network</th>  <th>Network info</th>  <th>Actions</th></tr>
+
                 {% for key,value in networks.items %}
 		  {% if value.net_internal == 'false' %}
-		    <tr> <td>{{key}}</td>  <td>{{value}}</td>  </tr>
+		    <tr> <td>{{key}}</td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}}</td>  <td><a href="/network/{{value.net_id}}/view/">view</a></td></tr>
 		  {% endif %}
-		  
+
 		{% endfor %}
 	    </table>
 	  {% else %}	
 	   <p><i>This project has no external networks</i></p>
 	  {% endif %}
-                         
+
         </div>
       </div>
-      
+
       <!-- Begin Routers widget-->
       <div class="span4">
         <div class="well">
@@ -325,38 +314,65 @@ $(document).ready(function() {
           </div>
 	  {% if routers %}
 	    <table class="paleblue">
-	    
+
                 <tr> <th>Router</th>  <th>Router Status</th>  </tr>
-                
+
                 {% for router in routers %}
-		  
+
 		    <tr> <td>{{router}}</td>  <td></td>  </tr>
-		  
+
 		{% endfor %}
 	    </table>
 	  {% else %}	
 	   <p><i>This project has no routers</i></p>
 	  {% endif %}
-	  
-         </div>                
+
+         </div>
       </div>
 
     <!-- Begin Private Networks widget-->
+
       <div class="span4">
         <div class="well">
           <div class="legend">
              Private Networks
+          <a href="#"  id="create-private-network" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Add Private Network</a>
+ 		
           </div>
+
+	    <div id="private-network-dialog-form" title="Create new private network">
+ 		<p class="validateTips">All fields required.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="name">Private Network Name</label>
+                    <input type="text" name="net_name" id="net_name"  class="text ui-widget-content ui-corner-all" />
+
+		    <label for="admin_state">Admin State?</label>
+                    <select name="admin_state" id="admin_state">
+                        <option value="---">---</option>
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                    </select>
+		    <label for="shared">Shared?</label>
+                    <select name="shared" id="shared">
+                        <option value="---">---</option>
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                    </select>
+                </fieldset>
+                </form>
+            </div>
           {% if networks %}
 	    <table class="paleblue">
-	    
-                <tr> <th>Network</th>  <th>Network info</th>  </tr>
-                
+
+                <tr> <th>Network</th>  <th>Network info</th> <th>Actions</th> </tr>
+
                 {% for key,value in networks.items %}
 		  {% if value.net_internal == 'true' %}
-		    <tr> <td>{{key}}</td>  <td>{{value}}</td>  </tr>
+		   <tr> <td>{{key}}</td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}} </td>  <td><a href="/network/{{value.net_id}}/view/">view</a></td></tr>
 		  {% endif %}
-		  
+
 		{% endfor %}
 	    </table>
 	  {% else %}	
@@ -364,12 +380,12 @@ $(document).ready(function() {
 	  {% endif %}
         </div>
       </div>
-    
+
     </div>
     <!-- end row three-->
     <!-- begin row four -->
-    <div class="row-fluid">  
-    
+    <div class="row-fluid">
+
      <!-- Begin instance widget-->
       <div class="span4">
         <div class="well">
@@ -378,13 +394,13 @@ $(document).ready(function() {
           </div>
 	  {% if instances %}
 	    <table class="paleblue">
-	    
+
                 <tr> <th>Instance</th>  <th></th>  </tr>
-                
+
                 {% for instance in instances %}
-		  
+
 		    <tr> <td>{{instance}}</td>  <td></td>  </tr>
-		  
+
 		{% endfor %}
 	    </table>
 	  {% else %}	
@@ -392,7 +408,7 @@ $(document).ready(function() {
 	  {% endif %}
         </div>
       </div>
-      
+
       <!-- Begin Floating IP widget-->
       <div class="span4">
         <div class="well">
@@ -402,7 +418,7 @@ $(document).ready(function() {
           <p> Not yet implemented.</p>
         </div>
       </div>
-      
+
       <!-- Begin image widget-->
       <div class="span4">
         <div class="well">
@@ -411,13 +427,13 @@ $(document).ready(function() {
           </div>
           {% if images %}
 	    <table class="paleblue">
-	    
+
                 <tr> <th>Image</th>  <th></th>  </tr>
-                
+
                 {% for image in images %}
-		  
+
 		    <tr> <td>{{image}}</td>  <td></td>  </tr>
-		  
+
 		{% endfor %}
 	    </table>
 	  {% else %}	
@@ -428,11 +444,11 @@ $(document).ready(function() {
 
     </div>
     <!-- end row four-->
-       
 
-      
 
-   
+
+
+
 
 
 {% endblock %}
