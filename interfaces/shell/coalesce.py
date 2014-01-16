@@ -225,7 +225,7 @@ def setup(d):
     first_time = node_util.check_first_time_boot()
     # Check to determine if first time (will be implemented differently
     # once we have those flags setup on database, this is just proof of concept
-    if (first_time['first_time_boot'] == 'FALSE'):
+    if (first_time['first_time_boot'] == 'TRUE'):
         d.msgbox("Taking you to the Coalesce Dashboard...")
         # Direct user to Coalesce Dashboard
         clear_screen(d)
