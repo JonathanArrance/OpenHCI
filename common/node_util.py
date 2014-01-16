@@ -194,7 +194,7 @@ def set_first_time_boot(set_flag):
                                         ERROR
                                         NA
     ACCESS: Wide open
-    NOTE: TRUE - system first time boot falg has been set/unset, FALSE - system boot flag could not be set.
+    NOTE: TRUE - system first time boot flag has been set/unset, FALSE - system boot flag could not be set.
     """
     db = util.db_connect()
 

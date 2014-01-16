@@ -110,19 +110,19 @@ def info(d):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, "", 1, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 2, 1, "", 2, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 3, 1, "", 3, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 4, 1, "", 4, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 5, 1, "", 5, 24, 40, 40, 0x0),
-            ("Management IP:", 6, 1, "", 6, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 7, 1, "", 7, 24, 40, 40, 0x0),
-            ("Management DNS:", 8, 1, "", 8, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 9, 1, "", 9, 24, 40, 40, 0x0),
-            ("VM Range Start-Point:", 10, 1, "", 10, 24, 40, 40, 0x0),
-            ("VM Range End-Point:", 11, 1, "", 11, 24, 40, 40, 0x0),
-            ("New Admin password:", 12, 1, "", 12, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
+            ("Uplink IP:", 1, 1, "192.168.10.37", 1, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 2, 1, "255.255.255.0", 2, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 3, 1, "192.168.3.3", 3, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 4, 1, "8.8.8.8", 4, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 5, 1, "test.transcirrus.com", 5, 24, 40, 40, 0x0),
+            ("Management IP:", 6, 1, "192.168.64.64", 6, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 7, 1, "255.255.255.0", 7, 24, 40, 40, 0x0),
+            ("Management DNS:", 8, 1, "8.8.8.8", 8, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 9, 1, "testmgmt.transcirrus.com", 9, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 10, 1, "192.168.10.50", 10, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 11, 1, "192.168.10.60", 11, 24, 40, 40, 0x0),
+            ("New Admin password:", 12, 1, "newpass", 12, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 13, 1, "newpass", 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77)
@@ -224,13 +224,16 @@ def setup(d):
     first_time = node_util.check_first_time_boot()
     # Check to determine if first time (will be implemented differently
     # once we have those flags setup on database, this is just proof of concept
-    if (first_time is False):
+    if (first_time['first_time_boot'] is False):
         d.msgbox("Taking you to the Coalesce Dashboard...")
         # Direct user to Coalesce Dashboard
         clear_screen(d)
         return
     else:
         d.msgbox("Continue to first time setup.")
+        flag_set = node_util.set_first_time_boot('SET')
+        if(flag_set['first_time_boot'] != 'OK'):
+            d.msgbox("An error has occured in setting the first time boot flag.")
 
     while(True):
         uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d)
@@ -303,12 +306,13 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
     ran = run_setup(new_system_variables, user_dict)
-    pass_dict = {"new_password": pwd, "project_id": user_dict['project_id'], "user_id": user_dict['user_id']}
+    change_admin_password(user_dict, pwd)
     timeout = 20
 
     if(ran == "OK"):
         success(d, timeout)
         clear_screen(d)
+        util.reboot_system()
 
     else:
         rollback(d, timeout)
