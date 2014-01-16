@@ -73,7 +73,7 @@ urlpatterns = patterns('',
 
 	
 	# --- User actions ----
-	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_name>[^/]+)/$',
+	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_user',
             name='create_user'),
     
