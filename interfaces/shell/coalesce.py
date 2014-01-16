@@ -10,6 +10,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
+from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
 
 progname = os.path.basename(sys.argv[0])
@@ -160,7 +161,7 @@ def dhcp(d):
     d.gauge_stop()
 
 
-def success(d, seconds):
+def success_msg(d, seconds):
     d.pause("""\
 Setup has completed successfully.  The system will now restart in %u seconds\
  and update with the information you have entered.  To connect to this unit\
@@ -168,7 +169,7 @@ Setup has completed successfully.  The system will now restart in %u seconds\
 % seconds, height=15, seconds=seconds)
 
 
-def rollback(d, seconds):
+def rollback_msg(d, seconds):
     d.pause("""\
 Setup has encountered an issue.  The system will now rollback in %u seconds\
  to factory defaults.  Attempt to rerun setup."""
@@ -310,13 +311,15 @@ def setup(d):
     timeout = 20
 
     if(ran == "OK"):
-        success(d, timeout)
+        success_msg(d, timeout)
         clear_screen(d)
         util.reboot_system()
 
     else:
-        rollback(d, timeout)
+        rollback_msg(d, timeout)
         clear_screen(d)
+        rollback(user_dict)
+        util.reboot_system()
 
     #except Exception as e:
         #d.msgbox("Error when updating database: " + str(e))
