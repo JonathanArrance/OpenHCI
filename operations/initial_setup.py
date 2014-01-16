@@ -366,7 +366,7 @@ def run_setup(new_system_variables,auth_dict):
     #build the new config.py file
     netconfig_dict = {'file_path':'/usr/local/lib/python2.7/dist-packages/transcirrus/common',
                    'file_name':'config.py',
-                   'file_content':netcontent,
+                   'file_content':net_content,
                    'file_owner':'transuser',
                    'file_group':'transystem',
                    'file_perm':'644',

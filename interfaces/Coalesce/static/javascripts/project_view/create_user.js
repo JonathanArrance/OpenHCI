@@ -93,7 +93,7 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT + '/');
+						$.post('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT_ID + '/');
 					  
 						$( "#users tbody" ).append( "<tr>" +
 							"<td>" + name.val() + "</td>" +

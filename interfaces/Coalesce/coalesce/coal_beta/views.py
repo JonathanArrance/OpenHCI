@@ -153,11 +153,12 @@ def volume_view(request, project_id, vol_id):
                                                         }))
 	       	       
 
-def create_user(request, username, password, userrole, email, project_name = None):
+def create_user(request, username, password, userrole, email, project_id):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_name': project_name}
+        user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_id': project_id}
+	import pdb; pdb.set_trace()
         newuser= uo.create_user(user_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
@@ -294,12 +295,13 @@ def network_view(request, net_id):
                                                         'nw': nw,
                                                         }))
 
-def add_private_network(request, net_name, admin_state, shared, project_id):
+def add_private_network(request, net_name, admin_state, shared, project_id, subnet_dhcp_enable, subnet_dns):
     try:
         auth = request.session['auth']
         no = neutron_net_ops(auth)
         create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
-        no.add_private_network(create_dict)
+        network = no.add_private_network(create_dict)
+	
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
