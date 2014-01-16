@@ -464,7 +464,7 @@ class user_ops:
         else:
             logger.sys_info("Invalid Keystone user role passed")
             raise Exception("Invalid Keystone user role passed")
-
+        logger.sys_info('%s'%(self.adm_token))
         #check if the user creating a new account is an admin
         if(self.is_admin == 1):
             logger.sys_info("User identified as an admin.")
@@ -542,21 +542,23 @@ class user_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            try:
-                #add the user to the project with the proper keystone Role
-                body = ""
-                header = {"X-Auth-Token":self.adm_token, "Content-Type": "python-keystoneclient"}
-                function = 'PUT'
-                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(proj[0][0],user[0][0],key_role[0][0])
-                logger.sys_info("%s"%(api_path))
-                token = self.adm_token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
-                rest = api.call_rest(rest_dict)
-                new_user_id = ""
-            except Exception as e:
-                logger.sys_error('%s' %(e))
-                raise
+            #try:
+            #add the user to the project with the proper keystone Role
+            logger.sys_info('%s'%(self.is_admin))
+            body = ""
+            header = {"X-Auth-Token":self.adm_token, "Content-Type": "python-keystoneclient"}
+            function = 'PUT'
+            api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(proj[0][0],user[0][0],key_role[0][0])
+            logger.sys_info("%s"%(api_path))
+            token = self.adm_token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
+            logger.sys_info(rest_dict)
+            rest = api.call_rest(rest_dict)
+            new_user_id = ""
+            #except Exception as e:
+            #    logger.sys_error('%s' %(e))
+            #    raise
 
             if(rest['response'] == 200):
                 #read the json that is returned
