@@ -79,7 +79,7 @@ class user_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
     def create_user(self,new_user_dict):
-        logger.sys_info("new_user_dict " + new_user_dict)
+        logger.sys_info("%s"  %(new_user_dict))
         """
         DESC: create a new user in both the transcirrus and OpenStack Keystone DB
         INPUT: new_user_dict - username - req
