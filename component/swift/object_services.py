@@ -43,10 +43,6 @@ class object_services:
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
 
-        if(self.adm_token == ''):
-            logger.sys_error("No admin tokens passed.")
-            #raise Exception("No admin tokens passed.")
-
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
             raise Exception("No tokens passed, or token was in error")

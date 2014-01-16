@@ -114,7 +114,7 @@ class neutron_net_ops:
                 get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings"}
             else:
                 get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id)}
-    
+
             nets = self.db.pg_select(get_nets)
             r_array = []
             for net in nets:
@@ -669,7 +669,6 @@ class neutron_net_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
             except:
-                self.db.pg_transaction_rollback()
                 logger.sql_error("Could not remove the subnet from Neutron.")
                 raise Exception("Could not remove the subnet from Neutron.")
 
@@ -683,7 +682,67 @@ class neutron_net_ops:
                     update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id='NULL',proj_id='NULL',subnet_id='NULL'",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
                     self.db.pg_update(update_dict)
                 except:
-                    self.db.pg_transaction_lback()
+                    self.db.pg_transaction_rollback()
+                    logger.sys_error("Could not set the subnet to disabled in the Transcirrus DB.")
+                    raise Exception("Could not set the subnet to disabled in the Transcirrus DB.")
+                else:
+                    self.db.pg_transaction_commit()
+                    return 'OK'
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+        else:
+            logger.sys_error("Only an admin or a power user can remove a subnet.")
+            raise Exception("Only an admin or a power user can remove a subnet.")
+
+    def remove_net_pub_subnet(self,del_dict):
+        """
+        DESC: Remove a public subnet from a public network.
+        INPUT: pub_subnet_id
+        OUTPUT: OK if deleted or error code
+        ACCESS: Admins can remove a subnet from any network. Only a power user can remove a subnet
+                from a network in their project. Users can not remove subnets
+        NOTE: REST api operation will give 409 error if ips from subnet are still allocated
+        """
+        #if(('pub_subnet_id' not in del_dict) or (del_dict['pub_subnet_id'] == "")):
+        if(pub_subnet_id == ""):
+            logger.sys_error("Can not have a blank subnet id when deleteing a subnet")
+            raise Exception("Can not have a blank subnet id when deleteing a subnet")
+        #if(('net_id' not in del_dict) or (del_dict['net_id'] == "")):
+        #    logger.sys_error("Can not have a blank net id when deleteing a subnet")
+        #    raise Exception("Can not have a blank net id when deleteing a subnet")
+
+        if(self.user_level <= 1):
+            try:
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                #add the new user to openstack
+                body = ''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/subnets/%s' %(pub_subnet_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not remove the subnet from Neutron.")
+                raise Exception("Could not remove the subnet from Neutron.")
+
+            #check the response and make sure it is a 204
+            if(rest['response'] == 204):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                try:
+                    self.db.pg_transaction_begin()
+                    delete = {"table":'trans_public_subnets',"where":"subnet_id='%s'"%(pub_subnet_id)}
+                    self.db.pg_delete(delete)
+                except:
+                    self.db.pg_transaction_rollback()
                     logger.sys_error("Could not set the subnet to disabled in the Transcirrus DB.")
                     raise Exception("Could not set the subnet to disabled in the Transcirrus DB.")
                 else:

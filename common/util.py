@@ -423,6 +423,12 @@ def get_cloud_controller_name():
     '''
     return config.CLOUD_CONTROLLER
 
+def get_default_pub_net_id():
+    return config.DEFAULT_PUB_NET_ID
+
+def get_default_pub_subnet_id():
+    return config.DEFAULT_PUB_SUBNET_ID
+
 def get_cloud_controller_id():
     """
     DESC: get the system name from the config.py file.

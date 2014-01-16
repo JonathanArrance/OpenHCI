@@ -66,7 +66,7 @@ def run_setup(new_system_variables,auth_dict):
     if(boot == 'FALSE'):
         return "System already set up."
 
-
+    
     #properly format the key values to an array.
     content = []
     for key, val in sys_vars.items():
@@ -353,6 +353,29 @@ def run_setup(new_system_variables,auth_dict):
     if('subnet_id' not in default_pub_subnet):
         logger.sys_error("Could not create the default public subnet.")
         return 'ERROR'
+    else:
+        def_sub_array = [{'system_name': sys_vars['NODE_NAME'],'parameter':'default_pub_subnet_id', 'param_value':default_pub_subnet['subnet_id']}]
+        update_def_pub_subnet = util.update_system_variables(def_sub_array)
+        if((update_def_pub_subnet == 'ERROR') or (update_def_pub_subnet == 'NA')):
+            logger.sys_error("Could not update the default public network id, Setup has failed.")
+            return 'ERROR'
+
+    #build the net content array
+    net_content = ['DEFAULT_PUB_NET_ID="%s"'%(default_public['net_id']),'DEFAULT_PUB_SUBNET_ID="%s"'%(default_pub_subnet['subnet_id'])]
+
+    #build the new config.py file
+    netconfig_dict = {'file_path':'/usr/local/lib/python2.7/dist-packages/transcirrus/common',
+                   'file_name':'config.py',
+                   'file_content':netcontent,
+                   'file_owner':'transuser',
+                   'file_group':'transystem',
+                   'file_perm':'644',
+                   'op':'append'
+                   }
+
+    write_net_config = util.write_new_config_file(netconfig_dict)
+    if(write_net_config != 'OK'):
+        logger.sys_error("Could not write network setting to the config file.")
 
     #add ext net id to quantum l3agent.conf
     os.system('sudo chmod 664 /etc/quantum/l3_agent.ini')
