@@ -147,22 +147,21 @@ class volume_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
     
-            #try:
+            try:
                 #add the new user to openstack 
-            body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": null, "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'])
-            token = self.token
-            #NOTE: if token is not converted python will pass unicode and not a string
-            header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
-            function = 'POST'
-            api_path = '/v1/%s/volumes' %(create_vol['project_id'])
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
-            print rest_dict
-            rest = api.call_rest(rest_dict)
-            #except Exception as e:
-            #    logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
+                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": null, "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'])
+                token = self.token
+                #NOTE: if token is not converted python will pass unicode and not a string
+                header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
+                function = 'POST'
+                api_path = '/v1/%s/volumes' %(create_vol['project_id'])
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-            #    raise
+                raise
 
             if(rest['response'] == 200):
                 #read the json that is returned
