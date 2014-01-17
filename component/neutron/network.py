@@ -694,7 +694,7 @@ class neutron_net_ops:
             logger.sys_error("Only an admin or a power user can remove a subnet.")
             raise Exception("Only an admin or a power user can remove a subnet.")
 
-    def remove_net_pub_subnet(self,del_dict):
+    def remove_net_pub_subnet(self,pub_subnet_id):
         """
         DESC: Remove a public subnet from a public network.
         INPUT: pub_subnet_id
