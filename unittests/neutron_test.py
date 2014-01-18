@@ -4,16 +4,16 @@ from transcirrus.component.neutron.network import neutron_net_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("bill","test")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
-'''
+
 print"----------------------------------------"
 print "createin a new external network"
-create = {'net_name':"Jon4",'admin_state':"true", 'shared':"true"}
+create = {'net_name':"pubtest",'admin_state':"true", 'shared':"false"}
 newpubnet = net.add_public_network(create)
 print newpubnet
 time.sleep(1)
@@ -21,9 +21,15 @@ time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"
 dns = ["192.168.190.20"]
-input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.167.10','subnet_end_range':'192.168.167.40','public_ip':'192.168.167.2','public_gateway':'192.168.167.1','public_subnet_mask':'255.255.255.0'}
+input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.177.10','subnet_end_range':'192.168.177.40','public_ip':'192.168.177.2','public_gateway':'192.168.177.1','public_subnet_mask':'255.255.255.0'}
 getsubnet = net.add_public_subnet(input_dict)
 print getsubnet
+
+'''
+print "----------------------------------------"
+print "deleteing subnet"
+shit = net.remove_net_pub_subnet(getsubnet['subnet_id'])
+print shit
 
 print "creating a new network"
 create = {'net_name':"internaltest",'admin_state':"true", 'shared':"false",'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
@@ -35,13 +41,13 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_networks()
 print newnet
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
 getnet = net.get_network("03a730bb-72d1-4b32-ae13-15de60fbfef9")
 print getnet
-'''
+
 time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"
@@ -49,7 +55,7 @@ dns = ["192.168.190.20"]
 input_dict2 = {'net_id':"4ea066c7-f376-484b-ae96-773e35f1b99c",'subnet_dhcp_enable':'true'}
 getsubnet2 = net.add_net_subnet(input_dict2)
 print getsubnet2
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new network8 after subnet added"

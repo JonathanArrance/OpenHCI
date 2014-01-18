@@ -260,7 +260,7 @@ class snapshot_ops:
             raise Exception("The user level is invalid, and can not delete snap.")
 
         #check to see if the snapshot exists
-        snap_info = self.get_snapshot(snap_name)
+        snap_info = self.get_snapshot(snap_name[0][0])
 
         #if the snap exisits and you are allowed to delete it
         if(snap_info['snap_id'] and (snap_status == 1)):
@@ -363,7 +363,7 @@ class snapshot_ops:
                 snap_status
                 volume_id
                 create_time
-        ACCESS: Admins can list snapshots in any project, users and power users can list snapshots in their
+        ACCESS: Admins can get snapshots in any project, users and power users can get snapshots in their
                 project only
         NOTE: This need to be changed to incorporate project_id
         """
@@ -389,8 +389,8 @@ class snapshot_ops:
             select = {'select':"snap_id,proj_id",'from':"trans_system_snapshots",'where':"snap_name='%s'" %(snap_name)}
             snap_id = self.db.pg_select(select)
         except:
-            logger.sql_error("Could not get the snap name from Transcirrus DB.")
-            raise Exception("Could not get the snap name from Transcirrus DB.")
+            logger.sql_error("Could not get the snap id from Transcirrus DB.")
+            raise Exception("Could not get the snap id from Transcirrus DB.")
 
         try:
             select_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'" %(snap_id[0][1])}
@@ -412,8 +412,9 @@ class snapshot_ops:
                 raise Exception("Users can not get snapshots outside of their project.")
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can get the snap info on any snapshot.")
+            #possibly a complete hack - used if the admin wantst to get the snap shot info
             if(snap_id[0][1] != self.project_id):
-                self.token = get_token(self.username,self.password,input_dict['project_id'])
+                self.token = get_token(self.username,self.password,snap_id[0][1])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, and can not list snap info.")
