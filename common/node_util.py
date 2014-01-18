@@ -176,9 +176,9 @@ def check_first_time_boot():
         logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
         r_dict = {'first_time_boot':'ERROR'}
 
-    if(nodeconfig[0][0] == '1'):
+    if(nodeconfig[0][0] == '0'):
         r_dict = {'first_time_boot':'FALSE'}
-    elif(nodeconfig[0][0] == '0'):
+    elif(nodeconfig[0][0] == '1'):
         r_dict = {'first_time_boot':'TRUE'}
     else:
         r_dict = {'first_time_boot':'NA'}
@@ -194,7 +194,7 @@ def set_first_time_boot(set_flag):
                                         ERROR
                                         NA
     ACCESS: Wide open
-    NOTE: TRUE - system first time boot flag has been set/unset, FALSE - system boot flag could not be set.
+    NOTE: SET - set the flag(new node/rollback) , UNSET - unset the flag(node already set up)
     """
     db = util.db_connect()
 
