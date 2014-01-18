@@ -32,6 +32,7 @@ def rollback(auth_dict):
         logger.sys_error('Could not get the factory_defaults')
         raise Exception('Could not get the factory_defaults')
 
+
     #connect to the DB
     try:
         db = util.db_connect()
@@ -81,13 +82,15 @@ def rollback(auth_dict):
         #we can get all of the info we ned from the public subnets table
         get_net = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(t[0]['net_id'])}
         network = db.pg_select(get_net)
+        logger.sys_info("%s" %(network))
     except:
         pass
 
     #remove the public subnet
     logger.sys_info("Removeing the public subnet.")
     try:
-        net.remove_net_pub_subnet(network[0][0])
+        pub_sub = net.remove_net_pub_subnet(network[0][0])
+        logger.sys_info("%s"%(pub_sub))
     except:
         logger.sys_info("No public subnet to remove.")
         pass
@@ -96,7 +99,8 @@ def rollback(auth_dict):
     logger.sys_info("Removeing the public net.")
     try:
         net_dict = {'net_id':t[net_id],'project_id':proj_info[0][0]}
-        net.remove_network(net_dict)
+        pub_net = net.remove_network(net_dict)
+        logger.sys_info("%s"%(pub_sub))
     except:
         logger.sys_info("No public net to remove.")
         pass
@@ -104,9 +108,9 @@ def rollback(auth_dict):
     #set all of the netadpters to default IPS
     #set up br-ex and enable ovs.
     uplink_dict = {
-                'up_ip':'192.168.0.3',
+                'up_ip':'192.168.10.49',
                 'up_subnet':'255.255.255.0',
-                'up_gateway':'192.168.0.1',
+                'up_gateway':'192.168.10.1',
                 'up_dns1':'8.8.8.8',
                 'up_domain':'localhost.pubnet'
                 }
@@ -220,14 +224,6 @@ def rollback(auth_dict):
     except:
         pass
 
-    #restart postgres
-    logger.sys_info('Reseting the postgres DB.')
-    try:
-        os.system('sudo cp /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
-        psql_stop = service.postgresql('restart')
-    except:
-        pass
-
     #reset the config file
     sys_vars = None
     try:
@@ -259,3 +255,11 @@ def rollback(auth_dict):
         logger.sys_info('Admin password reset to "password"')
     else:
         logger.sys_warn('Admin password was not reset, password may still be set.')
+        
+     #restart postgres
+    logger.sys_info('Reseting the postgres DB.')
+    try:
+        os.system('sudo cp /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+        psql_stop = service.postgresql('restart')
+    except:
+        pass
