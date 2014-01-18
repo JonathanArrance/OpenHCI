@@ -25,6 +25,7 @@ def rollback(auth_dict):
 
     #get all of the variables from the factory defaults table
     logger.sys_info('Getting the node ID and factory default settings.')
+    factory_defaults = None
     try:
         factory_defaults = util.get_system_defaults(config.NODE_ID)
     except:
@@ -37,20 +38,6 @@ def rollback(auth_dict):
     except:
         pass
 
-    #set the node back to single
-    logger.sys_info("Disableing muli-node support.")
-    try:
-        status = node_util.disable_multi_node()
-    except:
-        pass
-
-    #set the first time boot flag
-    logger.sys_info("Reseting first time boot flag.")
-    try:
-        first_boot = node_util.set_first_time_boot('UNSET')
-    except:
-        pass
-
     #get trans_default
     try:
         get_project = {'select':"*",'from':"projects",'where':"proj_name='trans_default'"}
@@ -58,28 +45,49 @@ def rollback(auth_dict):
     except:
         pass
 
+    #kill any OVS configs
+    logger.sys_info('Removing all of the OpenVswitch settings.')
+    try:
+        logger.sys_info("Removeing br-ex")
+        os.system("sudo ovs-vsctl del-br br-ex")
+        os.system("sudo ovs-vsctl del-port br-ex bond1")
+        logger.sys_info("Removeing the internal br-int")
+        os.system("sudo ovs-vsctl del-br br-int")
+    except:
+        pass
+
     #remove the iptables settings and the config file
     logger.sys_info("Removeing iptables entries.")
     try:
-        os.system('sudo rm -rf /transcirrus/iptables.conf')
-        os.system("sudo iptables -D FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
-        os.system("sudo iptables -D FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
-        os.system("sudo iptables -D POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
+        os.system('sudo iptables -F')
+        #os.system('sudo rm -rf /transcirrus/iptables.conf')
+        #os.system("sudo iptables -D FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
+        #os.system("sudo iptables -D FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+        #os.system("sudo iptables -D POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
     except:
         logger.sys_info("No iptables entries to remove.")
         pass
 
+    #get the default public info
+    try:
+        t = net.list_networks()
+    except:
+        pass
+        
     #get default subnet and net id
     try:
-        net_id = util.get_default_pub_net_id()
-        subnet_id = util.get_default_pub_subnet_id()
+        #net_id = util.get_default_pub_net_id()
+        #subnet_id = util.get_default_pub_subnet_id()
+        #we can get all of the info we ned from the public subnets table
+        get_net = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(t[0]['net_id'])}
+        network = db.pg_select(get_net)
     except:
         pass
 
     #remove the public subnet
     logger.sys_info("Removeing the public subnet.")
     try:
-        net.remove_net_pub_subnet(subnet_id)
+        net.remove_net_pub_subnet(network[0][0])
     except:
         logger.sys_info("No public subnet to remove.")
         pass
@@ -87,7 +95,7 @@ def rollback(auth_dict):
     #remove the public network
     logger.sys_info("Removeing the public net.")
     try:
-        net_dict = {'net_id':net_id,'project_id':proj_info[0][0]}
+        net_dict = {'net_id':t[net_id],'project_id':proj_info[0][0]}
         net.remove_network(net_dict)
     except:
         logger.sys_info("No public net to remove.")
@@ -133,17 +141,6 @@ def rollback(auth_dict):
     except:
         pass
 
-    #set nova,glance,cinder,quantum config files to defaults
-    logger.sys_info('Removeing the OpenStack configs.')
-    try:
-        os.system('sudo rm -rf /etc/nova')
-        os.system('sudo rm -rf /etc/cinder')
-        os.system('sudo rm -rf /etc/glance')
-        os.system('sudo rm -rf /etc/quantum')
-        os.system('sudo tar -xvf /etc/os_configs.tar -C /etc')
-    except:
-        pass
-
     #stop all of the openstack services
     logger.sys_info('Stopping the OpenStack services.')
     try:
@@ -153,22 +150,50 @@ def rollback(auth_dict):
         neutron_start = service.neutron('stop')
     except:
         pass
-    
+
+    #set nova,glance,cinder,quantum config files to defaults
+    logger.sys_info('Removeing the OpenStack configs.')
+    try:
+        os.system('sudo rm -rf /etc/nova')
+        os.system('sudo rm -rf /etc/cinder')
+        os.system('sudo rm -rf /etc/glance')
+        os.system('sudo rm -rf /etc/quantum')
+        os.system('sudo tar -xvf /etc/os_configs.tar -C /etc')
+        os.system('sudo chown -R nova:nova /etc/nova')
+        os.system('sudo chown -R cinder:cinder /etc/cinder')
+        os.system('sudo chown -R glance:glance /etc/glance')
+        os.system('sudo chown -R quantum:quantum /etc/quantum')
+        os.system('sudo chmod -R 770 /etc/nova /etc/quantum /etc/glance /etc/cinder')
+    except:
+        pass
+
     #remove the node entry
     logger.sys_info('Removeing the node from the Transcirrus DB.')
-    node_id = util.get_node_id()
+    node_id = factory_defaults['node_id']
     try:
         del_node = node_db.delete_node(node_id)
     except:
         pass
 
 
+    #copy all of the factory defaults to trans_system_settings
+    rollback_array = []
+    for key,value in factory_defaults.items():
+        dictionary = {"system_name":factory_defaults['node_name'],"parameter":key,"param_value":value}
+        rollback_array.append(dictionary)
+
+    print rollback_array
+    logger.sys_info('Resetting the factory system defaults.')
+    try:
+        util.update_system_variables(rollback_array)
+    except:
+        pass
+
     try:
         logger.sys_info('Resetting OpenStack Keystone.')
         #move the default config file back in place
         key_input = {'service_name':'keystone'}
         del_keystone = endpoint.delete_endpoint(key_input)
-        print del_keystone
         if(del_keystone == 'OK'):
             input_dict = {'cloud_name':'TransCirrusCloud','service_name':'keystone'}
             create_keystone = endpoint.create_endpoint(input_dict)
@@ -179,10 +204,19 @@ def rollback(auth_dict):
     except:
         pass
 
-    #copy all of the factory defaults to trans_system_settings
-    logger.sys_info('Resetting the factory system defaults.')
+    #may have to hack endpoint not deleted for some reason, however the default endpoint is created ???????
     try:
-        util.update_system_variables(factory_defaults)
+        logger.sys_info('Resetting OpenStack Swift.')
+        #move the default config file back in place
+        swift_input = {'service_name':'swift'}
+        del_swift = endpoint.delete_endpoint(swift_input)
+        if(del_swift == 'OK'):
+            input_dict = {'cloud_name':'TransCirrusCloud','service_name':'swift'}
+            create_swift = endpoint.create_endpoint(input_dict)
+            if(create_swift['endpoint_id']):
+                print "Swift endpoint set up complete."
+            else:
+                return "Swift error."
     except:
         pass
 
@@ -217,6 +251,8 @@ def rollback(auth_dict):
     except:
         pass
 
+    print auth_dict['user_id']
+    print auth_dict['adm_token']
     #set the admin password back to password
     reset_password = change_admin_password(auth_dict,'password')
     if('OK'):
