@@ -61,6 +61,7 @@ def rollback(auth_dict):
     logger.sys_info("Removeing iptables entries.")
     try:
         os.system('sudo iptables -F')
+        os.system('sudo rm /transcirrus/iptables.conf')
         #os.system('sudo rm -rf /transcirrus/iptables.conf')
         #os.system("sudo iptables -D FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
         #os.system("sudo iptables -D FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
@@ -70,6 +71,7 @@ def rollback(auth_dict):
         pass
 
     #get the default public info
+    t = None
     try:
         t = net.list_networks()
     except:
@@ -77,9 +79,6 @@ def rollback(auth_dict):
         
     #get default subnet and net id
     try:
-        #net_id = util.get_default_pub_net_id()
-        #subnet_id = util.get_default_pub_subnet_id()
-        #we can get all of the info we ned from the public subnets table
         get_net = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(t[0]['net_id'])}
         network = db.pg_select(get_net)
         logger.sys_info("%s" %(network))
@@ -98,9 +97,9 @@ def rollback(auth_dict):
     #remove the public network
     logger.sys_info("Removeing the public net.")
     try:
-        net_dict = {'net_id':t[net_id],'project_id':proj_info[0][0]}
+        net_dict = {'net_id':t[0]['net_id'],'project_id':proj_info[0][0]}
         pub_net = net.remove_network(net_dict)
-        logger.sys_info("%s"%(pub_sub))
+        logger.sys_info("%s"%(pub_net))
     except:
         logger.sys_info("No public net to remove.")
         pass
