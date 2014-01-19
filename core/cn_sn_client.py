@@ -53,6 +53,11 @@ node_info = {
     }
 }
 
+reply_alive = {
+'Type' : 'status',
+'Length': '1',
+'Value': 'alive'
+}
 
 def getNodeInfo():
     '''
@@ -996,13 +1001,13 @@ def keep_alive(sock):
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 logger.sys_info("***%s***" % (data['Value']))
+                # send reply as alive
+                sock.sendall(pickle.loads(reply_alive, -1))
                 if __debug__ :
                     print "***%s***" % data['Value']
-            elif data['Type'] == 'status' and data['Value'] == 'node_ready':
-                logger.sys_info("received %s " %(data['Value']))
-                if __debug__ :
-                    print "received %s " % data['Value']
-                keep_alive(sock)
+            elif data['Type'] == 'command':
+                logger.sys_info("received command %s" %(data['Value']))
+                # TODO
             else:
                 logger.sys_info("received %s" %(data))
                 if __debug__ :
