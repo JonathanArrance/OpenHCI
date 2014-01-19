@@ -315,11 +315,11 @@ class volume_ops:
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
 
-    def list_volumes(self):
+    def list_volumes(self,project_id=None):
         """
         DESC: list the volumes for a particular project if the user is a member
               only admins can list all volumes on the system
-        INPUT: None
+        INPUT: project_id - op
         OUTPUT - array of volumes dict {"vol_id":'',"vol_name":'',"project_id":''}
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
@@ -339,7 +339,10 @@ class volume_ops:
         #build the select statement
         select_vol = ""
         if(self.user_level == 0):
-            select_vol = {"select":'*',"from":'trans_system_vols'}
+            if(project_id):
+                select_vol = {"select":'*',"from":'trans_system_vols',"where":"proj_id='%s'" %(project_id)}
+            else:
+                select_vol = {"select":'*',"from":'trans_system_vols'}
         elif(self.user_level >= 1):
             select_vol = {"select":'*',"from":'trans_system_vols',"where":"proj_id='%s'" %(self.project_id)}
         else:
