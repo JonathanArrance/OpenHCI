@@ -308,7 +308,7 @@ class snapshot_ops:
             logger.sys_error("The snapshot: %s does not exist." %(snap_name))
             raise Exception("The snapshot: %s does not exist." %(snap_name))
 
-    def list_snapshots(self):
+    def list_snapshots(self,project_id=None):
         """
         DESC: List all of the snapshots in a project
         INPUT: None
@@ -332,7 +332,10 @@ class snapshot_ops:
         try:
             select_snap = None
             if(self.is_admin == 1):
-                select_snap = {'select':"*",'from':"trans_system_snapshots"}
+                if(project_id):
+                    select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(project_id)}
+                else:
+                    select_snap = {'select':"*",'from':"trans_system_snapshots"}
             else:
                 select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(self.project_id)}
             snaps = self.db.pg_select(select_snap)

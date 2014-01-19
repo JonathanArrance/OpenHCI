@@ -339,7 +339,7 @@ def recv_data(conn):
     return data
 
 
-def keep_alive_check(conn):
+def keep_alive_check(node_id, conn):
 
     '''
     @author         : Shashaa
@@ -358,12 +358,21 @@ def keep_alive_check(conn):
                 'Length': '1',
                 'Value': 'alive'
                 }
-        conn.sendall(pickle.dumps(status_alive, -1))
-
-        # sleep for keep_alive_sec
         logger.sys_info("***keep_alive***")
         if __debug__ :
             print "***keep_alive***"
+        conn.sendall(pickle.dumps(status_alive, -1))
+        data = recv_data(conn)
+        if data:
+            data = pickle.loads(data)
+            if data['Type'] == 'status' and data['Value'] == 'alive':
+                logger.sys_info("node %s alive" %(node_id))
+                if __debug__ :
+                    print "node %s alive" %(node_id)
+            else:
+                logger.sys_info("node not responding")
+
+        # sleep for keep_alive_sec
         sleep(keep_alive_sec)
 
 
@@ -507,7 +516,7 @@ def client_thread(conn, client_addr):
                                 logger.sys_info("ciac server sending keep alive messages for node_id: %s" %(node_id))
                                 if __debug__ :
                                     print "ciac server sending keep alive messages for node_id: %s" % (node_id)
-                                keep_alive_check(conn)
+                                keep_alive_check(node_id, conn)
 
                             # node info has not been changed
                             else:
@@ -523,7 +532,7 @@ def client_thread(conn, client_addr):
                                 logger.sys_info("ciac server sending keep alive messages from node_id: %s" %(node_id))
                                 if __debug__ :
                                     print "ciac server sending keep alive messages from node_id: %s" % (node_id)
-                                keep_alive_check(conn)
+                                keep_alive_check(node_id, conn)
                                 
 
                         # node does not exists in the ciac DB
@@ -593,7 +602,7 @@ def client_thread(conn, client_addr):
                                 logger.sys_info("ciac server sending keep alive messages, node_id: %s" %(node_id))
                                 if __debug__ :
                                     print "ciac server sending keep alive messages, node_id: %s" % (node_id)
-                                keep_alive_check(conn)
+                                keep_alive_check(node_id, conn)
 
                             else:
                                 logger.sys_error("error in inserting new node_id %s in DB, exiting !!!" %(node_id))
