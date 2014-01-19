@@ -20,13 +20,13 @@ nova = server_ops(d)
 '''
 print "Loggin in as the power user."
 #onlyt an admin can create a new user
-c = authorization("bill","test")
+c = authorization("admin","password")
 #get the user dict
 e = c.get_auth()
 nova2 = server_ops(e)
 
 print "deleteing the security group"
-d = {'sec_group_id':"61789128-04a8-422e-b28f-1a20db1eb479", 'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+d = {'sec_group_id':"61789128-04a8-422e-b28f-1a20db1eb479", 'project_id':"975378d013664df394e3284bd7030108"}
 del_group = nova.delete_sec_group(d)
 print del_group
 print "-------------------------------------------------"
