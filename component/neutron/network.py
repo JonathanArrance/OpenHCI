@@ -97,7 +97,7 @@ class neutron_net_ops:
         #close any open db connections
         self.db.close_connection()
 
-    def list_networks(self):
+    def list_internal_networks(self,project_id=None):
         """
         DESC: List the networks available in a project. All user types can only
               list the networks that are available in their project.Admin can list
@@ -111,9 +111,43 @@ class neutron_net_ops:
         if(self.user_level <= 1):
             get_nets = {}
             if(self.is_admin == 1):
-                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings"}
+                if(project_id):
+                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(project_id)}
+                else:
+                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings"}
             else:
                 get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id)}
+
+            nets = self.db.pg_select(get_nets)
+            r_array = []
+            for net in nets:
+                r_dict = {}
+                r_dict['net_name'] = net[0]
+                r_dict['net_id'] = net[1]
+                r_dict['project_id'] = net[2]
+                r_array.append(r_dict)
+            return r_array
+
+    def list_external_networks(self,project_id=None):
+        """
+        DESC: List the networks available in a project. All user types can only
+              list the networks that are available in their project.Admin can list
+              all of the networks
+        INPUT: self object
+        OUTPUT: array of r_dict - net_name
+                                - net_id
+        ACCESS: All users. Admin can list all networks.
+        NOTE:none
+        """
+        if(self.user_level <= 1):
+            get_nets = {}
+            if(self.is_admin == 1):
+                if(project_id):
+                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(project_id),'and':"net_internal='false'"}
+                else:
+                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"net_internal='false'"}
+            else:
+                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='false'"}
 
             nets = self.db.pg_select(get_nets)
             r_array = []

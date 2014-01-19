@@ -87,10 +87,10 @@ class server_ops:
         #close any open db connections
         self.db.pg_close_connection()
 
-    def list_servers(self):
+    def list_servers(self,project_id=None):
         """
         DESC: List the virtual servers in the project.
-        INPUT: None
+        INPUT: project_id - op
         OUTPUT: array or r_dict - server_name
                                 - server_id
                                 - project_id
@@ -107,7 +107,10 @@ class server_ops:
         get_inst = None
         try:
             if(self.user_level == 0):
-                get_inst = {'select':"inst_name,inst_id,proj_id",'from':"trans_instances"}
+                if(project_id):
+                    get_inst = {'select':"inst_name,inst_id,proj_id",'from':"trans_instances",'where':"proj_id='%s'" %(project_id)}
+                else:
+                    get_inst = {'select':"inst_name,inst_id,proj_id",'from':"trans_instances"}
             elif(self.user_level == 1):
                 get_inst = {'select':"inst_name,inst_id,proj_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
             elif(self.user_level == 2):
@@ -948,7 +951,7 @@ class server_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
-    def list_sec_group(self):
+    def list_sec_group(self,project_id=None):
         """
         DESC: list the security groups that belong to a user
         INPUT: self object
@@ -962,7 +965,7 @@ class server_ops:
         get_group_dict = None
 
         if(self.is_admin == 1):
-            get_group_dict = {"select":'*',"from":'trans_security_group'}
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(project_id)}
         elif(self.user_level == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(self.project_id)}
         elif(self.user_level == 2):
@@ -985,7 +988,7 @@ class server_ops:
         #return the array
         return group_array
 
-    def list_sec_keys(self):
+    def list_sec_keys(self,project_id=None):
         """
         DESC: List the security keys that belong to a user
         INPUT: None
@@ -1000,7 +1003,7 @@ class server_ops:
         #get the security group info from the db.
         get_key_dict = None
         if(self.user_level == 0):
-            get_key_dict = {"select":'*',"from":'trans_security_keys'}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(project_id)}
         elif(self.user_level == 1):
             get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(self.project_id)}
         else:
