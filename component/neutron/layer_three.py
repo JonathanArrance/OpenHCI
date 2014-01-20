@@ -754,7 +754,7 @@ class layer_three_ops:
 #Refer to http://docs.openstack.org/api/openstack-network/2.0/content/router_ext_ops_floatingip.html
 
     #ALL floating iP stuff updated/UNITTESTED
-    def list_floating_ips(self):
+    def list_floating_ips(self,project_id=None):
         """
         DESC: List the availabel floating ips in a project. Any user type can list
               the floating ips in a project.
@@ -769,7 +769,10 @@ class layer_three_ops:
         get_floating = None
         try:
             if(self.is_admin == 1):
-                get_floating = {'select':"*",'from':"trans_floating_ip order by index ASC"}
+                if(project_id):
+                    get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s'order by index ASC"%(project_id)}
+                else:
+                    get_floating = {'select':"*",'from':"trans_floating_ip order by index ASC"}
             else:
                 get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s' order by index ASC"%(self.project_id)}
             floating = self.db.pg_select(get_floating)
