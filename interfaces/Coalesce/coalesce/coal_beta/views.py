@@ -105,16 +105,21 @@ def project_view(request, project_name):
         for ouser in ousers:
             ouserinfo.append(ouser['user_name'])     
   
-    network_list = no.list_networks()
-    routers= l3o.list_routers()
-    volumes = vo.list_volumes(pid)
-    snapshots=sno.list_snapshots()
-    sec_groups = so.list_sec_group()
-    sec_keys = so.list_sec_keys()
+    priv_net_list = no.list_internal_networks(pid)
+    pub_net_list  = no.list_external_networks(pid)
+    routers       = l3o.list_routers(pid)
+    volumes       = vo.list_volumes(pid)
+    snapshots     = sno.list_snapshots(pid)
+    sec_groups    = so.list_sec_group(pid)
+    sec_keys      = so.list_sec_keys(pid)
 
-    networks={}
-    for net in network_list:
-        networks[net['net_name']]= no.get_network(net['net_id'])
+    private_networks={}
+    for net in priv_net_list:
+        private_networks[net['net_name']]= no.get_network(net['net_id'])
+
+    public_networks={}
+    for net in pub_net_list:
+        public_networks[net['net_name']]= no.get_network(net['net_id'])
 
 
     return render_to_response('coal/project_view.html',
@@ -124,7 +129,8 @@ def project_view(request, project_name):
                                                         'userinfo':userinfo,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
-                                                        'networks': networks,
+                                                        'private_networks': private_networks,
+							'public_networks': public_networks,
                                                         'routers': routers,
                                                         'volumes': volumes,
                                                         'snapshots':snapshots,
@@ -296,13 +302,13 @@ def network_view(request, net_id):
                                                         'nw': nw,
                                                         }))
 
-def add_private_network(request, net_name, admin_state, shared, project_id, subnet_dhcp_enable, subnet_dns):
+def add_private_network(request, net_name, admin_state, shared, project_id):
     try:
         auth = request.session['auth']
         no = neutron_net_ops(auth)
         create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
+        import pdb; pdb.set_trace()
         network = no.add_private_network(create_dict)
-	
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

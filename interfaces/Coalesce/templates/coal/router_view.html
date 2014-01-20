@@ -1,0 +1,51 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %} Details for {{router.router_name}}{% endblock %}
+
+{% block content %}
+
+    <div class="row-fluid">
+      <div class="span6">
+        <div class="well">
+          <div class="legend">
+              Details for {{router.router_name}}
+          </div>
+          <table class="paleblue">
+              <tr><th>Router Status</th><td>{{router.router_status}}</td></tr>
+              <tr><th>Router Id</th><td>{{router.router_id}}</td></tr>
+              <tr><th>Project Id</th><td>{{router.project_id}}</td></tr>
+              <tr><th>Network Id</th><td>{{router.network_id}}</td></tr>
+              <tr><th>External Gateway</th><td>{{router.external_gateway}}</td></tr>
+              <tr><th>External IP</th><td>{{router.external_ip}}</td></tr>
+              <tr><th>Admin State Up</th><td>{{router.admin_state_up}}</td></tr>
+          </table>
+        </div>
+      </div><!-- end span6-->
+
+      <!--<div class="span5 offset1">
+        <div class="well">
+          <div class="legend">
+              Actions for {{ user_info.username }}
+          </div>
+          <div id="dialog-form-update-password" title="Update Password">
+                <p class="validateTips">All form fields are required.</p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="password1">Password</label>
+                    <input type="password" name="password1" id="password1" value="" class="text ui-widget-content ui-corner-all" />
+                    <label for="password2">Confirm Password</label>
+                    <input type="password" name="password2" id="password2" value="" class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
+          <a href="#" id="update-user-password">update password</a>
+        </div>
+      </div><!-- end span6-->
+
+
+
+    </div><!-- end row-fluid-->
+
+
+{% endblock %}
