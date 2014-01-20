@@ -80,7 +80,7 @@ class layer_three_ops:
         #close any open db connections
         self.db.close_connection()
 
-    def list_routers(self):
+    def list_routers(self,project_id=None):
         """
         DESC: List the routers that are present in a project.
         INPUT: self object
@@ -92,7 +92,10 @@ class layer_three_ops:
         """
         try:
             if(self.is_admin == 1):
-                self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers"}
+                if(project_id):
+                    self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers",'where':"proj_id='%s'"%(project_id)}
+                else:
+                    self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers"}
             else:
                 self.select_router = {'select':"router_name,router_id,router_status",'from':"trans_routers",'where':"proj_id='%s'"%(self.project_id)}
             routers = self.db.pg_select(self.select_router)

@@ -696,10 +696,11 @@ def processComputeConfig(sock, node_id):
 
             if data:
                 data = pickle.loads(data)
-                logger.sys_info("client received %s" %(data))
-                if __debug__ :
-                    print "client received %s" % data
-                break
+                if data['Type'] == 'status' and data['Value'] == 'ok':
+                    logger.sys_info("client received %s" %(data['Value']))
+                    if __debug__ :
+                        print "client received %s" % data
+                    break
             else:
                 logger.sys_info("listening for status_ready ack")
                 if __debug__ :
@@ -746,10 +747,11 @@ def processComputeConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    logger.sys_info("client received %s" %(data))
-                    if __debug__ :
-                        print "client received %s" % data
-                    break
+                    if data['Type'] == 'status' and data['Value'] =='ok':
+                        logger.sys_info("client received %s" %(data['Value']))
+                        if __debug__ :
+                            print "client received %s" % data
+                        break
                 else:
                     logger.sys_info("listening for status_halt ack")
                     if __debug__ :
@@ -765,10 +767,11 @@ def processComputeConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    logger.sys_info("client received %s" %(data))
-                    if __debug__ :
-                        print "client received %s" % data
-                    break
+                    if data['Type'] == 'status' and data['Value'] == 'ok':
+                        logger.sys_info("client received %s" %(data))
+                        if __debug__ :
+                            print "client received %s" % data
+                        break
                 else:
                     logger.sys_info("listening for status_ready ack")
                     if __debug__ :
@@ -905,10 +908,11 @@ def processStorageConfig(sock, node_id):
 
             if data:
                 data = pickle.loads(data)
-                logger.sys_info("node_id: %s client received %s" %(node_id, data))
-                if __debug__ :
-                    print "node_id: %s client received %s" % (node_id, data)
-                break
+                if data['Type'] == 'status' and data['Value'] == 'ok':
+                    logger.sys_info("node_id: %s client received %s" %(node_id, data['Value']))
+                    if __debug__ :
+                        print "node_id: %s client received %s" %(node_id, data['Value'])
+                    break
             else:
                 logger.sys_info("listening for ok ack message for status ready message")
                 if __debug__ :
@@ -951,9 +955,11 @@ def processStorageConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    logger.sys_info("node_id: %s client received: %s" %(node_id,data))
-                    if __debug__ :
-                        print "node_id: %s client received: %s" % (node_id,data)
+                    if data['Type'] == 'status' and data['Value'] == 'ok':
+                        logger.sys_info("node_id: %s client received: %s" %(node_id,data['Value']))
+                        if __debug__ :
+                            print "node_id: %s client received: %s" % (node_id,data)
+                        break
                 else:
                     logger.sys_info("node_id: %s listening for status_halt ack" %(node_id))
                     if __debug__ :
@@ -968,9 +974,12 @@ def processStorageConfig(sock, node_id):
 
                 if data:
                     data = pickle.loads(data)
-                    logger.sys_info("node_id: %s client received: %s" %(node_id, data))
-                    if __debug__ :
-                        print "node_id: %s client received: %s" % (node_id,data)
+                    if data['Type'] and data['Value'] == 'ok':
+                        logger.sys_info("node_id: %s client received: %s" %(node_id, data['Value']))
+                        if __debug__ :
+                            print "node_id: %s client received: %s" %(node_id,data['Value'])
+                    else:
+                        logger.sys_error("node_id: %s received: %s" %(node_id, data['Value']))
                 else:
                     logger.sys_info("node_id: %s listening for status_ready ack" %(node_id))
                     if __debug__ :
