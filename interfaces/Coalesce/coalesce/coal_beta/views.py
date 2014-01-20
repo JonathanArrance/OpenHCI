@@ -121,7 +121,6 @@ def project_view(request, project_name):
     for net in pub_net_list:
         public_networks[net['net_name']]= no.get_network(net['net_id'])
 
-
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
                                                         'users': users,
@@ -307,7 +306,7 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
         auth = request.session['auth']
         no = neutron_net_ops(auth)
         create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         network = no.add_private_network(create_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
