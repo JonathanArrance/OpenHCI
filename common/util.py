@@ -918,6 +918,7 @@ def get_network_variables(input_dict):
                    - net_inet
                    - net_phy_adapter
                    - net_dns_domain
+                   -inet_setting
     ACCESS: Wide open
     NOTE: This only returns the network interface settings of the system. It is used for information puposes
           and to build file descriptors to write the /etc/network/interfaces file

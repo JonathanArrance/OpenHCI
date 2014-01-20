@@ -4,14 +4,12 @@ import transcirrus.common.util as util
 import transcirrus.common.config as config
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
-
-from transcirrus.component.neutron.network import neutron_net_ops
 from ifconfig import ifconfig
 
 def change_uplink_ip(auth_dict,input_dict):
     """
     DESC: Change the IP address of the uplink adapter.
-    INPUT: input_dict - uplink_ip
+    INPUT: input_dict - uplink_ip - req
                       - uplink_subnet - op
                       - uplink_gateway - op
                       - uplink_dns - op
@@ -52,15 +50,59 @@ def change_uplink_ip(auth_dict,input_dict):
             logger.sys_error("Missing required param to reset uplink ip.")
             raise Exception("Missing required param to reset uplink ip.")
 
-    #get the current mgmt net info
-    mgmt_net = util.get_network_variables({'net_adapter':'mgmt','node_id':node_id})
-    if(mgmt_net == 'ERROR'):
-        logger.sys_error('Could not get the mgmt netw adapter info. Can not update uplink ip.')
-        return 'ERROR'
-
     # 1. we need to change the network bond1 ip address based on the node type - cc - change it it is uplink
     if(node_type == 'cc'):
-        #
+        #get the current net settings from the db
+        #get the current mgmt net info
+        mgmt_net = util.get_network_variables({'net_adapter':'mgmt','node_id':node_id})
+        if(mgmt_net == 'ERROR'):
+            logger.sys_error('Could not get the mgmt net adapter info. Can not update uplink ip.')
+            return 'ERROR'
+
+        uplink_net = util.get_network_variables({'net_adapter':'uplink','node_id':node_id})
+        if(uplink_net == 'ERROR'):
+            logger.sys_error('Could not get the uplink net adapter info. Can not update uplink ip.')
+            return 'ERROR'
+
+        #get the existing vals
+        if('uplink_subnet' not in input_dict):
+            input_dict['uplink_subnet'] = uplink_net['net_mask']
+        if('uplink_gateway' not in input_dict):
+            input_dict['uplink_gateway'] = uplink_net['net_gateway']
+        if('uplink_dns' not in input_dict):
+            input_dict['uplink_dns'] = uplink_net['net_dns1']
+        if('uplink_dns2' not in input_dict):
+            input_dict['uplink_dns2'] = uplink_net['net_dns2']
+        if('uplink_dns3' not in input_dict):
+            input_dict['uplink_dns3'] = uplink_net['net_dns3']
+        if('uplink_domain' not in input_dict):
+            input_dict['uplink_domain'] = uplink_net['net_dns_domain']
+
+        #change the ip with the given info
+        uplink_dict = {
+                       'up_ip':input_dict['uplink_ip'],
+                       'up_subnet':input_dict['uplink_subnet'],
+                       'up_gateway':input_dict['uplink_gateway'],
+                       'up_dns1':input_dict['uplink_dns'],
+                       'up_dns2':input_dict['uplink_dns2'],
+                       'up_dns3':input_dict['uplink_dns3'],
+                       'up_domain':input_dict['uplink_domain']
+                       }
+        mgmt_dict = {
+                    'mgmt_ip':mgmt_net['net_ip'],
+                    'mgmt_subnet':mgmt_net['net_mask'],
+                    'mgmt_dns1':mgmt_net['net_dns1'],
+                    'mgmt_dns2':['net_dns2'],
+                    'mgmt_dns3':['net_dns3'],
+                    'mgmt_domain':['net_dns_domain'],
+                    'mgmt_dhcp':['inet_setting']
+                    }
+        input_dict = {
+                      'node_id':node_id,
+                      'uplink_dict':uplink_dict,
+                      'mgmt_dict':mgmt_dict
+                      }
+        change_uplink = util.set_network_variables(input_dict)
     else:
         logger.sys_error("Invalid node type.")
         return 'ERROR'
