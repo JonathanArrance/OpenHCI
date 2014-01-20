@@ -112,11 +112,11 @@ class neutron_net_ops:
             get_nets = {}
             if(self.is_admin == 1):
                 if(project_id):
-                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(project_id)}
+                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(project_id),'and':"net_internal='true'"}
                 else:
                     get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings"}
             else:
-                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id)}
+                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='true'"}
 
             nets = self.db.pg_select(get_nets)
             r_array = []
