@@ -241,6 +241,32 @@ def recv_data(sock):
 
     return data
 
+def send_data(msg, sock):
+
+
+    global retry_count
+    global timeout_sec
+    count=0
+    totalsent = 0
+    #msglen = msg.length()
+    # TODO send data based on size of the message being sent
+    # assume 10 bytes as minimum length of any message exchanged between client
+    # and server sockets
+    msglen = 10
+    while totalsent < msglen:
+        sent = sock.send(msg[totalsent:])
+        if sent == 0:
+            count = count+1
+            if count >= retry_count:
+                logger.sys_error("send failed !!")
+                raise RuntimeError("socket connection broken")
+                sys.exit()
+            else:
+                logger.sys_info("socket send data retrying ...")
+                time.sleep(1)
+        totalsent = totalsent + sent
+
+
 def restartNovaServices(node_id):
     '''
     @author         : Shashaa
