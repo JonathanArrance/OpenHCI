@@ -121,7 +121,7 @@ def project_view(request, project_name):
     for net in pub_net_list:
         public_networks[net['net_name']]= no.get_network(net['net_id'])
     
-    default_public = public_networks.values()[0]['net_subnet_id'][0]
+    default_public = public_networks.values()[0]['net_id']
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -216,10 +216,12 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         return HttpResponse(status=500)
 
 def create_router(request, router_name, priv_net, default_public, project_id):
-    #print "%s, %s, %s, %s " % (router_name, priv_net, default_public, project_id)
     try:
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
+	no = network_ops(auth)
+	netinfo = no.get_network(priv_net)
+	subnet = netinfo["net_subnet_id"][0]
 
         create_router = {'router_name': router_name, 'project_id': project_id}
         router = l3o.add_router(create_router)
@@ -231,16 +233,17 @@ def create_router(request, router_name, priv_net, default_public, project_id):
 	gateway = l3o.add_router_gateway_interface(add_dict)
 	print "add_dict: %s" % add_dict 
 	print "gateway: %s" % gateway 
-
-	internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_name': priv_net}
-	internal_int= l3o.add_router_internal_interface(internal_dict)
+	print "```````````````````````````````````````"
+	internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_id': subnet}
 	print "internal_dict: %s" % internal_dict 
+	internal_int= l3o.add_router_internal_interface(internal_dict)
+	
 	print "internal_int: %s" % internal_int
 
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        return HttpResponse(status=500)
 
 def take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
     try:

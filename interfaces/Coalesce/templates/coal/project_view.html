@@ -324,7 +324,7 @@ $(document).ready(function() {
 		    <label for="priv_net">Private Network</label>
                     <select name="priv_net" id="priv_net">
 			{% for key,value in private_networks.items %}
-		   	<option value="{{value.net_name}}">{{value.net_name}}</option>
+		   	<option value="{{value.net_id}}">{{value.net_name}}</option>
 			{% endfor %}
                     </select>
                 </fieldset>
