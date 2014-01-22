@@ -13,6 +13,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -994,6 +995,8 @@ class neutron_net_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(net['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,net['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
