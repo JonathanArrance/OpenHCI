@@ -85,7 +85,7 @@ $(function() {
 					if ( bValid ) {
 						$.post('/add_existing_user/' + name.val() + '/' + role.val() + '/' + PROJECT + '/');
 						$( this ).dialog( "close" );
-                        window.location.reload();
+                        
 					}
 				},
 				Cancel: function() {

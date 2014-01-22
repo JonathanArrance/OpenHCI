@@ -1,6 +1,7 @@
 # Django imports
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -12,6 +13,7 @@ from django.db.utils import DatabaseError
 from django.db import connection
 from django.views.decorators.cache import never_cache
 from django.core import serializers
+import time
 
 
 from transcirrus.common.auth import authorization
@@ -83,6 +85,7 @@ def project_view(request, project_name):
     sno = snapshot_ops(auth)
 
     project = to.get_tenant(project_name)
+    pid = project["project_id"]
     users = to.list_tenant_users(project_name)
     userinfo = {}
     uo = user_ops(auth)
@@ -102,17 +105,21 @@ def project_view(request, project_name):
         for ouser in ousers:
             ouserinfo.append(ouser['user_name'])     
   
-    network_list = no.list_networks()
-    routers= l3o.list_routers()
-    volumes = vo.list_volumes()
-    snapshots=sno.list_snapshots()
-    sec_groups = so.list_sec_group()
-    sec_keys = so.list_sec_keys()
+    priv_net_list = no.list_internal_networks(pid)
+    pub_net_list  = no.list_external_networks(pid)
+    routers       = l3o.list_routers(pid)
+    volumes       = vo.list_volumes(pid)
+    snapshots     = sno.list_snapshots(pid)
+    sec_groups    = so.list_sec_group(pid)
+    sec_keys      = so.list_sec_keys(pid)
 
-    networks={}
-    for net in network_list:
-        networks[net['net_name']]= no.get_network(net['net_id'])
+    private_networks={}
+    for net in priv_net_list:
+        private_networks[net['net_name']]= no.get_network(net['net_id'])
 
+    public_networks={}
+    for net in pub_net_list:
+        public_networks[net['net_name']]= no.get_network(net['net_id'])
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -121,7 +128,8 @@ def project_view(request, project_name):
                                                         'userinfo':userinfo,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
-                                                        'networks': networks,
+                                                        'private_networks': private_networks,
+							'public_networks': public_networks,
                                                         'routers': routers,
                                                         'volumes': volumes,
                                                         'snapshots':snapshots,
@@ -158,13 +166,11 @@ def create_user(request, username, password, userrole, email, project_id):
         auth = request.session['auth']
         uo = user_ops(auth)
         user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_id': project_id}
-	import pdb; pdb.set_trace()
+	#import pdb; pdb.set_trace()
         newuser= uo.create_user(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        return HttpResponseRedirect("project_view", )
     except:
-        return HttpResponse(status=500)
+        raise
 
 
 def create_security_group(request, groupname, groupdesc, ports, project_id):
@@ -177,9 +183,8 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         so = server_ops(auth)
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
         newgroup= so.create_sec_group(create_sec)  
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        print "newgroup = %s" % newgroup
+	return HttpResponseRedirect("manage_projects")
     except:
         return HttpResponse(status=500)
 
@@ -265,9 +270,10 @@ def add_existing_user(request, username, user_role, project_name):
         uo = user_ops(auth)
         user_dict = {'username': username, 'user_role':user_role, 'project_name': project_name}
         uo.add_user_to_project(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
+	referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
+
     except:
         return HttpResponse(status=500)  
 
@@ -295,13 +301,13 @@ def network_view(request, net_id):
                                                         'nw': nw,
                                                         }))
 
-def add_private_network(request, net_name, admin_state, shared, project_id, subnet_dhcp_enable, subnet_dns):
+def add_private_network(request, net_name, admin_state, shared, project_id):
     try:
         auth = request.session['auth']
         no = neutron_net_ops(auth)
         create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
+        #import pdb; pdb.set_trace()
         network = no.add_private_network(create_dict)
-	
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

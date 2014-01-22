@@ -291,16 +291,13 @@ $(document).ready(function() {
           <div class="legend">
              External Networks
           </div>
-          {% if networks %}
+          {% if public_networks %}
 	    <table class="paleblue">
 
                 <tr> <th>Network</th>  <th>Network info</th>  <th>Actions</th></tr>
 
-                {% for key,value in networks.items %}
-		  {% if value.net_internal == 'false' %}
+                {% for key,value in public_networks.items %}
 		    <tr> <td>{{key}}</td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}}</td>  <td><a href="/network/{{value.net_id}}/view/">view</a></td></tr>
-		  {% endif %}
-
 		{% endfor %}
 	    </table>
 	  {% else %}	
@@ -315,7 +312,18 @@ $(document).ready(function() {
         <div class="well">
           <div class="legend">
              Routers
+          <a href="#"  id="create-router" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Router</a>	
           </div>
+
+	    <div id="router-dialog-form" title="Create new router">
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="router_name">Router Name</label>
+                    <input type="text" name="router_name" id="router_name"  class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
 	  {% if routers %}
 	    <table class="paleblue">
 
@@ -367,16 +375,13 @@ $(document).ready(function() {
                 </fieldset>
                 </form>
             </div>
-          {% if networks %}
+          {% if private_networks %}
 	    <table class="paleblue">
 
                 <tr> <th>Network</th>  <th>Network info</th> <th>Actions</th> </tr>
 
-                {% for key,value in networks.items %}
-		  {% if value.net_internal == 'true' %}
+                {% for key,value in private_networks.items %}
 		   <tr> <td>{{key}}</td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}} </td>  <td><a href="/network/{{value.net_id}}/view/">view</a></td></tr>
-		  {% endif %}
-
 		{% endfor %}
 	    </table>
 	  {% else %}	

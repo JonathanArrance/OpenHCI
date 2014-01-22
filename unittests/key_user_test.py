@@ -29,14 +29,15 @@ print "Create a new standard user with no project."
 new_user_dict = {"username":'keven',"password":"test","userrole":"pu","email":"keven@domain.com"}
 create = use.create_user(new_user_dict)
 print create
+'''
 
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
-add_user_dict = {"username":"admin","user_role":'pu',"project_name":'testproj6'}
+add_user_dict = {"username":"admin","user_role":'admin',"project_name":'ffvc2'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
-
+'''
 print "Create a new standard user."
 new_user_dict = {"username":'ralph',"password":"test","userrole":"user","email":"ralph@domain.com","project_id":"5b5a1f8784a742bc8bae98021d7e884b"}
 create = use.create_user(new_user_dict)
