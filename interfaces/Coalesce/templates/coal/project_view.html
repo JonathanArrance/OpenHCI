@@ -23,10 +23,13 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/private-network-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/router-dialog-form.js"/></script>
     <script>
-      var PROJECT = "{{ project.project_name}}";
+      var PROJECT = "{{ project.project_name }}";
     </script>
     <script>
-      var PROJECT_ID = "{{ project.project_id}}";
+      var PROJECT_ID = "{{ project.project_id }}";
+    </script>
+    <script>
+      var DEFAULT_PUBLIC = "{{ default_public }}";
     </script>
 <script>
 $(document).ready(function() {
@@ -49,10 +52,8 @@ $(document).ready(function() {
 {% block content %}
 {% load extratags %}
 
-
-
     <div class="span12 well legend-header">
-        {{ project.project_name}} ({{project.project_id}}) <a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
+        {{ project.project_name}} ({{project.project_id}}) {{default_public}}<a href="/projects/{{project.id}}/delete" data-confirm="Are you sure you want to delete?" class="btn btn-danger" style="float:right"><i class="icon-white icon-trash"></i> Delete Project</a>
     </div>
 
     <!--  Begin Row One -->
@@ -85,7 +86,6 @@ $(document).ready(function() {
                         <option value="pu">Power User</option>
                         <option value="admin">Admin</option>
                     </select>
- <p>{{ project.project_id}}</p>
                 </fieldset>
                 </form>
             </div>
@@ -110,16 +110,6 @@ $(document).ready(function() {
                 </fieldset>
                 </form>
             </div>
-
-	   <div id="router-dialog-form" title="Create new router">
-                <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="router_name">Router Name</label>
-                    <input type="text" name="router_name" id="router_name"  class="text ui-widget-content ui-corner-all" />
-                </fieldset>
-                </form>
-           </div>
 
           <table class="paleblue" id="users">
                 <tr> <th>User</th>  <th>Actions</th>  </tr>
@@ -322,9 +312,24 @@ $(document).ready(function() {
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Routers
-          <a href="#"  id="create-router" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Router</a>	
+             Routers <a href="#"  id="create-router" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Router</a>	
           </div>
+
+	   <div id="router-dialog-form" title="Create new router">
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="router_name">Router Name</label>
+                    <input type="text" name="router_name" id="router_name"  class="text ui-widget-content ui-corner-all" />
+		    <label for="priv_net">Private Network</label>
+                    <select name="priv_net" id="priv_net">
+			{% for key,value in private_networks.items %}
+		   	<option value="{{value.net_name}}">{{value.net_name}}</option>
+			{% endfor %}
+                    </select>
+                </fieldset>
+                </form>
+           </div>
 
 	    
 	  {% if routers %}

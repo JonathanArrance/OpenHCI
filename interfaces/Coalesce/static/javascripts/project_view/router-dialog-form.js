@@ -36,7 +36,9 @@ $(function() {
 		
 		
 		var 	router_name = $( "#router_name" ),
-			allFields = $( [] ).add( router_name ),
+			priv_net = $( "#priv_net" ),
+
+			allFields = $( [] ).add( router_name ).add( priv_net ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -75,7 +77,7 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					   $.post('/create_router/' + router_name.val() + '/' + PROJECT_ID + '/');
+					   $.post('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}
