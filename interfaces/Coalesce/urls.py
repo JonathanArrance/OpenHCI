@@ -71,6 +71,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.add_private_network',
             name='add_private_network'),
 
+	url(r'^create_router/(?P<router_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_router',
+            name='create_router'),
+
 	
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',

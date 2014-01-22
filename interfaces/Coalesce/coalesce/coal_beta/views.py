@@ -106,7 +106,7 @@ def project_view(request, project_name):
             ouserinfo.append(ouser['user_name'])     
   
     priv_net_list = no.list_internal_networks(pid)
-    pub_net_list  = no.list_external_networks(pid)
+    pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(pid)
     volumes       = vo.list_volumes(pid)
     snapshots     = sno.list_snapshots(pid)
@@ -212,6 +212,24 @@ def create_volume(request, volume_name, volume_size, description, project_id):
     except:
         return HttpResponse(status=500)
 
+def create_router(request, router_name, project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        create_router = {'router_name': router_name, 'project_id': project_id}
+        #import pdb; pdb.set_trace()
+        router = l3o.add_router(create_router) 
+	#add_dict = {'router_id': router['router_id'], 'ext_net_id': ext_net_id} #need to get this from project_view
+	#l3o.add_router_gateway_interface(add_dict)
+	#internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_name': subnet_name}
+	#l3o.add_router_internal_interface(self,internal_dict)
+
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
 def take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
     try:
         auth = request.session['auth']
@@ -308,6 +326,8 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
         create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
         #import pdb; pdb.set_trace()
         network = no.add_private_network(create_dict)
+	subnet_dict={"net_id": network.net_id, "subnet_dhcp_enable": "true", "subnet_dns": ["8.8.8.8"]}
+	subnet = no.add_net_subnet(subnet_dict)		
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
