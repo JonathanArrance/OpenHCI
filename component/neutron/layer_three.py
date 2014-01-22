@@ -11,6 +11,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 from transcirrus.common.api_caller import caller
 from transcirrus.component.neutron.ports import port_ops
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -461,6 +462,8 @@ class layer_three_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != add_dict['project_id']):
+                    self.token = get_token(self.username,self.password,add_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
@@ -602,6 +605,7 @@ class layer_three_ops:
               router.
         INPUT: add_dict - router_id
                         - ext_net_id
+                        - project_id
         OUTPUT: OK -success
                 ERROR - failure
         ACCESS: Admins and power users can add an extrnal interface to the router.
@@ -615,6 +619,13 @@ class layer_three_ops:
             raise Exception("Can not add external_gateway to router, no subnet id given.")
 
         if(self.user_level <= 1):
+            try:
+                get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(add_dict['project_id'])}
+                project = self.db.pg_select(get_proj)
+            except:
+                logger.sys_error("Project could not be found.")
+                raise Exception("Project could not be found.")
+
             #get the extnet info - confirmation
             if('ext_net_id' in add_dict):
                 try:
@@ -638,6 +649,8 @@ class layer_three_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != add_dict['project_id']):
+                    self.token = get_token(self.username,self.password,add_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
