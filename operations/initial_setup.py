@@ -15,6 +15,7 @@ from transcirrus.component.neutron.network import neutron_net_ops
 #from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
+from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.database import node_db
 
 #get the passed in vars
@@ -238,6 +239,44 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
 
+    #setup the pre-installed images
+    print "Importing default images"
+    glance = glance_ops(auth_dict)
+    cirros_input = {
+                    'img_name':"Cirros-x86_64-0.3.1",
+                    'img_disk_format':"qcow2",
+                    'img_is_public':'True',
+                    'img_is_protected':'True',
+                    'project_id':auth_dict['project_id'],
+                    'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
+                    }
+    import_cirros = glance.import_image(cirros_input)
+    if(import_cirros != 'OK'):
+        logger.warn('Could not import the default cirros image.')
+
+    ubuntu_input = {
+                    'img_name':"Ubuntu-12.04-x86_64",
+                    'img_disk_format':"qcow2",
+                    'img_is_public':'True',
+                    'img_is_protected':'True',
+                    'project_id':auth_dict['project_id'],
+                    'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
+                    }
+    import_ubuntu = glance.import_image(ubuntu_input)
+    if(import_ubuntu != 'OK'):
+        logger.warn('Could not import the default Ubuntu Precise image.')
+
+    fedora_input = {
+                    'img_name':"Fedora-x86_64",
+                    'img_disk_format':"qcow2",
+                    'img_is_public':'True',
+                    'img_is_protected':'True',
+                    'project_id':auth_dict['project_id'],
+                    'file_location':"/transcirrus/fedora-latest.x86_64.qcow2"
+                    }
+    import_fedora = glance.import_image(fedora_input)
+    if(import_fedora != 'OK'):
+        logger.warn('Could not import the default Fedora image.')
 
     #set up openvswitch
     logger.sys_info("Setting up br-ex")
@@ -398,7 +437,7 @@ def run_setup(new_system_variables,auth_dict):
     #new_cloud_name = util.update_cloud_controller_name(updatename)
     #if(new_cloud_name != 'OK'):
     #    logger.error('Cloud name was not chnaged.')
-
+    
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
     if(boot == 'ERROR'):

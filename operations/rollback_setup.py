@@ -14,12 +14,14 @@ import transcirrus.common.service_control as service
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
+from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.database import node_db
 
 #app = Celery('rollback_setup')
 #@app.task()
 def rollback(auth_dict):
     net = neutron_net_ops(auth_dict)
+    glance = glance_ops(auth_dict)
     auth_dict['api_ip'] = util.get_api_ip()
     endpoint = endpoint_ops(auth_dict)
 
@@ -46,6 +48,16 @@ def rollback(auth_dict):
     except:
         pass
 
+    logger.sys_info("Removeing the default glance images.")
+    try:
+        #remove the default glance images if they were created
+        images = glance.list_images()
+        for image in images:
+            glance.delete_image(image['image_id'])
+    except:
+        logger.sys_info("No Glance images to remove.")
+        pass
+
     #kill any OVS configs
     logger.sys_info('Removing all of the OpenVswitch settings.')
     try:
@@ -62,10 +74,6 @@ def rollback(auth_dict):
     try:
         os.system('sudo iptables -F')
         os.system('sudo rm /transcirrus/iptables.conf')
-        #os.system('sudo rm -rf /transcirrus/iptables.conf')
-        #os.system("sudo iptables -D FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
-        #os.system("sudo iptables -D FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
-        #os.system("sudo iptables -D POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
     except:
         logger.sys_info("No iptables entries to remove.")
         pass
