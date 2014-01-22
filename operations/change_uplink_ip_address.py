@@ -4,6 +4,7 @@ import transcirrus.common.util as util
 import transcirrus.common.config as config
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
+import datetime
 from ifconfig import ifconfig
 
 def change_uplink_ip(auth_dict,input_dict):
@@ -19,6 +20,7 @@ def change_uplink_ip(auth_dict,input_dict):
                       
     OUTPUT: OK - success
             ERROR - fail
+            NA - unknown
     ACCESS:Only the admin can change the Uplink ip address
     NOTE: This def will change the uplink ip - it WILL NOT
           chnage the default public network or any allocated floating ips.
@@ -92,10 +94,10 @@ def change_uplink_ip(auth_dict,input_dict):
                     'mgmt_ip':mgmt_net['net_ip'],
                     'mgmt_subnet':mgmt_net['net_mask'],
                     'mgmt_dns1':mgmt_net['net_dns1'],
-                    'mgmt_dns2':['net_dns2'],
-                    'mgmt_dns3':['net_dns3'],
-                    'mgmt_domain':['net_dns_domain'],
-                    'mgmt_dhcp':['inet_setting']
+                    'mgmt_dns2':mgmt_net['net_dns2'],
+                    'mgmt_dns3':mgmt_net['net_dns3'],
+                    'mgmt_domain':mgmt_net['net_dns_domain'],
+                    'mgmt_dhcp':mgmt_net['inet_setting']
                     }
         input_dict = {
                       'node_id':node_id,
@@ -103,6 +105,22 @@ def change_uplink_ip(auth_dict,input_dict):
                       'mgmt_dict':mgmt_dict
                       }
         change_uplink = util.set_network_variables(input_dict)
+        if(change_uplink == 'ERROR' or change_uplink == 'NA'):
+            return change_uplink
+        else:
+            logger.sys_info("writing the network config file.")
+            write_up_net = util.write_new_config_file(change_uplink)
+            if(write_up_net == 'OK'):
+                #restart the network card
+                restart_card = util.restart_network_card("br-ex")
+                if(restart_card != 'OK'):
+                    logger.sys_error("Could not restart adapter: Bridge 1(uplink)")
+                    return restart_card
+            else:
+                logger.sys_info("Network config file not written, new uplnk not written, rolling back old config.")
+                #Rollback the netconfig file
+                date = strftime("%Y-%m-%d", gmtime())
+                os.system('sudo cp /etc/network/interfaces_%s /etc/network/interfaces'%(date))
     else:
         logger.sys_error("Invalid node type.")
         return 'ERROR'
