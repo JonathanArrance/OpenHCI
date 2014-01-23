@@ -123,6 +123,15 @@ class neutron_net_ops:
             r_array = []
             for net in nets:
                 r_dict = {}
+                #add an in use flag
+                get_use = {'select': "router_name",'from': "trans_routers",'where':"net_id='%s'"%(nets[0][1])}
+                in_use = self.db.pg_select(get_use)
+                if(len(in_use[0]) > 0):
+                    r_dict['in_use'] = 'true'
+                    r_dict['router_name'] = in_use[0][0]
+                else:
+                    r_dict['in_use'] = 'false'
+                    r_dict['router_name'] = ''
                 r_dict['net_name'] = net[0]
                 r_dict['net_id'] = net[1]
                 r_dict['project_id'] = net[2]
@@ -172,7 +181,7 @@ class neutron_net_ops:
                        - net_admin_state
                        - net_shared
                        - net_internal
-                       - net_subnet_id[]
+                       - net_subnet[{subnet_id: subnet_name:}]
         ACCESS: Admins can get info on any network, power users and users can get info
                 for networks in their project.
         """
@@ -195,9 +204,9 @@ class neutron_net_ops:
         get_sub = None
         try:
             if(net[0][4] == 'false'):
-                get_sub = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
+                get_sub = {'select':"subnet_id,subnet_name",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
             elif(net[0][4] == 'true'):
-                get_sub = {'select':"subnet_id",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
+                get_sub = {'select':"subnet_id,subnet_name",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
             subs = self.db.pg_select(get_sub)
         except:
             logger.sys_error('Could not get the subnets for net_id %s'%(net_id))
@@ -206,7 +215,8 @@ class neutron_net_ops:
         #build a better array
         new_array = []
         for sub in subs:
-            new_array.append(sub[0])
+            r_dict = {'subnet_id':sub[0], 'subnet_name':sub[1]}
+            new_array.append(r_dict)
 
         r_dict = {'net_name':net[0][0],'net_id':net[0][1],'net_creator_id':net[0][2],'net_admin_state':net[0][3],'net_shared':net[0][5],'net_internal':net[0][4],'net_subnet_id':new_array,'project_id':net[0][6]}
         return r_dict
@@ -627,12 +637,12 @@ class neutron_net_ops:
                 r_array.append(r_dict)
             return r_array
 
-    def get_net_subnet(self,subnet_name):
+    def get_net_subnet(self,subnet_id):
         """
         DESC: Get all of the information for a specific subnet. All user types
               can get information for subnets in the project networks.
         INPUT: subnet_name
-        OUTPUT: r_dict - subnet_id
+        OUTPUT: r_dict - subnet_name
                        - subnet_class
                        - subnet_ip_ver
                        - subnet_cidr
@@ -643,7 +653,7 @@ class neutron_net_ops:
         NOTE: all of the return info can be quried from the transcirrus db. May use
               rest api to verify subent exsists(not required).
         """
-        if(subnet_name == ''):
+        if(subnet_id == ''):
             logger.sys_error("No subnet name was specified.")
             raise Exception("No subnet name was specified.")
 
@@ -651,16 +661,16 @@ class neutron_net_ops:
             get_subnet = {}
             try:
                 if(self.is_admin == 1):
-                    get_subnet = {'select':"subnet_id,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable",'from':"trans_subnets",'where':"subnet_name='%s'" %(subnet_name)}
+                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id)}
                 else:
-                    get_subnet = {'select':"subnet_id,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable",'from':"trans_subnets",'where':"subnet_name='%s'" %(subnet_name),'and':"proj_id='%s'" %(self.project_id)}
+                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id),'and':"proj_id='%s'" %(self.project_id)}
                 sub = self.db.pg_select(get_subnet)
             except:
                 logger.sql_error("Could not connect to the Transcirrus db.")
                 raise Exception("Could not connect to the Transcirrus db.")
 
             #build a better array
-            r_dict = {'subnet_id':sub[0][0],'subnet_class':sub[0][1],'subnet_ip_ver':sub[0][2],'subnet_cidr':sub[0][3],'subnet_allocation_start':sub[0][4],'subnet_allocation_end':sub[0][5],'subnet_gateway':sub[0][6],'subnet_mask':sub[0][7],'subnet_dhcp_enable':sub[0][8]}
+            r_dict = {'subnet_name':sub[0][0],'subnet_class':sub[0][1],'subnet_ip_ver':sub[0][2],'subnet_cidr':sub[0][3],'subnet_allocation_start':sub[0][4],'subnet_allocation_end':sub[0][5],'subnet_gateway':sub[0][6],'subnet_mask':sub[0][7],'subnet_dhcp_enable':sub[0][8]}
             return r_dict
 
     def remove_net_subnet(self,del_dict):
