@@ -425,16 +425,15 @@ class layer_three_ops:
                 logger.sys_error("Power user can only create networks in their project.")
                 raise Exception("Power user can only create networks in their project.")
         elif(self.user_level == 2):
-            logger.sys_error("Users can not remove networks in their project.")
-            raise Exception("Users can not remove networks in their project.")
+            logger.sys_error("Users can not add interfaces to routers.")
+            raise Exception("Users can not add interfaces to routers.")
 
         #get the subnet info
-        get_sub = {}
+        get_sub = None
         try:
             if(self.is_admin == 1):
                 get_sub = {'select':"subnet_name,proj_id,net_id",'from':"trans_subnets",'where':"subnet_id='%s'"%(add_dict['subnet_id'])}
-                #self.subnet = self.db.pg_select(get_sub)
-            elif(self.user_level):
+            elif(self.user_level == 1):
                 get_sub = {'select':"subnet_name,proj_id,net_id",'from':"trans_subnets",'where':"subnet_id='%s'"%(add_dict['subnet_id']),'and':"proj_id='%s'"%(add_dict['project_id'])}
             self.subnet = self.db.pg_select(get_sub)
         except:
@@ -454,14 +453,14 @@ class layer_three_ops:
 
         #check if router and subnet are in the same project
         if(self.subnet[0][1] != self.router[0][4]):
-            logger.sys_error("Router %s and subnet %s not in project %s."%(add_dict['router_id'],add_dict['subnet_id'],add_dict['project_id']))
-            raise Exception("Router %s and subnet %s not in project %s."%(add_dict['router_id'],add_dict['subnet_id'],add_dict['project_id']))
+            logger.sys_error("Router %s and subnet %s not in project %s."%(add_dict['router_id'],self.subnet[0][0],add_dict['project_id']))
+            raise Exception("Router %s and subnet %s not in project %s."%(add_dict['router_id'],self.subnet[0][0],add_dict['project_id']))
 
         if(self.user_level <= 1):
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":add_dict['project_id']}
                 if(self.project_id != add_dict['project_id']):
                     self.token = get_token(self.username,self.password,add_dict['project_id'])
                 api = caller(api_dict)
@@ -471,7 +470,7 @@ class layer_three_ops:
 
             try:
                 #add the new user to openstack
-                body = '{"subnet_id": "%s"}'%(self.add_dict['subnet_id'])
+                body = '{"subnet_id": "%s"}'%(add_dict['subnet_id'])
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/v2.0/routers/%s/add_router_interface'%(add_dict['router_id'])
@@ -498,7 +497,7 @@ class layer_three_ops:
                     raise Exception("Could not add an internal port to router in Transcirrus DB.")
                 else:
                     self.db.pg_transaction_commit()
-                    r_dict = {'router_id': add_dict['router_id'],'router_name':self.router[0][1],'subnet_name': add_dict['subnet_name'],'subnet_id': load['subnet_id'],'port_id': load['port_id']}
+                    r_dict = {'router_id': add_dict['router_id'],'router_name':self.router[0][1],'subnet_name': self.subnet[0][0],'subnet_id': load['subnet_id'],'port_id': load['port_id']}
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
@@ -511,7 +510,8 @@ class layer_three_ops:
         DESC: Remove an internal router network interface to the virtual layer3
               router.
         INPUT: remove_dict - router_id
-                           - subnet_name
+                           - subnet_id
+                           - project_id
         OUTPUT: OK - success
                 ERROR - failure
         ACCESS: Admins can remove an internal interface to the router. Power users
@@ -521,22 +521,33 @@ class layer_three_ops:
         if(('router_id' not in remove_dict) or (remove_dict['router_id'] == '')):
             logger.sys_error("Can not add internal port to router, no router id given.")
             raise Exception("Can not add internal port to router, no router id given.")
-        if(('subnet_name' not in remove_dict) or (remove_dict['subnet_name'] == '')):
+        if(('subnet_id' not in remove_dict) or (remove_dict['subnet_id'] == '')):
             logger.sys_error("Can not add internal port to router, no subnet id given.")
             raise Exception("Can not add internal port to router, no subnet id given.")
+        if(('project_id' not in remove_dict) or (remove_dict['project_id'] == '')):
+            logger.sys_error("Can not add internal port to router, no project id given.")
+            raise Exception("Can not add internal port to router, no project id given.")
 
-        #get the subnet info
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(remove_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        #verify the subnet exisits
         try:
             get_sub = None
             if(self.is_admin == 1):
-                get_sub = {'select':"subnet_id,proj_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(remove_dict['subnet_name'])}
+                get_sub = {'select':"proj_id,subnet_name",'from':"trans_subnets",'where':"subnet_id='%s'"%(remove_dict['subnet_id'])}
             elif(self.user_level):
-                get_sub = {'select':"subnet_id,proj_id",'from':"trans_subnets",'where':"subnet_name='%s'"%(remove_dict['subnet_name']),'and':"proj_id='%s'"%(self.project_id)}
+                get_sub = {'select':"proj_id,subnet_name",'from':"trans_subnets",'where':"subnet_id='%s'"%(remove_dict['subnet_id']),'and':"proj_id='%s'"%(self.project_id)}
             self.subnet = self.db.pg_select(get_sub)
         except:
             logger.sys_error("No subnet found in project %s."%(self.project_id))
             raise Exception("No subnet found in project %s."%(self.project_id))
 
+        #verify the router id
         try:
             if(self.is_admin == 1):
                 get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(remove_dict['router_id'])}
@@ -545,19 +556,21 @@ class layer_three_ops:
                 get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(remove_dict['router_id']),'and':"proj_id='%s'"%(self.project_id)}
                 self.router = self.db.pg_select(get_router)
         except:
-            logger.sys_error("No router found in project %s."%(self.project_id))
-            raise Exception("No router found in project %s."%(self.project_id))
+            logger.sys_error("No router found in project %s."%(remove_dict['project_id']))
+            raise Exception("No router found in project %s."%(remove_dict['project_id']))
 
         #check if router and subnet are in the same project
-        if(self.subnet[0][1] != self.router[0][4]):
-            logger.sys_error("Router %s and subnet %s not in project %s."%(remove_dict['router_id'],remove_dict['subnet_name'],self.project_id))
-            raise Exception("Router %s and subnet %s not in project %s."%(remove_dict['router_id'],remove_dict['subnet_name'],self.project_id))
+        if(self.subnet[0][0] != self.router[0][4]):
+            logger.sys_error("Router %s and subnet %s not in project %s."%(remove_dict['router_id'],self.subnet[0][1],remove_dict['project_id']))
+            raise Exception("Router %s and subnet %s not in project %s."%(remove_dict['router_id'],self.subnet[0][1],remove_dict['project_id']))
 
         if(self.user_level <= 1):
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
+                if(self.project_id != remove_dict['project_id']):
+                    self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
@@ -565,7 +578,7 @@ class layer_three_ops:
 
             try:
                 #add the new user to openstack
-                body = '{"subnet_id": "%s"}'%(self.subnet[0][0])
+                body = '{"subnet_id": "%s"}'%(remove_dict['subnet_id'])
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/v2.0/routers/%s/remove_router_interface'%(remove_dict['router_id'])
