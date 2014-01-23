@@ -324,7 +324,9 @@ $(document).ready(function() {
 		    <label for="priv_net">Private Network</label>
                     <select name="priv_net" id="priv_net">
 			{% for key,value in private_networks.items %}
-		   	<option value="{{value.net_id}}">{{value.net_name}}</option>
+                            {% if value.in_use == 'false' %}
+		   		<option value="{{value.net_id}}">{{value.net_name}}</option>
+			    {% endif %}
 			{% endfor %}
                     </select>
                 </fieldset>
@@ -403,7 +405,7 @@ $(document).ready(function() {
 			    {% endfor %}
                         </td>
 			<td><a href="/network/{{value.net_id}}/view/">view</a>
-			    {%if private_networks.items %}
+			    {%if value.net_subnet_id %}
 				<strong>delete</strong>
 			    {% else %}
 				<a href="/delete_network/{{ project.project_id }}/{{value.net_id}}/" 
