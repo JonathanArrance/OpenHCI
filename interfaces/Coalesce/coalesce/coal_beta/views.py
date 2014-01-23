@@ -219,7 +219,8 @@ def create_router(request, router_name, priv_net, default_public, project_id):
     try:
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
-	no = network_ops(auth)
+	no = neutron_net_ops(auth)
+	#import pdb; pdb.set_trace()
 	netinfo = no.get_network(priv_net)
 	subnet = netinfo["net_subnet_id"][0]
 
