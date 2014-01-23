@@ -711,24 +711,32 @@ class layer_three_ops:
             logger.sys_error("Users can not add gateways to routers.")
             raise Exception("Users can not add gateways to routers.")
 
-    def delete_router_gateway_interface(self,router_id):
+    def delete_router_gateway_interface(self,remove_dict):
         """
         DESC: Remove an external gateway network interface from the virtual layer3
               router.
-        INPUT: router_id
+        INPUT: remove_dict - router_id
+                           - project_id
         OUTPUT: OK - success
                 ERROR - failure
         ACCESS: Only admins can remove an extrnal interface from the router.
         NOTE: transcirrus db will have to be updated accordingly - Haveing issues removeing gateways, bug in Grizzly
         """
-        if(router_id == ''):
+        if(remove_dict['router_id'] == ''):
             logger.sys_error("Can not add external gateway to router, no router id given.")
             raise Exception("Can not add external gateway to router, no router id given.")
 
         if(self.is_admin == 1):
+            try:
+                get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(remove_dict['project_id'])}
+                project = self.db.pg_select(get_proj)
+            except:
+                logger.sys_error("Project could not be found.")
+                raise Exception("Project could not be found.")
+
             #make sure router_id is valid
             try:
-                get_router = {'select':"router_name",'from':"trans_routers",'where':"router_id='%s'"%(router_id)}
+                get_router = {'select':"router_name",'from':"trans_routers",'where':"router_id='%s'"%(remove_dict['router_id'])}
                 router = self.db.pg_select(get_router)
             except:
                 logger.sys_error("No router found in project.")
@@ -738,6 +746,8 @@ class layer_three_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != remove_dict['project_id']):
+                    self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
@@ -747,7 +757,7 @@ class layer_three_ops:
                 body = '{"router": {"external_gateway_info": {}}}'
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'PUT'
-                api_path = '/v2.0/routers/%s'%(router_id)
+                api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
                 token = self.token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
@@ -762,7 +772,7 @@ class layer_three_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #update the transcirrus router
-                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('NULL','NULL'),'where':"router_id='%s'"%(router_id)}
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('NULL','NULL'),'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
