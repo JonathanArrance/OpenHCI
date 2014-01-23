@@ -215,6 +215,9 @@ class neutron_net_ops:
         #build a better array
         new_array = []
         for sub in subs:
+            if(net[0][4] == 'false'):
+                #HACK - fucking hate this - add subnet name to db for public subnets alpo.1
+                r_dict = {'subnet_id':sub[0], 'subnet_name':'PublicSubnet'}
             r_dict = {'subnet_id':sub[0], 'subnet_name':sub[1]}
             new_array.append(r_dict)
 
