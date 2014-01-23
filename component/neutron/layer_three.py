@@ -468,19 +468,19 @@ class layer_three_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
+            try:
                 #add the new user to openstack
-            body = '{"subnet_id": "%s"}'%(add_dict['subnet_id'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'PUT'
-            api_path = '/v2.0/routers/%s/add_router_interface'%(add_dict['router_id'])
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            #except:
-            #    logger.sql_error("Could not add an internal port to router.")
-            #    raise Exception("Could not add an internal port to router.")
+                body = '{"subnet_id": "%s"}'%(add_dict['subnet_id'])
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/routers/%s/add_router_interface'%(add_dict['router_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not add an internal port to router.")
+                raise Exception("Could not add an internal port to router.")
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -578,7 +578,7 @@ class layer_three_ops:
 
             try:
                 #add the new user to openstack
-                body = '{"subnet_id": "%s"}'%(self.subnet[0][0])
+                body = '{"subnet_id": "%s"}'%(remove_dict['subnet_id'])
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/v2.0/routers/%s/remove_router_interface'%(remove_dict['router_id'])
