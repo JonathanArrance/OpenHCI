@@ -67,6 +67,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.network_view',
             name='network_view'),
 
+	url(r'^delete_network/(?P<project_id>[^/]+)/(?P<net_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.remove_network',
+            name='remove_network'),
+
 	url(r'^add_private_network/(?P<net_name>[^/]+)/(?P<admin_state>[^/]+)/(?P<shared>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.add_private_network',
             name='add_private_network'),
@@ -74,6 +78,14 @@ urlpatterns = patterns('',
 	url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_router',
             name='create_router'),
+
+	url(r'^delete_router/(?P<project_id>[^/]+)/(?P<router_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.delete_router',
+            name='delete_router'),
+
+	url(r'^router/(?P<router_id>[^/]+)/view/$',
+	    'coalesce.coal_beta.views.router_view',
+            name='router_view'),
 
 	
 	# --- User actions ----
