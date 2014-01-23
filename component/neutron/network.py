@@ -115,7 +115,7 @@ class neutron_net_ops:
                 if(project_id):
                     get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(project_id),'and':"net_internal='true'"}
                 else:
-                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings"}
+                    get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"net_internal='true'"}
             else:
                 get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='true'"}
 
@@ -126,7 +126,7 @@ class neutron_net_ops:
                 #add an in use flag
                 get_use = {'select': "router_name",'from': "trans_routers",'where':"net_id='%s'"%(nets[0][1])}
                 in_use = self.db.pg_select(get_use)
-                if(len(in_use[0]) > 0):
+                if(in_use):
                     r_dict['in_use'] = 'true'
                     r_dict['router_name'] = in_use[0][0]
                 else:
