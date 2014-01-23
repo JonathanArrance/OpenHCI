@@ -745,7 +745,7 @@ class layer_three_ops:
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
                 if(self.project_id != remove_dict['project_id']):
                     self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
@@ -753,18 +753,21 @@ class layer_three_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            try:
-                body = '{"router": {"external_gateway_info": {}}}'
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'PUT'
-                api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-                rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not remove gateway from router.")
-                raise Exception("Could not remove gateway from router.")
+            #try:
+            body = '{"router": {"external_gateway_info": {}}}'
+            logger.sys_info("body " + body)
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'PUT'
+            api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
+            logger.sys_info("api_path " + api_path)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+            logger.sys_info(rest)
+            #except:
+            #   logger.sql_error("Could not remove gateway from router.")
+            #    raise Exception("Could not remove gateway from router.")
 
             if(rest['response'] == 200):
                 #read the json that is returned
