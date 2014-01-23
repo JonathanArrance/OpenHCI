@@ -204,7 +204,7 @@ class neutron_net_ops:
         get_sub = None
         try:
             if(net[0][4] == 'false'):
-                get_sub = {'select':"subnet_id,subnet_name",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
+                get_sub = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
             elif(net[0][4] == 'true'):
                 get_sub = {'select':"subnet_id,subnet_name",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
             subs = self.db.pg_select(get_sub)
