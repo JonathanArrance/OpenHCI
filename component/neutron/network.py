@@ -127,7 +127,7 @@ class neutron_net_ops:
             for net in nets:
                 r_dict = {}
                 #add an in use flag
-                get_use = {'select': "router_name",'from': "trans_routers",'where':"net_id='%s'"%(nets[0][1])}
+                get_use = {'select': "router_name",'from': "trans_routers",'where':"net_id='%s'"%(net[1])}
                 in_use = self.db.pg_select(get_use)
                 if(in_use):
                     r_dict['in_use'] = 'true'
