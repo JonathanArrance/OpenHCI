@@ -250,7 +250,9 @@ def run_setup(new_system_variables,auth_dict):
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
                     }
+    print cirros_input
     import_cirros = glance.import_image(cirros_input)
+    print import_cirros
     if(import_cirros != 'OK'):
         logger.warn('Could not import the default cirros image.')
 
@@ -262,7 +264,9 @@ def run_setup(new_system_variables,auth_dict):
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
                     }
+    print ubuntu_input
     import_ubuntu = glance.import_image(ubuntu_input)
+    print import_ubuntu
     if(import_ubuntu != 'OK'):
         logger.warn('Could not import the default Ubuntu Precise image.')
 
@@ -274,7 +278,9 @@ def run_setup(new_system_variables,auth_dict):
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/fedora-latest.x86_64.qcow2"
                     }
+    print fedora_input
     import_fedora = glance.import_image(fedora_input)
+    print import_fedora
     if(import_fedora != 'OK'):
         logger.warn('Could not import the default Fedora image.')
 
