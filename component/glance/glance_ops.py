@@ -233,6 +233,7 @@ class glance_ops:
                                        % (input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['file_location']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             image = out.stdout.readlines()
+            print image
             if(image[0]):
                 return 'OK'
             else:

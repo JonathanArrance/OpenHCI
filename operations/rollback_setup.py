@@ -81,7 +81,7 @@ def rollback(auth_dict):
     #get the default public info
     t = None
     try:
-        t = net.list_networks()
+        t = net.list_external_networks()
     except:
         pass
         
