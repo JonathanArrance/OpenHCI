@@ -222,12 +222,12 @@ class glance_ops:
         try:
             #subprocess
             if(input_dict['url'] != ''):
-                out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s image-create --name %s --disk-format %s --container-format bare --owner %s\
+                out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s --os-auth-url http://localhost:5000/v2.0 image-create --name %s --disk-format %s --container-format bare --owner %s\
                                        --is-public %s  --is-protected %s --location %s'\
                                        % (self.username,self.password,input_dict['project_id'],input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['url']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             elif(input_dict['file_location'] != ''):
-                out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s image-create --name %s --disk-format %s --container-format bare --owner %s\
+                out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s --os-auth-url http://localhost:5000/v2.0 image-create --name %s --disk-format %s --container-format bare --owner %s\
                                        --is-public %s  --is-protected %s --file %s'\
                                        % (self.username,self.password,input_dict['project_id'],input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['file_location']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
