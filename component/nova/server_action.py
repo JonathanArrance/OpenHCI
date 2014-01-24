@@ -456,9 +456,12 @@ class server_actions:
 
     def check_instance_status(self):
         pass
+        #alpo.1
     
     def create_instance_image(self):
         pass
+        #alpo.1
 
     def move_instance(self):
         pass
+        #alpo.1

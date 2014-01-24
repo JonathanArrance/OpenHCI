@@ -204,7 +204,7 @@ class neutron_net_ops:
         get_sub = None
         try:
             if(net[0][4] == 'false'):
-                get_sub = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
+                get_sub = {'select':"subnet_id,subnet_name",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
             elif(net[0][4] == 'true'):
                 get_sub = {'select':"subnet_id,subnet_name",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
             subs = self.db.pg_select(get_sub)
@@ -215,9 +215,6 @@ class neutron_net_ops:
         #build a better array
         new_array = []
         for sub in subs:
-            if(net[0][4] == 'false'):
-                #HACK - fucking hate this - add subnet name to db for public subnets alpo.1
-                r_dict = {'subnet_id':sub[0], 'subnet_name':'PublicSubnet'}
             r_dict = {'subnet_id':sub[0], 'subnet_name':sub[1]}
             new_array.append(r_dict)
 
@@ -916,7 +913,7 @@ class neutron_net_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    insert_dict = {"subnet_dhcp_enable":self.enable_dhcp,"subnet_id":load['subnet']['id'],"subnet_range_start":subnet_dict['subnet_start_range'],"subnet_range_end":subnet_dict['subnet_end_range'],"subnet_gateway":subnet_dict['public_gateway'],
+                    insert_dict = {"subnet_dhcp_enable":self.enable_dhcp,"subnet_name":name,"subnet_id":load['subnet']['id'],"subnet_range_start":subnet_dict['subnet_start_range'],"subnet_range_end":subnet_dict['subnet_end_range'],"subnet_gateway":subnet_dict['public_gateway'],
                                    "subnet_mask":subnet_dict['public_subnet_mask'],"subnet_ip_ver":"4","proj_id":net['project_id'],"net_id":net['net_id']}
                     logger.sys_info("%s"%(insert_dict))
                     self.db.pg_insert("trans_public_subnets",insert_dict)

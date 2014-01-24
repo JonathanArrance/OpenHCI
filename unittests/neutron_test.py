@@ -10,7 +10,7 @@ d = a.get_auth()
 
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
-
+'''
 print"----------------------------------------"
 print "createin a new external network"
 create = {'net_name':"pubtest",'admin_state':"true", 'shared':"false"}
@@ -25,7 +25,7 @@ input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_d
 getsubnet = net.add_public_subnet(input_dict)
 print getsubnet
 
-'''
+
 print "----------------------------------------"
 print "deleteing subnet"
 shit = net.remove_net_pub_subnet(getsubnet['subnet_id'])
@@ -39,15 +39,21 @@ print newnet
 time.sleep(1)
 print "----------------------------------------"
 print "listing the networks"
-newnet = net.list_networks()
+newnet = net.list_internal_networks("9fad7cee35024b858795097f6e7d62da")
 print newnet
 
 time.sleep(1)
 print "----------------------------------------"
+print "listing the networks"
+newnet2 = net.list_internal_networks()
+print newnet2
+'''
+time.sleep(1)
+print "----------------------------------------"
 print "getting the new."
-getnet = net.get_network("03a730bb-72d1-4b32-ae13-15de60fbfef9")
+getnet = net.get_network("20400a44-7abc-4468-abfb-b2f45e74b6cb")
 print getnet
-
+'''
 time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"
@@ -61,20 +67,20 @@ print "----------------------------------------"
 print "getting the new network8 after subnet added"
 getnet2 = net.get_network("4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae")
 print getnet2
-
+'''
 time.sleep(1)
 print "----------------------------------------"
 print "Listing the subnets in use for thistest8"
-listsub = net.list_net_subnet("4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae")
+listsub = net.list_net_subnet("20400a44-7abc-4468-abfb-b2f45e74b6cb")
 print listsub
 
 time.sleep(1)
 print "---------------------------------------"
 print "get the subnet"
 subnet = listsub[0]
-getsub3 = net.get_net_subnet(subnet['subnet_name'])
+getsub3 = net.get_net_subnet('e007d46e-df30-4686-83f7-4d01ec5daebc')
 print getsub3
-
+'''
 time.sleep(1)
 print "---------------------------------------"
 print "Deleteing the subnet from the network."

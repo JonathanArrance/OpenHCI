@@ -1444,8 +1444,9 @@ SELECT pg_catalog.setval('user_seq', 1, false);
 
 CREATE TABLE trans_public_subnets (
     index integer NOT NULL,
-    subnet_dhcp_enable character varying,
+    subnet_name character varying,
     subnet_id character varying,
+    subnet_dhcp_enable character varying,
     subnet_range_start character varying,
     subnet_range_end character varying,
     subnet_gateway character varying,
