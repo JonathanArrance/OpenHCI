@@ -169,7 +169,7 @@ class glance_ops:
         if(input_dict['file_location'] and input_dict['url']):
             logger.sys_error('Can not specify both file location and a url for the same image.')
             raise Exception('Can not specify both file location and a url for the same image.')
-
+        '''
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
             if(input_dict['project_id'] != self.project_id):
@@ -182,7 +182,6 @@ class glance_ops:
         #cli stuff is ghetto
         #here is the api error
         #'reason': 'Bad Request', 'data': "400 Bad Request\n\nSupplied size (13147648) and size generated from uploaded image (4) did not match. Setting image status to 'killed'.\n\n   ", 'response': 400
-        '''
         try:
             body = None
             if(input_dict['url']):
@@ -223,14 +222,14 @@ class glance_ops:
         try:
             #subprocess
             if(input_dict['url'] != ''):
-                out = subprocess.Popen('glance image-create --name %s --disk-format %s --container-format bare --owner %s\
+                out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s image-create --name %s --disk-format %s --container-format bare --owner %s\
                                        --is-public %s  --is-protected %s --location %s'\
-                                       % (input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['url']),
+                                       % (self.username,self.password,input_dict['project_id'],input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['url']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             elif(input_dict['file_location'] != ''):
-                out = subprocess.Popen('glance image-create --name %s --disk-format %s --container-format bare --owner %s\
+                out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s image-create --name %s --disk-format %s --container-format bare --owner %s\
                                        --is-public %s  --is-protected %s --file %s'\
-                                       % (input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['file_location']),
+                                       % (self.username,self.password,input_dict['project_id'],input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['file_location']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             image = out.stdout.readlines()
             print image
