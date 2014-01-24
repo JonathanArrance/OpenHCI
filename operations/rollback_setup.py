@@ -115,7 +115,7 @@ def rollback(auth_dict):
     #set all of the netadpters to default IPS
     #set up br-ex and enable ovs.
     uplink_dict = {
-                'up_ip':'192.168.10.49',
+                'up_ip':'192.168.0.3',
                 'up_subnet':'255.255.255.0',
                 'up_gateway':'192.168.10.1',
                 'up_dns1':'8.8.8.8',

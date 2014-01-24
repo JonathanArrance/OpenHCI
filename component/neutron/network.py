@@ -474,26 +474,28 @@ class neutron_net_ops:
 
         if(self.user_level <= 1):
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
+                if(self.project_id != remove_dict['project_id']):
+                    self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            try:
-                #add the new user to openstack
-                body = ''
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'DELETE'
-                api_path = '/v2.0/networks/%s' %(remove_dict['net_id'])
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-                rest = api.call_rest(rest_dict)
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not remove the network from Neutron.")
-                raise Exception("Could not remove the network from Neutron.")
+            #try:
+            #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/networks/%s' %(remove_dict['net_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+            #except:
+            #    self.db.pg_transaction_rollback()
+            #    logger.sql_error("Could not remove the network from Neutron.")
+            #    raise Exception("Could not remove the network from Neutron.")
         else:
             logger.sys_error("Only an admin or a power user can remove a new network.")
             raise Exception("Only an admin or a power user can remove a new network.")
