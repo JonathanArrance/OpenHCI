@@ -123,10 +123,10 @@ def change_mgmt_ip(auth_dict,input_dict):
         if(write_up_net == 'OK'):
             print input_dict
             #write the sysconfigs and the new config.py
-            mg_info = [{'host_system':node_name,'parameter':"mgmt_ip",'param_value':input_dict['mgmt_ip']},
-                        {'host_system':node_name,'parameter':"mgmt_subnet",'param_value':input_dict['mgmt_subnet']},
-                        {'host_system':node_name,'parameter':"mgmt_dns",'param_value':input_dict['mgmt_dns']},
-                        {'host_system':node_name,'parameter':"mgmt_domain_name",'param_value':input_dict['mgmt_domain']}
+            mg_info = [{'system_name':node_name,'parameter':"mgmt_ip",'param_value':input_dict['mgmt_ip']},
+                        {'system_name':node_name,'parameter':"mgmt_subnet",'param_value':input_dict['mgmt_subnet']},
+                        {'system_name':node_name,'parameter':"mgmt_dns",'param_value':input_dict['mgmt_dns']},
+                        {'system_name':node_name,'parameter':"mgmt_domain_name",'param_value':input_dict['mgmt_domain']}
                        ]
             manage = util.update_system_variables(mg_info)
             if(manage == 'OK'):
