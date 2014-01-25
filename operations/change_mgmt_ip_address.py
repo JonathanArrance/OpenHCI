@@ -128,7 +128,7 @@ def change_mgmt_ip(auth_dict,input_dict):
                         {'host_system':node_name,'parameter':"mgmt_dns",'param_value':input_dict['mgmt_dns']},
                         {'host_system':node_name,'parameter':"mgmt_domain_name",'param_value':input_dict['mgmt_domain']}
                        ]
-            manage = update_system_variables(mg_info)
+            manage = util.update_system_variables(mg_info)
             if(manage == 'OK'):
                 #restart the network card
                 restart_card = util.restart_network_card("bond0")
