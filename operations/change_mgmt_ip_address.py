@@ -6,7 +6,7 @@ import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
 from ifconfig import ifconfig
 
-def change_uplink_ip(auth_dict,input_dict):
+def change_mgmt_ip(auth_dict,input_dict):
     """
     DESC: Change the IP address of the uplink adapter.
     INPUT: input_dict - mgmt_ip - req
