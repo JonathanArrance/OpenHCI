@@ -102,12 +102,12 @@ def change_uplink_ip(auth_dict,input_dict):
                     'mgmt_domain':mgmt_net['net_dns_domain'],
                     'mgmt_dhcp':mgmt_net['inet_setting']
                     }
-        input_dict = {
+        up_dict = {
                       'node_id':node_id,
                       'uplink_dict':uplink_dict,
                       'mgmt_dict':mgmt_dict
                       }
-        change_uplink = util.set_network_variables(input_dict)
+        change_uplink = util.set_network_variables(up_dict)
         if(change_uplink == 'ERROR' or change_uplink == 'NA'):
             return change_uplink
         else:

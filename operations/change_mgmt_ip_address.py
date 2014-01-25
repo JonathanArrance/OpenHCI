@@ -109,12 +109,12 @@ def change_mgmt_ip(auth_dict,input_dict):
     if(node_type != 'cc'):
         mgmt_dict['mgmt_gateway'] = input_dict['mgmt_gateway']
 
-    input_dict = {
+    up_dict = {
                   'node_id':node_id,
                   'uplink_dict':uplink_dict,
                   'mgmt_dict':mgmt_dict
                   }
-    change_mgmt = util.set_network_variables(input_dict)
+    change_mgmt = util.set_network_variables(up_dict)
     if(change_mgmt == 'ERROR' or change_mgmt == 'NA'):
         return change_mgmt
     else:
