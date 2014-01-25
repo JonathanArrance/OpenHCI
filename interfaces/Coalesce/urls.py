@@ -87,6 +87,17 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.router_view',
             name='router_view'),
 
+	url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
+	    'coalesce.coal_beta.views.floating_ip_view',
+            name='floating_ip_view'),
+
+	url(r'^allocate_floating_ip/(?P<project_id>[^/]+)/(?P<ext_net_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.allocate_floating_ip',
+            name='allocate_floating_ip'),
+
+	url(r'^deallocate_floating_ip/(?P<project_id>[^/]+)/(?P<floating_ip>[^/]+)/$',
+	    'coalesce.coal_beta.views.deallocate_floating_ip',
+            name='deallocate_floating_ip'),
 	
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
