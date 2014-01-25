@@ -114,12 +114,12 @@ def change_mgmt_ip(auth_dict,input_dict):
                   'uplink_dict':uplink_dict,
                   'mgmt_dict':mgmt_dict
                   }
-    change_uplink = util.set_network_variables(input_dict)
-    if(change_uplink == 'ERROR' or change_uplink == 'NA'):
-        return change_uplink
+    change_mgmt = util.set_network_variables(input_dict)
+    if(change_mgmt == 'ERROR' or change_mgmt == 'NA'):
+        return change_mgmt
     else:
         logger.sys_info("writing the network config file.")
-        write_up_net = util.write_new_config_file(change_uplink)
+        write_up_net = util.write_new_config_file(change_mgmt)
         if(write_up_net == 'OK'):
             print input_dict
             #write the sysconfigs and the new config.py
