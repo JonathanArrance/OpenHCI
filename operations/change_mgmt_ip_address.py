@@ -28,7 +28,8 @@ def change_mgmt_ip(auth_dict,input_dict):
     #get the nodeID from the config file
     node_id = util.get_node_id()
     node_type = util.get_node_type()
-    
+    node_name = util.get_node_name()
+
     for key,value in input_dict.items():
         if(key == 'mgmt_ip'):
             logger.sys_info('Management ip specified %s'%(input_dict['mgmt_ip']))
