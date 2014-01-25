@@ -66,6 +66,7 @@ def change_mgmt_ip(auth_dict,input_dict):
 
     #if dhcp set set all vars to blank
     if('mgmt_dhcp' in input_dict and input_dict['mgmt_dhcp'] == 'dhcp'):
+        print input_dict
         input_dict['mgmt_ip'] == ''
         input_dict['mgmt_subnet'] == ''
         input_dict['mgmt_gateway'] == ''
@@ -73,7 +74,6 @@ def change_mgmt_ip(auth_dict,input_dict):
         input_dict['mgmt_dns2'] == ''
         input_dict['mgmt_dns3'] == ''
         input_dict['mgmt_domain'] == ''
-        input_dict['mgmt_dhcp'] == ''
     else:
         #get the existing vals
         if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
@@ -129,7 +129,6 @@ def change_mgmt_ip(auth_dict,input_dict):
         logger.sys_info("writing the network config file.")
         write_up_net = util.write_new_config_file(change_mgmt)
         if(write_up_net == 'OK'):
-            print input_dict
             #write the sysconfigs and the new config.py
             mg_info = [{'system_name':node_name,'parameter':"mgmt_ip",'param_value':input_dict['mgmt_ip']},
                         {'system_name':node_name,'parameter':"mgmt_subnet",'param_value':input_dict['mgmt_subnet']},
