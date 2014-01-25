@@ -67,25 +67,36 @@ def change_mgmt_ip(auth_dict,input_dict):
         logger.sys_error('Could not get the uplink net adapter info. Can not update uplink ip.')
         return 'ERROR'
 
-    #get the existing vals
-    if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
-        input_dict['mgmt_ip'] = mgmt_net['net_ip']
-    if('mgmt_subnet' not in input_dict):
-        input_dict['mgmt_subnet'] = mgmt_net['net_mask']
-    
-    if('uplink_gateway' not in input_dict and node_type != 'cc'):
-        input_dict['mgmt_gateway'] = uplink_net['net_gateway']
-    
-    if('mgmt_dns' not in input_dict):
-        input_dict['mgmt_dns'] = mgmt_net['net_dns1']
-    if('mgmt_dns2' not in input_dict):
-        input_dict['mgmt_dns2'] = mgmt_net['net_dns2']
-    if('mgmt_dns3' not in input_dict):
-        input_dict['mgmt_dns3'] = mgmt_net['net_dns3']
-    if('mgmt_domain' not in input_dict):
-        input_dict['mgmt_domain'] = mgmt_net['net_dns_domain']
-    if('mgmt_dhcp' not in input_dict):
-        input_dict['mgmt_dhcp'] = mgmt_net['inet_setting']
+    #if dhcp set set all vars to blank
+    if('mgmt_dhcp' in input_dict and input_dict['mgmt_dhcp'] == 'dhcp'):
+        input_dict['mgmt_ip'] == ''
+        input_dict['mgmt_subnet'] == ''
+        input_dict['mgmt_gateway'] == ''
+        input_dict['mgmt_dns'] == ''
+        input_dict['mgmt_dns2'] == ''
+        input_dict['mgmt_dns3'] == ''
+        input_dict['mgmt_domain'] == ''
+        input_dict['mgmt_dhcp'] == ''
+    else:
+        #get the existing vals
+        if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
+            input_dict['mgmt_ip'] = mgmt_net['net_ip']
+        if('mgmt_subnet' not in input_dict):
+            input_dict['mgmt_subnet'] = mgmt_net['net_mask']
+        
+        if('uplink_gateway' not in input_dict and node_type != 'cc'):
+            input_dict['mgmt_gateway'] = uplink_net['net_gateway']
+        
+        if('mgmt_dns' not in input_dict):
+            input_dict['mgmt_dns'] = mgmt_net['net_dns1']
+        if('mgmt_dns2' not in input_dict):
+            input_dict['mgmt_dns2'] = mgmt_net['net_dns2']
+        if('mgmt_dns3' not in input_dict):
+            input_dict['mgmt_dns3'] = mgmt_net['net_dns3']
+        if('mgmt_domain' not in input_dict):
+            input_dict['mgmt_domain'] = mgmt_net['net_dns_domain']
+        if('mgmt_dhcp' not in input_dict):
+            input_dict['mgmt_dhcp'] = mgmt_net['inet_setting']
 
     #change the ip with the given info
     uplink_dict = {
