@@ -109,11 +109,19 @@ def change_mgmt_ip(auth_dict,input_dict):
         logger.sys_info("writing the network config file.")
         write_up_net = util.write_new_config_file(change_uplink)
         if(write_up_net == 'OK'):
-            #restart the network card
-            restart_card = util.restart_network_card("bond0")
-            if(restart_card != 'OK'):
-                logger.sys_error("Could not restart adapter: bond0(mgmt)")
-                return restart_card
+            #write the sysconfigs and the new config.py
+            mg_info = [{'host_system':node_name,parameter:"mgmt_ip",'param_value':input_dict['mgmt_ip']},
+                        {'host_system':node_name,parameter:"mgmt_subnet",'param_value':input_dict['mgmt_subnet']},
+                        {'host_system':node_name,parameter:"mgmt_dns",'param_value':input_dict['mgmt_dns']},
+                        {'host_system':node_name,parameter:"mgmt_domain_name",'param_value':input_dict['mgmt_domain']}
+                       ]
+            manage = update_system_variables(mg_info)
+            if(manage == 'OK'):
+                #restart the network card
+                restart_card = util.restart_network_card("bond0")
+                if(restart_card != 'OK'):
+                    logger.sys_error("Could not restart adapter: bond0(mgmt)")
+                    return restart_card
         else:
             logger.sys_info("Network config file not written, new uplnk not written, rolling back old config.")
             #Rollback the netconfig file
