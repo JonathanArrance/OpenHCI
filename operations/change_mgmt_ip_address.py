@@ -30,8 +30,6 @@ def change_mgmt_ip(auth_dict,input_dict):
     node_type = util.get_node_type()
     node_name = util.get_node_name()
 
-    print input_dict
-
     for key,value in input_dict.items():
         if(key == 'mgmt_ip'):
             logger.sys_info('Management ip specified %s'%(input_dict['mgmt_ip']))
@@ -123,6 +121,7 @@ def change_mgmt_ip(auth_dict,input_dict):
         logger.sys_info("writing the network config file.")
         write_up_net = util.write_new_config_file(change_uplink)
         if(write_up_net == 'OK'):
+            print input_dict
             #write the sysconfigs and the new config.py
             mg_info = [{'host_system':node_name,'parameter':"mgmt_ip",'param_value':input_dict['mgmt_ip']},
                         {'host_system':node_name,'parameter':"mgmt_subnet",'param_value':input_dict['mgmt_subnet']},
