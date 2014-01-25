@@ -52,9 +52,10 @@ def change_mgmt_ip(auth_dict,input_dict):
             logger.sys_error("Missing required param to reset mgmt ip.")
             raise Exception("Missing required param to reset mgmt ip.")
 
-    if(input_dict['mgmt_dhcp'] == 'static' and input_dict['mgmt_ip'] == ''):
-        logger.sys_error("Missing param to reset mgmt ip. Specify ip with dhcp set to static.")
-        raise Exception("Missing param to reset mgmt ip.Specify ip with dhcp set to static.")
+    if('mgmt_dhcp' != ''):
+        if(input_dict['mgmt_dhcp'] == 'static' and input_dict['mgmt_ip'] == ''):
+            logger.sys_error("Missing param to reset mgmt ip. Specify ip with dhcp set to static.")
+            raise Exception("Missing param to reset mgmt ip.Specify ip with dhcp set to static.")
 
     #get the current net settings from the db
     #get the current mgmt net info
