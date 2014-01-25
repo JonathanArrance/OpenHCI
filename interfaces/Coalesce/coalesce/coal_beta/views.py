@@ -115,13 +115,20 @@ def project_view(request, project_name):
 
     private_networks={}
     for net in priv_net_list:
-        private_networks[net['net_name']]= no.get_network(net['net_id'])
+        try:
+	    private_networks[net['net_name']]= no.get_network(net['net_id'])
+	except:
+	    pass
 
     public_networks={}
     for net in pub_net_list:
-        public_networks[net['net_name']]= no.get_network(net['net_id'])
+        try:
+	    public_networks[net['net_name']]= no.get_network(net['net_id'])
+	except:
+	    pass
     
-    default_public = public_networks.values()[0]['net_id']
+    default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    floating_ips = l3o.list_floating_ips(pid)
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -133,7 +140,10 @@ def project_view(request, project_name):
                                                         'private_networks': private_networks,
 							'public_networks': public_networks,
 							'default_public': default_public,
+							'priv_net_list':priv_net_list,
+							'pub_net_list':pub_net_list,
                                                         'routers': routers,
+							'floating_ips': floating_ips,
                                                         'volumes': volumes,
                                                         'snapshots':snapshots,
                                                         }))
@@ -162,6 +172,15 @@ def volume_view(request, project_id, vol_id):
                                                         'volume_info': volume_info,
 							'snapshots': snapshots,
                                                         }))
+def floating_ip_view(request, floating_ip_id):
+    auth = request.session['auth']
+    l3o = layer_three_ops(auth)
+    fip = l3o.get_floating_ip(floating_ip_id)
+
+    return render_to_response('coal/floating_ip_view.html',
+                               RequestContext(request, { 
+                                                        'fip': fip,
+                                                 }))
 	       	       
 
 def create_user(request, username, password, userrole, email, project_id):
@@ -220,7 +239,7 @@ def create_router(request, router_name, priv_net, default_public, project_id):
         l3o = layer_three_ops(auth)
 	no = neutron_net_ops(auth)
 	netinfo = no.get_network(priv_net)
-	subnet = netinfo["net_subnet_id"][0]
+	subnet = netinfo["net_subnet_id"][0]['subnet_id']
 
         create_router = {'router_name': router_name, 'project_id': project_id}
         router = l3o.add_router(create_router)
@@ -230,6 +249,7 @@ def create_router(request, router_name, priv_net, default_public, project_id):
 
 	internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_id': subnet}
 	internal_int= l3o.add_router_internal_interface(internal_dict)
+
 
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -246,6 +266,30 @@ def delete_router(request, project_id, router_id):
 	remove_dict = {'router_id': router_id, 'subnet_id': router["subnet_id"], 'project_id': project_id}
 	l3o.delete_router_internal_interface(remove_dict)
         l3o.delete_router(proj_rout_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
+def allocate_floating_ip(request, project_id, ext_net_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        input_dict = {'ext_net_id': ext_net_id, 'project_id': project_id}
+        l3o.allocate_floating_ip(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
+def deallocate_floating_ip(request, project_id, floating_ip):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        input_dict = {'floating_ip': floating_ip, 'project_id': project_id}
+        l3o.deallocate_floating_ip(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

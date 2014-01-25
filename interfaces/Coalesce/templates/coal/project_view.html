@@ -323,9 +323,9 @@ $(document).ready(function() {
                     <input type="text" name="router_name" id="router_name"  class="text ui-widget-content ui-corner-all" />
 		    <label for="priv_net">Private Network</label>
                     <select name="priv_net" id="priv_net">
-			{% for key,value in private_networks.items %}
-                            {% if value.in_use == 'false' %}
-		   		<option value="{{value.net_id}}">{{value.net_name}}</option>
+			{% for net in priv_net_list %}
+                            {% if net.in_use == 'false' %}
+		   		<option value="{{net.net_id}}">{{net.net_name}}</option>
 			    {% endif %}
 			{% endfor %}
                     </select>
@@ -368,6 +368,7 @@ $(document).ready(function() {
  		
           </div>
 
+
 	    <div id="private-network-dialog-form" title="Create new private network">
  		<p class="validateTips">All fields required.  </p>
                 <form>
@@ -394,6 +395,8 @@ $(document).ready(function() {
           {% if private_networks %}
 	    <table class="paleblue">
 
+
+
                 <tr> <th>Network</th>  <th>Network info</th> <th>Subnets</th><th>Actions</th> </tr>
 
                 {% for key,value in private_networks.items %}
@@ -401,7 +404,7 @@ $(document).ready(function() {
 			<td>{{key}}</td>  
 			<td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}} </td>  
 			<td>{% for subnet in value.net_subnet_id %}
-				{{subnet}}</br>
+				{{subnet.subnet_name}}</br>
 			    {% endfor %}
                         </td>
 			<td><a href="/network/{{value.net_id}}/view/">view</a>
@@ -432,8 +435,29 @@ $(document).ready(function() {
         <div class="well">
           <div class="legend">
              Floating IP's
+		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/"  id="allocate_floating_ip" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Allocate</a>
           </div>
-          <p> Not yet implemented.</p>
+
+	  {% if floating_ips %}
+	    <table class="paleblue">
+
+                <tr> <th>Floating IP</th>   <th>Actions</th></tr>
+
+                {% for fip in floating_ips %}
+
+		    <tr> 
+			<td>{{fip.floating_ip}}</td>  
+			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">view</a> | 
+			    <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/" 
+                                data-confirm="This will deallocate {{fip.floating_ip}} from this project and make any associated VM's private. Are you sure?"> deallocate
+                                </a></td></tr>
+
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no floating IPs</i></p>
+	  {% endif %}
+          
         </div>
       </div>
 

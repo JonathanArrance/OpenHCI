@@ -160,7 +160,8 @@ def sendStorageConfig(conn, node_id):
 
     if config:
         # send config files
-        conn.sendall(pickle.dumps(config, -1))
+        #conn.sendall(pickle.dumps(config, -1))
+        send_data(pickle.dumps(config, -1), conn)
         logger.sys_info("node_id: %s, sent storage node config files")
         if __debug__ :
             print "node_id: %s, sent storage node config files"
@@ -213,7 +214,8 @@ def sendComputeConfig(conn, node_id):
             print "node_id: %s nova config %s" % (node_id, config)
 
         # send config
-        conn.sendall(pickle.dumps(config, -1))
+        #conn.sendall(pickle.dumps(config, -1))
+        send_data(pickle.dumps(config, -1), conn)
         logger.sys_info("sent compute node, node_id: %s nova config!!" %(node_id))
         if __debug__ :
             print "sent compute node, node_id: %s nova config!!" % node_id
@@ -245,7 +247,8 @@ def sendComputeConfig(conn, node_id):
             structure
             '''
             #print "sending ovs conf %s" % config
-            conn.sendall(pickle.dumps(config, -1))
+            #conn.sendall(pickle.dumps(config, -1))
+            send_data(pickle.dumps(config, -1), conn)
             logger.sys_info("sent compute node ovs config, node_id: %s" %(node_id))
             if __debug__ :
                 print "sent compute node ovs config, node_id: %s" % (node_id)
@@ -313,7 +316,8 @@ def sendOk(conn):
             'Length': '1',
             'Value': 'ok'
         }
-    conn.sendall(pickle.dumps(status_ok, -1))
+    #conn.sendall(pickle.dumps(status_ok, -1))
+    send_data(pickle.dumps(status_ok, -1), conn)
 
 def recv_data(conn):
 
@@ -349,6 +353,31 @@ def recv_data(conn):
                 print "retrying... ", count
 
     return data
+
+def send_data(msg, sock):
+
+
+    global retry_count
+    global timeout_sec
+    count=0
+    totalsent = 0
+    #msglen = msg.length()
+    # TODO send data based on size of the message being sent
+    # assume 10 bytes as minimum length of any message exchanged between client
+    # and server sockets
+    msglen = 10
+    while totalsent < msglen:
+        sent = sock.send(msg[totalsent:])
+        if sent == 0:
+            count = count+1
+            if count >= retry_count:
+                logger.sys_error("send failed !!")
+                raise RuntimeError("socket connection broken")
+                sys.exit()
+            else:
+                logger.sys_info("socket send data retrying ...")
+                time.sleep(1)
+        totalsent = totalsent + sent
 
 
 def keep_alive_check(node_id, conn):
@@ -407,7 +436,8 @@ def sendBuild(conn):
             'Value':'build'
             }
     try:
-        conn.sendall(pickle.dumps(status_build, -1))
+        #conn.sendall(pickle.dumps(status_build, -1))
+        send_data(pickle.dumps(status_build, -1), conn)
     except socket.error , msg:
         logger.sys_error('Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
         if __debug__ :
