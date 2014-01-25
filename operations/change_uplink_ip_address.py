@@ -115,14 +115,14 @@ def change_uplink_ip(auth_dict,input_dict):
             write_up_net = util.write_new_config_file(change_uplink)
             if(write_up_net == 'OK'):
                 #write the sysconfigs and the new config.py
-                uplink_info = [{'host_system':node_name,parameter:"api_ip",'param_value':input_dict['uplink_ip']},
-                                {'host_system':node_name,parameter:"admin_api_ip",'param_value':input_dict['uplink_ip']},
-                                {'host_system':node_name,parameter:"int_api_ip",'param_value':input_dict['uplink_ip']},
-                                {'host_system':node_name,parameter:"uplink_ip",'param_value':input_dict['uplink_ip']},
-                                {'host_system':node_name,parameter:"uplink_subnet",'param_value':input_dict['uplink_subnet']},
-                                {'host_system':node_name,parameter:"uplink_gateway",'param_value':input_dict['uplink_gateway']},
-                                {'host_system':node_name,parameter:"uplink_dns",'param_value':input_dict['uplink_dns']},
-                                {'host_system':node_name,parameter:"uplink_domain_name",'param_value':input_dict['uplink_domain']}
+                uplink_info = [{'host_system':node_name,'parameter':"api_ip",'param_value':input_dict['uplink_ip']},
+                                {'host_system':node_name,'parameter':"admin_api_ip",'param_value':input_dict['uplink_ip']},
+                                {'host_system':node_name,'parameter':"int_api_ip",'param_value':input_dict['uplink_ip']},
+                                {'host_system':node_name,'parameter':"uplink_ip",'param_value':input_dict['uplink_ip']},
+                                {'host_system':node_name,'parameter':"uplink_subnet",'param_value':input_dict['uplink_subnet']},
+                                {'host_system':node_name,'parameter':"uplink_gateway",'param_value':input_dict['uplink_gateway']},
+                                {'host_system':node_name,'parameter':"uplink_dns",'param_value':input_dict['uplink_dns']},
+                                {'host_system':node_name,'parameter':"uplink_domain_name",'param_value':input_dict['uplink_domain']}
                                 ]
                 uplink = update_system_variables(uplink_info)
                 #recreate the openstack API endpoints
