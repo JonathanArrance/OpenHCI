@@ -9,7 +9,7 @@ from ifconfig import ifconfig
 def change_mgmt_ip(auth_dict,input_dict):
     """
     DESC: Change the IP address of the uplink adapter.
-    INPUT: input_dict - mgmt_ip - req
+    INPUT: input_dict - mgmt_ip - op
                       - mgmt_subnet - op
                       - mgmt_gateway - op (only nodes)
                       - mgmt_dns - op
@@ -32,12 +32,12 @@ def change_mgmt_ip(auth_dict,input_dict):
     for key,value in input_dict.items():
         if(key == 'mgmt_ip'):
             logger.sys_info('Management ip specified %s'%(input_dict['mgmt_ip']))
-            if(value == ""):
-                logger.sys_error("Missing required param to reset mgmt ip.")
-                raise Exception("Missing required param to reset mgmt ip.")
+            #if(value == ""):
+            #    logger.sys_error("Missing required param to reset mgmt ip.")
+            #    raise Exception("Missing required param to reset mgmt ip.")
         elif(key == 'mgmt_gateway' and node_type == 'cc'):
-            logger.sys_error("The cloud controller can no have a gateway set on the management port.")
-            raise Exception("The cloud controller can no have a gateway set on the management port.")
+            logger.sys_error("The cloud controller can not have a gateway set on the management port.")
+            raise Exception("The cloud controller can not have a gateway set on the management port.")
         elif(key == 'mgmt_subnet'):
             logger.sys_info('Management subnet specified %s'%(input_dict['mgmt_subnet']))
         elif(key == 'mgmt_dns'):
@@ -77,6 +77,8 @@ def change_mgmt_ip(auth_dict,input_dict):
         input_dict['mgmt_dns3'] = mgmt_net['net_dns3']
     if('mgmt_domain' not in input_dict):
         input_dict['mgmt_domain'] = mgmt_net['net_dns_domain']
+    if('mgmt_dhcp' not in input_dict):
+        input_dict['mgmt_dhcp'] = mgmt_net['inet_setting']
 
     #change the ip with the given info
     uplink_dict = {
