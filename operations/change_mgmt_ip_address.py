@@ -46,9 +46,6 @@ def change_mgmt_ip(auth_dict,input_dict):
             logger.sys_info('Management dns3 specified %s'%(input_dict['mgmt_dns3']))
         elif(key == 'mgmt_domain'):
             logger.sys_info('Management domain specified %s'%(input_dict['mgmt_domain']))
-        else:
-            logger.sys_error("Missing required param to reset mgmt ip.")
-            raise Exception("Missing required param to reset mgmt ip.")
 
     if('mgmt_dhcp' in input_dict):
         if(input_dict['mgmt_dhcp'] == 'static' and 'mgmt_ip' not in input_dict):
