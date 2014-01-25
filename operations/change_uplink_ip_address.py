@@ -124,7 +124,7 @@ def change_uplink_ip(auth_dict,input_dict):
                                 {'host_system':node_name,'parameter':"uplink_dns",'param_value':input_dict['uplink_dns']},
                                 {'host_system':node_name,'parameter':"uplink_domain_name",'param_value':input_dict['uplink_domain']}
                                 ]
-                uplink = update_system_variables(uplink_info)
+                uplink = util.update_system_variables(uplink_info)
                 #recreate the openstack API endpoints
                 if(uplink == 'OK'):
                     endpoint = endpoint_ops(auth_dict)
