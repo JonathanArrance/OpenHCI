@@ -51,7 +51,7 @@ def change_mgmt_ip(auth_dict,input_dict):
             raise Exception("Missing required param to reset mgmt ip.")
 
     if('mgmt_dhcp' in input_dict):
-        if(input_dict['mgmt_dhcp'] == 'static' and input_dict['mgmt_ip'] == ''):
+        if(input_dict['mgmt_dhcp'] == 'static' and 'mgmt_ip' not in input_dict):
             logger.sys_error("Missing param to reset mgmt ip. Specify ip with dhcp set to static.")
             raise Exception("Missing param to reset mgmt ip.Specify ip with dhcp set to static.")
 
