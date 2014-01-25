@@ -67,13 +67,13 @@ def change_mgmt_ip(auth_dict,input_dict):
     #if dhcp set set all vars to blank
     if('mgmt_dhcp' in input_dict and input_dict['mgmt_dhcp'] == 'dhcp'):
         print input_dict
-        input_dict['mgmt_ip'] == ''
-        input_dict['mgmt_subnet'] == ''
-        input_dict['mgmt_gateway'] == ''
-        input_dict['mgmt_dns'] == ''
-        input_dict['mgmt_dns2'] == ''
-        input_dict['mgmt_dns3'] == ''
-        input_dict['mgmt_domain'] == ''
+        #input_dict['mgmt_ip'] == ''
+        #input_dict['mgmt_subnet'] == ''
+        #input_dict['mgmt_gateway'] == ''
+        #input_dict['mgmt_dns'] == ''
+        #input_dict['mgmt_dns2'] == ''
+        #input_dict['mgmt_dns3'] == ''
+        #input_dict['mgmt_domain'] == ''
     else:
         #get the existing vals
         if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
