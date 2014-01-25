@@ -16,7 +16,7 @@ def change_mgmt_ip(auth_dict,input_dict):
                       - mgmt_dns2 - op
                       - mgmt_dns3 - op
                       - mgmt_domain - op
-                      - mgmt_dhcp - op
+                      - mgmt_dhcp - op static/dhcp
                       
     OUTPUT: OK - success
             ERROR - fail
@@ -30,12 +30,11 @@ def change_mgmt_ip(auth_dict,input_dict):
     node_type = util.get_node_type()
     node_name = util.get_node_name()
 
+    print input_dict
+
     for key,value in input_dict.items():
         if(key == 'mgmt_ip'):
             logger.sys_info('Management ip specified %s'%(input_dict['mgmt_ip']))
-            #if(value == ""):
-            #    logger.sys_error("Missing required param to reset mgmt ip.")
-            #    raise Exception("Missing required param to reset mgmt ip.")
         elif(key == 'mgmt_gateway' and node_type == 'cc'):
             logger.sys_error("The cloud controller can not have a gateway set on the management port.")
             raise Exception("The cloud controller can not have a gateway set on the management port.")
@@ -53,6 +52,10 @@ def change_mgmt_ip(auth_dict,input_dict):
             logger.sys_error("Missing required param to reset mgmt ip.")
             raise Exception("Missing required param to reset mgmt ip.")
 
+    if(input_dict['mgmt_dhcp'] == 'static' and input_dict['mgmt_ip'] == ''):
+        logger.sys_error("Missing param to reset mgmt ip. Specify ip with dhcp set to static.")
+        raise Exception("Missing param to reset mgmt ip.Specify ip with dhcp set to static.")
+
     #get the current net settings from the db
     #get the current mgmt net info
     mgmt_net = util.get_network_variables({'net_adapter':'mgmt','node_id':node_id})
@@ -66,10 +69,14 @@ def change_mgmt_ip(auth_dict,input_dict):
         return 'ERROR'
 
     #get the existing vals
+    if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
+        input_dict['mgmt_ip'] = mgmt_net['net_ip']
     if('mgmt_subnet' not in input_dict):
         input_dict['mgmt_subnet'] = mgmt_net['net_mask']
-    #if('uplink_gateway' not in input_dict):
-    #    input_dict['mgmt_gateway'] = uplink_net['net_gateway']
+    
+    if('uplink_gateway' not in input_dict and node_type != 'cc'):
+        input_dict['mgmt_gateway'] = uplink_net['net_gateway']
+    
     if('mgmt_dns' not in input_dict):
         input_dict['mgmt_dns'] = mgmt_net['net_dns1']
     if('mgmt_dns2' not in input_dict):
@@ -100,6 +107,9 @@ def change_mgmt_ip(auth_dict,input_dict):
                 'mgmt_domain':input_dict['mgmt_domain'],
                 'mgmt_dhcp':input_dict['mgmt_dhcp']
                 }
+    if(node_type != 'cc'):
+        mgmt_dict['mgmt_gateway'] = input_dict['mgmt_gateway']
+
     input_dict = {
                   'node_id':node_id,
                   'uplink_dict':uplink_dict,
