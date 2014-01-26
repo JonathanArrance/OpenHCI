@@ -598,7 +598,7 @@ class layer_three_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    update = {'table':'trans_routers','set':"net_id='%s',router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%('NULL','NULL','NULL','NULL'),'where':"router_id='%s'"%(remove_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"net_id='%s',router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%('','','',''),'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
@@ -698,7 +698,7 @@ class layer_three_ops:
                     #for x in raw:
                     #    self.ip = x['ip_address']
                     #update the transcirrus router
-                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],'NULL'),'where':"router_id='%s'"%(add_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],''),'where':"router_id='%s'"%(add_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
@@ -777,7 +777,7 @@ class layer_three_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #update the transcirrus router
-                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('NULL','NULL'),'where':"router_id='%s'"%(remove_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('',''),'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
@@ -869,10 +869,10 @@ class layer_three_ops:
             floating = self.db.pg_select(get_floating)
             r_dict = {'floating_ip':floating[0][0],
                       'floating_ip_id':floating_ip_id,
-                      'instance_name':'NULL',
-                      'instance_id':'NULL',
-                      'internal_net_name':'NULL',
-                      'internal_net_id':'NULL',
+                      'instance_name':'',
+                      'instance_id':'',
+                      'internal_net_name':'',
+                      'internal_net_id':'',
                       'project_id':floating[0][1]
                     }
         elif(len(floating) == 1):
@@ -956,8 +956,8 @@ class layer_three_ops:
             self.db.pg_transaction_begin()
             load = json.loads(rest['data'])
             try:
-                insert_dict = {"floating_ip":load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id'],"proj_id":input_dict['project_id'],"router_id":"NULL",
-                               "fixed_ip":"NULL"}
+                insert_dict = {"floating_ip":load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id'],"proj_id":input_dict['project_id'],"router_id":"",
+                               "fixed_ip":""}
                 self.db.pg_insert("trans_floating_ip",insert_dict)
             except:
                 self.db.pg_transaction_rollback()
@@ -1072,7 +1072,7 @@ class layer_three_ops:
                 if(action == 'add'):
                     update = {'table':'trans_instances','set':"floating_ip_id='%s',inst_floating_ip='%s'"%(floater[0][0],update_dict['floating_ip']),'where':"inst_id='%s'"%(update_dict['instance_id'])}
                 elif(action == 'remove'):
-                    update = {'table':'trans_instances','set':"floating_ip_id='NULL',inst_floating_ip='NULL'",'where':"inst_id='%s'"%(update_dict['instance_id'])}
+                    update = {'table':'trans_instances','set':"floating_ip_id='',inst_floating_ip=''",'where':"inst_id='%s'"%(update_dict['instance_id'])}
                 print update
                 self.db.pg_update(update)
             except:
