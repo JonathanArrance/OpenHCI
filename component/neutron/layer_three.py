@@ -598,7 +598,7 @@ class layer_three_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    update = {'table':'trans_routers','set':"router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%('NULL','NULL','NULL'),'where':"router_id='%s'"%(remove_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"net_id='%s',router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%('NULL','NULL','NULL','NULL'),'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
