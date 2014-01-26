@@ -6,7 +6,7 @@ from transcirrus.component.nova.server import server_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 
 
-def build_complete_project(auth_dict, proj_dict):
+def build_project(auth_dict, proj_dict):
     """
     DESC: Build complete project.
     INPUT: auth_dict
