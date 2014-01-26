@@ -682,14 +682,14 @@ class neutron_net_ops:
     def remove_net_subnet(self,del_dict):
         """
         DESC: Remove a subnet from a network.
-        INPUT: del_dict - subnet_name
+        INPUT: del_dict - subnet_id
                         - net_id
         OUTPUT: OK if deleted or error code
         ACCESS: Admins can remove a subnet from any network. Only a power user can remove a subnet
                 from a network in their project. Users can not remove subnets
         NOTE: REST api operation will give 409 error if ips from subnet are still allocated
         """
-        if(('subnet_name' not in del_dict) or (del_dict['subnet_name'] == "")):
+        if(('subnet_id' not in del_dict) or (del_dict['subnet_id'] == "")):
             logger.sys_error("Can not have a blank subnet id when deleteing a subnet")
             raise Exception("Can not have a blank subnet id when deleteing a subnet")
         if(('net_id' not in del_dict) or (del_dict['net_id'] == "")):
@@ -698,7 +698,7 @@ class neutron_net_ops:
 
         if(self.user_level <= 1):
             #check if the subnet exists
-            sub = self.get_net_subnet(del_dict['subnet_name'])
+            sub = self.get_net_subnet(del_dict['subnet_id'])
             if(sub == None):
                 raise Exception('Could not find the subnet to delete.')
 
