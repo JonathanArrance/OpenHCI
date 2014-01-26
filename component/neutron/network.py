@@ -1048,7 +1048,7 @@ class neutron_net_ops:
                     raise Exception("Could not add a new subnet to Transcirrus DB.")
                 else:
                     self.db.pg_transaction_commit()
-                    r_dict = {'subnet_name':sub[0][13],'subnet_id':sub[0][1],'subnet_cidr':sub[0][4],'subnet_start_range':sub[0][6],'subnet_end_range':sub[0][7],'subnet_mask':sub[0][14],'subnet_gateway':sub[0][5]}
+                    r_dict = {'subnet_name':sub[0][13],'subnet_id':load['subnet']['id'],'subnet_cidr':sub[0][4],'subnet_start_range':sub[0][6],'subnet_end_range':sub[0][7],'subnet_mask':sub[0][14],'subnet_gateway':sub[0][5]}
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
