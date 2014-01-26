@@ -707,9 +707,9 @@ class neutron_net_ops:
                 raise Exception('Could not find the subnet to delete.')
 
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
-                if(self.project_id != remove_dict['project_id']):
-                    self.token = get_token(self.username,self.password,remove_dict['project_id'])
+                api_dict = {"username":self.username, "password":self.password, "project_id":del_dict['project_id']}
+                if(self.project_id != del_dict['project_id']):
+                    self.token = get_token(self.username,self.password,del_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
