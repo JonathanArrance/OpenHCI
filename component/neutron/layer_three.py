@@ -343,25 +343,29 @@ class layer_three_ops:
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":get_router['proj_id']}
+                if(get_router['proj_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,get_router['proj_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            try:
+            #try:
                 #add the new user to openstack
-                body = ''
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'DELETE'
-                api_path = '/v2.0/routers/%s'%(router_id)
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-                rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not delete the router.")
-                raise Exception("Could not delete the router.")
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/routers/%s'%(router_id)
+            logger.sys_info(api_path)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+            logger.sys_info(rest)
+            #except:
+            #    logger.sql_error("Could not delete the router.")
+            #    raise Exception("Could not delete the router.")
 
             if(rest['response'] == 204 or rest['response'] == 200):
                 #read the json that is returned
@@ -753,21 +757,21 @@ class layer_three_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            body = '{"router": {"external_gateway_info": {}}}'
-            logger.sys_info("body " + body)
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'PUT'
-            api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
-            logger.sys_info("api_path " + api_path)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            logger.sys_info(rest)
-            #except:
-            #   logger.sql_error("Could not remove gateway from router.")
-            #    raise Exception("Could not remove gateway from router.")
+            try:
+                body = '{"router": {"external_gateway_info": {}}}'
+                logger.sys_info("body " + body)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
+                logger.sys_info("api_path " + api_path)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                logger.sys_info(rest)
+            except:
+                logger.sql_error("Could not remove gateway from router.")
+                raise Exception("Could not remove gateway from router.")
 
             if(rest['response'] == 200):
                 #read the json that is returned
