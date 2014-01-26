@@ -712,7 +712,7 @@ class neutron_net_ops:
                     self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
