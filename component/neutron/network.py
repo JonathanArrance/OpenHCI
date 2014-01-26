@@ -1106,5 +1106,43 @@ class neutron_net_ops:
     #DESC: used to clean up after the server class
     #INPUT: self object
     #OUTPUT: void
-    def remove_net_port():
-        print "not implemented"
+    def remove_net_port(self,input_dict):
+        """
+        DESC: used to clean up after the
+        INPUT: update_dict - subnet_id - req
+                           - port_id - req
+                           - project_id - req
+        OUTPUT: OK - success
+                ERROR - fail
+                NA - unknown
+        ACCESS: 
+        """
+        if(('subnet_id' not in input_dict) or (input_dict['subnet_id'] == '')):
+            logger.sys_error("Could not remove port. No subnet id given.")
+            raise Exception("Could not remove port. No subnet id given.")
+        if(('port_id' not in input_dict) or (input_dict['port_id'] == '')):
+            logger.sys_error("No port id given. Can not remove port.")
+            raise Exception("No port id given. Can not remove port.")
+        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
+            logger.sys_error("No project id given. Can not remove port.")
+            raise Exception("No project id given. Can not remove port.")
+
+        #get the next available subnet from the database
+        try:
+            get_sub = {'select':"*",'from':"trans_subnets",'where':"in_use=0 order by index ASC"}
+            sub = self.db.pg_select(get_sub)
+        except:
+            logger.sql_error("Could not get subnet information from the Transcirrus db.")
+            raise Exception("Could not get subnet information from the Transcirrus db.")
+
+        if(self.user_level <= 1):
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(net['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,net['project_id'])
+                api = caller(api_dict)
+            except:
+                logger.sys_logger("Could not connect to the API")
+                raise Exception("Could not connect to the API")
