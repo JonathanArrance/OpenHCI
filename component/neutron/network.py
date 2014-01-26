@@ -667,16 +667,16 @@ class neutron_net_ops:
             get_subnet = {}
             try:
                 if(self.is_admin == 1):
-                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id)}
+                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable,subnet_id",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id)}
                 else:
-                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id),'and':"proj_id='%s'" %(self.project_id)}
+                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable,subnet_id",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id),'and':"proj_id='%s'" %(self.project_id)}
                 sub = self.db.pg_select(get_subnet)
             except:
                 logger.sql_error("Could not connect to the Transcirrus db.")
                 raise Exception("Could not connect to the Transcirrus db.")
 
             #build a better array
-            r_dict = {'subnet_name':sub[0][0],'subnet_class':sub[0][1],'subnet_ip_ver':sub[0][2],'subnet_cidr':sub[0][3],'subnet_allocation_start':sub[0][4],'subnet_allocation_end':sub[0][5],'subnet_gateway':sub[0][6],'subnet_mask':sub[0][7],'subnet_dhcp_enable':sub[0][8]}
+            r_dict = {'subnet_name':sub[0][0],'subnet_class':sub[0][1],'subnet_ip_ver':sub[0][2],'subnet_cidr':sub[0][3],'subnet_allocation_start':sub[0][4],'subnet_allocation_end':sub[0][5],'subnet_gateway':sub[0][6],'subnet_mask':sub[0][7],'subnet_dhcp_enable':sub[0][8],'subnet_id':sub[0][9]}
             return r_dict
 
     def remove_net_subnet(self,del_dict):
