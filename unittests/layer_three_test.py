@@ -3,7 +3,7 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.neutron.ports import port_ops
 import time
 
-auth = authorization('bill','test')
+auth = authorization('admin','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
@@ -14,22 +14,21 @@ create = router.add_router(r)
 print create
 time.sleep(1)
 print"-------------------------------------------------"
-
+'''
 print "Adding an internal interface."
-add_dict = {'router_id':create['router_id'],'subnet_name':"int-sub-3",'project_id':'523e5098be6c4438b428d7f3f94b3a2d'}
+add_dict = {'router_id':"6896172e-7788-4c05-bbec-c3b71a5028c1",'subnet_id':"37ae0641-3dd2-4d4e-a78d-e436e266bf47",'project_id':'975378d013664df394e3284bd7030108'}
 int_interface = router.add_router_internal_interface(add_dict)
 print int_interface
 time.sleep(1)
 print "-------------------------------------------------"
-'''
 
+'''
 print "Add a gateway"
-add_dict2 = {'router_id':"25a9d202-218d-4d64-a40c-64b6a805a24a",'ext_net_id':"7bb5744c-c34b-48b5-83b5-5325e36f12ef"}
+add_dict2 = {'router_id':"6429d4e8-9dae-4595-8d6b-62b807380ac3",'ext_net_id':"a2a21d14-9630-455b-b31a-1d3d1d8c0680"}
 ext_int = router.add_router_gateway_interface(add_dict2)
 print ext_int
 time.sleep(1)
 print "-------------------------------------------------"
-'''
 
 print "listing the routers"
 lister = router.list_routers()

@@ -185,7 +185,7 @@ class neutron_net_ops:
                        - net_admin_state
                        - net_shared
                        - net_internal
-                       - net_subnet[{subnet_id: subnet_name:}]
+                       - net_subnet_id[{subnet_id: subnet_name:}]
         ACCESS: Admins can get info on any network, power users and users can get info
                 for networks in their project.
         """
