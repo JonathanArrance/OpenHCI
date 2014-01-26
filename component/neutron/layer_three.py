@@ -337,16 +337,18 @@ class layer_three_ops:
                     if(not get_router):
                         self.flag = False
             except:
-                logger.sys_logger("Power user could not delete the router %s." %(router_id))
+                logger.sys_error("Power user could not delete the router %s." %(router_id))
                 raise Exception("Power user could not delete router %s." %(router_id))
 
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":get_router['proj_id']}
+                if(get_router['proj_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,get_router['proj_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -363,7 +365,7 @@ class layer_three_ops:
                 logger.sql_error("Could not delete the router.")
                 raise Exception("Could not delete the router.")
 
-            if(rest['response'] == 204 or rest['response'] == 200):
+            if(rest['response'] == 204):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 try:
@@ -753,21 +755,21 @@ class layer_three_ops:
                 logger.sys_logger("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            body = '{"router": {"external_gateway_info": {}}}'
-            logger.sys_info("body " + body)
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'PUT'
-            api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
-            logger.sys_info("api_path " + api_path)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            logger.sys_info(rest)
-            #except:
-            #   logger.sql_error("Could not remove gateway from router.")
-            #    raise Exception("Could not remove gateway from router.")
+            try:
+                body = '{"router": {"external_gateway_info": {}}}'
+                logger.sys_info("body " + body)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/v2.0/routers/%s'%(remove_dict['router_id'])
+                logger.sys_info("api_path " + api_path)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                logger.sys_info(rest)
+            except:
+                logger.sql_error("Could not remove gateway from router.")
+                raise Exception("Could not remove gateway from router.")
 
             if(rest['response'] == 200):
                 #read the json that is returned
