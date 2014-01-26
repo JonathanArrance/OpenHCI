@@ -408,13 +408,14 @@ $(document).ready(function() {
 			    {% endfor %}
                         </td>
 			<td><a href="/network/{{value.net_id}}/view/">view</a>
-			    {%if value.net_subnet_id %}
-				<strong>delete</strong>
-			    {% else %}
-				<a href="/delete_network/{{ project.project_id }}/{{value.net_id}}/" 
-                                data-confirm="This will completely remove {{key}} from this project. Are you sure?"> delete
+
+				<a href="/delete_private_network/{{ project.project_id }}/{{value.net_id}}/" 
+                                data-confirm="This will completely remove {{key}} from this project. 
+					      Any virtual machines connected to its subnets will be detached from
+                                              this network, and any routers using this network will also be detached.
+					      Are you sure?"> delete
                                 </a>
-                            {% endif %}
+
 	                </td>
 		   </tr>
 		{% endfor %}

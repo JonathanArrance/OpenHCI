@@ -67,9 +67,9 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.network_view',
             name='network_view'),
 
-	url(r'^delete_network/(?P<project_id>[^/]+)/(?P<net_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.remove_network',
-            name='remove_network'),
+	url(r'^delete_private_network/(?P<project_id>[^/]+)/(?P<net_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.remove_private_network',
+            name='remove_private_network'),
 
 	url(r'^add_private_network/(?P<net_name>[^/]+)/(?P<admin_state>[^/]+)/(?P<shared>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.add_private_network',
