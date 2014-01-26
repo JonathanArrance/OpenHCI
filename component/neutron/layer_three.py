@@ -363,7 +363,7 @@ class layer_three_ops:
                 logger.sql_error("Could not delete the router.")
                 raise Exception("Could not delete the router.")
 
-            if(rest['response'] == 204):
+            if(rest['response'] == 204 or rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
