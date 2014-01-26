@@ -94,9 +94,9 @@ $(function() {
 					if ( bValid ) {
 					  
 						$.post('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT_ID + '/');
-					  
-						
+	
 						$( this ).dialog( "close" );
+
 					}
 				},
 				Cancel: function() {

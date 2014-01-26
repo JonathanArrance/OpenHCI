@@ -189,7 +189,8 @@ def create_user(request, username, password, userrole, email, project_id):
         uo = user_ops(auth)
         user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_id': project_id}
         newuser= uo.create_user(user_dict)
-        return HttpResponseRedirect("project_view", )
+	redirect_to = "/projects/%s/view/" % ("ffvc2")
+	return HttpResponseRedirect(redirect_to)
     except:
         raise
 
@@ -252,25 +253,28 @@ def create_router(request, router_name, priv_net, default_public, project_id):
 
 
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+	return HttpResponseRedirect(reverse('project_view', project_name=('ffvc2',)))
+
     except:
-        return HttpResponse(status=500)
+        raise
 
 def delete_router(request, project_id, router_id):
     try:
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
 	router=l3o.get_router(router_id)
+	print router
 	proj_rout_dict = {'router_id': router_id, 'project_id': project_id}
 	l3o.delete_router_gateway_interface(proj_rout_dict)
 	remove_dict = {'router_id': router_id, 'subnet_id': router["subnet_id"], 'project_id': project_id}
+	print remove_dict
 	l3o.delete_router_internal_interface(remove_dict)
         l3o.delete_router(proj_rout_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+
+	return HttpResponseRedirect(reverse('project_view', project_name=('ffvc2',)))
+
     except:
-        return HttpResponse(status=500)
+        raise
 
 def allocate_floating_ip(request, project_id, ext_net_id):
     try:
@@ -402,12 +406,10 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
         network = no.add_private_network(create_dict)
 	subnet_dict={"net_id": network['net_id'], "subnet_dhcp_enable": "true", "subnet_dns": ["8.8.8.8"]}
 	subnet = no.add_net_subnet(subnet_dict)		
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        return HttpResponse(status=500)
+	return render(request, 'coalesce.coal_beta.views.project_view', {'project_name': 'ffvc2'})
 
+    except:
+        raise
       
 def remove_network(request, project_id, net_id):
     try:
