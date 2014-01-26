@@ -332,7 +332,7 @@ class layer_three_ops:
             try:
                 if(self.user_level == 1):
                     #check if the router_id is in the power user project
-                    check_router = {'select':"router_name",'from':"trans_routers",'where':"proj_id='%s'"%(self.project_id)}
+                    check_router = {'select':"router_name,proj_id",'from':"trans_routers",'where':"proj_id='%s'"%(self.project_id)}
                     get_router = self.db.pg_select(check_router)
                     if(not get_router):
                         self.flag = False
@@ -343,9 +343,9 @@ class layer_three_ops:
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":get_router['proj_id']}
-                if(get_router['proj_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,get_router['proj_id'])
+                api_dict = {"username":self.username, "password":self.password, "project_id":get_router[0][1]}
+                if(get_router[0][1] != self.project_id):
+                    self.token = get_token(self.username,self.password,get_router[0][1])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
