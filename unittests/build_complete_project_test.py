@@ -13,19 +13,19 @@ a = authorization("admin","newpass")
 d = a.get_auth()
 print d
 
-proj_dict = {'proj_name':"test_proj", 
-             'user_dict': {'username': "powuser", 
-                           'password': "powuser", 
+proj_dict = {'proj_name':"11", 
+             'user_dict': {'username': "11", 
+                           'password': "11", 
                            'userrole': "pu", 
                            'email': "power@transcirrus.com",
                            'project_id': None},
              'net_name': "netname",
              'subnet_dns': [],
-             'sec_group_dict': {'group_name': "groupname",
-                                'group_desc': "groupdesc",
+             'sec_group_dict': {'group_name': "11",
+                                'group_desc': "11",
                                 'project_id': None},
-             'sec_keys_name': "seckeys",
-             'router_name': "routername"}
+             'sec_keys_name': "11",
+             'router_name': "11"}
 
 print "Building project..."
 print bcp
