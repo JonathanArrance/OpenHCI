@@ -442,11 +442,12 @@ def remove_private_network(request, project_id, net_id):
                     print
                     l3o.delete_router_internal_interface(remove_dict) 
 
-            del_dict={'subnet_name': subnet['subnet_name'], 'net_id': subnet['subnet_id'],}
+            del_dict={'subnet_id': subnet['subnet_id'], 'net_id': net_id, 'project_id': project_id }
             print "DELETE_DICT:"
             print del_dict
             print
             no.remove_net_subnet(del_dict)
+	remove_dict={'net_id': net_id, 'project_id': project_id }
         no.remove_network(remove_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
