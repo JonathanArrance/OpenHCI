@@ -684,6 +684,7 @@ class neutron_net_ops:
         DESC: Remove a subnet from a network.
         INPUT: del_dict - subnet_id
                         - net_id
+                        - project_id
         OUTPUT: OK if deleted or error code
         ACCESS: Admins can remove a subnet from any network. Only a power user can remove a subnet
                 from a network in their project. Users can not remove subnets
@@ -695,6 +696,9 @@ class neutron_net_ops:
         if(('net_id' not in del_dict) or (del_dict['net_id'] == "")):
             logger.sys_error("Can not have a blank net id when deleteing a subnet")
             raise Exception("Can not have a blank net id when deleteing a subnet")
+        if(('project_id' not in del_dict) or (del_dict['project_id'] == "")):
+            logger.sys_error("Can not have a blank project id when deleteing a subnet")
+            raise Exception("Can not have a blank project id when deleteing a subnet")
 
         if(self.user_level <= 1):
             #check if the subnet exists
@@ -703,7 +707,9 @@ class neutron_net_ops:
                 raise Exception('Could not find the subnet to delete.')
 
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
+                if(self.project_id != remove_dict['project_id']):
+                    self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_logger("Could not connect to the API")
