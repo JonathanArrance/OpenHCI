@@ -351,23 +351,21 @@ class layer_three_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
+            try:
                 #add the new user to openstack
-            body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'DELETE'
-            api_path = '/v2.0/routers/%s'%(router_id)
-            logger.sys_info(api_path)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            logger.sys_info(rest)
-            #except:
-            #    logger.sql_error("Could not delete the router.")
-            #    raise Exception("Could not delete the router.")
+                body = ''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/routers/%s'%(router_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not delete the router.")
+                raise Exception("Could not delete the router.")
 
-            if(rest['response'] == 204 or rest['response'] == 200):
+            if(rest['response'] == 204):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 try:
