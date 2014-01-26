@@ -17,7 +17,7 @@ def build_complete_project(auth_dict, proj_dict):
                                  - email - req
                                  - project_id - leave NULL
                      - net_name - req
-                     - subnet_dns - req
+                     - subnet_dns[] - req
                      - sec_group_dict - ports[] - op
                                       - group_name - req
                                       - group_desc - req
