@@ -337,7 +337,7 @@ class layer_three_ops:
                     if(not get_router):
                         self.flag = False
             except:
-                logger.sys_logger("Power user could not delete the router %s." %(router_id))
+                logger.sys_error("Power user could not delete the router %s." %(router_id))
                 raise Exception("Power user could not delete router %s." %(router_id))
 
             #Create an API connection with the admin
@@ -348,7 +348,7 @@ class layer_three_ops:
                     self.token = get_token(self.username,self.password,get_router['proj_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             #try:
