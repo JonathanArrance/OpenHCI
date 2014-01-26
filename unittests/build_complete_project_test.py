@@ -29,4 +29,4 @@ proj_dict = {'proj_name':"test_proj",
 
 print "Building project..."
 print bcp
-bcp.build_complete_project(a, proj_dict)
+bcp.build_project(d, proj_dict)
