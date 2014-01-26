@@ -620,7 +620,7 @@ def processComputeConfig(sock, node_id):
     sent for any update in node info or if the node is inserted into
     cluster for the first time
     '''
-
+    sys.exit() # TEST
     # write compute nodes nova config files
 
     ret = util.write_new_config_file(nova_conf)
