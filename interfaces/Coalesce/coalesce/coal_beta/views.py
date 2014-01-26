@@ -266,9 +266,10 @@ def delete_router(request, project_id, router_id):
 	print router
 	proj_rout_dict = {'router_id': router_id, 'project_id': project_id}
 	l3o.delete_router_gateway_interface(proj_rout_dict)
-	remove_dict = {'router_id': router_id, 'subnet_id': router["router_int_sub_id"], 'project_id': project_id}
-	print remove_dict
-	l3o.delete_router_internal_interface(remove_dict)
+	subnet_id=router["router_int_sub_id"]
+	if subnet_id:
+	    remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
+	    l3o.delete_router_internal_interface(remove_dict)
         l3o.delete_router(router_id)
 
 	return HttpResponseRedirect(reverse('project_view', args=('ffvc2',)))
@@ -417,36 +418,28 @@ def remove_private_network(request, project_id, net_id):
         no      = neutron_net_ops(auth)
         l3o     = layer_three_ops(auth)
         network = no.get_network(net_id)
-        print "NETWORK:"
-        print network
-        print
         subnets = network['net_subnet_id']
         routers = l3o.list_routers(project_id)
 
-        print "ROUTERS:"
-        print routers
-        print
-
         for subnet in subnets:
+	    print "######################"
+            print subnet
             for router in routers:
-                router_dict = l3o.get_router(router['router_id'])
-
-                print "ROUTER_DICT:"
-                print router_dict
-                print
+	        print "###############"
+                print router
+                rid = router['router_id']
+		print "#########"
+                print rid
+                router_dict = l3o.get_router(rid)
 
                 if router_dict['router_int_sub_id'] == subnet['subnet_id']:
-                    remove_dict = {'router_id': router_dict['router_id'], 'subnet_id': router_dict["router_int_sub_id"], 'project_id': project_id}
-                    print "ROUTER_DICT:"
-                    print router_dict
-                    print
+                    remove_dict = {'router_id': router_dict['router_id'], 'subnet_id': router_dict['router_int_sub_id'], 'project_id': project_id}
                     l3o.delete_router_internal_interface(remove_dict) 
 
-            del_dict={'subnet_name': subnet['subnet_name'], 'net_id': subnet['subnet_id'],}
-            print "DELETE_DICT:"
-            print del_dict
-            print
+            del_dict={'subnet_id': subnet['subnet_id'], 'net_id': net_id, 'project_id': project_id }
+
             no.remove_net_subnet(del_dict)
+	remove_dict={'net_id': net_id, 'project_id': project_id }
         no.remove_network(remove_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
