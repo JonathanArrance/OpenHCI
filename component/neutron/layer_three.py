@@ -141,8 +141,8 @@ class layer_three_ops:
             logger.sql_error("Could not find router %s"%(router_id))
             raise Exception("Could not find router %s"%(router_id))
 
-        r_dict = {'router_name':router[0][1],'router_status':router[0][8],'router_id':router[0][2],'project_id':self.project_id,'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][5],
-                  'external_ip':router[0][6],'admin_state_up':router[0][9],'internal_port':router[0][7]}
+        r_dict = {'router_name':router[0][1],'router_status':router[0][5],'router_id':router[0][2],'project_id':router[0][4],'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][10],
+                  'external_ip':router[0][11],'admin_state_up':router[0][9],'internal_port':router[0][8]}
 
         return r_dict
 
@@ -598,7 +598,7 @@ class layer_three_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    update = {'table':'trans_routers','set':"net_id='%s',router_int_subnet_id='%s',router_int_conn_id='%s',router_int_port_id='%s'"%('','','',''),'where':"router_id='%s'"%(remove_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"net_id='',router_int_subnet_id='',router_int_conn_id='',router_int_port_id=''",'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
@@ -698,7 +698,7 @@ class layer_three_ops:
                     #for x in raw:
                     #    self.ip = x['ip_address']
                     #update the transcirrus router
-                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],''),'where':"router_id='%s'"%(add_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip=''"%(load['router']['id']),'where':"router_id='%s'"%(add_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
@@ -777,7 +777,7 @@ class layer_three_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #update the transcirrus router
-                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%('',''),'where':"router_id='%s'"%(remove_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"router_ext_gateway='',router_ext_ip=''",'where':"router_id='%s'"%(remove_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
