@@ -366,7 +366,6 @@ class layer_three_ops:
             if(rest['response'] == 204 or rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                load = json.loads(rest['data'])
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
