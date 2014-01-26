@@ -6,6 +6,7 @@ import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
 import datetime
 from ifconfig import ifconfig
+from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 
 def change_uplink_ip(auth_dict,input_dict):
     """
@@ -29,7 +30,9 @@ def change_uplink_ip(auth_dict,input_dict):
     #get the nodeID from the config file
     node_id = util.get_node_id()
     node_type = util.get_node_type()
-    
+    node_name = util.get_node_name()
+    cloud_name = util.get_cloud_name()
+
     for key,value in input_dict.items():
         if(key == 'uplink_ip'):
             logger.sys_info('Uplink ip specified %s'%(input_dict['uplink_ip']))
@@ -99,23 +102,109 @@ def change_uplink_ip(auth_dict,input_dict):
                     'mgmt_domain':mgmt_net['net_dns_domain'],
                     'mgmt_dhcp':mgmt_net['inet_setting']
                     }
-        input_dict = {
+        up_dict = {
                       'node_id':node_id,
                       'uplink_dict':uplink_dict,
                       'mgmt_dict':mgmt_dict
                       }
-        change_uplink = util.set_network_variables(input_dict)
+        change_uplink = util.set_network_variables(up_dict)
         if(change_uplink == 'ERROR' or change_uplink == 'NA'):
             return change_uplink
         else:
             logger.sys_info("writing the network config file.")
             write_up_net = util.write_new_config_file(change_uplink)
             if(write_up_net == 'OK'):
-                #restart the network card
-                restart_card = util.restart_network_card("br-ex")
-                if(restart_card != 'OK'):
-                    logger.sys_error("Could not restart adapter: Bridge 1(uplink)")
-                    return restart_card
+                #write the sysconfigs and the new config.py
+                uplink_info = [{'system_name':node_name,'parameter':"api_ip",'param_value':input_dict['uplink_ip']},
+                                {'system_name':node_name,'parameter':"admin_api_ip",'param_value':input_dict['uplink_ip']},
+                                {'system_name':node_name,'parameter':"int_api_ip",'param_value':input_dict['uplink_ip']},
+                                {'system_name':node_name,'parameter':"uplink_ip",'param_value':input_dict['uplink_ip']},
+                                {'system_name':node_name,'parameter':"uplink_subnet",'param_value':input_dict['uplink_subnet']},
+                                {'system_name':node_name,'parameter':"uplink_gateway",'param_value':input_dict['uplink_gateway']},
+                                {'system_name':node_name,'parameter':"uplink_dns",'param_value':input_dict['uplink_dns']},
+                                {'system_name':node_name,'parameter':"uplink_domain_name",'param_value':input_dict['uplink_domain']}
+                                ]
+                uplink = util.update_system_variables(uplink_info)
+                #recreate the openstack API endpoints
+                if(uplink == 'OK'):
+                    endpoint = endpoint_ops(auth_dict)
+                    #reset the keystone endpoint
+                    key_input = {'service_name':'keystone'}
+                    del_keystone = endpoint.delete_endpoint(key_input)
+                    print del_keystone
+                    if(del_keystone == 'OK'):
+                        input_dict = {'cloud_name':cloud_name,'service_name':'keystone'}
+                        create_keystone = endpoint.create_endpoint(input_dict)
+                        if(create_keystone['endpoint_id']):
+                            print "Keystone endpoint set up complete."
+                        else:
+                            return "ERROR"
+    
+                    #reset swift endpoint
+                    swift_input = {'service_name':'swift'}
+                    del_swift = endpoint.delete_endpoint(swift_input)
+                    print del_swift
+                    if(del_swift == 'OK'):
+                        input_dict = {'cloud_name':cloud_name,'service_name':'swift'}
+                        create_swift = endpoint.create_endpoint(input_dict)
+                        if(create_swift['endpoint_id']):
+                            print "Swift endpoint set up complete."
+                        else:
+                            return "ERROR"
+    
+                    #reset nova endpoint
+                    nova_input = {'service_name':'nova'}
+                    del_nova = endpoint.delete_endpoint(nova_input)
+                    print del_nova
+                    if(del_nova == 'OK'):
+                        input_dict = {'cloud_name':cloud_name,'service_name':'nova'}
+                        create_nova = endpoint.create_endpoint(input_dict)
+                        if(create_nova['endpoint_id']):
+                            print "Nova endpoint set up complete."
+                        else:
+                            return "ERROR"
+    
+                    #reset quantum endpoint
+                    quant_input = {'service_name':'quantum'}
+                    del_quant = endpoint.delete_endpoint(quant_input)
+                    print del_quant
+                    if(del_quant == 'OK'):
+                        input_dict = {'cloud_name':cloud_name,'service_name':'quantum'}
+                        create_quant = endpoint.create_endpoint(input_dict)
+                        if(create_quant['endpoint_id']):
+                            print "Quantum endpoint set up complete."
+                        else:
+                            return "ERROR"
+    
+                    #reset cinder endpoint
+                    cinder_input = {'service_name':'cinder'}
+                    del_cinder = endpoint.delete_endpoint(cinder_input)
+                    print del_cinder
+                    if(del_cinder == 'OK'):
+                        input_dict = {'cloud_name':cloud_name,'service_name':'cinder'}
+                        create_cinder = endpoint.create_endpoint(input_dict)
+                        if(create_cinder['endpoint_id']):
+                            print "Cinder endpoint set up complete."
+                        else:
+                            return "ERROR"
+    
+                    #reset glance endpoint
+                    glance_input = {'service_name':'glance'}
+                    del_glance = endpoint.delete_endpoint(glance_input)
+                    print del_glance
+                    if(del_glance == 'OK'):
+                        input_dict = {'cloud_name':cloud_name,'service_name':'glance'}
+                        create_glance = endpoint.create_endpoint(input_dict)
+                        if(create_glance['endpoint_id']):
+                            print "Glance endpoint set up complete."
+                        else:
+                            return "ERROR"
+
+                    #restart the network card
+                    restart_card = util.restart_network_card("br-ex")
+                    if(restart_card != 'OK'):
+                        logger.sys_error("Could not restart adapter: Bridge 1(uplink)")
+                        return restart_card
             else:
                 logger.sys_info("Network config file not written, new uplnk not written, rolling back old config.")
                 #Rollback the netconfig file

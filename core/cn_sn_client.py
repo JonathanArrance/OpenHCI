@@ -148,7 +148,8 @@ def sendOk(sock):
             'Length': '1',
             'Value': 'ok'
         }
-    sock.sendall(pickle.dumps(status_ok, -1))
+    #sock.sendall(pickle.dumps(status_ok, -1))
+    send_data(pickle.dumps(status_ok, -1), sock)
 
 def restartServices(node_id, node_type):
 
@@ -619,7 +620,7 @@ def processComputeConfig(sock, node_id):
     sent for any update in node info or if the node is inserted into
     cluster for the first time
     '''
-
+    sys.exit() # TEST
     # write compute nodes nova config files
 
     ret = util.write_new_config_file(nova_conf)
@@ -714,7 +715,8 @@ def processComputeConfig(sock, node_id):
     if post_install_status == True:
 
         # send node_ready status message to cc
-        sock.sendall(pickle.dumps(status_ready, -1))
+        #sock.sendall(pickle.dumps(status_ready, -1))
+        send_data(pickle.dumps(status_ready, -1), sock)
 
         # listen for ok message, ack -- loops infinetly
         while True:
@@ -765,7 +767,8 @@ def processComputeConfig(sock, node_id):
         if post_install_status != True:
 
             # send node_halt status message to cc
-            sock.sendall(pickle.dumps(status_halt, -1))
+            #sock.sendall(pickle.dumps(status_halt, -1))
+            send_data(pickle.dumps(status_halt, -1), sock)
 
             # listen for ok message, ack -- loop infinetly
             while True:
@@ -785,7 +788,8 @@ def processComputeConfig(sock, node_id):
         else:
              
             # send node_ready status message to cc
-            sock.sendall(pickle.dumps(status_ready, -1))
+            #sock.sendall(pickle.dumps(status_ready, -1))
+            send_data(pickle.dumps(status_ready, -1), sock)
 
             # listen for ok message, ack -- loops infinetly
             while True:
@@ -926,7 +930,8 @@ def processStorageConfig(sock, node_id):
 
     if post_install_status == True:
         # send node ready status to cc
-        sock.sendall(pickle.loads(status_ready, -1))
+        #sock.sendall(pickle.loads(status_ready, -1))
+        send_data(pickle.dumps(status_ready, -1), sock)
 
         # listen for ok ack message -- loop infinetly
         while True:
@@ -973,7 +978,8 @@ def processStorageConfig(sock, node_id):
         # check after stipulated retry's
         if post_install_status != True:
             # send node halt mesage to cc
-            sock.sendall(pickle.loads(status_halt, -1))
+            #sock.sendall(pickle.loads(status_halt, -1))
+            send_data(pickle.dumps(status_halt, -1), sock)
 
             # listen for ok ack message
             while True:
@@ -992,7 +998,8 @@ def processStorageConfig(sock, node_id):
                         print "node_id: %s listening for status_halt ack" % (node_id)
         else:
             # send node ready status message to cc
-            sock.sendall(pickle.loads(status_ready, -1))
+            #sock.sendall(pickle.loads(status_ready, -1))
+            send_data(pickle.dumps(status_ready, -1), sock)
 
             # listen for ok ack message
             while True:
@@ -1088,7 +1095,8 @@ try:
     logger.sys_info("sending connect_pkt")
     if __debug__ :
         print "sending connect_pkt"
-    sock.sendall(pickle.dumps(connect_pkt, -1))
+    #sock.sendall(pickle.dumps(connect_pkt, -1))
+    send_data(pickle.dumps(connect_pkt, -1), sock)
 
     # receive packet using select, retry_count
     while True:
@@ -1127,7 +1135,8 @@ try:
             if __debug__ :
                 print "sending %s " % node_info
             #print "node_id = %s" % node_id
-            sock.sendall(pickle.dumps(node_info, -1))
+            #sock.sendall(pickle.dumps(node_info, -1))
+            send_data(pickle.dumps(node_info, -1), sock)
 
             # receive status message, retry_count
             data = recv_data(sock)

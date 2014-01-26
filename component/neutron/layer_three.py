@@ -123,6 +123,7 @@ class layer_three_ops:
                        - router_id
                        - project_id
                        - network_id
+                       - router_int_sub_id
                        - external_gateway
                        - external_ip
                        - admin_state_up
@@ -140,7 +141,7 @@ class layer_three_ops:
             logger.sql_error("Could not find router %s"%(router_id))
             raise Exception("Could not find router %s"%(router_id))
 
-        r_dict = {'router_name':router[0][1],'router_status':router[0][8],'router_id':router[0][2],'project_id':self.project_id,'network_id':router[0][3],'external_gateway':router[0][5],
+        r_dict = {'router_name':router[0][1],'router_status':router[0][8],'router_id':router[0][2],'project_id':self.project_id,'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][5],
                   'external_ip':router[0][6],'admin_state_up':router[0][9],'internal_port':router[0][7]}
 
         return r_dict
