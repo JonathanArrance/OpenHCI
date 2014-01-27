@@ -404,19 +404,19 @@ def keep_alive_check(node_id, conn):
                 'Length': '1',
                 'Value': 'alive'
                 }
-        logger.sys_info("***keep_alive***")
+        logger.sys_info("node_id: %s ***keep_alive***" %(node_id))
         if __debug__ :
-            print "***keep_alive***"
+            print "node_id: %s ***keep_alive***" %(node_id)
         conn.sendall(pickle.dumps(status_alive, -1))
         data = recv_data(conn)
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
-                logger.sys_info("node %s alive" %(node_id))
+                logger.sys_info("node_id: %s ***alive***" %(node_id))
                 if __debug__ :
-                    print "node %s alive" %(node_id)
+                    print "node_id: %s ***alive***" %(node_id)
             else:
-                logger.sys_info("node not responding")
+                logger.sys_info("node_id: %s Error received %s" %(node_id, data))
 
         # sleep for keep_alive_sec
         sleep(keep_alive_sec)
@@ -661,21 +661,21 @@ def client_thread(conn, client_addr):
                     
                     # server did not receive node_info
                     else:
-                        logger.sys_error("server did not receive any data")
+                        logger.sys_error("ciac_server: did not receive any data")
                         if __debug__ :
-                            print "server did not receive any data"
+                            print "ciac_server: did not receive any data"
                 # handshake process failure
                 else:
-                    logger.sys_error("server did not receive connect, exiting")
+                    logger.sys_error("ciac_server: did not receive connect, exiting")
                     if __debug__ :
-                        print "server did not receive connect, exiting"
+                        print "ciac_server: did not receive connect, exiting"
                     sys.exit(1)
 
 
             else:
-                logger.sys_error("no data received")
+                logger.sys_error("ciac_server: no data received")
                 if __debug__ :
-                    print "no data received"
+                    print "ciac_server: no data received"
                 break
     except socket.error , msg:
 
@@ -684,9 +684,9 @@ def client_thread(conn, client_addr):
         logger.sys_error('Failed. Error Code : ' + str(msg[0]) + 'Message ' + msg[1])
         sys.exit()
     finally:
-        logger.sys_warning("In finally block")
+        logger.sys_warning("ciac_server: In finally block, node_id: %s" %(node_id))
         if __debug__ :
-            print "In finally block"
+            print "ciac_server: In finally block, node_id: %s" %(node_id)
        # conn.close()
 
 
