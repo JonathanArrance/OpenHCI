@@ -47,13 +47,13 @@ print "----------------------------------------"
 print "listing the networks"
 newnet2 = net.list_internal_networks()
 print newnet2
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
 getnet = net.get_network("20400a44-7abc-4468-abfb-b2f45e74b6cb")
 print getnet
-'''
+
 time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"
@@ -67,7 +67,7 @@ print "----------------------------------------"
 print "getting the new network8 after subnet added"
 getnet2 = net.get_network("4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae")
 print getnet2
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "Listing the subnets in use for thistest8"
@@ -80,7 +80,7 @@ print "get the subnet"
 subnet = listsub[0]
 getsub3 = net.get_net_subnet('e007d46e-df30-4686-83f7-4d01ec5daebc')
 print getsub3
-'''
+
 time.sleep(1)
 print "---------------------------------------"
 print "Deleteing the subnet from the network."
@@ -111,3 +111,14 @@ print "listing the networks"
 newnet = net.list_networks()
 print newnet
 '''
+
+##remove port
+#stuff_dict = {'subnet_id':'e007d46e-df30-4686-83f7-4d01ec5daebc','project_id':'9fad7cee35024b858795097f6e7d62da','port_id':'d4313791-9da9-4909-b65f-ccb9aa2cd5a3'}
+#stuff2 = net.remove_net_port(stuff_dict)
+#print stuff2
+
+
+#list ports
+input_dict = {'net_id':'20400a44-7abc-4468-abfb-b2f45e74b6cb','subnet_id':'e007d46e-df30-4686-83f7-4d01ec5daebc','project_id':'9fad7cee35024b858795097f6e7d62da'}
+stuff = net.list_net_ports(input_dict)
+print stuff

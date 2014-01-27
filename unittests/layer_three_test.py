@@ -9,22 +9,21 @@ a = auth.get_auth()
 router = layer_three_ops(a)
 '''
 print "Adding a new router"
-r = {'router_name':'inttestrouter','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+r = {'router_name':'inttestrouter','project_id':"9fad7cee35024b858795097f6e7d62da"}
 create = router.add_router(r)
 print create
 time.sleep(1)
 print"-------------------------------------------------"
-'''
+
 print "Adding an internal interface."
-add_dict = {'router_id':"6896172e-7788-4c05-bbec-c3b71a5028c1",'subnet_id':"37ae0641-3dd2-4d4e-a78d-e436e266bf47",'project_id':'975378d013664df394e3284bd7030108'}
+add_dict = {'router_id':create['router_id'],'subnet_id':"e007d46e-df30-4686-83f7-4d01ec5daebc",'project_id':'9fad7cee35024b858795097f6e7d62da'}
 int_interface = router.add_router_internal_interface(add_dict)
 print int_interface
 time.sleep(1)
 print "-------------------------------------------------"
 
-'''
 print "Add a gateway"
-add_dict2 = {'router_id':"6429d4e8-9dae-4595-8d6b-62b807380ac3",'ext_net_id':"a2a21d14-9630-455b-b31a-1d3d1d8c0680"}
+add_dict2 = {'router_id':'600a528c-eba0-4fad-b861-90aee59ff036','ext_net_id':"1e1af977-d218-4f10-83b3-741a1aa96bd2",'project_id':'9fad7cee35024b858795097f6e7d62da'}
 ext_int = router.add_router_gateway_interface(add_dict2)
 print ext_int
 time.sleep(1)
@@ -34,6 +33,12 @@ print "listing the routers"
 lister = router.list_routers()
 print lister
 time.sleep(1)
+'''
+print "gateway"
+
+get = router.get_router("600a528c-eba0-4fad-b861-90aee59ff036")
+print get
+'''
 
 print "updateing a router"
 print create2['router_id']
@@ -41,16 +46,22 @@ update_dict = {'router_id':create2['router_id'],'router_name':"jonarranceYO",'ro
 update = router.update_router(update_dict)
 print update
 
-del_dict = {'router_id':"a195ec8b-5486-4cef-abc1-ecd99518ea03",'subnet_name':"test"}
+del_dict = {'router_id':'600a528c-eba0-4fad-b861-90aee59ff036','subnet_id':"e007d46e-df30-4686-83f7-4d01ec5daebc",'project_id':"9fad7cee35024b858795097f6e7d62da"}
 delete = router.delete_router_internal_interface(del_dict)
 print delete
 time.sleep(1)
 print "-------------------------------------------------"
 
-del_ext = router.delete_router_gateway_interface("a195ec8b-5486-4cef-abc1-ecd99518ea03")
+e = {'router_id': '600a528c-eba0-4fad-b861-90aee59ff036', 'project_id': '9fad7cee35024b858795097f6e7d62da'}
+del_ext = router.delete_router_gateway_interface(e)
 print del_ext
 time.sleep(1)
 print "--------------------------------------------------"
+
+print "listing the routers"
+lister = router.list_routers()
+print lister
+time.sleep(1)
 
 print "Allocating a new floating ip"
 s = {'ext_net_id':"7bb5744c-c34b-48b5-83b5-5325e36f12ef",'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}

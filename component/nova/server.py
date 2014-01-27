@@ -368,9 +368,12 @@ class server_ops:
         r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
         return r_dict
 
+    def detach_all_servers_from_network(self,net_id):
+        pass
+
     def detach_server_from_network(self):
         pass
-    
+
     def attach_server_to_network(self):
         pass
 
