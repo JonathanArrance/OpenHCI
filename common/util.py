@@ -10,7 +10,7 @@ import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
-
+import transcirrus.common.service_control as service
 from transcirrus.database.postgres import pgsql
 from time import gmtime, strftime
 from ifconfig import ifconfig
@@ -1006,12 +1006,12 @@ def restart_network_card(net_adapter):
     if(net_adapter.lower() == 'all'):
         os.system('sudo /etc/init.d/networking restart')
     else:
-        down = os.system('sudo ifdown %s' %(net_adapter))
+        down = os.system('sudo ifdown --force %s' %(net_adapter))
         print down
         #if(down == ''):
         #    return 'ERROR'
-    
-        up = os.system('sudo ifup %s' %(net_adapter))
+        time.sleep(2)
+        up = os.system('sudo ifup --force %s' %(net_adapter))
         print up
         if(up != 0):
             return 'ERROR'
