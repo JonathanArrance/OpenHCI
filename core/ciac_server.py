@@ -209,9 +209,11 @@ def sendComputeConfig(conn, node_id):
     # get compute node nova config
     config = node_db.get_node_nova_config(node_id)
     if config:
-        logger.sys_info("node_id: %s nova config %s" %(node_id, config))
+        logger.sys_info("node_id: %s got nova config from DB" %(node_id))
+        #logger.sys_info("node_id: %s nova config %s" %(node_id, config))
         if __debug__ :
-            print "node_id: %s nova config %s" % (node_id, config)
+            #print "node_id: %s nova config %s" % (node_id, config)
+            print "node_id: %s got nova config from DB" %(node_id)
 
         # send config
         #conn.sendall(pickle.dumps(config, -1))
@@ -271,16 +273,21 @@ def sendComputeConfig(conn, node_id):
                     print "ciac serve did not receive ack for sent ovs config structure for compute node_id:%s,\
 		 exiting" % (node_id)
                 sys.exit()
+        else:
+            logger.sys_error("node_id: %s Error in get neutron config from DB" %(node_id))
+            if __debug__:
+                print "node_id: %s Error in get neutron config from DB" %(node_id)
+
 
     else:
-        logger.sys_error("ciac server did not extract nova config for node_id:%s, exiting" %(node_id))
+        logger.sys_error("node_id: %s Error in get nova config" %(node_id))
         if __debug__ :
-            print "ciac server did not extract nova config for node_id:%s, exiting" % (node_id)
+            print "node_id: %s Error in get nova config" % (node_id)
         sys.exit()
 
-    logger.sys_info("ciac server done with sending config files for node_id:%s" %(node_id))
+    logger.sys_info("node_id:%s ciac server send config completed" %(node_id))
     if __debug__ :
-        print "ciac server done with sending config files for node_id:%s" % (node_id)
+        print "node_id:%s ciac server send config completed" % (node_id)
     
 def handle():
 
@@ -491,11 +498,9 @@ def client_thread(conn, client_addr):
                     # received data from client
                     if data:
                         data = pickle.loads(data)
-                        #logger.sys_info("ciac server received: %s" %(data))
-                        '''
+                        logger.sys_info("ciac server received: %s" %(data))
                         if __debug__ :
                             print "ciac server received %s" % data
-                        '''
 
                         # extract node_id from the packet
                         node_id = data['Value']['node_id']
