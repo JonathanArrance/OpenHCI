@@ -121,7 +121,7 @@ def getDhcpServer():
             # TODO: can initiate a command to acquire dhcp assigned IP
             logger.sys_warning("Trying to get DHCP server IP")
             dhcp_retry = dhcp_retry-1
-            time.sleep(1)
+            sleep(1)
 
     if (dhcp_server == ""):
         logger.sys_error("Error in getting DHCP server IP")
@@ -264,7 +264,7 @@ def send_data(msg, sock):
                 sys.exit()
             else:
                 logger.sys_info("socket send data retrying ...")
-                time.sleep(1)
+                sleep(1)
         totalsent = totalsent + sent
 
 
@@ -1097,6 +1097,7 @@ try:
         print "sending connect_pkt"
     #sock.sendall(pickle.dumps(connect_pkt, -1))
     send_data(pickle.dumps(connect_pkt, -1), sock)
+
 
     # receive packet using select, retry_count
     while True:

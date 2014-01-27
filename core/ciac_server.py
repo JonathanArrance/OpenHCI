@@ -209,16 +209,18 @@ def sendComputeConfig(conn, node_id):
     # get compute node nova config
     config = node_db.get_node_nova_config(node_id)
     if config:
-        logger.sys_info("node_id: %s nova config %s" %(node_id, config))
+        logger.sys_info("node_id: %s got nova config from DB" %(node_id))
+        #logger.sys_info("node_id: %s nova config %s" %(node_id, config))
         if __debug__ :
-            print "node_id: %s nova config %s" % (node_id, config)
+            #print "node_id: %s nova config %s" % (node_id, config)
+            print "node_id: %s got nova config from DB" %(node_id)
 
         # send config
         #conn.sendall(pickle.dumps(config, -1))
         send_data(pickle.dumps(config, -1), conn)
-        logger.sys_info("sent compute node, node_id: %s nova config!!" %(node_id))
+        logger.sys_info("node_id: %s sent cn nova config!!" %(node_id))
         if __debug__ :
-            print "sent compute node, node_id: %s nova config!!" % node_id
+            print "node_id: %s sent cn nova config!!" % node_id
 
         # listen for ok message, ack
         data = recv_data(conn)
@@ -230,11 +232,11 @@ def sendComputeConfig(conn, node_id):
                 logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
                 sys.exit()
             if __debug__ :
-                print "ciac server received %s from node_id: %s" % (data, node_id)
+                print "node_id: %s ciac server received %s" % (node_id, data)
         else:
-            logger.sys_error("server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" %(node_id))
+            logger.sys_error("node_id: %s ciac server NOT received ok ack for cn nova conf exiting!!!" %(node_id))
             if __debug__ :
-                print "server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" % (node_id)
+                print "node_id: %s ciac server NOT received ok ack for cn nova conf exiting!!!" % (node_id)
             sys.exit()
 
         # get ovs config for compute node
@@ -249,9 +251,9 @@ def sendComputeConfig(conn, node_id):
             #print "sending ovs conf %s" % config
             #conn.sendall(pickle.dumps(config, -1))
             send_data(pickle.dumps(config, -1), conn)
-            logger.sys_info("sent compute node ovs config, node_id: %s" %(node_id))
+            logger.sys_info("node_id: %s sent cn ovs conf" %(node_id))
             if __debug__ :
-                print "sent compute node ovs config, node_id: %s" % (node_id)
+                print "node_id: %s sent cn ovs conf" % (node_id)
 
             # listen for ok message, ack
             data = recv_data(conn)
@@ -263,24 +265,27 @@ def sendComputeConfig(conn, node_id):
                     logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
                     sys.exit()
                 if __debug__ :
-                    print "ciac server received %s from node_id: %s" % (data, node_id)
+                    print "node_id: %s ciac server received %s" % (node_id, data)
             else:
-                logger.sys_error("ciac serve did not receive ack forsent ovs config structure for compute \
-                        node_id:%s," %(node_id))
+                logger.sys_error("node_id: %s ciac server NOT received ok ack for cn ovs conf" %(node_id))
                 if __debug__ :
-                    print "ciac serve did not receive ack for sent ovs config structure for compute node_id:%s,\
-		 exiting" % (node_id)
+                    print "node_id: %s ciac server NOT received ok ack for cn ovs conf" % (node_id)
                 sys.exit()
+        else:
+            logger.sys_error("node_id: %s Error in get neutron config from DB" %(node_id))
+            if __debug__:
+                print "node_id: %s Error in get neutron config from DB" %(node_id)
+
 
     else:
-        logger.sys_error("ciac server did not extract nova config for node_id:%s, exiting" %(node_id))
+        logger.sys_error("node_id: %s Error in get nova config" %(node_id))
         if __debug__ :
-            print "ciac server did not extract nova config for node_id:%s, exiting" % (node_id)
+            print "node_id: %s Error in get nova config" % (node_id)
         sys.exit()
 
-    logger.sys_info("ciac server done with sending config files for node_id:%s" %(node_id))
+    logger.sys_info("node_id:%s ciac server send config completed" %(node_id))
     if __debug__ :
-        print "ciac server done with sending config files for node_id:%s" % (node_id)
+        print "node_id:%s ciac server send config completed" % (node_id)
     
 def handle():
 
@@ -399,19 +404,19 @@ def keep_alive_check(node_id, conn):
                 'Length': '1',
                 'Value': 'alive'
                 }
-        logger.sys_info("***keep_alive***")
+        logger.sys_info("node_id: %s ***keep_alive***" %(node_id))
         if __debug__ :
-            print "***keep_alive***"
+            print "node_id: %s ***keep_alive***" %(node_id)
         conn.sendall(pickle.dumps(status_alive, -1))
         data = recv_data(conn)
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
-                logger.sys_info("node %s alive" %(node_id))
+                logger.sys_info("node_id: %s ***alive***" %(node_id))
                 if __debug__ :
-                    print "node %s alive" %(node_id)
+                    print "node_id: %s ***alive***" %(node_id)
             else:
-                logger.sys_info("node not responding")
+                logger.sys_info("node_id: %s Error received %s" %(node_id, data))
 
         # sleep for keep_alive_sec
         sleep(keep_alive_sec)
@@ -462,7 +467,7 @@ def client_thread(conn, client_addr):
     comments        :
     '''
     #logger.sys_info("Thread created for a connection from host: %s" %(client_addr))
-    print "Thread created for a connection from host:", client_addr
+    print "ciac_server: Thread created for a connection from host:", client_addr
     try:
         while True:
 
@@ -472,18 +477,18 @@ def client_thread(conn, client_addr):
             # received data from client
             if data:
                 data = pickle.loads(data)
-                logger.sys_info("ciac server received: %s" %(data))
+                logger.sys_info("ciac_server: received: %s" %(data))
                 if __debug__:
-                    print "ciac server received: %s" % data
+                    print "ciac_server: received: %s" % data
 
                 # process packet
                 if data['Type'] == 'connect':
 
                     # send a TLV status ok packet
                     sendOk(conn)
-                    logger.sys_info("ciac server sent ok ack for connect")
+                    logger.sys_info("ciac_server: sent ok ack for connect")
                     if __debug__ :
-                        print "ciac server sent ok ack for connect"
+                        print "ciac_server: sent ok ack for connect"
 
                     # recv data, retry_count
                     data = recv_data(conn)
@@ -491,9 +496,9 @@ def client_thread(conn, client_addr):
                     # received data from client
                     if data:
                         data = pickle.loads(data)
-                        logger.sys_info("ciac server received: %s" %(data))
+                        logger.sys_info("ciac_server: received: %s" %(data))
                         if __debug__ :
-                            print "ciac server received %s" % data
+                            print "ciac_server: received %s" % data
 
                         # extract node_id from the packet
                         node_id = data['Value']['node_id']
@@ -512,10 +517,10 @@ def client_thread(conn, client_addr):
 
                             if update == 'OK':
                                 logger.sys_info("node_id: %s conflicts with default DB" %(node_id))
-                                logger.sys_info("sending build mesage to %s,node_type: %s" %(node_id, data['Value']['node_type']))
+                                logger.sys_info("node_id: %s sending build message node_type: %s" %(node_id, data['Value']['node_type']))
                                 if __debug__ :
                                     print "node_id: %s conflicts with default DB" % (node_id)
-                                    print "sending build mesage to %s,node_type: %s" % (node_id, data['Value']['node_type'])
+                                    print "node_id: %s sending build message node_type: %s" % (node_id, data['Value']['node_type'])
 
                                 sendBuild(conn)
 
@@ -532,33 +537,33 @@ def client_thread(conn, client_addr):
                                         data = conn.recv(recv_buffer)
                                         break
                                     else:
-                                        logger.sys_warning("ciac server waiting for status ready/halt from compute node_id: %s" %(node_id))
+                                        logger.sys_warning("node_id: %s ciac server waiting for status ready/halt cn: %s" %(node_id))
                                         if __debug__ :
-                                            print "ciac server waiting for status ready/halt from compute node_id: %s" % (node_id)
+                                            print "node_id: %s ciac server waiting for status ready/halt cn: %s" %(node_id)
                                 if data:
                                     data = pickle.loads(data)
                                     if data['Type'] == 'status':
-                                        logger.sys_info("ciac server received %s from node_id: %s" %(data['Value'], node_id))
-                                        logger.sys_info("ciac server sending ok ack node_id: %s" %(node_id))
+                                        logger.sys_info("node_id: %s ciac server received %s" %(node_id, data['Value']))
+                                        logger.sys_info("node_id: %s ciac server sending ok ack" %(node_id))
                                         if __debug__ :
-                                            print "ciac server received %s from node_id: %s" % (data['Value'], node_id)
-                                            print "ciac server sending ok ack node_id: %s" % (node_id)
+                                            print "node_id: %s ciac server received %s" %(node_id, data['Value'])
+                                            print "node_id: %s ciac server sending ok ack" %(node_id)
                                         sendOk(conn)
                                         setDbFlag(node_id, data['Value'])
                                     else:
-                                        logger.sys_error("ciac server received non status message from node_id: %s" %(node_id))
+                                        logger.sys_error("node_id: %s ciac server received non status message" %(node_id))
                                         if __debug__ :
-                                            print "ciac server received non status message from node_id: %s" % (node_id)
+                                            print "node_id: %s ciac server received non status message" % (node_id)
                                         sys.exit()
 
                                 else:
-                                    logger.sys_error("ciac server did not receive any data")
+                                    logger.sys_error("node_id: %s ciac server did not receive any data" %(node_id))
                                     if __debug__ :
-                                        print "ciac server did not receive any data"
+                                        print "node_id: %s ciac server did not receive any data" %(node_id)
 
-                                logger.sys_info("ciac server sending keep alive messages for node_id: %s" %(node_id))
+                                logger.sys_info("node_id: %s ciac server sending keep alive messages" %(node_id))
                                 if __debug__ :
-                                    print "ciac server sending keep alive messages for node_id: %s" % (node_id)
+                                    print "node_id: %s ciac server sending keep alive messages" % (node_id)
                                 keep_alive_check(node_id, conn)
 
                             # node info has not been changed
@@ -572,17 +577,17 @@ def client_thread(conn, client_addr):
                                 setDbFlag(node_id, 'node_ready')
 
                                 # go for keep_alive check
-                                logger.sys_info("ciac server sending keep alive messages for node_id: %s" %(node_id))
+                                logger.sys_info("node_id: %s ciac server sending keep alive messages" %(node_id))
                                 if __debug__ :
-                                    print "ciac server sending keep alive messages for node_id: %s" % (node_id)
+                                    print "node_id: %s ciac server sending keep alive messages" % (node_id)
                                 keep_alive_check(node_id, conn)
                                 
 
                         # node does not exists in the ciac DB
                         else:
-                            logger.sys_info("new node being inserted in DB")
+                            logger.sys_info("node_id: %s new node being inserted in DB" %(node_id))
                             if __debug__ :
-                                print "new node being inserted in DB"
+                                print "node_id: %s new node being inserted in DB" %(node_id)
 
                             #global input_dict
                             # make a DB compatible dictionary 
@@ -623,54 +628,54 @@ def client_thread(conn, client_addr):
                                         data = conn.recv(recv_buffer)
                                         break
                                     else:
-                                        logger.sys_warning("ciac server waiting for status ready/halt from node_id: %s" %(node_id))
+                                        logger.sys_warning("node_id: %s ciac server waiting for status ready/halt" %(node_id))
                                         if __debug__ :
-                                            print "ciac server waiting for status ready/halt from node_id: %s" % (node_id)
+                                            print "node_id: %s ciac server waiting for status ready/halt" % (node_id)
                                 if data:
                                     data = pickle.loads(data)
                                     if data['Type'] == 'status':
-                                        logger.sys_info("ciac server received %s from node_id: %s" %(data['Value'], node_id))
-                                        logger.sys_info("ciac server sent ok ack, node_id: %s" %(node_id))
+                                        logger.sys_info("node_id: %s ciac server received %s" %(node_id, data['Value']))
+                                        logger.sys_info("node_id: %s ciac server sent ok ack" %(node_id))
                                         if __debug__ :
-                                            print "ciac server received %s from node_id: %s" % (data['Value'], node_id)
-                                            print "ciac server sent ok ack, node_id: %s" % (node_id)
+                                            print "node_id: %s ciac server received %s" %(node_id, data['Value'])
+                                            print "node_id: %s ciac server sent ok ack" %(node_id)
                                         sendOk(conn)
                                         setDbFlag(node_id, data['Value'])
                                 else:
-                                    logger.sys_error("ciac server did not receive any data from node_id: %s" %(node_id))
+                                    logger.sys_error("node_id: %s ciac server did not receive any data" %(node_id))
                                     if __debug__ :
-                                        print "ciac server did not receive any data from node_id: %s" % (node_id)
+                                        print "node_id: %s ciac server did not receive any data" % (node_id)
 
                                 # go for keep alive check
-                                logger.sys_info("ciac server sending keep alive messages, node_id: %s" %(node_id))
+                                logger.sys_info("node_id: %s ciac server sending keep alive messages" %(node_id))
                                 if __debug__ :
-                                    print "ciac server sending keep alive messages, node_id: %s" % (node_id)
+                                    print "node_id: %s ciac server sending keep alive messages" % (node_id)
                                 keep_alive_check(node_id, conn)
 
                             else:
-                                logger.sys_error("error in inserting new node_id %s in DB, exiting !!!" %(node_id))
+                                logger.sys_error("node_id: %s error in inserting in DB, exiting !!!" %(node_id))
                                 if __debug__ :
-                                    print "error in inserting new node_id %s in DB, exiting !!!" % (node_id)
+                                    print "noe_id: %s error in inserting in DB, exiting !!!" % (node_id)
                                 sys.exit()
 
                     
                     # server did not receive node_info
                     else:
-                        logger.sys_error("server did not receive any data")
+                        logger.sys_error("ciac_server: did not receive any data")
                         if __debug__ :
-                            print "server did not receive any data"
+                            print "ciac_server: did not receive any data"
                 # handshake process failure
                 else:
-                    logger.sys_error("server did not receive connect, exiting")
+                    logger.sys_error("ciac_server: did not receive connect, exiting")
                     if __debug__ :
-                        print "server did not receive connect, exiting"
+                        print "ciac_server: did not receive connect, exiting"
                     sys.exit(1)
 
 
             else:
-                logger.sys_error("no data received")
+                logger.sys_error("ciac_server: no data received")
                 if __debug__ :
-                    print "no data received"
+                    print "ciac_server: no data received"
                 break
     except socket.error , msg:
 
@@ -679,9 +684,9 @@ def client_thread(conn, client_addr):
         logger.sys_error('Failed. Error Code : ' + str(msg[0]) + 'Message ' + msg[1])
         sys.exit()
     finally:
-        logger.sys_warning("In finally block")
+        logger.sys_warning("ciac_server: In finally block, node_id: %s" %(node_id))
         if __debug__ :
-            print "In finally block"
+            print "ciac_server: In finally block, node_id: %s" %(node_id)
        # conn.close()
 
 
@@ -698,17 +703,17 @@ sock.listen(5)
 
 try:
     while True:
-        logger.sys_info("waiting for connection...on %s of ciac server, port: %s" %("bond2", "6161"))
+        logger.sys_info("ciac_server: waiting for connection...on %s of ciac server, port: %s" %("bond2", "6161"))
         if __debug__ :
-            print "waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
+            print "ciac_server: waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
         conn, client_addr = sock.accept()
         #logger.sys_info("connection from: ", (client_addr))
-        print "connection from ", client_addr
+        print "ciac_server: connection from ", client_addr
         start_new_thread(client_thread, (conn, client_addr))
 except socket.error , msg:
-    logger.sys_error('Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+    logger.sys_error('ciac_server: Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
     if __debug__ :
-        print 'Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+        print 'ciac_server: Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
 finally:
     sock.close()
