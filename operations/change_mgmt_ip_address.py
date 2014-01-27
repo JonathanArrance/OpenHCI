@@ -137,7 +137,7 @@ def change_mgmt_ip(auth_dict,input_dict):
             manage = util.update_system_variables(mg_info)
             if(manage == 'OK'):
                 #restart the network card
-                restart_card = util.restart_network_card("bond0")
+                restart_card = util.restart_network_card("all")
                 if(restart_card != 'OK'):
                     logger.sys_error("Could not restart adapter: bond0(mgmt)")
                     return restart_card
