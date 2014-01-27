@@ -256,7 +256,7 @@ class server_storage_ops:
             if(rest['response'] == 202):
                 #insert the volume info into the DB
                 self.db.pg_transaction_begin()
-                update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='NULL',vol_attached=false,vol_mount_location='NULL'",'where':"vol_id='%s'"%(input_dict['volume_id'])}
+                update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst=NULL,vol_attached=false,vol_mount_location=NULL",'where':"vol_id='%s'"%(input_dict['volume_id'])}
                 self.db.pg_update(update_vol)
                 self.db.pg_transaction_commit()
             else:

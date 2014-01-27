@@ -159,6 +159,7 @@ class server_ops:
 
     def create_server_snapshot():
         pass
+
     def delete_server_snapshot():
         pass
 
@@ -315,7 +316,8 @@ class server_ops:
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
-                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':"NULL",'inst_floating_ip':"NULL",'proj_id':self.project_id,'in_use':"1",'floating_ip_id':"NULL",'inst_id':load['server']['id'],'inst_port_id':"NULL",'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':"NULL",'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
+                # ALL NONE USED TO BE "NULL"
+                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':self.project_id,'in_use':"1",'floating_ip_id':None,'inst_id':load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
                 self.db.pg_insert("trans_instances",ins_dict)
             except:
                 self.db.pg_transaction_rollback()
@@ -351,21 +353,26 @@ class server_ops:
             raise Exception("Status level not sufficient to get virtual servers.")
 
         #get the detailed server info from openstack
-        #try:
-            
-        #except:
-        
-        
-        get_server = None
-        if(self.is_admin == 1):
-            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
-        else:
-            get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
-        server = self.db.pg_select(get_server)
+        try:
+            get_server = None
+            if(self.is_admin == 1):
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
+            else:
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
+            server = self.db.pg_select(get_server)
+        except:
+            logger.sys_error('Could not get server info: get_server')
+            raise Exception('Could not get server info: get_server')
 
         #build the return dictionary
         r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
         return r_dict
+
+    def detach_server_from_network(self):
+        pass
+    
+    def attach_server_to_network(self):
+        pass
 
     def update_server(self,update_dict):
         """
@@ -837,7 +844,7 @@ class server_ops:
                 self.db.pg_transaction_begin()
                 #set the default security group back to NULL
                 if(flag == 1):
-                    update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(sec_dict['project_id'])}
+                    update_dict = {'table':"projects",'set':"""def_security_group_id=NULL,def_security_group_name=NULL""",'where':"proj_id='%s'" %(sec_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #delete the security group from the db
                 delete_dict = {"table":'trans_security_group',"where":"sec_group_id='%s'" %(sec_dict['sec_group_id'])}
@@ -936,7 +943,7 @@ class server_ops:
                 self.db.pg_transaction_begin()
                 #set the default security group back to NULL
                 if(flag == 1):
-                    update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %('NULL','NULL'),'where':"proj_id='%s'" %(delete_dict['project_id'])}
+                    update_dict = {'table':"projects",'set':"""def_security_key_id=NULL,def_security_key_name=NULL""",'where':"proj_id='%s'" %(delete_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #delete the security group from the db
                 del_dict = {"table":'trans_security_keys',"where":"sec_key_id='%s'" %(get_key[0][3])}

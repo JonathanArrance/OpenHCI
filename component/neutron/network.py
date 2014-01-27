@@ -1115,13 +1115,15 @@ class neutron_net_ops:
     def remove_net_port(self,input_dict):
         """
         DESC: used to clean up after the
-        INPUT: update_dict - subnet_id - req
+        INPUT: input_dict  - subnet_id - req
                            - port_id - req
                            - project_id - req
         OUTPUT: OK - success
                 ERROR - fail
                 NA - unknown
-        ACCESS: 
+        ACCESS: Admins can remove a port in any project
+                power users can remove a port in their own project
+                users can not remove ports
         """
         if(('subnet_id' not in input_dict) or (input_dict['subnet_id'] == '')):
             logger.sys_error("Could not remove port. No subnet id given.")
@@ -1133,22 +1135,63 @@ class neutron_net_ops:
             logger.sys_error("No project id given. Can not remove port.")
             raise Exception("No project id given. Can not remove port.")
 
-        #get the next available subnet from the database
+        #make sure the project exists
         try:
-            get_sub = {'select':"*",'from':"trans_subnets",'where':"in_use=0 order by index ASC"}
-            sub = self.db.pg_select(get_sub)
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
         except:
-            logger.sql_error("Could not get subnet information from the Transcirrus db.")
-            raise Exception("Could not get subnet information from the Transcirrus db.")
+            logger.sys_error('The project doest not exist: remove_net_port')
+            raise Exception('The project doest not exist: remove_net_port')
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error('Power user can only remove ports in their project: remove_net_port')
+                raise Exception('Power user can only remove ports in their project: remove_net_port')
+
+        #make sure the subnet is in the project
+        try:
+            get_sub = None
+            if(self.user_level <= 1):
+                get_sub = {'select':'subnet_id','from':'trans_subnets','where':"proj_id='%s'"%(input_dict['project_id'])}
+                subnet = self.db.pg_select(get_sub)
+            else:
+                logger.sys_error('Could not get subnet, invalid user level: remove_net_port')
+                raise Exception('Could not get subnet, invalid user level: remove_net_port')
+        except:
+            logger.sys_error('Could not get subnet, invalid user level: remove_net_port')
+            raise Exception('Could not get subnet, invalid user level: remove_net_port')
+
 
         if(self.user_level <= 1):
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                if(net['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,net['project_id'])
+                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
-                raise Exception("Could not connect to the API")
+                logger.sys_logger("Could not connect to the API: remove_net_port")
+                raise Exception("Could not connect to the API: remove_net_port")
+            try:
+                body = ''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = 'v2.0/ports/%s'%(input_dict['port_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not remove the port with api: remove_net_port")
+                raise Exception("Could not remove the port with api: remove_net_port")
+
+            #check the response and make sure it is a 201
+            if(rest['response'] == 204):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            else:
+                util.http_codes(rest['response'],rest['reason'])
+        else:
+            logger.sys_error("Only an admin or a power user can remove a port: remove_net_port")
+            raise Exception("Only an admin or a power user can remove a port: remove_net_port")
