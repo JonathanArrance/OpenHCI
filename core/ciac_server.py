@@ -546,8 +546,8 @@ def client_thread(conn, client_addr):
                                         logger.sys_info("node_id: %s ciac server received %s" %(node_id, data['Value']))
                                         logger.sys_info("node_id: %s ciac server sending ok ack" %(node_id))
                                         if __debug__ :
-                                        print "node_id: %s ciac server received %s" %(node_id, data['Value'])
-                                        print "node_id: %s ciac server sending ok ack" %(node_id)
+                                            print "node_id: %s ciac server received %s" %(node_id, data['Value'])
+                                            print "node_id: %s ciac server sending ok ack" %(node_id)
                                         sendOk(conn)
                                         setDbFlag(node_id, data['Value'])
                                     else:
@@ -637,8 +637,8 @@ def client_thread(conn, client_addr):
                                         logger.sys_info("node_id: %s ciac server received %s" %(node_id, data['Value']))
                                         logger.sys_info("node_id: %s ciac server sent ok ack" %(node_id))
                                         if __debug__ :
-                                        print "node_id: %s ciac server received %s" %(node_id, data['Value'])
-                                        print "node_id: %s ciac server sent ok ack" %(node_id)
+                                            print "node_id: %s ciac server received %s" %(node_id, data['Value'])
+                                            print "node_id: %s ciac server sent ok ack" %(node_id)
                                         sendOk(conn)
                                         setDbFlag(node_id, data['Value'])
                                 else:
