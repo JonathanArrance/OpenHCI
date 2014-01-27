@@ -218,9 +218,9 @@ def sendComputeConfig(conn, node_id):
         # send config
         #conn.sendall(pickle.dumps(config, -1))
         send_data(pickle.dumps(config, -1), conn)
-        logger.sys_info("sent compute node, node_id: %s nova config!!" %(node_id))
+        logger.sys_info("node_id: %s sent cn nova config!!" %(node_id))
         if __debug__ :
-            print "sent compute node, node_id: %s nova config!!" % node_id
+            print "node_id: %s sent cn nova config!!" % node_id
 
         # listen for ok message, ack
         data = recv_data(conn)
@@ -232,11 +232,11 @@ def sendComputeConfig(conn, node_id):
                 logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
                 sys.exit()
             if __debug__ :
-                print "ciac server received %s from node_id: %s" % (data, node_id)
+                print "node_id: %s ciac server received %s" % (node_id, data)
         else:
-            logger.sys_error("server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" %(node_id))
+            logger.sys_error("node_id: %s ciac server NOT received ok ack for cn nova conf exiting!!!" %(node_id))
             if __debug__ :
-                print "server did not receive ack for sent nova config for compute node node_id: %s, exiting!!!" % (node_id)
+                print "node_id: %s ciac server NOT received ok ack for cn nova conf exiting!!!" % (node_id)
             sys.exit()
 
         # get ovs config for compute node
@@ -251,9 +251,9 @@ def sendComputeConfig(conn, node_id):
             #print "sending ovs conf %s" % config
             #conn.sendall(pickle.dumps(config, -1))
             send_data(pickle.dumps(config, -1), conn)
-            logger.sys_info("sent compute node ovs config, node_id: %s" %(node_id))
+            logger.sys_info("node_id: %s sent cn ovs conf" %(node_id))
             if __debug__ :
-                print "sent compute node ovs config, node_id: %s" % (node_id)
+                print "node_id: %s sent cn ovs conf" % (node_id)
 
             # listen for ok message, ack
             data = recv_data(conn)
@@ -265,13 +265,11 @@ def sendComputeConfig(conn, node_id):
                     logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
                     sys.exit()
                 if __debug__ :
-                    print "ciac server received %s from node_id: %s" % (data, node_id)
+                    print "node_id: %s ciac server received %s" % (node_id, data)
             else:
-                logger.sys_error("ciac serve did not receive ack forsent ovs config structure for compute \
-                        node_id:%s," %(node_id))
+                logger.sys_error("node_id: %s ciac server NOT received ok ack for cn ovs conf" %(node_id))
                 if __debug__ :
-                    print "ciac serve did not receive ack for sent ovs config structure for compute node_id:%s,\
-		 exiting" % (node_id)
+                    print "node_id: %s ciac server NOT received ok ack for cn ovs conf" % (node_id)
                 sys.exit()
         else:
             logger.sys_error("node_id: %s Error in get neutron config from DB" %(node_id))
