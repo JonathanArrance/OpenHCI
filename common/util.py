@@ -1092,7 +1092,7 @@ def update_pg_hba():
     os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
     #get the current ip settings
     b0 = get_adapter_ip('bond0')
-    b1 = get_adapter_ip('bond1')
+    b1 = get_adapter_ip('br-ex')
     os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b0['net_ip']))
     os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b1['net_ip']))
 
