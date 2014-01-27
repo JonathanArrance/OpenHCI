@@ -4,6 +4,8 @@ import transcirrus.common.util as util
 import transcirrus.common.config as config
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
+import transcirrus.common.service_control as service
+
 from ifconfig import ifconfig
 
 def change_mgmt_ip(auth_dict,input_dict):
