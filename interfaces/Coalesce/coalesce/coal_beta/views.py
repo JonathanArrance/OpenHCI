@@ -25,6 +25,7 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.operations.initial_setup import run_setup
+import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
 
@@ -416,29 +417,17 @@ def remove_private_network(request, project_id, net_id):
     try:
         auth    = request.session['auth']
         no      = neutron_net_ops(auth)
-        l3o     = layer_three_ops(auth)
         network = no.get_network(net_id)
         subnets = network['net_subnet_id']
-        routers = l3o.list_routers(project_id)
-
+        
         for subnet in subnets:
-	    print "######################"
-            print subnet
-            for router in routers:
-	        print "###############"
-                print router
-                rid = router['router_id']
-		print "#########"
-                print rid
-                router_dict = l3o.get_router(rid)
-
-                if router_dict['router_int_sub_id'] == subnet['subnet_id']:
-                    remove_dict = {'router_id': router_dict['router_id'], 'subnet_id': router_dict['router_int_sub_id'], 'project_id': project_id}
-                    l3o.delete_router_internal_interface(remove_dict) 
-
-            del_dict={'subnet_id': subnet['subnet_id'], 'net_id': net_id, 'project_id': project_id }
-
-            no.remove_net_subnet(del_dict)
+	    subnet_id = subnet['subnet_id']
+	    sub_proj_dict = {'subnet_id': subnet['subnet_id'], 'project_id': project_id}
+	    ports = no.list_ports(sub_proj_dict)
+	    for port in ports:
+		remove_port_dict = {'subnet_id': subnet_id, 'project_id': project_id, 'port_id': port['port_id']}
+		no.remove_net_port(remove_port_dict)
+            no.remove_net_subnet(sub_proj_dict)
 	remove_dict={'net_id': net_id, 'project_id': project_id }
         no.remove_network(remove_dict)
         referer = request.META.get('HTTP_REFERER', None)
@@ -447,7 +436,6 @@ def remove_private_network(request, project_id, net_id):
 
     except:
         raise
-
 
 
 def manage_projects(request):
@@ -508,6 +496,57 @@ def setup(request):
     else:
         form = SetupForm()
     return render_to_response('coal/setup.html', RequestContext(request, { 'form':form, }))
+
+
+
+def build_project(request):
+    if request.method == 'POST':
+        form = BuildProjectForm(request.POST)
+        if form.is_valid():
+    	    proj_name 		= form.cleaned_data['proj_name']
+    	    username 		= form.cleaned_data['username']
+    	    password 		= form.cleaned_data['password']
+    	    password_confirm 	= form.cleaned_data['password_confirm']
+    	    email 		= form.cleaned_data['email']
+    	    net_name 		= form.cleaned_data['net_name']
+    	    subnet_dns 		= form.cleaned_data['subnet_dns']
+    	    #ports[] - op
+    	    group_name 		= form.cleaned_data['group_name']
+    	    group_desc 		= form.cleaned_data['group_desc']
+    	    sec_keys_name 	= form.cleaned_data['sec_keys_name'] 
+    	    router_name 	= form.cleaned_data['router_name']
+
+        auth = request.session['auth']
+        project_var_array = {	'proj_name': proj_name,
+                      		'user_dict': { 'username': username,
+                                 		'password': password,
+                                 		'userrole': 'pu',
+                                 		'email': email,
+                                  		'project_id': ''},
+
+                     		'net_name':net_name,
+                     		'subnet_dns': subnet_dns,
+                     		'sec_group_dict':  { 'ports': '',
+                                 		     'group_name': group_name,
+                                 		     'group_desc': 'group_desc',
+                                  		     'project_id': ''},
+
+                     		'sec_keys_name': sec_keys_name,
+                     		'router_name': router_name
+
+		           }
+	bcp.build_project(auth, project_var_array)
+
+
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect('/')
+        else:
+            redirect_to = "/projects/%s/view/" % (proj_name)
+	    return HttpResponseRedirect(redirect_to)
+
+    else:
+        form = BuildProjectForm()
+    return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
 
 # --- Media ---
 def logo(request):

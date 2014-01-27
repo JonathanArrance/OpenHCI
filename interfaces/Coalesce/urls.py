@@ -37,6 +37,11 @@ urlpatterns = patterns('',
             name='manage_nodes'),
 
         # --- Projects ----
+
+        url(r'^projects/build/$',
+            'coalesce.coal_beta.views.build_project',
+            name='build_project'),
+
         url(r'^projects/(?P<project_name>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),

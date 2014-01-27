@@ -17,7 +17,7 @@ def build_project(auth_dict, proj_dict):
                                  - email - req
                                  - project_id - leave NULL
                      - net_name - req
-                     - subnet_dns[] - req
+                     - subnet_dns - req
                      - sec_group_dict - ports[] - op
                                       - group_name - req
                                       - group_desc - req
@@ -79,3 +79,5 @@ def build_project(auth_dict, proj_dict):
     outside_port_dict = {'router_id': router['router_id'], 'ext_net_id': ext_net_id, 'project_id': proj['tenant_id']}
     outside_port = neutron_router.add_router_gateway_interface(outside_port_dict)
     logger.sys_info("Created router gateway")
+
+    return "OK"
