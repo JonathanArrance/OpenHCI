@@ -667,8 +667,6 @@ def set_network_variables(input_dict):
 
     mgmt_dict = input_dict['mgmt_dict']
     uplink_dict = input_dict['uplink_dict']
-    print mgmt_dict
-    print uplink_dict
 
     up_inet = 'static'
     for key,value in uplink_dict.items():
@@ -1083,7 +1081,27 @@ def ovs_add_br(br_input):
                 os.system("ovs-vsctl add-port %s %s" %(br_input['br_name'],ports[0]))
     return 'OK'
 '''
+def update_pg_hba():
+    """
+    DESC: Update the pg_hba.conf file when a network card change is made
+    INPUT: None
+    OUTPUT: 'OK' - success
+            'ERROR' - fail
+    """
+    #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
+    os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+    #get the current ip settings
+    b0 = get_adapter_ip('bond0')
+    b1 = get_adapter_ip('bond1')
+    os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b0['net_ip']))
+    os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b1['net_ip']))
 
+    pgsql_start = service.postgresql('restart')
+    if(pgsql_start != 'OK'):
+        #fire off revert
+        return pgsql_start
+
+    return 'OK'
 
 def ovs_update_br(br_input):
     pass

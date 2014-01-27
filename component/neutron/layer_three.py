@@ -1140,20 +1140,18 @@ class layer_three_ops:
             raise Exception("Could not connect to the API")
         
         #New way to do API calls - experiment
-        #try:
-        body = ''
-        header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id": project[0][0]}
-        function = 'DELETE'
-        api_path = '/v2.0/floatingips/%s'%(floater[0][0])
-        print api_path
-        token = self.token
-        sec = self.sec
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-        print rest_dict
-        rest = api.call_rest(rest_dict)
-        #except:
-        #    logger.sys_error("Could not deallocate the floating ip.")
-        #    raise Exception("Could not deallocate the floating ip.")
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id": project[0][0]}
+            function = 'DELETE'
+            api_path = '/v2.0/floatingips/%s'%(floater[0][0])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Could not deallocate the floating ip.")
+            raise Exception("Could not deallocate the floating ip.")
 
         #new way to process db transaction after API call - experiment
         load = None

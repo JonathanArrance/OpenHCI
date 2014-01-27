@@ -146,3 +146,10 @@ def change_mgmt_ip(auth_dict,input_dict):
             #Rollback the netconfig file
             date = strftime("%Y-%m-%d", gmtime())
             os.system('sudo cp /etc/network/interfaces_%s /etc/network/interfaces'%(date))
+
+    #if we do not reconfig pg_hba.conf the system will not be able to connect to the db
+    sql = util.update_pg_hba()
+    if(sql != 'OK'):
+        logger.sys_error("Postgres DB pg_hba.conf file not written.")
+
+    return 'OK'
