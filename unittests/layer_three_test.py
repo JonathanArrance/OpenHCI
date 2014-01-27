@@ -14,7 +14,7 @@ create = router.add_router(r)
 print create
 time.sleep(1)
 print"-------------------------------------------------"
-'''
+
 print "Adding an internal interface."
 add_dict = {'router_id':"6896172e-7788-4c05-bbec-c3b71a5028c1",'subnet_id':"37ae0641-3dd2-4d4e-a78d-e436e266bf47",'project_id':'975378d013664df394e3284bd7030108'}
 int_interface = router.add_router_internal_interface(add_dict)
@@ -22,7 +22,7 @@ print int_interface
 time.sleep(1)
 print "-------------------------------------------------"
 
-'''
+
 print "Add a gateway"
 add_dict2 = {'router_id':"6429d4e8-9dae-4595-8d6b-62b807380ac3",'ext_net_id':"a2a21d14-9630-455b-b31a-1d3d1d8c0680"}
 ext_int = router.add_router_gateway_interface(add_dict2)
@@ -109,3 +109,5 @@ for z3 in yo13:
     yo14 = router.get_floating_ip(z3['floating_ip_id'])
     print yo14
 '''
+h = router.get_router('8cdba63b-0533-4e47-8b57-c87a9b05682f')
+print h

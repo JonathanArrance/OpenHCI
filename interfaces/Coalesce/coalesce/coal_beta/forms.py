@@ -38,6 +38,30 @@ class SetupForm(forms.Form):
         self.helper.add_input(Submit('cancel', 'Cancel Setup', css_class='btn-cancel'))
         self.helper.add_input(Submit('submit', 'Setup Box'))
 
+class BuildProjectForm(forms.Form):
+    proj_name = forms.CharField(min_length = 1, max_length = 64, label='Project Name')
+    username = forms.CharField(min_length = 1, max_length = 64, label='Power User Name')
+    password = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password')
+    password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password Confirm')
+    email = forms.CharField(min_length = 1, max_length = 64, label='Power User email')
+    net_name = forms.CharField(min_length = 1, max_length = 64, label='Network Name')
+    subnet_dns = forms.IPAddressField(label = 'Subnet DNS')
+    #ports[] - op
+    group_name = forms.CharField(min_length = 1, max_length = 64, label='Security Group Name')
+    group_desc = forms.CharField(min_length = 1, max_length = 64, label='Security Group Description')
+    sec_keys_name = forms.CharField(min_length = 1, max_length = 64, label='Security Key Name')
+    router_name = forms.CharField(min_length = 1, max_length = 64, label='Router Name')
+
+    def __init__(self, *args, **kwargs):
+        super(BuildProjectForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.help_text_inline = True
+        self.helper.error_text_inline = False
+        self.helper.add_input(Submit('cancel', 'Cancel', css_class='btn-cancel'))
+        self.helper.add_input(Submit('submit', 'Submit'))
+
 
 class authentication_form(forms.Form):
 
