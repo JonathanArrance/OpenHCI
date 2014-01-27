@@ -467,7 +467,7 @@ def client_thread(conn, client_addr):
     comments        :
     '''
     #logger.sys_info("Thread created for a connection from host: %s" %(client_addr))
-    print "Thread created for a connection from host:", client_addr
+    print "ciac_server: Thread created for a connection from host:", client_addr
     try:
         while True:
 
@@ -477,18 +477,18 @@ def client_thread(conn, client_addr):
             # received data from client
             if data:
                 data = pickle.loads(data)
-                logger.sys_info("ciac server received: %s" %(data))
+                logger.sys_info("ciac_server: received: %s" %(data))
                 if __debug__:
-                    print "ciac server received: %s" % data
+                    print "ciac_server: received: %s" % data
 
                 # process packet
                 if data['Type'] == 'connect':
 
                     # send a TLV status ok packet
                     sendOk(conn)
-                    logger.sys_info("ciac server sent ok ack for connect")
+                    logger.sys_info("ciac_server: sent ok ack for connect")
                     if __debug__ :
-                        print "ciac server sent ok ack for connect"
+                        print "ciac_server: sent ok ack for connect"
 
                     # recv data, retry_count
                     data = recv_data(conn)
@@ -496,9 +496,9 @@ def client_thread(conn, client_addr):
                     # received data from client
                     if data:
                         data = pickle.loads(data)
-                        logger.sys_info("ciac server received: %s" %(data))
+                        logger.sys_info("ciac_server: received: %s" %(data))
                         if __debug__ :
-                            print "ciac server received %s" % data
+                            print "ciac_server: received %s" % data
 
                         # extract node_id from the packet
                         node_id = data['Value']['node_id']
@@ -703,17 +703,17 @@ sock.listen(5)
 
 try:
     while True:
-        logger.sys_info("waiting for connection...on %s of ciac server, port: %s" %("bond2", "6161"))
+        logger.sys_info("ciac_server: waiting for connection...on %s of ciac server, port: %s" %("bond2", "6161"))
         if __debug__ :
-            print "waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
+            print "ciac_server: waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
         conn, client_addr = sock.accept()
         #logger.sys_info("connection from: ", (client_addr))
-        print "connection from ", client_addr
+        print "ciac_server: connection from ", client_addr
         start_new_thread(client_thread, (conn, client_addr))
 except socket.error , msg:
-    logger.sys_error('Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+    logger.sys_error('ciac_server: Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
     if __debug__ :
-        print 'Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+        print 'ciac_server: Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
 finally:
     sock.close()
