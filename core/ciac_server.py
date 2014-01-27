@@ -491,9 +491,11 @@ def client_thread(conn, client_addr):
                     # received data from client
                     if data:
                         data = pickle.loads(data)
-                        logger.sys_info("ciac server received: %s" %(data))
+                        #logger.sys_info("ciac server received: %s" %(data))
+                        '''
                         if __debug__ :
                             print "ciac server received %s" % data
+                        '''
 
                         # extract node_id from the packet
                         node_id = data['Value']['node_id']
