@@ -736,7 +736,7 @@ class neutron_net_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id='NULL',proj_id='NULL',subnet_id='NULL'",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
+                    update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id=NULL,proj_id=NULL,subnet_id=NULL",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
                     self.db.pg_update(update_dict)
                 except:
                     self.db.pg_transaction_rollback()
