@@ -28,8 +28,8 @@ fi
 
 #add the django site to its proper place in the file system
 echo 'Adding Coalesce to the opt directory.'
-#cp -Rf ./interfaces/Coalesce /opt
-#chown -R transuser:transystem /opt/Coalesce
+cp -Rf ./interfaces/Coalesce /opt
+chown -R transuser:transystem /opt/Coalesce
 
 #add the shell to its proper place
 
