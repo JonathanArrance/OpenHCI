@@ -66,7 +66,7 @@ def change_mgmt_ip(auth_dict,input_dict):
         return 'ERROR'
 
     #if dhcp set set all vars to blank
-    if(input_dict['mgmt_dhcp'] == 'dhcp'):
+    if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] == 'dhcp'):
         input_dict['mgmt_ip'] = None
         input_dict['mgmt_subnet'] = None
         input_dict['mgmt_gateway'] = None
