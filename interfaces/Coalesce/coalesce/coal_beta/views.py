@@ -440,7 +440,6 @@ def remove_private_network(request, project_id, net_id):
         for subnet in subnets:
 	    subnet_id = subnet['subnet_id']
 	    sub_proj_dict = {'net_id': net_id, 'subnet_id': subnet_id, 'project_id': project_id}
-
 	    remove_dict = {'router_id': network['router_id'], 'subnet_id': subnet_id, 'project_id': project_id}
 	    l3o.delete_router_internal_interface(remove_dict)
 	    #ports = no.list_net_ports(sub_proj_dict)

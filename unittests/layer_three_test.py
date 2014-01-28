@@ -3,10 +3,16 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.neutron.ports import port_ops
 import time
 
-auth = authorization('bill','test')
+auth = authorization('admin','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
+
+
+print "deleteing router"
+yo = router.delete_router("e0802314-7bdc-41aa-bf63-3942906b9959")
+print yo
+
 '''
 print "Adding a new router"
 r = {'router_name':'inttestrouter','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
@@ -21,7 +27,6 @@ int_interface = router.add_router_internal_interface(add_dict)
 print int_interface
 time.sleep(1)
 print "-------------------------------------------------"
-'''
 
 print "Add a gateway"
 add_dict2 = {'router_id':"25a9d202-218d-4d64-a40c-64b6a805a24a",'ext_net_id':"7bb5744c-c34b-48b5-83b5-5325e36f12ef"}
@@ -29,7 +34,7 @@ ext_int = router.add_router_gateway_interface(add_dict2)
 print ext_int
 time.sleep(1)
 print "-------------------------------------------------"
-'''
+
 
 print "listing the routers"
 lister = router.list_routers()
