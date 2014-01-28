@@ -1,0 +1,30 @@
+<!-- Begin Floating IP widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Floating IP's
+		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/"  id="allocate_floating_ip" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Allocate</a>
+          </div>
+
+	  {% if floating_ips %}
+	    <table class="paleblue">
+
+                <tr> <th>Floating IP</th>   <th>Actions</th></tr>
+
+                {% for fip in floating_ips %}
+
+		    <tr> 
+			<td>{{fip.floating_ip}}</td>  
+			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">view</a> | 
+			    <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/" 
+                                data-confirm="This will deallocate {{fip.floating_ip}} from this project and make any associated VM's private. Are you sure?"> deallocate
+                                </a></td></tr>
+
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no floating IPs</i></p>
+	  {% endif %}
+          
+        </div>
+      </div>

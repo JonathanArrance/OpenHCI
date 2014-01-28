@@ -1,0 +1,37 @@
+ <!-- Begin Security Groups widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Security Groups
+	     <a href="#"  id="create-security-group" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Security Group</a>
+          </div>
+
+	    <div id="sec-group-dialog-form" title="Create new security group">
+                <p class="validateTips">Preserve port defaults of 443,80,22 unless you know what you are doing.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="name">Ports</label>
+                    <input type="text" name="ports" id="ports" value="443,80,22" class="text ui-widget-content ui-corner-all" />
+                    <label for="groupname">Group Name</label>
+                    <input type="text" name="groupname" id="groupname" value="" class="text ui-widget-content ui-corner-all" />
+                    <label for="groupdesc">Group Description</label>
+                    <input type="text" name="groupdesc" id="groupdesc" value="" class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
+
+
+	    <table class="paleblue">
+		{% if sec_groups %}
+		  <tr> <th>Security Group</th>  <th>Owner</th> <th>Actions</th>  </tr>
+		    {% for sg in sec_groups %}
+		      <tr> <td>{{sg.sec_group_name}}</td>  <td>{{sg.username}}</td>  <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		
+		<p><i>This project has no security groups</i></p>
+		{% endif %}
+	  </table>
+        </div>
+      </div>

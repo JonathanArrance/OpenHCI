@@ -1,0 +1,49 @@
+<!-- Begin Routers widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Routers <a href="#"  id="create-router" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Router</a>	
+          </div>
+
+	   <div id="router-dialog-form" title="Create new router">
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="router_name">Router Name</label>
+                    <input type="text" name="router_name" id="router_name"  class="text ui-widget-content ui-corner-all" />
+		    <label for="priv_net">Private Network</label>
+                    <select name="priv_net" id="priv_net">
+			{% for net in priv_net_list %}
+                            {% if net.in_use == 'false' %}
+		   		<option value="{{net.net_id}}">{{net.net_name}}</option>
+			    {% endif %}
+			{% endfor %}
+                    </select>
+                </fieldset>
+                </form>
+           </div>
+
+	    
+	  {% if routers %}
+	    <table class="paleblue">
+
+                <tr> <th>Router</th>  <th>Router Status</th>  <th>Actions</th></tr>
+
+                {% for router in routers %}
+
+		    <tr> 
+			<td>{{router.router_name}}</td>  
+			<td>{{router.router_status}}</td>  
+			<td><a href="/router/{{ router.router_id }}/view/">view</a> | 
+			    <a href="/delete_router/{{ project.project_id }}/{{ router.router_id }}/" 
+                                data-confirm="This will completely remove {{router.router_name}} from this project. Are you sure?"> delete
+                                </a></td></tr>
+
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no routers</i></p>
+	  {% endif %}
+
+         </div>
+      </div>
