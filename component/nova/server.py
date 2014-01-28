@@ -201,11 +201,19 @@ class server_ops:
             logger.sys_error("Status level not sufficient to create virtual servers.")
             raise Exception("Status level not sufficient to create virtual servers.")
 
+        #get the name of the project based on the id
+        try:
+            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(create_dict['project_id'])}
+            proj_name = self.db.pg_select(select)
+        except:
+            logger.sql_error("Could not get the project name from Transcirrus DB.")
+            raise Exception("Could not get the project name from Transcirrus DB.")
+
         #security group verification
         if('sec_group_name' not in create_dict):
             #get the default security group from the transcirrus db
             try:
-                select_sec = {"select":'def_security_group_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                select_sec = {"select":'def_security_group_name', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 get_sec = self.db.pg_select(select_sec)
             except:
                 logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
@@ -214,7 +222,7 @@ class server_ops:
         else:
             #check if the group specified is associated with the users project
             try:
-                select_sec = {"select":'sec_group_name', "from":'trans_security_group', "where":"proj_id='%s'" %(self.project_id)}
+                select_sec = {"select":'sec_group_name', "from":'trans_security_group', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 get_sec = self.db.pg_select(select_sec)
                 if(not get_sec[0][0]):
                     raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
@@ -226,7 +234,7 @@ class server_ops:
         if('sec_key_name' not in create_dict):
             #get the default security group from the transcirrus db
             try:
-                select_key = {"select":'def_security_key_name', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                select_key = {"select":'def_security_key_name', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 sec_key = self.db.pg_select(select_key)
             except:
                 logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
@@ -235,7 +243,7 @@ class server_ops:
         else:
             #check if the key specified is associated with the users project
             try:
-                select_key = {"select":'sec_key_name', "from":'trans_security_keys', "where":"proj_id='%s'" %(self.project_id)}
+                select_key = {"select":'sec_key_name', "from":'trans_security_keys', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 sec_key = self.db.pg_select(select_key)
             except:
                 logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
@@ -245,7 +253,7 @@ class server_ops:
         if('network_name' not in create_dict):
             #get the default security group from the transcirrus db
             try:
-                select_net = {"select":'def_network_id', "from":'projects', "where":"proj_id='%s'" %(self.project_id)}
+                select_net = {"select":'def_network_id', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 net = self.db.pg_select(select_key)
                 self.net_id = net[0][0]
             except:
@@ -254,7 +262,7 @@ class server_ops:
         else:
             #check if the network specified is associated with the users project
             try:
-                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'" %(self.project_id)}
+                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 net = self.db.pg_select(select_net)
                 self.net_id = net[0][0]
             except:
@@ -280,7 +288,7 @@ class server_ops:
                 raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
 
         #verify the image requested exsists
-        image_list = self.image.nova_list_images(self.project_id)
+        image_list = self.image.nova_list_images(create_dict['project_id'])
         for image in image_list:
             if(image['image_name'] == 'None'):
                 continue
@@ -293,9 +301,9 @@ class server_ops:
 
         #connect to the rest api caller
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            #if( != self.project_id):
-            #        self.token = get_token(self.username,self.password,get_router[0][1])
+            api_dict = {"username":self.username, "password":self.password, "project_id":create_dict['project_id']}
+            if(create_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,get_router[0][1])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
@@ -306,7 +314,7 @@ class server_ops:
             body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}], "security_groups": [{"name": "%s"}]}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
-            api_path = '/v2/%s/servers' %(self.project_id)
+            api_path = '/v2/%s/servers' %(create_dict['project_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
@@ -323,7 +331,7 @@ class server_ops:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
                 # ALL NONE USED TO BE "NULL"
-                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':self.project_id,'in_use':"1",'floating_ip_id':None,'inst_id':load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
+                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':create_dict['project_id'],'in_use':"1",'floating_ip_id':None,'inst_id':load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
                 self.db.pg_insert("trans_instances",ins_dict)
             except:
                 self.db.pg_transaction_rollback()
@@ -332,7 +340,7 @@ class server_ops:
             else:
                 #commit the db transaction
                 self.db.pg_transaction_commit()
-                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':self.project_id}
+                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
                 return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])
@@ -374,13 +382,48 @@ class server_ops:
         r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
         return r_dict
 
-    def detach_all_servers_from_network(self,net_id):
-        pass
+    def detach_all_servers_from_network(self,input_dict):
+        """
+        DESC: Used to detach all servers in a project from a specific network
+        INPUT: input_dict - project_id
+                          - net_id
+        OUTPUT: 'OK' - success
+                'ERROR' - fail
+        ACCESS: Admins can detach servers in any project
+                Power users can only detach servers in their project
+                Users can not detach servers
+        NOTE: None
+        """
+        
 
     def detach_server_from_network(self):
+        """
+        DESC: Used to detach a server in a project from a specific network
+        INPUT: input_dict - server_id
+                          - project_id
+                          - net_id
+        OUTPUT: 'OK' - success
+                'ERROR' - fail
+        ACCESS: Admins can detach servers in any project
+                Power users can only detach servers in their project
+                Users can not detach servers
+        NOTE: None
+        """
         pass
 
     def attach_server_to_network(self):
+        """
+        DESC: Used to attach a server in a project to a specific network
+        INPUT: input_dict - server_id
+                          - project_id
+                          - net_id
+        OUTPUT: 'OK' - success
+                'ERROR' - fail
+        ACCESS: Admins can attach servers in any project
+                Power users can only attach servers in their project
+                Users can not attach servers
+        NOTE: None
+        """
         pass
 
     def update_server(self,update_dict):
