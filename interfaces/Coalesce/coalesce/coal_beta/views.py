@@ -114,7 +114,7 @@ def project_view(request, project_name):
     volumes       = vo.list_volumes(pid)
     snapshots     = sno.list_snapshots(pid)
     sec_groups    = so.list_sec_group(pid)
-    sec_keys      = so.list_sec_keys()
+    sec_keys      = so.list_sec_keys(pid)
     print "```````````````sec keys`````````````````"
     print sec_keys
 
