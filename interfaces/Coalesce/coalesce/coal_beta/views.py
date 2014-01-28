@@ -24,6 +24,7 @@ from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
+from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -84,6 +85,7 @@ def project_view(request, project_name):
     l3o = layer_three_ops(auth)
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
+    go = glance_ops(auth)
 
     project = to.get_tenant(project_name)
     pid = project["project_id"]
@@ -113,6 +115,12 @@ def project_view(request, project_name):
     snapshots     = sno.list_snapshots(pid)
     sec_groups    = so.list_sec_group(pid)
     sec_keys      = so.list_sec_keys()
+    
+
+    try:
+	images 	  = go.list_images()
+    except:
+	images =[]
 
     private_networks={}
     for net in priv_net_list:
@@ -123,8 +131,6 @@ def project_view(request, project_name):
 
     public_networks={}
     for net in pub_net_list:
-	print "PUB NET LIST --------------------"
-	print pub_net_list
         try:
 	    public_networks[net['net_name']]= no.get_network(net['net_id'])
 	except:
@@ -153,6 +159,7 @@ def project_view(request, project_name):
 							'floating_ips': floating_ips,
                                                         'volumes': volumes,
                                                         'snapshots':snapshots,
+							'images': images,
                                                         }))
 
 def user_view(request, project_name, user_name):
