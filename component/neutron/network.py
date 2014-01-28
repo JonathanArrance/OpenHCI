@@ -108,7 +108,7 @@ class neutron_net_ops:
                                 - net_id
                                 - project_id
                                 - in_use
-                                - router_name
+                                - router_id
         ACCESS: All users. Admin can list all networks.
         NOTE:none
         """
@@ -127,14 +127,14 @@ class neutron_net_ops:
             for net in nets:
                 r_dict = {}
                 #add an in use flag
-                get_use = {'select': "router_name",'from': "trans_routers",'where':"net_id='%s'"%(net[1])}
+                get_use = {'select': "router_id",'from': "trans_routers",'where':"net_id='%s'"%(net[1])}
                 in_use = self.db.pg_select(get_use)
                 if(in_use):
                     r_dict['in_use'] = 'true'
-                    r_dict['router_name'] = in_use[0][0]
+                    r_dict['router_id'] = in_use[0][0]
                 else:
                     r_dict['in_use'] = 'false'
-                    r_dict['router_name'] = ''
+                    r_dict['router_id'] = ''
                 r_dict['net_name'] = net[0]
                 r_dict['net_id'] = net[1]
                 r_dict['project_id'] = net[2]
@@ -186,12 +186,13 @@ class neutron_net_ops:
                        - net_shared
                        - net_internal
                        - net_subnet_id[{subnet_id: subnet_name:}]
+                       - router_id
         ACCESS: Admins can get info on any network, power users and users can get info
                 for networks in their project.
         """
         if(net_id == ''):
-            logger.sys_error("No net name was specified for the new network.")
-            raise Exception("No net name was specified for the new network.")
+            logger.sys_error("No net id was specified for the new network.")
+            raise Exception("No net id was specified for the new network.")
 
         get_net = None
         try:
@@ -203,6 +204,14 @@ class neutron_net_ops:
         except:
             logger.sql_error("Could not get the net_id %s from from the Transcirrus db."%(net_id))
             raise Exception("Could not get the net_id %s from from the Transcirrus db."%(net_id))
+
+	#add router to return 
+        get_use = {'select': "router_id",'from': "trans_routers",'where':"net_id='%s'"%(net_id)}
+        in_use = self.db.pg_select(get_use)
+        if(in_use):
+            router_id = in_use[0][0]
+        else:
+            router_id=''
 
         #get the subnets
         get_sub = None
@@ -222,7 +231,7 @@ class neutron_net_ops:
             r_dict = {'subnet_id':sub[0], 'subnet_name':sub[1]}
             new_array.append(r_dict)
 
-        r_dict = {'net_name':net[0][0],'net_id':net[0][1],'net_creator_id':net[0][2],'net_admin_state':net[0][3],'net_shared':net[0][5],'net_internal':net[0][4],'net_subnet_id':new_array,'project_id':net[0][6]}
+        r_dict = {'net_name':net[0][0],'net_id':net[0][1],'net_creator_id':net[0][2],'net_admin_state':net[0][3],'net_shared':net[0][5],'net_internal':net[0][4],'net_subnet_id':new_array,'project_id':net[0][6], 'router_id': router_id}
         return r_dict
 
     def add_private_network(self,create_dict):
