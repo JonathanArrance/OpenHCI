@@ -170,6 +170,7 @@ class server_ops:
         """
         DESC: Build a new virtual instance.
         INPUT: create_dict - config_script - op
+                             project_id - req
                              sec_group_name - default project security group if none specified
                              sec_key_name - default project security key if none specified.
                              avail_zone - default availability zone - nova
@@ -293,6 +294,8 @@ class server_ops:
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            #if( != self.project_id):
+            #        self.token = get_token(self.username,self.password,get_router[0][1])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
@@ -752,7 +755,7 @@ class server_ops:
                         update_dict = {'table':"projects",'set':"""def_security_key_id='%s',def_security_key_name='%s'""" %(str(seckey['keypair']['fingerprint']),str(seckey['keypair']['name'])),'where':"proj_id='%s'" %(key_dict['project_id'])}
                     self.db.pg_update(update_dict)
                 #insert all of the relevent info into the transcirrus db
-                insert_dict = {"proj_id":self.project_id,"user_name":self.username,"user_id":self.user_id,"sec_key_id":str(seckey['keypair']['fingerprint']),"sec_key_name":str(seckey['keypair']['name']),"public_key":str(seckey['keypair']['public_key']),"private_key":str(seckey['keypair']['private_key'])}
+                insert_dict = {"proj_id":key_dict['project_id'],"user_name":self.username,"user_id":self.user_id,"sec_key_id":str(seckey['keypair']['fingerprint']),"sec_key_name":str(seckey['keypair']['name']),"public_key":str(seckey['keypair']['public_key']),"private_key":str(seckey['keypair']['private_key'])}
                 self.db.pg_insert("trans_security_keys",insert_dict)
             except:
                 self.db.pg_transaction_rollback()
