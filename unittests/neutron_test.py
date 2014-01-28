@@ -41,13 +41,13 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_internal_networks("9fad7cee35024b858795097f6e7d62da")
 print newnet
-
+'''
 time.sleep(1)
 print "----------------------------------------"
 print "listing the networks"
-newnet2 = net.list_internal_networks()
+newnet2 = net.list_external_networks()
 print newnet2
-
+'''
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
@@ -80,14 +80,14 @@ print "get the subnet"
 subnet = listsub[0]
 getsub3 = net.get_net_subnet('e007d46e-df30-4686-83f7-4d01ec5daebc')
 print getsub3
-'''
+
 time.sleep(1)
 print "---------------------------------------"
 print "Deleteing the subnet from the network."
-del_dict = {'subnet_id':'b9c736ba-cd6f-4f28-aeef-588951f49509', 'project_id':'975378d013664df394e3284bd7030108','net_id':'9f1fc50c-a024-4ca5-a598-220522c5645a'}
+del_dict = {'subnet_name':'int-sub-3','net_id':'4ea066c7-f376-484b-ae96-773e35f1b99c'}
 delsub = net.remove_net_subnet(del_dict)
 print delsub
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "Listing the subnets in use for thistest8"
@@ -101,7 +101,7 @@ print tdel
 time.sleep(1)
 print"----------------------------------------"
 print "attempting to deleteing the new network"
-r = {'net_id':"4665a6b}
+r = {'net_id':"4665a6b5-f5cc-46d0-8fb7-2b1a90a1ffae",'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
 delnet = net.remove_network(r)
 print delnet
 

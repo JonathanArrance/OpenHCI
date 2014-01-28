@@ -15,6 +15,7 @@ from transcirrus.database.postgres import pgsql
 #get the nova libs
 from flavor import flavor_ops
 from image import nova_image_ops
+from transcirrus.component.neutron.network import neutron_net_ops
 
 #######Special imports#######
 #sys.path.append('/home/jonathan/alpo.0/component/neutron')
@@ -79,6 +80,8 @@ class server_ops:
 
         #build the nova image object
         self.image = nova_image_ops(user_dict)
+
+        self.net = neutron_net_ops(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -368,9 +371,12 @@ class server_ops:
         r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
         return r_dict
 
+    def detach_all_servers_from_network(self,net_id):
+        pass
+
     def detach_server_from_network(self):
         pass
-    
+
     def attach_server_to_network(self):
         pass
 

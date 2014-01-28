@@ -4,6 +4,7 @@ import transcirrus.common.util as util
 import transcirrus.common.config as config
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
+
 from ifconfig import ifconfig
 
 def change_mgmt_ip(auth_dict,input_dict):
@@ -65,26 +66,34 @@ def change_mgmt_ip(auth_dict,input_dict):
         return 'ERROR'
 
     #if dhcp set set all vars to blank
+    if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] == 'dhcp'):
+        input_dict['mgmt_ip'] = None
+        input_dict['mgmt_subnet'] = None
+        input_dict['mgmt_gateway'] = None
+        input_dict['mgmt_dns'] = None
+        input_dict['mgmt_dns2'] = None
+        input_dict['mgmt_dns3'] = None
+        input_dict['mgmt_domain'] = None
+        input_dict['mgmt_gateway'] = None
 
-    #get the existing vals
-    if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
-        input_dict['mgmt_ip'] = mgmt_net['net_ip']
-    if('mgmt_subnet' not in input_dict):
-        input_dict['mgmt_subnet'] = mgmt_net['net_mask']
-    
-    if('uplink_gateway' not in input_dict and node_type != 'cc'):
-        input_dict['mgmt_gateway'] = uplink_net['net_gateway']
-    
-    if('mgmt_dns' not in input_dict):
-        input_dict['mgmt_dns'] = mgmt_net['net_dns1']
-    if('mgmt_dns2' not in input_dict):
-        input_dict['mgmt_dns2'] = mgmt_net['net_dns2']
-    if('mgmt_dns3' not in input_dict):
-        input_dict['mgmt_dns3'] = mgmt_net['net_dns3']
-    if('mgmt_domain' not in input_dict):
-        input_dict['mgmt_domain'] = mgmt_net['net_dns_domain']
-    if('mgmt_dhcp' not in input_dict):
-        input_dict['mgmt_dhcp'] = mgmt_net['inet_setting']
+    else:
+        #get the existing vals
+        if('mgmt_ip' not in input_dict and input_dict['mgmt_dhcp'] != 'dhcp'):
+            input_dict['mgmt_ip'] = mgmt_net['net_ip']
+        if('mgmt_subnet' not in input_dict):
+            input_dict['mgmt_subnet'] = mgmt_net['net_mask']
+        if('uplink_gateway' not in input_dict and node_type != 'cc'):
+            input_dict['mgmt_gateway'] = uplink_net['net_gateway']
+        if('mgmt_dns' not in input_dict):
+            input_dict['mgmt_dns'] = mgmt_net['net_dns1']
+        if('mgmt_dns2' not in input_dict):
+            input_dict['mgmt_dns2'] = mgmt_net['net_dns2']
+        if('mgmt_dns3' not in input_dict):
+            input_dict['mgmt_dns3'] = mgmt_net['net_dns3']
+        if('mgmt_domain' not in input_dict):
+            input_dict['mgmt_domain'] = mgmt_net['net_dns_domain']
+        if('mgmt_dhcp' not in input_dict):
+            input_dict['mgmt_dhcp'] = mgmt_net['inet_setting']
 
     #change the ip with the given info
     uplink_dict = {
@@ -129,7 +138,7 @@ def change_mgmt_ip(auth_dict,input_dict):
             manage = util.update_system_variables(mg_info)
             if(manage == 'OK'):
                 #restart the network card
-                restart_card = util.restart_network_card("bond0")
+                restart_card = util.restart_network_card("all")
                 if(restart_card != 'OK'):
                     logger.sys_error("Could not restart adapter: bond0(mgmt)")
                     return restart_card
@@ -138,3 +147,10 @@ def change_mgmt_ip(auth_dict,input_dict):
             #Rollback the netconfig file
             date = strftime("%Y-%m-%d", gmtime())
             os.system('sudo cp /etc/network/interfaces_%s /etc/network/interfaces'%(date))
+
+    #if we do not reconfig pg_hba.conf the system will not be able to connect to the db
+    sql = util.update_pg_hba()
+    if(sql != 'OK'):
+        logger.sys_error("Postgres DB pg_hba.conf file not written.")
+
+    return 'OK'

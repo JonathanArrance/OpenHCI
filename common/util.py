@@ -10,7 +10,7 @@ import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
-
+import transcirrus.common.service_control as service
 from transcirrus.database.postgres import pgsql
 from time import gmtime, strftime
 from ifconfig import ifconfig
@@ -667,8 +667,6 @@ def set_network_variables(input_dict):
 
     mgmt_dict = input_dict['mgmt_dict']
     uplink_dict = input_dict['uplink_dict']
-    print mgmt_dict
-    print uplink_dict
 
     up_inet = 'static'
     for key,value in uplink_dict.items():
@@ -878,7 +876,7 @@ def set_network_variables(input_dict):
         os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
         #get the current ip settings
         b0 = get_adapter_ip('bond0')
-        b1 = get_adapter_ip('bond1')
+        b1 = get_adapter_ip('br-ex')#may need to be put back to bond1
         os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b0['net_ip']))
         os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b1['net_ip']))
         os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(mgmt_dict['mgmt_ip']))
@@ -1008,12 +1006,12 @@ def restart_network_card(net_adapter):
     if(net_adapter.lower() == 'all'):
         os.system('sudo /etc/init.d/networking restart')
     else:
-        down = os.system('sudo ifdown %s' %(net_adapter))
+        down = os.system('sudo ifdown --force %s' %(net_adapter))
         print down
         #if(down == ''):
         #    return 'ERROR'
-    
-        up = os.system('sudo ifup %s' %(net_adapter))
+        time.sleep(2)
+        up = os.system('sudo ifup --force %s' %(net_adapter))
         print up
         if(up != 0):
             return 'ERROR'
@@ -1083,7 +1081,28 @@ def ovs_add_br(br_input):
                 os.system("ovs-vsctl add-port %s %s" %(br_input['br_name'],ports[0]))
     return 'OK'
 '''
+def update_pg_hba():
+    """
+    DESC: Update the pg_hba.conf file when a network card change is made
+    INPUT: None
+    OUTPUT: 'OK' - success
+            'ERROR' - fail
+    """
+    #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
+    os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+    #get the current ip settings
+    b0 = get_adapter_ip('bond0')
+    b1 = get_adapter_ip('br-ex')
+    os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b0['net_ip']))
+    os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b1['net_ip']))
 
+    time.sleep(2)
+    pgsql_start = service.postgresql('restart')
+    if(pgsql_start != 'OK'):
+        #fire off revert
+        return pgsql_start
+
+    return 'OK'
 
 def ovs_update_br(br_input):
     pass
