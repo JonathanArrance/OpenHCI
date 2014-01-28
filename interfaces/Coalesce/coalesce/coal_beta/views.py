@@ -417,16 +417,21 @@ def remove_private_network(request, project_id, net_id):
     try:
         auth    = request.session['auth']
         no      = neutron_net_ops(auth)
+	l3o 	= layer_three_ops(auth)
         network = no.get_network(net_id)
         subnets = network['net_subnet_id']
         
         for subnet in subnets:
 	    subnet_id = subnet['subnet_id']
-	    sub_proj_dict = {'subnet_id': subnet['subnet_id'], 'project_id': project_id}
-	    ports = no.list_ports(sub_proj_dict)
-	    for port in ports:
-		remove_port_dict = {'subnet_id': subnet_id, 'project_id': project_id, 'port_id': port['port_id']}
-		no.remove_net_port(remove_port_dict)
+	    sub_proj_dict = {'net_id': net_id, 'subnet_id': subnet_id, 'project_id': project_id}
+
+	    remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
+	    l3o.delete_router_internal_interface(remove_dict)
+	    #ports = no.list_net_ports(sub_proj_dict)
+	    #for port in ports:
+		#remove_port_dict = {'subnet_id': subnet_id, 'project_id': project_id, 'port_id': port['port_id']}
+		#no.remove_net_port(remove_port_dict)
+	    
             no.remove_net_subnet(sub_proj_dict)
 	remove_dict={'net_id': net_id, 'project_id': project_id }
         no.remove_network(remove_dict)
