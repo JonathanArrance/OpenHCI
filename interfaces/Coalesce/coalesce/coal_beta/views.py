@@ -112,7 +112,7 @@ def project_view(request, project_name):
     volumes       = vo.list_volumes(pid)
     snapshots     = sno.list_snapshots(pid)
     sec_groups    = so.list_sec_group(pid)
-    sec_keys      = so.list_sec_keys(pid)
+    sec_keys      = so.list_sec_keys()
 
     private_networks={}
     for net in priv_net_list:
@@ -123,12 +123,18 @@ def project_view(request, project_name):
 
     public_networks={}
     for net in pub_net_list:
+	print "PUB NET LIST --------------------"
+	print pub_net_list
         try:
 	    public_networks[net['net_name']]= no.get_network(net['net_id'])
 	except:
 	    pass
     
-    default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    try:
+	default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    except:
+	default_public = "NO PUBLIC NETWORK"
+
     floating_ips = l3o.list_floating_ips(pid)
 
     return render_to_response('coal/project_view.html',
@@ -252,7 +258,7 @@ def create_router(request, router_name, priv_net, default_public, project_id):
 	internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_id': subnet}
 	internal_int= l3o.add_router_internal_interface(internal_dict)
 
-
+	referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
 	return HttpResponseRedirect(reverse('project_view', project_name=('ffvc2',)))
 
@@ -419,13 +425,16 @@ def remove_private_network(request, project_id, net_id):
         no      = neutron_net_ops(auth)
 	l3o 	= layer_three_ops(auth)
         network = no.get_network(net_id)
+	print
+	print network
+	print
         subnets = network['net_subnet_id']
         
         for subnet in subnets:
 	    subnet_id = subnet['subnet_id']
 	    sub_proj_dict = {'net_id': net_id, 'subnet_id': subnet_id, 'project_id': project_id}
 
-	    remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
+	    remove_dict = {'router_id': network['router_id'], 'subnet_id': subnet_id, 'project_id': project_id}
 	    l3o.delete_router_internal_interface(remove_dict)
 	    #ports = no.list_net_ports(sub_proj_dict)
 	    #for port in ports:
