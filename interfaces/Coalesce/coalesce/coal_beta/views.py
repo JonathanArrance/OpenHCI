@@ -115,8 +115,7 @@ def project_view(request, project_name):
     snapshots     = sno.list_snapshots(pid)
     sec_groups    = so.list_sec_group(pid)
     sec_keys      = so.list_sec_keys(pid)
-    print "```````````````sec keys`````````````````"
-    print sec_keys
+    instances     = so.list_servers(pid)
 
     try:
         	images 	  = go.list_images()
@@ -161,6 +160,7 @@ def project_view(request, project_name):
                                                         'volumes': volumes,
                                                         'snapshots':snapshots,
                                                         'images': images,
+							'instances': instances,
                                                         }))
 
 def user_view(request, project_name, user_name):
@@ -322,6 +322,22 @@ def take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
         sno = snapshot_ops(auth)
         create_snap = {'snap_name': snap_name, 'snap_desc': snap_desc, 'vol_id': vol_id, 'project_id': project_id}
         sno.create_snapshot(create_snap)  
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)
+
+def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+	instance = {	'project_id':project_id, 'sec_group_name':sec_group_name, 
+			'avail_zone':avail_zone, 'sec_key_name': sec_key_name, 
+			'network_name': network_name,'image_name': image_name, 
+			'flavor_name':flavor_name, 'name':name}
+	import pdb; pdb.set_trace()
+	so.create_server(instance)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

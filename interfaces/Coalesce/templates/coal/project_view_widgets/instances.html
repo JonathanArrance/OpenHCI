@@ -2,8 +2,50 @@
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Instances
+             Instances <a href="#"  id="create-instance" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Instance</a>
           </div>
+
+ 	  <div id="instance-dialog-form" title="Create new instance">
+                <form>
+                {% csrf_token %}
+                <fieldset>
+
+                    <label for="name">Instance Name</label>
+                    <input type="text" name="name" id="name"  class="text ui-widget-content ui-corner-all" />
+
+		    <label for="sec_group_name">Security Group</label>
+                    <select name="sec_group_name" id="sec_group_name">
+			{% for sg in sec_groups %}
+		   	    <option value="{{sg.sec_group_name}}">{{sg.sec_group_name}}</option>
+			{% endfor %}
+                    </select>
+
+		    <label for="sec_key_name">Security Key</label>
+                    <select name="sec_key_name" id="sec_key_name">
+			{% for sk in sec_keys %}
+		   	    <option value="{{sk.key_name}}">{{sk.key_name}}</option>
+			{% endfor %}
+                    </select>
+
+		    <label for="network_name">Private Network</label>
+                    <select name="network_name" id="network_name">
+			{% for net in priv_net_list %}
+		   	    <option value="{{net.net_name}}">{{net.net_name}}</option>
+			{% endfor %}
+                    </select>
+
+		   <label for="image_name">Image</label>
+                    <select name="image_name" id="image_name">
+			{% for image in images %}
+		   	    <option value="{{image.image_name}}">{{image.image_name}}</option>
+			{% endfor %}
+                    </select>
+
+                </fieldset>
+                </form>
+           </div>
+
+
 	  {% if instances %}
 	    <table class="paleblue">
 

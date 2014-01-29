@@ -66,6 +66,11 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.take_snapshot',
             name='take_snapshot'),
 
+	url(r'^create_image/(?P<name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_name>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_name>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_image',
+            name='create_image'),
+
+
 	# --- Network stuff ----
 
 	url(r'^network/(?P<net_id>[^/]+)/view/$',
