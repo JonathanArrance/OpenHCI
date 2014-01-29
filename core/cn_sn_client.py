@@ -623,6 +623,7 @@ def processComputeConfig(sock, node_id):
     #sys.exit() # TEST
     # write compute nodes nova config files
 
+    print "***********nova_conf************ %s" % nova_conf  # TEST
     ret = util.write_new_config_file(nova_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("eror in writing nova conf, exiting!!!")
@@ -634,6 +635,7 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, nova conf"
 
+    print "***********comp_conf************ %s" % comp_conf  # TEST
     ret = util.write_new_config_file(comp_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing comp conf, exiting!!!")
@@ -645,6 +647,7 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, comp conf"
 
+    print "***********api_conf************ %s" % api_conf  # TEST
     ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing api conf, exiting!!!")
@@ -658,6 +661,7 @@ def processComputeConfig(sock, node_id):
 
     # write compute nodes ovs config file
 
+    print "***********ovs_conf************ %s" % ovs_conf  # TEST
     ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing ovs conf, exiting!!!")
@@ -669,6 +673,7 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, ovs conf"
 
+    print "***********net_conf************ %s" % net_conf  # TEST
     ret = util.write_new_config_file(net_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing net conf, exiting!!!")
