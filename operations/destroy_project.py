@@ -91,21 +91,22 @@ def destroy_project(auth_dict, proj_dict):
             return "ERROR"
 
     user_list = tenant.list_tenant_users(proj_dict['project_name'])
-    for user in user_list:
-        if(keep_users):
-            user['project_id'] = proj_dict['project_id']
-            remove_user = user.remove_user_from_project(user)
+    for usr in user_list:
+        if(proj_dict['keep_users']):
+            usr['project_id'] = proj_dict['project_id']
+            remove_user = user.remove_user_from_project(usr)
             if(remove_user == "OK"):
-                logger.sys_info("User %s removed." % user['user_id'])
+                logger.sys_info("User %s removed." % usr['user_id'])
             else:
-                logger.sys_info("ERROR, user %s not removed." % user['user_id'])
+                logger.sys_info("ERROR, user %s not removed." % usr['user_id'])
                 return "ERROR"
         else:
-            remove_user = user.delete_user(user)
+            usr['userid'] = usr['user_id']
+            remove_user = user.delete_user(usr)
             if(remove_user == "OK"):
-                logger.sys_info("User %s removed." % user['user_id'])
+                logger.sys_info("User %s removed." % usr['user_id'])
             else:
-                logger.sys_info("ERROR, user %s not removed." % user['user_id'])
+                logger.sys_info("ERROR, user %s not removed." % usr['user_id'])
                 return "ERROR"
 
     remove_tenant = tenant.remove_tenant(proj_dict['project_name'])
