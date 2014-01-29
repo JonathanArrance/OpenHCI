@@ -114,7 +114,7 @@ class tenant_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -128,7 +128,7 @@ class tenant_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
             except:
-                logger.sys_logger("Could not build the new project %s"%(project_name))
+                logger.sys_error("Could not build the new project %s"%(project_name))
                 raise Exception("Could not build the new project %s"%(project_name))
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
@@ -217,7 +217,7 @@ class tenant_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":select[0][0]}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:

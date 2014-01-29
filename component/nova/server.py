@@ -16,6 +16,7 @@ from transcirrus.database.postgres import pgsql
 from flavor import flavor_ops
 from image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
+from transcirrus.component.glance.glance_ops import glance_ops
 
 #######Special imports#######
 #sys.path.append('/home/jonathan/alpo.0/component/neutron')
@@ -82,6 +83,7 @@ class server_ops:
         self.image = nova_image_ops(user_dict)
 
         self.net = neutron_net_ops(user_dict)
+        self.glance = glance_ops(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -99,7 +101,7 @@ class server_ops:
                                 - project_id
         ACCESS: Admins can list all servers in the cloud
                 Power users can list the servers in a project.
-                Users can list all virtual servers in the project they own .
+                Users can list virtual servers in the project they own .
         """
         #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
         if(self.status_level < 2):
@@ -288,7 +290,8 @@ class server_ops:
                 raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
 
         #verify the image requested exsists
-        image_list = self.image.nova_list_images(create_dict['project_id'])
+        #image_list = self.image.nova_list_images(create_dict['project_id'])
+        image_list = self.glance.list_images()
         for image in image_list:
             if(image['image_name'] == 'None'):
                 continue
@@ -303,7 +306,7 @@ class server_ops:
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":create_dict['project_id']}
             if(create_dict['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,get_router[0][1])
+                    self.token = get_token(self.username,self.password,create_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
@@ -389,14 +392,33 @@ class server_ops:
                           - net_id
         OUTPUT: 'OK' - success
                 'ERROR' - fail
+                'NA' - unknown
         ACCESS: Admins can detach servers in any project
                 Power users can only detach servers in their project
                 Users can not detach servers
         NOTE: None
         """
-        
 
-    def detach_server_from_network(self):
+        #get the server ids in the project attached to the network.
+        try:
+            get_server = {'select':'inst_id','from':'trans_instances','where':"inst_int_net_id='%s'" %(input_dict['net_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            servers = self.db.pg_select(get_server)
+        except:
+            logger.sql_error("Could not get the server in project %s name from Transcirrus DB :detach_all_servers_from_network"%(input_dict['project_id']))
+            raise Exception("Could not get the server in project %s name from Transcirrus DB :detach_all_servers_from_network"%(input_dict['project_id']))
+
+        for server in servers:
+            server_dict = {'server_id':server[0],
+                           'project_id':input_dict['project_id'],
+                           'net_id':input_dict['net_id']
+                            }
+            detach_all = self.detach_server_from_network(server_dict)
+            if(detach_all != 'OK'):
+                return detach_all
+
+        return 'OK'
+
+    def detach_server_from_network(self,input_dict):
         """
         DESC: Used to detach a server in a project from a specific network
         INPUT: input_dict - server_id
@@ -409,22 +431,215 @@ class server_ops:
                 Users can not detach servers
         NOTE: None
         """
-        pass
+        #check if the project exists
+        try:
+            get_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'" %(input_dict['project_id'])}
+            proj_name = self.db.pg_select(get_proj)
+        except:
+            logger.sql_error("Could not get the project from Transcirrus DB :detach_server_from_network")
+            raise Exception("Could not get the project from Transcirrus DB :detach_server_from_network")
 
-    def attach_server_to_network(self):
+        #see if the network exists in the project
+        try:
+            get_net = {'select':"net_name",'from':"trans_network_settings",'where':"net_id='%s'" %(input_dict['net_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            net_name = self.db.pg_select(get_net)
+        except:
+            logger.sql_error("Could not get the network name from Transcirrus DB :detach_server_from_network")
+            raise Exception("Could not get the network name from Transcirrus DB :detach_server_from_network")
+
+        #get the subnet IDs in the given network
+        #Only allowing one sub per net for alpha. Will have to account for multiple subnets later.
+        try:
+            get_subs = {'select':"subnet_id",'from':"trans_subnets",'where':"net_id='%s'"%(input_dict['net_id'])}
+            subnets = self.db.pg_select(get_subs)
+        except:
+            logger.sql_error("Could not get the subnets name from Transcirrus DB :detach_server_from_network")
+            raise Exception("Could not get the subnets name from Transcirrus DB :detach_server_from_network")
+
+        #check if the power user is in the project
+        if(self.user_level == 1):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error('Power User %s is not in project %s'%(self.username,input_dict['project_id']))
+                raise Exception('Power User %s is not in project %s'%(self.username,input_dict['project_id']))
+        elif(self.user_level == 2):
+            logger.sys_error('Users can not detach servers from networks :detach_serverfrom_network')
+            raise Exception('Users can not detach servers from networks :detach_server_from_network')
+
+        #get the server ids in the project attached to the network.
+        try:
+            get_server = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s' and inst_int_net_id='%s'" %(input_dict['server_id'],input_dict['net_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            server = self.db.pg_select(get_server)
+        except:
+            logger.sql_error("Could not get the server in project %s name from Transcirrus DB :detach_server_from_network"%(input_dict['project_id']))
+            raise Exception("Could not get the server in project %s name from Transcirrus DB :detach_server_from_network"%(input_dict['project_id']))
+
+        if(self.user_level <= 1):
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API: remove_net_port")
+                raise Exception("Could not connect to the API: remove_net_port")
+
+            try:
+                get_body = ''
+                get_header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                get_function = 'GET'
+                get_api_path = '/v2/%s/servers/%s/os-interface' %(input_dict['project_id'],input_dict['server_id'])
+                g_token = self.token
+                get_sec = self.sec
+                get_rest_dict = {"body": get_body, "header": get_header, "function":get_function, "api_path":get_api_path, "token": g_token, "sec": get_sec, "port":'8774'}
+                get_rest = api.call_rest(get_rest_dict)
+            except Exception as e:
+                logger.sys_error("Could not remove the project %s" %(e))
+                raise e
+
+            #portID
+            get_load = json.loads(get_rest['data'])
+
+            if(get_rest['response'] == 200):
+                #remove the server from the network
+                try:
+                    body = ''
+                    header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                    function = 'DELETE'
+                    #need to account for multiple ports in get_load
+                    api_path = '/v2/%s/servers/%s/os-interface/%s' %(input_dict['project_id'],input_dict['server_id'],get_load['interfaceAttachments'][0]['port_id'])
+                    token = self.token
+                    sec = self.sec
+                    rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                    rest = api.call_rest(rest_dict)
+                except Exception as e:
+                    logger.sys_error("Could not remove the project %s" %(e))
+                    raise e
+                if(rest['response'] == 202):
+                    #NOTE: need to add in a polling mechanism to report back status of the creation
+                    try:
+                        self.db.pg_transaction_begin()
+                        # ALL NONE USED TO BE "NULL"
+                        up_dict = {'table':"trans_instances",'set':"inst_int_net_id=NULL,inst_int_net_name=NULL",'where':"inst_id='%s'"%(input_dict['server_id'])}
+                        self.db.pg_update(up_dict)
+                    except:
+                        self.db.pg_transaction_rollback()
+                        logger.sql_error('Could not add the new virtual instance to the Transcirrus DB.')
+                        raise Exception('Could not add the new virtual instance to the Transcirrus DB.')
+                    else:
+                        #commit the db transaction
+                        self.db.pg_transaction_commit()
+                        return 'OK'
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+            else:
+                util.http_codes(get_rest['response'],get_rest['reason'])
+
+    def attach_server_to_network(self,input_dict):
         """
         DESC: Used to attach a server in a project to a specific network
         INPUT: input_dict - server_id
                           - project_id
                           - net_id
-        OUTPUT: 'OK' - success
-                'ERROR' - fail
+        OUTPUT: r_dict - server_ip
+                       - server_port_d
+                       - server_mac_addr
         ACCESS: Admins can attach servers in any project
                 Power users can only attach servers in their project
                 Users can not attach servers
         NOTE: None
         """
-        pass
+        try:
+            get_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'" %(input_dict['project_id'])}
+            proj_name = self.db.pg_select(get_proj)
+        except:
+            logger.sql_error("Could not get the project from Transcirrus DB :attach_server_from_network")
+            raise Exception("Could not get the project from Transcirrus DB :attach_server_from_network")
+
+        #see if the network exists in the project
+        try:
+            get_net = {'select':"net_name",'from':"trans_network_settings",'where':"net_id='%s'" %(input_dict['net_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            net_name = self.db.pg_select(get_net)
+        except:
+            logger.sql_error("Could not get the project name from Transcirrus DB :attach_server_from_network")
+            raise Exception("Could not get the project name from Transcirrus DB :attach_server_from_network")
+
+        #get the subnet IDs in the given network
+        #Only allowing one sub per net for alpha. Will have to account for multiple subnets later.
+        try:
+            get_subs = {'select':"subnet_id",'from':"trans_subnets",'where':"net_id='%s'"%(input_dict['net_id'])}
+            subnets = self.db.pg_select(get_subs)
+        except:
+            logger.sql_error("Could not get the subnets name from Transcirrus DB :attach_server_from_network")
+            raise Exception("Could not get the subnets name from Transcirrus DB :attach_server_from_network")
+
+        #check if the power user is in the project
+        if(self.user_level == 1):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error('Power User %s is not in project %s'%(self.username,input_dict['project_id']))
+                raise Exception('Power User %s is not in project %s'%(self.username,input_dict['project_id']))
+        elif(self.user_level == 2):
+            logger.sys_error('Users can not detach servers from networks :attach_server_from_network')
+            raise Exception('Users can not detach servers from networks :attach_server_from_network')
+
+        #get the server ids in the project attached to the network.
+        try:
+            get_server = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s' and inst_int_net_id='%s'" %(input_dict['server_id'],input_dict['net_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            server = self.db.pg_select(get_server)
+        except:
+            logger.sql_error("Could not get the server in project %s name from Transcirrus DB :attach_server_from_network"%(input_dict['project_id']))
+            raise Exception("Could not get the server in project %s name from Transcirrus DB :attach_server_from_network"%(input_dict['project_id']))
+
+        if(self.user_level <= 1):
+        #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API: remove_net_port")
+                raise Exception("Could not connect to the API: remove_net_port")
+
+            #remove the server from the network
+            try:
+                body = '{"interfaceAttachment": {"net_id": "%s"}}'%(input_dict['net_id'])
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2/%s/servers/%s/os-interface' %(input_dict['project_id'],input_dict['server_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                self.db.pg_transaction_rollback()
+                logger.sys_error("Could not remove the project %s" %(e))
+                raise e
+    
+            if(rest['response'] == 200):
+                #NOTE: need to add in a polling mechanism to report back status of the creation
+                load = json.loads(rest['data'])
+                try:
+                    self.db.pg_transaction_begin()
+                    #add the instance values to the transcirrus DB
+                    up_dict = {'table':"trans_instances",'set':"inst_int_net_id='%s',inst_int_net_name='%s',inst_port_id='%s'"%(input_dict['net_id'],net_name[0][0],load['interfaceAttachment']['port_id']),'where':"inst_id='%s'"%(input_dict['server_id'])}
+                    self.db.pg_update(up_dict)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error('Could not add the new virtual instance to the Transcirrus DB: attach_server_from_network')
+                    raise Exception('Could not add the new virtual instance to the Transcirrus DB: attach_server_from_network')
+                else:
+                    #commit the db transaction
+                    self.db.pg_transaction_commit()
+                    r_dict = {'server_ip': load['interfaceAttachment']['fixed_ips'][0]['ip_address'],
+                              'server_port_d':load['interfaceAttachment']['port_id'],
+                              'server_mac_addr':load['interfaceAttachment']['mac_addr']
+                            }
+                    return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'])
 
     def update_server(self,update_dict):
         """

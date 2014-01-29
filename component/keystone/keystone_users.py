@@ -173,7 +173,7 @@ class user_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -295,7 +295,7 @@ class user_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -401,7 +401,7 @@ class user_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -540,7 +540,7 @@ class user_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -657,7 +657,7 @@ class user_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -934,7 +934,7 @@ class user_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:

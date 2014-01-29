@@ -205,7 +205,7 @@ class neutron_net_ops:
             logger.sql_error("Could not get the net_id %s from from the Transcirrus db."%(net_id))
             raise Exception("Could not get the net_id %s from from the Transcirrus db."%(net_id))
 
-	#add router to return 
+        #add router to return 
         get_use = {'select': "router_id",'from': "trans_routers",'where':"net_id='%s'"%(net_id)}
         in_use = self.db.pg_select(get_use)
         if(in_use):
@@ -299,7 +299,7 @@ class neutron_net_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             r_dict = {}
@@ -397,7 +397,7 @@ class neutron_net_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             r_dict = {}
@@ -492,7 +492,7 @@ class neutron_net_ops:
                     self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -574,7 +574,7 @@ class neutron_net_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -782,7 +782,7 @@ class neutron_net_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -908,7 +908,7 @@ class neutron_net_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -1030,7 +1030,7 @@ class neutron_net_ops:
                     self.token = get_token(self.username,self.password,net['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -1152,7 +1152,7 @@ class neutron_net_ops:
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API: remove_net_port")
+                logger.sys_error("Could not connect to the API: remove_net_port")
                 raise Exception("Could not connect to the API: remove_net_port")
             try:
                 body = ''
@@ -1179,7 +1179,7 @@ class neutron_net_ops:
                     for ip in fixed_ip:
                         if(port['network_id'] == input_dict['net_id']):
                             if(ip['subnet_id'] == input_dict['subnet_id']):
-                                r_dict = {'port_status':str(port['status']),'port_mac':str(port['mac_address']),'port_id':str(port['id'])}
+                                r_dict = {'port_status':str(port['status']),'port_mac':str(port['mac_address']),'port_id':str(port['id']),'port_ip':str(ip['ip_address'])}
                                 r_array.append(r_dict)
                 return r_array
             else:
@@ -1188,21 +1188,24 @@ class neutron_net_ops:
             logger.sys_error("Only an admin or a power user can remove a port: remove_net_port")
             raise Exception("Only an admin or a power user can remove a port: remove_net_port")
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
     def get_net_port():
         print "not implemented"
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
+    
     def add_net_port():
-        print "not implemented"
+        """
+        DESC: used to clean up after the
+        INPUT: input_dict  - subnet_id - req
+                           - port_id - req
+                           - project_id - req
+        OUTPUT: OK - success
+                ERROR - fail
+                NA - unknown
+        ACCESS: Admins can remove a port in any project
+                power users can remove a port in their own project
+                users can not remove ports
+        """
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
     def update_net_port():
         print "not implemented"
 
@@ -1265,7 +1268,7 @@ class neutron_net_ops:
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API: remove_net_port")
+                logger.sys_error("Could not connect to the API: remove_net_port")
                 raise Exception("Could not connect to the API: remove_net_port")
             try:
                 body = ''

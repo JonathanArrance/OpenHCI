@@ -97,7 +97,7 @@ class endpoint_ops:
             logger.sys_error("The service name was not specified while createing an endpoint.")
             raise Exception("The service name was not specified while createing an endpoint.")
         if(self.is_admin == 0):
-            logger.sys_logger("Endpoints can only be crearted by the admin.")
+            logger.sys_error("Endpoints can only be crearted by the admin.")
             raise Exception("Endpoints can only be crearted by the admin.")
 
         #get the cloud name (Region)
@@ -256,7 +256,7 @@ class endpoint_ops:
             logger.sys_error("The service name was not specified while createing an endpoint.")
             raise Exception("The service name was not specified while createing an endpoint.")
         if(self.is_admin == 0):
-            logger.sys_logger("Endpoints can only be crearted by the cloud admin.")
+            logger.sys_error("Endpoints can only be crearted by the cloud admin.")
             raise Exception("Endpoints can only be crearted by the cloud admin.")
 
         #get the cloud name (Region)
