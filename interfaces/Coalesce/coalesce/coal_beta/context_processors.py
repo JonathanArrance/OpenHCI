@@ -1,5 +1,4 @@
 from django.conf import settings
-from coalesce.coal_beta.models import Node, Project
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.database.node_db import list_nodes
 

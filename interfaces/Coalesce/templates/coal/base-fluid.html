@@ -39,17 +39,11 @@
                 <header id="overview">
                     <div class="row-fluid" >
                         <div class="span3"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png"
-                                        alt="TransCirrus" width="248" height="75"></div>
-                        <div class="span7"><h1>{% block title %}OVERRIDE THIS{% endblock %}</h1></div>
-                        <div class="span2">
-                            {% if token %}
-                                <small>Welcome,{{ user.username }} <br>
-                                <a href={% url 'logout' %}> Log out</a>
-                                </small>
-                            {% else %}
-                                <a href={% url 'login_page' %}> Log in</a>
-                            {% endif %}
-                        </div>
+                                        alt="TransCirrus" width="248px" height="75px"></div>
+                        <div class="span6"><h1 style="position:absolute; top:50%; height:32px; margin-top:-16px">{% block title %}OVERRIDE THIS{% endblock %}</h1></div>
+
+			<div class="span3"><img border="0" style="position:absolute; top:50%; height:32px; margin-top:-16px" src="{{ STATIC_URL }}images/coalesce_logo.png"
+                                        alt="Coalesce" width="200px" height="32px"></div>
                     </div>
                 </header>
 
@@ -68,7 +62,7 @@
                                                     <li><a href="/nodes/manage">View All Nodes</a></li>
                                                     <li class="divider"></li>
                                                     {% for node in node_list %}
-                                                        <li><a href="/nodes/{{ node.name|urlencode}}/view">{{node.node_name}}</a></li>
+                                                        <li><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></li>
                                                     {% endfor %}
                                                 </ul>
                                             </li>
@@ -116,13 +110,13 @@
         <div class="footer-wrapper">
             <footer>
                 <div class="container-fluid">
-                    <div class="row-fluid">
+                    <div class="row-fluid nav-header">
                         <div class="span9">
                             <br>
-                            <p class="small"><b>Transcirrus Confidential</b></p>
+                            <p class="small"><b>Trans<span style="color: rgb(255,111,15)">Cirrus</span> Confidential</b></p>
                             <p class="small"><i>
                             The information contained in this website is for general information purposes only.
-                            The information is provided by TransCirrus, Inc. and while we endeavour to keep the
+                            The information is provided by Trans<span style="color: rgb(255,111,15)">Cirrus</span>, Inc. and while we endeavour to keep the
                             information up to date and correct, we make no representations or warranties of any
                             kind, express or implied, about the completeness, accuracy, reliability, suitability
                             or availability with respect to the website or the information, products, services,
@@ -133,6 +127,13 @@
                         <div class="span2 offset1">
                             <br><br>
                             <p class="small">
+				{% if token %}
+		                    <small>Welcome,{{ user.username }} <br>
+		                        <a href={% url 'logout' %}> Log out</a><br>
+		                    </small>
+		                {% else %}
+		                    <a href={% url 'login_page' %}> Log in</a><br>
+		                {% endif %}
                                 <a href={% url 'terms-of-use' %}>Terms of Use</a><br>
                                 <a href={% url 'privacy-policy' %}>Privacy Policy</a><br>
                                 <a href="#">Back to top</a>

@@ -28,7 +28,7 @@ urlpatterns = patterns('',
 
 
         # --- Nodes ----
-        url(r'^nodes/(?P<node_name>\w+)/view/$',
+        url(r'^nodes/(?P<node_id>[-\w]+)/view/$',
             'coalesce.coal_beta.views.node_view',
             name='node_view'),
 
@@ -113,7 +113,7 @@ urlpatterns = patterns('',
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_user',
             name='create_user'),
-    
+
 	url(r'^add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_name>[^/]+)/$',
         'coalesce.coal_beta.views.add_existing_user',
             name='add_existing_user'),

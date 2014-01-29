@@ -29,6 +29,7 @@ from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
+from transcirrus.database.node_db import list_nodes, get_node
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -48,7 +49,7 @@ import json
 from urlparse import urlsplit
 
 # Custom imports
-from coalesce.coal_beta.models import *
+#from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
 
 
@@ -67,15 +68,41 @@ def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
 
 
-def node_view(request, node_name):
-    node = Node.objects.get(name=node_name)
+def node_view(request, node_id):
+    node=get_node(node_id)
     return render_to_response('coal/node_view.html', RequestContext(request, {'node': node, }))
 
 def manage_nodes(request):
-    nodes = Node.objects.all()
-    nodes_table = NodesTable(nodes)
-    RequestConfig(request).configure(nodes_table)
-    return render_to_response('coal/manage_nodes.html', RequestContext(request, {'nodes_table':nodes_table}))
+    node_list = list_nodes()
+    print node_list
+    node_info = []
+    try:
+        for node in node_list:
+            nid = node['node_id']
+            ni = get_node(nid)
+            ni['node_id']= nid
+            node_info.append(ni)
+    except:
+        pass
+    return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
+
+
+def manage_projects(request):
+    auth = request.session['auth']
+    to = tenant_ops(auth)
+    project_list = to.list_all_tenants()
+    print project_list.keys()
+    project_info = []
+    try:
+        for proj in project_list.keys():
+            print proj
+            pi = to.get_tenant(proj)
+            print pi
+            pi['project_name']= proj
+            project_info.append(pi)
+    except:
+        pass
+    return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
 def project_view(request, project_name):
     auth = request.session['auth']
@@ -96,18 +123,18 @@ def project_view(request, project_name):
     for user in users:
         user_dict = {'username': user['username'], 'project_name': project_name}
         user_info = uo.get_user_info(user_dict)
-        userinfo[user['username']] = user_info 
-     
+        userinfo[user['username']] = user_info
+
     try:
         ousers = uo.list_orphaned_users()
     except:
         raise
-   
+
     ouserinfo = []
     if ousers:
         for ouser in ousers:
-            ouserinfo.append(ouser['user_name'])     
-  
+            ouserinfo.append(ouser['user_name'])
+
     priv_net_list = no.list_internal_networks(pid)
     pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(pid)
@@ -135,7 +162,7 @@ def project_view(request, project_name):
             public_networks[net['net_name']]= no.get_network(net['net_id'])
         except:
             pass
-    
+
     try:
         default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
     except:
@@ -193,7 +220,7 @@ def floating_ip_view(request, floating_ip_id):
     fip = l3o.get_floating_ip(floating_ip_id)
 
     return render_to_response('coal/floating_ip_view.html',
-                               RequestContext(request, { 
+                               RequestContext(request, {
                                                         'fip': fip,
                                                  }))
 
@@ -219,7 +246,7 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         auth = request.session['auth']
         so = server_ops(auth)
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
-        newgroup= so.create_sec_group(create_sec)  
+        newgroup= so.create_sec_group(create_sec)
         print "newgroup = %s" % newgroup
         return HttpResponseRedirect("manage_projects")
     except:
@@ -230,7 +257,7 @@ def create_keypair(request, key_name, project_id):
         auth = request.session['auth']
         so = server_ops(auth)
         key_dict = {'key_name': key_name, 'project_id': project_id}
-        newkey= so.create_sec_keys(key_dict)  
+        newkey= so.create_sec_keys(key_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -242,7 +269,7 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
-        vo.create_volume(create_vol)  
+        vo.create_volume(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -260,11 +287,11 @@ def create_router(request, router_name, priv_net, default_public, project_id):
         create_router = {'router_name': router_name, 'project_id': project_id}
         router = l3o.add_router(create_router)
 
-        add_dict = {'router_id': router['router_id'], 'ext_net_id': default_public, 'project_id': project_id} 
-        gateway = l3o.add_router_gateway_interface(add_dict)
+        add_dict = {'router_id': router['router_id'], 'ext_net_id': default_public, 'project_id': project_id}
+        l3o.add_router_gateway_interface(add_dict)
 
         internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_id': subnet}
-        internal_int= l3o.add_router_internal_interface(internal_dict)
+        l3o.add_router_internal_interface(internal_dict)
 
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
@@ -321,7 +348,7 @@ def take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
         auth = request.session['auth']
         sno = snapshot_ops(auth)
         create_snap = {'snap_name': snap_name, 'snap_desc': snap_desc, 'vol_id': vol_id, 'project_id': project_id}
-        sno.create_snapshot(create_snap)  
+        sno.create_snapshot(create_snap)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -332,9 +359,9 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
     try:
         auth = request.session['auth']
         so = server_ops(auth)
-	instance = {	'project_id':project_id, 'sec_group_name':sec_group_name, 
-			'avail_zone':avail_zone, 'sec_key_name': sec_key_name, 
-			'network_name': network_name,'image_name': image_name, 
+	instance = {	'project_id':project_id, 'sec_group_name':sec_group_name,
+			'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
+			'network_name': network_name,'image_name': image_name,
 			'flavor_name':flavor_name, 'name':name}
 	so.create_server(instance)
         referer = request.META.get('HTTP_REFERER', None)
@@ -342,8 +369,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         return HttpResponseRedirect(redirect_to)
     except:
         return HttpResponse(status=500)
-      
-      
+
+
 def toggle_user(request, username, toggle):
     try:
         auth = request.session['auth']
@@ -356,7 +383,7 @@ def toggle_user(request, username, toggle):
 
     except:
         return HttpResponse(status=500)
-      
+
 def delete_user(request, username, userid):
     try:
         auth = request.session['auth']
@@ -369,7 +396,7 @@ def delete_user(request, username, userid):
 
     except:
         return HttpResponse(status=500)
-      
+
 def remove_user_from_project(request, user_id, project_id):
     try:
         auth = request.session['auth']
@@ -382,7 +409,7 @@ def remove_user_from_project(request, user_id, project_id):
 
     except:
         return HttpResponse(status=500)
-      
+
 def add_existing_user(request, username, user_role, project_name):
     try:
         auth = request.session['auth']
@@ -394,7 +421,7 @@ def add_existing_user(request, username, user_role, project_name):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)  
+        return HttpResponse(status=500)
 
 
 def update_user_password(request, user_id, project_id, new_password):
@@ -408,7 +435,7 @@ def update_user_password(request, user_id, project_id, new_password):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)  
+        return HttpResponse(status=500)
 
 def network_view(request, net_id):
     auth = request.session['auth']
@@ -442,7 +469,7 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
 
     except:
         raise
-      
+
 def remove_private_network(request, project_id, net_id):
     try:
         auth    = request.session['auth']
@@ -450,7 +477,7 @@ def remove_private_network(request, project_id, net_id):
         l3o     = layer_three_ops(auth)
         network = no.get_network(net_id)
         subnets = network['net_subnet_id']
-        
+
         for subnet in subnets:
             subnet_id = subnet['subnet_id']
             sub_proj_dict = {'net_id': net_id, 'subnet_id': subnet_id, 'project_id': project_id}
@@ -461,7 +488,7 @@ def remove_private_network(request, project_id, net_id):
                 #remove_port_dict = {'subnet_id': subnet_id, 'project_id': project_id, 'port_id': port['port_id']}
                 #no.remove_net_port(remove_port_dict)
             no.remove_net_subnet(sub_proj_dict)
-            
+
         remove_dict={'net_id': net_id, 'project_id': project_id }
         no.remove_network(remove_dict)
         referer = request.META.get('HTTP_REFERER', None)
@@ -470,13 +497,6 @@ def remove_private_network(request, project_id, net_id):
 
     except:
         raise
-
-
-def manage_projects(request):
-    projects = Project.objects.all()
-    projects_table = ProjectsTable(projects)
-    RequestConfig(request).configure(projects_table)
-    return render_to_response('coal/manage_projects.html', RequestContext(request, { 'projects_table':projects_table}))
 
 
 def setup(request):
@@ -547,7 +567,7 @@ def build_project(request):
             #ports[] - op
             group_name      = form.cleaned_data['group_name']
             group_desc      = form.cleaned_data['group_desc']
-            sec_keys_name   = form.cleaned_data['sec_keys_name'] 
+            sec_keys_name   = form.cleaned_data['sec_keys_name']
             router_name     = form.cleaned_data['router_name']
 
         auth = request.session['auth']

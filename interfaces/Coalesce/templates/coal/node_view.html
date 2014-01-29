@@ -12,9 +12,17 @@
              {{ node.name }} Details
           </div>
           <table class="paleblue">
-                <tr> <th>Node IP Address</th>  <td>{{ node.node_ip }}</td>  </tr>
-                <tr class="odd"> <th>Management IP Address</th>  <td>{{node.management_ip }}</td>  </tr>
-                <tr> <th>Node Type</th>  <td>{{ node.node_type }}</td>  </tr>
+
+                <tr><th>Name</th>                    <td>{{node.node_name}}</td></tr>
+                <tr class="odd"><th>Type</th>        <td>{{node.node_type}}</td></tr>
+                <tr><th>Data IP</th>                 <td>{{node.node_data_ip}}</td></tr>
+                <tr class="odd"><th>Mgmt IP</th>     <td>{{node.node_mgmt_ip}}</td></tr>
+                <tr><th>Controller</th>              <td>{{node.node_controller}}</td></tr>
+                <tr class="odd"><th>Cloud Name</th>  <td>{{node.node_cloud_name}}</td></tr>
+                <tr><th>Zone</th>                    <td>{{node.node_nova_zone}}</td></tr>
+                <tr class="odd"><th>ISCSI IQN</th>   <td>{{node.node_iscsi_iqn}}</td></tr>
+                <tr><th>Swift Ring</th>              <td>{{node.node_swift_ring}}</td></tr>
+                <tr class="odd"><th>Status</th>      <td>{{node.status}}</td></tr>
 
           </table>
         </div>

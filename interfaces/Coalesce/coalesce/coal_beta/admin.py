@@ -1,4 +1,4 @@
-from coalesce.coal_beta.models import *
+#from coalesce.coal_beta.models import *
 from django.contrib import admin
 
 

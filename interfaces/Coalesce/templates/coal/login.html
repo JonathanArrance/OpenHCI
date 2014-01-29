@@ -3,17 +3,25 @@
 {% block title %} Login {% endblock %}
 
 {% block content %}
-<div class="span12">
 
-    Please Login to use this site.
-    <p>By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">terms of use</a>. If you do not
-    agree to these terms of use, you should exit the website.  By entering logon information and accessing the website contents, you are
-    stating full acceptance of the terms.</p>
 
-		{% load crispy_forms_tags %}
-		{% crispy form %}
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span3 offset1 well">
+	    {% load crispy_forms_tags %}
+	    {% crispy form %}
+        </div>
 
-    <p>If you don't have or have forgotten your logon credentials, please contact your TransCirrus Cloud Administrator to gain access to this site.</p>
+        <div class="span6">
+            Please Login to use this site.
+            <p>By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">terms of use</a>. 
+            If you do not agree to these terms of use, you should exit the website.  By entering logon information and accessing the 
+            website contents, you are  stating full acceptance of the terms.</p>
+
+            <p>If you don't have or have forgotten your logon credentials, please contact your Trans<span style="color: rgb(255,111,15)">
+            Cirrus</span> Cloud Administrator to gain access to this site.</p>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

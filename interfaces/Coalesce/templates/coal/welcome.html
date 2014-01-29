@@ -1,19 +1,21 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %} Coalesce {% endblock %}
+{% block title %}  {% endblock %}
 
 {% block content %}
 
-    <div class="span7 offset3">
+    <div class="span5 offset3">
+
+    <img border="0" src="{{ STATIC_URL }}images/coalesce.png"
+                                        alt="coalesce" width="200" height="203"><br><br>
 
 
         {% if token %}
 
 
-            <img border="0" src="{{ STATIC_URL }}images/coalesce.png"
-                                        alt="coalesce" width="200" height="203">
+            
             <br><br>
-            <p>Welcome, {{ user.username }} to the Coalesce cloud management interface by TransCirrus.</p>
+            <p>Welcome, {{ user.username }} to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.</p>
 
             <p>You can manage your account by <a href={% url 'logout' %}>logging out</a> or
             <a href={% url 'change-password' %}>changing your password</a>;</p>
@@ -22,10 +24,11 @@
 
             <p> Please take the time to review the Terms of Use and the Privacy Policy.</p>
         {% else %}
-            <p>Welcome to the Coalesce cloud management interface by TransCirrus.<p>
+            <p>Welcome to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.</p>
             <p>You are not currenly logged in, please
-            <a href={% url 'login_page' %}>log in</a>.  If you don't have or have forgotten your logon credentials, please contact your
-            Transcirrus Cloud Administrator to gain access to this site.</p>
+                <a href={% url 'login_page' %} class="btn btn-primary">log in</a>.</p>
+	    <p>If you don't have or have forgotten your logon credentials, please contact your
+               Trans<span style="color: rgb(255,111,15)">Cirrus</span> Cloud Administrator to gain access to this site.</p>
         {% endif %}
 
     </div>

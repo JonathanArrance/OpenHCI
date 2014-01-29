@@ -4,18 +4,40 @@
 
 {% block content %}
 
-
     <div class="row-fluid">
-      <div class="span6">
-        <div class="well">
+      <div class="span6 offset1">
+        <table class="paleblue">
+            <tr>
+                <th>Project Name</th>
+                <th>Project Id</th>
+                <th>Host System Name</th>
+                <th>Host System IP</th>
+                <th>Security Group Name</th>
+                <th>Security Group ID</th>
+                <th>Security Key Name</th>
+                <th>Security Key ID</th>
+                <th>Network Name</th>
+                <th>Network ID</th>
+            </tr>
+            {% for proj in project_info %}
+                <tr>
+                    <td><a href={% url 'project_view' proj.project_name%}>{{proj.project_name}}</a></td>
+                    <td>{{proj.project_id}}</td>
+                    <td>{{proj.host_system_name}}</td>
+                    <td>{{proj.host_system_ip}}</td>
+                    <td>{{proj.def_security_group_name}}</td>
+                    <td>{{proj.def_security_group_id}}</td>
+                    <td>{{proj.def_security_key_name}}</td>
+                    <td>{{proj.def_security_key_id}}</td>
+                    <td>{{proj.def_network_name}}</td>
+                    <td>{{proj.def_network_id}}</td>
 
-          {% load render_table from django_tables2 %}
-          {% render_table projects_table %}
-        </div>
-      </div><!-- end span5-->
+                </tr>
+            {% endfor %}
+        </table>
 
+      </div><!-- end span6-->
 
     </div><!-- end row-fluid-->
-
 
 {% endblock %}
