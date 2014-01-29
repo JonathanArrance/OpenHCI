@@ -7,13 +7,13 @@ from transcirrus.common.auth import authorization
 import transcirrus.operations.destroy_project as destroy
 
 print "Authenticating..."
-a = authorization("admin","password")
+a = authorization("admin","newpass")
 
 #get the user dict
 d = a.get_auth()
 print d
 
-proj_dict = {'project_name': "1", 'project_id': None, 'keep_users': 0)
+proj_dict = {'project_name': "1", 'project_id': None, 'keep_users': 0}
 project_id = raw_input('project_id: ')
 proj_dict['project_id'] = project_id
 

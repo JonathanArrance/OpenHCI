@@ -52,8 +52,9 @@ def destroy_project(auth_dict, proj_dict):
 
     sec_key_list = nova.list_sec_keys(proj_dict['project_id'])
     for sec_key in sec_key_list:
-        sec_key_dict = nova.get_sec_keys(sec_key['key_id'])
-        sec_key_dict['project_id'] = proj_dict['project_id']
+        #sec_key_dict = nova.get_sec_keys(sec_key['key_id'])
+        #sec_key_dict['project_id'] = proj_dict['project_id']
+        sec_key_dict = {'sec_key_name': sec_key['key_name'], 'project_id': proj_dict['project_id']}
         remove_sec_key = nova.delete_sec_keys(sec_key_dict)
         if(remove_sec_key == "OK"):
             logger.sys_info("sec_key %s removed." % sec_key_dict['sec_key_name'])
@@ -85,9 +86,9 @@ def destroy_project(auth_dict, proj_dict):
         remove_network = neutron_net_ops.remove_network(network)
         if(remove_network == "OK"):
                 logger.sys_info("Network %s removed." % network['net_id'])
-            else:
-                logger.sys_info("ERROR, network %s not removed." % network['net_id'])
-                return "ERROR"
+        else:
+            logger.sys_info("ERROR, network %s not removed." % network['net_id'])
+            return "ERROR"
 
     user_list = tenant.list_tenant_users(project_name)
     for user in user_list:
