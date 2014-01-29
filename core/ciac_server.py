@@ -537,9 +537,9 @@ def client_thread(conn, client_addr):
                                         data = conn.recv(recv_buffer)
                                         break
                                     else:
-                                        logger.sys_warning("node_id: %s ciac server waiting for status ready/halt cn: %s" %(node_id))
+                                        logger.sys_warning("node_id: %s ciac server waiting for status ready/halt from cn" %(node_id))
                                         if __debug__ :
-                                            print "node_id: %s ciac server waiting for status ready/halt cn: %s" %(node_id)
+                                            print "node_id: %s ciac server waiting for status ready/halt from cn" %(node_id)
                                 if data:
                                     data = pickle.loads(data)
                                     if data['Type'] == 'status':
