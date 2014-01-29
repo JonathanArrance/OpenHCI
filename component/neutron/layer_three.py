@@ -188,7 +188,7 @@ class layer_three_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -272,7 +272,7 @@ class layer_three_ops:
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -344,8 +344,6 @@ class layer_three_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                #if(get_router[0][1] != self.project_id):
-                #    self.token = get_token(self.username,self.password,get_router[0][1])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -467,7 +465,7 @@ class layer_three_ops:
                     self.token = get_token(self.username,self.password,add_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -575,7 +573,7 @@ class layer_three_ops:
                     self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -668,7 +666,7 @@ class layer_three_ops:
                     self.token = get_token(self.username,self.password,add_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -752,7 +750,7 @@ class layer_three_ops:
                     self.token = get_token(self.username,self.password,remove_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_logger("Could not connect to the API")
+                logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
@@ -931,7 +929,7 @@ class layer_three_ops:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             api = caller(api_dict)
         except:
-            logger.sys_logger("Could not connect to the API")
+            logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
         #New way to do API calls - experiment
@@ -1045,7 +1043,7 @@ class layer_three_ops:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             api = caller(api_dict)
         except:
-            logger.sys_logger("Could not connect to the API")
+            logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
         try:
@@ -1136,7 +1134,7 @@ class layer_three_ops:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             api = caller(api_dict)
         except:
-            logger.sys_logger("Could not connect to the API")
+            logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
         
         #New way to do API calls - experiment

@@ -22,12 +22,12 @@ b = c.get_auth()
 print "Image..."
 i= glance_ops(b)
 print i
-
+'''
 
 d = i.delete_image("a6920f75-d179-4917-86ee-1237a2da0f1a")
 print d
 
-'''
+
 print "List Images..."
 li = i.list_images()
 print li
@@ -60,15 +60,15 @@ b = c.get_auth()
 print "Image..."
 x= glance_ops(b)
 print x
-
+'''
 
 print "List Images..."
-li = x.list_images()
+li = i.list_images()
 print li
 print
 
 
-
+'''
 print "Update Image %s..." % (str(li[0]['image_id']))
 update = [
             {"x-image-meta-name": "test"}

@@ -96,7 +96,9 @@ class nova_image_ops:
         if(list_flag == 1):
             #connect to the rest api caller.
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+                if(project_id != self.project_id):
+                    self.token = get_token(self.username,self.password,project_id)
                 api = caller(api_dict)
             except:
                logger.sys_error("Could not connect to the API caller")
@@ -112,7 +114,8 @@ class nova_image_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error("Could not remove the project %s" %(e))
+                logger.sys_error("Nova could not list the images %s" %(e))
+                raise Exception("Nova could not list the images %s" %(e))
 
             if((rest['response'] == 200) or (rest['response'] == 203)):
                 #build up the return dictionary and return it if everythig is good to go

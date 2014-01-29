@@ -41,13 +41,13 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_internal_networks("9fad7cee35024b858795097f6e7d62da")
 print newnet
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "listing the networks"
 newnet2 = net.list_external_networks()
 print newnet2
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
@@ -111,3 +111,8 @@ print "listing the networks"
 newnet = net.list_networks()
 print newnet
 '''
+input_dict = {'net_id':"52dea20c-c7fc-4db3-92a6-a0fa4a8f742c",
+              'subnet_id':"ae1c8992-9d71-4146-a9f5-dcfaf7aebbde",
+              'project_id':"de6647df708542ddafc00baf39534f56"}
+yo = net.list_net_ports(input_dict)
+print yo
