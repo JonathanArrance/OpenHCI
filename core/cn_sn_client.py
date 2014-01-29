@@ -1044,7 +1044,7 @@ def keep_alive(sock):
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 logger.sys_info("***%s***" % (data['Value']))
                 # send reply as alive
-                sock.sendall(pickle.loads(reply_alive, -1))
+                sock.sendall(pickle.dumps(reply_alive, -1))
                 if __debug__ :
                     print "***%s***" % data['Value']
             elif data['Type'] == 'command':
