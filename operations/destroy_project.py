@@ -72,25 +72,25 @@ def destroy_project(auth_dict, proj_dict):
             logger.sys_info("ERROR, sec_group %s not removed." % sec_group['sec_group_name'])
             return "ERROR"
 
-    internal_network_list = neutron_net_ops.list_internal_networks(proj_dict['project_id'])
+    internal_network_list = neutron_net.list_internal_networks(proj_dict['project_id'])
     for network in internal_network_list:
-        subnet_list = neutron_net_ops.list_net_subnets(network['net_id'])
+        subnet_list = neutron_net.list_net_subnet(network['net_id'])
         for subnet in subnet_list:
             subnet['project_id'] = proj_dict['project_id']
-            remove_subnet = neutron_net_ops.remove_net_subnet(subnet)
+            remove_subnet = neutron_net.remove_net_subnet(subnet)
             if(remove_subnet == "OK"):
                 logger.sys_info("Subnet %s removed." % subnet['subnet_id'])
             else:
                 logger.sys_info("ERROR, subnet %s not removed." % subnet['subnet_id'])
                 return "ERROR"
-        remove_network = neutron_net_ops.remove_network(network)
+        remove_network = neutron_net.remove_network(network)
         if(remove_network == "OK"):
                 logger.sys_info("Network %s removed." % network['net_id'])
         else:
             logger.sys_info("ERROR, network %s not removed." % network['net_id'])
             return "ERROR"
 
-    user_list = tenant.list_tenant_users(project_name)
+    user_list = tenant.list_tenant_users(proj_dict['project_name'])
     for user in user_list:
         if(keep_users):
             user['project_id'] = proj_dict['project_id']
@@ -108,11 +108,11 @@ def destroy_project(auth_dict, proj_dict):
                 logger.sys_info("ERROR, user %s not removed." % user['user_id'])
                 return "ERROR"
 
-    remove_tenant = tenant.remove_tenant(project_name)
+    remove_tenant = tenant.remove_tenant(proj_dict['project_name'])
     if(remove_tenant['status'] == "OK"):
-        logger.sys_info("Project %s removed." % project_name)
+        logger.sys_info("Project %s removed." % proj_dict['project_name'])
     else:
-        logger.sys_info("ERROR, project %s not removed." % project_name)
+        logger.sys_info("ERROR, project %s not removed." % proj_dict['project_name'])
         return "ERROR"
 
     return "OK"
