@@ -1,0 +1,22 @@
+<!-- Begin instance widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Instances
+          </div>
+	  {% if instances %}
+	    <table class="paleblue">
+
+                <tr> <th>Instance</th>  <th></th>  </tr>
+
+                {% for instance in instances %}
+
+		    <tr> <td>{{instance}}</td>  <td></td>  </tr>
+
+		{% endfor %}
+	    </table>
+	  {% else %}	
+	   <p><i>This project has no instances</i></p>
+	  {% endif %}
+        </div>
+      </div>

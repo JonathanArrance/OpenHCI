@@ -1,0 +1,33 @@
+<!-- Begin Key Pairs widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Key Pairs
+             <a href="#"  id="create-keypair" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Key Pair</a>
+ 		
+          </div>
+
+	    <div id="keypair-dialog-form" title="Create new key pair">
+ 		<p class="validateTips">Enter a name for the key pair.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="name">Key Pair Name</label>
+                    <input type="text" name="key_name" id="key_name"  class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
+
+          <table class="paleblue">
+	    {% if sec_keys %}
+                <tr> <th>Key Name</th> <th>Owner</th> <th>Actions</th></tr>
+                    {% for key in sec_keys %}
+		      <tr> <td>{{key.key_name}}</td>  <td>{{key.username}}</td> <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		  <p><i>This project has no keys</i></p>
+		{% endif %}
+          </table>
+
+        </div>
+      </div>

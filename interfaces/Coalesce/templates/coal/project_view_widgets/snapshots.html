@@ -1,0 +1,18 @@
+      <!-- Begin snapshots widget-->
+      <div class="span4">
+        <div class="well">
+          <div class="legend">
+             Snapshots
+          </div>
+          <table class="paleblue">
+	    {% if snapshots %}
+                <tr> <th>Snapshot</th> <th>Volume</th> <th>Actions</th></tr>
+                    {% for snapshot in snapshots %}
+		      <tr> <td>{{snapshot.snapshot_name}}</td>  <td>{{snapshot.vol_name}}</td>  <td></td></tr>
+		    {% endfor %}
+		{% else %}
+		  <p><i>This project has no snapshots</i></p>
+		{% endif %}
+          </table>
+        </div>
+      </div>
