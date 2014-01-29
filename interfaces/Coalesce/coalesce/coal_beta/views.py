@@ -336,7 +336,6 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
 			'avail_zone':avail_zone, 'sec_key_name': sec_key_name, 
 			'network_name': network_name,'image_name': image_name, 
 			'flavor_name':flavor_name, 'name':name}
-	import pdb; pdb.set_trace()
 	so.create_server(instance)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
