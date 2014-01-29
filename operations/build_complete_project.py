@@ -29,7 +29,7 @@ def build_project(auth_dict, proj_dict):
     NOTES:
     """
     tenant = tenant_ops(auth_dict)
-    logger.sys_info("Instantiated tenat_ops object")
+    logger.sys_info("Instantiated tenant_ops object")
     user = user_ops(auth_dict)
     logger.sys_info("Instantiated user_ops object")
     neutron_net = neutron_net_ops(auth_dict)
