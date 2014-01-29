@@ -620,7 +620,7 @@ def processComputeConfig(sock, node_id):
     sent for any update in node info or if the node is inserted into
     cluster for the first time
     '''
-    sys.exit() # TEST
+    #sys.exit() # TEST
     # write compute nodes nova config files
 
     ret = util.write_new_config_file(nova_conf)
@@ -1072,6 +1072,7 @@ ciac_ip = util.getDhcpServer()
 #print ciac_ip
 #sys.exit()
 # TEST
+logger.sys_info("ciac_ip: %s" % ciac_ip)
 
 # data network ip
 data_ip = "172.38.24.11"
