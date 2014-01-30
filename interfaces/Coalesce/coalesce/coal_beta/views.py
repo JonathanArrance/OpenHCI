@@ -246,9 +246,23 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         auth = request.session['auth']
         so = server_ops(auth)
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
+        import pdb; pdb.set_trace()
         newgroup= so.create_sec_group(create_sec)
         print "newgroup = %s" % newgroup
         return HttpResponseRedirect("manage_projects")
+    except:
+        return HttpResponse(status=500)
+
+def delete_sec_group(request, sec_group_id, project_id):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        sec_dict = {'sec_group_id': sec_group_id, 'project_id':project_id}
+        so.delete_sec_group(sec_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
     except:
         return HttpResponse(status=500)
 
