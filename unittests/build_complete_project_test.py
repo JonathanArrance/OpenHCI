@@ -7,13 +7,13 @@ from transcirrus.common.auth import authorization
 import transcirrus.operations.build_complete_project as bcp
 
 print "Authenticating..."
-a = authorization("admin","password")
+a = authorization("admin","newpass")
 
 #get the user dict
 d = a.get_auth()
 print d
 
-proj_dict = {'proj_name':"11", 
+proj_dict = {'proj_name':"1", 
              'user_dict': {'username': "jon", 
                            'password': "test", 
                            'userrole': "pu", 
@@ -24,9 +24,8 @@ proj_dict = {'proj_name':"11",
              'sec_group_dict': {'group_name': "jong",
                                 'group_desc': "test group",
                                 'project_id': None},
-             'sec_keys_name': "11",
-             'router_name': "11"}
+             'sec_keys_name': "1",
+             'router_name': "1"}
 
 print "Building project..."
-print bcp
 bcp.build_project(d, proj_dict)
