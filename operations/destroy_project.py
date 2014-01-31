@@ -104,9 +104,9 @@ def destroy_project(auth_dict, proj_dict):
             usr['userid'] = usr['user_id']
             remove_user = user.delete_user(usr)
             if(remove_user == "OK"):
-                logger.sys_info("User %s removed." % usr['user_id'])
+                logger.sys_info("User %s deleted." % usr['user_id'])
             else:
-                logger.sys_info("ERROR, user %s not removed." % usr['user_id'])
+                logger.sys_info("ERROR, user %s not deleted." % usr['user_id'])
                 return "ERROR"
 
     remove_tenant = tenant.remove_tenant(proj_dict['project_name'])
