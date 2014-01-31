@@ -4,6 +4,7 @@ import sys
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
 ROOT_PATH = os.path.dirname(__file__).replace('\\','/')
+ALLOWED_HOSTS = ['*']
 
 # Set the path to the packages in /src
 SRC_PATH =  os.path.join(PROJECT_PATH, 'src')
