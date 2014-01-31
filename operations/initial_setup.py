@@ -243,7 +243,7 @@ def run_setup(new_system_variables,auth_dict):
     print "Importing default images"
     glance = glance_ops(auth_dict)
     cirros_input = {
-                    'img_name':"Cirros-x86_64-0.3.1",
+                    'img_name':"Cirros-x86_64-0-3-1",
                     'img_disk_format':"qcow2",
                     'img_is_public':'True',
                     'img_is_protected':'True',
@@ -255,7 +255,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default cirros image.')
 
     ubuntu_input = {
-                    'img_name':"Ubuntu-12.04-x86_64",
+                    'img_name':"Ubuntu-12-04-x86_64",
                     'img_disk_format':"qcow2",
                     'img_is_public':'True',
                     'img_is_protected':'True',
