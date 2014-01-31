@@ -246,7 +246,6 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         auth = request.session['auth']
         so = server_ops(auth)
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
-        import pdb; pdb.set_trace()
         newgroup= so.create_sec_group(create_sec)
         print "newgroup = %s" % newgroup
         return HttpResponseRedirect("manage_projects")
