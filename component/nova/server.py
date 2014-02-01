@@ -292,15 +292,17 @@ class server_ops:
         #verify the image requested exsists
         #image_list = self.image.nova_list_images(create_dict['project_id'])
         image_list = self.glance.list_images()
+        img_flag = 0
         for image in image_list:
             if(image['image_name'] == 'None'):
                 continue
             elif(image['image_name'] == create_dict['image_name']):
                 self.image_id = image['image_id']
+                img_flag = 1
                 break
-            else:
-                logger.sys_error("The image: %s was not found" %(create_dict['image_name']))
-                raise Exception("The image: %s was not found" %(create_dict['image_name']))
+        if(img_flag == 0): 
+            logger.sys_error("The image: %s was not found" %(create_dict['image_name']))
+            raise Exception("The image: %s was not found" %(create_dict['image_name']))
 
         #connect to the rest api caller
         try:
