@@ -510,8 +510,8 @@ class user_ops:
                 if(type(proj[0][0]) is str):
                     logger.sys_info("Project id is valid in the transcirrus DB, for operation add_role_to_user.")
                 else:
-                    logger.sys_error("Project id is not valid in the transcirrus DB, for operation add_role_to_user Project: %s." %(user_role_dict['project_id']))
-                    raise Exception("Project id is not valid in the transcirrus DB, for operation add_role_to_user Project %s." %(user_role_dict['project_id']))
+                    logger.sys_error("Project id is not valid in the transcirrus DB, for operation add_role_to_user Project: %s." %(user_role_dict['project_name']))
+                    raise Exception("Project id is not valid in the transcirrus DB, for operation add_role_to_user Project %s." %(user_role_dict['project_name']))
             except:
                 logger.sql_error("Database Operation failed for add_user_to_project.")
                 raise Exception("Database Operation failed for add_user_to_project.")
@@ -562,9 +562,23 @@ class user_ops:
             if(rest['response'] == 200):
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                if(proj[0][0] != user[0][1]):
-                    r_dict = {"project":user_role_dict['project_name'],"project_id":proj[0][0]}
-                    return r_dict
+                #if(proj[0][0] != user[0][1]):
+                if(self.is_admin == 1):
+                    try:
+                        load = json.loads(rest['data'])
+                        self.db.pg_transaction_begin()
+                        #need to update trans_usr_table
+                        input_dict = {'proj_name': user_role_dict['project_name'],'proj_id': proj[0][0],'user_name': user_role_dict['username'],'user_id': user[0][0]}
+                        insert = self.db.pg_insert("trans_user_projects",input_dict)
+                    except Exception as e:
+                        self.db.pg_transaction_rollback()
+                        self.db.pg_close_connection()
+                        logger.sql_error('%s' %(e))
+                        raise e
+                    else:
+                        self.db.pg_transaction_commit()
+                        #self.db.pg_close_connection()
+
                 if(user_role_dict['username'] != 'admin'):#may be able to remove this check, more testing needed
                     try:
                         load = json.loads(rest['data'])
@@ -579,14 +593,13 @@ class user_ops:
                         raise e
                     else:
                         self.db.pg_transaction_commit()
-                        self.db.pg_close_connection()
                 else:
                     logger.sys_info('Added admin to project %s'%(user_role_dict['project_name']))
+                self.db.pg_close_connection()
+                r_dict = {"project":user_role_dict['project_name'],"project_id":proj[0][0]}
+                return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
-
-            r_dict = {"project":user_role_dict['project_name'],"project_id":proj[0][0]}
-            return r_dict
         else:
             logger.sys_error("Admin flag not set, could not add user to project.")
 

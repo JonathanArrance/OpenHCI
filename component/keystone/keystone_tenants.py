@@ -38,6 +38,7 @@ class tenant_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
+            self.user_id = user_dict['user_id']
 
             if('adm_token' in user_dict):
                 self.adm_token = user_dict['adm_token']
@@ -159,21 +160,24 @@ class tenant_ops:
             util.http_codes(rest['response'],rest['reason'])
 
         #add the admin to the project who created the oprject
-        try:
+        if(self.username == 'admin'):
+            try:
+                #add the "cloud" admin to the project as an admin - admingets added to all projects in the system
+                add_admin = {'username':'admin','user_role':'admin','project_name':project_name}
+                admin = self.keystone_users.add_user_to_project(add_admin)
+            except Exception as e:
+                logger.sys_error('Could not add the admin to %s'%(project_name))
+                raise Exception('Could not add the admin to %s'%(project_name))
+        else:
+            #try:
             #add the admin user to the project as an admin
             add_projadmin = {'username':self.username,'user_role':'admin','project_name':project_name}
             projadmin = self.keystone_users.add_user_to_project(add_projadmin)
-        except Exception as e:
-            logger.sys_error('Could not add the project admin to %s'%(project_name))
-            raise Exception('Could not add the project admin to %s'%(project_name))
+            #except Exception as e:
+            #    logger.sys_error('Could not add the project admin to %s'%(project_name))
+            #    raise Exception('Could not add the project admin to %s'%(project_name))
 
-        try:
-            #add the "cloud" admin to the project as an admin - admingets added to all projects in the system
-            add_admin = {'username':'admin','user_role':'admin','project_name':project_name}
-            admin = self.keystone_users.add_user_to_project(add_admin)
-        except Exception as e:
-            logger.sys_error('Could not add the admin to %s'%(project_name))
-            raise Exception('Could not add the admin to %s'%(project_name))
+        
 
         r_dict = {"response":200,"reason":"OK","project_name":project_name,"tenant_id":tenant_id}
         return r_dict
@@ -275,10 +279,7 @@ class tenant_ops:
         Output: Dictionary containing all of the projects and project ids
         ACCESS: This operation is only available to admins
         """
-        # create a new project in OpenStack. This can only be done by and Admin
-        # we need to make sure that the user is a transcirrus admin and an openstack admin.
-        # if not reject and throw an exception
-
+        logger.sys_info('\n**Listing projects. Component: Keystone Def: list_tenants**\n')
         try:
             #Try to connect to the transcirrus db
             self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
@@ -291,31 +292,40 @@ class tenant_ops:
             logger.sys_error("User not identified as a user or an admin.")
             #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
             if(self.status_level <= 1):
-                logger.sys_error("User status not sufficient, can not list endpoints.")
-                raise Exception("User status not sufficient, can not list endpoints.")
+                logger.sys_error("User status not sufficient, can not list projects.")
+                raise Exception("User status not sufficient, can not list projects.")
     
             #standard users can not create a project
             if(self.user_level >= 1):
-                logger.sys_error("Only admins and power users can may list endpoints.")
-                raise Exception("Only admins and power users can may list endpoints.")
+                logger.sys_error("Only admins can list projects.")
+                raise Exception("Only admins can list projects.")
 
             #query the DB and get the list of projects in the OpenStack Environment
-            try:
-                #insert the new project into the db
-                select_dict = {"select":'proj_name,proj_id',"from":'projects'}
-                projects = self.db.pg_select(select_dict)
-                
-                #initialize the projects dict
-                proj_dict = {}
-                for project in projects:
-                    proj_dict[project[0]] = project[1]
-                self.db.pg_close_connection()
-                return proj_dict
-            except Exception as e:
-                logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
-                raise
+            projects=None
+            if(self.username == 'admin'):
+                try:
+                    #insert the new project into the db
+                    select_dict = {"select":'proj_name,proj_id',"from":'projects'}
+                    projects = self.db.pg_select(select_dict)
+                except Exception as e:
+                    logger.sql_error("Could not retrieve the tenants." %(e))
+                    raise
+            else:
+                try:
+                    select_dict = {"select":'proj_name,proj_id',"from":'trans_user_projects','where':"user_id='%s'"%(self.user_id)}
+                    projects = self.db.pg_select(select_dict)
+                except Exception as e:
+                    logger.sql_error("Could not retrieve the tenants." %(e))
+                    raise
+
+            #initialize the projects dict
+            proj_dict = {}
+            for project in projects:
+                proj_dict[project[0]] = project[1]
+            self.db.pg_close_connection()
+            return proj_dict
         else:
-            logger.sys_error("Admin flag not set, could not create the new project ")
+            logger.sys_error("Admin flag not set, could not list projects")
 
     def get_tenant(self,project_name):
         """
