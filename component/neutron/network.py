@@ -976,7 +976,7 @@ class neutron_net_ops:
         NOTE: REST API will throw a 409 error if there is a conflict. Default google dns used if no DNS server specified.
               Up to 2 more DNS servers can be specified.
         """
-
+        logger.sys_info('\n**Creating private network subnet. Component: Neutron Def: add_net_subnet**\n')
         if(('net_id' not in subnet_dict) or (subnet_dict['net_id'] == '')):
             logger.sys_error("Could not create subnet. No network id given.")
             raise Exception("Could not create subnet. No network id given.")
@@ -1015,7 +1015,7 @@ class neutron_net_ops:
     
         #get the next available subnet from the database
         try:
-            get_sub = {'select':"*",'from':"trans_subnets",'where':"in_use=0 order by index ASC"}
+            get_sub = {'select':"*",'from':"trans_subnets",'where':"in_use=0 order by index ASC limit 1"}
             sub = self.db.pg_select(get_sub)
         except:
             logger.sql_error("Could not get subnet information from the Transcirrus db.")
@@ -1024,7 +1024,11 @@ class neutron_net_ops:
         if(self.user_level <= 1):
             #Create an API connection with the admin
             try:
-                #build an api connection for the admin user
+                #api_dict = None
+                #if(self.is_admin == 1):
+                    #build an api connection for the admin user
+                #    api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                #else:
                 api_dict = {"username":self.username, "password":self.password, "project_id":net['project_id']}
                 if(net['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,net['project_id'])

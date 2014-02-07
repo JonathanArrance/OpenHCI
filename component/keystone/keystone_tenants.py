@@ -79,7 +79,7 @@ class tenant_ops:
         # create a new project in OpenStack. This can only be done by and Admin
         # we need to make sure that the user is a transcirrus admin and an openstack admin.
         # if not reject and throw an exception
-
+        logger.sys_info('\n**Creating new Keystone project. Component: Keystone Def: create_tenant**\n')
         if((not project_name) or (project_name == "")):
             logger.sys_error("No project name was specified for the new project.")
             raise EXception("No project name was specified for the new project.")
@@ -158,9 +158,17 @@ class tenant_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
+        #add the admin to the project who created the oprject
+        try:
+            #add the admin user to the project as an admin
+            add_projadmin = {'username':self.username,'user_role':'admin','project_name':project_name}
+            projadmin = self.keystone_users.add_user_to_project(add_projadmin)
+        except Exception as e:
+            logger.sys_error('Could not add the project admin to %s'%(project_name))
+            raise Exception('Could not add the project admin to %s'%(project_name))
 
         try:
-            #add the admin to the project as an admin - admingets added to all projects in the system
+            #add the "cloud" admin to the project as an admin - admingets added to all projects in the system
             add_admin = {'username':'admin','user_role':'admin','project_name':project_name}
             admin = self.keystone_users.add_user_to_project(add_admin)
         except Exception as e:

@@ -457,6 +457,7 @@ class user_ops:
         NOTE: This call is actually to an API call that addsa a user to an OpenStack role. It implicitly adds
               the user to project specified.
         """
+        logger.sys_info('\n**Adding a user to a project. Component: Keystone Def: add_user_to_project**\n')
         if(not user_role_dict):
             logger.sys_error("user_role_dict not specified for add_role_to_user operation.")
             raise Exception("user_role_dict not specified for add_role_to_user operation.")
@@ -491,7 +492,7 @@ class user_ops:
             #NOTE: the log messages are not includeing the %s specifics.
             try:
                 #check if valid username
-                select_user = {"select":"keystone_user_uuid","from":"trans_user_info","where":"user_name='%s'" %(user_role_dict['username'])}
+                select_user = {"select":"keystone_user_uuid,user_project_id","from":"trans_user_info","where":"user_name='%s'" %(user_role_dict['username'])}
                 user = self.db.pg_select(select_user)
                 if(type(user[0][0]) is str):
                     logger.sys_info("Username is valid in the transcirrus DB, for operation add_role_to_user.")
@@ -559,9 +560,12 @@ class user_ops:
                 raise
 
             if(rest['response'] == 200):
-                #read the json that is returned
+                #this is to add user from one project to another with out chnaageing the primary project in the DB
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                if(user_role_dict['username'] != 'admin'):
+                if(proj[0][0] != user[0][1]):
+                    r_dict = {"project":user_role_dict['project_name'],"project_id":proj[0][0]}
+                    return r_dict
+                if(user_role_dict['username'] != 'admin'):#may be able to remove this check, more testing needed
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
