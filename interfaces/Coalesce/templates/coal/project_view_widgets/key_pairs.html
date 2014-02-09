@@ -22,7 +22,7 @@
 	    {% if sec_keys %}
                 <tr> <th>Key Name</th> <th>Owner</th> <th>Actions</th></tr>
                     {% for key in sec_keys %}
-		      <tr> <td>{{key.key_name}}</td>  <td>{{key.username}}</td> <td></td></tr>
+		      <tr> <td><a href="/key_pair/{{key.key_id}}/view/">{{key.key_name}}</a></td>  <td>{{key.username}}</td> <td></td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no keys</i></p>

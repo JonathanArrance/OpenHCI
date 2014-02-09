@@ -1,0 +1,49 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block javascripts %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+{% endblock %}
+
+{% block title %} Details for {{key_info.sec_key_name}}{% endblock %}
+
+{% block content %}
+
+
+    <div class="row-fluid">
+      <div class="span6">
+        <div class="well">
+          <div class="legend">
+              Details for {{ key_info.sec_key_name }}
+          </div>
+          <table class="paleblue">
+              <tr><th>Id</th><td>{{user_info.sec_key_id}}</td></tr>
+              <tr><th>RSA Public Key</th><td>{{user_info.rsa_public_key}}</td></tr>
+             
+          </table>
+        </div>
+      </div><!-- end span-->
+
+      <div class="span5 offset1">
+        <div class="well">
+          <div class="legend">
+              Actions for {{ key_info.sec_key_name }}
+          </div>
+          
+      </div><!-- end span-->
+
+
+
+    </div><!-- end row-fluid-->
+
+
+{% endblock %}

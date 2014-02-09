@@ -148,6 +148,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),
 
+	url(r'^key_pair/(?P<sec_key_id>[^/]+)/view/$',
+	    'coalesce.coal_beta.views.key_view',
+            name='key_view'),
+
         # --- Setup ----
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',

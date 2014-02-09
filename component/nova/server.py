@@ -1386,8 +1386,7 @@ class server_ops:
     def get_sec_keys(self,input_dict):
         """
         DESC: Get detailed info for a specific security key
-        INPUT: input_dict - sec_key_id
-                          - project_id
+        INPUT: sec_key_id
         OUTPUT: r_dict - sec_key_name
                        - user_name
                        - sec_key_id
