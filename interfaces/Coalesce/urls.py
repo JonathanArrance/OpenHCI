@@ -152,6 +152,11 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.key_view',
             name='key_view'),
 
+	url(r'^download_public_key/(?P<key_id>[^/]+)/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.download_public_key',
+            name='download_public_key'),
+
+
         # --- Setup ----
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',
