@@ -1412,5 +1412,5 @@ class server_ops:
             logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(sec_key_name,self.project_id))
             raise Exception("Could not get the security group info for sec_key_name: %s in project: %s" %(sec_key_name,self.project_id))
 
-        r_dict = {'sec_key_name':get_key[0][4],'user_name':get_key[0][1],'sec_key_id':get_key[0][3],'public_key':get_key[0][5]}
+        r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2]}
         return r_dict
