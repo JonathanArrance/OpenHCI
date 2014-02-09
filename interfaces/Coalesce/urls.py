@@ -46,7 +46,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 
-        url(r'^projects/(?P<project_name>\w+)/user/(?P<user_name>\w+)/view/$',
+        url(r'^projects/(?P<project_name>\w+)/(?P<project_id>[^/]+)/user/(?P<user_name>\w+)/view/$',
             'coalesce.coal_beta.views.user_view',
             name='user_view'),
 
@@ -147,6 +147,15 @@ urlpatterns = patterns('',
 	url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),
+
+	url(r'^key_pair/(?P<sec_key_id>[^/]+)/(?P<project_id>[^/]+)/view/$',
+	    'coalesce.coal_beta.views.key_view',
+            name='key_view'),
+
+	url(r'^download_public_key/(?P<key_id>[^/]+)/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.download_public_key',
+            name='download_public_key'),
+
 
         # --- Setup ----
         url(r'^setup/$',

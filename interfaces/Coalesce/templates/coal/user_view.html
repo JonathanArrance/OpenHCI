@@ -14,10 +14,13 @@
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/update_user_password.js"/></script>
     <script>
-      var PROJECT = "{{ project.project_name}}";
+      var PROJECT = "{{ project_name}}";
     </script>
     <script>
-      var PROJECT_ID = "{{ project.project_id}}";
+      var PROJECT_ID = "{{ project_id}}";
+    </script>
+    <script>
+      var USER_ID = "{{ user_info.user_id }}";
     </script>
 
 {% endblock %}
@@ -40,7 +43,7 @@
               <tr><th>Email</th><td><a href="mailto:{{user_info.email}}">{{user_info.email}}</a></td></tr>
           </table>
         </div>
-      </div><!-- end span6-->
+      </div><!-- end span-->
 
       <div class="span5 offset1">
         <div class="well">
@@ -61,7 +64,7 @@
             </div>
           <a href="#" id="update-user-password">update password</a>
         </div>
-      </div><!-- end span6-->
+      </div><!-- end span-->
 
 
 
