@@ -203,6 +203,18 @@ def user_view(request, project_name, project_id, user_name):
                                                         'user_info': user_info,
                                                  }))
 
+
+def key_view(request, sec_key_id):
+    auth = request.session['auth']
+    so = server_ops(auth)
+    key_info = so.get_sec_keys(sec_key_id)
+
+    return render_to_response('coal/key_view.html',
+                               RequestContext(request, { 
+                                                        'key_info': key_info,
+                                                 }))
+
+
 def volume_view(request, project_id, vol_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
@@ -449,7 +461,7 @@ def update_user_password(request, user_id, project_id, password):
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
 	messages.warning(request, 'Password updated.')
-        return HttpResponseRedirect(redirect_to)
+        return HttpResponseRedirect('/')
 
     except:
         return HttpResponse(status=500)
