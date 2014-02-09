@@ -1914,7 +1914,70 @@ INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AllHostsFilter', 
 -- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
+--
+-- TOC entry 215 (class 1259 OID 19290)
+-- Name: trans_user_projects; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
 
+CREATE TABLE trans_user_projects (
+    proj_name character varying,
+    proj_id character varying,
+    user_name character varying,
+    user_id character varying,
+    index integer NOT NULL
+);
+
+
+ALTER TABLE public.trans_user_projects OWNER TO transuser;
+
+--
+-- TOC entry 216 (class 1259 OID 19314)
+-- Name: trans_user_projects_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_user_projects_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_user_projects_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 2058 (class 0 OID 0)
+-- Dependencies: 216
+-- Name: trans_user_projects_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_user_projects_index_seq OWNED BY trans_user_projects.index;
+
+
+--
+-- TOC entry 2059 (class 0 OID 0)
+-- Dependencies: 216
+-- Name: trans_user_projects_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_user_projects_index_seq', 5, true);
+
+
+--
+-- TOC entry 2050 (class 2604 OID 19316)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_user_projects ALTER COLUMN index SET DEFAULT nextval('trans_user_projects_index_seq'::regclass);
+
+
+--
+-- TOC entry 2052 (class 2606 OID 19324)
+-- Name: trans_user_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_user_projects
+    ADD CONSTRAINT trans_user_projects_pkey PRIMARY KEY (index);
 
 
 --

@@ -9,6 +9,7 @@ from transcirrus.common.api_caller import caller
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+import util
 
 from transcirrus.database.postgres import pgsql
 
@@ -195,6 +196,7 @@ def get_token(username,password,project_id):
         rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
         rest = api.call_rest(rest_dict)
     except Exception as e:
+        util.http_codes(rest['response'],rest['reason'],rest['data']['error'])
         logger.sys_error("%s" %(e))
         raise e
 
@@ -204,30 +206,6 @@ def get_token(username,password,project_id):
         load = json.loads(rest['data'])
         apitoken = load['access']['token']['id']
         return apitoken
-    elif (rest['response'] == 403):
-        logger.sys_warning("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif (rest['response'] == 400):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif (rest['response'] == 401):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif (rest['response'] == 405):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif (rest['response'] == 413):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif (rest['response'] == 503):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    elif (rest['response'] == 404):
-        logger.sys_error("Response %s with Reason %s" %(rest['response'],rest['reason']))
-        raise Exception("Response %s with Reason %s" %(rest['response'],rest['reason']))
-    else:
-        logger.sys_error("Could not get apitoken for unknown reason.")
-        raise Exception("Could not get apitoken for unknown reason.")
 
 def _get_admin_token(db,project_id):
     #retrieve the default system token from the Transcirrus DB
