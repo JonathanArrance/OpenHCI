@@ -26,8 +26,8 @@
               Details for {{ key_info.sec_key_name }}
           </div>
           <table class="paleblue">
-              <tr><th>Id</th><td>{{user_info.sec_key_id}}</td></tr>
-              <tr><th>RSA Public Key</th><td>{{user_info.rsa_public_key}}</td></tr>
+              <tr><th>Id</th><td>{{key_info.sec_key_id}}</td></tr>
+              <tr><th>RSA Public Key</th><td>{{key_info.rsa_public_key}}</td></tr>
              
           </table>
         </div>
@@ -38,6 +38,7 @@
           <div class="legend">
               Actions for {{ key_info.sec_key_name }}
           </div>
+	<a href="/download_public_key/{{key_info.sec_key_id}}/{{key_info.sec_key_name}}/{{project_id}})">Download RSA Key</a>
           
       </div><!-- end span-->
 

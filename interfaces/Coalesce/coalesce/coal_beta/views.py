@@ -204,15 +204,25 @@ def user_view(request, project_name, project_id, user_name):
                                                  }))
 
 
-def key_view(request, sec_key_id):
+def key_view(request, sec_key_id, project_id):
     auth = request.session['auth']
     so = server_ops(auth)
-    key_info = so.get_sec_keys(sec_key_id)
+    key_dict = {'sec_key_id': sec_key_id, 'project_id': project_id}
+    key_info = so.get_sec_keys(key_dict)
 
     return render_to_response('coal/key_view.html',
                                RequestContext(request, { 
                                                         'key_info': key_info,
                                                  }))
+
+def download_public_key(request, key_id, key_name, project_id):
+    auth = request.session['auth']
+    so = server_ops(auth)
+    key_dict = {'key_id': key_id, 'project_id': project_id}
+    key_info = so.get_sec_keys(key_dict)
+    response = HttpResponse(mimetype='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="%s.txt"' % key_name
+    response.write(key_info['rsa_public_key'])
 
 
 def volume_view(request, project_id, vol_id):
@@ -290,6 +300,7 @@ def create_keypair(request, key_name, project_id):
         return HttpResponseRedirect(redirect_to)
     except:
         return HttpResponse(status=500)
+
 
 def create_volume(request, volume_name, volume_size, description, project_id):
     try:
