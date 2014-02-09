@@ -39,6 +39,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.models import get_current_site
 from django.template.response import TemplateResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.contrib import messages
 
 
 # Python imports
@@ -190,7 +191,7 @@ def project_view(request, project_name):
 							'instances': instances,
                                                         }))
 
-def user_view(request, project_name, user_name):
+def user_view(request, project_name, project_id, user_name):
     auth = request.session['auth']
     uo = user_ops(auth)
     user_dict = {'username': user_name, 'project_name': project_name}
@@ -198,6 +199,7 @@ def user_view(request, project_name, user_name):
 
     return render_to_response('coal/user_view.html',
                                RequestContext(request, { 'project_name': project_name,
+							'project_id': project_id,
                                                         'user_info': user_info,
                                                  }))
 
@@ -437,14 +439,16 @@ def add_existing_user(request, username, user_role, project_name):
         return HttpResponse(status=500)
 
 
-def update_user_password(request, user_id, project_id, new_password):
+def update_user_password(request, user_id, project_id, password):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        user_dict = {'user_id': user_id, 'project_id':project_id}
-        uo.remove_user_from_project(user_dict)
+        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password }
+	#import pdb; pdb.set_trace()
+	uo.update_user_password(passwd_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
+	messages.warning(request, 'Password updated.')
         return HttpResponseRedirect(redirect_to)
 
     except:
@@ -633,20 +637,19 @@ def login_page(request, template_name):
     if request.method == "POST":
         form = authentication_form(request.POST)
         if form.is_valid():
-
-            # Okay, security check complete. Log the user in.
-            user = form.cleaned_data['username']
-            pw = form.cleaned_data['password']
-            a = authorization(user, pw)
-            auth = a.get_auth()
-            request.session['auth'] = auth
-            print auth
-
-
-            return render_to_response('coal/welcome.html', RequestContext(request, {  }))
+	    try:
+		user = form.cleaned_data['username']
+		pw = form.cleaned_data['password']
+		a = authorization(user, pw)
+		auth = a.get_auth()
+		request.session['auth'] = auth
+            	return render_to_response('coal/welcome.html', RequestContext(request, {  }))
+	    except:
+		form = authentication_form()
+		messages.warning(request, 'Login failed.  Please verify your username and password.')
+                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
     else:
         form = authentication_form()
-
         return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
 
 @never_cache

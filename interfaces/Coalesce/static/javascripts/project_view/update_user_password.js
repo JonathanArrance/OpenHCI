@@ -82,12 +82,12 @@ $(function() {
 
 					bValid = bValid && checkLength( password1, "password1", 5, 16 );
 
-					bValid = bValid && (password1 == password2);
+					//bValid = bValid && (password1 == password2);
 
 
 					if ( bValid ) {
 					  
-						$.post('/update_user_password/' + name.val() + '/' + password1.val() + '/' + PROJECT_ID + '/');
+						$.post('/update_user_password/' + USER_ID + '/' + password1.val() + '/' + PROJECT_ID + '/');
 					  
 						
 						$( this ).dialog( "close" );

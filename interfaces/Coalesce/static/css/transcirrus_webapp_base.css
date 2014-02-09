@@ -28,7 +28,7 @@ div.nav a {
 	div.nav a:visited { color: black; }
 	div.nav a:active { color: black; }
  
-ul.errorlist {   background-color: #f7f8f8;
+ul.messages {   background-color: #f7f8f8;
                 border: 2px solid #FF6600;
     			padding: 8px;
                 margin-bottom: 2em;
@@ -38,9 +38,8 @@ ul.errorlist {   background-color: #f7f8f8;
     			-webkit-border-radius: 20px;
     		}
             
-ul.errorlist li { list-style-image: url('../images/warn.png'); margin-left:80px; font-weight:bold;}
-ul.errorlist li li { list-style: circle; margin-left:0px; font-weight:normal;}
-ul.errorlist li li li { list-style: circle; margin-left:0px; font-weight:normal;}
+ul.messages li.warning { list-style-image: url('../images/warn.png'); margin-left:80px; font-weight:bold;}
+
 
  
 table input {
