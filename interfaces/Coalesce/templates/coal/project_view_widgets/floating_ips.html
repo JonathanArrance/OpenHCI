@@ -15,7 +15,9 @@
 		    <label for="floating_ip">Floating IP</label>
                     <select name="floating_ip" id="floating_ip">
 			{% for fip in floating_ips %}
-		           <option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
+                           {% if fip.floating_in_use == 'false' %}
+		               <option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
+                           {% endif %}
 			{% endfor %}
                     </select>
 
