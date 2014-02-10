@@ -360,6 +360,7 @@ class server_ops:
                        - sec_group_name
                        - server_flavor
                        - server_os
+                       - server_net_id
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
         """
@@ -375,16 +376,16 @@ class server_ops:
         try:
             get_server = None
             if(self.is_admin == 1):
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
             else:
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
             server = self.db.pg_select(get_server)
         except:
             logger.sys_error('Could not get server info: get_server')
             raise Exception('Could not get server info: get_server')
 
         #build the return dictionary
-        r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5]}
+        r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5],'server_net_id':server[0][6]}
         return r_dict
 
     def detach_all_servers_from_network(self,input_dict):
