@@ -991,7 +991,7 @@ class layer_three_ops:
         {"removeFloatingIp": {"address": "192.168.10.14"}}
         """
         logger.sys_info('\n**Updateing a floating IP. Component: Neutron Def: update_floating_ip**\n')
-        print update_dict
+        logger.sys_info(update_dict)
         if((update_dict['floating_ip'] == '') or ('floating_ip' not in update_dict)):
             logger.sys_error('No floating ip given.')
             raise Exception('No floating ip given.')
@@ -1045,13 +1045,13 @@ class layer_three_ops:
         #Create an API connection with the admin
         #try:
             #build an api connection for the admin user
-        print "project id given %s" %update_dict['project_id']
+        logger.sys_info("project id given %s" %update_dict['project_id'])
         api_dict = {"username":self.username, "password":self.password, "project_id":update_dict['project_id']}
-        print api_dict
+        logger.sys_info(api_dict)
         if(self.project_id != project_dict['project_id']):
             self.token = get_token(self.username,self.password,update_dict['project_id'])
         api = caller(api_dict)
-        print api
+        logger.sys_info(api)
         #except:
         #    logger.sys_error("Could not connect to the API")
         #    raise Exception("Could not connect to the API")
