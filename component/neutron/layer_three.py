@@ -802,6 +802,7 @@ class layer_three_ops:
         INPUT: self object
         OUTPUT: array of r_dict - floating_ip
                                 - floating_ip_id
+                                - floating_in_use
         ACCESS: Admin will be able to list floatingips in the system,
                 power users and standard users will only be able to list
                 floating ips in their project.
@@ -823,7 +824,7 @@ class layer_three_ops:
 
         r_array = []
         for floater in floating:
-            r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2]}
+            r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2],'floating_in_use':floater[6]}
             r_array.append(r_dict)
 
         return r_array
@@ -1069,14 +1070,20 @@ class layer_three_ops:
 
         if(rest['response'] == 202):
             update = None
+            update_float = None
             try:
                 self.db.pg_transaction_begin()
                 if(action == 'add'):
                     update = {'table':'trans_instances','set':"floating_ip_id='%s',inst_floating_ip='%s'"%(floater[0][0],update_dict['floating_ip']),'where':"inst_id='%s'"%(update_dict['instance_id'])}
                 elif(action == 'remove'):
                     update = {'table':'trans_instances','set':"floating_ip_id=NULL,inst_floating_ip=NULL",'where':"inst_id='%s'"%(update_dict['instance_id'])}
-                print update
                 self.db.pg_update(update)
+                
+                if(action == 'add'):
+                    update_float = {'table':'trans_floating_ip','set':"in_use=True",'where':"floating_ip_id='%s'"%(floater[0][0])}
+                elif(action == 'remove'):
+                    update_float = {'table':'trans_floating_ip','set':"in_use=False",'where':"floating_ip_id='%s'"%(floater[0][0])}
+                self.db.pg_update(update_float)
             except:
                 self.db.pg_transaction_rollback()
                 logger.sys_error("Could not update floating ip in the Transcirrus DB")
