@@ -428,6 +428,21 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         return HttpResponse(status=500)
 
 
+def assign_floating_ip(request, floating_ip, instance_id, project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
+        import pdb; pdb.set_trace()
+        l3o.update_floating_ip(update_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)    
+
+
+
 def toggle_user(request, username, toggle):
     try:
         auth = request.session['auth']
