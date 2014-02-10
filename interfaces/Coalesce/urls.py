@@ -148,9 +148,14 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),
 
-	url(r'^key_pair/(?P<sec_key_id>[^/]+)/view/$',
+	url(r'^key_pair/(?P<sec_key_id>[^/]+)/(?P<project_id>[^/]+)/view/$',
 	    'coalesce.coal_beta.views.key_view',
             name='key_view'),
+
+	url(r'^download_public_key/(?P<sec_key_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.download_public_key',
+            name='download_public_key'),
+
 
         # --- Setup ----
         url(r'^setup/$',
