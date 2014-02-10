@@ -1042,7 +1042,9 @@ class layer_three_ops:
         #Create an API connection with the admin
         try:
             #build an api connection for the admin user
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":update_dict['project_id']}
+            if(self.project_id != project_dict['project_id']):
+                self.token = get_token(self.username,self.password,update_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
