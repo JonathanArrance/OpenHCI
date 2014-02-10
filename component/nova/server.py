@@ -325,7 +325,6 @@ class server_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            self.db.pg_transaction_rollback()
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
 
@@ -350,10 +349,11 @@ class server_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
-    def get_server(self,server_id):
+    def get_server(self,input_dict):
         """
         DESC:Used to get detailed info for a specific virtual server.
-        INPUT: server_name
+        INPUT: input_dict - server_id
+                          - project_id
         OUTPUT: r_dict - server_name
                        - server_id
                        - sec_key_name
@@ -361,9 +361,11 @@ class server_ops:
                        - server_flavor
                        - server_os
                        - server_net_id
+                       - server_int_net - dict of int net info
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
         """
+        #server_int_net - {"fishnet": [{"version": 4, "addr": "192.0.23.4", "OS-EXT-IPS:type": "fixed"}]}
         if((not server_id) or (server_id == "")):
             logger.sys_error("The virtual server name was not specifed or is blank.")
             raise Exception("The virtual server name was not specifed or is blank.")
@@ -371,6 +373,14 @@ class server_ops:
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to get virtual servers.")
             raise Exception("Status level not sufficient to get virtual servers.")
+
+        #get the name of the project based on the id
+        try:
+            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(input_dict['project_id'])}
+            proj_name = self.db.pg_select(select)
+        except:
+            logger.sql_error("Could not get the project name from Transcirrus DB.")
+            raise Exception("Could not get the project name from Transcirrus DB.")
 
         #get the detailed server info from openstack
         try:
@@ -384,9 +394,37 @@ class server_ops:
             logger.sys_error('Could not get server info: get_server')
             raise Exception('Could not get server info: get_server')
 
-        #build the return dictionary
-        r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'server_os':server[0][5],'server_net_id':server[0][6]}
-        return r_dict
+        #this is a HACK to get the server internal IP - I want to have all this info in the DB, need a polling mechanisim to poll until the
+        #server is up and then get the ip
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connec to the REST api caller in create_server operation.")
+            raise Esception("Could not connec to the REST api caller in create_server operation.")
+
+        #build the server
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/%s'%(input_dict['project_id'],input_dict['server_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
+
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            #build the return dictionary
+            r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
+                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses']}
+            return r_dict
 
     def detach_all_servers_from_network(self,input_dict):
         """
