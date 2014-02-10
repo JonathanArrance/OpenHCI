@@ -1043,18 +1043,18 @@ class layer_three_ops:
             raise Exception("Floating ip no in project %s"%(update_dict['project_id']))
 
         #Create an API connection with the admin
-        #try:
+        try:
             #build an api connection for the admin user
-        logger.sys_info("project id given %s" %update_dict['project_id'])
-        api_dict = {"username":self.username, "password":self.password, "project_id":update_dict['project_id']}
-        logger.sys_info(api_dict)
-        if(self.project_id != project_dict['project_id']):
-            self.token = get_token(self.username,self.password,update_dict['project_id'])
-        api = caller(api_dict)
-        logger.sys_info(api)
-        #except:
-        #    logger.sys_error("Could not connect to the API")
-        #    raise Exception("Could not connect to the API")
+            logger.sys_info("project id given %s" %update_dict['project_id'])
+            api_dict = {"username":self.username, "password":self.password, "project_id":update_dict['project_id']}
+            logger.sys_info(api_dict)
+            if(self.project_id != update_dict['project_id']):
+                self.token = get_token(self.username,self.password,update_dict['project_id'])
+            api = caller(api_dict)
+            logger.sys_info(api)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
 
         try:
             body = None
