@@ -308,7 +308,8 @@ def create_keypair(request, key_name, project_id):
         newkey= so.create_sec_keys(key_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        response = HttpResponseRedirect(redirect_to)
+        return render_to_response(response)
     except:
         return HttpResponse(status=500)
 
@@ -433,7 +434,7 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         l3o.update_floating_ip(update_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
