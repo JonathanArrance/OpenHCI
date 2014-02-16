@@ -114,7 +114,8 @@ class endpoint_ops:
         try:
             #this will need to be chabged if we use different ips for endpoints
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
-            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='api_ip'"}
+            #HACK - we need to use the api ip - better yet use the api ips for admin, public,internal
+            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='mgmt_ip'"}
             self.ep_ip = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
