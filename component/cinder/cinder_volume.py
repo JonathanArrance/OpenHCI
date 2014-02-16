@@ -199,19 +199,19 @@ class volume_ops:
     def delete_volume(self,delete_vol):
         """
         DESC: Delete a volume from the environmnet.
-        INPUT delete_vol - vol_id
+        INPUT delete_vol - volume_id
                          - project_id
         OUTPUT 'OK' - success
         ACCESS: Users and power users can only delete the volumes they created in a project
                 admins can delete any vol or a fault if there is an error
         """
         #NOTE: we will get all info from the Transcirrus DB
-        if((not delete_vol) or delete_vol['vol_id'] == ""):
+        if((not delete_vol) or delete_vol['volume_id'] == ""):
             logger.sys_error("Delete vol parameter was not given or is blank.")
             raise Exception("Delete vol parameter was not given or is blank.")
-        if('vol_id' not in delete_vol):
-            logger.sys_error("Requiered parameter vol_id not given for delete vol operation.")
-            raise Exception("Requiered parameter vol_id not given for delete vol operation.")
+        if('volume_id' not in delete_vol):
+            logger.sys_error("Requiered parameter volume_id not given for delete vol operation.")
+            raise Exception("Requiered parameter volume_id not given for delete vol operation.")
         if(('project_id' not in delete_vol) or (delete_vol['project_id'] == '')):
             logger.sys_error("Requiered parameter project_id not given for delete vol operation.")
             raise Exception("Requiered parameter project_id not given for delete vol operation.")
@@ -239,11 +239,11 @@ class volume_ops:
 
         #make sure the volume is in the DB
         try:
-            get_vol_id = {'select':"vol_name,keystone_user_uuid", 'from':"trans_system_vols", 'where':"vol_id='%s'"%(delete_vol['vol_id']),'and':"proj_id='%s'"%(delete_vol['project_id'])}
+            get_vol_id = {'select':"vol_name,keystone_user_uuid", 'from':"trans_system_vols", 'where':"vol_id='%s'"%(delete_vol['volume_id']),'and':"proj_id='%s'"%(delete_vol['project_id'])}
             vol_id = self.db.pg_select(get_vol_id)
             if(not vol_id[0][0]):
-                logger.sys_error("Volume not found for given volume id: %s." %(delete_vol['vol_id']))
-                raise Exception("Volume not found for given volume id: %s." %(delete_vol['vol_id']))
+                logger.sys_error("Volume not found for given volume id: %s." %(delete_vol['volume_id']))
+                raise Exception("Volume not found for given volume id: %s." %(delete_vol['volume_id']))
         except Exception as e:
             logger.sql_error("Could not query the Transcirrus DB ")
             raise e
@@ -320,7 +320,7 @@ class volume_ops:
         DESC: list the volumes for a particular project if the user is a member
               only admins can list all volumes on the system
         INPUT: project_id - op
-        OUTPUT - array of volumes dict {"vol_id":'',"vol_name":'',"project_id":''}
+        OUTPUT - array of volumes dict {"volume_id":'',"volume_name":'',"project_id":''}
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
         #sanity check
@@ -353,7 +353,7 @@ class volume_ops:
 
         vol_array = []
         for vol in volumes:
-            vol_dict = {"vol_id":vol[0],"vol_name":vol[3],"vol_proj_id":vol[1]}
+            vol_dict = {"volume_id":vol[0],"volume_name":vol[3],"project_id":vol[1]}
             vol_array.append(vol_dict)
 
         return vol_array
@@ -362,7 +362,7 @@ class volume_ops:
         """
         DESC: Get all of the information for a specific volume. Admins and power users can get info on
               any volume in their project. Users can only list their own volumes
-        INPUT:  vol_dict - vol_id
+        INPUT:  vol_dict - volume_id
                          - project_id - op -def user project id
         OUTPUT: r_dict - volume_name
                        - volume_id
@@ -401,25 +401,25 @@ class volume_ops:
         get_vol_dict = None
         if(self.user_level == 2):
             if(self.project_id == proj_id):
-                get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['vol_id']),'and':"keystone_user_uuid='%s'" %(self.user_id)}
+                get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"keystone_user_uuid='%s'" %(self.user_id)}
             else:
-                logger.sys_error('User could not get vol info for vol: %s'%(vol_dict['vol_id']))
-                raise Exception('User could not get vol info for vol: %s'%(vol_dict['vol_id']))
+                logger.sys_error('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
+                raise Exception('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
         elif(self.user_level == 1):
             if(self.project_id == proj_id):
-                get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['vol_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
+                get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
             else:
-                logger.sys_error('User could not get vol info for vol: %s'%(vol_dict['vol_id']))
-                raise Exception('User could not get vol info for vol: %s'%(vol_dict['vol_id']))
+                logger.sys_error('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
+                raise Exception('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
         else:
-            get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['vol_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
+            get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
 
         try:
             print get_vol_dict
             get_vol = self.db.pg_select(get_vol_dict)
         except:
-            logger.sql_error("Could not get the volume info for %s" %(vol_id))
-            raise Exception("Could not get the volume info for %s" %(vol_id))
+            logger.sql_error("Could not get the volume info for %s" %(volume_id))
+            raise Exception("Could not get the volume info for %s" %(volume_id))
 
         self.db.pg_close_connection()
         r_dict = {'volume_name':get_vol[0][1],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}

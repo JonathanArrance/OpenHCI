@@ -59,7 +59,7 @@ print "------------------------------------------"
 """
 
 print "Creaing vol with testuser"
-e = authorization("bill2","test")
+e = authorization("admin","newpass")
 #get the user dict
 f = e.get_auth()
 
@@ -67,7 +67,7 @@ print "instantiating a volume abject."
 vol3 = volume_ops(f)
 
 print "createing a new volume"
-create3 = {'volume_name':'ffvcvol3','volume_size':'1','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+create3 = {'volume_name':'ffvcvol3','volume_size':'1','project_id':"bb85322a95db4990802b9c09b6f943fa"}
 create_vol3 = vol3.create_volume(create3)
 print create_vol3
 time.sleep(10)
