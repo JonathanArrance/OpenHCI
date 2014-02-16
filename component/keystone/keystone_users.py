@@ -84,29 +84,27 @@ class user_ops:
         DESC: create a new user in both the transcirrus and OpenStack Keystone DB
         INPUT: new_user_dict - username - req
                              - password - req
-                             - userrole - req - admin,pu,user
+                             - user_role - req - admin,pu,user
                              - email - req
                              - project_id - op - if project_id is not set, project is set to the NULL state
-        OUTPUT: r_dict - user_name
+        OUTPUT: r_dict - username
                        - user_id
-                       - project_name
+                       - project_id
                        
         ACCESS: Only an admin can create a new user account.
         NOTE: If the project is not specified then the user project is set to NULL. The user can then be added to a project later.
               If the project name is not specified the user will be set to an ordinary user.If a project is not specified then the
               user is added to the catch all _member_ group. You must use add_user_to_project.
-              
-              NOTE: project_name will have to be changed to project_id in a future release.
         """
         #check to make sure that new_user_dict is present
         if(not new_user_dict):
             logger.sys_error("new_user_dict not specified for create_user operation.")
             raise Exception("new_user_dict not specified for create_user operation.")
-        #Check to make sure that the username,password and userrole are valid
-        if((not new_user_dict['username'])or(not new_user_dict['password'])or(not new_user_dict['userrole'])):
+        #Check to make sure that the username,password and user_role are valid
+        if((not new_user_dict['username'])or(not new_user_dict['password'])or(not new_user_dict['user_role'])):
             logger.sys_error("Blank parametrs passed into create user operation, INVALID.")
             raise Exception("Blank parametrs passed into create user operation, INVALID.")
-        if(('username' not in new_user_dict) or ('password' not in new_user_dict) or ('userrole' not in new_user_dict) or ('email' not in new_user_dict)):
+        if(('username' not in new_user_dict) or ('password' not in new_user_dict) or ('user_role' not in new_user_dict) or ('email' not in new_user_dict)):
             logger.sys_error("Required parametrs not passed into create user operation, INVALID.")
             raise Exception("Required parametrs not passed into create user operation, INVALID.")
         if(not re.match(r"^[A-Za-z0-9\.\+_-]+\@[A-Za-z0-9\._-]+\.[a-zA-Z]*$", new_user_dict['email'])):
@@ -141,13 +139,13 @@ class user_ops:
                 #NOTE for now we are sticking with the default admin,Member roles in Keystone.
                 #all access is controlled with Transcirrus permissions. Later we will add the
                 #ability to create and use custom roles in keystone.
-                if(new_user_dict['userrole'] == 'admin'):
+                if(new_user_dict['user_role'] == 'admin'):
                     group_id = 0
                     key_role = 'admin'
-                elif(new_user_dict['userrole'] == 'pu'):
+                elif(new_user_dict['user_role'] == 'pu'):
                     group_id = 1
                     key_role = 'Member'
-                elif(new_user_dict['userrole'] == 'user'):
+                elif(new_user_dict['user_role'] == 'user'):
                     group_id = 2
                     key_role = 'Member'
 
@@ -214,7 +212,7 @@ class user_ops:
             try:
                 self.db.pg_transaction_begin()
                 #insert data in transcirrus DB
-                ins_dict = {"user_name":new_user_dict['username'],"user_group_membership":new_user_dict['userrole'],"user_group_id":group_id,"user_enabled":'TRUE',"keystone_role":key_role,"user_primary_project":self.proj_name,"user_project_id":self.new_user_proj_id,"keystone_user_uuid":new_user_id,"user_email":new_user_dict['email']}
+                ins_dict = {"user_name":new_user_dict['username'],"user_group_membership":new_user_dict['user_role'],"user_group_id":group_id,"user_enabled":'TRUE',"keystone_role":key_role,"user_primary_project":self.proj_name,"user_project_id":self.new_user_proj_id,"keystone_user_uuid":new_user_id,"user_email":new_user_dict['email']}
                 insert = self.db.pg_insert("trans_user_info",ins_dict)
             except Exception as e:
                 self.db.pg_transaction_rollback()
@@ -227,7 +225,7 @@ class user_ops:
 
             if(self.new_user_proj_id != "NULL"):
                 user_role_dict = {'username':new_user_dict['username'],
-                                  'user_role':new_user_dict['userrole'],
+                                  'user_role':new_user_dict['user_role'],
                                   'project_name':self.proj_name
                                   }
                 add_role = self.add_user_to_project(user_role_dict)
@@ -247,21 +245,21 @@ class user_ops:
               Admin must be in the same project as user they are removeing
               only admins can remove users includeing other admins
         INPUTS: delete_dict - username - req
-                            - userid - req
+                            - user_id - req
         OUTPUTS: OK if successful or Exception
         ACCESS: Only an admin can delete a user account.
-        NOTE: You will need to get the userid from the database by using the keystone_tenants.tenant_ops.list_tenant_users().
-              The userid will be in the form of a UUID.
+        NOTE: You will need to get the user_id from the database by using the keystone_tenants.tenant_ops.list_tenant_users().
+              The user_id will be in the form of a UUID.
         """
         #check to make sure that new_user_dict is present
         if(not delete_dict):
             logger.sys_error("delete_dict not specified for remove_user operation.")
             raise Exception("delete_dict not specified for remove_user operation.")
-        #Check to make sure that the username,password and userrole are valid
-        if((not delete_dict['username'])or(not delete_dict['userid'])):
+        #Check to make sure that the username,password and user_id are valid
+        if((not delete_dict['username'])or(not delete_dict['user_id'])):
             logger.sys_error("Blank parametrs passed into remove user operation, INVALID.")
             raise Exception("Blank parametrs passed into remove user operation, INVALID.")
-        if(('username' not in delete_dict) or ('userid' not in delete_dict)):
+        if(('username' not in delete_dict) or ('user_id' not in delete_dict)):
             logger.sys_error("Required parametrs missing for remove user operation, MISSING PARAM.")
             raise Exception("Required parametrs missing for remove user operation, MISSING PARAM.")
 
@@ -303,7 +301,7 @@ class user_ops:
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
-                api_path = '/v2.0/users/%s' %(delete_dict['userid'])
+                api_path = '/v2.0/users/%s' %(delete_dict['user_id'])
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
@@ -342,19 +340,19 @@ class user_ops:
         DESC: Disable a user in both the Keystone and Transcirrus DB
         INPUT: disable_dict - username - req - name of the user to toggle
                             - toggle - req - enable/disable
-                            - userid - op
+                            - user_id - op
         OUTPUT: r_dict - username
-                       - userid
+                       - user_id
                        - toggle status(enable|disable) or exception
         ACCESS: Only an admin can toggle the user status.
-        NOTE: The userid input can be given as an optional parameter. If it is not given then it will be
+        NOTE: The user_id input can be given as an optional parameter. If it is not given then it will be
               looked up in the database.
         """
         #Check to make sure required params are given
         if(not disable_dict):
             logger.sys_error("new_user_dict not specified for create_user operation.")
             raise Exception("new_user_dict not specified for create_user operation.")
-        #Check to make sure that the username,password and userrole are valid
+        #Check to make sure that the username and toggle are valid
         if((not disable_dict['username'])or(not disable_dict['toggle'])):
             logger.sys_error("Blank parametrs passed into create user operation, INVALID.")
             raise Exception("Blank parametrs passed into create user operation, INVALID.")
@@ -365,9 +363,9 @@ class user_ops:
         else:
             logger.sys_error("Toggle value is invalid.")
             raise Exception("Toggle value is invalid.")
-        #Set userid to NULL to easily track
-        if(('userid' not in disable_dict) or (disable_dict['userid'] == "")):
-            disable_dict['userid'] = 'NULL'
+        #Set user_id to NULL to easily track
+        if(('user_id' not in disable_dict) or (disable_dict['user_id'] == "")):
+            disable_dict['user_id'] = 'NULL'
 
         toggle = None
         if(disable_dict['toggle'] == 'enable'):
@@ -375,17 +373,17 @@ class user_ops:
         elif(disable_dict['toggle'] == 'disable'):
             toggle = 'false'
 
-        #if the userid is not specified connect to the DB and get it
+        #if the user_id is not specified connect to the DB and get it
         try:
             #Try to connect to the transcirrus db
             self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
             logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
             #get the project ID if not using the admins
-            if(disable_dict['userid'] == 'NULL'):
-                logger.sql_info("Userid was NULL for toggle user operation, retrieving userid from Transcirrus DB.")
+            if(disable_dict['user_id'] == 'NULL'):
+                logger.sql_info("Userid was NULL for toggle user operation, retrieving user_id from Transcirrus DB.")
                 select_user = {"select":"user_project_id,keystone_user_uuid","from":"trans_user_info","where":"user_name='%s'" %(disable_dict['username'])}
                 user = self.db.pg_select(select_user)
-                disable_dict['userid'] = user[0][1]
+                disable_dict['user_id'] = user[0][1]
             else:
                 logger.sql_info("Userid was not NULL for toggle user operation.")
                 select_user = {"select":"user_project_id","from":"trans_user_info","where":"user_name='%s'" %(disable_dict['username'])}
@@ -406,10 +404,10 @@ class user_ops:
 
             try:
                 #add the new user to openstack
-                body = '{"user": {"enabled": %s, "id":"%s"}}' %(toggle,disable_dict['userid'])
+                body = '{"user": {"enabled": %s, "id":"%s"}}' %(toggle,disable_dict['user_id'])
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'PUT'
-                api_path = '/v2.0/users/%s' %(disable_dict['userid'])
+                api_path = '/v2.0/users/%s' %(disable_dict['user_id'])
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
@@ -426,7 +424,7 @@ class user_ops:
                 try:
                     self.db.pg_transaction_begin()
                     #update the transcirrus db
-                    update_dict = {'table':"trans_user_info",'set':"user_enabled='%s'" %(toggle.upper()),'where':"keystone_user_uuid='%s'" %(disable_dict['userid'])}
+                    update_dict = {'table':"trans_user_info",'set':"user_enabled='%s'" %(toggle.upper()),'where':"keystone_user_uuid='%s'" %(disable_dict['user_id'])}
                     self.db.pg_update(update_dict)
                 except Exception as e:
                     self.db.pg_transaction_rollback()
@@ -439,18 +437,17 @@ class user_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'])
 
-                r_dict = {"username":disable_dict['username'],"userid":disable_dict['userid'],"toggle":disable_dict['toggle']}
+                r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
                 return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
     def add_user_to_project(self, user_role_dict):
         """
-        This all needs to be changed to work on IDs
         DESC: Add a user to a project. Only an admin can perform this operation
         INPUT: user_role_dict - username - req
                               - user_role - req - admin/pu/user
-                              - project_name - req - name of the project to add the user to
+                              - project_id - req - id of the project to add the user to
         OUTPUT: r_dict - project_name
                        - project_id
         ACCESS: Only an admin can add a user to a project.
@@ -502,20 +499,20 @@ class user_ops:
             except:
                 logger.sql_error("Database Operation failed for add_user_to_project.")
                 raise Exception("Database Operation failed for add_user_to_project.")
-
+            
             try:
                 #check if project is valid
-                select_proj = {"select":"proj_id","from":"projects","where":"proj_name='%s'" %(user_role_dict['project_name'])}
+                select_proj = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(user_role_dict['project_id'])}
                 proj = self.db.pg_select(select_proj)
                 if(type(proj[0][0]) is str):
-                    logger.sys_info("Project id is valid in the transcirrus DB, for operation add_role_to_user.")
+                    logger.sys_info("Project name is valid in the transcirrus DB, for operation add_role_to_user.")
                 else:
-                    logger.sys_error("Project id is not valid in the transcirrus DB, for operation add_role_to_user Project: %s." %(user_role_dict['project_name']))
-                    raise Exception("Project id is not valid in the transcirrus DB, for operation add_role_to_user Project %s." %(user_role_dict['project_name']))
+                    logger.sys_error("Project name is not valid in the transcirrus DB, for operation add_role_to_user Project: %s." %(user_role_dict['project_id']))
+                    raise Exception("Project name is not valid in the transcirrus DB, for operation add_role_to_user Project %s." %(user_role_dict['project_id']))
             except:
                 logger.sql_error("Database Operation failed for add_user_to_project.")
                 raise Exception("Database Operation failed for add_user_to_project.")
-
+            
             #Determin the Keystone role ID
             #Query the DB to get the ID for the member role and the admin role
             try:
@@ -538,7 +535,7 @@ class user_ops:
 
             try:
                 #build an api connection for the admin user. NOTE project ID is the admin user project id
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":user_role_dict['project_id']}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -549,7 +546,7 @@ class user_ops:
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "python-keystoneclient"}
                 function = 'PUT'
-                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(proj[0][0],user[0][0],key_role[0][0])
+                api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_role_dict['project_id'],user[0][0],key_role[0][0])
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'35357'}
@@ -568,7 +565,7 @@ class user_ops:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
-                        input_dict = {'proj_name': user_role_dict['project_name'],'proj_id': proj[0][0],'user_name': user_role_dict['username'],'user_id': user[0][0]}
+                        input_dict = {'proj_name': proj[0][0],'proj_id': user_role_dict['project_id'],'user_name': user_role_dict['username'],'user_id': user[0][0]}
                         insert = self.db.pg_insert("trans_user_projects",input_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
@@ -584,7 +581,7 @@ class user_ops:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
-                        update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(user_role_dict['project_name'],proj[0][0],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                        update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
                         self.db.pg_update(update_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
@@ -594,9 +591,9 @@ class user_ops:
                     else:
                         self.db.pg_transaction_commit()
                 else:
-                    logger.sys_info('Added admin to project %s'%(user_role_dict['project_name']))
+                    logger.sys_info('Added admin to project %s'%(proj[0][0]))
                 self.db.pg_close_connection()
-                r_dict = {"project":user_role_dict['project_name'],"project_id":proj[0][0]}
+                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id']}
                 return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
@@ -852,7 +849,7 @@ class user_ops:
                            - new_project - op - add or change user project membership
                            - new_role - op - assign a user to a new roles admin/pu/user
         OUTPUT: r_dict - username
-                       - userid
+                       - user_id
                        - user_email
                        - user_enabled
                        - user_project
@@ -864,7 +861,7 @@ class user_ops:
         if(not update_dict):
             logger.sys_error("new_user_dict not specified for create_user operation.")
             raise Exception("new_user_dict not specified for create_user operation.")
-        #Check to make sure that the username,password and userrole are valid
+        #Check to make sure that the username is valid
         if((not update_dict['username']) or ('username' not in update_dict)):
             logger.sys_error("Blank parametrs passed into create user operation, INVALID.")
             raise Exception("Blank parametrs passed into create user operation, INVALID.")
@@ -995,7 +992,7 @@ class user_ops:
                 user_info = {'username':self.new_username,'user_role':update_dict['new_role'],'project_name':self.new_project}
                 self.add_user_to_project(user_info)
 
-            r_dict = {'username':self.new_username,'userid':user[0][5],'user_email':self.email,'user_enabled':self.toggle, 'user_project':self.new_project, 'user_role':self.new_role}
+            r_dict = {'username':self.new_username,'user_id':user[0][5],'user_email':self.email,'user_enabled':self.toggle, 'user_project':self.new_project, 'user_role':self.new_role}
             return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
@@ -1015,7 +1012,7 @@ class user_ops:
         """
         DESC: List all of the orphaned or unaffiliated users in the system.
         INPUT: none
-        OUTPUT: array of r_dict - user_name
+        OUTPUT: array of r_dict - username
                                 - user_group
                                 - user_enabled
                                 - keystone_user_id
@@ -1042,7 +1039,7 @@ class user_ops:
 
             r_array = []
             for user in users:
-                r_dict = {'user_name':user[1],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
+                r_dict = {'username':user[1],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
                 r_array.append(r_dict)
 
             return r_array

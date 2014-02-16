@@ -14,14 +14,15 @@ from transcirrus.common.api_caller import caller
 from transcirrus.database.postgres import pgsql
 
 class token_ops:
-    
-    #DESC: Constructor to build out the tokens object
-    #INPUT: user_dict dictionary containing - built in auth.py
-    #           username
-    #           password
-    #           project_id - could be blank
-    #           
+
     def __init__(self,user_dict):
+        """
+        DESC: Check that a token is valid and that it belongs to a particular tenant (For performance).
+              Does NOT return the tenant permissions
+        INPUT: self object
+               permissions - dictionary of permissions and tokens from a particular user auth
+        OUTPUT: 403 if invalid token, "valid" flag if token is valid
+        """
         #try:
             #Try to connect to the transcirrus db
         #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
@@ -58,13 +59,14 @@ class token_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-    #DESC: get the user auth token from openstack so that api commands can be run aginst the
-    #      cloud environment
-    #INPUT: self object
-    #OUTPUT: api_token used to run REST API commands
-    #NOTE: implemented in auth.py for now. this def is not used right now
     def get_token(self):
-
+        """
+        DESC: get the user auth token from openstack so that api commands can be run aginst the
+              cloud environment
+        INPUT: self object
+        OUTPUT: api_token used to run REST API commands
+        NOTE: implemented in auth.py for now. this def is not used right now
+        """
         #submit the values passed in 
         api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
         api = caller(api_dict)
@@ -92,12 +94,14 @@ class token_ops:
         else:
             _http_codes(rest['response'],rest['reason'])
 
-    #DESC: Check that a token is valid and that it belongs to a particular tenant (For performance).
-    #      Does NOT return the tenant permissions
-    #INPUT: self object
-    #       permissions - dictionary of permissions and tokens from a particular user auth
-    #OUTPUT: 403 if invalid token, "valid" flag if token is valid
     def check_token(self):
+        """
+        DESC: Check that a token is valid and that it belongs to a particular tenant (For performance).
+              Does NOT return the tenant permissions
+        INPUT: self object
+               permissions - dictionary of permissions and tokens from a particular user auth
+        OUTPUT: 403 if invalid token, "valid" flag if token is valid
+        """
         #NOTE: fix this shit
         #get the permissions settings from the dictionary - sanity check
         #if((self.is_admin != 1) or (self.is_admin != 0)):
