@@ -70,16 +70,15 @@ class tenant_ops:
 
         self.keystone_users = user_ops(user_dict)
 
-    #DESC: create a new project in Openstack. Only admins can perform this operation.
-    #      calls the rest api in OpenStack and updates applicable fields in Transcirrus
-    #      database
-    #INPUT: self object
-    #       project_name - what you want to call the new project - Required
-    #OUTPUT tenant ID
     def create_tenant(self,project_name):
-        # create a new project in OpenStack. This can only be done by and Admin
-        # we need to make sure that the user is a transcirrus admin and an openstack admin.
-        # if not reject and throw an exception
+        """
+        DESC: create a new project in Openstack. Only admins can perform this operation.
+              calls the rest api in OpenStack and updates applicable fields in Transcirrus
+              database
+        INPUT: self object
+               project_name - what you want to call the new project - Required
+        OUTPUT project_id
+        """
         logger.sys_info('\n**Creating new Keystone project. Component: Keystone Def: create_tenant**\n')
         if((not project_name) or (project_name == "")):
             logger.sys_error("No project name was specified for the new project.")
@@ -92,8 +91,8 @@ class tenant_ops:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise Exception("Could not connect to db with error: %s" %(e))
 
-        #declare tenant_id
-        tenant_id = None
+        #declare project_id
+        project_id = None
 
         #Need to create the new project then find the new project in OS then update transcirrus db
 
@@ -135,17 +134,17 @@ class tenant_ops:
             logger.sys_error("Admin flag not set, could not create the new project ")
 
         #check the response and make sure it is a 200 or 201
-        tenant_id = None
+        project_id = None
         if((rest['response'] == 201) or (rest['response'] == 200)):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            tenant_id = load['tenant']['id']
+            project_id = load['tenant']['id']
             # need to update the project_id info to the relevent transcirrus db tables
             try:
                 self.db.pg_transaction_begin()
                 #insert the new project into the db
-                proj_ins_dict = {"proj_id":tenant_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
+                proj_ins_dict = {"proj_id":project_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
                 self.db.pg_insert("projects",proj_ins_dict)
             except Exception as e:
                 logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
@@ -159,41 +158,35 @@ class tenant_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
-        #add the admin to the project who created the oprject
+        #add the admin to the project who created the project
         if(self.username == 'admin'):
             try:
-                #add the "cloud" admin to the project as an admin - admingets added to all projects in the system
-                add_admin = {'username':'admin','user_role':'admin','project_name':project_name}
+                #add the "cloud" admin to the project as an admin - admin gets added to all projects in the system
+                add_admin = {'username':'admin','user_role':'admin','project_id':project_id}
                 admin = self.keystone_users.add_user_to_project(add_admin)
             except Exception as e:
-                logger.sys_error('Could not add the admin to %s'%(project_name))
-                raise Exception('Could not add the admin to %s'%(project_name))
+                logger.sys_error('Could not add the admin to %s'%(project_id))
+                raise Exception('Could not add the admin to %s'%(project_id))
         else:
             #try:
             #add the admin user to the project as an admin
-            add_projadmin = {'username':self.username,'user_role':'admin','project_name':project_name}
+            add_projadmin = {'username':self.username,'user_role':'admin','project_id':project_id}
             projadmin = self.keystone_users.add_user_to_project(add_projadmin)
             #except Exception as e:
             #    logger.sys_error('Could not add the project admin to %s'%(project_name))
             #    raise Exception('Could not add the project admin to %s'%(project_name))
+        return project_id
 
-        
-
-        r_dict = {"response":200,"reason":"OK","project_name":project_name,"tenant_id":tenant_id}
-        return r_dict
-
-    def remove_tenant(self,project_name):
+    def remove_tenant(self,project_id):
         """
         DESC: Remove a tenant from the OpenStack system and from the Transcirrus DB
-        INPUT: project_name
+        INPUT: project_id
         ACCESS: Only the admin can remove the project
-        OUTPUT: r_dict -response
-                       -reason
-                       -status - 'OK' if task completed successfully
+        OUTPUT: 'OK' if task completed successfully
         """
-        if((not project_name) or (project_name == "")):
-            logger.sys_error("No project name was specified for the new project.")
-            raise EXception("No project name was specified for the new project.")
+        if((not project_id) or (project_id == "")):
+            logger.sys_error("No project id was specified for the new project.")
+            raise EXception("No project id was specified for the new project.")
 
         try:
             #Try to connect to the transcirrus db
@@ -214,7 +207,7 @@ class tenant_ops:
             if(self.user_level >= 1):
                 logger.sys_error("Only admins and power users can may list endpoints.")
                 raise Exception("Only admins and power users can may list endpoints.")
-
+            """
             #need to get the project ID from the Transcirrus DB
             try:
                 select_dict = {"select":"proj_id", "from":"projects", "where":"proj_name='%s'" %(project_name)}
@@ -223,10 +216,10 @@ class tenant_ops:
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 raise
-
+            """
             try:
                 #build an api connection for the admin user.
-                api_dict = {"username":self.username, "password":self.password, "project_id":select[0][0]}
+                api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -236,7 +229,7 @@ class tenant_ops:
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
-                api_path = '/v2.0/tenants/%s' %(select[0][0])
+                api_path = '/v2.0/tenants/%s' %(project_id)
                 print api_path
                 token = self.adm_token
                 sec = 'FALSE'
@@ -246,14 +239,14 @@ class tenant_ops:
                 if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
                     #read the json that is returned
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    logger.sys_info("Project: %s has been removed from the Transcirrus DB." %(select[0][0]))
+                    logger.sys_info("Project: %s has been removed from the Transcirrus DB." %(project_id))
                     #delete the project from transcirrus db and update the user account
                     try:
                         self.db.pg_transaction_begin()
-                        del_dict = {"table":'projects',"where":"proj_id='%s'" %(select[0][0])}
+                        del_dict = {"table":'projects',"where":"proj_id='%s'" %(project_id)}
                         self.db.pg_delete(del_dict)
 
-                        user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(select[0][0])}
+                        user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(project_id)}
                         self.db.pg_update(user_up_dict)
                         self.db.pg_transaction_commit()
                     except Exception as e:
@@ -262,9 +255,8 @@ class tenant_ops:
                         raise
                     #close all of the db connections that are open
                     self.db.pg_close_connection()
-                    #build up the return dictionary and return it if everythig is good to go
-                    r_dict = {"response":rest['response'],"reason":rest['reason'],"status":"OK"}
-                    return r_dict
+                    #return OK if good to go
+                    return 'OK'
                 else:
                     _http_codes(rest['response'],rest['reason'])
             except Exception as e:
@@ -276,7 +268,8 @@ class tenant_ops:
         """
         DESC: Get all of the project names and IDs from the Transcirrus Db
         INPUT: None
-        Output: Dictionary containing all of the projects and project ids
+        Output:array of r_dict - project_name
+                               - project_id
         ACCESS: This operation is only available to admins
         """
         logger.sys_info('\n**Listing projects. Component: Keystone Def: list_tenants**\n')
@@ -318,28 +311,39 @@ class tenant_ops:
                     logger.sql_error("Could not retrieve the tenants." %(e))
                     raise
 
-            #initialize the projects dict
-            proj_dict = {}
+            #initialize the r_array
+            r_array = []
             for project in projects:
-                proj_dict[project[0]] = project[1]
-            self.db.pg_close_connection()
-            return proj_dict
+                r_dict = {}
+                r_dict['project_name'] = project[0].rstrip()
+                r_dict['project_id'] = project[1].rstrip()
+                r_array.append(r_dict)
+            return r_array
         else:
             logger.sys_error("Admin flag not set, could not list projects")
 
-    def get_tenant(self,project_name):
+    def get_tenant(self,project_id):
         """
         DESC: Get the information for a specific project from the Transcirrus DB
-        INPUT: project_name
-        OUTPUT: dictionary containing the project info
+        INPUT: project_id
+        OUTPUT: r_dict - project_id
+                       - project_name
+                       - def_security_key_name
+                       - def_security_key_id
+                       - def_security_group_id
+                       - def_security_group_name
+                       - host_system_name
+                       - host_system_ip
+                       - def_network_name
+                       - def_network_id
         ACCESS: Admins can get any project, users can only view the primary project
               they belong to.
         NOTE: If any of the project variables are empty a None will be returned for that variable.
         """
         
-        if(not project_name):
-            logger.sys_error("Did not pass a project name to the get_tenant operation.")
-            raise Exception ("Did not pass a project name to the get_tenant operation.")
+        if(not project_id):
+            logger.sys_error("Did not pass a project id to the get_tenant operation.")
+            raise Exception ("Did not pass a project id to the get_tenant operation.")
 
         #connect to the db
         try:
@@ -351,11 +355,11 @@ class tenant_ops:
 
         #get the project info
         try:
-            get = {"select":'*', "from":'projects', "where":"proj_name='%s'" %(project_name)}
+            get = {"select":'*', "from":'projects', "where":"proj_id='%s'" %(project_id)}
             proj = self.db.pg_select(get)
         except:
-            logger.sql_error("Could not get the project info for project: %s" %(project_name))
-            raise Exception("Could not get the project info for project: %s" %(project_name))
+            logger.sql_error("Could not get the project info for project: %s" %(project_id))
+            raise Exception("Could not get the project info for project: %s" %(project_id))
 
         #build the dictionary up
         r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
@@ -368,19 +372,19 @@ class tenant_ops:
             else:
                 raise Exception("Users can only get information on their own projects.")
 
-    def list_tenant_users(self,project_name):
+    def list_tenant_users(self,project_id):
         """
         DESC: list the users that are members of the project. Admins and power users can do this.
-        INPUT: project_name
+        INPUT: project_id
         OUTPUT: array of r_dict - username
                                 - user_id
         ACCESS: All users can list project users in the project they belong to. Admins can list users
                 in any project.
         NOTE:none
         """
-        if(project_name == ""):
-            logger.sys_error("Must specify the project name.")
-            raise Exception("Must specify the project name.")
+        if(project_id == ""):
+            logger.sys_error("Must specify the project id.")
+            raise Exception("Must specify the project id.")
 
         try:
             #Try to connect to the transcirrus db
@@ -390,14 +394,16 @@ class tenant_ops:
             raise Exception("Could not connect to db with error: %s" %(e))
 
         try:
+            """
             if(self.is_admin == 1):
-                self.get_users = {'select':'user_name,keystone_user_uuid','from':'trans_user_info','where':"user_primary_project='%s'"%(project_name)}
+                self.get_users = {'select':'user_name,keystone_user_uuid','from':'trans_user_info','where':"user_project_id='%s'"%(project_id)}
             else:
-                self.get_users = {'select':'user_name,keystone_user_uuid','from':'trans_user_info','where':"user_primary_project='%s'"%(project_name),'and':"user_project_id='%s'"%(self.project_id)}
+            """
+            self.get_users = {'select':'user_name,keystone_user_uuid','from':'trans_user_info','where':"user_project_id='%s'"%(project_id)}
             self.users = self.db.pg_select(self.get_users)
         except:
-            logger.sys_error("Could not get user list for %s."%(project_name))
-            raise Exception("Could not get user list for %s."%(project_name))
+            logger.sys_error("Could not get user list for %s."%(project_id))
+            raise Exception("Could not get user list for %s."%(project_id))
 
         r_array = []
         for user in self.users:

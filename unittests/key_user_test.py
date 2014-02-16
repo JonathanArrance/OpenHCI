@@ -13,27 +13,27 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("admin","newpass")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating user_ops object."
 use = user_ops(d)
-'''
+"""
 print "listing orphaned users"
 orph = use.list_orphaned_users()
 print orph
-
+"""
 
 print "Create a new standard user with no project."
-new_user_dict = {"username":'keven',"password":"test","userrole":"pu","email":"keven@domain.com"}
+new_user_dict = {"username":'keven',"password":"test","user_role":"pu","email":"keven@domain.com"}
 create = use.create_user(new_user_dict)
 print create
-'''
+
 
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
-add_user_dict = {"username":"admin","user_role":'admin',"project_name":'ffvc2'}
+add_user_dict = {"username":"keven","user_role":'pu',"project_id":'0a206d3822c54da2981a6196ea4dec31'}
 add = use.add_user_to_project(add_user_dict)
 print add
 

@@ -45,6 +45,8 @@ class endpoint_ops:
             if('api_ip' in user_dict):
                 #NOTE may have to add an IP check
                 self.api_ip = user_dict['api_ip']
+            else:
+                self.api_ip = config.API_IP
 
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
@@ -243,19 +245,19 @@ class endpoint_ops:
             self.db.pg_transaction_rollback()
             util.http_codes(ep_rest['response'],ep_rest['reason'])
 
-    def delete_endpoint(self,input_dict):
+    def delete_endpoint(self,service_name):
         """
         DESC: Delete a cloud service endpoint. Only an admin can delete an endpoint.
-        INPUT: input_dict -service_name - req
+        INPUT: service_name - req
         OUTPUT: OK if deleted else error
         ACCESS: Only the admin can delete a service endpoint
         NOTES: using an input dictionary because I may need to add a few more
                vars when we expand to multiple cloud controllers in the future.
                Deleteing an endpoint implicitly deletes a service catalog entry
         """
-        if('service_name' not in input_dict):
-            logger.sys_error("The service name was not specified while createing an endpoint.")
-            raise Exception("The service name was not specified while createing an endpoint.")
+        if(service_name == ''):
+            logger.sys_error('The service name was blank')
+            raise Exception('The service name was blank')
         if(self.is_admin == 0):
             logger.sys_error("Endpoints can only be crearted by the cloud admin.")
             raise Exception("Endpoints can only be crearted by the cloud admin.")
@@ -282,15 +284,16 @@ class endpoint_ops:
         #get the service info from the DB
         try:
             #Get pre populated values from the transcirrus db. Needed to build service catalog and endpoints in OpenStack
-            get_serv_info = {'select':"service_id,service_endpoint_id",'from':"trans_service_settings",'where':"service_name='%s'" %(input_dict['service_name'])}
+            get_serv_info = {'select':"service_id,service_endpoint_id",'from':"trans_service_settings",'where':"service_name='%s'" %(service_name)}
             self.get_service = self.db.pg_select(get_serv_info)
+            print self.get_service
             if(not self.get_service):
                 #if the service name is bogus it will fail
-                logger.sys_error("Could not find the service %s." %(input_dict['service_name']))
-                raise Exception("Could not find the service %s." %(input_dict['service_name']))
+                logger.sys_error("Could not find the service %s." %(service_name))
+                raise Exception("Could not find the service %s." %(service_name))
         except:
-            logger.sql_error("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
-            raise Exception("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
+            logger.sql_error("Could not get the service info for OpenStack %s service from database." %(service_name))
+            raise Exception("Could not get the service info for OpenStack %s service from database." %(service_name))
 
         #connect to the API
         try:
@@ -312,8 +315,8 @@ class endpoint_ops:
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            logger.sys_error("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
-            raise Exception("Could not delete the %s endpoint. %s"%(input_dict['service_name'],e))
+            logger.sys_error("Could not delete the %s endpoint. %s"%(service_name,e))
+            raise Exception("Could not delete the %s endpoint. %s"%(service_name,e))
 
         if(rest['response'] == 204):
             #read the json that is returned
@@ -321,7 +324,7 @@ class endpoint_ops:
             #update service table with ips and service id
             try:
                 self.db.pg_transaction_begin()
-                update = {'table':"trans_service_settings",'set':"service_id='NULL',service_admin_ip='NULL',service_int_ip='NULL',service_public_ip='NULL',service_endpoint_id='NULL'",'where':"service_name='%s'" %(input_dict['service_name'])}
+                update = {'table':"trans_service_settings",'set':"service_id='NULL',service_admin_ip='NULL',service_int_ip='NULL',service_public_ip='NULL',service_endpoint_id='NULL'",'where':"service_name='%s'" %(service_name)}
                 self.db.pg_update(update)
             except Exception as e:
                 self.db.pg_transaction_rollback()
@@ -346,7 +349,7 @@ class endpoint_ops:
         ACCESS: only an admin can list the api endpoints on the system
         NOTES: May need to add cloud name as we expand to support more cloud name spaces
         """
-        if('service_name' == ''):
+        if(service_name == ''):
             logger.sys_error('The service name was blank')
             raise Exception('The service name was blank')
 
