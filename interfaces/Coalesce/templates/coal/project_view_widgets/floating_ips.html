@@ -4,7 +4,33 @@
           <div class="legend">
              Floating IP's
 		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/"  id="allocate_floating_ip" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Allocate</a>
+                <a href="#"  id="assign_ip" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Assign</a>	
           </div>
+
+	   <div id="fip-assign-dialog-form" title="Assign floating IP to instance">
+                <form>
+                {% csrf_token %}
+                <fieldset>
+
+		    <label for="floating_ip">Floating IP</label>
+                    <select name="floating_ip" id="floating_ip">
+			{% for fip in floating_ips %}
+                           {% if fip.floating_in_use == 'false' %}
+		               <option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
+                           {% endif %}
+			{% endfor %}
+                    </select>
+
+		    <label for="instance">Instance</label>
+                    <select name="instance" id="instance">
+			{% for server in instances %}
+		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
+			{% endfor %}
+                    </select>
+
+                </fieldset>
+                </form>
+           </div>
 
 	  {% if floating_ips %}
 	    <table class="paleblue">
@@ -18,7 +44,9 @@
 			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">view</a> | 
 			    <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/" 
                                 data-confirm="This will deallocate {{fip.floating_ip}} from this project and make any associated VM's private. Are you sure?"> deallocate
-                                </a></td></tr>
+                            </a>
+                        </td>
+                    </tr>
 
 		{% endfor %}
 	    </table>

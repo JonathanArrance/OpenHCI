@@ -108,6 +108,10 @@ urlpatterns = patterns('',
 	url(r'^deallocate_floating_ip/(?P<project_id>[^/]+)/(?P<floating_ip>[^/]+)/$',
 	    'coalesce.coal_beta.views.deallocate_floating_ip',
             name='deallocate_floating_ip'),
+
+	url(r'^assign_floating_ip/(?P<floating_ip>[^/]+)/(?P<instance_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.assign_floating_ip',
+            name='assign_floating_ip'),
 	
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',

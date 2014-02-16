@@ -14,7 +14,7 @@ from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.glance.glance_ops import glance_ops
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","password")
+c= authorization("admin","newpass")
 
 print "Get admin authorization dictionary..."
 b = c.get_auth()
