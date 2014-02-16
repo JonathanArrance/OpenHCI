@@ -74,20 +74,20 @@ class snapshot_ops:
     def create_snapshot(self,create_snap):
         """
         DESC: create a new snapshot of an exsisting volume
-        INPUT create_snap - snap_name - snapshot name - REQ
-                          - snap_desc - description - REQ
+        INPUT create_snap - snapshot_name - snapshot name - REQ
+                          - snapshot_desc - description - REQ
                           - project_id - project volume lives in - REQ
-                          - vol_id - volume to snap - REQ
-        OUTPUT: r_dict - snap_name
-                       - snap_id
-                       - vol_id
+                          - volume_id - volume to snap - REQ
+        OUTPUT: r_dict - snapshot_name
+                       - snapshot_id
+                       - volume_id
         ACCESS: users can only snap volumes in their project, admins can snapshot any volume
         """
         #check to make sure all params have been passed
         if(not create_snap):
             logger.sys_error("Did not pass in create_snap dictionary to create snapshot operation.")
             raise Exception("Did not pass in create_snap dictionary to create snapshot operation.")
-        if(('snap_name' not in create_snap) or ('snap_desc' not in create_snap) or ('project_id' not in create_snap) or ('vol_id' not in create_snap)):
+        if(('snapshot_name' not in create_snap) or ('snapshot_desc' not in create_snap) or ('project_id' not in create_snap) or ('volume_id' not in create_snap)):
             logger.sys_error("Did not pass required params to create snapshot operation.")
             raise Exception("Did not pass required params to create snapshot operation.")
         #sanity check
@@ -130,7 +130,7 @@ class snapshot_ops:
 
         #check the volid in the project
         try:
-            get_vol = {'select':"proj_id",'from':"trans_system_vols",'where':"vol_id='%s'"%(create_snap['vol_id'])}
+            get_vol = {'select':"proj_id",'from':"trans_system_vols",'where':"vol_id='%s'"%(create_snap['volume_id'])}
             vol_proj = self.db.pg_select(get_vol)
             if(vol_proj[0][0] == create_snap['project_id']):
                 logger.sys_info("The volume is in the requested project.")
@@ -153,7 +153,7 @@ class snapshot_ops:
 
             try:
                 #add the new user to openstack 
-                body = '{"snapshot": {"display_name": "%s", "force": false, "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snap_name'],create_snap['snap_desc'],create_snap['vol_id'])
+                body = '{"snapshot": {"display_name": "%s", "force": false, "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snapshot_name'],create_snap['snapshot_desc'],create_snap['volume_id'])
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string - WTF not sure what was goin on here
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
@@ -164,7 +164,7 @@ class snapshot_ops:
                 rest = api.call_rest(rest_dict)
                 r_dict = ""
             except:
-                logger.sys_error("Volume snapshot %s may or may not have been created." %(create_snap['snap_name']))
+                logger.sys_error("Volume snapshot %s may or may not have been created." %(create_snap['snapshot_name']))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise
 
@@ -177,17 +177,17 @@ class snapshot_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snap_name'],"snap_desc": create_snap['snap_desc']}
+                    insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snapshot_name'],"snap_desc": create_snap['snapshot_desc']}
                     self.db.pg_insert("trans_system_snapshots",insert_snap)
                 except:
                     self.db.pg_transaction_rollback()
                     self.db.pg_close_connection()
-                    logger.sql_error("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
-                    raise Exception("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
+                    logger.sql_error("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snapshot_name']))
+                    raise Exception("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snapshot_name']))
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
-                    r_dict = {"snap_name": create_snap['snap_name'],"snap_id": load['snapshot']['id'], "vol_id": load['snapshot']['volume_id']}
+                    r_dict = {"snapshot_name": create_snap['snapshot_name'],"snapshot_id": load['snapshot']['id'], "volume_id": load['snapshot']['volume_id']}
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
@@ -197,16 +197,16 @@ class snapshot_ops:
     def delete_snapshot(self,input_dict):
         """
         DESC: Delete a snapshot
-        INPUT: input_dict - snap_id
+        INPUT: input_dict - snapshot_id
                           - project_id
         OUTPUT: OK if successful
         ACCESS: Admins can delete any volume
                 Users can only snap volumes in their project.
         """
         #check to make sure all params have been passed
-        if((input_dict['snap_id'] == '') or ('snap_id' not in input_dict)):
-            logger.sys_error("Did not pass snap_id to delete_snapshot operation.")
-            raise Exception("Did not pass snap_id to delete_snapshot operation.")
+        if((input_dict['snapshot_id'] == '') or ('snapshot_id' not in input_dict)):
+            logger.sys_error("Did not pass snapshot_id to delete_snapshot operation.")
+            raise Exception("Did not pass snapshot_id to delete_snapshot operation.")
         if((input_dict['project_id'] == '') or ('project_id' not in input_dict)):
             logger.sys_error("Did not pass project_id to delete_snapshot operation.")
             raise Exception("Did not pass project_id to delete_snapshot operation.")
@@ -223,15 +223,15 @@ class snapshot_ops:
         except Exception as e:
             logger.sql_error("Could not connect to the Transcirrus DB ")
             raise e
-
-        #get the id of the snapshot based on the name
+        """
+        #get the name of the snapshot based on the id
         try:
-            select = {"select":"snap_name","from":"trans_system_snapshots","where":"snap_id='%s'" %(input_dict['snap_id'])}
+            select = {"select":"snap_name","from":"trans_system_snapshots","where":"snap_id='%s'" %(input_dict['snapshot_id'])}
             snap_name = self.db.pg_select(select)
         except:
             logger.sql_error("Could not get the snap name from Transcirrus DB.")
             raise Exception("Could not get the snap name from Transcirrus DB.")
-
+        """
         try:
             select_proj = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(input_dict['project_id'])}
             proj_name = self.db.pg_select(select_proj)
@@ -244,7 +244,7 @@ class snapshot_ops:
         snap_status = 0
         #if the user proj id matches the volume proj_id they can delete the volume
         if(self.is_admin == 0):
-            if(self.project_id == input_dict['snap_id']):
+            if(self.project_id == input_dict['snapshot_id']):
                 #snap_status = 1 - list snap info
                 snap_status = 1
             else:
@@ -260,10 +260,10 @@ class snapshot_ops:
             raise Exception("The user level is invalid, and can not delete snap.")
 
         #check to see if the snapshot exists
-        snap_info = self.get_snapshot(snap_name[0][0])
+        snap_info = self.get_snapshot(input_dict['snapshot_id'])
 
         #if the snap exisits and you are allowed to delete it
-        if(snap_info['snap_id'] and (snap_status == 1)):
+        if(snap_info['snapshot_id'] and (snap_status == 1)):
             try:
                 api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
                 api = caller(api_dict)
@@ -278,7 +278,7 @@ class snapshot_ops:
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
                 function = 'DELETE'
-                api_path = '/v1/%s/snapshots/%s' %(input_dict['project_id'],snap_info['snap_id'])
+                api_path = '/v1/%s/snapshots/%s' %(input_dict['project_id'],snap_info['snapshot_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -291,13 +291,13 @@ class snapshot_ops:
                 #remove snap info from the transcirrus db
                 try:
                     self.db.pg_transaction_begin()
-                    delete = {"table":'trans_system_snapshots',"where":"snap_id='%s'" %(snap_info['snap_id'])}
+                    delete = {"table":'trans_system_snapshots',"where":"snap_id='%s'" %(snap_info['snapshot_id'])}
                     self.db.pg_delete(delete)
                 except:
                     self.db.pg_transaction_rollback()
                     self.db.pg_close_connection()
-                    logger.sql_error("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
-                    raise Exception("Could not enter in snapshot %s information into Transcirrus DB" %(create_snap['snap_name']))
+                    logger.sql_error("Could not enter in snapshot %s information into Transcirrus DB" %(snap_info['snapshot_id']))
+                    raise Exception("Could not enter in snapshot %s information into Transcirrus DB" %(snap_info['snapshot_id']))
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
@@ -305,8 +305,8 @@ class snapshot_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'])
         else:
-            logger.sys_error("The snapshot: %s does not exist." %(snap_name))
-            raise Exception("The snapshot: %s does not exist." %(snap_name))
+            logger.sys_error("The snapshot: %s does not exist." %(snap_info['snapshot_id']))
+            raise Exception("The snapshot: %s does not exist." %(snap_info['snapshot_id']))
 
     def list_snapshots(self,project_id=None):
         """
@@ -351,29 +351,30 @@ class snapshot_ops:
             except:
                 logger.sys_error("Could not get the volume name.")
                 raise Exception("Could not get the volume name.")
-            snap_dict = {"vol_name":vol_name[0][0],"vol_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
+            snap_dict = {"volume_name":vol_name[0][0],"volume_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
             r_array.append(snap_dict)
 
         self.db.pg_close_connection()
         return r_array
 
-    def get_snapshot(self,snap_name):
+    def get_snapshot(self,snapshot_id):
         """
         DESC: Get the details of a specific snapshot
-        INPUT: snap_name
+        INPUT: snapshot_id
         OUTPUT: dictionary containing
-                snap_id
-                snap_status
+                snapshot_id
+                snapshot_status
                 volume_id
                 create_time
+                snapshot_name
         ACCESS: Admins can get snapshots in any project, users and power users can get snapshots in their
                 project only
         NOTE: This need to be changed to incorporate project_id
         """
         #check to make sure all params have been passed
-        if(not snap_name):
-            logger.sys_error("Did not pass snap_name to get_snapshot operation.")
-            raise Exception("Did not pass snap_name to get_snapshot operation.")
+        if(not snapshot_id):
+            logger.sys_error("Did not pass snapshot_id to get_snapshot operation.")
+            raise Exception("Did not pass snapshot_id to get_snapshot operation.")
         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to snapshot volumes.")
@@ -387,16 +388,16 @@ class snapshot_ops:
             logger.sql_error("Could not connect to the Transcirrus DB ")
             raise e
 
-        #get the id of the snapshot based on the name
+        #get the id of the project based on the snapshot_id
         try:
-            select = {'select':"snap_id,proj_id",'from':"trans_system_snapshots",'where':"snap_name='%s'" %(snap_name)}
-            snap_id = self.db.pg_select(select)
+            select = {'select':"proj_id",'from':"trans_system_snapshots",'where':"snap_id='%s'" %(snapshot_id)}
+            proj_id = self.db.pg_select(select)
         except:
             logger.sql_error("Could not get the snap id from Transcirrus DB.")
             raise Exception("Could not get the snap id from Transcirrus DB.")
 
         try:
-            select_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'" %(snap_id[0][1])}
+            select_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'" %(proj_id[0][0])}
             proj_name = self.db.pg_select(select_proj)
         except:
             logger.sql_error("Could not get the project name from Transcirrus DB.")
@@ -407,7 +408,7 @@ class snapshot_ops:
         snap_status = 0
         #if the user proj id matches the volume proj_id they can delete the volume
         if(self.user_level >= 1):
-            if(self.project_id == snap_id[0][1]):
+            if(self.project_id == proj_id[0][0]):
                 #snap_status = 1 - list snap info
                 snap_status = 1
             else:
@@ -416,8 +417,8 @@ class snapshot_ops:
         elif(self.user_level == 0):
             logger.sys_info("The user is an admin and can get the snap info on any snapshot.")
             #possibly a complete hack - used if the admin wantst to get the snap shot info
-            if(snap_id[0][1] != self.project_id):
-                self.token = get_token(self.username,self.password,snap_id[0][1])
+            if(proj_id[0][0] != self.project_id):
+                self.token = get_token(self.username,self.password,proj_id[0][0])
             snap_status = 1
         else:
             logger.sys_error("The user level is invalid, and can not list snap info.")
@@ -438,7 +439,7 @@ class snapshot_ops:
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
                 function = 'GET'
-                api_path = '/v1/%s/snapshots/%s' %(snap_id[0][1],snap_id[0][0])
+                api_path = '/v1/%s/snapshots/%s' %(proj_id[0][0],snapshot_id)
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -451,7 +452,7 @@ class snapshot_ops:
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
-                r_dict = {"snap_id": str(load['snapshot']['id']), "snap_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at'])}
+                r_dict = {"snapshot_id": str(load['snapshot']['id']), "snapshot_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at']), "snapshot_name": str(load['snapshot']['display_name'])}
                 return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])

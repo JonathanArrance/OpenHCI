@@ -213,16 +213,27 @@ def key_view(request, sec_key_id, project_id):
     return render_to_response('coal/key_view.html',
                                RequestContext(request, { 
                                                         'key_info': key_info,
+							'project_id': project_id
                                                  }))
 
-def download_public_key(request, key_id, key_name, project_id):
+def download_public_key(request, sec_key_id, sec_key_name, project_id):
     auth = request.session['auth']
     so = server_ops(auth)
-    key_dict = {'key_id': key_id, 'project_id': project_id}
+    key_dict = {'sec_key_id': sec_key_id, 'project_id': project_id}
     key_info = so.get_sec_keys(key_dict)
     response = HttpResponse(mimetype='text/plain')
-    response['Content-Disposition'] = 'attachment; filename="%s.txt"' % key_name
-    response.write(key_info['rsa_public_key'])
+    response['Content-Disposition'] = 'attachment; filename="%s.pem"' % sec_key_name
+    response.write(key_info['public_key'])
+    return response
+
+def attach_server_to_network(request, server_id, project_id, net_id):
+    auth = request.session['auth']
+    so = server_ops(auth)
+
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    return HttpResponseRedirect(redirect_to)
+    
 
 
 def volume_view(request, project_id, vol_id):
@@ -255,7 +266,7 @@ def create_user(request, username, password, userrole, email, project_id):
         uo = user_ops(auth)
         user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_id': project_id}
         newuser= uo.create_user(user_dict)
-        redirect_to = "/projects/%s/view/" % ("ffvc2")
+        redirect_to = "/projects/%s/view/" % ("CHANGEME") #<<<<<<<<<< This doesn't work
         return HttpResponseRedirect(redirect_to)
     except:
         raise
@@ -297,7 +308,8 @@ def create_keypair(request, key_name, project_id):
         newkey= so.create_sec_keys(key_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        response = HttpResponseRedirect(redirect_to)
+        return render_to_response(response)
     except:
         return HttpResponse(status=500)
 
@@ -397,16 +409,39 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
     try:
         auth = request.session['auth']
         so = server_ops(auth)
+        no = neutron_net_ops(auth)
 	instance = {	'project_id':project_id, 'sec_group_name':sec_group_name,
 			'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
 			'network_name': network_name,'image_name': image_name,
 			'flavor_name':flavor_name, 'name':name}
-	so.create_server(instance)
+	server = so.create_server(instance)
+        priv_net_list = no.list_internal_networks(project_id)
+	default_priv = priv_net_list[0]['net_id']
+    	input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
+    	net_info = so.attach_server_to_network(input_dict)
+	print 
+	print net_info
+	print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
         return HttpResponse(status=500)
+
+
+def assign_floating_ip(request, floating_ip, instance_id, project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
+        import pdb; pdb.set_trace()
+        l3o.update_floating_ip(update_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        return HttpResponse(status=500)    
+
 
 
 def toggle_user(request, username, toggle):
@@ -467,7 +502,6 @@ def update_user_password(request, user_id, project_id, password):
         auth = request.session['auth']
         uo = user_ops(auth)
         passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password }
-	#import pdb; pdb.set_trace()
 	uo.update_user_password(passwd_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]

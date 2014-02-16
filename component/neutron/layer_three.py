@@ -802,6 +802,7 @@ class layer_three_ops:
         INPUT: self object
         OUTPUT: array of r_dict - floating_ip
                                 - floating_ip_id
+                                - floating_in_use
         ACCESS: Admin will be able to list floatingips in the system,
                 power users and standard users will only be able to list
                 floating ips in their project.
@@ -823,7 +824,7 @@ class layer_three_ops:
 
         r_array = []
         for floater in floating:
-            r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2]}
+            r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2],'floating_in_use':floater[6]}
             r_array.append(r_dict)
 
         return r_array
@@ -989,6 +990,8 @@ class layer_three_ops:
         body = '{"addFloatingIp": {"address": "%s"}}' port 8774
         {"removeFloatingIp": {"address": "192.168.10.14"}}
         """
+        logger.sys_info('\n**Updateing a floating IP. Component: Neutron Def: update_floating_ip**\n')
+        logger.sys_info(update_dict)
         if((update_dict['floating_ip'] == '') or ('floating_ip' not in update_dict)):
             logger.sys_error('No floating ip given.')
             raise Exception('No floating ip given.')
@@ -1042,8 +1045,13 @@ class layer_three_ops:
         #Create an API connection with the admin
         try:
             #build an api connection for the admin user
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            logger.sys_info("project id given %s" %update_dict['project_id'])
+            api_dict = {"username":self.username, "password":self.password, "project_id":update_dict['project_id']}
+            logger.sys_info(api_dict)
+            if(self.project_id != update_dict['project_id']):
+                self.token = get_token(self.username,self.password,update_dict['project_id'])
             api = caller(api_dict)
+            logger.sys_info(api)
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
@@ -1067,14 +1075,20 @@ class layer_three_ops:
 
         if(rest['response'] == 202):
             update = None
+            update_float = None
             try:
                 self.db.pg_transaction_begin()
                 if(action == 'add'):
                     update = {'table':'trans_instances','set':"floating_ip_id='%s',inst_floating_ip='%s'"%(floater[0][0],update_dict['floating_ip']),'where':"inst_id='%s'"%(update_dict['instance_id'])}
                 elif(action == 'remove'):
                     update = {'table':'trans_instances','set':"floating_ip_id=NULL,inst_floating_ip=NULL",'where':"inst_id='%s'"%(update_dict['instance_id'])}
-                print update
                 self.db.pg_update(update)
+                
+                if(action == 'add'):
+                    update_float = {'table':'trans_floating_ip','set':"in_use=True",'where':"floating_ip_id='%s'"%(floater[0][0])}
+                elif(action == 'remove'):
+                    update_float = {'table':'trans_floating_ip','set':"in_use=False",'where':"floating_ip_id='%s'"%(floater[0][0])}
+                self.db.pg_update(update_float)
             except:
                 self.db.pg_transaction_rollback()
                 logger.sys_error("Could not update floating ip in the Transcirrus DB")
