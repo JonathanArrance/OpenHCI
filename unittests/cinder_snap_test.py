@@ -12,7 +12,7 @@ from transcirrus.database.postgres import pgsql
 from transcirrus.common.auth import authorization
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
-a = authorization("admin","password")
+a = authorization("admin","newpass")
 #get the user dict
 d = a.get_auth()
 
@@ -20,7 +20,7 @@ snap = snapshot_ops(d)
 vol = volume_ops(d)
 '''
 print "createing a new volume"
-create = {'volume_name':'snaptestvol','volume_size':'1','project_id':"66069dc297a449ca90582187011ac8e9"}
+create = {'volume_name':'snaptestvol','volume_size':'1','project_id':"bb85322a95db4990802b9c09b6f943fa"}
 create_vol = vol.create_volume(create)
 print create_vol
 print "sleeping for 10 seconds while volume created"
@@ -29,7 +29,7 @@ print "------------------------------------------"
 '''
 
 print "creating snapshot"
-snapit = {"snap_name":"snapvol","snap_desc":"this is a test","vol_id":"60e15600-6dc2-4410-ac01-b88e5138d8f8","project_id":"66069dc297a449ca90582187011ac8e9"}
+snapit = {"snapshot_name":"snapvol","snapshot_desc":"this is a test","volume_id":"db2f0ee7-e3c8-463e-99bb-91db8305ec0c","project_id":"bb85322a95db4990802b9c09b6f943fa"}
 snaps = snap.create_snapshot(snapit)
 print snaps
 print "sleeping for 10 seconds while snapshot created"
@@ -38,7 +38,7 @@ time.sleep(10)
 print "------------------------------------------"
 
 
-ind = {'snap_id': snaps['snap_id'],'project_id':"66069dc297a449ca90582187011ac8e9"}
+ind = {'snapshot_id': snaps['snapshot_id'],'project_id':"bb85322a95db4990802b9c09b6f943fa"}
 dsnap = snap.delete_snapshot(ind)
 print dsnap
 """

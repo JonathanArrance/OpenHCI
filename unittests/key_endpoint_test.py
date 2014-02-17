@@ -13,7 +13,7 @@ from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("admin","newpass")
 #get the user dict
 d = a.get_auth()
 
@@ -39,13 +39,13 @@ listservice = end.list_service_catalog()
 print listservice
 print "----------------------------------------------"
 
-
+"""
 print "Create a new service endpoint with a fake service name."
 new_endpoint_dict3 = {"service_name":"blah"}
 create3 = end.create_endpoint(new_endpoint_dict3)
 print create3
 print "---------------------------------------------"
-
+"""
 
 time.sleep(1)
 print "listing the service endpoints"
@@ -61,7 +61,6 @@ print"-----------------------------------------------"
 
 time.sleep(1)
 print "Delete a service endpoint with out a cloud name."
-new_endpoint_dict2 = {"service_name":"s3"}
-create2 = end.delete_endpoint(new_endpoint_dict2)
+create2 = end.delete_endpoint("s3")
 print create2
 print "---------------------------------------------"

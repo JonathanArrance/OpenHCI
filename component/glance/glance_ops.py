@@ -84,10 +84,10 @@ class glance_ops:
     def import_image(self,input_dict):
         """
         DESC: Import a pre-made glance image .img file
-        INPUT: input_dict - img_name
-                          - img_disk_format
-                          - img_is_public (True/False)
-                          - img_is_protected(True/False)
+        INPUT: input_dict - image_name
+                          - image_disk_format
+                          - image_is_public (True/False)
+                          - image_is_protected(True/False)
                           - project_id
                           - url - op
                           - file_location - op
@@ -98,7 +98,7 @@ class glance_ops:
                 visible to other projects
                 Users can not import images.
         NOTE: Either URL or file_location need to be specified it neither are specified and ERROR will be
-              thrown. Power users have defaults set for img_is_public,img_is_protected,img_disk_format,project_id.
+              thrown. Power users have defaults set for image_is_public,image_is_protected,image_disk_format,project_id.
               If you specify both a file location and a url error will be thrown
         """
         #print "not implemented"
@@ -124,33 +124,33 @@ class glance_ops:
             if(self.project_id != input_dict['project_id']):
                 logger.sys_error('Power users can only create an image in their project.')
                 raise Exception('Power users can only create an image in their project.')
-            input_dict['img_is_public'] == 'false'
-            input_dict['img_is_protected'] == 'false'
-            input_dict['img_disk_format'] == 'qcow2'
+            input_dict['image_is_public'] == 'false'
+            input_dict['image_is_protected'] == 'false'
+            input_dict['image_disk_format'] == 'qcow2'
 
-        if(('img_name' not in input_dict) or (input_dict['img_name'] == '')):
+        if(('image_name' not in input_dict) or (input_dict['image_name'] == '')):
             logger.sys_error('Image name not specified')
             raise Exception('Image name not specified')
-        if(('img_disk_format' not in input_dict) or (input_dict['img_disk_format'] == '')):
+        if(('image_disk_format' not in input_dict) or (input_dict['image_disk_format'] == '')):
             logger.sys_error('Image disk format not specified')
             raise Exception('Image disk format not specified')
         if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
             logger.sys_error('Image project not specified')
             raise Exception('Image project not specified')
 
-        if(('img_is_public' not in input_dict) or (input_dict['img_is_public'] == '')):
+        if(('image_is_public' not in input_dict) or (input_dict['image_is_public'] == '')):
             logger.sys_error('Image public not specified.')
             raise Exception('Image public not specified.')
-        elif((input_dict['img_is_public'] == 'True') or (input_dict['img_is_public'] == 'False')):
+        elif((input_dict['image_is_public'] == 'True') or (input_dict['image_is_public'] == 'False')):
             logger.sys_info('Image public value valid.')
         else:
             logger.sys_error('Image public value invalid.')
             raise Exception('Image public value invalid.')
 
-        if(('img_is_protected' not in input_dict) or (input_dict['img_is_protected'] == '')):
+        if(('image_is_protected' not in input_dict) or (input_dict['image_is_protected'] == '')):
             logger.sys_error('Image project not specified')
             raise Exception('Image project not specified')
-        elif((input_dict['img_is_protected'] == 'True') or (input_dict['img_is_protected'] == 'False')):
+        elif((input_dict['image_is_protected'] == 'True') or (input_dict['image_is_protected'] == 'False')):
             logger.sys_info('Image protected value valid.')
         else:
             logger.sys_error('Image public value invalid.')
@@ -191,13 +191,13 @@ class glance_ops:
             header = {"User-Agent": "python-glanceclient",
                       "Content-Type": "application/octet-stream",
                       "X-Auth-Token": self.token,
-                      "x-image-meta-name": input_dict['img_name'],
-                      "x-image-meta-disk_format": input_dict['img_disk_format'],
+                      "x-image-meta-name": input_dict['image_name'],
+                      "x-image-meta-disk_format": input_dict['image_disk_format'],
                       "x-image-meta-container-format": 'bare',
-                      "x-image-meta-is_public": input_dict['img_is_public'],
+                      "x-image-meta-is_public": input_dict['image_is_public'],
                       "x-image-meta-location": input_dict['url'],
                       "x-image-meta-owner": input_dict['project_id'],
-                      "x-image-meta-protected":input_dict['img_is_protected'],
+                      "x-image-meta-protected":input_dict['image_is_protected'],
                       "x-image-meta-size": 0
                     }
             function = 'POST'
@@ -224,12 +224,12 @@ class glance_ops:
             if(input_dict['url'] != ''):
                 out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s --os-auth-url http://localhost:5000/v2.0 image-create --name %s --disk-format %s --container-format bare --owner %s\
                                        --is-public %s  --is-protected %s --location %s'\
-                                       % (self.username,self.password,input_dict['project_id'],input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['url']),
+                                       % (self.username,self.password,input_dict['project_id'],input_dict['image_name'], input_dict['image_disk_format'], input_dict['project_id'], input_dict['image_is_public'], input_dict['image_is_protected'],input_dict['url']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             elif(input_dict['file_location'] != ''):
                 out = subprocess.Popen('glance --os-username %s --os-password %s --os-tenant-id %s --os-auth-url http://localhost:5000/v2.0 image-create --name %s --disk-format %s --container-format bare --owner %s\
                                        --is-public %s  --is-protected %s --file %s'\
-                                       % (self.username,self.password,input_dict['project_id'],input_dict['img_name'], input_dict['img_disk_format'], input_dict['project_id'], input_dict['img_is_public'], input_dict['img_is_protected'],input_dict['file_location']),
+                                       % (self.username,self.password,input_dict['project_id'],input_dict['image_name'], input_dict['image_disk_format'], input_dict['project_id'], input_dict['image_is_public'], input_dict['image_is_protected'],input_dict['file_location']),
                                           shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             image = out.stdout.readlines()
             if(image[0]):
