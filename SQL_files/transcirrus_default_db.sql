@@ -1710,8 +1710,8 @@ INSERT INTO cinder_default VALUES ('verbose', 'True', 'cinder.conf', 15);
 INSERT INTO cinder_default VALUES ('auth_stratagy', 'keystone', 'cinder.conf', 16);
 INSERT INTO cinder_default VALUES ('state_path', '/var/lib/cinder', 'cinder.conf', 17);
 INSERT INTO cinder_default VALUES ('lock_path', '/var/lib/cinder', 'cinder.conf', 18);
-INSERT INTO cinder_default VALUES ('qpid_username', 'guest', 'cinder.conf', 19);
-INSERT INTO cinder_default VALUES ('qpid_password', 'guest', 'cinder.conf', 20);
+--INSERT INTO cinder_default VALUES ('qpid_username', 'guest', 'cinder.conf', 19);
+--INSERT INTO cinder_default VALUES ('qpid_password', 'guest', 'cinder.conf', 20);
 INSERT INTO cinder_default VALUES ('qpid_hostname', '172.38.24.10', 'cinder.conf', 21);
 INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 22);
 
@@ -1757,10 +1757,11 @@ INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'gla
 INSERT INTO glance_defaults VALUES ('admin_user', 'glance', 'NULL', 'glance-registry-paste.ini', 23);
 INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-registry-paste.ini', 24);
 INSERT INTO glance_defaults VALUES ('qpid_host', '172.38.24.10', 'NULL', 'glance-api.conf', 25);
-INSERT INTO glance_defaults VALUES ('qpid_username', 'guest', 'NULL', 'glance-api.conf', 26);
-INSERT INTO glance_defaults VALUES ('qpid_password', 'guest', 'NULL', 'glance-api.conf', 27);
+--INSERT INTO glance_defaults VALUES ('qpid_username', 'guest', 'NULL', 'glance-api.conf', 26);
+--INSERT INTO glance_defaults VALUES ('qpid_password', 'guest', 'NULL', 'glance-api.conf', 27);
 INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-api.conf', 28);
 INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-registry.conf', 29);
+
 --
 -- TOC entry 2170 (class 0 OID 16423)
 -- Dependencies: 169
@@ -1791,7 +1792,7 @@ INSERT INTO neutron_default VALUES ('nova_metadata_port', '8775', 'metadata_agen
 INSERT INTO neutron_default VALUES ('interface_driver', 'quantum.agent.linux.interface.OVSInterfaceDriver', 'l3_agent.ini', 16);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'l3_agent.ini', 17);
 INSERT INTO neutron_default VALUES ('external_network_bridge', 'br-ex', 'l3_agent.ini', 18);
-INSERT INTO neutron_default VALUES ('qpid_username', 'guest', 'quantum.conf', 19);
+--INSERT INTO neutron_default VALUES ('qpid_username', 'guest', 'quantum.conf', 19);
 INSERT INTO neutron_default VALUES ('qpid_port', '5672', 'quantum.conf', 20);
 INSERT INTO neutron_default VALUES ('lock_path', '$state_path/lock', 'quantum.conf', 21);
 INSERT INTO neutron_default VALUES ('bind_host', '0.0.0.0', 'quantum.conf', 22);
@@ -1808,7 +1809,7 @@ INSERT INTO neutron_default VALUES ('tunnel_bridge', 'br-tun', 'ovs_quantum_plug
 INSERT INTO neutron_default VALUES ('polling_interval', '2', 'ovs_quantum_plugin.ini', 33);
 INSERT INTO neutron_default VALUES ('auth_url', 'http://172.38.24.10:35357/v2.0', 'metadata_agent.ini', 34);
 INSERT INTO neutron_default VALUES ('metadata_proxy_shared_secret', 'transcirrus1', 'metadata_agent.ini', 35);
-INSERT INTO neutron_default VALUES ('qpid_password', 'guest', 'quantum.conf', 36);
+--INSERT INTO neutron_default VALUES ('qpid_password', 'guest', 'quantum.conf', 36);
 INSERT INTO neutron_default VALUES ('qpid_hostname', '172.38.24.10', 'quantum.conf', 37);
 INSERT INTO neutron_default VALUES ('auth_host', '172.38.24.10', 'quantum.conf', 38);
 INSERT INTO neutron_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/quantum', 'ovs_quantum_plugin.ini', 39);
@@ -1841,12 +1842,12 @@ INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'quantum.conf', 49)
 INSERT INTO nova_default VALUES ('enabled_apis', 'ec2,osapi_compute,metadata', 'nova.conf', 1);
 INSERT INTO nova_default VALUES ('logdir', '/var/log/nova', 'nova.conf', 2);
 INSERT INTO nova_default VALUES ('state_path', '/var/lib/nova', 'nova.conf', 3);
-INSERT INTO nova_default VALUES ('lock_path', '/run/lock/nova', 'nova.conf', 4);
+INSERT INTO nova_default VALUES ('lock_path', '/var/lock/nova', 'nova.conf', 4);
 INSERT INTO nova_default VALUES ('verbose', 'True', 'nova.conf', 5);
 INSERT INTO nova_default VALUES ('api_paste_config', '/etc/nova/api-paste.ini', 'nova.conf', 6);
 INSERT INTO nova_default VALUES ('compute_scheduler_driver', 'nova.scheduler.simple.SimpleScheduler', 'nova.conf', 7);
-INSERT INTO nova_default VALUES ('qpid_password', 'guest', 'nova.conf', 8);
-INSERT INTO nova_default VALUES ('qpid_username', 'guest', 'nova.conf', 9);
+--INSERT INTO nova_default VALUES ('qpid_password', 'guest', 'nova.conf', 8);
+--INSERT INTO nova_default VALUES ('qpid_username', 'guest', 'nova.conf', 9);
 INSERT INTO nova_default VALUES ('root_helper', 'sudo nova-rootwrap /etc/nova/rootwrap.conf', 'nova.conf', 10);
 INSERT INTO nova_default VALUES ('multi_host', 'False', 'nova.conf', 11);
 INSERT INTO nova_default VALUES ('enable_instance_password', 'true', 'nova.conf', 12);

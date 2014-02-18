@@ -59,6 +59,7 @@ def write_new_config_file(file_dict):
                      - file_group - req
                      - file_perm - default 644
                      - file_op - new/append
+                     - file_backup - True/False
     OUTPUT: A file written out to the proper location with the proper permissions
             raise exceptions on fail
             OK - file written
@@ -106,10 +107,13 @@ def write_new_config_file(file_dict):
         logger.sys_warning("The file %s does not exists, Creating..." %(fqp))
         os.system('sudo mkdir -p %s' %(file_dict['file_path']))
     else:
-        logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))
-        date = strftime("%Y-%m-%d", gmtime())
-        old = '%s_%s' %(fqp,date)
-        os.system('sudo cp -f %s %s' %(fqp,old))
+        if(('file_backup' in file_dict) and (file_dict['file_backup'] == False)):
+            logger.sys_info("The file %s exists. Not creating backup"%(fqp))
+        else:
+            logger.sys_warning("The file %s exists. Creating a backup and building new config." %(fqp))
+            date = strftime("%Y-%m-%d", gmtime())
+            old = '%s_%s' %(fqp,date)
+            os.system('sudo cp -f %s %s' %(fqp,old))
 
     #decide if we append the scratch file or write it as
     #an entire new file
@@ -627,17 +631,59 @@ def add_network_adapter():
     pass
 
 def set_nameresolution(input_dict):
-    pass
-    #dns stuff
-            #if((mgmt_dict['mgmt_dns1'] == '') or ('mgmt_dns1' not in mgmt_dict)):
-            #    mgmt_dict['mgmt_dns1'] = '8.8.8.8'
-            #if('mgmt_dns2' not in mgmt_dict):
-            #    mgmt_dict['mgmt_dns2'] = '8.8.4.4'
-            #if('mgmt_dns3' not in mgmt_dict):
-            #    mgmt_dict['mgmt_dns3'] = '204.85.3.3'
-            #if('mgmt_domain' not in mgmt_dict):
-            #    mgmt_dict['mgmt_domain'] = 'localdomain'
+    """
+    DESC: Add all of the name resolution informaton to the RedHat based system.
+    INPUT: input_dict - dns_server1 - req
+                      - dns_server2 - op
+                      - dns_server3 - op
+                      - search_domain_int - req
+                      - search_domain_ext - req
+    OUTPUT: OK - success
+            ERROR - fail
+    ACCESS: Wide open
+    NOTE: Used to globally set the name resolution information
+    """
+    for key,value in input_dict.items():
+        if(key == 'dns_server2' or key == 'dns_server3'):
+            #optional params
+            continue
+        else:
+            #for any other key val pair check this
+            if(value == ''):
+                logger.sys_error('Blank values given for require name resolution params.')
+                raise Exception ('Blank values given for require name resolution params.')
 
+    resolve = []
+    #try:
+        
+    #except:
+        
+    #else:
+
+    resolve.append('nameserver %s'%(input_dict['dns_server1']))
+    #default DNS values
+    if('dns_server2' not in input_dict):
+        resolve.append('nameserver 8.8.8.8')
+    else:
+        resolve.append('nameserver %s'%(input_dict['dns_server2']))
+
+    if('dns_server3' not in input_dict):
+        resolve.append('nameserver 8.8.4.4')
+    else:
+        resolve.append('nameserver %s'%(input_dict['dns_server3']))
+
+    resolve.append('search %s %s' %(input_dict['search_domain_int'],input_dict['search_domain_ext']))
+
+    resolv_conf = {}
+    resolv_conf['op'] = 'new'
+    resolv_conf['file_owner'] = 'root'
+    resolv_conf['file_group'] = 'root'
+    resolv_conf['file_perm'] = '644'
+    resolv_conf['file_path'] = '/etc'
+    resolv_conf['file_name'] = 'resolv.conf'
+    resolv_conf['file_content'] = resolve
+
+    return resolv_conf
 
 def set_network_variables(input_dict):
     """
@@ -690,7 +736,7 @@ def set_network_variables(input_dict):
                 mgmt_inet = 'dhcp'
                 break
             if(mgmt_dict['mgmt_dhcp'].lower() == 'static'):
-                mgmt_inet = 'none'
+                mgmt_inet = 'static'
             if('mgmt_ip' not in mgmt_dict):
                 logger.sys_error('No mgmt ip was specified.')
                 raise Exception('No mgmt ip was specified.')
@@ -731,7 +777,6 @@ def set_network_variables(input_dict):
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',net_gateway='%s',inet_setting='%s',net_mtu='%s'"
                       %(uplink_dict['up_ip'],uplink_dict['up_subnet'],uplink_dict['up_gateway'],up_inet,'9000'),'where':"net_adapter='br-ex'",
                       'and':"node_id='%s'"%(input_dict['node_id'])}
-            print update
             db.pg_update(update)
         else:
             return 'NA'
@@ -746,7 +791,6 @@ def set_network_variables(input_dict):
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='%s',net_mtu='%s'"
                       %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_subnet'],mgmt_inet,'1500'),'where':"net_adapter='bond0'",
                       'and':"node_id='%s'"%(input_dict['node_id'])}
-            print update
             db.pg_update(update)
         else:
             return 'NA'
@@ -756,7 +800,6 @@ def set_network_variables(input_dict):
         return 'ERROR'
     finally:
         db.pg_transaction_commit()
-        #disconnect from db
         db.pg_close_connection()
 
     #"net adapters" are always bonds unless noted, uplink will be a bridge adapter
@@ -771,28 +814,23 @@ def set_network_variables(input_dict):
     #if(input_dict['net_adapter'] == 'mgmt'):
     #bond = 'DEVICE=bond0'
     #bond0.append(bond)
-    bond0 = ['DEVICE=bond0']
+    bond0 = ['DEVICE="bond0"','BONDING_OPTS="mode=balance-alb miimon=100 primary=eth0"','ONBOOT="yes"','IPV6INIT="no"','MTU="1500"','NM_CONTROLLED="no"','TYPE="Bond"']
     if(m_netadpt['inet_setting'] == 'static'):
-        address = 'IPADDR=%s'%(m_netadpt['net_ip'])
+        address = 'IPADDR="%s"'%(m_netadpt['net_ip'])
         bond0.append(address)
-        netmask = 'NETMASK=%s' %(m_netadpt['net_mask'])
+        netmask = 'NETMASK="%s"' %(m_netadpt['net_mask'])
         bond0.append(netmask)
-        onboot = 'ONBOOT=yes'
-        bond0.append(onboot)
-        proto = 'BOOTPROTO=static'
+        proto = 'BOOTPROTO="static"'
         bond0.append(proto)
-        ctl = 'USERCTL=no'
-        bond0.append(ctl)
+        #ctl = 'USERCTL=no'
+        #bond0.append(ctl)
         if(m_netadpt['net_gateway'] != 'NULL' or m_netadpt['net_gateway'] != ''):
             logger.sys_info("No gateway set for Bond0")
     else:
-        onboot = 'ONBOOT=yes'
-        bond0.append(onboot)
-        proto = 'BOOTPROTO=static'
+        proto = 'BOOTPROTO="dhcp"'
         bond0.append(proto)
-        ctl = 'USERCTL=no'
-        bond0.append(ctl)
-    bond0.append('')
+        #ctl = 'USERCTL=no'
+        #bond0.append(ctl)
 
     #we know the node type based on the ID
     #000 - ciac
@@ -800,20 +838,15 @@ def set_network_variables(input_dict):
     #002 - storage
     br = []
     if(node[0][0] == 'cc'):
-        br = ['DEVICE=br-ex','TYPE=Bridge']
+        br = ['DEVICE="br-ex"','TYPE="Bridge"','BOOTPROTO="static"','ONBOOT="yes"','TYPE="OVSBridge"','DEVICETYPE="ovs"','NM_CONTROLLED="no"']
         if(up_netadpt['inet_setting'] == 'static'):
-            proto = 'BOOTPROTO=static'
-            br.append(proto)
-            address = 'IPADDR=%s'%(up_netadpt['net_ip'])
+            address = 'IPADDR="%s"'%(up_netadpt['net_ip'])
             br.append(address)
-            netmask = 'NETMASK=%s' %(up_netadpt['net_mask'])
+            netmask = 'NETMASK="%s"' %(up_netadpt['net_mask'])
             br.append(netmask)
             if(up_netadpt['net_gateway'] != 'NULL' or up_netadpt['net_gateway'] != ''):
-                gateway = 'GATEWAY=%s' %(up_netadpt['net_gateway'])
+                gateway = 'GATEWAY="%s"' %(up_netadpt['net_gateway'])
                 br.append(gateway)
-        else:
-            proto = 'BOOTPROTO=dhcp' %(up_netadpt[0][1])
-            br.append(proto)
         br.append('')
 
         #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
@@ -825,8 +858,8 @@ def set_network_variables(input_dict):
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b1['net_ip']))
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(mgmt_dict['mgmt_ip']))
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(uplink_dict['up_ip']))
-        os.system('sudo mv /transcirrus/pg_hba.conf /var/lib/pgsql/9.1/data/pg_hba.conf')
-        os.system('sudo chown postgres:postgres /var/lib/pgsql/9.1/data/pg_hba.conf')
+        os.system('sudo mv /transcirrus/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf')
+        os.system('sudo chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf')
 
     node_flag = 0
     if((node[0][0] == 'cn') or (node[0][0] == 'sn')):
@@ -834,24 +867,26 @@ def set_network_variables(input_dict):
 
     net_array = []
     bond_conf = {}
-    bond_conf['op'] = 'new'
+    bond_conf['op'] = 'append'
     bond_conf['file_owner'] = 'root'
     bond_conf['file_group'] = 'root'
     bond_conf['file_perm'] = '644'
     bond_conf['file_path'] = '/etc/sysconfig/network-scripts'
     bond_conf['file_name'] = 'ifcfg-bond0'
     bond_conf['file_content'] = bond0
+    bond_conf['file_backup'] = False
     net_array.append(bond_conf)
 
     if(node_flag == 0):
         br_conf = {}
-        br_conf['op'] = 'new'
+        br_conf['op'] = 'append'
         br_conf['file_owner'] = 'root'
         br_conf['file_group'] = 'root'
         br_conf['file_perm'] = '644'
         br_conf['file_path'] = '/etc/sysconfig/network-scripts'
         br_conf['file_name'] = 'ifcfg-br-ex'
         br_conf['file_content'] = br
+        br_conf['file_backup'] = False
         net_array.append(br_conf)
 
     return net_array
@@ -960,7 +995,7 @@ def restart_network_card(net_adapter):
     """
 
     if(net_adapter.lower() == 'all'):
-        os.system('sudo /etc/init.d/networking restart')
+        os.system('sudo service network restart')
     else:
         down = os.system('sudo ifdown --force %s' %(net_adapter))
         print down
@@ -1045,12 +1080,15 @@ def update_pg_hba():
             'ERROR' - fail
     """
     #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
-    os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+    #os.system('sudo cp -f /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
     #get the current ip settings
     b0 = get_adapter_ip('bond0')
     b1 = get_adapter_ip('br-ex')
-    os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b0['net_ip']))
-    os.system('sudo echo "host all all %s/32 md5" >> /etc/postgresql/9.1/main/pg_hba.conf'%(b1['net_ip']))
+    os.system('cp /transcirrus/pg_hba.proto /transcirrus/pg_hba.conf')
+    os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b0['net_ip']))
+    os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b1['net_ip']))
+    os.system('sudo mv /transcirrus/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf')
+    os.system('sudo chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf')
 
     time.sleep(2)
     pgsql_start = service.postgresql('restart')
@@ -1219,7 +1257,8 @@ def getDhcpServer():
     comments        : should be used by cn/sn client process
     '''
 
-    dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
+    #dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
+    dhcp_file = "/var/lib/dhclient/dhclient.bond1.leases"
     dhcp_server = ""
     global dhcp_retry
 

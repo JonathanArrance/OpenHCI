@@ -1,7 +1,7 @@
 from transcirrus.database.postgres import pgsql
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
-#import transcirrus.common.util as util
+import transcirrus.common.util as util
 
 #pushed to alpo.1
 #import transcirrus.common.status_codes as status
@@ -15,7 +15,8 @@ def check_node_exists(node_id):
     NOTES: status of OK means the node exists in the DB. Status of NA means node does not exist in the DB. ERROR is a catch all.
     """
     #connect to the database
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
     try:
         find_node_dict = {'select':"node_name",'from':"trans_nodes",'where':"node_id='%s'" %(node_id)}
         node_name = db.pg_select(find_node_dict)
@@ -46,7 +47,8 @@ def get_node(node_id):
     NOTES: Return the r_dict with a status of OK, else status code of NA or ERROR is returned outside of the ductionary.
     """
     #connect to the database
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
     try:
         find_node_dict = {'select':"*",'from':"trans_nodes",'where':"node_id='%s'" %(node_id)}
         node = db.pg_select(find_node_dict)
@@ -116,8 +118,9 @@ def insert_node(input_dict):
         raise Exception("Node type sn (Storage node) must have iscsi iqn specified")
 
     #get the db connection
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
+    
     #count up the number of nodes attached to controller
     elem_dict = {'table':"trans_nodes",'where':"node_controller='%s'" %(input_dict['node_controller'])}
     count = db.count_elements(elem_dict)
@@ -193,7 +196,8 @@ def list_nodes():
            the dictionary are to be returned. pushed to alpo.1
     """
     #connect to the DB
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
     r_array = []
     try:
         nodes = {'select':"node_name,node_id,node_type",'from':"trans_nodes"}
@@ -236,7 +240,8 @@ def delete_node(node_id):
 
     if(check == 'OK'):
     #connect to the DB
-        db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        db = util.db_connect()
         try:
             db.pg_transaction_begin()
             del_dict = {"table":'trans_nodes',"where":"node_id='%s'" %(node_id)}
@@ -324,7 +329,8 @@ def update_node(update_dict):
         if(('node_nova_zone' in update_dict) and update_dict['node_nova_zone'] != ""):
             update.append('node_nova_zone=nova')
 
-        db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        db = util.db_connect()
         updater = ",".join(update)
         try:
             db.pg_transaction_begin()
@@ -360,7 +366,8 @@ def get_node_nova_config(node_id):
     node_info = get_node(node_id)
 
     #connect to the db
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
 
     #query the novaconf table in transcirrus db
     #first get the nova.conf configs
@@ -490,7 +497,8 @@ def get_node_neutron_config(node_id):
     node_info = get_node(node_id)
 
     #connect to the db
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
 
     try:
         get_netdef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='quantum.conf'"}
@@ -672,6 +680,7 @@ def get_node_swift_config(node_id):
            out the new config file if desired
            default file operation can be new(write new file) or append(append to existing)
     """
+    #this is pushed out, Swift will most likely come pre set up just like Keystone.
     #swift.conf
     #rsyncd.conf
 
@@ -696,7 +705,8 @@ def get_node_cinder_config(node_id):
     node_info = get_node(node_id)
 
     #connect to the db
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
 
     cinraw = None
     apiraw = None
@@ -769,7 +779,8 @@ def get_glance_config():
            future we will add the ability to move glance to a seperate node.
     """
     #connect to the db
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
     logger.sys_info("Writing the Glance config file to the controller node.")
 
     try:
@@ -910,10 +921,10 @@ def get_node_netsysctl_config(node_id):
     sys_conf['file_name'] = 'sysctl.conf'
     sys_conf['file_content'] = sys_con
     r_array.append(sys_conf)
-"""
+
 
 def db_connect(host,port,dbname,user,password):
-    """
+    '''
     DESC: Connect to the transcirrus db to perform node db functions.
     INPUT: host - db server
            port - deb port
@@ -924,7 +935,7 @@ def db_connect(host,port,dbname,user,password):
     ACCESS: Open to everything
     NOTES: This function is open to all, only the transcirrus db can be connected to. May
            use the generic DB connect funtion found in common.util at somepoint.
-    """
+    '''
     #make sure that only the transcirrus db is connected to
     #NOTE!!! need to change this to transcirrus from cac_system
     if(dbname == 'transcirrus'):
@@ -934,3 +945,4 @@ def db_connect(host,port,dbname,user,password):
         except:
             logger.sql_error("Could not connect to the Transcirrus db for node operations.")
             logger.sys_error("Could not connect to the Transcirrus db for node operations.")
+"""

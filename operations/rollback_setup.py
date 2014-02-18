@@ -118,15 +118,11 @@ def rollback(auth_dict):
                 'up_ip':'192.168.0.3',
                 'up_subnet':'255.255.255.0',
                 'up_gateway':'192.168.10.1',
-                'up_dns1':'8.8.8.8',
-                'up_domain':'localhost.pubnet'
                 }
 
     mgmt_dict = {
                 'mgmt_ip':'192.168.0.2',
                 'mgmt_subnet':'255.255.255.0',
-                'mgmt_dns1':'8.8.8.8',
-                'mgmt_domain':'localhost.localnet',
                 'mgmt_dhcp':'static'
                 }
 
@@ -242,7 +238,7 @@ def rollback(auth_dict):
             row = key+'='+ '"'+ val + '"'
             content.append(row)
         #build the new config.py file
-        config_dict = {'file_path':'/usr/local/lib/python2.7/dist-packages/transcirrus/common',
+        config_dict = {'file_path':'/usr/local/lib/python2.7/transcirrus/common',
                        'file_name':'config.py',
                        'file_content':content,
                        'file_owner':'transuser',
@@ -266,7 +262,7 @@ def rollback(auth_dict):
      #restart postgres
     logger.sys_info('Reseting the postgres DB.')
     try:
-        os.system('sudo cp /etc/postgresql/9.1/main/pg_hba.proto /etc/postgresql/9.1/main/pg_hba.conf')
+        os.system('sudo cp /var/lib/pgsql/data/pg_hba.conf.old /var/lib/pgsql/data/pg_hba.conf')
         psql_stop = service.postgresql('restart')
     except:
         pass

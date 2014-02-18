@@ -7,6 +7,7 @@ import time
 import transcirrus.common.logger as logger
 import transcirrus.common.util as util
 import transcirrus.common.config as config
+import transcirrus.common.service_control as service
 
 def check_config_type():
     """
@@ -65,16 +66,11 @@ def enable_multi_node():
             update_config = {'table':"trans_system_settings",'set':"param_value='0'",'where':"parameter='single_node'",'and':"host_system='%s'" %(config.CLOUD_CONTROLLER)}
             db.pg_update(update_config)
             #This may be a complete HACK need more research
-            os.system('sudo /etc/init.d/isc-dhcp-server start')
-            time.sleep(1)
-            out = subprocess.Popen('sudo service isc-dhcp-server status | grep "start/running"', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            process = out.stdout.readlines()
-            if (process[0]):
+            dhcp = service.dhcp_server('start')
+            if (dhcp == 'OK'):
                 db.pg_transaction_commit()
                 db.pg_close_connection()
                 logger.sys_info("DHCP is now runnig for multi-node setup configs.")
-            elif(process[0] == ""):
-                return 'ERROR'
             else:
                 return 'NA'
         except:
@@ -85,7 +81,7 @@ def enable_multi_node():
         #turn on the network adapter for datanet
         #bond2 is always the datanet bond
         logger.sys_info("Bringing up Datanet.")
-        ifconfig = util.enable_network_card('bond2')
+        ifconfig = util.enable_network_card('bond1')
         if(ifconfig == 'OK'):
             logger.sys_info("Datanet successfully brough up.")
             return 'OK'
@@ -116,16 +112,12 @@ def disable_multi_node():
             db.pg_transaction_begin()
             update_config = {'table':"trans_system_settings",'set':"param_value='1'",'where':"parameter='single_node'"}
             db.pg_update(update_config)
-            os.system('sudo /etc/init.d/isc-dhcp-server stop')
+            dhcp = service.dhcp_server('stop')
             time.sleep(1)
-            out = subprocess.Popen('sudo service isc-dhcp-server status | grep "stop/waiting"', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            process = out.stdout.readlines()
-            if (process[0]):
+            if (dhcp == 'OK'):
                 db.pg_transaction_commit()
                 db.pg_close_connection()
                 logger.sys_info("DHCP is now off for single setup configs.")
-            elif(process[0] == ""):
-                return 'ERROR'
             else:
                 return 'NA'
         except:
@@ -135,7 +127,7 @@ def disable_multi_node():
         
         #turn datanet network off
         logger.sys_info("Bringing down the Datanet")
-        ifconfig = util.disable_network_card('bond2')
+        ifconfig = util.disable_network_card('bond1')
         if(ifconfig == 'OK'):
             logger.sys_info("Datanet successfully brought down.")
             return 'OK'

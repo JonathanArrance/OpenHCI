@@ -75,7 +75,7 @@ def run_setup(new_system_variables,auth_dict):
         content.append(row)
 
     #build the new config.py file
-    config_dict = {'file_path':'/usr/local/lib/python2.7/dist-packages/transcirrus/common',
+    config_dict = {'file_path':'/usr/local/lib/python2.7/transcirrus/common',
                    'file_name':'config.py',
                    'file_content':content,
                    'file_owner':'transuser',
@@ -94,9 +94,8 @@ def run_setup(new_system_variables,auth_dict):
     endpoint = endpoint_ops(auth_dict)
 
     #reset the keystone endpoint
-    key_input = {'service_name':'keystone'}
-    del_keystone = endpoint.delete_endpoint(key_input)
-    print del_keystone
+    #key_input = {'service_name':'keystone'}
+    del_keystone = endpoint.delete_endpoint('keystone')
     if(del_keystone == 'OK'):
         input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'keystone'}
         create_keystone = endpoint.create_endpoint(input_dict)
@@ -104,6 +103,15 @@ def run_setup(new_system_variables,auth_dict):
             print "Keystone endpoint set up complete."
         else:
             return "Keystone error."
+
+    #del_swift = endpoint.delete_endpoint('swift')
+    #if(del_swift == 'OK'):
+    #    input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+    #    create_keystone = endpoint.create_endpoint(input_dict)
+    #    if(create_keystone['endpoint_id']):
+    #        print "Swift endpoint set up complete."
+    #    else:
+    #        return "Swift error."
 
     #set up all of the other endpoint based on the new mgmt IP address
     nova_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'nova'}
@@ -172,6 +180,8 @@ def run_setup(new_system_variables,auth_dict):
             print "Nova config file written."
             logger.sys_info("Nova config file written.")
     time.sleep(1)
+    #HACK CentOS6.5 may not be needed in the future
+    os.system('sudo usermod -G lock nova')
     os.system("sudo nova-manage db sync")
     time.sleep(1)
     #start the NOVA service
@@ -233,6 +243,8 @@ def run_setup(new_system_variables,auth_dict):
         else:
             print "Neutron config file written."
             logger.sys_info("Neutron config file written.")
+    #HACK - centOS6.5 - may not be needed in future
+    os.system('sudo chown -R quantum:quantum /var/lib/quantum')
     #start the cinder service
     neutron_start = service.neutron('restart')
     if(neutron_start != 'OK'):
@@ -243,10 +255,10 @@ def run_setup(new_system_variables,auth_dict):
     print "Importing default images"
     glance = glance_ops(auth_dict)
     cirros_input = {
-                    'img_name':"Cirros-x86_64-0-3-1",
-                    'img_disk_format':"qcow2",
-                    'img_is_public':'True',
-                    'img_is_protected':'True',
+                    'image_name':"Cirros-x86_64-0-3-1",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
                     }
@@ -255,10 +267,10 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default cirros image.')
 
     ubuntu_input = {
-                    'img_name':"Ubuntu-12-04-x86_64",
-                    'img_disk_format':"qcow2",
-                    'img_is_public':'True',
-                    'img_is_protected':'True',
+                    'image_name':"Ubuntu-12-04-x86_64",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
                     }
@@ -267,10 +279,10 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default Ubuntu Precise image.')
 
     fedora_input = {
-                    'img_name':"Fedora-x86_64",
-                    'img_disk_format':"qcow2",
-                    'img_is_public':'True',
-                    'img_is_protected':'True',
+                    'image_name':"Fedora-x86_64",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/fedora-latest.x86_64.qcow2"
                     }
@@ -279,12 +291,14 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default Fedora image.')
 
     #set up openvswitch
-    logger.sys_info("Setting up br-ex")
-    os.system("sudo ovs-vsctl add-br br-ex")
-    os.system("sudo ovs-vsctl add-bond br-ex bond1 eth2 eth3")
-    logger.sys_info("Setting up the internal br-int")
-    os.system("sudo ovs-vsctl add-br br-int")
-
+    #os.system("sudo service openvswitch restart")
+    #time.sleep(1)
+    #logger.sys_info("Setting up br-ex")
+    #os.system("sudo ovs-vsctl add-br br-ex")
+    #os.system("sudo ovs-vsctl add-bond br-ex bond2 eth4 eth5")
+    #logger.sys_info("Setting up the internal br-int")
+    #os.system("sudo ovs-vsctl add-br br-int")
+    #os.system("chkconfig --level 2345 openvswitch on")
 
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
@@ -292,20 +306,31 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_error('Uplink gateway is not on the same subnet as the uplink ip.')
         return gateway
 
+    resolve = {
+                'dns_server1':sys_vars['UPLINK_DNS'],
+                'search_domain_int':sys_vars['UPLINK_DOMAIN_NAME'],
+                'search_domain_ext':sys_vars['MGMT_DOMAIN_NAME']
+            }
+    name_service = util.set_nameresolution(resolve)
+    write_name_config = util.write_new_config_file(name_service)
+    time.sleep(1)
+    if(write_name_config != 'OK'):
+        #Exit the setup return to factory default
+        return write_name_config
+    else:
+        print "Name service config file written."
+        logger.sys_info("Name service config file written.")
+
     #set up br-ex and enable ovs.
     uplink_dict = {
                 'up_ip':sys_vars['UPLINK_IP'],
                 'up_subnet':sys_vars['UPLINK_SUBNET'],
                 'up_gateway':sys_vars['UPLINK_GATEWAY'],
-                'up_dns1':sys_vars['UPLINK_DNS'],
-                'up_domain':sys_vars['UPLINK_DOMAIN_NAME']
                 }
 
     mgmt_dict = {
                 'mgmt_ip':sys_vars['MGMT_IP'],
                 'mgmt_subnet':sys_vars['MGMT_SUBNET'],
-                'mgmt_dns1':sys_vars['MGMT_DNS'],
-                'mgmt_domain':sys_vars['MGMT_DOMAIN_NAME'],
                 'mgmt_dhcp':'static'
                 }
 
@@ -314,15 +339,16 @@ def run_setup(new_system_variables,auth_dict):
                  'mgmt_dict':mgmt_dict
                 }
 
-    uplink = util.set_network_variables(net_input)
-    write_net_config = util.write_new_config_file(uplink)
-    time.sleep(1)
-    if(write_net_config != 'OK'):
-        #Exit the setup return to factory default
-        return write_net_config
-    else:
-        print "Net config file written."
-        logger.sys_info("Net config file written.")
+    links = util.set_network_variables(net_input)
+    for link in links:
+        write_net_config = util.write_new_config_file(link)
+        time.sleep(1)
+        if(write_net_config != 'OK'):
+            #Exit the setup return to factory default
+            return write_net_config
+        else:
+            print "Net config file written."
+            logger.sys_info("Net config file written.")
 
     #restart postgres
     pgsql_start = service.postgresql('restart')
@@ -338,9 +364,11 @@ def run_setup(new_system_variables,auth_dict):
 
     time.sleep(5)
     #reconfig ips
-    out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
-    os.system("sudo ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],process[0]))
+    cidr = process[0].split("=")
+    os.system("sudo ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],cidr[1].rstrip()))
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
@@ -403,7 +431,7 @@ def run_setup(new_system_variables,auth_dict):
     net_content = ['DEFAULT_PUB_NET_ID="%s"'%(default_public['net_id']),'DEFAULT_PUB_SUBNET_ID="%s"'%(default_pub_subnet['subnet_id'])]
 
     #build the new config.py file
-    netconfig_dict = {'file_path':'/usr/local/lib/python2.7/dist-packages/transcirrus/common',
+    netconfig_dict = {'file_path':'/usr/local/lib/python2.7/transcirrus/common',
                    'file_name':'config.py',
                    'file_content':net_content,
                    'file_owner':'transuser',
@@ -442,6 +470,14 @@ def run_setup(new_system_variables,auth_dict):
     first_boot = node_util.set_first_time_boot('UNSET')
     if(boot == 'ERROR'):
         logger.error("Could not set the first time boot flag to the UNSET status.")
+
+    #HACK - CentOS complains about the bridge already exisiting after a reboot
+            #fix remove the bridge from OVS restart network readd bridge to OVS
+    #os.system("sudo ovs-vsctl del-br br-ex")
+    #util.restart_network_card("all")
+    #logger.sys_info("Re-setting br-ex")
+    #os.system("sudo ovs-vsctl add-br br-ex")
+    #os.system("sudo ovs-vsctl add-bond br-ex bond2 eth4 eth5")
 
     return 'OK'
 
