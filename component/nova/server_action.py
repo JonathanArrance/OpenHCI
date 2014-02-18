@@ -455,13 +455,123 @@ class server_actions:
         return 'OK'
 
     def check_instance_status(self):
-        pass
-        #alpo.1
+        """
+        DESC: Suspend a running virtual server. Suspending saves the vm state to disk.
+        INPUT: input_dict - project_id
+                          - instance_id
+        OUTPUT: Virtual instance usage stats
+        ACCESS: Admins can get the status for any instance.
+                Power users can get the status of instances in their project.
+                Users can only get status of instances they own.
+        NOTES: 
+        """
+        logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_status**\n')
+        for key,value in input_dict:
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+
+        #see if the user has access to the instance
+        get_inst = None
+        if(self.user_level == 2):
+            if(self.project_id == input_dict['project_id']):
+                get_inst = {"select":'inst_name',"from":'trans_instance',"where":"inst_user_id='%s'","and":"inst_id='%s'"}%(self.user_id,input_dict['instance_id'])
+        elif(self.user_level <= 1):
+            #PU and admin
+            get_inst = {"select":'inst_name',"from":'trans_instance',"where":"proj_id='%s'","and":"inst_id='%s'"}%(input_dict['project_id'],input_dict['instance_id'])
+        inst = self.db.pg_select(get_inst)
+        if(len(inst) == 0):
+            logger.sys_error('The instance does not exist: check_instance_status')
+            raise Exception('The instance does not exist: check_instance_status')
+
+        # Create an API connection with the Admin
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            body=''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Error in server status/diag request.")
+            raise Exception("Error in server status/diag request")
+
+        if(rest['response'] == 200):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                return load
+        else:
+            util.http_codes(rest['response'],rest['reason'])
     
     def create_instance_image(self):
         pass
         #alpo.1
-
-    def move_instance(self):
+        
+    def create_instance_backup(self):
         pass
         #alpo.1
+        
+    def get_instance_console(self,input_dict):
+        """
+        DESC: Suspend a running virtual server. Suspending saves the vm state to disk.
+        INPUT: input_dict - project_id
+                          - instance_id
+        OUTPUT: NoVnc console address
+        ACCESS: Admins can suspend an instance in the cloud.
+        NOTES: This is not the same as pause.
+        """
+        logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_console**\n')
+        for key,value in input_dict:
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            body='{"os-getVNCConsole": {"type": "novnc"}}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Error in server suspend request.")
+            raise Exception("Error in server suspend request")
+
+        if(rest['response'] == 200):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                return load['console']['url']
+        else:
+            util.http_codes(rest['response'],rest['reason'])
