@@ -226,7 +226,7 @@ class user_ops:
             if(self.new_user_proj_id != "NULL"):
                 user_role_dict = {'username':new_user_dict['username'],
                                   'user_role':new_user_dict['user_role'],
-                                  'project_name':self.proj_name
+                                  'project_id':self.new_user_proj_id
                                   }
                 add_role = self.add_user_to_project(user_role_dict)
                 if(not add_role):
