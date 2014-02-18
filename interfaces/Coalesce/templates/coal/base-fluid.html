@@ -75,8 +75,8 @@
                                                     <li><a href="/projects/manage">View All Projects</a></li>
                                                     <li class="divider"></li>
                                                     {% for project in project_list %}
-                                                        {% url 'project_view' project as proj_url %}
-                                                        <li><a href={{proj_url}}>{{project}}</a></li>
+                                                        {% url 'project_view' project.project_id as proj_url %}
+                                                        <li><a href={{proj_url}}>{{project.project_name}}</a></li>
                                                     {% endfor %}
                                                 </ul>
                                             </li>

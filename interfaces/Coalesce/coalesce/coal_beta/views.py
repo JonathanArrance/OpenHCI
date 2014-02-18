@@ -106,7 +106,7 @@ def manage_projects(request):
         pass
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
-def project_view(request, project_name):
+def project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     so = server_ops(auth)
@@ -116,14 +116,13 @@ def project_view(request, project_name):
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
 
-    project = to.get_tenant(project_name)
-    pid = project["project_id"]
-    users = to.list_tenant_users(project_name)
+    project = to.get_tenant(project_id)
+    users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
 
     for user in users:
-        user_dict = {'username': user['username'], 'project_name': project_name}
+        user_dict = {'username': user['username'], 'project_name': project['project_name']}
         user_info = uo.get_user_info(user_dict)
         userinfo[user['username']] = user_info
 
@@ -137,14 +136,14 @@ def project_view(request, project_name):
         for ouser in ousers:
             ouserinfo.append(ouser['user_name'])
 
-    priv_net_list = no.list_internal_networks(pid)
+    priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
-    routers       = l3o.list_routers(pid)
-    volumes       = vo.list_volumes(pid)
-    snapshots     = sno.list_snapshots(pid)
-    sec_groups    = so.list_sec_group(pid)
-    sec_keys      = so.list_sec_keys(pid)
-    instances     = so.list_servers(pid)
+    routers       = l3o.list_routers(project_id)
+    volumes       = vo.list_volumes(project_id)
+    snapshots     = sno.list_snapshots(project_id)
+    sec_groups    = so.list_sec_group(project_id)
+    sec_keys      = so.list_sec_keys(project_id)
+    instances     = so.list_servers(project_id)
 
     try:
         	images 	  = go.list_images()
@@ -170,7 +169,7 @@ def project_view(request, project_name):
     except:
         default_public = "NO PUBLIC NETWORK"
 
-    floating_ips = l3o.list_floating_ips(pid)
+    floating_ips = l3o.list_floating_ips(project_id)
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -375,7 +374,7 @@ def destroy_project(request, project_id, project_name):
         auth = request.session['auth']
 	proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': 0}
 	destroy.destroy_project(auth, proj_dict)
-        return manage_projects(request)
+        return HttpResponseRedirect('/')
 
     except:
         raise

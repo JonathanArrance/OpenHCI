@@ -165,7 +165,7 @@ def destroy_project(auth_dict, proj_dict):
 
     #tenant
     remove_tenant = tenant.remove_tenant(proj_dict['project_name'])
-    if(remove_tenant['status'] == "OK"):
+    if(remove_tenant == "OK"):
         logger.sys_info("Project %s removed." % proj_dict['project_name'])
     else:
         logger.sys_info("ERROR, project %s not removed." % proj_dict['project_name'])
