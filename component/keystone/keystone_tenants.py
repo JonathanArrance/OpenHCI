@@ -256,7 +256,7 @@ class tenant_ops:
                     #close all of the db connections that are open
                     self.db.pg_close_connection()
                     #return OK if good to go
-                    return 'OK'
+                    return "OK"
                 else:
                     _http_codes(rest['response'],rest['reason'])
             except Exception as e:
