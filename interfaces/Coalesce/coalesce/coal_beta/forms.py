@@ -23,7 +23,7 @@ class SetupForm(forms.Form):
     mgmt_domain_name  = forms.CharField(min_length = 1, max_length = 64, label='Management Domain Name')
     mgmt_subnet = forms.IPAddressField(label = 'Management Subnet')
     mgmt_dns  = forms.IPAddressField(label = 'Management DNS')
-    cloud_name  = forms.CharField(min_length = 1, max_length = 64, label='Cloud Name', help_text = 'This is the region used in the OpenStack projects.')
+    cloud_name  = forms.SlugField(min_length = 1, max_length = 64, label='Cloud Name', help_text = 'This is the region used in the OpenStack projects.')
     single_node = forms.BooleanField( label='Single Node?', help_text = 'If unchecked, this box will be setup with DHCP and listen for additional nodes to be added.  Check the box to improve performance if you do not plan to add nodes to this box.')
     admin_password = forms.CharField(widget=forms.PasswordInput(),  label='Administrator Password')
     admin_password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Administrator Password Confirm')
@@ -39,18 +39,18 @@ class SetupForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Setup Box'))
 
 class BuildProjectForm(forms.Form):
-    proj_name = forms.CharField(min_length = 1, max_length = 64, label='Project Name')
-    username = forms.CharField(min_length = 1, max_length = 64, label='Power User Name')
+    proj_name = forms.SlugField(min_length = 1, max_length = 64, label='Project Name')
+    username = forms.SlugField(min_length = 1, max_length = 64, label='Power User Name')
     password = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password')
     password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password Confirm')
-    email = forms.CharField(min_length = 1, max_length = 64, label='Power User email')
-    net_name = forms.CharField(min_length = 1, max_length = 64, label='Network Name')
+    email = forms.EmailField( label='Power User email')
+    net_name = forms.SlugField(min_length = 1, max_length = 64, label='Network Name')
     subnet_dns = forms.IPAddressField(label = 'Subnet DNS')
     #ports[] - op
-    group_name = forms.CharField(min_length = 1, max_length = 64, label='Security Group Name')
+    group_name = forms.SlugField(min_length = 1, max_length = 64, label='Security Group Name')
     group_desc = forms.CharField(min_length = 1, max_length = 64, label='Security Group Description')
-    sec_keys_name = forms.CharField(min_length = 1, max_length = 64, label='Security Key Name')
-    router_name = forms.CharField(min_length = 1, max_length = 64, label='Router Name')
+    sec_keys_name = forms.SlugField(min_length = 1, max_length = 64, label='Security Key Name')
+    router_name = forms.SlugField(min_length = 1, max_length = 64, label='Router Name')
 
     def __init__(self, *args, **kwargs):
         super(BuildProjectForm, self).__init__(*args, **kwargs)

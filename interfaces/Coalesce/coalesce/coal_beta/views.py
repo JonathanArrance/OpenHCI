@@ -30,6 +30,7 @@ import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
 from transcirrus.database.node_db import list_nodes, get_node
+import transcirrus.operations.destroy_project as destroy
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -105,7 +106,7 @@ def manage_projects(request):
         pass
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
-def project_view(request, project_name):
+def project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     so = server_ops(auth)
@@ -115,14 +116,13 @@ def project_view(request, project_name):
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
 
-    project = to.get_tenant(project_name)
-    pid = project["project_id"]
-    users = to.list_tenant_users(project_name)
+    project = to.get_tenant(project_id)
+    users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
 
     for user in users:
-        user_dict = {'username': user['username'], 'project_name': project_name}
+        user_dict = {'username': user['username'], 'project_name': project['project_name']}
         user_info = uo.get_user_info(user_dict)
         userinfo[user['username']] = user_info
 
@@ -136,14 +136,14 @@ def project_view(request, project_name):
         for ouser in ousers:
             ouserinfo.append(ouser['user_name'])
 
-    priv_net_list = no.list_internal_networks(pid)
+    priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
-    routers       = l3o.list_routers(pid)
-    volumes       = vo.list_volumes(pid)
-    snapshots     = sno.list_snapshots(pid)
-    sec_groups    = so.list_sec_group(pid)
-    sec_keys      = so.list_sec_keys(pid)
-    instances     = so.list_servers(pid)
+    routers       = l3o.list_routers(project_id)
+    volumes       = vo.list_volumes(project_id)
+    snapshots     = sno.list_snapshots(project_id)
+    sec_groups    = so.list_sec_group(project_id)
+    sec_keys      = so.list_sec_keys(project_id)
+    instances     = so.list_servers(project_id)
 
     try:
         	images 	  = go.list_images()
@@ -169,7 +169,7 @@ def project_view(request, project_name):
     except:
         default_public = "NO PUBLIC NETWORK"
 
-    floating_ips = l3o.list_floating_ips(pid)
+    floating_ips = l3o.list_floating_ips(project_id)
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -365,6 +365,16 @@ def delete_router(request, project_id, router_id):
         l3o.delete_router(router_id)
 
         return HttpResponseRedirect(reverse('project_view', args=('ffvc2',)))
+
+    except:
+        raise
+
+def destroy_project(request, project_id, project_name):
+    try:
+        auth = request.session['auth']
+	proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': 0}
+	destroy.destroy_project(auth, proj_dict)
+        return HttpResponseRedirect('/')
 
     except:
         raise
@@ -575,27 +585,29 @@ def remove_private_network(request, project_id, net_id):
 
 def setup(request):
     if request.method == 'POST':
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect('/')
         form = SetupForm(request.POST)
         if form.is_valid():
-            management_ip         = form.cleaned_data['management_ip']
-            uplink_ip             = form.cleaned_data['uplink_ip']
-            vm_ip_min             = form.cleaned_data['vm_ip_min']
-            vm_ip_max             = form.cleaned_data['vm_ip_max']
-            uplink_dns            = form.cleaned_data['uplink_dns']
-            uplink_gateway        = form.cleaned_data['uplink_gateway']
-            uplink_domain_name    = form.cleaned_data['uplink_domain_name']
-            uplink_subnet 	       = form.cleaned_data['uplink_subnet']
-            mgmt_domain_name      = form.cleaned_data['mgmt_domain_name']
-            mgmt_subnet           = form.cleaned_data['mgmt_subnet']
-            mgmt_dns              = form.cleaned_data['mgmt_dns']
-            cloud_name            = form.cleaned_data['cloud_name']
+            management_ip          = form.cleaned_data['management_ip']
+            uplink_ip              = form.cleaned_data['uplink_ip']
+            vm_ip_min              = form.cleaned_data['vm_ip_min']
+            vm_ip_max              = form.cleaned_data['vm_ip_max']
+            uplink_dns             = form.cleaned_data['uplink_dns']
+            uplink_gateway         = form.cleaned_data['uplink_gateway']
+            uplink_domain_name     = form.cleaned_data['uplink_domain_name']
+            uplink_subnet 	   = form.cleaned_data['uplink_subnet']
+            mgmt_domain_name       = form.cleaned_data['mgmt_domain_name']
+            mgmt_subnet            = form.cleaned_data['mgmt_subnet']
+            mgmt_dns               = form.cleaned_data['mgmt_dns']
+            cloud_name             = form.cleaned_data['cloud_name']
             single_node            = form.cleaned_data['single_node']
             admin_password         = form.cleaned_data['admin_password']
-            admin_password_confirm 	= form.cleaned_data['admin_password_confirm']
+            admin_password_confirm = form.cleaned_data['admin_password_confirm']
 
-        auth = request.session['auth']
-        system = util.get_cloud_controller_name()
-        system_var_array = [
+            auth = request.session['auth']
+            system = util.get_cloud_controller_name()
+            system_var_array = [
                                 {"system_name": system, "parameter": "api_ip",             "param_value": uplink_ip},
                                 {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
                                 {"system_name": system, "parameter": "admin_api_ip",       "param_value": uplink_ip},
@@ -613,14 +625,11 @@ def setup(request):
                                 {"system_name": system, "parameter": "mgmt_dns",           "param_value": mgmt_dns},
                                 ]
 
-        run_setup(system_var_array, auth)
-        change_admin_password (auth, admin_password)
-
-        if request.POST.get('cancel'):
-            return HttpResponseRedirect('/')
-        else:
+            run_setup(system_var_array, auth)
+            change_admin_password (auth, admin_password)
             return render_to_response('coal/setup_results.html', RequestContext(request, {'cloud_name':cloud_name, 'management_ip': management_ip}))
-
+        else:
+            return render_to_response('coal/setup.html', RequestContext(request, { 'form':form, }))
     else:
         form = SetupForm()
     return render_to_response('coal/setup.html', RequestContext(request, { 'form':form, }))
@@ -629,6 +638,8 @@ def setup(request):
 
 def build_project(request):
     if request.method == 'POST':
+        if request.POST.get('cancel'):
+            return HttpResponseRedirect('/')
         form = BuildProjectForm(request.POST)
         if form.is_valid():
             proj_name        = form.cleaned_data['proj_name']
@@ -644,8 +655,8 @@ def build_project(request):
             sec_keys_name   = form.cleaned_data['sec_keys_name']
             router_name     = form.cleaned_data['router_name']
 
-        auth = request.session['auth']
-        project_var_array = {   'proj_name': proj_name,
+            auth = request.session['auth']
+            project_var_array = {   'proj_name': proj_name,
                                 'user_dict': { 'username': username,
                                                 'password': password,
                                                 'userrole': 'pu',
@@ -662,14 +673,13 @@ def build_project(request):
                                 'sec_keys_name': sec_keys_name,
                                 'router_name': router_name
                             }
-        bcp.build_project(auth, project_var_array)
+            bcp.build_project(auth, project_var_array)
 
-
-        if request.POST.get('cancel'):
-            return HttpResponseRedirect('/')
-        else:
             redirect_to = "/projects/%s/view/" % (proj_name)
             return HttpResponseRedirect(redirect_to)
+ 
+        else:
+            return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
 
     else:
         form = BuildProjectForm()
