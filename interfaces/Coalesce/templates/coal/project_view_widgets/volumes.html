@@ -27,7 +27,7 @@
 	    {% if volumes %}
                 <tr> <th>Volume</th> <th>Actions</th></tr>
                     {% for volume in volumes %}
-		      <tr> <td>{{volume.vol_name}}</td>  <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.vol_id}}/">view</a> </td></tr>
+		      <tr> <td>{{volume.volume_name}}</td>  <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> </td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>

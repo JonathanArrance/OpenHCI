@@ -50,7 +50,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.destroy_project',
             name='destroy_project'),
 
-        url(r'^projects/(?P<project_name>\w+)/(?P<project_id>[^/]+)/user/(?P<user_name>\w+)/view/$',
+        url(r'^projects/(?P<project_name>\w+)/(?P<project_id>\w+)/user/(?P<user_name>\w+)/view/',
             'coalesce.coal_beta.views.user_view',
             name='user_view'),
 
@@ -58,7 +58,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
 
-        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<vol_id>[^/]+)/$',
+        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.volume_view',
             name='view_volume'),
 
@@ -66,7 +66,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
-	url(r'^take_snapshot/(?P<snap_name>[^/]+)/(?P<snap_desc>[^/]+)/(?P<vol_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	url(r'^take_snapshot/(?P<snapshot_name>[^/]+)/(?P<snapshot_desc>[^/]+)/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.take_snapshot',
             name='take_snapshot'),
 
@@ -118,7 +118,7 @@ urlpatterns = patterns('',
             name='assign_floating_ip'),
 	
 	# --- User actions ----
-	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<userrole>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<user_role>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_user',
             name='create_user'),
 
