@@ -13,8 +13,8 @@ def destroy_project(auth_dict, project_dict):
     DESC: Destroy project.
     INPUT: auth_dict
            project_dict - project_id - req
-                     - project_name - req
-                     - keep_users - req (boolean)
+                        - project_name - req
+                        - keep_users - req (boolean)
     OUTPUT:
     ACCESS:
     NOTES:
