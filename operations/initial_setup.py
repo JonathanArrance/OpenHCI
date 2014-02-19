@@ -244,6 +244,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Neutron config file written."
             logger.sys_info("Neutron config file written.")
     #HACK - centOS6.5 - may not be needed in future
+    os.system('sudo ln -s /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugin.ini')
     os.system('sudo chown -R quantum:quantum /var/lib/quantum')
     #start the cinder service
     neutron_start = service.neutron('restart')
@@ -289,16 +290,6 @@ def run_setup(new_system_variables,auth_dict):
     import_fedora = glance.import_image(fedora_input)
     if(import_fedora != 'OK'):
         logger.warn('Could not import the default Fedora image.')
-
-    #set up openvswitch
-    #os.system("sudo service openvswitch restart")
-    #time.sleep(1)
-    #logger.sys_info("Setting up br-ex")
-    #os.system("sudo ovs-vsctl add-br br-ex")
-    #os.system("sudo ovs-vsctl add-bond br-ex bond2 eth4 eth5")
-    #logger.sys_info("Setting up the internal br-int")
-    #os.system("sudo ovs-vsctl add-br br-int")
-    #os.system("chkconfig --level 2345 openvswitch on")
 
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
@@ -470,14 +461,6 @@ def run_setup(new_system_variables,auth_dict):
     first_boot = node_util.set_first_time_boot('UNSET')
     if(boot == 'ERROR'):
         logger.error("Could not set the first time boot flag to the UNSET status.")
-
-    #HACK - CentOS complains about the bridge already exisiting after a reboot
-            #fix remove the bridge from OVS restart network readd bridge to OVS
-    #os.system("sudo ovs-vsctl del-br br-ex")
-    #util.restart_network_card("all")
-    #logger.sys_info("Re-setting br-ex")
-    #os.system("sudo ovs-vsctl add-br br-ex")
-    #os.system("sudo ovs-vsctl add-bond br-ex bond2 eth4 eth5")
 
     return 'OK'
 

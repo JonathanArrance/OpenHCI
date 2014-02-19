@@ -893,12 +893,13 @@ class neutron_net_ops:
                 logger.sys_error('The public network given does not match the uplink subnet.')
                 return pub_check
 
-            #get the cidr
-            out = subprocess.Popen('ipcalc -b %s/%s'%(subnet_dict['subnet_start_range'],subnet_dict['public_subnet_mask']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out = subprocess.Popen('ipcalc -p %s %s'%(subnet_dict['subnet_start_range'],subnet_dict['public_subnet_mask']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             process = out.stdout.readlines()
-            x = process[4]
-            y = x.split(':')
-            cidr = y[1].strip()
+            x = process[0].split('=')
+            out2 = subprocess.Popen('ipcalc -n %s %s'%(subnet_dict['subnet_start_range'],subnet_dict['public_subnet_mask']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process2= out2.stdout.readlines()
+            y = process2[0].split('=')
+            cidr = y[1].rstrip() + '/' + x[1].rstrip()
 
             #build the subnet name
             name = net['net_name'] + '_sub'
