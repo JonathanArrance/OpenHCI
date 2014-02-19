@@ -93,17 +93,18 @@ def manage_projects(request):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project_list = to.list_all_tenants()
-    print project_list.keys()
+    print project_list
     project_info = []
     try:
-        for proj in project_list.keys():
-            print proj
-            pi = to.get_tenant(proj)
-            print pi
-            pi['project_name']= proj
+        for proj in project_list:
+            pid = proj['project_id']
+	    dict={}
+            pi = to.get_tenant(pid)
             project_info.append(pi)
+            print
+            print project_info
     except:
-        pass
+        raise
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
 def project_view(request, project_id):
@@ -236,12 +237,12 @@ def attach_server_to_network(request, server_id, project_id, net_id):
     
 
 
-def volume_view(request, project_id, vol_id):
+def volume_view(request, project_id, volume_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     snapshots = sno.list_snapshots()
-    vol_dict = {'project_id': project_id, 'vol_id': vol_id}
+    vol_dict = {'project_id': project_id, 'volume_id': volume_id}
     volume_info = vo.get_volume_info(vol_dict)
 
     return render_to_response('coal/volume_view.html',
@@ -260,11 +261,11 @@ def floating_ip_view(request, floating_ip_id):
                                                  }))
 
 
-def create_user(request, username, password, userrole, email, project_id):
+def create_user(request, username, password, user_role, email, project_id):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        user_dict = {'username': username, 'password':password, 'userrole':userrole, 'email': email, 'project_id': project_id}
+        user_dict = {'username': username, 'password':password, 'user_role':user_role, 'email': email, 'project_id': project_id}
         newuser= uo.create_user(user_dict)
         redirect_to = "/projects/%s/view/" % ("CHANGEME") #<<<<<<<<<< This doesn't work
         return HttpResponseRedirect(redirect_to)
@@ -283,7 +284,7 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
         newgroup= so.create_sec_group(create_sec)
         print "newgroup = %s" % newgroup
-        return HttpResponseRedirect("manage_projects")
+        return HttpResponseRedirect("/projects/manage")
     except:
         return HttpResponse(status=500)
 
@@ -403,11 +404,11 @@ def deallocate_floating_ip(request, project_id, floating_ip):
     except:
         return HttpResponse(status=500)
 
-def take_snapshot(request, snap_name, snap_desc, vol_id, project_id):
+def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
     try:
         auth = request.session['auth']
         sno = snapshot_ops(auth)
-        create_snap = {'snap_name': snap_name, 'snap_desc': snap_desc, 'vol_id': vol_id, 'project_id': project_id}
+        create_snap = {'snapshot_name': snapshot_name, 'snapshot_desc': snapshot_desc, 'volume_id': volume_id, 'project_id': project_id}
         sno.create_snapshot(create_snap)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]

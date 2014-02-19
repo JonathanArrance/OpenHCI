@@ -23,7 +23,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'tc',
+        'NAME': '/opt/Coalesce/tc',
     }
 }
 

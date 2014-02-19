@@ -204,10 +204,10 @@ class user_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'])
 
-            #if(self.new_user_proj_id == "NULL"):
-            #    self.proj_name = "NULL"
-            #else:
-            #    self.proj_name = project[0][0]
+            if(self.new_user_proj_id == "NULL"):
+                self.proj_name = "NULL"
+            else:
+                self.proj_name = project[0][0]
 
             try:
                 self.db.pg_transaction_begin()
