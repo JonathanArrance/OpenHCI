@@ -94,8 +94,8 @@ def run_setup(new_system_variables,auth_dict):
     endpoint = endpoint_ops(auth_dict)
 
     #reset the keystone endpoint
-    key_input = {'service_name':'keystone'}
-    del_keystone = endpoint.delete_endpoint(key_input)
+    #key_input = {'service_name':'keystone'}
+    del_keystone = endpoint.delete_endpoint('keystone')
     print del_keystone
     if(del_keystone == 'OK'):
         input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'keystone'}
@@ -243,10 +243,10 @@ def run_setup(new_system_variables,auth_dict):
     print "Importing default images"
     glance = glance_ops(auth_dict)
     cirros_input = {
-                    'img_name':"Cirros-x86_64-0-3-1",
-                    'img_disk_format':"qcow2",
-                    'img_is_public':'True',
-                    'img_is_protected':'True',
+                    'image_name':"Cirros-x86_64-0-3-1",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
                     }
@@ -255,10 +255,10 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default cirros image.')
 
     ubuntu_input = {
-                    'img_name':"Ubuntu-12-04-x86_64",
-                    'img_disk_format':"qcow2",
-                    'img_is_public':'True',
-                    'img_is_protected':'True',
+                    'image_name':"Ubuntu-12-04-x86_64",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
                     }
@@ -267,10 +267,10 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default Ubuntu Precise image.')
 
     fedora_input = {
-                    'img_name':"Fedora-x86_64",
-                    'img_disk_format':"qcow2",
-                    'img_is_public':'True',
-                    'img_is_protected':'True',
+                    'image_name':"Fedora-x86_64",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
                     'file_location':"/transcirrus/fedora-latest.x86_64.qcow2"
                     }
