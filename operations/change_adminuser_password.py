@@ -43,8 +43,8 @@ def change_admin_password(auth_dict,new_password):
                      'file_group':'transuser',
                      'file_perm':664,
                      'op':'append'
-                    }
-        os.system('sudo chown transuser:transystem /home/transuser/factory_creds')
+                    } 
+        os.system('sudo chown -R transuser:transystem /home/transuser')
         write_creds = util.write_new_config_file(file_dict)
         if(write_creds != 'OK'):
             logger.sys_warning('Could not write the new credentials file in transuser home directory.')
