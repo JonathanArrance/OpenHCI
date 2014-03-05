@@ -219,7 +219,7 @@ class tenant_ops:
             """
             try:
                 #build an api connection for the admin user.
-                api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
