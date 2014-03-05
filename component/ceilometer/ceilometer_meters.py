@@ -74,10 +74,12 @@ class meter_ops:
         self.db.pg_close_connection()
 
 
-    def list_meters(self):
+    def list_meters(self, project_id):
         
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != project_id):
+                    self.token = get_token(self.username,self.password,project_id)
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the Keystone API")
