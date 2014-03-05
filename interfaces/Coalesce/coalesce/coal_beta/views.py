@@ -657,7 +657,7 @@ def build_project(request):
             router_name     = form.cleaned_data['router_name']
 
             auth = request.session['auth']
-            project_var_array = {   'proj_name': proj_name,
+            project_var_array = {   'project_name': project_name,
                                 'user_dict': { 'username': username,
                                                 'password': password,
                                                 'userrole': 'pu',
