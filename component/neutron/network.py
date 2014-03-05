@@ -1098,7 +1098,7 @@ class neutron_net_ops:
 #######reserved for alpo.1#######
 #not needed for the prototype
 #http://docs.openstack.org/api/openstack-network/2.0/content/Ports.html
-
+    '''
     def list_net_ports(self,input_dict):
         """
         DESC: used to list the 'in use' ports (ips) on a subnet
@@ -1193,10 +1193,6 @@ class neutron_net_ops:
             logger.sys_error("Only an admin or a power user can remove a port: remove_net_port")
             raise Exception("Only an admin or a power user can remove a port: remove_net_port")
 
-    def get_net_port():
-        print "not implemented"
-
-    
     def add_net_port():
         """
         DESC: used to clean up after the
@@ -1297,3 +1293,4 @@ class neutron_net_ops:
         else:
             logger.sys_error("Only an admin or a power user can remove a port: remove_net_port")
             raise Exception("Only an admin or a power user can remove a port: remove_net_port")
+    '''

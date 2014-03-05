@@ -10,7 +10,7 @@ from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
-class object_services:
+class object_service_ops:
     def __init__(self,user_dict):
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
@@ -24,6 +24,7 @@ class object_services:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
+            self.user_id = user_dict['user_id']
 
             if(self.is_admin == 1):
                 self.adm_token = user_dict['adm_token']
@@ -43,6 +44,10 @@ class object_services:
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
 
+        if(self.adm_token == ''):
+            logger.sys_error("No admin tokens passed.")
+            #raise Exception("No admin tokens passed.")
+
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
             raise Exception("No tokens passed, or token was in error")
@@ -52,21 +57,141 @@ class object_services:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         #attach to the DB
-        try:
-            #Try to connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sys_error("Could not connect to db with error: %s" %(e))
-            raise Exception("Could not connect to db with error: %s" %(e))
+        self.db = util.db_connect()
         
-    def get_object_details(self):
-        pass
+    def get_object_details(self,input_dict):
+        """
+        DESC: Get the specifics of an object.
+        INPUT input_dict - container_name
+                         - object_name
+                         - project_id
+        OUTPUT: r_array - list of container objects
+        ACCESS: Admin - can get the object details in any container
+                PU - can get the object details from any container in their project
+                User - can get the object details in the containers they own
+        NOTE:
+        """
+        logger.sys_info('\n**Get object details. Component: Swift Def: get_object_details**\n')
+        #check if the continer can be accesed by the user.
+        try:
+            get_container = None
+            if(self.user_level == 0):
+                get_container = {'select':"index",'from':"trans_swift_containers",'where':"container_name='%s'"%(input_dict['container_name'])}
+            elif(self.user_level == 1):
+                get_container = {'select':"index",'from':"trans_swift_containers",'where':"proj_id='%s'"%(self.project_id),'and':"container_name='%s'"%(input_dict['container_name'])}
+            elif(self.user_level == 2):
+                if(self.project_id == input_dict['project_id']):
+                    get_container = {'select':"index",'from':"trans_swift_containers",'where':"container_user_id='%s'"%(self.user_id),'and':"container_name='%s'"%(input_dict['container_name'])}
+                else:
+                    logger.sys_error("Container specified does not belong to the user.")
+                    raise Exception("Container specified does not belong to the user.")
+            container = self.db.pg_select(get_container)
+        except:
+            logger.sys_error("Container could not be found.")
+            raise Exception("Container could not be found.")
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v1/AUTH_%s/%s/%s' %(input_dict['project_id'],input_dict['container_name'],input_dict['object_name'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sql_error("Could not get the Swift object info.")
+            raise Exception("Could not get the Swift object info.")
+
+        #check the response and make sure it is a 200
+        if(rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            print rest
+            #r_array = rest['data'].split('\n')
+            #r_array.pop()
+            #return r_array
+        else:
+            util.http_codes(rest['response'],rest['reason'])
     
-    def create_object(self):
-        pass
+    def create_object(self,input_dict):
+        """
+        DESC: Create a new object in a container.
+        INPUT input_dict - container_name
+                         - object_name
+                         - project_id
+        OUTPUT: r_array - list of container objects
+        ACCESS: Admin - can create an object in any container
+                PU - can create an object in any container in their project
+                User - can creae a new object in a container they own.
+        NOTE:
+        """
+        logger.sys_info('\n**Create a new object. Component: Swift Def: create_object**\n')
+        #check if the continer can be accesed by the user.
+        try:
+            get_container = None
+            if(self.user_level == 0):
+                get_container = {'select':"index",'from':"trans_swift_containers",'where':"container_name='%s'"%(input_dict['container_name'])}
+            elif(self.user_level == 1):
+                get_container = {'select':"index",'from':"trans_swift_containers",'where':"proj_id='%s'"%(self.project_id),'and':"container_name='%s'"%(input_dict['container_name'])}
+            elif(self.user_level == 2):
+                if(self.project_id == input_dict['project_id']):
+                    get_container = {'select':"index",'from':"trans_swift_containers",'where':"container_user_id='%s'"%(self.user_id),'and':"container_name='%s'"%(input_dict['container_name'])}
+                else:
+                    logger.sys_error("Container specified does not belong to the user.")
+                    raise Exception("Container specified does not belong to the user.")
+            container = self.db.pg_select(get_container)
+        except:
+            logger.sys_error("Container could not be found.")
+            raise Exception("Container could not be found.")
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'PUT'
+            api_path = '/v1/AUTH_%s/%s/%s' %(input_dict['project_id'],input_dict['container_name'],input_dict['object_name'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sql_error("Could not get the Swift object info.")
+            raise Exception("Could not get the Swift object info.")
+
+        #check the response and make sure it is a 200
+        if(rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            print rest
+            #r_array = rest['data'].split('\n')
+            #r_array.pop()
+            #return r_array
+        else:
+            util.http_codes(rest['response'],rest['reason'])
     
     def update_object(self):
         pass
+        #most likey we can use create_object
     
     def create_chunked_object(self):
         pass

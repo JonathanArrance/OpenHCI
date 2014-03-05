@@ -1839,7 +1839,7 @@ INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'quantum.conf', 49)
 -- Data for Name: nova_default; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
-INSERT INTO nova_default VALUES ('enabled_apis', 'ec2,osapi_compute,metadata', 'nova.conf', 1);
+INSERT INTO nova_default VALUES ('enabled_apis', 'ec2,osapi_compute', 'nova.conf', 1);
 INSERT INTO nova_default VALUES ('logdir', '/var/log/nova', 'nova.conf', 2);
 INSERT INTO nova_default VALUES ('state_path', '/var/lib/nova', 'nova.conf', 3);
 INSERT INTO nova_default VALUES ('lock_path', '/var/lock/nova', 'nova.conf', 4);

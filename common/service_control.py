@@ -182,6 +182,23 @@ def swift(action):
     out = _operator(swift_array,action)
     return out
 
+def gluster_swift(action):
+    """
+    DESC: Control the swift services
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: These only work on the ciac node for now
+    """
+
+    swift_array = ['openstack-swift-object','openstack-swift-container','openstack-swift-account','openstack-swift-proxy']
+    out = _operator(swift_array,action)
+    return out
+
 def gluster(action):
     """
     DESC: Control the glusterfs services
