@@ -135,7 +135,7 @@ def project_view(request, project_id):
     ouserinfo = []
     if ousers:
         for ouser in ousers:
-            ouserinfo.append(ouser['user_name'])
+            ouserinfo.append(ouser['username'])
 
     priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
@@ -373,7 +373,7 @@ def delete_router(request, project_id, router_id):
 def destroy_project(request, project_id, project_name):
     try:
         auth = request.session['auth']
-	proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': 0}
+	proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': False}
 	destroy.destroy_project(auth, proj_dict)
         return HttpResponseRedirect('/')
 
@@ -657,26 +657,26 @@ def build_project(request):
             router_name     = form.cleaned_data['router_name']
 
             auth = request.session['auth']
-            project_var_array = {   'project_name': project_name,
-                                'user_dict': { 'username': username,
+            project_var_array = {'project_name': proj_name,
+                                 'user_dict': { 'username': username,
                                                 'password': password,
-                                                'userrole': 'pu',
+                                                'user_role': 'pu',
                                                 'email': email,
                                                 'project_id': ''},
 
-                                'net_name':net_name,
-                                'subnet_dns': subnet_dns,
-                                'sec_group_dict':  { 'ports': '',
+                                 'net_name':net_name,
+                                 'subnet_dns': subnet_dns,
+                                 'sec_group_dict':  { 'ports': '',
                                                      'group_name': group_name,
                                                      'group_desc': 'group_desc',
                                                      'project_id': ''},
 
-                                'sec_keys_name': sec_keys_name,
-                                'router_name': router_name
+                                 'sec_keys_name': sec_keys_name,
+                                 'router_name': router_name
                             }
-            bcp.build_project(auth, project_var_array)
+            pid = bcp.build_project(auth, project_var_array)
 
-            redirect_to = "/projects/%s/view/" % (proj_name)
+            redirect_to = "/projects/%s/view/" % (pid)
             return HttpResponseRedirect(redirect_to)
  
         else:
