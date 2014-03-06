@@ -104,31 +104,31 @@ class gluster_ops:
         """
         DESC: Create a new gluster volume
         INPUT input_dict - volume_name
-                         - gluster_dir_name
+                         - bricks[]
         OUTPUT: OK - SUCCESS
                 ERROR - FAIL
         ACCESS: Admin - can create a gluster volumes directly
                 PU - none
                 User - none
         NOTE: This is not the same as useing the Cinder volume create, this def
-              creates volumes using the gluster commands
+              creates volumes using the gluster commands,
+              bricks[172.38.24.11:/data/gluster/'volume_name']
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
         if(self.is_admin == 1):
+            command = None
+            if(len(input_dict['bricks']) >= 1):
+                brick = ','.join(input_dict['bricks'])
+                command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s %s'%(input_dict['volume_name'],input_dict['volume_name'],brick)
+            else:
+                command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
             #make a new directory for the gluster volume
-            out = subprocess.Popen('sudo mkdir -p /data/gluster/%s'%(input_dict['gluster_dir_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             make = out.stdout.readlines()
             if(len(make) >= 1):
-                logger.sys_error('Could not create a new directory for Gluster volume.')
+                logger.sys_error('Could not create a new Gluster volume.')
                 return 'ERROR'
-    
-            #create the gluster volume
-            out2 = subprocess.Popen('sudo gluster volume create %s 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['gluster_dir_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            vol_create= out2.stdout.readlines()
-            if(len(vol_create) == 0):
-                logger.sys_error('Could not create the new Gluster volume.')
-                return 'ERROR'
-    
+
             out3 = subprocess.Popen('sudo gluster volume start %s'%(input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             start = out3.stdout.readlines()
             #print start
@@ -159,8 +159,8 @@ class gluster_ops:
             if(out != 0):
                 return 'ERROR'
         else:
-            logger.sys_error('Only admins can create gluster swift rings.')
-            raise Exeption('Only admins can create gluster swift rings.')
+            logger.sys_error('Only admins can delete Gluster volumes.')
+            raise Exeption('Only admins can delete Gluster volumes.')
 
         return 'OK'
 
@@ -183,8 +183,8 @@ class gluster_ops:
                 r_array.append(vol.rstrip())
             return r_array
         else:
-            logger.sys_error('Only admins can create gluster swift rings.')
-            raise Exeption('Only admins can create gluster swift rings.')
+            logger.sys_error('Only admins can list Gluster volumes.')
+            raise Exeption('Only admins can list Gluster volumes.')
 
     def add_gluster_brick(self,input_dict):
         """
@@ -208,8 +208,8 @@ class gluster_ops:
             else:
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
-            logger.sys_error('Only admins can create gluster swift rings.')
-            raise Exeption('Only admins can create gluster swift rings.')
+            logger.sys_error('Only admins can add a gluster brick.')
+            raise Exeption('Only admins can add a gluster brick.')
 
         return 'OK'
 
@@ -231,8 +231,8 @@ class gluster_ops:
             if(out != 0):
                 return 'ERROR'
         else:
-            logger.sys_error('Only admins can create gluster swift rings.')
-            raise Exeption('Only admins can create gluster swift rings.')
+            logger.sys_error('Only admins can stop a Gluster volume.')
+            raise Exeption('Only admins can stop a gluster volume.')
     
     def remove_gluster_brick(self,input_dict):
         """
@@ -248,12 +248,12 @@ class gluster_ops:
         """
         logger.sys_info('\n**Removeing Gluster brick from volumes. Common Def: remove_gluster_brick**\n')
         if(self.is_admin == 1):
-            out = os.system('sudo gluster volume add-brick %s %s'%(input_dict['volume_name'],input_dict['brick']))
+            out = os.system('sudo gluster volume remove-brick %s %s'%(input_dict['volume_name'],input_dict['brick']))
             if(out != 0):
                 return 'ERROR'
         else:
-            logger.sys_error('Only admins can create gluster swift rings.')
-            raise Exeption('Only admins can create gluster swift rings.')
+            logger.sys_error('Only admins can remove Gluster bricks.')
+            raise Exeption('Only admins can remove Gluster bricks.')
 
         return 'OK'
 
@@ -263,12 +263,19 @@ class gluster_ops:
         INPUT: volume_name
         OUTPUT: OK - SUCCESS
                 ERROR - FAIL
+                NA - UNKNOWN
         ACCESS: Admin - Can rebalance volumes across bricks.
                 PU - none
                 User - none
         NOTE: Uses the glusterfs commands to rebalance volumes.
         """
-        pass
+        out = subprocess.Popen('sudo gluster volume rebalance %s'%(volume_name), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        start = out.stdout.readlines()
+        #print start
+        if(len(start) == 0):
+            logger.sys_error('Unknown output while rebalancing Gluster volume.')
+            return 'NA'
+        print start
     
     def replace_gluster_brick(self,input_dict):
         """
@@ -291,12 +298,24 @@ class gluster_ops:
         INPUT: server_ip
         OUTPUT: OK - SUCCESS
                 ERROR - FAIL
+                NA - UNKNOWN
         ACCESS: Admin - Can probe potential peers
                 PU - none
                 User - none
         NOTE: Uses the GlusterFS commands
         """
-        pass
+        out = subprocess.Popen('sudo gluster probe %s'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        probe = out.stdout.readlines()
+        #print start
+        if(len(probe) == 0):
+            logger.sys_error('Unknown output while probeing Gluster peer.')
+            return 'NA'
+        #this needs to be confirmed
+        print probe
+        
+        if(probe[1] == 'success'):
+            update = {'table':"trans_nodes",'set':"node_gluster_peer='1'",'where':"node_data_ip='%s'"%(server_ip)}
+            self.db.pg_update(update)
 
     def detach_gluster_peer(self,server_ip):
         """
@@ -309,6 +328,47 @@ class gluster_ops:
                 User - none
         NOTE: Uses the GlusterFS commands
         """
-        pass
-    
-    
+        out = subprocess.Popen('sudo gluster peer detach %s'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        det = out.stdout.readlines()
+        #print start
+        if(len(det) == 0):
+            logger.sys_error('Unknown output while probeing Gluster peer.')
+            return 'NA'
+        #this needs to be confirmed
+        print det
+        
+        if(det[1] == 'success'):
+            update = {'table':"trans_nodes",'set':"node_gluster_peer='0'",'where':"node_data_ip='%s'"%(server_ip)}
+            
+            self.db.pg_update(update)
+
+    def list_gluster_nodes(self):
+        """
+        DESC: List all of the Gluster storage nodes
+        INPUT: None
+        OUTPUT: r_array or r_dict - node_id
+                                  - node_name
+                                  - node_type
+                                  - node_data_ip
+                ERROR - fail
+        ACCESS: Admin - Can list gluster peers.
+                PU - none
+                User - none
+        NOTE:
+        """
+        if(self.is_admin == 1):
+            try:
+                select = {'select':"node_id,node_name,node_type,node_data_ip",'from':"trans_nodes",'where':"node_gluster_peer='1'"}
+                peers = self.db.pg_select(select)
+            except:
+                logger.sys_error("Could not retrive any gluster peers")
+                return 'ERROR'
+
+            r_array = []
+            for peer in peers:
+                r_dict = {'node_id':peer[0],'node_name':peer[1],'node_type':peer[2],'node_data_ip':peer[3]}
+                r_array.append(r_dict)
+            return r_array
+        else:
+            logger.sys_error('Only admins can list Gluster peers.')
+            return 'ERROR'
