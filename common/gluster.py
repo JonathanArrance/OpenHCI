@@ -1,8 +1,8 @@
 #need to re-run the gluster swift ring create everytime a new project is added, also need to kick the proxy server
 import sys
-import json
 import subprocess
 import os
+import re
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -117,21 +117,25 @@ class gluster_ops:
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
         if(self.is_admin == 1):
             command = None
-            if(len(input_dict['bricks']) >= 1):
-                brick = ','.join(input_dict['bricks'])
-                command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s %s'%(input_dict['volume_name'],input_dict['volume_name'],brick)
+            if('bricks' in input_dict and len(input_dict['bricks']) >= 1):
+                brick = ' '.join(input_dict['bricks'])
+                #print brick
+                command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
+                #print command
             else:
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
+                print command
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             make = out.stdout.readlines()
-            if(len(make) >= 1):
+            print make
+            if(len(make) == 0):
                 logger.sys_error('Could not create a new Gluster volume.')
                 return 'ERROR'
 
             out3 = subprocess.Popen('sudo gluster volume start %s'%(input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             start = out3.stdout.readlines()
-            #print start
+            print start
             if(len(start) == 0):
                 logger.sys_error('Could not start the new Gluster volume.')
                 return 'ERROR'
@@ -230,6 +234,8 @@ class gluster_ops:
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume stop %s'%(volume_name))
             if(out != 0):
                 return 'ERROR'
+            else:
+                return 'OK'
         else:
             logger.sys_error('Only admins can stop a Gluster volume.')
             raise Exeption('Only admins can stop a gluster volume.')
@@ -248,14 +254,15 @@ class gluster_ops:
         """
         logger.sys_info('\n**Removeing Gluster brick from volumes. Common Def: remove_gluster_brick**\n')
         if(self.is_admin == 1):
-            out = os.system('sudo gluster volume remove-brick %s %s'%(input_dict['volume_name'],input_dict['brick']))
+            out = os.system('sudo gluster volume remove-brick %s %s start'%(input_dict['volume_name'],input_dict['brick']))
             if(out != 0):
+                logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
                 return 'ERROR'
+            else:
+                return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
             raise Exeption('Only admins can remove Gluster bricks.')
-
-        return 'OK'
 
     def rebalance_gluster_volume(self,volume_name):
         """
@@ -269,13 +276,19 @@ class gluster_ops:
                 User - none
         NOTE: Uses the glusterfs commands to rebalance volumes.
         """
-        out = subprocess.Popen('sudo gluster volume rebalance %s'%(volume_name), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logger.sys_info('\n**Rebalanceing Gluster volumes. Common Def: rebalance_gluster_volume**\n')
+        out = subprocess.Popen('sudo gluster volume rebalance %s start'%(volume_name), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         start = out.stdout.readlines()
         #print start
         if(len(start) == 0):
             logger.sys_error('Unknown output while rebalancing Gluster volume.')
             return 'NA'
-        print start
+        if(os.system("echo '%s' | grep 'success'"%(start[0])) == 0):
+            logger.sys_info("Starting rebalance of gluster volume %s" %(volume_name))
+            return 'OK'
+        else:
+            logger.sys_error('Could not rebalance the volume %s'%(volume_name))
+            return 'ERROR'
     
     def replace_gluster_brick(self,input_dict):
         """
@@ -292,7 +305,7 @@ class gluster_ops:
         """
         pass
     
-    def probe_gluster_peer(self,server_ip):
+    def attach_gluster_peer(self,server_ip):
         """
         DESC: Probe a new gluster server and add it to the gluster cluster
         INPUT: server_ip
@@ -304,18 +317,23 @@ class gluster_ops:
                 User - none
         NOTE: Uses the GlusterFS commands
         """
-        out = subprocess.Popen('sudo gluster probe %s'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = subprocess.Popen('sudo gluster peer probe %s'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         probe = out.stdout.readlines()
-        #print start
-        if(len(probe) == 0):
-            logger.sys_error('Unknown output while probeing Gluster peer.')
-            return 'NA'
         #this needs to be confirmed
-        print probe
-        
-        if(probe[1] == 'success'):
-            update = {'table':"trans_nodes",'set':"node_gluster_peer='1'",'where':"node_data_ip='%s'"%(server_ip)}
-            self.db.pg_update(update)
+        if(len(probe) == 1):
+            try:
+                update = {'table':"trans_nodes",'set':"node_gluster_peer='1'",'where':"node_data_ip='%s'"%(server_ip)}
+                self.db.pg_update(update)
+            except:
+                logger.sys_error('Could not attach host with ip %s to Gluster storage network.'%(server_ip))
+                self.delete_gluster_volume(server_ip)
+                return 'NA'
+            else:
+                logger.sys_info('Successfuly added a new gluster peer %s'%(server_ip))
+                return 'OK'
+        else:
+            logger.sys_error('Could not attach host with ip %s to Gluster storage network.'%(server_ip))
+            return 'ERROR'
 
     def detach_gluster_peer(self,server_ip):
         """
@@ -330,17 +348,23 @@ class gluster_ops:
         """
         out = subprocess.Popen('sudo gluster peer detach %s'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         det = out.stdout.readlines()
-        #print start
-        if(len(det) == 0):
-            logger.sys_error('Unknown output while probeing Gluster peer.')
-            return 'NA'
-        #this needs to be confirmed
-        print det
-        
-        if(det[1] == 'success'):
-            update = {'table':"trans_nodes",'set':"node_gluster_peer='0'",'where':"node_data_ip='%s'"%(server_ip)}
-            
-            self.db.pg_update(update)
+        if(len(det) == 1):
+            try:
+                update = {'table':"trans_nodes",'set':"node_gluster_peer='0'",'where':"node_data_ip='%s'"%(server_ip)}
+                self.db.pg_update(update)
+            except:
+                logger.sys_error('Could not dettach host with ip %s from Gluster storage network.'%(server_ip))
+                self.delete_gluster_volume(server_ip)
+                return 'NA'
+            else:
+                logger.sys_info('Successfuly detachedgluster peer %s'%(server_ip))
+                return 'OK'
+        else:
+            logger.sys_error('Could not remove peer %s from Gluster storage network.'%(server_ip))
+            return 'ERROR'
+
+    def gluster_vol_status(self):
+        pass
 
     def list_gluster_nodes(self):
         """
