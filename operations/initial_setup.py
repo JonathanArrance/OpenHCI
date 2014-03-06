@@ -361,6 +361,10 @@ def run_setup(new_system_variables,auth_dict):
     cidr = process[0].split("=")
     os.system("sudo ip addr add %s/%s dev br-ex" %(sys_vars['UPLINK_IP'],cidr[1].rstrip()))
 
+    #add the internal bridge
+    logger.sys_info("Adding br-int")
+    os.system("sudo ovs-vsctl add-br br-int")
+
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
     os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")

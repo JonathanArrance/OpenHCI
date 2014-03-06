@@ -10,7 +10,7 @@ from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
-class account_services:
+class account_service_ops:
     def __init__(self,user_dict):
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
@@ -52,21 +52,67 @@ class account_services:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         #attach to the DB
+        self.db = util.db_connect()
+
+    def get_account_containers(self,project_id):
+        """
+        DESC: Get the account information
+        INPUT None
+        OUTPUT: r_array - list of containers
+        ACCESS: Admin - can get the account data from an project
+                PU - can get the account data for their project
+                User - can not get account data
+        NOTE:
+        """
+        logger.sys_info('\n**Getting Swift account data. Component: Swift Def: get_account_data**\n')
+        if(self.user_level == 0):
+            logger.sys_info('Admin user logged in.')
+        elif(self.user_level == 1):
+            if(project_id != self.project_id):
+                logger.sys_error('Power user not in the project.')
+                raise Exception('Power user not in the project.')
+        else:
+            logger.sys_error('Only admins and power users can get info from .')
+            raise Exception('Power user not in the project.')
+
         try:
-            #Try to connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sys_error("Could not connect to db with error: %s" %(e))
-            raise Exception("Could not connect to db with error: %s" %(e))
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            if(self.project_id != project_id):
+                self.token = get_token(self.username,self.password,project_id)
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
 
-    def list_user_containers(self):
+        try:
+            #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v1/AUTH_%s' %(project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sql_error("Could not get the Swift account info.")
+            raise Exception("Could not get the Swift account info.")
+
+        #check the response and make sure it is a 204
+        if(rest['response'] == 204 or rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            r_array = rest['data'].split('\n')
+            r_array.pop()
+            return r_array
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+    def create_account_metadata(self):
         pass
 
-    def get_account_data(self):
+    def update_account_metadata(self):
         pass
 
-    def update_account_data(self):
-        pass
-
-    def delete_account_data(self):
+    def delete_account_metadata(self):
         pass

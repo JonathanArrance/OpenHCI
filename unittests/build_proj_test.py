@@ -15,25 +15,25 @@ a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 print d
-'''
+use = user_ops(d)
 print "Instantiating a new tenant ops object."
 ten = tenant_ops(d)
 time.sleep(1)
 print "----------------------------------------"
 
 print "creating test project"
-proj = ten.create_tenant("ffvc2")
+proj = ten.create_tenant("test5")
 print proj
 time.sleep(1)
 print "----------------------------------------"
 
 print "Instantiating user_ops object."
-use = user_ops(d)
+
 nova = server_ops(d)
 
 print "Create a new standard user with no project."
 
-new_user_dict = {"username":'jill',"password":"test","userrole":"pu","email":"jill@domain.com"}
+new_user_dict = {"username":'kevin2',"password":"test","user_role":"pu","email":"kevin2@domain.com"}
 
 create = use.create_user(new_user_dict)
 print create
@@ -42,12 +42,12 @@ print "----------------------------------------"
 
 print "Adding user %s to test project" %(create['username'])
 
-add_user_dict = {"username":"jill","user_role":'pu',"project_name":'ffvc2'}
+add_user_dict = {"username":"kevin2","user_role":'pu',"project_id":proj}
 
 add = use.add_user_to_project(add_user_dict)
 print add
 time.sleep(1)
-
+'''
 print "Creating security group with default ports - default"
 #create a security group with default ports
 create_group = {"group_name": 'yosec',"group_desc": 'This is a test','project_id':proj['tenant_id']}
@@ -115,9 +115,9 @@ ext_int = router.add_router_gateway_interface(add_dict2)
 print ext_int
 time.sleep(1)
 print "-------------------------------------------------"
-'''
+
 router = layer_three_ops(d)
 del_dict = {'router_id':"bb1ee95f-7a33-4a1a-9a5f-e0a48eba106e",'subnet_id':"e007d46e-df30-4686-83f7-4d01ec5daebc",'project_id':"9fad7cee35024b858795097f6e7d62da"}
 delr = router.delete_router_internal_interface(del_dict)
 print delr
-
+'''

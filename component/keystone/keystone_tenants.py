@@ -259,7 +259,7 @@ class tenant_ops:
                     #return OK if good to go
                     return "OK"
                 else:
-                    _http_codes(rest['response'],rest['reason'])
+                    util.http_codes(rest['response'],rest['reason'])
             except Exception as e:
                 logger.sys_error("Could not remove the project %s" %(e))
         else:
@@ -273,7 +273,7 @@ class tenant_ops:
                                - project_id
         ACCESS: This operation is only available to admins
         """
-        logger.sys_info('\n**Listing projects. Component: Keystone Def: list_tenants**\n')
+        logger.sys_info('\n**Listing projects. Component: Keystone Def: list_all_tenants**\n')
         try:
             #Try to connect to the transcirrus db
             self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
@@ -283,7 +283,6 @@ class tenant_ops:
 
         #check if the is_admin flag set to 1 - sanity check
         if(self.is_admin == 1):
-            logger.sys_error("User not identified as a user or an admin.")
             #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
             if(self.status_level <= 1):
                 logger.sys_error("User status not sufficient, can not list projects.")
@@ -414,12 +413,3 @@ class tenant_ops:
 
     def update_tenant(self):
         pass
-        
-######Internal defs#######
-def _http_codes(code,reason):
-    if(code):
-        logger.sys_error("Response %s with Reason %s" %(code,reason))
-        raise Exception("Response %s with Reason %s" %(code,reason))
-    else:
-        logger.sys_error("Error for unknown reason.")
-        raise Exception("Error for unknown reason.")
