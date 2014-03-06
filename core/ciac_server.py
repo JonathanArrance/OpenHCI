@@ -363,7 +363,7 @@ def recv_data(sock):
             logger.sys_error("recv_data: invalid tlv %s" %(data['Type']))
             sys.exit()
     else:
-        logger.sys_error("recv_data: pkt_len failed")i
+        logger.sys_error("recv_data: pkt_len failed")
         sys.exit()
 
     while True:
