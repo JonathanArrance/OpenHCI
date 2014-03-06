@@ -59,6 +59,12 @@ reply_alive = {
 'Value': 'alive'
 }
 
+pkt_len = {
+'Type' : 'pkt_len',
+'Length': '1',
+'Value': 1
+}
+
 def getNodeInfo():
     '''
     @author         : Shashaa
@@ -224,36 +230,61 @@ def recv_data(sock):
     comments        :
     '''
     count=0
+    data = ''
+    chunk=''
+    recv_len=0
+    msglen=0
+    global retry_count
+    global timeout_sec
+
+    # receive pkt length
+    data = recv_pkt_len(sock)
+    if data:
+        data = pickle.loads(data)
+        if data['Type'] == 'pkt_len':
+            msglen  = data['Value']
+        else:
+            logger.sys_error("recv_data: invalid tlv %s" %(data['Type']))
+            sys.exit()
+    else:
+        logger.sys_error("recv_data: pkt_len failed")
+        sys.exit()
+
     while True:
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
-            data = sock.recv(recv_buffer)
-            break
+            chunk = sock.recv(recv_buffer)
+            data = data + chunk
+            if len(data) == msglen:
+                logger.sys_info("recv_data: recv data len %s" %(len(data)))
+                break
+            else:
+                logger.sys_info("recv_data: looping for more data")
         else:
             count = count + 1
             if count >= retry_count:
-                logger.sys_error("retry count expired..exiting!!")
+                logger.sys_error("recv_data: retry count expired")
                 if __debug__ :
-                    print "retry count expired..exiting!!"
+                    print "recv_data: retry count expired..exiting!!"
                 sys.exit(1)
-            logger.sys_warning("retrying...%s" %(count))
+            logger.sys_warning("recv_data: retrying...%s" %(count))
             if __debug__ :
-                print "retrying... ", count
+                print "recv_data: retrying... ", count
 
     return data
 
-def send_data(msg, sock):
 
+def send_data(msg, sock):
 
     global retry_count
     global timeout_sec
     count=0
     totalsent = 0
-    #msglen = msg.length()
-    # TODO send data based on size of the message being sent
-    # assume 10 bytes as minimum length of any message exchanged between client
-    # and server sockets
-    msglen = 10
+    # send pkt length
+    msglen = len(msg)
+    send_pkt_len(msglen, sock)
+
+    logger.sys_info("send_data: %s bytes" %(msglen))
     while totalsent < msglen:
         sent = sock.send(msg[totalsent:])
         if sent == 0:
@@ -264,9 +295,56 @@ def send_data(msg, sock):
                 sys.exit()
             else:
                 logger.sys_info("socket send data retrying ...")
-                sleep(1)
+                time.sleep(1)
         totalsent = totalsent + sent
 
+def recv_pkt_len(sock):
+
+    count=0
+    global retry_count
+    global timeout_sec
+    data = ''
+    while True:
+        ready = select.select([sock], [], [], timeout_sec)
+        if ready[0]:
+            data = sock.recv(recv_buffer)
+            break
+        else:
+            count = count + 1
+            if count >= retry_count:
+                logger.sys_error("recv_pkt_len: retry count expired")
+                if __debug__ :
+                    print "retry count expired..exiting!!"
+                sys.exit(1)
+            logger.sys_warning("recv_pkt_len: retrying...%s" %(count))
+            if __debug__ :
+                print "recv_pkt_len: retrying... ", count
+
+    return data
+
+
+def send_pkt_len(msglen, sock):
+
+    global pkt_len
+    global retry_count
+    global timeout_sec
+    count=0
+    pkt_len['Value']= msglen
+
+    while True:
+        sent = sock.send(pickle.dumps(pkt_len, -1))
+        if sent == 0:
+            count = count+1
+            if count >= retry_count:
+                logger.sys_error("send_pkt_len: send failed !!")
+                raise RuntimeError("socket connection broken")
+                sys.exit()
+            else:
+                logger.sys_info("send_pkt_len: socket send retrying ...")
+                time.sleep(1)
+        else:
+            logger.sys_info("send_pkt_len: ok")
+            break;
 
 def restartNovaServices(node_id):
     '''
