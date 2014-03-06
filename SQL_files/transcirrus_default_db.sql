@@ -918,10 +918,9 @@ CREATE TABLE trans_nodes (
     node_controller character varying,
     node_cloud_name character varying,
     node_nova_zone character varying,
-    node_iscsi_iqn character varying,
-    node_swift_ring character varying,
     node_fault_flag character varying,
-    node_ready_flag character varying
+    node_ready_flag character varying,
+    node_gluster_peer character varying
 );
 
 
