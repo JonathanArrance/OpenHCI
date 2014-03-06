@@ -80,4 +80,4 @@ def build_project(auth_dict, project_dict):
     outside_port = neutron_router.add_router_gateway_interface(outside_port_dict)
     logger.sys_info("Created router gateway")
 
-    return "OK"
+    return proj

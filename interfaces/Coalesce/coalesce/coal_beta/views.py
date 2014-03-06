@@ -135,7 +135,7 @@ def project_view(request, project_id):
     ouserinfo = []
     if ousers:
         for ouser in ousers:
-            ouserinfo.append(ouser['user_name'])
+            ouserinfo.append(ouser['username'])
 
     priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
@@ -674,9 +674,9 @@ def build_project(request):
                                  'sec_keys_name': sec_keys_name,
                                  'router_name': router_name
                             }
-            bcp.build_project(auth, project_var_array)
+            pid = bcp.build_project(auth, project_var_array)
 
-            redirect_to = "/projects/%s/view/" % (proj_name)
+            redirect_to = "/projects/%s/view/" % (pid)
             return HttpResponseRedirect(redirect_to)
  
         else:

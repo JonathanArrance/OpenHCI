@@ -230,7 +230,7 @@ class tenant_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
                 api_path = '/v2.0/tenants/%s' %(project_id)
-		print "API Path is:"
+                print "API Path is:"
                 print api_path
                 token = self.adm_token
                 sec = 'FALSE'
@@ -361,6 +361,7 @@ class tenant_ops:
             logger.sql_error("Could not get the project info for project: %s" %(project_id))
             raise Exception("Could not get the project info for project: %s" %(project_id))
 
+        logger.sys_info('%s proj stuff' %(proj))
         #build the dictionary up
         r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
                   "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9]}
