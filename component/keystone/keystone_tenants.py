@@ -197,7 +197,7 @@ class tenant_ops:
 
         #check if the is_admin flag set to 1 - sanity check
         if(self.is_admin == 1):
-            logger.sys_error("User not identified as a user or an admin.")
+            #logger.sys_error("User is identified as a user or an admin.")
             #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
             if(self.status_level <= 1):
                 logger.sys_error("User status not sufficient, can not list endpoints.")
@@ -219,7 +219,7 @@ class tenant_ops:
             """
             try:
                 #build an api connection for the admin user.
-                api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -230,6 +230,7 @@ class tenant_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
                 api_path = '/v2.0/tenants/%s' %(project_id)
+		print "API Path is:"
                 print api_path
                 token = self.adm_token
                 sec = 'FALSE'

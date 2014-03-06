@@ -7,7 +7,7 @@ from transcirrus.common.auth import authorization
 import transcirrus.operations.build_complete_project as bcp
 
 print "Authenticating..."
-a = authorization("admin","newpass")
+a = authorization("admin","password")
 
 #get the user dict
 d = a.get_auth()
