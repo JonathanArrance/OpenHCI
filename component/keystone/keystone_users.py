@@ -448,6 +448,7 @@ class user_ops:
         INPUT: user_role_dict - username - req
                               - user_role - req - admin/pu/user
                               - project_id - req - id of the project to add the user to
+                              - update_primary - op - do you want to update the primary project True/False
         OUTPUT: r_dict - project_name
                        - project_id
         ACCESS: Only an admin can add a user to a project.
@@ -460,6 +461,8 @@ class user_ops:
             raise Exception("user_role_dict not specified for add_role_to_user operation.")
         if((user_role_dict['user_role'] == 'admin') or (user_role_dict['user_role'] == 'user') or (user_role_dict['user_role'] == 'pu')):
             logger.sys_info("Valid Keystone user role passed")
+        if('update_primary' not in user_role_dict):
+            user_role_dict['update_primary'] = False
         else:
             logger.sys_info("Invalid Keystone user role passed")
             raise Exception("Invalid Keystone user role passed")
@@ -567,6 +570,9 @@ class user_ops:
                         #need to update trans_usr_table
                         input_dict = {'proj_name': proj[0][0],'proj_id': user_role_dict['project_id'],'user_name': user_role_dict['username'],'user_id': user[0][0]}
                         insert = self.db.pg_insert("trans_user_projects",input_dict)
+                        if(user_role_dict['update_primary'] == True):
+                            update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                            self.db.pg_update(update_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
                         self.db.pg_close_connection()
@@ -576,7 +582,7 @@ class user_ops:
                         self.db.pg_transaction_commit()
                         #self.db.pg_close_connection()
 
-                if(user_role_dict['username'] != 'admin'):#may be able to remove this check, more testing needed
+                if((user_role_dict['username'] != 'admin') and (self.is_admin == 0)):#may be able to remove this check, more testing needed
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
