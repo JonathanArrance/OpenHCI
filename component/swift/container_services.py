@@ -116,10 +116,7 @@ class container_service_ops:
         if(rest['response'] == 204 or rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            print rest
-            #r_array = rest['data'].split('\n')
-            #r_array.pop()
-            #return r_array
+            return rest['data']
         else:
             util.http_codes(rest['response'],rest['reason'])
 
@@ -129,29 +126,12 @@ class container_service_ops:
         INPUT input_dict - container_name
                          - project_id
         OUTPUT: 'OK' - success
-                'ERROR' - fail
         ACCESS: Admin - can create a container in any project
                 PU - can create a container in their project
                 User - can create a container their project
         NOTE:
         """
         logger.sys_info('\n**Creating a new container. Component: Swift Def: create_container**\n')
-        #insert a container in the trans db.
-        try:
-            put_container = None
-            if(self.user_level == 0):
-                put_container = {"proj_id":input_dict['project_id'],"container_name":input_dict['container_name'],"container_user_id":self.user_id}
-            elif(self.user_level >= 1):
-                if(self.project_id == input_dict['project_id']):
-                    put_container = {"proj_id":input_dict['project_id'],"container_name":input_dict['container_name'],"container_user_id":self.user_id}
-                else:
-                    logger.sys_error("Container specified does not belong to the user.")
-                    raise Exception("Container specified does not belong to the user.")
-            container = self.db.pg_insert('trans_swift_containers',put_container)
-        except:
-            logger.sys_error("Container could not be created.")
-            raise Exception("Container could not be created.")
-
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
             if(self.project_id != input_dict['project_id']):
@@ -179,20 +159,35 @@ class container_service_ops:
         if(rest['response'] == 204 or rest['response'] == 201):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            print rest
-            #r_array = rest['data'].split('\n')
-            #r_array.pop()
-            #return r_array
+            try:
+                put_container = None
+                self.db.pg_transaction_begin()
+                if(self.user_level == 0):
+                    put_container = {"proj_id":input_dict['project_id'],"container_name":input_dict['container_name'],"container_user_id":self.user_id}
+                elif(self.user_level >= 1):
+                    if(self.project_id == input_dict['project_id']):
+                        put_container = {"proj_id":input_dict['project_id'],"container_name":input_dict['container_name'],"container_user_id":self.user_id}
+                    else:
+                        logger.sys_error("Container specified does not belong to the user.")
+                        raise Exception("Container specified does not belong to the user.")
+                container = self.db.pg_insert('trans_swift_containers',put_container)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sys_error("Container could not be created.")
+                raise Exception("Container could not be created.")
+            else:
+                self.db.pg_transaction_commit()
+                return 'OK'
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
-    def delete_container(self):
+    def delete_container(self,input_dict):
         """
         DESC: Delete a container
         INPUT input_dict - container_name
                          - project_id
         OUTPUT: 'OK' - success
-                'ERROR' - fail
+                Exception
         ACCESS: Admin - can delete a container in any project
                 PU - can delete a container in their project
                 User - can delete a container their project they own
@@ -244,12 +239,19 @@ class container_service_ops:
         if(rest['response'] == 204):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            print rest
-            #r_array = rest['data'].split('\n')
-            #r_array.pop()
-            #return r_array
+            try:
+                self.db.pg_transaction_begin()
+                delete = {"table":'trans_swift_containers',"where":"container_name='%s'"%(input_dict['container_name']), "and":"proj_id='%s'"%(input_dict['project_id'])}
+                self.db.pg_delete(delete)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sys_error('Could not delete container from Transcirus DB.')
+                raise Exception('Could not delete container from Transcirus DB.')
+            else:
+                self.db.pg_transaction_commit()
+                print 'OK'
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
     def update_container_info(self):
         pass
         #pushed out to starkist

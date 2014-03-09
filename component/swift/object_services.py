@@ -122,19 +122,21 @@ class object_service_ops:
             #r_array.pop()
             #return r_array
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
     
     def create_object(self,input_dict):
         """
         DESC: Create a new object in a container.
         INPUT input_dict - container_name
-                         - object_name
+                         - object_path
                          - project_id
-        OUTPUT: r_array - list of container objects
+        OUTPUT: 'OK' - success
+                Exception
         ACCESS: Admin - can create an object in any container
                 PU - can create an object in any container in their project
                 User - can creae a new object in a container they own.
         NOTE:
+        curl -i http://192.168.10.34:8080/v1/AUTH_634911ba0d794a4dadefdf872e0d8abe/container1/home/transuser/alpo_rhel/unittests/auth_test.py -X PUT -H "X-Auth-Token: 
         """
         logger.sys_info('\n**Create a new object. Component: Swift Def: create_object**\n')
         #check if the continer can be accesed by the user.
@@ -156,7 +158,7 @@ class object_service_ops:
             raise Exception("Container could not be found.")
 
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(self.project_id != input_dict['project_id']):
                 self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
@@ -167,9 +169,9 @@ class object_service_ops:
         try:
             #add the new user to openstack
             body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            header = {"X-Auth-Token":self.token, "Content-Length": "0", }
             function = 'PUT'
-            api_path = '/v1/AUTH_%s/%s/%s' %(input_dict['project_id'],input_dict['container_name'],input_dict['object_name'])
+            api_path = '/v1/AUTH_%s/%s%s' %(input_dict['project_id'],input_dict['container_name'],input_dict['object_path'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
@@ -179,15 +181,12 @@ class object_service_ops:
             raise Exception("Could not get the Swift object info.")
 
         #check the response and make sure it is a 200
-        if(rest['response'] == 200):
+        if(rest['response'] == 200 or rest['response'] == 201):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            print rest
-            #r_array = rest['data'].split('\n')
-            #r_array.pop()
-            #return r_array
+            return 'OK'
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
     
     def update_object(self):
         pass
@@ -196,8 +195,68 @@ class object_service_ops:
     def create_chunked_object(self):
         pass
 
-    def delete_object(self):
-        pass
+    def delete_object(self,input_dict):
+        """
+        DESC: Create a new object in a container.
+        INPUT input_dict - container_name
+                         - object_name
+                         - project_id
+        OUTPUT: 'OK' - success
+                Exception
+        ACCESS: Admin - can create an object in any container
+                PU - can create an object in any container in their project
+                User - can creae a new object in a container they own.
+        NOTE:
+        """
+        logger.sys_info('\n**Delete an object. Component: Swift Def: delete_object**\n')
+        #check if the continer can be accesed by the user.
+        try:
+            get_container = None
+            if(self.user_level == 0):
+                get_container = {'select':"index",'from':"trans_swift_containers",'where':"container_name='%s'"%(input_dict['container_name'])}
+            elif(self.user_level == 1):
+                get_container = {'select':"index",'from':"trans_swift_containers",'where':"proj_id='%s'"%(self.project_id),'and':"container_name='%s'"%(input_dict['container_name'])}
+            elif(self.user_level == 2):
+                if(self.project_id == input_dict['project_id']):
+                    get_container = {'select':"index",'from':"trans_swift_containers",'where':"container_user_id='%s'"%(self.user_id),'and':"container_name='%s'"%(input_dict['container_name'])}
+                else:
+                    logger.sys_error("Container specified does not belong to the user.")
+                    raise Exception("Container specified does not belong to the user.")
+            container = self.db.pg_select(get_container)
+        except:
+            logger.sys_error("Container could not be found.")
+            raise Exception("Container could not be found.")
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Length": "0"}
+            function = 'DELETE'
+            api_path = '/v1/AUTH_%s/%s/%s' %(input_dict['project_id'],input_dict['container_name'],input_dict['object_name'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sql_error("Could not delete the Swift object info.")
+            raise Exception("Could not delete the Swift object info.")
+
+        #check the response and make sure it is a 200
+        if(rest['response'] == 200 or rest['response'] == 204):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s Data %s" %(rest['response'],rest['reason'],rest['data']))
+            print rest
+            return 'OK'
+        else:
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def get_object_metadata(self):
         pass

@@ -54,9 +54,64 @@ class account_service_ops:
         #attach to the DB
         self.db = util.db_connect()
 
-    def get_account_containers(self,project_id):
+    def get_account_info(self,project_id):
         """
         DESC: Get the account information
+        INPUT None
+        OUTPUT: r_array - list of containers
+        ACCESS: Admin - can get the account data from an project
+                PU - can get the account data for their project
+                User - can not get account data
+        NOTE: Experimental
+        """
+        logger.sys_info('\n**Getting Swift account info. Component: Swift Def: get_account_info**\n')
+        if(self.user_level == 0):
+            logger.sys_info('Admin user logged in.')
+        elif(self.user_level == 1):
+            if(project_id != self.project_id):
+                logger.sys_error('Power user not in the project.')
+                raise Exception('Power user not in the project.')
+        else:
+            logger.sys_error('Only admins and power users can get info from .')
+            raise Exception('Power user not in the project.')
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != project_id):
+                self.token = get_token(self.username,self.password,project_id)
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+        #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'HEAD'
+            api_path = '/v1/AUTH_%s' %(project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sql_error("Could not get the Swift account info.")
+            raise Exception("Could not get the Swift account info.")
+
+        #check the response and make sure it is a 204
+        if(rest['response'] == 204 or rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            #r_array = rest['data'].split('\n')
+            #r_array.pop()
+            #return r_array
+            print rest
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+    def get_account_containers(self,project_id):
+        """
+        DESC: Get the account containers
         INPUT None
         OUTPUT: r_array - list of containers
         ACCESS: Admin - can get the account data from an project
@@ -76,7 +131,7 @@ class account_service_ops:
             raise Exception('Power user not in the project.')
 
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(self.project_id != project_id):
                 self.token = get_token(self.username,self.password,project_id)
             api = caller(api_dict)
@@ -85,7 +140,7 @@ class account_service_ops:
             raise Exception("Could not connect to the API")
 
         try:
-            #add the new user to openstack
+        #add the new user to openstack
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'GET'
@@ -95,8 +150,8 @@ class account_service_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
             rest = api.call_rest(rest_dict)
         except:
-            logger.sql_error("Could not get the Swift account info.")
-            raise Exception("Could not get the Swift account info.")
+            logger.sql_error("Could not get the Swift account containers.")
+            raise Exception("Could not get the Swift account containers.")
 
         #check the response and make sure it is a 204
         if(rest['response'] == 204 or rest['response'] == 200):
