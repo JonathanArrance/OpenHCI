@@ -84,14 +84,12 @@ class gluster_ops:
             #projects is an array of arrays
             string = ''
             for project_id in projects:
-                input_dict = {'volume_name':project_id[0],'gluster_dir_name':project_id[0]}
-                create_vol = self.create_gluster_volume(input_dict)
+                #input_dict = {'volume_name':project_id[0],'gluster_dir_name':project_id[0]}
+                #create_vol = self.create_gluster_volume(input_dict)
                 string = string + project_id[0] + ' '
-    
+
             ring = subprocess.Popen('sudo gluster-swift-gen-builders %s'%(string), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             create_ring = ring.stdout.readlines()
-            print create_ring
-    
             #restart the swift processes - use gluster-swift operation
             service.gluster_swift('restart')
         else:

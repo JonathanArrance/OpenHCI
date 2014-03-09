@@ -9,6 +9,7 @@ import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
+from transcirrus.common.gluster import gluster_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.common.api_caller import caller
 from transcirrus.database.postgres import pgsql
@@ -69,6 +70,7 @@ class tenant_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         self.keystone_users = user_ops(user_dict)
+        self.gluster = gluster_ops(user_dict)
 
     def create_tenant(self,project_name):
         """
@@ -153,6 +155,10 @@ class tenant_ops:
                 #simple cleanup of failed project create
                 raise e
             else:
+                gluster_vol_input = {'volume_name':project_id}
+                self.gluster.create_gluster_volume(gluster_vol_input)
+                #this has got to be forked into a new background process
+                self.gluster.create_gluster_swift_ring()
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
         else:

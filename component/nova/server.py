@@ -817,15 +817,17 @@ class server_ops:
         if(self.user_level != 0):
             if(self.user_id != user_id[0][0]):
                 logger.sys_error("Users can only delete virtual servers they own.")
-                raise Exceptopn("Users can only delete virtual servers they own.")
+                raise Exception("Users can only delete virtual servers they own.")
 
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != delete_dict['project_id']):
+                self.token = get_token(self.username,self.password,delete_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
-            raise Esception("Could not connec to the REST api caller in create_server operation.")
+            raise Exception("Could not connec to the REST api caller in create_server operation.")
 
         #delete the server
         try:
@@ -873,7 +875,7 @@ class server_ops:
         ACCESS: Admins can create a security group in any prject, users and power
                 users can only create security groups in their own projects.
         """
-        
+        logger.sys_info('\n**Creating security group. Nova:server.py Def: create_sec_group**\n')
         #NOTE: after prototype we will want to have the ability to have more then one security group in a project
         #      for now building out 1 in enough. Will also have to make a table in the DB to track them.
         #do variable checks
@@ -919,6 +921,7 @@ class server_ops:
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id":project[0][0]}
             function = 'POST'
             api_path = '/v2/%s/os-security-groups' %(create_sec['project_id'])
+            logger.sys_info('%s'%(api_path))
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}

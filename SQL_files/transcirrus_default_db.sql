@@ -2102,7 +2102,72 @@ INSERT INTO trans_service_settings VALUES ('swift_admin         ', 8080, NULL, '
 -- Data for Name: trans_system_snapshots; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
+CREATE TABLE trans_swift_containers (
+    index integer NOT NULL,
+    proj_id character varying,
+    container_name character varying,
+    container_user_id character varying
+);
 
+
+ALTER TABLE public.trans_swift_containers OWNER TO transuser;
+
+--
+-- TOC entry 196 (class 1259 OID 26897)
+-- Name: trans_swift_containers_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_swift_containers_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_swift_containers_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1951 (class 0 OID 0)
+-- Dependencies: 196
+-- Name: trans_swift_containers_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_swift_containers_index_seq OWNED BY trans_swift_containers.index;
+
+
+--
+-- TOC entry 1952 (class 0 OID 0)
+-- Dependencies: 196
+-- Name: trans_swift_containers_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_swift_containers_index_seq', 2, true);
+
+
+--
+-- TOC entry 1943 (class 2604 OID 26902)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_swift_containers ALTER COLUMN index SET DEFAULT nextval('trans_swift_containers_index_seq'::regclass);
+
+
+--
+-- TOC entry 1946 (class 0 OID 26899)
+-- Dependencies: 197
+-- Data for Name: trans_swift_containers; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+
+
+--
+-- TOC entry 1945 (class 2606 OID 26907)
+-- Name: trans_swift_containers_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_swift_containers
+    ADD CONSTRAINT trans_swift_containers_pkey PRIMARY KEY (index);
 
 --
 -- TOC entry 2192 (class 0 OID 16596)
