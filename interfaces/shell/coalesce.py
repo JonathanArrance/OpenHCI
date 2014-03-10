@@ -76,8 +76,8 @@ def handle_exit_code(d, code):
 def controls(d):
     """Defines the UI controls for the user"""
     d.msgbox("Use SPACE to select items (ie in a radio list) "
-              "Use ARROW KEYS to move the cursor \n"
-              "Use ENTER to submit and advance (OK or Cancel)", width=50)
+             "Use ARROW KEYS to move the cursor \n"
+             "Use ENTER to submit and advance (OK or Cancel)", width=50)
 
 
 def userbox(d):
@@ -127,7 +127,7 @@ def info(d):
             ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
-            "Please fill in Cloud Information:", elements, width=77)
+            "Please fill in Cloud Information:", elements, width=77, insecure=True)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break

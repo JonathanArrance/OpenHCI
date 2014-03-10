@@ -1,6 +1,7 @@
 from __future__ import nested_scopes, division
 import sys, os, stat, time, getopt, subprocess, dialog
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.operations.build_complete_project import build_project
 from transcirrus.operations.destroy_project import destroy_project
 
@@ -224,15 +225,16 @@ def projectAdd(d, auth_dict):
             ("Router Name:", 11, 1, "", 11, 32, 40, 40, 0x0)]
 
         (code, fields) = d.mixedform(
-            "Please fill in Project Information:", elements, width=90)
+            "Please fill in Project Information:", elements, width=90, insecure=True)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
-        
+        if handle_exit_code(d, code) == d.DIALOG_CANCEL:
+            return
     project_name, username, password, email, net_name, subnet_dns, ports, group_name, group_desc, sec_keys_name, router_name = fields
     user_dict = {"username":username, "password":password, "user_role":"pu", "email":email, "project_id": None}
     sec_group_dict = {"ports":None, "group_name":group_name, "group_desc":group_desc, "project_id": None}
-    project_dict = {"project_name":project_name, "user_dict":user_dict, "net_name":net_name, "subnet_dns":subnet_dns, "sec_group_dict":sec_group_dict, "sec_keys_name":sec_keys_name, "router_name":router_name}
+    project_dict = {"project_name":project_name, "user_dict":user_dict, "net_name":net_name, "subnet_dns":[], "sec_group_dict":sec_group_dict, "sec_keys_name":sec_keys_name, "router_name":router_name}
     project = build_project(auth_dict, project_dict)
     return project
 
@@ -276,53 +278,65 @@ def projectManage(d, project):
     return tag
 
 
-def projUsers(d, project):
+def projUsers(d, tenant_op, project):
     addChoice = ("Add", "Add a User", 0)
     projChoice = ("Back", "Return to Project Components", 1)
     allChoices = []
     counter = 0
-
-    for entry in project['users']:
+    userList = tenant_op.list_tenant_users(project['project_id'])
+    for entry in userList:
         counter += 1
-        choice = (str(counter), entry['name'], 0)
+        choice = (str(counter), entry['username'], 0)
         allChoices.append(choice)
     allChoices.append(addChoice)
     allChoices.append(projChoice)
     while True:
-        (code, tag) = d.radiolist(project['name'] + " - Select User to Manage",
+        (code, tag) = d.radiolist(project['project_name'] + " - Select User to Manage",
         width=65, choices=allChoices)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
 
 
-def userAdd(d):
+def userAdd(d, user_op, project):
+    HIDDEN = 0x1
     while True:
         elements = [
-            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
-            ("ID:", 2, 1, "", 2, 24, 16, 16, 0x0),
-            ("Email Address:", 3, 1, "", 3, 24, 16, 16, 0x0),
-            ("Enabled (true/false):", 4, 1, "", 4, 24, 16, 16, 0x0)]
+            ("Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
+            ("Password:", 2, 1, "", 2, 32, 40, 40, HIDDEN),
+            ("Re-Enter Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
+            ("Role (admin/pu/user):", 4, 1, "", 4, 32, 40, 40, 0x0),
+            ("Email", 5, 1, "", 5, 32, 40, 40, 0x0)]
 
         (code, fields) = d.mixedform(
-            "Add User:", elements, width=77)
+            "Add User:", elements, width=90, insecure=True)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
+        if handle_exit_code(d, code) == d.DIALOG_CANCEL:
+            return
+    username, password, confirm, user_role, email = fields
+    if(password != confirm):
+        d.msgbox("Passwords do not match, try again")
+        return "Add"
+    new_user_dict = {"username":username, "password":password, "user_role":user_role, "email":email, "project_id":project['project_id']}
+    user_op.create_user(new_user_dict)
 
-    return fields
 
-
-def userDel(d, user):
-    return d.yesno("Are you sure you would like to delete this User?",
+def userDel(d, user_op, user):
+    yesno = d.yesno("Are you sure you would like to delete this User?",
          yes_label="Yes, I'm sooo sure",
          no_label="No, not yet", width=80)
+    
+    if(yesno == d.DIALOG_OK):
+        delete_dict = {"username":user['username'], "user_id":user['user_id']}
+        user_op.delete_user(delete_dict)
 
 
 def userInfo(d, user):
     while True:
         (code, tag) = d.radiolist(
-            user['name'] + " - User Options",
+            user['username'] + " - User Options",
             width=65,
             choices=[("Manage", "Manage this user", 0),
                      ("Delete", "Completely remove this user", 0),
@@ -889,7 +903,8 @@ def networkManage(d, network):
     return fields
 
 def dash(d, auth_dict):
-    tenant = tenant_ops(auth_dict)
+    tenant_op = tenant_ops(auth_dict)
+    user_op = user_ops(auth_dict)
     
     nodeList = [("1", "Compute_1", 0),
                 ("2", "Storage_1", 0),
@@ -971,7 +986,7 @@ def dash(d, auth_dict):
         while(selection == "Projects"):
 
 #/============================Projects Start=========================
-            projectList = tenant.list_all_tenants()
+            projectList = tenant_op.list_all_tenants()
             selection = projects(d, projectList)
             if(selection == "Add"):
                 projectAdd(d, auth_dict)
@@ -999,17 +1014,21 @@ def dash(d, auth_dict):
                                 while(selection == "ProjUsers"):
 
 #/----------------------------Project Users Start-------------------------
-
-                                    selection = projUsers(d, project)
-                                    if(selection == "Add"):
-                                        userAdd(d)
-                                        selection = "ProjUsers"
-                                        continue
+                                    userList = tenant_op.list_tenant_users(project['project_id'])
+                                    selection = projUsers(d, tenant_op, project)
+                                    while(selection == "Add"):
+                                        userAdd(d, user_op, project)
+                                        if(userAdd == "Add"):
+                                            selection = "Add"
+                                            continue
+                                        else:
+                                            selection = "ProjUsers"
+                                            continue
                                     elif(selection == "Back"):
                                         selection = "ProjManage"
                                         continue
-                                    elif(int(selection) >= 1 and int(selection) <= len(project['users'])):
-                                        user = project['users'][int(selection) - 1]
+                                    elif(int(selection) >= 1 and int(selection) <= len(userList)):
+                                        user = userList[int(selection) - 1]
                                         selection = "UserManage"
                                         while(selection == "UserManage"):
                                             selection = userInfo(d, user)
@@ -1017,7 +1036,7 @@ def dash(d, auth_dict):
                                                 selection = userManage(d, user)
                                                 selection = "UserManage"
                                             elif(selection == "Delete"):
-                                                userDel(d, user)
+                                                userDel(d, user_op, user)
                                                 selection = "ProjUsers"
                                                 continue
                                             elif(selection == "Back"):
