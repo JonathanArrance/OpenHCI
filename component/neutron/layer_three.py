@@ -968,8 +968,9 @@ class layer_three_ops:
                 self.db.pg_transaction_commit()
                 r_dict = {'floating_ip':load['floatingip']['floating_ip_address'],"floating_ip_id":load['floatingip']['id']}
                 return r_dict
+        
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def update_floating_ip(self,update_dict):
         """
