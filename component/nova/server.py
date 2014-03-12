@@ -425,7 +425,8 @@ class server_ops:
             raise e
 
         if(rest['response'] == 200):
-            novnc = self.server_actions.get_instance_console({'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']})
+            input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
+            novnc = self.server_actions.get_instance_console(input_dict)
             load = json.loads(rest['data'])
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
