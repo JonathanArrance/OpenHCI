@@ -101,8 +101,8 @@ class gluster_ops:
     def create_gluster_volume(self,input_dict):
         """
         DESC: Create a new gluster volume
-        INPUT input_dict - volume_name
-                         - bricks[]
+        INPUT input_dict - volume_name - req
+                         - bricks[] - op
         OUTPUT: OK - SUCCESS
                 ERROR - FAIL
         ACCESS: Admin - can create a gluster volumes directly
@@ -122,7 +122,6 @@ class gluster_ops:
                 #print command
             else:
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
-                print command
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             make = out.stdout.readlines()
@@ -241,8 +240,8 @@ class gluster_ops:
     def remove_gluster_brick(self,input_dict):
         """
         DESC: Remove a Gluster brick
-        INPUT: input_dict - volume_name
-                          - brick
+        INPUT: input_dict - volume_name - req
+                          - brick - req
         OUTPUT: OK - SUCCESS
                 ERROR - FAIL
         ACCESS: Admin - Can remove a gluster brick from volumes.
