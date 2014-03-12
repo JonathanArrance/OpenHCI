@@ -1,3 +1,3 @@
-#! /bin/sh
+#!/bin/sh
 
-sudo python /usr/local/lib/python2.7/transcirrus/core/ciac_server.py
+sudo python2.7 /usr/local/lib/python2.7/transcirrus/core/ciac_server.py

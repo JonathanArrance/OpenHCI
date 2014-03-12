@@ -359,6 +359,7 @@ def recv_data(sock):
         data = pickle.loads(data)
         if data['Type'] == 'pkt_len':
             msglen  = data['Value']
+            logger.sys_info("recv_data: pkt_len %s" %(msglen))
         else:
             logger.sys_error("recv_data: invalid tlv %s" %(data['Type']))
             sys.exit()
@@ -377,6 +378,7 @@ def recv_data(sock):
             else:
                 logger.sys_info("recv_data: looping for more data")
         else:
+            print "data not received" # TEST
             count = count + 1
             if count >= retry_count:
                 logger.sys_error("recv_data: retry count expired")
@@ -604,6 +606,8 @@ def client_thread(conn, client_addr):
                     if __debug__ :
                         print "ciac_server: sent ok ack for connect"
 
+                    sys.exit() # TEST
+
                     # recv data, retry_count
                     data = recv_data(conn)
 
@@ -808,7 +812,7 @@ def client_thread(conn, client_addr):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Bind it to data network interface bind's it to physical interface
-sock.setsockopt(socket.SOL_SOCKET, 25, "bond2"+'\0')
+sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')
 
 # bind the socket on all interfaces
 sock.bind(('', _server_port))
