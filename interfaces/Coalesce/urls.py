@@ -117,6 +117,11 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.assign_floating_ip',
             name='assign_floating_ip'),
 	
+	# --- Server actions ----
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/pause_server/$',
+	    'coalesce.coal_beta.views.pause_server',
+            name='pause_server'),
+	
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<user_role>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_user',

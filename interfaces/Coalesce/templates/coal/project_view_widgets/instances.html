@@ -47,15 +47,23 @@
 
 
 	  {% if instances %}
+	  {{instance_info}}
 	    <table class="paleblue">
 
-                <tr> <th>Instance</th>  <th></th>  </tr>
+                <tr> <th>Name</th>  <th>Status</th><th>OS flavor</th><th>Actions</th> </tr>
 
-                {% for instance in instances %}
-
-		    <tr> <td>{{instance}}</td>  <td></td>  </tr>
-
-		{% endfor %}
+                 {% for k,v in instance_info.items %}
+                
+			<tr>
+			    <td>{{v.server_name}}</td>
+			    <td>{{v.server_status}}</td>
+			    <td>{{v.server_os}} {{v.server_flavor}}</td>
+			    <td><a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a></td>
+			 </tr>
+                {% endfor %}
+                       
+                       
+                       
 	    </table>
 	  {% else %}	
 	   <p><i>This project has no instances</i></p>

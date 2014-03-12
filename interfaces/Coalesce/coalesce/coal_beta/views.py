@@ -20,6 +20,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
+from transcirrus.component.nova.admin_actions import server_admin_actions
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
@@ -145,7 +146,13 @@ def project_view(request, project_id):
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
-
+    instance_info={}
+    for instance in instances:
+        i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
+        i_info = so.get_server(i_dict)
+        sname  = instance['server_name']
+        instance_info[sname] = i_info
+    
     try:
         	images 	  = go.list_images()
     except:
@@ -171,6 +178,12 @@ def project_view(request, project_id):
         default_public = "NO PUBLIC NETWORK"
 
     floating_ips = l3o.list_floating_ips(project_id)
+    for fip in floating_ips:
+        if fip["floating_in_use"]:
+            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
+            fip['instance_name']=ip_info['instance_name']
+        else:
+	    fip['instance_name']=''
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -189,7 +202,8 @@ def project_view(request, project_id):
                                                         'volumes': volumes,
                                                         'snapshots':snapshots,
                                                         'images': images,
-							'instances': instances,
+                                                        'instances': instances,
+							'instance_info': instance_info,
                                                         }))
 
 def user_view(request, project_name, project_id, user_name):
@@ -286,7 +300,7 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         print "newgroup = %s" % newgroup
         return HttpResponseRedirect("/projects/manage")
     except:
-        return HttpResponse(status=500)
+        raise
 
 def delete_sec_group(request, sec_group_id, project_id):
     try:
@@ -299,7 +313,7 @@ def delete_sec_group(request, sec_group_id, project_id):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)
+        raise
 
 def create_keypair(request, key_name, project_id):
     try:
@@ -312,7 +326,7 @@ def create_keypair(request, key_name, project_id):
         response = HttpResponseRedirect(redirect_to)
         return render_to_response(response)
     except:
-        return HttpResponse(status=500)
+        raise
 
 
 def create_volume(request, volume_name, volume_size, description, project_id):
@@ -325,7 +339,7 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)
+        raise
 
 def create_router(request, router_name, priv_net, default_public, project_id):
     try:
@@ -381,6 +395,8 @@ def destroy_project(request, project_id, project_name):
         raise
 
 def allocate_floating_ip(request, project_id, ext_net_id):
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
     try:
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
@@ -390,7 +406,8 @@ def allocate_floating_ip(request, project_id, ext_net_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)
+        messages.warning(request, "Unable to allocate IP.  The IP range may be used up.")
+        return HttpResponseRedirect(redirect_to)
 
 def deallocate_floating_ip(request, project_id, floating_ip):
     try:
@@ -402,7 +419,7 @@ def deallocate_floating_ip(request, project_id, floating_ip):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)
+        raise
 
 def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
     try:
@@ -414,7 +431,7 @@ def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)
+        raise
 
 def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
     try:
@@ -425,19 +442,32 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
 			'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
 			'network_name': network_name,'image_name': image_name,
 			'flavor_name':flavor_name, 'name':name}
+
 	server = so.create_server(instance)
         priv_net_list = no.list_internal_networks(project_id)
 	default_priv = priv_net_list[0]['net_id']
     	input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
     	net_info = so.attach_server_to_network(input_dict)
-	print 
-	print net_info
-	print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)
+        raise
+      
+def pause_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        saa.pause_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to pause server.")
+        return HttpResponseRedirect(redirect_to)
 
 
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
@@ -445,13 +475,12 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
-        import pdb; pdb.set_trace()
         l3o.update_floating_ip(update_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        return HttpResponse(status=500)    
+        raise    
 
 
 
@@ -466,7 +495,7 @@ def toggle_user(request, username, toggle):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)
+        raise
 
 def delete_user(request, username, userid):
     try:
@@ -479,7 +508,7 @@ def delete_user(request, username, userid):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)
+        raise
 
 def remove_user_from_project(request, user_id, project_id):
     try:
@@ -492,7 +521,7 @@ def remove_user_from_project(request, user_id, project_id):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)
+        raise
 
 def add_existing_user(request, username, user_role, project_name):
     try:
@@ -505,7 +534,7 @@ def add_existing_user(request, username, user_role, project_name):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        return HttpResponse(status=500)
+        raise
 
 
 def update_user_password(request, user_id, project_id, password):
@@ -520,7 +549,7 @@ def update_user_password(request, user_id, project_id, password):
         return HttpResponseRedirect('/')
 
     except:
-        return HttpResponse(status=500)
+        raise
 
 def network_view(request, net_id):
     auth = request.session['auth']
