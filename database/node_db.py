@@ -163,6 +163,7 @@ def insert_node(input_dict):
         try:
             insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.38.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            #insert_shares = {'parameter':"cinder-vol",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             cinder_array = [insert_cinder_conf,insert_cinderavail_zone]
             for cinder in cinder_array:
                 db.pg_transaction_begin()
@@ -743,6 +744,7 @@ def get_node_cinder_config(node_id):
 
     cinraw = None
     apiraw = None
+    #shareraw = None
     if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'sn')):
         logger.sys_info("Node is a valid compute node or cloud in a can.")
         #query the novaconf table in transcirrus db
@@ -759,12 +761,15 @@ def get_node_cinder_config(node_id):
         try:
             get_apidef_dict = {'select':"parameter,param_value",'from':"cinder_default",'where':"file_name='api-paste.ini'"}
             apiraw = db.pg_select(get_apidef_dict)
-            #get_ovsnode_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='api-paste.ini'",'and':"node='%s'"%(node_id)}
-            #apinoderaw = db.pg_select(get_apinode_dict)
-            #apiraw = apidefraw + apinoderaw
         except:
             logger.sys_error('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
             raise Exception('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
+        #try:
+        #    get_shares_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='shares.conf'"}
+        #    shareraw = db.pg_select(get_shares_dict)
+        #except:
+        #    logger.sys_error('Could not get the shares entries from the Transcirrus cinder db.')
+        #    raise Exception('Could not get the shares entries from the Transcirrus cinder db.')
     else:
         logger.sys_error('Could not get cinder entries, node type invalid.')
         raise Exception('Could not get cinder entries, node type invalid.')
@@ -799,6 +804,19 @@ def get_node_cinder_config(node_id):
     api_conf['file_name'] = 'api-paste.ini'
     api_conf['file_content'] = api_con
 
+    #share_con = []
+    #shares_conf = {}
+    #for x in shareraw:
+    #    row = "=".join(x)
+    #    share_con.append(row)
+    #shares_conf['op'] = 'append'
+    #shares_conf['file_owner'] = 'cinder'
+    #shares_conf['file_group'] = 'cinder'
+    #shares_conf['file_perm'] = '644'
+    #shares_conf['file_path'] = '/etc/cinder'
+    #shares_conf['file_name'] = 'shares.conf'
+    #shares_conf['file_content'] = share_con
+
     r_array = [cin_conf,api_conf]
     return r_array
 
@@ -811,8 +829,6 @@ def get_glance_config():
     NOTES: As of now this function will only write the info to the controller/ciab node. In the
            future we will add the ability to move glance to a seperate node.
     """
-    #connect to the db
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
     logger.sys_info("Writing the Glance config file to the controller node.")
 
