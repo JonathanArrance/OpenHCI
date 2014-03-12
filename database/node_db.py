@@ -40,8 +40,9 @@ def get_node(node_id):
                     - node_controller
                     - node_cloud_name
                     - node_nova_zone
-                    - node_iscsi_iqn
-                    - node_swift_ring
+                    - node_fault_flag
+                    - node_ready_flag
+                    - node_gluster_peer
                     - status
     ACCESS: Wide open
     NOTES: Return the r_dict with a status of OK, else status code of NA or ERROR is returned outside of the ductionary.
@@ -55,7 +56,7 @@ def get_node(node_id):
         db.pg_close_connection()
         if(node[0][0] == node_id):
             r_dict = {'node_name':node[0][1],'node_type':node[0][2],'node_data_ip':node[0][4],'node_mgmt_ip':node[0][3],'node_controller':node[0][5],
-                      'node_cloud_name':node[0][6],'node_nova_zone':node[0][7],'node_iscsi_iqn':node[0][8],'node_swift_ring':node[0][9],'status':"OK"}
+                      'node_cloud_name':node[0][6],'node_nova_zone':node[0][7],'node_fault_flag':node[0][8],'node_ready_flag':node[0][9],'node_gluster_peer':node[0][10],'status':"OK"}
         else:
             return'ERROR'
     except:
@@ -63,6 +64,21 @@ def get_node(node_id):
         return 'NA'
 
     return r_dict
+
+def update_nova_node():
+    
+    
+    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy]
+    for nova in nova_array:
+        db.pg_transaction_begin()
+        db.pg_insert('nova_node',nova)
+        db.pg_transaction_commit()
+
 
 def insert_node(input_dict):
     #Need to add in the OVS/neutron stuff
@@ -75,24 +91,19 @@ def insert_node(input_dict):
                       - node_data_ip - req
                       - node_controller - req
                       - node_cloud_name - op
-                      - node_nova_zone - default nova
-                      - node_iscsi_iqn - default NULL
     OUTPUT: OK if successful
             ERROR if not successful
             raise error
     ACCESS: wide open
     NOTES: If node count in db is 20 or greater for a particular cloud_controller new nodes will not be added to the nodes db.
            The node types are cc - cloud in a can, sn - storage node, cn - compute node.
-           The iscsi iqn must be specified with node type sn
-           The swift ring will be set to NULL in alpo.0
-           The nova zone will be set to nova in alpo.0
            This function does not add a node to the openstack cloud
     """
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
-        if((key == 'node_nova_zone') or (key == 'node_iscsi_iqn') or \
-                (key == 'node_swift_ring') or (key == 'node_cloud_name') or \
+        if((key == 'node_nova_zone') or \
+                (key == 'node_cloud_name') or \
                 (key == 'node_mgmt_ip') or (key == 'node_controller')):
             continue
         if(val == ""):
@@ -104,18 +115,11 @@ def insert_node(input_dict):
 
     #static assign nova availability zone for now
     input_dict['node_nova_zone'] = 'nova'
-    #input_dict['node_swift_ring'] = 'NULL'
 
     if('node_cloud_name' not in input_dict):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
     if(input_dict['node_cloud_name'] == ''):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
-
-    if((input_dict['node_iscsi_iqn'] == "") or ('node_iscsi_iqn' not in input_dict)):
-        input_dict['node_iscsi_iqn'] = 'NULL'
-    elif((input_dict['node_type'] == 'sn') and ('node_iscsi_iqn' not in input_dict)):
-        logger.sys_error("Node type sn (Storage node) must have iscsi iqn specified")
-        raise Exception("Node type sn (Storage node) must have iscsi iqn specified")
 
     #get the db connection
     #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
@@ -147,7 +151,10 @@ def insert_node(input_dict):
         try:
             insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            nova_array = [insert_nova_conf,insert_nova_ip]
+            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -171,7 +178,7 @@ def insert_node(input_dict):
         return 'ERROR'
     try:
         insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
-                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['node_nova_zone'],'node_iscsi_iqn':input_dict['node_iscsi_iqn']}
+                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['node_nova_zone']}
         db.pg_transaction_begin()
         db.pg_insert('trans_nodes',insert_dict)
         db.pg_transaction_commit()
@@ -284,8 +291,7 @@ def update_node(update_dict):
                       - node_controller
                       - node_cloud_name
                       - node_nova_zone - always nova
-                      - node_iscsi_iqn
-                      - node_swift_ring
+                      - node_gluster_peer
     OUTPUT: OK if successful
             ERROR if not successful
     ACCESS: wide open
@@ -318,12 +324,9 @@ def update_node(update_dict):
         if(('node_cloud_name' in update_dict) and update_dict['node_cloud_name'] != ""):
             cloud_name = "node_cloud_name='%s'" %(update_dict['node_cloud_name'])
             update.append(cloud_name)
-        if(('node_iscsi_iqn' in update_dict) and update_dict['node_iscsi_iqn'] != ""):
-            iqn = "node_iscsi_iqn='%s'" %(update_dict['node_iscsi_iqn'])
-            update.append(iqn)
-        if(('node_swift_ring' in update_dict) and update_dict['node_swift_ring'] != ""):
-            ring = "node_swift_ring='%s'" %(update_dict['node_swift_ring'])
-            update.append(ring)
+        if(('node_gluster_peer' in update_dict) and update_dict['node_gluster_peer'] != ""):
+            peer = "node_gluster_peer='%s'" %(update_dict['node_gluster_peer'])
+            update.append(peer)
 
         #hard code nova_zone to nova
         if(('node_nova_zone' in update_dict) and update_dict['node_nova_zone'] != ""):

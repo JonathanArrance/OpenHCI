@@ -708,7 +708,7 @@ class layer_three_ops:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Users can not add gateways to routers.")
             raise Exception("Users can not add gateways to routers.")

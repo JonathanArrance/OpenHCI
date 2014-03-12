@@ -3,9 +3,10 @@ import json
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+import transcirrus.common.util as util
 
 from transcirrus.common.api_caller import caller
-
+from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 class admin_ops:
@@ -93,6 +94,10 @@ class admin_ops:
         ACCESS: Only Admins can list quotas for tenants.
         """
         logger.sys_info('\n**Listing network quotas. Component: Neutron Def: list_net_quota**\n')
+        if(project_id == ''):
+            logger.sys_error("Project id not given.")
+            raise Exception("Project id not given.")
+        
         network = 10
         subnet = 10
         port = 50
@@ -100,10 +105,19 @@ class admin_ops:
         router = None
 
         if(self.user_level <= 1):
+            
+            #check if power user is in the project
+            if(self.user_level == 1):
+                if(self.project_id != project_id):
+                    logger.sys_error('Power users can only list quotas in their networks.')
+                    raise Exception('Power users can only list quotas in their networks.')
+
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != project_id):
+                    self.token = get_token(self.username,self.password,project_id)
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -126,23 +140,27 @@ class admin_ops:
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
-                r_array = None
-                for quota in load['quotas']:
-                    if('network' in quota):
-                        network = quota['network']
-                    if('subnet' in quota):
-                        subnet = quota['subnet']
-                    if('floatingip' in quota):
-                        floatingip = quota['floatingip']
-                    if('router' in quota):
-                        network = quota['router']
-                    if('port' in quota):
-                        network = quota['port']
-                    r_dict = {'networks': network,'subnets': subnet,'floatingips':floating,'routers': router,'ports': port,'project_id':quota['tenant_id']}
+                r_array = []
+                if(load['quotas']):
+                    for quota in load['quotas']:
+                        if('network' in quota):
+                            network = quota['network']
+                        if('subnet' in quota):
+                            subnet = quota['subnet']
+                        if('floatingip' in quota):
+                            floatingip = quota['floatingip']
+                        if('router' in quota):
+                            network = quota['router']
+                        if('port' in quota):
+                            network = quota['port']
+                        r_dict = {'networks': network,'subnets': subnet,'floatingips':floating,'routers': router,'ports': port,'project_id':quota['tenant_id']}
+                        r_array.append(r_dict)
+                else:
+                    r_dict = {'networks': network,'subnets': subnet,'floatingips':floating,'routers': router,'ports': port,'project_id':project_id}
                     r_array.append(r_dict)
                 return r_array
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
                 return 'ERROR'
         else:
             logger.sys_error("Users can not get network quota info.")
@@ -162,12 +180,15 @@ class admin_ops:
         ACCESS: Admins can get the quota info on any network.
                 Power users can only get quota info on networks in their project.
         """
-        logger.sys_info('\n**Listing network quotas. Component: Neutron Def: get_net_quota**\n')
+        logger.sys_info('\n**Get network quotas. Component: Neutron Def: get_net_quota**\n')
+        if(project_id == ''):
+            logger.sys_error("Project id not given.")
+            raise Exception("Project id not given.")
         if(self.user_level <= 1):
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(project_id != self.project_id):
                     self.token = get_token(self.username,self.password,project_id)
                 api = caller(api_dict)
@@ -203,8 +224,12 @@ class admin_ops:
     def update_net_quota(self,input_dict):
         """
         DESC: List non-default quotas for networks on a tenant. 
-        INPUT: input_dict - port_id - req
-                          - project_id - req
+        INPUT: input_dict - project_id - req
+                          - subnet_quota - op
+                          - router_quota - op
+                          - network_quota - op
+                          - floatingip_quota - op
+                          - port_quota - op
         OUTPUT: r_dict - r_dict - subnet
                        - network
                        - floatingip
@@ -213,13 +238,37 @@ class admin_ops:
                        - router
                        - port
         ACCESS: Only admins can set a network quota on a project
+        NOTE: If no quotas are specifed nothing is done, return 'OK'
         """
-        logger.sys_info('\n**Listing network quotas. Component: Neutron Def: update_net_quota**\n')
+        logger.sys_info('\n**Updateing network quotas. Component: Neutron Def: update_net_quota**\n')
+        for key,value in input_dict.items():
+            if(key == '' and key == 'project_id'):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(key == 'project_id' and value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+        if(('subnet_quota' not in input_dict) and ('router_quota' not in input_dict) and ('network_quota' not in input_dict) and ('floatingip_quota' not in input_dict) and ('port_quota' not in input_dict)):
+            return 'OK'
+
         if(self.is_admin == 1):
+            #get the current quota vals
+            current_quota = self.get_net_quota(input_dict['project_id'])
+            if(input_dict['subnet_quota'] == '' or 'subnet_quota' not in input_dict):
+                input_dict['subnet_quota'] == current_quota['quota']['subnet']
+            if(input_dict['router_quota'] == '' or 'router_quota' not in input_dict):
+                input_dict['router_quota'] == current_quota['quota']['router']
+            if(input_dict['network_quota'] == '' or 'network_quota' not in input_dict):
+                input_dict['network_quota'] == current_quota['quota']['network']
+            if(input_dict['floatingip_quota'] == '' or 'floatingip_quota' not in input_dict):
+                input_dict['floatingip_quota'] == current_quota['quota']['floatingip']
+            if(input_dict['port_quota'] == '' or 'port_quota' not in input_dict):
+                input_dict['port_quota'] == current_quota['quota']['port']
+
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(input_dict['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
@@ -228,10 +277,11 @@ class admin_ops:
                 raise Exception("Could not connect to the API")
 
             try:
-                body = '{"quota": {"subnet": %d,"router": %d,"network": %d,"floatingip": %d,"port": %d}'%()
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                body = '{"quota": {"subnet": %d,"router": %d,"network": %d,"floatingip": %d,"port": %d}}'%(int(input_dict['subnet_quota']),int(input_dict['router_quota']),int(input_dict['network_quota']),
+                                                                                                          int(input_dict['floatingip_quota']),int(input_dict['port_quota']))
+                header = {"X-Auth-Token":self.token}
                 function = 'PUT'
-                api_path = '/v2.0/quotas/%s'%(project_id)
+                api_path = '/v2.0/quotas/%s'%(input_dict['project_id'])
                 token = self.token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
@@ -246,21 +296,53 @@ class admin_ops:
                 load = json.loads(rest['data'])
                 return load['quota']
             else:
-                util.http_codes(rest['response'],rest['reason'])
-                return 'ERROR'
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Users can not update network quota info.")
             raise Exception("Users can not update network quota info.")
 
-    def delete_net_quota(self,input_dict):
+    def reset_net_quota(self,project_id):
         """
-        DESC: List non-default quotas for networks on a tenant. 
-        INPUT: input_dict - port_id - req
-                          - project_id - req
+        DESC: Reset network quotas to defaults.
+        INPUT: project_id
         OUTPUT: OK - success
-                ERROR - fail
-                NA - unknown
-        ACCESS: Admins can get the info on any port
-                Power users can only get info on ports in their project.
+        ACCESS: Only Admins can reset network quotas.
         """
-        logger.sys_info('\n**Listing network quotas. Component: Neutron Def: delete_net_quota**\n')
+        logger.sys_info('\n**Resetting network quotas. Component: Neutron Def: reset_net_quota**\n')
+        if(project_id == ''):
+            logger.sys_error("Project id not given.")
+            raise Exception("Project id not given.")
+        if(self.is_admin == 1):
+            #Create an API connection with the admin
+            try:
+                #build an api connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(project_id != self.project_id):
+                    self.token = get_token(self.username,self.password,project_id)
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                body = ''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'DELETE'
+                api_path = '/v2.0/quotas/%s'%(project_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not reset the quota info.")
+                raise Exception("Could not reset the quota info.")
+
+            if(rest['response'] == 204):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                return 'OK'
+            else:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
+        else:
+            logger.sys_error("Users can not reset network quota info.")
+            raise Exception("Users can not reset network quota info.")
