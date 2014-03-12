@@ -454,7 +454,7 @@ class server_actions:
 
         return 'OK'
 
-    def check_instance_status(self):
+    def check_instance_status(self,input_dict):
         """
         DESC: Suspend a running virtual server. Suspending saves the vm state to disk.
         INPUT: input_dict - project_id
@@ -466,7 +466,7 @@ class server_actions:
         NOTES: 
         """
         logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_status**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -537,7 +537,7 @@ class server_actions:
         NOTES: This is not the same as pause.
         """
         logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_console**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
