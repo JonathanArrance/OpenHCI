@@ -1258,13 +1258,13 @@ def getDhcpServer():
     '''
 
     #dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
-    dhcp_file = "/var/lib/dhclient/dhclient.bond1.leases"
+    dhcp_file = "/var/lib/dhclient/dhclient-bond1.leases"
     dhcp_server = ""
     global dhcp_retry
 
     while dhcp_retry:
 
-        out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out = subprocess.Popen('grep dhcp-server-identifier %s' %(dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         data = out.stdout.readlines()
         if (data):
             #print data[0].split(" ")
