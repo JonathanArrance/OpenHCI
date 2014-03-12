@@ -165,22 +165,22 @@ class tenant_ops:
             util.http_codes(rest['response'],rest['reason'])
 
         #add the admin to the project who created the project
-        if(self.username == 'admin'):
-            try:
-                #add the "cloud" admin to the project as an admin - admin gets added to all projects in the system
-                add_admin = {'username':'admin','user_role':'admin','project_id':project_id}
-                admin = self.keystone_users.add_user_to_project(add_admin)
-            except Exception as e:
-                logger.sys_error('Could not add the admin to %s'%(project_id))
-                raise Exception('Could not add the admin to %s'%(project_id))
-        else:
-            #try:
+        #if(self.username == 'admin'):
+        try:
+            #add the "cloud" admin to the project as an admin - admin gets added to all projects in the system
+            add_admin = {'username':'admin','user_role':'admin','project_id':project_id}
+            admin = self.keystone_users.add_user_to_project(add_admin)
+        except Exception as e:
+            logger.sys_error('Could not add the admin to %s'%(project_id))
+            raise Exception('Could not add the admin to %s'%(project_id))
+        #else:
+        try:
             #add the admin user to the project as an admin
             add_projadmin = {'username':self.username,'user_role':'admin','project_id':project_id}
             projadmin = self.keystone_users.add_user_to_project(add_projadmin)
-            #except Exception as e:
-            #    logger.sys_error('Could not add the project admin to %s'%(project_name))
-            #    raise Exception('Could not add the project admin to %s'%(project_name))
+        except Exception as e:
+            logger.sys_error('Could not add the project admin to %s'%(project_name))
+            raise Exception('Could not add the project admin to %s'%(project_name))
         return project_id
 
     def remove_tenant(self,project_id):

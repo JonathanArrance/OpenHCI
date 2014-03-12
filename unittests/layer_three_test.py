@@ -3,7 +3,7 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.neutron.ports import port_ops
 import time
 
-auth = authorization('admin','password')
+auth = authorization('shithead','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
@@ -72,16 +72,16 @@ for y in yo2:
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
     
-
+'''
 print "attaching floating ip to instance"
-update_dict = {'floating_ip':'192.168.10.82','instance_id':"1bf6a21f-4797-4fff-9c33-d7258f090eec",'project_id':"7320858a96b34e6db1d23125ef3a5590",'action':"add"}
+update_dict = {'floating_ip':'192.168.10.227','instance_id':"ff48f2e3-dd9b-40c3-bf73-5b26d081cfb1",'project_id':"634911ba0d794a4dadefdf872e0d8abe",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
 '''
 print "Listing floating ips"
 yo5 = router.list_floating_ips()
 print yo5
-'''
+
 for z in yo5:
     print "Getting floating ip info"
     yo6 = router.get_floating_ip(z['floating_ip_id'])
