@@ -17,7 +17,7 @@ from flavor import flavor_ops
 from image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.glance.glance_ops import glance_ops
-from transcirrus.component.nova.server_actions import server_actions
+from transcirrus.component.nova.server_action import server_actions
 
 #######Special imports#######
 #sys.path.append('/home/jonathan/alpo.0/component/neutron')
