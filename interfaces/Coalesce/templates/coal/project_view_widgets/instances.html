@@ -49,21 +49,21 @@
 	  {% if instances %}
 	  {{instance_info}}
 	    <table class="paleblue">
-
                 <tr> <th>Name</th>  <th>Status</th><th>OS flavor</th><th>Actions</th> </tr>
-
-                 {% for k,v in instance_info.items %}
                 
+                 {% for k,v in instance_info.items %}
 			<tr>
 			    <td>{{v.server_name}}</td>
 			    <td>{{v.server_status}}</td>
 			    <td>{{v.server_os}} {{v.server_flavor}}</td>
-			    <td><a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a></td>
+			    <td>
+			       <a href="{{v.novnc_url}}" target="_blank">console</a>
+			       {% if v.server_status = "ACTIVE" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a>{% endif%}
+                               {% if v.server_status = "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a>{% endif%}
+			    </td>
 			 </tr>
-                {% endfor %}
-                       
-                       
-                       
+                {% endfor %}  
+                
 	    </table>
 	  {% else %}	
 	   <p><i>This project has no instances</i></p>

@@ -468,6 +468,22 @@ def pause_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to pause server.")
         return HttpResponseRedirect(redirect_to)
+      
+def unpause_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        saa.unpause_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to unpause server.")
+        return HttpResponseRedirect(redirect_to)
+
 
 
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
