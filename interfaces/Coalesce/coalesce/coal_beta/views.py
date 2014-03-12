@@ -20,12 +20,14 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
+from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.admin_actions import server_admin_actions
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.component.glance.glance_ops import glance_ops
+from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -55,10 +57,8 @@ from urlparse import urlsplit
 #from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
 
-
 def welcome(request):
     return render_to_response('coal/welcome.html', RequestContext(request, ))
-
 
 def privacy_policy(request):
     return render_to_response('coal/privacy-policy.html', RequestContext(request,))
@@ -66,10 +66,8 @@ def privacy_policy(request):
 def disclaimer(request):
     return render_to_response('coal/website-disclaimer.html', RequestContext(request,))
 
-
 def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
-
 
 def node_view(request, node_id):
     node=get_node(node_id)
@@ -88,7 +86,6 @@ def manage_nodes(request):
     except:
         pass
     return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
-
 
 def manage_projects(request):
     auth = request.session['auth']
@@ -218,7 +215,6 @@ def user_view(request, project_name, project_id, user_name):
                                                         'user_info': user_info,
                                                  }))
 
-
 def key_view(request, sec_key_id, project_id):
     auth = request.session['auth']
     so = server_ops(auth)
@@ -249,8 +245,6 @@ def attach_server_to_network(request, server_id, project_id, net_id):
     redirect_to = urlsplit(referer, 'http', False)[2]
     return HttpResponseRedirect(redirect_to)
     
-
-
 def volume_view(request, project_id, volume_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
@@ -264,6 +258,7 @@ def volume_view(request, project_id, volume_id):
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         }))
+			       
 def floating_ip_view(request, floating_ip_id):
     auth = request.session['auth']
     l3o = layer_three_ops(auth)
@@ -273,7 +268,6 @@ def floating_ip_view(request, floating_ip_id):
                                RequestContext(request, {
                                                         'fip': fip,
                                                  }))
-
 
 def create_user(request, username, password, user_role, email, project_id):
     try:
@@ -285,7 +279,6 @@ def create_user(request, username, password, user_role, email, project_id):
         return HttpResponseRedirect(redirect_to)
     except:
         raise
-
 
 def create_security_group(request, groupname, groupdesc, ports, project_id):
     try:
@@ -327,7 +320,6 @@ def create_keypair(request, key_name, project_id):
         return render_to_response(response)
     except:
         raise
-
 
 def create_volume(request, volume_name, volume_size, description, project_id):
     try:
@@ -483,8 +475,37 @@ def unpause_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to unpause server.")
         return HttpResponseRedirect(redirect_to)
-
-
+      
+def resize_server(request, project_id, instance_id, flavor_id):
+    input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        import pdb; pdb.set_trace()
+        sa.resize_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to resize server.")
+        return HttpResponseRedirect(redirect_to)
+      
+def confirm_resize(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        sa.confirm_resize(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to confirm resize.")
+        return HttpResponseRedirect(redirect_to)
 
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
     try:
@@ -497,8 +518,6 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         return HttpResponseRedirect(redirect_to)
     except:
         raise    
-
-
 
 def toggle_user(request, username, toggle):
     try:
@@ -552,7 +571,6 @@ def add_existing_user(request, username, user_role, project_name):
     except:
         raise
 
-
 def update_user_password(request, user_id, project_id, password):
     try:
         auth = request.session['auth']
@@ -585,6 +603,21 @@ def router_view(request, router_id):
     return render_to_response('coal/router_view.html',
                                RequestContext(request, {
                                                         'router': router,
+                                                        }))
+			       
+def instance_view(request, project_id, server_id):
+    auth = request.session['auth']
+    so = server_ops(auth)
+    fo = flavor_ops(auth)
+    i_dict = {'server_id': server_id, 'project_id': project_id}
+    server = so.get_server(i_dict)
+    flavors = fo.list_flavors()
+
+    return render_to_response('coal/instance_view.html',
+                               RequestContext(request, {
+                                                        'server': server,
+                                                        'flavors': flavors,
+                                                        'project_id': project_id,
                                                         }))
 
 def add_private_network(request, net_name, admin_state, shared, project_id):
@@ -627,7 +660,6 @@ def remove_private_network(request, project_id, net_id):
 
     except:
         raise
-
 
 def setup(request):
     if request.method == 'POST':
@@ -679,8 +711,6 @@ def setup(request):
     else:
         form = SetupForm()
     return render_to_response('coal/setup.html', RequestContext(request, { 'form':form, }))
-
-
 
 def build_project(request):
     if request.method == 'POST':
@@ -743,7 +773,6 @@ def jq(request):
     return HttpResponse(file, mimetype="text/javascript")
 
 # ---- Authentication ---
-
 @never_cache
 def login_page(request, template_name):
 
@@ -795,7 +824,6 @@ def logout(request, next_page=None,
         context.update(extra_context)
     return TemplateResponse(request, template_name, context,
         current_app=current_app)
-
 
 @never_cache
 def password_change(request):
