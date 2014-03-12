@@ -483,7 +483,7 @@ def resize_server(request, project_id, instance_id, flavor_id):
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         sa.resize_server(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
