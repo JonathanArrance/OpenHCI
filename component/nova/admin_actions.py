@@ -15,6 +15,7 @@ import transcirrus.common.util as util
 
 from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -102,7 +103,7 @@ class server_admin_actions:
         NOTES: This is not the same as suspend.
         """
         logger.sys_info('\n**Server action pause. Component: Nova Def: pause_server**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -114,31 +115,33 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
         try:
-            # construct request header and body
+        # construct request header and body
             body='{"pause": null}'
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "X-Auth-Project-Id": "newproj"}
             function = 'POST'
             api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            # check the response code
+        # check the response code
         except:
             logger.sys_error("Error in server pause request.")
             raise Exception("Error in server pause request")
 
         if(rest['response'] == 202):
                 # this method does not return any response body
-                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         return 'OK'
 
@@ -154,7 +157,7 @@ class server_admin_actions:
         NOTES: This is not the same as resume.
         """
         logger.sys_info('\n**Server action unpause. Component: Nova Def: unpause_server**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -166,6 +169,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -206,7 +211,7 @@ class server_admin_actions:
         NOTES: This is not the same as pause.
         """
         logger.sys_info('\n**Server action suspend. Component: Nova Def: suspend_server**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -218,6 +223,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -258,7 +265,7 @@ class server_admin_actions:
         NOTES: This is not the same as unpause.
         """
         logger.sys_info('\n**Server action resume. Component: Nova Def: resume_server**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -270,6 +277,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -310,7 +319,7 @@ class server_admin_actions:
         ACCESS: ONLY the admin can migrate an instance
         NOTES: This is not the same as the live_migration function
         """
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -322,6 +331,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -363,7 +374,7 @@ class server_admin_actions:
         ACCESS: ONLY the admin can migrate an instance
         NOTES: This is not the same as the migration function
         """
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -375,6 +386,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -416,7 +429,7 @@ class server_admin_actions:
         NOTES: This is not the same as unpause.
         """
         logger.sys_info('\n**Server action evacuate. Component: Nova Def: evacuate_server**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -428,6 +441,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -475,6 +490,8 @@ class server_admin_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")

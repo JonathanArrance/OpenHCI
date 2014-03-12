@@ -5,7 +5,7 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
 from transcirrus.common.api_caller import caller
-
+from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 class port_ops:
@@ -96,7 +96,7 @@ class port_ops:
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(input_dict['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
@@ -108,7 +108,7 @@ class port_ops:
                 body = ''
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'GET'
-                api_path = '/v2.0/ports/%s'%(port_id)
+                api_path = '/v2.0/ports/%s'%(input_dict['port_id'])
                 token = self.token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
@@ -120,7 +120,7 @@ class port_ops:
                     r_dict = {'admin_state_up': load['port']['admin_state_up'],'device_id':load['port']['device_id'],'device_owner':load['port']['device_owner'],'fixed_ips': load['port']['fixed_ips'],'mac': load['port']['mac_address']}
                     return r_dict
                 else:
-                    util.http_codes(rest['response'],rest['reason'])
+                    util.http_codes(rest['response'],rest['reason'],rest['data'])
                     return 'ERROR'
             except:
                 self.db.pg_transaction_rollback()
@@ -184,7 +184,7 @@ class port_ops:
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(input_dict['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
@@ -209,7 +209,7 @@ class port_ops:
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Only an admin or a power user can remove a port: remove_net_port")
             raise Exception("Only an admin or a power user can remove a port: remove_net_port")
@@ -267,13 +267,13 @@ class port_ops:
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(input_dict['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_error("Could not connect to the API: remove_net_port")
-                raise Exception("Could not connect to the API: remove_net_port")
+                logger.sys_error("Could not connect to the API: list_net_port")
+                raise Exception("Could not connect to the API: list_net_port")
             try:
                 body = ''
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}

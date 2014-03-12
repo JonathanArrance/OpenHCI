@@ -17,6 +17,7 @@ from flavor import flavor_ops
 from image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.glance.glance_ops import glance_ops
+from transcirrus.component.nova.server_action import server_actions
 
 #######Special imports#######
 #sys.path.append('/home/jonathan/alpo.0/component/neutron')
@@ -84,6 +85,7 @@ class server_ops:
 
         self.net = neutron_net_ops(user_dict)
         self.glance = glance_ops(user_dict)
+        self.server_actions = server_actions(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -308,7 +310,7 @@ class server_ops:
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":create_dict['project_id']}
             if(create_dict['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,create_dict['project_id'])
+                self.token = get_token(self.username,self.password,create_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
@@ -366,9 +368,12 @@ class server_ops:
                 Admins can get info on any virtual server.
         """
         #server_int_net - {"fishnet": [{"version": 4, "addr": "192.0.23.4", "OS-EXT-IPS:type": "fixed"}]}
-        if((not server_id) or (server_id == "")):
-            logger.sys_error("The virtual server name was not specifed or is blank.")
-            raise Exception("The virtual server name was not specifed or is blank.")
+        if(('server_id' not in input_dict) or (input_dict['server_id'] == "")):
+            logger.sys_error("The virtual server id was not specifed or is blank.")
+            raise Exception("The virtual server id was not specifed or is blank.")
+        if(('project_id' not in input_dict) or (input_dict['project_id'] == "")):
+            logger.sys_error("The project id was not specifed or is blank.")
+            raise Exception("The project id was not specifed or is blank.")
 
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to get virtual servers.")
@@ -386,9 +391,9 @@ class server_ops:
         try:
             get_server = None
             if(self.is_admin == 1):
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id)}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id'])}
             else:
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(server_id), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
             server = self.db.pg_select(get_server)
         except:
             logger.sys_error('Could not get server info: get_server')
@@ -420,10 +425,13 @@ class server_ops:
             raise e
 
         if(rest['response'] == 200):
+            input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
+            novnc = self.server_actions.get_instance_console(input_dict)
             load = json.loads(rest['data'])
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
-                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses']}
+                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_status':load['server']['status'],
+                      'server_node':load['server']['hostId'],'server_public_ips':load['server']['addresses'],'novnc_console':novnc}
             return r_dict
 
     def detach_all_servers_from_network(self,input_dict):

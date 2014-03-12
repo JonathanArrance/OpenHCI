@@ -527,6 +527,18 @@ def get_system_name():
     """
     return config.NODE_NAME
 
+def get_uplink_ip():
+    """
+    DESC: get the uplink ip from the config.py file.
+    INPUT: None
+    OUTPUT: uplink_ip
+    ACCESS: Wide open
+    NOTE: At first this may return nothing or 0.0.0.0 if the ciac node has not been set up.
+    """
+    db = db_connect()
+    get_uplink = {'select':'param_value','from':'trans_system_settings','where':"parameter='uplink_ip'"}
+    uplink = db.pg_select(get_uplink)
+    return uplink[0][0]
 
 def get_system_defaults(node_id):
     """

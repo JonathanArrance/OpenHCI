@@ -2,7 +2,7 @@ import transcirrus.database.node_db as node
 
 
 print "Inserting a node"
-node1 = {'node_id':'11','node_name':'node11','node_type':"cn",'node_data_ip':"192.168.10.1",'node_mgmt_ip':"192.168.11.1",'node_controller':"ciac-01",'node_cloud_name':"test",'node_nova_zone':"NULL",'node_iscsi_iqn':"11111-iqn",'node_swift_ring':"test"}
+node1 = {'node_id':'11','node_name':'node11','node_type':"cn",'node_data_ip':"192.168.10.1",'node_mgmt_ip':"192.168.11.1",'node_controller':"ciac-01",'node_cloud_name':"test"}
 inserter = node.insert_node(node1)
 print inserter
 

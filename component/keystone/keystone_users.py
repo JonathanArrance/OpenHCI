@@ -562,7 +562,6 @@ class user_ops:
             if(rest['response'] == 200):
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                #if(proj[0][0] != user[0][1]):
                 if(self.is_admin == 1):
                     try:
                         load = json.loads(rest['data'])
@@ -580,7 +579,6 @@ class user_ops:
                         raise e
                     else:
                         self.db.pg_transaction_commit()
-                        #self.db.pg_close_connection()
 
                 if((user_role_dict['username'] != 'admin') and (self.is_admin == 0)):#may be able to remove this check, more testing needed
                     try:

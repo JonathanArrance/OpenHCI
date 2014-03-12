@@ -1887,16 +1887,16 @@ INSERT INTO nova_default VALUES ('libvirt_vif_type', 'ethernet', 'nova-compute.c
 INSERT INTO nova_default VALUES ('libvirt_vif_driver', 'nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver', 'nova-compute.conf', 46);
 INSERT INTO nova_default VALUES ('libvirt_use_virtio_for_bridges', 'True', 'nova-compute.conf', 47);
 INSERT INTO nova_default VALUES ('quantum_admin_password', 'transcirrus1', 'nova.conf', 48);
-INSERT INTO nova_default VALUES ('novncproxy_base_url', 'http://172.38.24.10:6080/vnc_auto.html', 'nova.conf', 49);
-INSERT INTO nova_default VALUES ('vncserver_proxyclient_address', '172.38.24.10', 'nova.conf', 50);
-INSERT INTO nova_default VALUES ('quantum_url', 'http://172.38.24.10:9696', 'nova.conf', 51);
-INSERT INTO nova_default VALUES ('glance_api_servers', '172.38.24.10:9292', 'nova.conf', 52);
-INSERT INTO nova_default VALUES ('quantum_admin_auth_url', 'http://172.38.24.10:35357/v2.0', 'nova.conf', 53);
-INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 54);
-INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 55);
-INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 56);
-INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 57);
-INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AllHostsFilter', 'nova.conf', 58);
+--INSERT INTO nova_default VALUES ('novncproxy_base_url', 'http://172.38.24.10:6080/vnc_auto.html', 'nova.conf', 49);
+--INSERT INTO nova_default VALUES ('vncserver_proxyclient_address', '172.38.24.10', 'nova.conf', 50);
+INSERT INTO nova_default VALUES ('quantum_url', 'http://172.38.24.10:9696', 'nova.conf', 49);
+INSERT INTO nova_default VALUES ('glance_api_servers', '172.38.24.10:9292', 'nova.conf', 50);
+INSERT INTO nova_default VALUES ('quantum_admin_auth_url', 'http://172.38.24.10:35357/v2.0', 'nova.conf', 51);
+INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 52);
+INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 53);
+INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 54);
+INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 55);
+INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AllHostsFilter', 'nova.conf', 56);
 
 --maybe add novaurl? find out what it does first
 

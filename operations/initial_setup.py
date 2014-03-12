@@ -104,14 +104,14 @@ def run_setup(new_system_variables,auth_dict):
         else:
             return "Keystone error."
 
-    #del_swift = endpoint.delete_endpoint('swift')
-    #if(del_swift == 'OK'):
-    #    input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-    #    create_keystone = endpoint.create_endpoint(input_dict)
-    #    if(create_keystone['endpoint_id']):
-    #        print "Swift endpoint set up complete."
-    #    else:
-    #        return "Swift error."
+    del_swift = endpoint.delete_endpoint('swift')
+    if(del_swift == 'OK'):
+        input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+        create_keystone = endpoint.create_endpoint(input_dict)
+        if(create_keystone['endpoint_id']):
+            print "Swift endpoint set up complete."
+        else:
+            return "Swift error."
 
     #set up all of the other endpoint based on the new mgmt IP address
     nova_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'nova'}
@@ -142,13 +142,13 @@ def run_setup(new_system_variables,auth_dict):
         print "Quantum endpoint set up complete."
     else:
         return "Quantum error."
-    swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-    create_swift = endpoint.create_endpoint(swift_input_dict)
-    print create_swift
-    if(create_glance['endpoint_id']):
-        print "Swift endpoint set up complete."
-    else:
-        return "Swift error."
+    #swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+    #create_swift = endpoint.create_endpoint(swift_input_dict)
+    #print create_swift
+    #if(create_glance['endpoint_id']):
+    #    print "Swift endpoint set up complete."
+    #else:
+    #    return "Swift error."
 
     #insert the controller info into trans_nodes db table
     cc_insert_dict = {'node_id':node_id,
@@ -369,6 +369,7 @@ def run_setup(new_system_variables,auth_dict):
     os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
     os.system("sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
     os.system("sudo iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
+    os.system("sudo iptables -t mangle -A POSTROUTING -o br-ex -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill")
 
     logger.sys_info("Saving the iptables entries.")
     os.system("sudo iptables-save > /transcirrus/iptables.conf")
