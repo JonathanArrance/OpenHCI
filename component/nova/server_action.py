@@ -15,7 +15,7 @@ import transcirrus.common.util as util
 
 from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.common.api_caller import caller
-
+from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 class server_actions:
@@ -549,24 +549,26 @@ class server_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
-        try:
-            # construct request header and body
-            body='{"os-getVNCConsole": {"type": "novnc"}}'
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-            rest = api.call_rest(rest_dict)
-        except:
-            logger.sys_error("Error in server suspend request.")
-            raise Exception("Error in server suspend request")
+        #try:
+        # construct request header and body
+        body='{"os-getVNCConsole": {"type": "novnc"}}'
+        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+        function = 'POST'
+        api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+        token = self.token
+        sec = self.sec
+        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+        rest = api.call_rest(rest_dict)
+        #except:
+        #    logger.sys_error("Error in server suspend request.")
+        #    raise Exception("Error in server suspend request")
 
         if(rest['response'] == 200):
                 # this method does not return any response body
@@ -574,4 +576,4 @@ class server_actions:
                 load = json.loads(rest['data'])
                 return load['console']['url']
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
