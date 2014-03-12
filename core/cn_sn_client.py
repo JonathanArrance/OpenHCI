@@ -93,48 +93,6 @@ def getNodeInfo():
     # cluster is cloud information agnostic. 
 
 
-def getDhcpServer():
-    '''
-    @author         : Shashaa
-    comment         : get DHCP server IP address from dhcp.bond1.leases
-                      file. bond1 interface of the machine connects to
-                      data network of the cloud.
-    return value    : dhcp_server ip
-    create date     :
-    ----------------------
-    modify date     :
-    @author         :
-    comments        :
-    '''
-
-    dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
-    dhcp_server = ""
-    global dhcp_retry
-
-    while dhcp_retry:
-
-        out = subprocess.Popen('grep dhcp-server-identifier %s' % (dhcp_file), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        data = out.stdout.readlines()
-        if (data):
-            #print data[0].split(" ")
-            data = data[0].split(" ")
-            dhcp_server = data[4].strip()
-            dhcp_server = dhcp_server.strip(";")
-            logger.sys_info("dhcp_server IP: %s" % dhcp_server)
-            dhcp_retry=0
-            #sys.exit()
-        else:
-            # TODO: can initiate a command to acquire dhcp assigned IP
-            logger.sys_warning("Trying to get DHCP server IP")
-            dhcp_retry = dhcp_retry-1
-            sleep(1)
-
-    if (dhcp_server == ""):
-        logger.sys_error("Error in getting DHCP server IP")
-        sys.exit()
-    else:
-        return dhcp_server
-
 
 def sendOk(sock):
 
@@ -1181,8 +1139,12 @@ try:
         print "sending connect_pkt"
     #sock.sendall(pickle.dumps(connect_pkt, -1))
     send_data(pickle.dumps(connect_pkt, -1), sock)
+    print "connect pkt sent" # TEST
 
 
+    data = recv_data(sock)
+
+    """
     # receive packet using select, retry_count
     while True:
         ready = select.select([sock], [], [], timeout_sec)
@@ -1199,6 +1161,7 @@ try:
             logger.sys_warning("retrying...%s" %(count))
             if __debug__ :
                 print "retrying... ", count
+    """
 
     if data:
         data = pickle.loads(data)
