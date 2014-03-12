@@ -17,6 +17,7 @@ from flavor import flavor_ops
 from image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.glance.glance_ops import glance_ops
+from transcirrus.component.nova.server_actions import server_actions
 
 #######Special imports#######
 #sys.path.append('/home/jonathan/alpo.0/component/neutron')
@@ -84,6 +85,7 @@ class server_ops:
 
         self.net = neutron_net_ops(user_dict)
         self.glance = glance_ops(user_dict)
+        self.server_actions = server_actions(auth_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -423,10 +425,12 @@ class server_ops:
             raise e
 
         if(rest['response'] == 200):
+            novnc = self.server_actions.get_instance_console({'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']})
             load = json.loads(rest['data'])
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
-                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_status':load['server']['status'],'server_node':load['server']['hostId'],'server_public_ips':load['server']['addresses']}
+                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_status':load['server']['status'],
+                      'server_node':load['server']['hostId'],'server_public_ips':load['server']['addresses'],'novnc_console':novnc}
             return r_dict
 
     def detach_all_servers_from_network(self,input_dict):
