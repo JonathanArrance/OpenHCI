@@ -85,7 +85,7 @@ class server_ops:
 
         self.net = neutron_net_ops(user_dict)
         self.glance = glance_ops(user_dict)
-        self.server_actions = server_actions(auth_dict)
+        self.server_actions = server_actions(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
