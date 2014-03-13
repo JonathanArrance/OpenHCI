@@ -563,19 +563,19 @@ class server_actions:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
-        #try:
+        try:
         # construct request header and body
-        body='{"os-getVNCConsole": {"type": "novnc"}}'
-        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-        function = 'POST'
-        api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
-        token = self.token
-        sec = self.sec
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-        rest = api.call_rest(rest_dict)
-        #except:
-        #    logger.sys_error("Error in server suspend request.")
-        #    raise Exception("Error in server suspend request")
+            body='{"os-getVNCConsole": {"type": "novnc"}}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Error in server suspend request.")
+            raise Exception("Error in server suspend request")
 
         if(rest['response'] == 200):
                 # this method does not return any response body

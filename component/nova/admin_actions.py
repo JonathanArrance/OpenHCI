@@ -193,9 +193,9 @@ class server_admin_actions:
 
         if(rest['response'] == 202):
                 # this method does not return any response body
-                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         return 'OK'
 
@@ -467,55 +467,122 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         return 'OK'
 
-    def list_compute_hosts(self,project_id):
+    def list_compute_hosts(self,input_dict):
         """
         http://docs.openstack.org/api/openstack-compute/2/content/GET_os-hosts-v2_listHosts_v2__tenant_id__os-hosts_ext-os-hosts.html
-        DESC: Get the openstack (nova) compute host ids based on the project_id.
-        INPUT: project_id
-        OUTPUT: array of r_dict - compute_host_name
-                                - os_host_id
+        DESC: Get the openstack compute hosts in the cloud.
+        INPUT: input_dict - project_id
+                          - zone
+        OUTPUT: array of r_dict - zone
+                                - host_name
+                                - service
         ACCESS: ONLY the admin can migrate an instance
         NOTES: This is not the same as the transcirrus node ids. These are uuids assigend
-                by Nova
+                by Nova, Compute host zone is set to nova by default.
         """
-        if(project_id == ''):
-            logger.sys_error('No project_id spcified, can not get nova compute hosts')
-            raise Exception('No project_id spcified, can not get nova compute hosts')
-        
-        # Create an API connection with the Admin
-        try:
-            # build an API connection for the admin user
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            if(self.project_id != input_dict['project_id']):
-                self.token = get_token(self.username,self.password,input_dict['project_id'])
-            api = caller(api_dict)
-        except:
-            logger.sys_error("Could not connect to the API")
-            raise Exception("Could not connect to the API")
+        logger.sys_info('\n**Listing physical compute hosts. Component: Nova Def: list_compute_hosts**\n')
+        for key,value in input_dict.items():
+            if(key == 'zone'):
+                continue
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
 
-        try:
+        if(self.is_admin == 1):
+            if('zone' not in input_dict):
+                input_dict['zone'] = 'nova'
+    
+            # Create an API connection with the Admin
+            try:
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != input_dict['project_id']):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+    
+            try:
             # construct request header and body
-            body=''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2/%s/os-hosts?={compute}' % (project_id)
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-            rest = api.call_rest(rest_dict)
-            # check the response code
-        except:
-            logger.sys_error("Error in sending list compute hosts request.")
-            raise Exception("Error in sending list compute request")
+                body=''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'GET'
+                api_path = '/v2/%s/os-hosts?zone=%s&service=compute' % (input_dict['project_id'],input_dict['zone'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sys_error("Error in sending list compute hosts request.")
+                raise Exception("Error in sending list compute request")
+    
+            if(rest['response'] == 200):
+                    # this method does not return any response body
+                    logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
+                    load = json.loads(rest['data'])
+                    return load['hosts']
+            else:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
 
-        if(rest['response'] == 202):
-                # this method does not return any response body
-                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
-        else:
-            util.http_codes(rest['response'],rest['reason'])
+    def get_os_host(self,input_dict):
+        """
+        DESC: Get the detailed info on an OpenStack host.
+        INPUT: input_dict - project_id
+                          - host_name
+        OUTPUT: array of dict - project resources
+        ACCESS: ONLY the admin can get the the host.
+        NOTES:
+        """
+        logger.sys_info('\n**Getting physical host. Component: Nova Def: get_os_hosts**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
 
-        return 'OK'
+        if(self.is_admin == 1):
+            if('zone' not in input_dict):
+                input_dict['zone'] = 'nova'
+
+            # Create an API connection with the Admin
+            try:
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != input_dict['project_id']):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+    
+            try:
+            # construct request header and body
+                body=''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'GET'
+                api_path = '/v2/%s/os-hosts/%s' % (input_dict['project_id'],input_dict['host_name'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sys_error("Error getting OpenStack host.")
+                raise Exception("Error getting OpenStack host.")
+    
+            if(rest['response'] == 200):
+                    # this method does not return any response body
+                    logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
+                    load = json.loads(rest['data'])
+                    return load['host']
+            else:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])

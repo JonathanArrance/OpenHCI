@@ -9,6 +9,8 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 from transcirrus.common.auth import authorization
 from transcirrus.component.nova.server_action import server_actions
+from transcirrus.component.nova.admin_actions import server_admin_actions
+
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
@@ -16,10 +18,21 @@ auth = authorization("shithead","password")
 #get the user d0d95440b83d204a2456f16efict
 perms = auth.get_auth()
 action = server_actions(perms)
+admin = server_admin_actions(perms)
+
+input_dict = {'project_id':'30b63ffa0d95440b83d204a2456f16ef','zone':'nova'}
+x = admin.list_compute_hosts(input_dict)
+print x
+
+input_dict2 = {'project_id':'30b63ffa0d95440b83d204a2456f16ef','host_name':'ciac-38332'}
+y = admin.get_os_host(input_dict2)
+print y
+
+'''
 nput_dict = {'instance_id':'8b36c7b0-a319-4c55-bb6e-4ab3a226c60b','project_id':'30b63ffa0d95440b83d204a2456f16ef'}
 x = action.get_instance_console(nput_dict)
 print x
-'''
+
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
 auth2 = authorization("bill2","test")
