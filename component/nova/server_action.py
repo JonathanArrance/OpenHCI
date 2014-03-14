@@ -15,7 +15,7 @@ import transcirrus.common.util as util
 
 from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.common.api_caller import caller
-
+from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 class server_actions:
@@ -116,6 +116,7 @@ class server_actions:
                 
         NOTE:Need to implement user estriction - pushed to alpo.1
         """
+        logger.sys_info('\n**Server action reboot. Component: Nova Def: reboot_server**\n')
         if ((input_dict['action_type'] == '') or ('action_type' not in input_dict)):
             logger.sys_error("No action_type was specified.")
             raise Exception("No action_type was specified.")
@@ -136,6 +137,8 @@ class server_actions:
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             project = self.db.pg_select(get_proj)
         except:
             logger.sys_error("Project could not be found.")
@@ -203,6 +206,7 @@ class server_actions:
         ACCESS: Only Admins and power users can perform this task.
         NOTE:none
         """
+        logger.sys_info('\n**Server action resize. Component: Nova Def: resize_server**\n')
         if ((input_dict['server_id'] == '') or ('server_id' not in input_dict)):
             logger.sys_error("No server_id was provided")
             raise Exception("No server_id was provided")
@@ -242,6 +246,8 @@ class server_actions:
             try:
                 # build an API connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -271,10 +277,11 @@ class server_actions:
                     update_inst = {'table':'trans_instances','set':"inst_flav_name='%s',inst_confirm_resize=1,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%(flavor_info['flavor_name'],stamp['julian'],stamp['raw']),'where':"inst_id='%s'"%(input_dict['server_id'])}
                     self.db.pg_update(update_inst)
                 except:
-                    print update_inst
-                    #self.db.pg_transaction_rollback()
+                    #print update_inst
+                    self.db.pg_transaction_rollback()
                     logger.sql_error('Could not update the instance %s with resize information.'%(input_dict['server_id']))
                     #raise Exception('Could not update the instance %s with resize information.'%(input_dict['server_id']))
+                    return 'ERROR'
                 else:
                     self.db.pg_transaction_commit()
                     return 'OK'
@@ -454,7 +461,7 @@ class server_actions:
 
         return 'OK'
 
-    def check_instance_status(self):
+    def check_instance_status(self,input_dict):
         """
         DESC: Suspend a running virtual server. Suspending saves the vm state to disk.
         INPUT: input_dict - project_id
@@ -466,7 +473,7 @@ class server_actions:
         NOTES: 
         """
         logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_status**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -537,7 +544,7 @@ class server_actions:
         NOTES: This is not the same as pause.
         """
         logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_console**\n')
-        for key,value in input_dict:
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -549,13 +556,15 @@ class server_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
         try:
-            # construct request header and body
+        # construct request header and body
             body='{"os-getVNCConsole": {"type": "novnc"}}'
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
@@ -574,4 +583,4 @@ class server_actions:
                 load = json.loads(rest['data'])
                 return load['console']['url']
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])

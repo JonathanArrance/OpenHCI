@@ -117,6 +117,27 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.assign_floating_ip',
             name='assign_floating_ip'),
 	
+	# --- Server actions ----
+	url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
+	    'coalesce.coal_beta.views.instance_view',
+            name='instance_view'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/pause_server/$',
+	    'coalesce.coal_beta.views.pause_server',
+            name='pause_server'),
+	
+        url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
+	    'coalesce.coal_beta.views.unpause_server',
+            name='unpause_server'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<flavor_id>[^/]+)/resize_server/$',
+	    'coalesce.coal_beta.views.resize_server',
+            name='resize_server'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/confirm_resize/$',
+	    'coalesce.coal_beta.views.confirm_resize',
+            name='confirm_resize'),
+	
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<user_role>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_user',

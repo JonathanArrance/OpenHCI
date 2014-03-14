@@ -1,0 +1,80 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block javascripts %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/resize_server.js"/></script>
+    <script>
+      var PROJECT_ID = "{{ project_id}}";
+    </script>
+    <script>
+      var SERVER_ID = "{{server.server_id}}";
+    </script>
+
+{% endblock %}
+
+{% block title %} Details for {{server.server_name}}{% endblock %}
+
+{% block content %}
+
+    <div class="row-fluid">
+    
+      <div class="span4">
+      	<div class="row-fluid">
+      	
+	  <div id="dialog-form-resize-server" title="Resize Server">
+		<form>
+		{% csrf_token %}
+		<fieldset>
+		    <label for="flavor">Select new flavor</label>
+                    <select name="flavor" id="flavor">
+			{% for flav in flavors %}
+		   	    <option value="{{flav.flav_id}}">{{flav.flavor_name}}</option>
+			{% endfor %}
+                    </select>
+		</fieldset>
+		</form>
+	    </div>
+	    <a href="#" id="resize-server">resize instance</a>
+      	
+              <a href="/server/{{project_id}}/{{server.server_id}}/confirm_resize">confirm resize</a>
+	</div><!-- end inner row -->
+        <div class="row-fluid">
+	    
+	    <table class="paleblue">
+		<tr><th>Name</th><td>{{server.server_name}}</td></tr>
+		<tr><th>Status</th><td>{{server.server_status}}</td></tr>
+		<tr><th>OS</th><td>{{server.server_os}}</td></tr>
+		<tr><th>Flavor</th><td>{{server.server_flavor}}</td></tr>
+		<tr><th>ID</th><td>{{server.server_id}}</td></tr>
+		<tr><th>Key Name</th><td>{{server.server_key_name}}</td></tr>
+		<tr><th>Group Name</th><td>{{server.server_group_name}}</td></tr>
+		<tr><th>Public IPs</th><td>{{server.server_public_ips}}</td></tr>
+		<!--<tr><th>Node</th><td>{{server.server_node}}</td></tr>-->
+		<tr><th>Net ID</th><td>{{server.server_net_id}}</td></tr>
+		<tr><th>Internal Net</th><td>{{server.server_int_net}}</td></tr>
+
+	    </table>    
+	    
+	</div><!-- end inner row -->
+	
+      </div><!-- end span4 -->
+                                     
+
+      <div class="span8">
+        <iframe name="noVNCconsole" src="{{server.novnc_console}}" width="800" height="480"></iframe>
+      </div>
+
+   </div><!-- end row-fluid-->
+
+
+{% endblock %}
