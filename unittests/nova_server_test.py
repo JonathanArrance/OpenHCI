@@ -57,12 +57,12 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        }
 yo = store.attach_vol_to_server(inp)
 
-
+'''
 print "Createing a new virtual instance"
-server = {'sec_group_name':'yoyo_sec','avail_zone':'nova','sec_key_name':'tototot','network_name':'yonet','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'freakingstinking2','project_id':'634911ba0d794a4dadefdf872e0d8abe'}
+server = {'sec_group_name':'yoyo_sec','avail_zone':'nova','sec_key_name':'tototot','network_name':'yonet','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'freakingstinking3','project_id':'634911ba0d794a4dadefdf872e0d8abe'}
 yo = nova.create_server(server)
 print yo
-
+'''
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
@@ -175,12 +175,12 @@ update = nova.update_server(up_dict)
 print update
 print "---------------------------------------"
 time.sleep(2)
-'''
+
 print "Deleteing the virtual instance"
 input_dict = {'server_id':'a8fee5e8-049d-41fd-8081-c4c8d38c0fd7','project_id':'634911ba0d794a4dadefdf872e0d8abe'}
 delete = nova.delete_server(input_dict)
 print delete
-'''
+
 input_dict = {'server_id':"39e20ffd-903d-45bd-a631-e4763f1c7377",'project_id':"de6647df708542ddafc00baf39534f56",'net_id':"52dea20c-c7fc-4db3-92a6-a0fa4a8f742c" }
 dtp = nova.detach_server_from_network(input_dict)
 print dtp

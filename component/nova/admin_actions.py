@@ -498,6 +498,14 @@ class server_admin_actions:
         if(self.is_admin == 1):
             if('zone' not in input_dict):
                 input_dict['zone'] = 'nova'
+            else:
+                #check if the zone given exists
+                try:
+                    select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(input_dict['avail_zone'])}
+                    get_zone = self.db.pg_select(select_zone)
+                except:
+                    logger.sql_error('The specifed zone is not defined.')
+                    raise Exception('The specifed zone is not defined.')
     
             # Create an API connection with the Admin
             try:
@@ -551,9 +559,6 @@ class server_admin_actions:
                 raise Exception('Reguired value not passed.')
 
         if(self.is_admin == 1):
-            if('zone' not in input_dict):
-                input_dict['zone'] = 'nova'
-
             # Create an API connection with the Admin
             try:
                 # build an API connection for the admin user

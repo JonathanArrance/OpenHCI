@@ -101,9 +101,11 @@ class server_ops:
         OUTPUT: array or r_dict - server_name
                                 - server_id
                                 - project_id
+                                - zone
         ACCESS: Admins can list all servers in the cloud
                 Power users can list the servers in a project.
-                Users can list virtual servers in the project they own .
+                Users can list virtual servers in the project they own.
+        NOTE:
         """
         #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
         if(self.status_level < 2):
@@ -115,13 +117,13 @@ class server_ops:
         try:
             if(self.user_level == 0):
                 if(project_id):
-                    get_inst = {'select':"inst_name,inst_id,proj_id",'from':"trans_instances",'where':"proj_id='%s'" %(project_id)}
+                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone",'from':"trans_instances",'where':"proj_id='%s'" %(project_id)}
                 else:
-                    get_inst = {'select':"inst_name,inst_id,proj_id",'from':"trans_instances"}
+                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone",'from':"trans_instances"}
             elif(self.user_level == 1):
-                get_inst = {'select':"inst_name,inst_id,proj_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
+                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
             elif(self.user_level == 2):
-                get_inst = {'select':"inst_name,inst_id,proj_id", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id), 'and':"inst_user_id='%s'" %(self.user_id)}
+                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id), 'and':"inst_user_id='%s'" %(self.user_id)}
             instances = self.db.pg_select(get_inst)
         except:
             logger.sql_error('Could not retrieve the server instances for user %s.'%(self.username))
@@ -130,7 +132,7 @@ class server_ops:
         #build the array of r_dict
         inst_array = []
         for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2]}
+            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'zone':inst[3]}
             inst_array.append(r_dict)
 
         return inst_array
@@ -143,6 +145,7 @@ class server_ops:
                                 - server_id
                                 - project_id
                                 - user_id
+                                - zone
         ACCESS: Only admins can use this function
         """
         #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
@@ -151,7 +154,7 @@ class server_ops:
             raise Exception("Only admins can list all of the servers on the system")
 
         try:
-            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id", 'from':"trans_instances"}
+            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone", 'from':"trans_instances"}
             instances = self.db.pg_select(get_inst)
         except Exception as e:
             logger.sql_error("%s"%(e))
@@ -160,7 +163,7 @@ class server_ops:
         #build the array of r_dict
         inst_array = []
         for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3]}
+            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4]}
             inst_array.append(r_dict)
         return inst_array
 
@@ -189,6 +192,7 @@ class server_ops:
                        - created_by - name of creater
                        - project_id - id of project
         ACCESS: Users can only build servers in the projects that they are members of includeing admin users.
+        NOTE: If no zone is specified then the zone defaults to zone.
         """
         #do variable checks
         if(not create_dict):
@@ -275,8 +279,15 @@ class server_ops:
 
         #verify the availability zone
         #NOTE: for the prototype zone will always be nova
-        if(('avail_zone' not in create_dict) or ('avail_zone' in create_dict)):
+        if('avail_zone' not in create_dict):
             create_dict['avail_zone'] = 'nova'
+        else:
+            try:
+                select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(create_dict['avail_zone'])}
+                get_zone = self.db.pg_select(select_zone)
+            except:
+                logger.sql_error('The specifed zone is not defined.')
+                raise Exception('The specifed zone is not defined.')
 
         #verify that the flavor requested exists
         #get the flavor from the list
@@ -318,7 +329,7 @@ class server_ops:
 
         #build the server
         try:
-            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}], "security_groups": [{"name": "%s"}]}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'])
+            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
             api_path = '/v2/%s/servers' %(create_dict['project_id'])
@@ -337,7 +348,11 @@ class server_ops:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
                 # ALL NONE USED TO BE "NULL"
-                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':create_dict['project_id'],'in_use':"1",'floating_ip_id':None,'inst_id':load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],'inst_int_net_name':create_dict['network_name']}
+                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':create_dict['project_id'],
+                            'in_use':"1",'floating_ip_id':None,'inst_id':load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],
+                            'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,
+                            'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],
+                            'inst_int_net_name':create_dict['network_name'],'inst_zone':create_dict['avail_zone']}
                 self.db.pg_insert("trans_instances",ins_dict)
             except:
                 self.db.pg_transaction_rollback()
@@ -346,7 +361,8 @@ class server_ops:
             else:
                 #commit the db transaction
                 self.db.pg_transaction_commit()
-                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
+                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],
+                          'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
                 return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])
@@ -364,6 +380,11 @@ class server_ops:
                        - server_os
                        - server_net_id
                        - server_int_net - dict of int net info
+                       - server_zone
+                       - server_status
+                       - server_node
+                       - server_public_ips
+                       - novnc_console
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
         """
@@ -391,9 +412,9 @@ class server_ops:
         try:
             get_server = None
             if(self.is_admin == 1):
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id'])}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id'])}
             else:
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
             server = self.db.pg_select(get_server)
         except:
             logger.sys_error('Could not get server info: get_server')
@@ -430,7 +451,7 @@ class server_ops:
             load = json.loads(rest['data'])
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
-                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_status':load['server']['status'],
+                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
                       'server_node':load['server']['hostId'],'server_public_ips':load['server']['addresses'],'novnc_console':novnc}
             return r_dict
 
