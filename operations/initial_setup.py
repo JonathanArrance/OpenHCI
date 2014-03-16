@@ -104,7 +104,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             return "Keystone error."
 
-    del_swift = endpoint.delete_endpoint('swift')
+    #del_swift = endpoint.delete_endpoint('swift')
     if(del_swift == 'OK'):
         input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
         create_keystone = endpoint.create_endpoint(input_dict)
