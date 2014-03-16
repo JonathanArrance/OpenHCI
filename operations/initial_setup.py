@@ -38,7 +38,6 @@ for field in fields:
         new_system_variables.append(updated_field_dict)
 run_setup(new_system_variables,auth_dict)
 '''
-#@celery.task(name='initial_setup')
 def run_setup(new_system_variables,auth_dict):
     #retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
@@ -97,7 +96,6 @@ def run_setup(new_system_variables,auth_dict):
 
     logger.sys_info('Re-building Keystone endpoints')
     #reset the keystone endpoint
-    #key_input = {'service_name':'keystone'}
     del_keystone = endpoint.delete_endpoint('keystone')
     if(del_keystone == 'OK'):
         input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'keystone'}
@@ -106,15 +104,6 @@ def run_setup(new_system_variables,auth_dict):
             print "Keystone endpoint set up complete."
         else:
             return "Keystone error."
-
-    #del_swift = endpoint.delete_endpoint('swift')
-    #if(del_swift == 'OK'):
-    #    input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-    #    create_keystone = endpoint.create_endpoint(input_dict)
-    #    if(create_keystone['endpoint_id']):
-    #        print "Swift endpoint set up complete."
-    #    else:
-    #        return "Swift error."
 
     logger.sys_info('Building Nova endpoints')
     #set up all of the other endpoint based on the new mgmt IP address
@@ -361,6 +350,7 @@ def run_setup(new_system_variables,auth_dict):
     if(pgsql_start != 'OK'):
         #fire off revert
         return pgsql_start
+    time.sleep(5)
 
     #restart keystone so neutron does not go nuts
     logger.sys_info('Restarting Keystone.')
@@ -368,9 +358,9 @@ def run_setup(new_system_variables,auth_dict):
     if(keystone_restart != 'OK'):
         #fire off revert
         return keystone_restart
+    time.sleep(5)
 
     logger.sys_info('Setting OpenStack networking configs and bridges.')
-    time.sleep(5)
     out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     cidr = process[0].split("=")
@@ -471,12 +461,6 @@ def run_setup(new_system_variables,auth_dict):
             logger.error("Could not enable multi-node. Check the interface and try again.")
         else:
             logger.info("Multi-node configuration enabled.")
-
-    #set the cloudname
-    #updatename = {'old_name':'TransCirrusCloud', 'new_name':new_cloud_name}
-    #new_cloud_name = util.update_cloud_controller_name(updatename)
-    #if(new_cloud_name != 'OK'):
-    #    logger.error('Cloud name was not chnaged.')
     
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
