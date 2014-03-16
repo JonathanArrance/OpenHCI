@@ -2242,6 +2242,85 @@ ALTER TABLE ONLY trans_user_projects ALTER COLUMN index SET DEFAULT nextval('tra
 ALTER TABLE ONLY trans_user_projects
     ADD CONSTRAINT trans_user_projects_pkey PRIMARY KEY (index);
 
+--
+-- TOC entry 198 (class 1259 OID 49346)
+-- Name: trans_zones; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+CREATE TABLE trans_zones (
+    index integer NOT NULL,
+    zone_name character varying,
+    zone_description text
+);
+
+
+ALTER TABLE public.trans_zones OWNER TO transuser;
+
+--
+-- TOC entry 197 (class 1259 OID 49344)
+-- Name: trans_zones_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_zones_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_zones_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1955 (class 0 OID 0)
+-- Dependencies: 197
+-- Name: trans_zones_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_zones_index_seq OWNED BY trans_zones.index;
+
+
+--
+-- TOC entry 1956 (class 0 OID 0)
+-- Dependencies: 197
+-- Name: trans_zones_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_zones_index_seq', 1, false);
+
+
+--
+-- TOC entry 1945 (class 2604 OID 49349)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_zones ALTER COLUMN index SET DEFAULT nextval('trans_zones_index_seq'::regclass);
+
+
+--
+-- TOC entry 1950 (class 0 OID 49346)
+-- Dependencies: 198
+-- Data for Name: trans_zones; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+INSERT INTO trans_zones VALUES (0, 'nova', 'The default availability zone');
+
+
+--
+-- TOC entry 1947 (class 2606 OID 49354)
+-- Name: trans_zones_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_zones
+    ADD CONSTRAINT trans_zones_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 1949 (class 2606 OID 49356)
+-- Name: trans_zones_zone_name_key; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_zones
+    ADD CONSTRAINT trans_zones_zone_name_key UNIQUE (zone_name);
 
 
 --

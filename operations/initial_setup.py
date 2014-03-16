@@ -49,6 +49,7 @@ def run_setup(new_system_variables,auth_dict):
     #rollback_sys_vars = util.get_system_variables(node_id)
 
     #add all of the new value from the interface into the db
+    logger.sys_info('Updateing system variables.')
     update_sys_vars = util.update_system_variables(new_system_variables)
     if((update_sys_vars == 'ERROR') or (update_sys_vars == 'NA')):
         logger.sys_error("Could not update the system variables, Setup has failed.")
@@ -74,6 +75,7 @@ def run_setup(new_system_variables,auth_dict):
         row = key+'='+ '"'+ val + '"'
         content.append(row)
 
+    logger.sys_info('Building the config.py file.')
     #build the new config.py file
     config_dict = {'file_path':'/usr/local/lib/python2.7/transcirrus/common',
                    'file_name':'config.py',
@@ -93,6 +95,7 @@ def run_setup(new_system_variables,auth_dict):
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
 
+    logger.sys_info('Re-building Keystone endpoints')
     #reset the keystone endpoint
     #key_input = {'service_name':'keystone'}
     del_keystone = endpoint.delete_endpoint('keystone')
@@ -105,14 +108,15 @@ def run_setup(new_system_variables,auth_dict):
             return "Keystone error."
 
     #del_swift = endpoint.delete_endpoint('swift')
-    if(del_swift == 'OK'):
-        input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-        create_keystone = endpoint.create_endpoint(input_dict)
-        if(create_keystone['endpoint_id']):
-            print "Swift endpoint set up complete."
-        else:
-            return "Swift error."
+    #if(del_swift == 'OK'):
+    #    input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+    #    create_keystone = endpoint.create_endpoint(input_dict)
+    #    if(create_keystone['endpoint_id']):
+    #        print "Swift endpoint set up complete."
+    #    else:
+    #        return "Swift error."
 
+    logger.sys_info('Building Nova endpoints')
     #set up all of the other endpoint based on the new mgmt IP address
     nova_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'nova'}
     create_nova = endpoint.create_endpoint(nova_input_dict)
@@ -121,6 +125,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Nova endpoint set up complete."
     else:
         return "Nova error."
+    logger.sys_info('Building Cinder endpoints')
     cinder_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'cinder'}
     create_cinder = endpoint.create_endpoint(cinder_input_dict)
     print create_cinder
@@ -128,6 +133,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Cinder endpoint set up complete."
     else:
         return "Cinder error."
+    logger.sys_info('Building Glance endpoints')
     glance_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'glance'}
     create_glance = endpoint.create_endpoint(glance_input_dict)
     print create_glance
@@ -135,6 +141,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Glance endpoint set up complete."
     else:
         return "Glance error."
+    logger.sys_info('Building Quantum endpoints')
     quantum_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'quantum'}
     create_quantum = endpoint.create_endpoint(quantum_input_dict)
     print create_quantum
@@ -142,14 +149,16 @@ def run_setup(new_system_variables,auth_dict):
         print "Quantum endpoint set up complete."
     else:
         return "Quantum error."
-    #swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-    #create_swift = endpoint.create_endpoint(swift_input_dict)
-    #print create_swift
-    #if(create_glance['endpoint_id']):
-    #    print "Swift endpoint set up complete."
-    #else:
-    #    return "Swift error."
+    logger.sys_info('Building Swift endpoints')
+    swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+    create_swift = endpoint.create_endpoint(swift_input_dict)
+    print create_swift
+    if(create_glance['endpoint_id']):
+        print "Swift endpoint set up complete."
+    else:
+        return "Swift error."
 
+    logger.sys_info('Adding the core node to the trans_nodes table.')
     #insert the controller info into trans_nodes db table
     cc_insert_dict = {'node_id':node_id,
                       'node_name':node_name,
@@ -168,6 +177,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #enable nova
     #write the nova config files
+    logger.sys_info('Writing the Nova Config files.')
     nova_configs = node_db.get_node_nova_config(node_id)
     #take the array of nova file decriptors and write the files
     for config in nova_configs:
@@ -190,6 +200,7 @@ def run_setup(new_system_variables,auth_dict):
         return nova_start
 
     #enable cinder
+    logger.sys_info('Writing the Cinder Config files.')
     cinder_configs = node_db.get_node_cinder_config(node_id)
     #take the array of cinder file decriptors and write the files
     for config in cinder_configs:
@@ -210,6 +221,7 @@ def run_setup(new_system_variables,auth_dict):
         return cinder_start
 
     #enable glance
+    logger.sys_info('Writing the Glance Config files.')
     glance_configs = node_db.get_glance_config()
     #take the array of cinder file decriptors and write the files
     for config in glance_configs:
@@ -232,6 +244,7 @@ def run_setup(new_system_variables,auth_dict):
         #load default glance images shipped on ssd.
 
     #enable neutron
+    logger.sys_info('Writing the Quantum/Neutron Config files.')
     neu_configs = node_db.get_node_neutron_config(node_id)
     #take the array of cinder file decriptors and write the files
     for config in neu_configs:
@@ -252,6 +265,7 @@ def run_setup(new_system_variables,auth_dict):
         return neutron_start
 
     #setup the pre-installed images
+    logger.sys_info('Importing Default images.')
     print "Importing default images"
     glance = glance_ops(auth_dict)
     cirros_input = {
@@ -290,6 +304,7 @@ def run_setup(new_system_variables,auth_dict):
     if(import_fedora != 'OK'):
         logger.warn('Could not import the default Fedora image.')
 
+    logger.sys_info('Writing the network config files.')
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
     if(gateway != 'OK'):
@@ -341,20 +356,21 @@ def run_setup(new_system_variables,auth_dict):
             logger.sys_info("Net config file written.")
 
     #restart postgres
+    logger.sys_info('Restarting postgres.')
     pgsql_start = service.postgresql('restart')
     if(pgsql_start != 'OK'):
         #fire off revert
         return pgsql_start
 
     #restart keystone so neutron does not go nuts
+    logger.sys_info('Restarting Keystone.')
     keystone_restart = service.keystone('restart')
     if(keystone_restart != 'OK'):
         #fire off revert
         return keystone_restart
 
+    logger.sys_info('Setting OpenStack networking configs and bridges.')
     time.sleep(5)
-    #reconfig ips
-    #out = subprocess.Popen('ipcalc --class %s/%s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     cidr = process[0].split("=")
@@ -401,6 +417,7 @@ def run_setup(new_system_variables,auth_dict):
     #create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
     #or the vms will not be able to reach the outside.
     time.sleep(1)
+    logger.sys_info('Creating the DefaultPublic network..')
     s_create_dict = {
                      'net_id': default_public['net_id'],
                      'subnet_dhcp_enable':'true',
