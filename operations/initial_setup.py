@@ -382,6 +382,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #after quantum enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
+    logger.sys_info("Building the uplink network")
     public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
     pub_check = util.check_public_with_uplink(public_dict)
     if(pub_check != 'OK'):
@@ -389,7 +390,14 @@ def run_setup(new_system_variables,auth_dict):
         return pub_check
 
     #if in the same range create the default public range in quantum/neutron
-    time.sleep(3)
+    pg_accept = 1
+    while pg_accept != 0:
+        time.sleep(1)
+        logger.sys_info('Sleeping until postgres accepts connections.')
+        pg_accept = os.system('netstat -lnp | grep 5432')
+    logger.sys_info('Postgres accepting connections on port 5432.')
+
+    logger.sys_info('Creating Neutron Connection.')
     neu_net = neutron_net_ops(auth_dict)
     p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
     default_public = neu_net.add_public_network(p_create_dict)
