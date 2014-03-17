@@ -279,6 +279,38 @@ def dhcp_server(action):
     out = _operator(dhcp_array,action)
     return out
 
+def corosync(action):
+    """
+    DESC: Control the corosync service
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the dhcp services.
+    NOTES:
+    """
+    coro_array = ['corosync']
+    out  = _operator(coro_array,action)
+    return out
+
+def pacemaker(action):
+    """
+    DESC: Control the pacemaker
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the dhcp services.
+    NOTES:
+    """
+    pacemaker_array = ['pacemaker']
+    out  = _operator(pacemaker_array,action)
+    return out
+
 def _operator(service_array,action):
     #need to check the status of the call and error corrctly - Figure this out later
     for service in service_array:
