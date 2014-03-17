@@ -844,6 +844,7 @@ CREATE TABLE trans_instances (
     inst_int_net_name character varying,
     inst_image_name character varying,
     inst_name character varying,
+    inst_zone character varying DEFAULT 'nova'::character varying,
     inst_confirm_resize integer DEFAULT 0,
     inst_resize_julian_date character varying,
     inst_resize_hr_date character varying
@@ -1702,7 +1703,7 @@ INSERT INTO cinder_default VALUES ('admin_user', 'cinder', 'api-paste.ini', 8);
 INSERT INTO cinder_default VALUES ('signing_dir', '/var/lib/cinder', 'api-paste.ini', 9);
 INSERT INTO cinder_default VALUES ('rootwrap_config', '/etc/cinder/rootwrap.conf', 'cinder.conf', 10);
 INSERT INTO cinder_default VALUES ('api_paste_config', '/etc/cinder/api-paste.ini', 'cinder.conf', 11);
-INSERT INTO cinder_default VALUES ('iscsi_helper', 'tgtadm', 'cinder.conf', 12);
+--INSERT INTO cinder_default VALUES ('iscsi_helper', 'tgtadm', 'cinder.conf', 12);
 INSERT INTO cinder_default VALUES ('volume_name_template', 'volume-%s', 'cinder.conf', 13);
 INSERT INTO cinder_default VALUES ('volume_group', 'cinder-volumes', 'cinder.conf', 14);
 INSERT INTO cinder_default VALUES ('verbose', 'True', 'cinder.conf', 15);
@@ -1711,9 +1712,10 @@ INSERT INTO cinder_default VALUES ('state_path', '/var/lib/cinder', 'cinder.conf
 INSERT INTO cinder_default VALUES ('lock_path', '/var/lib/cinder', 'cinder.conf', 18);
 --INSERT INTO cinder_default VALUES ('qpid_username', 'guest', 'cinder.conf', 19);
 --INSERT INTO cinder_default VALUES ('qpid_password', 'guest', 'cinder.conf', 20);
-INSERT INTO cinder_default VALUES ('qpid_hostname', '172.38.24.10', 'cinder.conf', 21);
-INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 22);
-
+INSERT INTO cinder_default VALUES ('qpid_hostname', '172.38.24.10', 'cinder.conf', 19);
+INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 20);
+INSERT INTO cinder_default VALUES ('default_availability_zone', 'nova', 'cinder.conf', 21);
+INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter', 'cinder.conf', 22);
 
 --
 -- TOC entry 2167 (class 0 OID 16399)
@@ -1896,7 +1898,8 @@ INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 5
 INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 53);
 INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 54);
 INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 55);
-INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AllHostsFilter', 'nova.conf', 56);
+INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter', 'nova.conf', 56);
+INSERT INTO nova_default VALUES ('default_schedule_zone', 'nova', 'nova.conf', 57);
 
 --maybe add novaurl? find out what it does first
 
@@ -2239,6 +2242,85 @@ ALTER TABLE ONLY trans_user_projects ALTER COLUMN index SET DEFAULT nextval('tra
 ALTER TABLE ONLY trans_user_projects
     ADD CONSTRAINT trans_user_projects_pkey PRIMARY KEY (index);
 
+--
+-- TOC entry 198 (class 1259 OID 49346)
+-- Name: trans_zones; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+CREATE TABLE trans_zones (
+    index integer NOT NULL,
+    zone_name character varying,
+    zone_description text
+);
+
+
+ALTER TABLE public.trans_zones OWNER TO transuser;
+
+--
+-- TOC entry 197 (class 1259 OID 49344)
+-- Name: trans_zones_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_zones_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_zones_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1955 (class 0 OID 0)
+-- Dependencies: 197
+-- Name: trans_zones_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_zones_index_seq OWNED BY trans_zones.index;
+
+
+--
+-- TOC entry 1956 (class 0 OID 0)
+-- Dependencies: 197
+-- Name: trans_zones_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_zones_index_seq', 1, false);
+
+
+--
+-- TOC entry 1945 (class 2604 OID 49349)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_zones ALTER COLUMN index SET DEFAULT nextval('trans_zones_index_seq'::regclass);
+
+
+--
+-- TOC entry 1950 (class 0 OID 49346)
+-- Dependencies: 198
+-- Data for Name: trans_zones; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+INSERT INTO trans_zones VALUES (0, 'nova', 'The default availability zone');
+
+
+--
+-- TOC entry 1947 (class 2606 OID 49354)
+-- Name: trans_zones_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_zones
+    ADD CONSTRAINT trans_zones_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 1949 (class 2606 OID 49356)
+-- Name: trans_zones_zone_name_key; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_zones
+    ADD CONSTRAINT trans_zones_zone_name_key UNIQUE (zone_name);
 
 
 --
