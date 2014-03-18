@@ -156,9 +156,7 @@ def run_setup(new_system_variables,auth_dict):
                       'node_data_ip':'172.38.24.10',
                       'node_controller':sys_vars['CLOUD_CONTROLLER'],
                       'node_cloud_name':sys_vars['CLOUD_NAME'],
-                      'node_nova_zone':'nova',
-                      'node_fault_flag':'0',
-                      'node_ready_flag':'1',
+                      'avail_zone':'nova',
                       'node_gluster_peer':'1'}
     insert_cc = node_db.insert_node(cc_insert_dict)
     if(insert_cc != 'OK'):
