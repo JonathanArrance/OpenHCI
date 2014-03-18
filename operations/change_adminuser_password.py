@@ -36,7 +36,7 @@ def change_admin_password(auth_dict,new_password):
         #            } 
         #os.system('sudo chown -R transuser:transystem /home/transuser')
         #write_creds = util.write_new_config_file(file_dict)
-        write_creds = os.system("""sed -i 's/OS_PASSWORD=.*/OS_PASSWORD=%s/g' /home/transuser/factory_creds"""%(new_password))
+        write_creds = os.system("""sudo sed -i 's/OS_PASSWORD=.*/OS_PASSWORD=%s/g' /home/transuser/factory_creds"""%(new_password))
         if(write_creds != 'OK'):
             logger.sys_warning('Could not write the new credentials file in transuser home directory.')
         return 'OK'

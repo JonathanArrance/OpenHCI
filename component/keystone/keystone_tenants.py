@@ -100,7 +100,6 @@ class tenant_ops:
 
         #check if the is_admin flag set to 1 - sanity check
         if(self.is_admin == 1):
-            logger.sys_error("User not identified as a user or an admin.")
             #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
             if(self.status_level <= 1):
                 logger.sys_error("User status not sufficient, can not list endpoints.")
@@ -161,27 +160,28 @@ class tenant_ops:
                 self.gluster.create_gluster_swift_ring()
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
+
+            #add the admin to the project who created the project
+            #if(self.username == 'admin'):
+            try:
+                #add the "cloud" admin to the project as an admin - admin gets added to all projects in the system
+                add_admin = {'username':'admin','user_role':'admin','project_id':project_id}
+                admin = self.keystone_users.add_user_to_project(add_admin)
+            except Exception as e:
+                logger.sys_error('Could not add the admin to %s'%(project_id))
+                raise Exception('Could not add the admin to %s'%(project_id))
+            if(self.username != 'admin'):
+                try:
+                    #add the admin user to the project as an admin
+                    add_projadmin = {'username':self.username,'user_role':'admin','project_id':project_id}
+                    projadmin = self.keystone_users.add_user_to_project(add_projadmin)
+                except Exception as e:
+                    logger.sys_error('Could not add the project admin to %s'%(project_name))
+                    raise Exception('Could not add the project admin to %s'%(project_name))
+
+            return project_id
         else:
             util.http_codes(rest['response'],rest['reason'])
-
-        #add the admin to the project who created the project
-        #if(self.username == 'admin'):
-        try:
-            #add the "cloud" admin to the project as an admin - admin gets added to all projects in the system
-            add_admin = {'username':'admin','user_role':'admin','project_id':project_id}
-            admin = self.keystone_users.add_user_to_project(add_admin)
-        except Exception as e:
-            logger.sys_error('Could not add the admin to %s'%(project_id))
-            raise Exception('Could not add the admin to %s'%(project_id))
-        #else:
-        try:
-            #add the admin user to the project as an admin
-            add_projadmin = {'username':self.username,'user_role':'admin','project_id':project_id}
-            projadmin = self.keystone_users.add_user_to_project(add_projadmin)
-        except Exception as e:
-            logger.sys_error('Could not add the project admin to %s'%(project_name))
-            raise Exception('Could not add the project admin to %s'%(project_name))
-        return project_id
 
     def remove_tenant(self,project_id):
         """
