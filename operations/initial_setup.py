@@ -352,7 +352,7 @@ def run_setup(new_system_variables,auth_dict):
     if(pgsql_start != 'OK'):
         #fire off revert
         return pgsql_start
-    time.sleep(5)
+    time.sleep(10)
 
     #restart keystone so neutron does not go nuts
     logger.sys_info('Restarting Keystone.')
@@ -360,7 +360,7 @@ def run_setup(new_system_variables,auth_dict):
     if(keystone_restart != 'OK'):
         #fire off revert
         return keystone_restart
-    time.sleep(5)
+    time.sleep(10)
 
     logger.sys_info('Setting OpenStack networking configs and bridges.')
     out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -398,6 +398,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_info('Sleeping until postgres accepts connections.')
         pg_accept = os.system('netstat -lnp | grep 5432')
     logger.sys_info('Postgres accepting connections on port 5432.')
+    time.sleep(10)
 
     logger.sys_info('Creating Neutron Connection.')
     #neu_net = neutron_net_ops(auth_dict)

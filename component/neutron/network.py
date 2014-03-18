@@ -35,6 +35,7 @@ class neutron_net_ops:
                is_admin
                sec - optional - use HTTPS sec = TRUE defaults to FALSE
         """
+        logger.sys_info("\n**Creating Neutron Network Object**\n")
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
@@ -247,6 +248,7 @@ class neutron_net_ops:
                 a new private network. Users can not create networks.
         NOTE: need to update the transcirrus db with the new network.
         """
+        logger.sys_info('Adding new private network. Component: Neutron Def: add_private_network')
         if((create_dict['net_name'] == '') or ('net_name' not in create_dict)):
             logger.sys_error("No net name was specified for the new network.")
             raise Exception("No net name was specified for the new network.")
@@ -356,6 +358,7 @@ class neutron_net_ops:
         NOTE: need to update the transcirrus db with the new network. For now we can only add and
               external network to trans_default project
         """
+        logger.sys_info('Adding new public network. Component: Neutron Def: add_public_network')
         if((create_dict['net_name'] == '') or ('net_name' not in create_dict)):
             logger.sys_error("No net name was specified for the new network.")
             raise Exception("No net name was specified for the new network.")
