@@ -46,6 +46,7 @@ def run_setup(new_system_variables,auth_dict):
     #new_cloud_name = new_system_variables['cloud_name']
     #get the original system vars from the DB - used in case we need to rollback
     #rollback_sys_vars = util.get_system_variables(node_id)
+    
 
     #add all of the new value from the interface into the db
     logger.sys_info('Updateing system variables.')
@@ -93,6 +94,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
+    neu_net = neutron_net_ops(auth_dict)
 
     logger.sys_info('Re-building Keystone endpoints')
     #reset the keystone endpoint
@@ -398,7 +400,7 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info('Postgres accepting connections on port 5432.')
 
     logger.sys_info('Creating Neutron Connection.')
-    neu_net = neutron_net_ops(auth_dict)
+    #neu_net = neutron_net_ops(auth_dict)
     p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
     default_public = neu_net.add_public_network(p_create_dict)
     if('net_id' not in default_public):
