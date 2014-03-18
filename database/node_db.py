@@ -92,6 +92,7 @@ def insert_node(input_dict):
                       - node_controller - req
                       - avail_zone - op
                       - node_cloud_name - op
+                      - node_virt_type - op
     OUTPUT: OK if successful
             ERROR if not successful
             raise error
@@ -103,7 +104,7 @@ def insert_node(input_dict):
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
-        if((key == 'avail_zone') or \
+        if((key == 'avail_zone') or (key == 'node_virt_type') or \
                 (key == 'node_cloud_name') or \
                 (key == 'node_mgmt_ip') or (key == 'node_controller')):
             continue
@@ -125,6 +126,9 @@ def insert_node(input_dict):
         except:
             logger.sql_error('The specifed zone is not defined.')
             raise Exception('The specifed zone is not defined.')
+
+    if('node_virt_type' not in input_dict):
+        input_dict['node_virt_type'] = 'qemu'
 
     if('node_cloud_name' not in input_dict):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
@@ -168,7 +172,8 @@ def insert_node(input_dict):
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone]
+            insert_node_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
