@@ -94,8 +94,6 @@ def run_setup(new_system_variables,auth_dict):
 
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
-    neu_net = neutron_net_ops(auth_dict)
-
     logger.sys_info('Re-building Keystone endpoints')
     #reset the keystone endpoint
     del_keystone = endpoint.delete_endpoint('keystone')
@@ -346,6 +344,7 @@ def run_setup(new_system_variables,auth_dict):
             print "Net config file written."
             logger.sys_info("Net config file written.")
 
+    """
     #restart postgres
     logger.sys_info('Restarting postgres.')
     pgsql_start = service.postgresql('restart')
@@ -361,6 +360,7 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return keystone_restart
     time.sleep(10)
+    """
 
     logger.sys_info('Setting OpenStack networking configs and bridges.')
     out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -401,7 +401,7 @@ def run_setup(new_system_variables,auth_dict):
     time.sleep(10)
 
     logger.sys_info('Creating Neutron Connection.')
-    #neu_net = neutron_net_ops(auth_dict)
+    neu_net = neutron_net_ops(auth_dict)
     p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
     default_public = neu_net.add_public_network(p_create_dict)
     if('net_id' not in default_public):
