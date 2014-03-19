@@ -1,6 +1,7 @@
 from __future__ import nested_scopes, division
 import sys, os, stat, time, getopt, subprocess, dialog
-
+from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.operations.build_complete_project import build_project
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -154,13 +155,13 @@ def projects(d, projectList):
     counter = 0
     for entry in projectList:
         counter += 1
-        choice = (str(counter), entry['name'], 0)
+        choice = (str(counter), entry['project_name'], 0)
         allChoices.append(choice)
     allChoices.append(addChoice)
     allChoices.append(dashChoice)
     while True:
         (code, tag) = d.radiolist("Projects - Select Project to Manage",
-        width=65, choices=allChoices)
+        width=80, choices=allChoices)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
@@ -204,20 +205,67 @@ def userRemove(d, userList):
     return tag
 """
 
-def projectAdd(d):
-    d.msgbox("Project Name: \n"
-            "Users: \n"
-            "Whatever Else Is Needed to Create a Project: ", width=50)
+def projectAdd(d, auth_dict):
+
+    while True:
+        HIDDEN = 0x1
+        elements = [
+            ("Project Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
+            ("Project Power-User Name:", 2, 1, "", 2, 32, 40, 40, 0x0),
+            ("Project Power-User Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
+            ("Project Power-User Email:", 4, 1, "", 4, 32, 40, 40, 0x0),
+            ("Net Name:", 5, 1, "", 5, 32, 40, 40, 0x0),
+            ("Subnet DNS:", 6, 1, "", 6, 32, 40, 40, 0x0),
+            ("Ports:", 7, 1, "", 7, 32, 40, 40, 0x0),
+            ("Security Group Name:", 8, 1, "", 8, 32, 40, 40, 0x0),
+            ("Security Group Description:", 9, 1, "", 9, 32, 40, 40, 0x0),
+            ("Security Keys Name:", 10, 1, "", 10, 32, 40, 40, 0x0),
+            ("Router Name:", 11, 1, "", 11, 32, 40, 40, 0x0)]
+
+        (code, fields) = d.mixedform(
+            "Please fill in Project Information:", elements, width=90)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+        
+    project_name, username, password, email, net_name, subnet_dns, ports, group_name, group_desc, sec_keys_name, router_name = fields
+    user_dict = {"username":username, "password":password, "user_role":"pu", "email":email, "project_id": None}
+    sec_group_dict = {"ports":None, "group_name":group_name, "group_desc":group_desc, "project_id": None}
+    project_dict = {"project_name":project_name, "user_dict":user_dict, "net_name":net_name, "subnet_dns":subnet_dns, "sec_group_dict":sec_group_dict, "sec_keys_name":sec_keys_name, "router_name":router_name}
+    project = build_project(auth_dict, project_dict)
+    return project
 
 
-def projectDel(d):
-    return d.yesno("Are you sure you would like to delete this Project?",
+def projectDel(d, auth_dict):
+    yesno =  d.yesno("Are you sure you would like to delete this Project?",
          yes_label="Yes, I'm sooo sure",
          no_label="No, not yet", width=80)
+    
+    if(yesno == d.DIALOG_OK):
+        while True:
+            HIDDEN = 0x1
+            elements = [
+                ("Project Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
+                ("Project Power-User Name:", 2, 1, "", 2, 32, 40, 40, 0x0),
+                ("Project Power-User Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
+                ("Project Power-User Email:", 4, 1, "", 4, 32, 40, 40, 0x0),
+                ("Net Name:", 5, 1, "", 5, 32, 40, 40, 0x0),
+                ("Subnet DNS:", 6, 1, "", 6, 32, 40, 40, 0x0),
+                ("Ports:", 7, 1, "", 7, 32, 40, 40, 0x0),
+                ("Security Group Name:", 8, 1, "", 8, 32, 40, 40, 0x0),
+                ("Security Group Description:", 9, 1, "", 9, 32, 40, 40, 0x0),
+                ("Security Keys Name:", 10, 1, "", 10, 32, 40, 40, 0x0),
+                ("Router Name:", 11, 1, "", 11, 32, 40, 40, 0x0)]
+    
+            (code, fields) = d.mixedform(
+                "Please fill in Project Information:", elements, width=90)
+    
+            if handle_exit_code(d, code) == d.DIALOG_OK:
+                break
 
 
 def projectInfo(d, project):
-    return d.yesno(("Overview\n\n" + project['name']),
+    return d.yesno(("Overview\n\n" + project['project_name']),
     yes_label="Manage this Project",
     no_label="Return to Projects", width=50)
 
@@ -225,7 +273,7 @@ def projectInfo(d, project):
 def projectManage(d, project):
     while True:
         (code, tag) = d.radiolist(
-            project['name'] + " - Select Component to Manage",
+            project['project_name'] + " - Select Component to Manage",
             width=65,
             choices=[("Users", "List and manage users", 0),
                      ("Instances", "List and manage instances", 0),
@@ -855,11 +903,13 @@ def networkManage(d, network):
 
     return fields
 
-def dash(d):
+def dash(d, user_dict):
+    tenant = tenant_ops(user_dict)
+    
     nodeList = [("1", "Compute_1", 0),
                 ("2", "Storage_1", 0),
                 ("3", "Storage_2", 0)]
-
+    """
     projectList = [{'name':"Project Zeus",
                     'users':[{'name':"Snow White",
                               'role':"User",
@@ -967,7 +1017,7 @@ def dash(d):
                                 {'name':"keypair_2"}],
                     'networks':[{'name':"network_1"},
                                {'name':"network_2"}]}]
-
+    """
     userList = [{'name':"Snow White",
                  'role':"User",
                  'status':2,
@@ -1044,10 +1094,10 @@ def dash(d):
         while(selection == "Projects"):
 
 #/============================Projects Start=========================
-
+            projectList = tenant.list_all_tenants()
             selection = projects(d, projectList)
             if(selection == "Add"):
-                projectAdd(d)
+                projectAdd(d, user_dict)
                 selection = "Projects"
                 continue
             elif(selection == "Dashboard"):
@@ -1506,7 +1556,7 @@ def process_command_line():
     return ("continue", None)
 
 
-def main():
+def main(user_dict):
     what_to_do, code = process_command_line()
     if what_to_do == "exit":
         sys.exit(code)
@@ -1516,13 +1566,15 @@ def main():
         # argument), you can use:
         #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
         d = dialog.Dialog(dialog="dialog")
-        d.add_persistent_args(["--backtitle", "TransCirrus - CoalesceShell"])
+        d.add_persistent_args(["--colors"])
+        d.add_persistent_args(["--backtitle", "\Z1\ZbTransCirrus - CoalesceShell"])
+        
 
         # Show the additional widgets before the "normal demo", so that I can
         # test new widgets quickly and simply hit Ctrl-C once they've been
         # shown.
 
-        dash(d)
+        dash(d, user_dict)
     except dialog.error, exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)

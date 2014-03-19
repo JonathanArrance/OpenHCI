@@ -12,6 +12,7 @@ from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
+import transcirrus.interfaces.shell.dashboard as dashboard
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -227,6 +228,7 @@ def setup(d):
     # once we have those flags setup on database, this is just proof of concept
     if (first_time['first_time_boot'] == 'FALSE'):
         d.msgbox("Taking you to the Coalesce Dashboard...")
+        dashboard.main(user_dict)
         # Direct user to Coalesce Dashboard
         clear_screen(d)
         return
