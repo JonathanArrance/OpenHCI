@@ -2,6 +2,7 @@ from __future__ import nested_scopes, division
 import sys, os, stat, time, getopt, subprocess, dialog
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.operations.build_complete_project import build_project
+from transcirrus.operations.destroy_project import destroy_project
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -236,32 +237,16 @@ def projectAdd(d, auth_dict):
     return project
 
 
-def projectDel(d, auth_dict):
+def projectDel(d, auth_dict, project):
     yesno =  d.yesno("Are you sure you would like to delete this Project?",
          yes_label="Yes, I'm sooo sure",
          no_label="No, not yet", width=80)
     
     if(yesno == d.DIALOG_OK):
-        while True:
-            HIDDEN = 0x1
-            elements = [
-                ("Project Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
-                ("Project Power-User Name:", 2, 1, "", 2, 32, 40, 40, 0x0),
-                ("Project Power-User Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
-                ("Project Power-User Email:", 4, 1, "", 4, 32, 40, 40, 0x0),
-                ("Net Name:", 5, 1, "", 5, 32, 40, 40, 0x0),
-                ("Subnet DNS:", 6, 1, "", 6, 32, 40, 40, 0x0),
-                ("Ports:", 7, 1, "", 7, 32, 40, 40, 0x0),
-                ("Security Group Name:", 8, 1, "", 8, 32, 40, 40, 0x0),
-                ("Security Group Description:", 9, 1, "", 9, 32, 40, 40, 0x0),
-                ("Security Keys Name:", 10, 1, "", 10, 32, 40, 40, 0x0),
-                ("Router Name:", 11, 1, "", 11, 32, 40, 40, 0x0)]
-    
-            (code, fields) = d.mixedform(
-                "Please fill in Project Information:", elements, width=90)
-    
-            if handle_exit_code(d, code) == d.DIALOG_OK:
-                break
+        project_dict = {"project_id":project['project_id'], "project_name":project['project_name'], "keep_users":False}
+        destroy_project(auth_dict, project_dict)
+        
+    return yesno
 
 
 def projectInfo(d, project):
@@ -903,121 +888,13 @@ def networkManage(d, network):
 
     return fields
 
-def dash(d, user_dict):
-    tenant = tenant_ops(user_dict)
+def dash(d, auth_dict):
+    tenant = tenant_ops(auth_dict)
     
     nodeList = [("1", "Compute_1", 0),
                 ("2", "Storage_1", 0),
                 ("3", "Storage_2", 0)]
-    """
-    projectList = [{'name':"Project Zeus",
-                    'users':[{'name':"Snow White",
-                              'role':"User",
-                              'status':2,
-                              'isAdmin':False},
-                             {'name':"Pocahontas",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Rapunzel",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Tiana",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False}],
-                    'instances':[{'name':"instance_1"},
-                                 {'name':"instance_2"}],
-                    'volumes':[{'name':"vol_1",
-                                'capacity':"500GB"},
-                               {'name':"vol_2",
-                                'capacity':"1TB"}],
-                    'containers':[{'name':"container_1",
-                                   'capacity':"500GB"},
-                                  {'name':"container_2",
-                                   'capacity':"1TB"}],
-                    'snapshots':[{'name':"snapshot_1"},
-                                 {'name':"snapshot_2"}],
-                    'images':[{'name':"image_1"},
-                              {'name':"image_2"}],
-                    'securityGroups':[{'name':"securitygroup_1"},
-                                      {'name':"securitygroup_2"}],
-                    'keypairs':[{'name':"keypair_1"},
-                                {'name':"keypair_2"}],
-                    'networks':[{'name':"network_1"},
-                               {'name':"network_2"}]},
-                   {'name':"Project Hera",
-                    'users':[{'name':"Cinderella",
-                              'role':"User",
-                              'status':2,
-                              'isAdmin':False},
-                             {'name':"Aurora",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Ariel",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Merida",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False}],
-                    'instances':[{'name':"instance_1"},
-                                 {'name':"instance_2"}],
-                    'volumes':[{'name':"vol_1",
-                                'capacity':"500GB"},
-                               {'name':"vol_2",
-                                'capacity':"1TB"}],
-                    'containers':[{'name':"container_1",
-                                   'capacity':"500GB"},
-                                  {'name':"container_2",
-                                   'capacity':"1TB"}],
-                    'snapshots':[{'name':"snapshot_1"},
-                                 {'name':"snapshot_2"}],
-                    'images':[{'name':"image_1"},
-                              {'name':"image_2"}],
-                    'securityGroups':[{'name':"securitygroup_1"},
-                                      {'name':"securitygroup_2"}],
-                    'keypairs':[{'name':"keypair_1"},
-                                {'name':"keypair_2"}],
-                    'networks':[{'name':"network_1"},
-                               {'name':"network_2"}]},
-                   {'name':"Project Ares",
-                    'users':[{'name':"Belle",
-                              'role':"User",
-                              'status':2,
-                              'isAdmin':False},
-                             {'name':"Jasmine",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Mulan",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False}],
-                    'instances':[{'name':"instance_1"},
-                                 {'name':"instance_2"}],
-                    'volumes':[{'name':"vol_1",
-                                'capacity':"500GB"},
-                               {'name':"vol_2",
-                                'capacity':"1TB"}],
-                    'containers':[{'name':"container_1",
-                                   'capacity':"500GB"},
-                                  {'name':"container_2",
-                                   'capacity':"1TB"}],
-                    'snapshots':[{'name':"snapshot_1"},
-                                 {'name':"snapshot_2"}],
-                    'images':[{'name':"image_1"},
-                              {'name':"image_2"}],
-                    'securityGroups':[{'name':"securitygroup_1"},
-                                      {'name':"securitygroup_2"}],
-                    'keypairs':[{'name':"keypair_1"},
-                                {'name':"keypair_2"}],
-                    'networks':[{'name':"network_1"},
-                               {'name':"network_2"}]}]
-    """
+    
     userList = [{'name':"Snow White",
                  'role':"User",
                  'status':2,
@@ -1097,7 +974,7 @@ def dash(d, user_dict):
             projectList = tenant.list_all_tenants()
             selection = projects(d, projectList)
             if(selection == "Add"):
-                projectAdd(d, user_dict)
+                projectAdd(d, auth_dict)
                 selection = "Projects"
                 continue
             elif(selection == "Dashboard"):
@@ -1412,7 +1289,7 @@ def dash(d, user_dict):
 #/----------------------------Project Delete Start--------------------------
 
                             elif(selection == "Delete"):
-                                selection = projectDel(d, project)
+                                selection = projectDel(d, auth_dict, project)
                                 continue
 
 #-----------------------------Project Delete End---------------------------/
@@ -1556,7 +1433,7 @@ def process_command_line():
     return ("continue", None)
 
 
-def main(user_dict):
+def main(auth_dict):
     what_to_do, code = process_command_line()
     if what_to_do == "exit":
         sys.exit(code)
@@ -1574,7 +1451,7 @@ def main(user_dict):
         # test new widgets quickly and simply hit Ctrl-C once they've been
         # shown.
 
-        dash(d, user_dict)
+        dash(d, auth_dict)
     except dialog.error, exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)
