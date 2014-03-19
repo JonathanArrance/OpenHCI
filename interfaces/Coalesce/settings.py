@@ -118,7 +118,7 @@ INSTALLED_APPS = (
     'django_tables2',
     'django_filters',
     'crispy_forms',
-    'Coalesce.coalesce.coal_beta',
+    'coalesce.coal_beta',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (

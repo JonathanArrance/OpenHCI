@@ -10,7 +10,7 @@ from transcirrus.database.postgres import pgsql
 from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
-a = authorization("admin","newpass")
+a = authorization("admin","password")
 
 #get the user dict
 d = a.get_auth()
@@ -21,7 +21,7 @@ time.sleep(1)
 print "----------------------------------------"
 
 print "creating test project"
-proj = ten.create_tenant("jontest")
+proj = ten.create_tenant("jontest51")
 print proj
 time.sleep(1)
 print "----------------------------------------"

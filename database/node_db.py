@@ -92,6 +92,8 @@ def insert_node(input_dict):
                       - node_controller - req
                       - avail_zone - op
                       - node_cloud_name - op
+                      - node_virt_type - op
+                      - node_gluster_peer - op
     OUTPUT: OK if successful
             ERROR if not successful
             raise error
@@ -103,8 +105,8 @@ def insert_node(input_dict):
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
-        if((key == 'avail_zone') or \
-                (key == 'node_cloud_name') or \
+        if((key == 'avail_zone') or (key == 'node_virt_type') or \
+                (key == 'node_cloud_name') or (key == 'node_gluster_peer') or \
                 (key == 'node_mgmt_ip') or (key == 'node_controller')):
             continue
         if(val == ""):
@@ -114,6 +116,9 @@ def insert_node(input_dict):
             logger.sys_error("Node info not specified")
             raise Exception ("Node info not specified")
 
+    #get the db connection
+    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+    db = util.db_connect()
     #static assign nova availability zone for now
     if('avail_zone' not in input_dict):
         input_dict['avail_zone'] = 'nova'
@@ -121,20 +126,26 @@ def insert_node(input_dict):
         #check if zone given is valid.
         try:
             select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(input_dict['avail_zone'])}
-            get_zone = self.db.pg_select(select_zone)
+            get_zone = db.pg_select(select_zone)
         except:
             logger.sql_error('The specifed zone is not defined.')
             raise Exception('The specifed zone is not defined.')
+
+    if('node_virt_type' not in input_dict):
+        input_dict['node_virt_type'] = 'qemu'
+    if(input_dict['node_virt_type'] == ''):
+        input_dict['node_virt_type'] = 'qemu'
+
+    if('node_gluster_peer' not in input_dict):
+        input_dict['node_gluster_peer'] = '0'
+    if(input_dict['node_gluster_peer'] == ''):
+        input_dict['node_gluster_peer'] = '0'
 
     if('node_cloud_name' not in input_dict):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
     if(input_dict['node_cloud_name'] == ''):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
 
-    #get the db connection
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-    db = util.db_connect()
-    
     #count up the number of nodes attached to controller
     elem_dict = {'table':"trans_nodes",'where':"node_controller='%s'" %(input_dict['node_controller'])}
     count = db.count_elements(elem_dict)
@@ -145,22 +156,23 @@ def insert_node(input_dict):
         logger.sys_info("Controller %s has %s nodes attached." %(input_dict['node_controller'],count))
 
     #insert node info into specific service dbs based on node_type
+    print input_dict['node_type']
     if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
         #do the cinder config for now. Swift is up in the air still
         #HACK need to add in a supersecret db password
         try:
             insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.38.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_avail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            cinder_array = [insert_cinder_conf,insert_avail_zone]
+            insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            cinder_array = [insert_cinder_conf,insert_cinderavail_zone]
             for cinder in cinder_array:
                 db.pg_transaction_begin()
-                db.pg_insert('cinder_node',insert_cinder_conf)
+                db.pg_insert('cinder_node',cinder)
                 db.pg_transaction_commit()
         except:
             db.pg_transaction_rollback()
             logger.sql_error("Could not insert node specific cinder config into Transcirrus db.")
             return 'ERROR'
-    elif((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
+    if((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
         try:
             insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -168,7 +180,8 @@ def insert_node(input_dict):
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone]
+            insert_node_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -177,21 +190,22 @@ def insert_node(input_dict):
             db.pg_transaction_rollback()
             logger.sql_error("Could not insert node specific nova config into Transcirrus db.")
             return 'ERROR'
-    try:
-        insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
-        insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
-        neutron_array = [insert_neutron_region,insert_neutron_localip]
-        for neutron in neutron_array:
-            db.pg_transaction_begin()
-            db.pg_insert('neutron_node',neutron)
-            db.pg_transaction_commit()
-    except:
-        db.pg_transaction_rollback()
-        logger.sys_error("Could not insert node specific neutron config into Transcirrus db.")
-        return 'ERROR'
+        try:
+            insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            neutron_array = [insert_neutron_region,insert_neutron_localip]
+            for neutron in neutron_array:
+                db.pg_transaction_begin()
+                db.pg_insert('neutron_node',neutron)
+                db.pg_transaction_commit()
+        except:
+            db.pg_transaction_rollback()
+            logger.sys_error("Could not insert node specific neutron config into Transcirrus db.")
+            return 'ERROR'
     try:
         insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
-                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['avail_zone']}
+                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['avail_zone'],'node_fault_flag':'0',
+                       'node_ready_flag':'1','node_gluster_peer':input_dict['node_gluster_peer']}
         db.pg_transaction_begin()
         db.pg_insert('trans_nodes',insert_dict)
         db.pg_transaction_commit()

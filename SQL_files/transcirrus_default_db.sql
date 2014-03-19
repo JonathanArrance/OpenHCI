@@ -1525,6 +1525,155 @@ ALTER TABLE ONLY trans_public_subnets
 
 CREATE INDEX trans_public_subnets_subnet_id_idx ON trans_public_subnets USING btree (subnet_id);
 
+
+--
+-- TOC entry 200 (class 1259 OID 19357)
+-- Name: ha_default; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE ha_default (
+    parameter character varying,
+    param_value character varying,
+    file_name character varying,
+    index integer NOT NULL
+);
+
+
+ALTER TABLE public.ha_default OWNER TO transuser;
+
+--
+-- TOC entry 203 (class 1259 OID 19372)
+-- Name: ha_default_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE ha_default_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ha_default_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1973 (class 0 OID 0)
+-- Dependencies: 203
+-- Name: ha_default_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE ha_default_index_seq OWNED BY ha_default.index;
+
+
+--
+-- TOC entry 1974 (class 0 OID 0)
+-- Dependencies: 203
+-- Name: ha_default_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('ha_default_index_seq', 1, false);
+
+
+--
+-- TOC entry 202 (class 1259 OID 19362)
+-- Name: ha_node; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE ha_node (
+    parameter character varying,
+    param_value character varying,
+    file_name character varying,
+    node character varying,
+    index integer NOT NULL
+);
+
+
+ALTER TABLE public.ha_node OWNER TO transuser;
+
+--
+-- TOC entry 201 (class 1259 OID 19360)
+-- Name: ha_node_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE ha_node_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ha_node_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1975 (class 0 OID 0)
+-- Dependencies: 201
+-- Name: ha_node_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE ha_node_index_seq OWNED BY ha_node.index;
+
+
+--
+-- TOC entry 1976 (class 0 OID 0)
+-- Dependencies: 201
+-- Name: ha_node_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('ha_node_index_seq', 1, false);
+
+
+--
+-- TOC entry 1961 (class 2604 OID 19374)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY ha_default ALTER COLUMN index SET DEFAULT nextval('ha_default_index_seq'::regclass);
+
+
+--
+-- TOC entry 1962 (class 2604 OID 19365)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY ha_node ALTER COLUMN index SET DEFAULT nextval('ha_node_index_seq'::regclass);
+
+
+--
+-- TOC entry 1967 (class 0 OID 19357)
+-- Dependencies: 200
+-- Data for Name: ha_default; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+
+
+--
+-- TOC entry 1968 (class 0 OID 19362)
+-- Dependencies: 202
+-- Data for Name: ha_node; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+
+
+--
+-- TOC entry 1964 (class 2606 OID 19382)
+-- Name: ha_default_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY ha_default
+    ADD CONSTRAINT ha_default_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 1966 (class 2606 OID 19384)
+-- Name: ha_node_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY ha_node
+    ADD CONSTRAINT ha_node_pkey PRIMARY KEY (index);
+
+
+
 --
 -- TOC entry 2066 (class 2604 OID 16615)
 -- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
@@ -1883,7 +2032,7 @@ INSERT INTO nova_default VALUES ('admin_user', 'nova', 'api-paste.ini', 39);
 INSERT INTO nova_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 40);
 INSERT INTO nova_default VALUES ('signing_dir', '/tmp/keystone-signing-nova', 'api-paste.ini', 41);
 INSERT INTO nova_default VALUES ('auth_version', 'v2.0', 'api-paste.ini', 42);
-INSERT INTO nova_default VALUES ('libvirt_type', 'qemu', 'nova-compute.conf', 43);
+--INSERT INTO nova_default VALUES ('libvirt_type', 'qemu', 'nova-compute.conf', 43);
 INSERT INTO nova_default VALUES ('libvirt_ovs_bridge', 'br-int', 'nova-compute.conf', 44);
 INSERT INTO nova_default VALUES ('libvirt_vif_type', 'ethernet', 'nova-compute.conf', 45);
 INSERT INTO nova_default VALUES ('libvirt_vif_driver', 'nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver', 'nova-compute.conf', 46);

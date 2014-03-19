@@ -10,6 +10,7 @@ import transcirrus.common.logger as logger
 
 class pgsql:
     def __init__(self,host,port,dbname,user,password):
+        logger.sys_info("\n**Creating Postgres DB Object**\n")
         self.conn = psycopg2.connect("host=%s port=%s dbname=%s user=%s password=%s" %(host,port,dbname,user,password))
         #logger.sql("Connecting to %s with user %s" %(dbname,user))
         self.cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)

@@ -7,25 +7,25 @@ from transcirrus.common.auth import authorization
 import transcirrus.operations.build_complete_project as bcp
 
 print "Authenticating..."
-a = authorization("shithead","password")
+a = authorization("admin","password")
 
 #get the user dict
 d = a.get_auth()
-print d
 
-project_dict = {'project_name':"thissucksballs2", 
-             'user_dict': {'username': "thissucksballs2", 
-                           'password': "thissucksballs2", 
+
+project_dict = {'project_name':"keven5", 
+             'user_dict': {'username': "keven5", 
+                           'password': "keven5", 
                            'user_role': "pu", 
-                           'email': "thissucksballs2@transcirrus.com",
+                           'email': "keven5@transcirrus.com",
                            'project_id': None},
-             'net_name': "thissucksballs2",
+             'net_name': "keven5",
              'subnet_dns': [],
-             'sec_group_dict': {'group_name': "thissucksballs2",
-                                'group_desc': "thissucksballs2",
+             'sec_group_dict': {'group_name': "keven5",
+                                'group_desc': "keven5",
                                 'project_id': None},
-             'sec_keys_name': "thissucksballs2",
-             'router_name': "thissucksballs2"}
+             'sec_keys_name': "keven5",
+             'router_name': "keven5"}
 
 print "Building project..."
 bcp.build_project(d, project_dict)

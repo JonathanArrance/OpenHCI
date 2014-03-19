@@ -10,14 +10,14 @@ d = a.get_auth()
 
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
-'''
+
 print"----------------------------------------"
 print "createin a new external network"
 create = {'net_name':"pubtest",'admin_state':"true", 'shared':"false"}
 newpubnet = net.add_public_network(create)
 print newpubnet
 time.sleep(1)
-
+'''
 print"-----------------------------------------"
 print "Setting a subnet on new network"
 dns = ["192.168.190.20"]
@@ -110,9 +110,10 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_networks()
 print newnet
-'''
+
 input_dict = {'net_id':"52dea20c-c7fc-4db3-92a6-a0fa4a8f742c",
               'subnet_id':"ae1c8992-9d71-4146-a9f5-dcfaf7aebbde",
               'project_id':"de6647df708542ddafc00baf39534f56"}
 yo = net.list_net_ports(input_dict)
 print yo
+'''
