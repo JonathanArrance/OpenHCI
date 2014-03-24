@@ -2007,7 +2007,7 @@ INSERT INTO nova_default VALUES ('qpid_hostname', '172.38.24.10', 'nova.conf', 1
 INSERT INTO nova_default VALUES ('image_service', 'nova.image.glance.GlanceImageService', 'nova.conf', 16);
 INSERT INTO nova_default VALUES ('novnc_enabled', 'true', 'nova.conf', 17);
 INSERT INTO nova_default VALUES ('novncproxy_port', '6080', 'nova.conf', 18);
-INSERT INTO nova_default VALUES ('vncserver_listen', '0.0.0.0', 'nova.conf', 19);
+--INSERT INTO nova_default VALUES ('vncserver_listen', '0.0.0.0', 'nova.conf', 19);
 INSERT INTO nova_default VALUES ('network_api_class', 'nova.network.quantumv2.api.API', 'nova.conf', 20);
 INSERT INTO nova_default VALUES ('quantum_auth_strategy', 'keystone', 'nova.conf', 21);
 INSERT INTO nova_default VALUES ('quantum_admin_tenant_name', 'service', 'nova.conf', 22);
