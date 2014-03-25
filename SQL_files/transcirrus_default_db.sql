@@ -314,7 +314,7 @@ COMMENT ON COLUMN net_adapter_settings.net_alias IS 'this is an alias name ex. m
 -- Name: network_settings_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
 --
 
-CREATE SEQUENCE network_settings_index_seq
+CREATE SEQUENCE net_adapter_settings_index_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -322,7 +322,7 @@ CREATE SEQUENCE network_settings_index_seq
     CACHE 1;
 
 
-ALTER TABLE public.network_settings_index_seq OWNER TO transuser;
+ALTER TABLE public.net_adapter_settings_index_seq OWNER TO transuser;
 
 --
 -- TOC entry 2212 (class 0 OID 0)
@@ -2007,7 +2007,7 @@ INSERT INTO nova_default VALUES ('qpid_hostname', '172.38.24.10', 'nova.conf', 1
 INSERT INTO nova_default VALUES ('image_service', 'nova.image.glance.GlanceImageService', 'nova.conf', 16);
 INSERT INTO nova_default VALUES ('novnc_enabled', 'true', 'nova.conf', 17);
 INSERT INTO nova_default VALUES ('novncproxy_port', '6080', 'nova.conf', 18);
-INSERT INTO nova_default VALUES ('vncserver_listen', '0.0.0.0', 'nova.conf', 19);
+--INSERT INTO nova_default VALUES ('vncserver_listen', '0.0.0.0', 'nova.conf', 19);
 INSERT INTO nova_default VALUES ('network_api_class', 'nova.network.quantumv2.api.API', 'nova.conf', 20);
 INSERT INTO nova_default VALUES ('quantum_auth_strategy', 'keystone', 'nova.conf', 21);
 INSERT INTO nova_default VALUES ('quantum_admin_tenant_name', 'service', 'nova.conf', 22);
