@@ -314,7 +314,7 @@ COMMENT ON COLUMN net_adapter_settings.net_alias IS 'this is an alias name ex. m
 -- Name: network_settings_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
 --
 
-CREATE SEQUENCE network_settings_index_seq
+CREATE SEQUENCE net_adapter_settings_index_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -322,7 +322,7 @@ CREATE SEQUENCE network_settings_index_seq
     CACHE 1;
 
 
-ALTER TABLE public.network_settings_index_seq OWNER TO transuser;
+ALTER TABLE public.net_adapter_settings_index_seq OWNER TO transuser;
 
 --
 -- TOC entry 2212 (class 0 OID 0)
