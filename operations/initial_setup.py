@@ -51,6 +51,7 @@ def run_setup(new_system_variables,auth_dict):
     #    #fire off revert
     #    raise Exception('Could not start link local ip service.')
     time.sleep(1)
+    util.restart_network_card('bond3')
     cluster_ip = util.get_cluster_ip()
     time.sleep(1)
     #kill avahi-autoipd since we statically assigned the ip to bond3
