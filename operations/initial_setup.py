@@ -341,7 +341,7 @@ def run_setup(new_system_variables,auth_dict):
                 'mgmt_dhcp':'static'
                 }
 
-    clust_ip = {
+    clust_dict = {
                 'clust_ip':cluster_ip,
                 'clust_subnet':'255.255.0.0'
                 }
@@ -349,7 +349,7 @@ def run_setup(new_system_variables,auth_dict):
     net_input = {'node_id':node_id,
                  'uplink_dict':uplink_dict,
                  'mgmt_dict':mgmt_dict,
-                 'cluster_ip':clust_ip
+                 'cluster_dict':clust_dict
                 }
 
     links = util.set_network_variables(net_input)

@@ -8,16 +8,16 @@ import transcirrus.common.util as util
 #net = util.get_network_variables()
 #print net
 
-resolve = {
-                'dns_server1':'8.8.8.8',
-                'search_domain_int':'rtp.trans.com',
-                'search_domain_ext':'int.trans.com'
-}
+#resolve = {
+#                'dns_server1':'8.8.8.8',
+#                'search_domain_int':'rtp.trans.com',
+#                'search_domain_ext':'int.trans.com'
+#}
 
-name_service = util.set_nameresolution(resolve)
-print name_service
+#name_service = util.set_nameresolution(resolve)
+#print name_service
 
-write_name_config = util.write_new_config_file(name_service)
+#write_name_config = util.write_new_config_file(name_service)
 
 #set up br-ex and enable ovs.
 uplink_dict = {
@@ -32,19 +32,23 @@ mgmt_dict = {
             'mgmt_dhcp':'static'
             }
 
-net_input = {'node_id':'000-10015908-27302',
+
+clust_ip = {
+           'clust_ip':'169.168.0.146',
+           'clust_subnet':'255.255.0.0'
+           }
+
+net_input = {'node_id':'000-10019194-37020',
              'uplink_dict':uplink_dict,
-             'mgmt_dict':mgmt_dict
+             'mgmt_dict':mgmt_dict,
+             'cluster_dict':clust_ip
             }
 
-
 uplink = util.set_network_variables(net_input)
-print uplink
 
 for link in uplink:
     print link
     write_net_config = util.write_new_config_file(link)
-    print write_net_config
 
 
 #net = util.restart_network_card('all')

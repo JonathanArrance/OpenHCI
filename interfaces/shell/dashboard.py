@@ -1024,7 +1024,7 @@ def dash(d, auth_dict):
                                         else:
                                             selection = "ProjUsers"
                                             continue
-                                    elif(selection == "Back"):
+                                    if(selection == "Back"):
                                         selection = "ProjManage"
                                         continue
                                     elif(int(selection) >= 1 and int(selection) <= len(userList)):
