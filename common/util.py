@@ -946,8 +946,8 @@ def set_network_variables(input_dict):
     bond_conf['file_owner'] = 'root'
     bond_conf['file_group'] = 'root'
     bond_conf['file_perm'] = '644'
-    #bond_conf['file_path'] = '/etc/sysconfig/network-scripts'
-    bond_conf['file_path'] = '/home/transuser/network-scripts'
+    bond_conf['file_path'] = '/etc/sysconfig/network-scripts'
+    #bond_conf['file_path'] = '/home/transuser/network-scripts'
     bond_conf['file_name'] = 'ifcfg-bond0'
     bond_conf['file_content'] = bond0
     bond_conf['file_backup'] = False
@@ -959,8 +959,8 @@ def set_network_variables(input_dict):
         br_conf['file_owner'] = 'root'
         br_conf['file_group'] = 'root'
         br_conf['file_perm'] = '644'
-        #br_conf['file_path'] = '/etc/sysconfig/network-scripts'
-        br_conf['file_path'] = '/home/transuser/network-scripts'
+        br_conf['file_path'] = '/etc/sysconfig/network-scripts'
+        #br_conf['file_path'] = '/home/transuser/network-scripts'
         br_conf['file_name'] = 'ifcfg-br-ex'
         br_conf['file_content'] = br
         br_conf['file_backup'] = False
@@ -971,8 +971,8 @@ def set_network_variables(input_dict):
         ha_conf['file_owner'] = 'root'
         ha_conf['file_group'] = 'root'
         ha_conf['file_perm'] = '644'
-        #ha_conf['file_path'] = '/etc/sysconfig/network-scripts'
-        ha_conf['file_path'] = '/home/transuser/network-scripts'
+        ha_conf['file_path'] = '/etc/sysconfig/network-scripts'
+        #ha_conf['file_path'] = '/home/transuser/network-scripts'
         ha_conf['file_name'] = 'ifcfg-bond3'
         ha_conf['file_content'] = ha
         ha_conf['file_backup'] = False

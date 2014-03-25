@@ -47,17 +47,18 @@ def run_setup(new_system_variables,auth_dict):
     #get the avahi cluster ip
     logger.sys_info('Starting the avahi service.')
     avahi_start = service.avahi('start')
-    if(avahi_start != 'OK'):
-        #fire off revert
-        return avahi_start
+    #if(avahi_start != 'OK'):
+    #    #fire off revert
+    #    raise Exception('Could not start link local ip service.')
+    time.sleep(1)
     cluster_ip = util.get_cluster_ip()
     time.sleep(1)
     #kill avahi-autoipd since we statically assigned the ip to bond3
     logger.sys_info('Stoping the avahi service.')
-    avahi_stop = service.keystone('stop')
-    if(avahi_stop != 'OK'):
-        #fire off revert
-        return avahi_stop
+    avahi_stop = service.avahi('stop')
+    #if(avahi_stop != 'OK'):
+    #    #fire off revert
+    #    return avahi_stop
 
     #new_cloud_name = new_system_variables['cloud_name']
     #get the original system vars from the DB - used in case we need to rollback
