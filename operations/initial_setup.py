@@ -43,6 +43,24 @@ def run_setup(new_system_variables,auth_dict):
     node_id = util.get_node_id()
     node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
+
+    #get the avahi cluster ip
+    logger.sys_info('Starting the avahi service.')
+    avahi_start = service.avahi('start')
+    #if(avahi_start != 'OK'):
+    #    #fire off revert
+    #    raise Exception('Could not start link local ip service.')
+    time.sleep(1)
+    util.restart_network_card('bond3')
+    cluster_ip = util.get_cluster_ip()
+    time.sleep(1)
+    #kill avahi-autoipd since we statically assigned the ip to bond3
+    logger.sys_info('Stoping the avahi service.')
+    avahi_stop = service.avahi('stop')
+    #if(avahi_stop != 'OK'):
+    #    #fire off revert
+    #    return avahi_stop
+
     #new_cloud_name = new_system_variables['cloud_name']
     #get the original system vars from the DB - used in case we need to rollback
     #rollback_sys_vars = util.get_system_variables(node_id)
@@ -93,7 +111,6 @@ def run_setup(new_system_variables,auth_dict):
 
     #create a sevice controller object
     endpoint = endpoint_ops(auth_dict)
-
     logger.sys_info('Re-building Keystone endpoints')
     #reset the keystone endpoint
     del_keystone = endpoint.delete_endpoint('keystone')
@@ -156,9 +173,7 @@ def run_setup(new_system_variables,auth_dict):
                       'node_data_ip':'172.38.24.10',
                       'node_controller':sys_vars['CLOUD_CONTROLLER'],
                       'node_cloud_name':sys_vars['CLOUD_NAME'],
-                      'node_nova_zone':'nova',
-                      'node_fault_flag':'0',
-                      'node_ready_flag':'1',
+                      'avail_zone':'nova',
                       'node_gluster_peer':'1'}
     insert_cc = node_db.insert_node(cc_insert_dict)
     if(insert_cc != 'OK'):
@@ -328,9 +343,15 @@ def run_setup(new_system_variables,auth_dict):
                 'mgmt_dhcp':'static'
                 }
 
+    clust_dict = {
+                'clust_ip':cluster_ip,
+                'clust_subnet':'255.255.0.0'
+                }
+
     net_input = {'node_id':node_id,
                  'uplink_dict':uplink_dict,
-                 'mgmt_dict':mgmt_dict
+                 'mgmt_dict':mgmt_dict,
+                 'cluster_dict':clust_dict
                 }
 
     links = util.set_network_variables(net_input)
@@ -344,13 +365,14 @@ def run_setup(new_system_variables,auth_dict):
             print "Net config file written."
             logger.sys_info("Net config file written.")
 
+
     #restart postgres
     logger.sys_info('Restarting postgres.')
     pgsql_start = service.postgresql('restart')
     if(pgsql_start != 'OK'):
         #fire off revert
         return pgsql_start
-    time.sleep(5)
+    time.sleep(10)
 
     #restart keystone so neutron does not go nuts
     logger.sys_info('Restarting Keystone.')
@@ -358,7 +380,8 @@ def run_setup(new_system_variables,auth_dict):
     if(keystone_restart != 'OK'):
         #fire off revert
         return keystone_restart
-    time.sleep(5)
+    time.sleep(10)
+
 
     logger.sys_info('Setting OpenStack networking configs and bridges.')
     out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -396,6 +419,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_info('Sleeping until postgres accepts connections.')
         pg_accept = os.system('netstat -lnp | grep 5432')
     logger.sys_info('Postgres accepting connections on port 5432.')
+    time.sleep(10)
 
     logger.sys_info('Creating Neutron Connection.')
     neu_net = neutron_net_ops(auth_dict)
@@ -458,9 +482,6 @@ def run_setup(new_system_variables,auth_dict):
     os.system('sudo chmod 664 /etc/quantum/l3_agent.ini')
     time.sleep(1)
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
-
-    #only restart the swift services. We will not write a config as of yet because of the complexity of swift.
-    #this is pushed to alpo.1
 
     #if the node is set as multinode, enable multinode
     if(sys_vars['SINGLE_NODE'] == '0'):

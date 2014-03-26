@@ -13,7 +13,7 @@ from transcirrus.component.nova.storage import server_storage_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("shithead","password")
+auth = authorization("admin","password")
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
@@ -59,7 +59,7 @@ yo = store.attach_vol_to_server(inp)
 
 '''
 print "Createing a new virtual instance"
-server = {'sec_group_name':'yoyo_sec','avail_zone':'nova','sec_key_name':'tototot','network_name':'yonet','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'freakingstinking3','project_id':'634911ba0d794a4dadefdf872e0d8abe'}
+server = {'sec_group_name':'keven5','avail_zone':'nova','sec_key_name':'keven5','network_name':'keven5','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'thevm','project_id':'441e0a31c2ed4168872ef9f53aad4e63'}
 yo = nova.create_server(server)
 print yo
 '''

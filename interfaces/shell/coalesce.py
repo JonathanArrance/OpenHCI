@@ -12,6 +12,7 @@ from transcirrus.common import util
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
+import transcirrus.interfaces.shell.dashboard as dashboard
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -75,8 +76,8 @@ def handle_exit_code(d, code):
 def controls(d):
     """Defines the UI controls for the user"""
     d.msgbox("Use SPACE to select items (ie in a radio list) "
-              "Use ARROW KEYS to move the cursor \n"
-              "Use ENTER to submit and advance (OK or Cancel)", width=50)
+             "Use ARROW KEYS to move the cursor \n"
+             "Use ENTER to submit and advance (OK or Cancel)", width=50)
 
 
 def userbox(d):
@@ -126,7 +127,7 @@ def info(d):
             ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
-            "Please fill in Cloud Information:", elements, width=77)
+            "Please fill in Cloud Information:", elements, width=77, insecure=True)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
@@ -227,6 +228,7 @@ def setup(d):
     # once we have those flags setup on database, this is just proof of concept
     if (first_time['first_time_boot'] == 'FALSE'):
         d.msgbox("Taking you to the Coalesce Dashboard...")
+        dashboard.main(user_dict)
         # Direct user to Coalesce Dashboard
         clear_screen(d)
         return

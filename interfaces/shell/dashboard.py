@@ -1,6 +1,9 @@
 from __future__ import nested_scopes, division
 import sys, os, stat, time, getopt, subprocess, dialog
-
+from transcirrus.component.keystone.keystone_tenants import tenant_ops
+from transcirrus.component.keystone.keystone_users import user_ops
+from transcirrus.operations.build_complete_project import build_project
+from transcirrus.operations.destroy_project import destroy_project
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -154,13 +157,13 @@ def projects(d, projectList):
     counter = 0
     for entry in projectList:
         counter += 1
-        choice = (str(counter), entry['name'], 0)
+        choice = (str(counter), entry['project_name'], 0)
         allChoices.append(choice)
     allChoices.append(addChoice)
     allChoices.append(dashChoice)
     while True:
         (code, tag) = d.radiolist("Projects - Select Project to Manage",
-        width=65, choices=allChoices)
+        width=80, choices=allChoices)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
@@ -204,20 +207,52 @@ def userRemove(d, userList):
     return tag
 """
 
-def projectAdd(d):
-    d.msgbox("Project Name: \n"
-            "Users: \n"
-            "Whatever Else Is Needed to Create a Project: ", width=50)
+def projectAdd(d, auth_dict):
+
+    while True:
+        HIDDEN = 0x1
+        elements = [
+            ("Project Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
+            ("Project Power-User Name:", 2, 1, "", 2, 32, 40, 40, 0x0),
+            ("Project Power-User Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
+            ("Project Power-User Email:", 4, 1, "", 4, 32, 40, 40, 0x0),
+            ("Net Name:", 5, 1, "", 5, 32, 40, 40, 0x0),
+            ("Subnet DNS:", 6, 1, "", 6, 32, 40, 40, 0x0),
+            ("Ports:", 7, 1, "", 7, 32, 40, 40, 0x0),
+            ("Security Group Name:", 8, 1, "", 8, 32, 40, 40, 0x0),
+            ("Security Group Description:", 9, 1, "", 9, 32, 40, 40, 0x0),
+            ("Security Keys Name:", 10, 1, "", 10, 32, 40, 40, 0x0),
+            ("Router Name:", 11, 1, "", 11, 32, 40, 40, 0x0)]
+
+        (code, fields) = d.mixedform(
+            "Please fill in Project Information:", elements, width=90, insecure=True)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+        if handle_exit_code(d, code) == d.DIALOG_CANCEL:
+            return
+    project_name, username, password, email, net_name, subnet_dns, ports, group_name, group_desc, sec_keys_name, router_name = fields
+    user_dict = {"username":username, "password":password, "user_role":"pu", "email":email, "project_id": None}
+    sec_group_dict = {"ports":None, "group_name":group_name, "group_desc":group_desc, "project_id": None}
+    project_dict = {"project_name":project_name, "user_dict":user_dict, "net_name":net_name, "subnet_dns":[], "sec_group_dict":sec_group_dict, "sec_keys_name":sec_keys_name, "router_name":router_name}
+    project = build_project(auth_dict, project_dict)
+    return project
 
 
-def projectDel(d):
-    return d.yesno("Are you sure you would like to delete this Project?",
+def projectDel(d, auth_dict, project):
+    yesno =  d.yesno("Are you sure you would like to delete this Project?",
          yes_label="Yes, I'm sooo sure",
          no_label="No, not yet", width=80)
+    
+    if(yesno == d.DIALOG_OK):
+        project_dict = {"project_id":project['project_id'], "project_name":project['project_name'], "keep_users":False}
+        destroy_project(auth_dict, project_dict)
+        
+    return yesno
 
 
 def projectInfo(d, project):
-    return d.yesno(("Overview\n\n" + project['name']),
+    return d.yesno(("Overview\n\n" + project['project_name']),
     yes_label="Manage this Project",
     no_label="Return to Projects", width=50)
 
@@ -225,7 +260,7 @@ def projectInfo(d, project):
 def projectManage(d, project):
     while True:
         (code, tag) = d.radiolist(
-            project['name'] + " - Select Component to Manage",
+            project['project_name'] + " - Select Component to Manage",
             width=65,
             choices=[("Users", "List and manage users", 0),
                      ("Instances", "List and manage instances", 0),
@@ -243,53 +278,65 @@ def projectManage(d, project):
     return tag
 
 
-def projUsers(d, project):
+def projUsers(d, tenant_op, project):
     addChoice = ("Add", "Add a User", 0)
     projChoice = ("Back", "Return to Project Components", 1)
     allChoices = []
     counter = 0
-
-    for entry in project['users']:
+    userList = tenant_op.list_tenant_users(project['project_id'])
+    for entry in userList:
         counter += 1
-        choice = (str(counter), entry['name'], 0)
+        choice = (str(counter), entry['username'], 0)
         allChoices.append(choice)
     allChoices.append(addChoice)
     allChoices.append(projChoice)
     while True:
-        (code, tag) = d.radiolist(project['name'] + " - Select User to Manage",
+        (code, tag) = d.radiolist(project['project_name'] + " - Select User to Manage",
         width=65, choices=allChoices)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
 
 
-def userAdd(d):
+def userAdd(d, user_op, project):
+    HIDDEN = 0x1
     while True:
         elements = [
-            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
-            ("ID:", 2, 1, "", 2, 24, 16, 16, 0x0),
-            ("Email Address:", 3, 1, "", 3, 24, 16, 16, 0x0),
-            ("Enabled (true/false):", 4, 1, "", 4, 24, 16, 16, 0x0)]
+            ("Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
+            ("Password:", 2, 1, "", 2, 32, 40, 40, HIDDEN),
+            ("Re-Enter Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
+            ("Role (admin/pu/user):", 4, 1, "", 4, 32, 40, 40, 0x0),
+            ("Email", 5, 1, "", 5, 32, 40, 40, 0x0)]
 
         (code, fields) = d.mixedform(
-            "Add User:", elements, width=77)
+            "Add User:", elements, width=90, insecure=True)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
+        if handle_exit_code(d, code) == d.DIALOG_CANCEL:
+            return
+    username, password, confirm, user_role, email = fields
+    if(password != confirm):
+        d.msgbox("Passwords do not match, try again")
+        return "Add"
+    new_user_dict = {"username":username, "password":password, "user_role":user_role, "email":email, "project_id":project['project_id']}
+    user_op.create_user(new_user_dict)
 
-    return fields
 
-
-def userDel(d, user):
-    return d.yesno("Are you sure you would like to delete this User?",
+def userDel(d, user_op, user):
+    yesno = d.yesno("Are you sure you would like to delete this User?",
          yes_label="Yes, I'm sooo sure",
          no_label="No, not yet", width=80)
+    
+    if(yesno == d.DIALOG_OK):
+        delete_dict = {"username":user['username'], "user_id":user['user_id']}
+        user_op.delete_user(delete_dict)
 
 
 def userInfo(d, user):
     while True:
         (code, tag) = d.radiolist(
-            user['name'] + " - User Options",
+            user['username'] + " - User Options",
             width=65,
             choices=[("Manage", "Manage this user", 0),
                      ("Delete", "Completely remove this user", 0),
@@ -855,119 +902,14 @@ def networkManage(d, network):
 
     return fields
 
-def dash(d):
+def dash(d, auth_dict):
+    tenant_op = tenant_ops(auth_dict)
+    user_op = user_ops(auth_dict)
+    
     nodeList = [("1", "Compute_1", 0),
                 ("2", "Storage_1", 0),
                 ("3", "Storage_2", 0)]
-
-    projectList = [{'name':"Project Zeus",
-                    'users':[{'name':"Snow White",
-                              'role':"User",
-                              'status':2,
-                              'isAdmin':False},
-                             {'name':"Pocahontas",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Rapunzel",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Tiana",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False}],
-                    'instances':[{'name':"instance_1"},
-                                 {'name':"instance_2"}],
-                    'volumes':[{'name':"vol_1",
-                                'capacity':"500GB"},
-                               {'name':"vol_2",
-                                'capacity':"1TB"}],
-                    'containers':[{'name':"container_1",
-                                   'capacity':"500GB"},
-                                  {'name':"container_2",
-                                   'capacity':"1TB"}],
-                    'snapshots':[{'name':"snapshot_1"},
-                                 {'name':"snapshot_2"}],
-                    'images':[{'name':"image_1"},
-                              {'name':"image_2"}],
-                    'securityGroups':[{'name':"securitygroup_1"},
-                                      {'name':"securitygroup_2"}],
-                    'keypairs':[{'name':"keypair_1"},
-                                {'name':"keypair_2"}],
-                    'networks':[{'name':"network_1"},
-                               {'name':"network_2"}]},
-                   {'name':"Project Hera",
-                    'users':[{'name':"Cinderella",
-                              'role':"User",
-                              'status':2,
-                              'isAdmin':False},
-                             {'name':"Aurora",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Ariel",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Merida",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False}],
-                    'instances':[{'name':"instance_1"},
-                                 {'name':"instance_2"}],
-                    'volumes':[{'name':"vol_1",
-                                'capacity':"500GB"},
-                               {'name':"vol_2",
-                                'capacity':"1TB"}],
-                    'containers':[{'name':"container_1",
-                                   'capacity':"500GB"},
-                                  {'name':"container_2",
-                                   'capacity':"1TB"}],
-                    'snapshots':[{'name':"snapshot_1"},
-                                 {'name':"snapshot_2"}],
-                    'images':[{'name':"image_1"},
-                              {'name':"image_2"}],
-                    'securityGroups':[{'name':"securitygroup_1"},
-                                      {'name':"securitygroup_2"}],
-                    'keypairs':[{'name':"keypair_1"},
-                                {'name':"keypair_2"}],
-                    'networks':[{'name':"network_1"},
-                               {'name':"network_2"}]},
-                   {'name':"Project Ares",
-                    'users':[{'name':"Belle",
-                              'role':"User",
-                              'status':2,
-                              'isAdmin':False},
-                             {'name':"Jasmine",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False},
-                             {'name':"Mulan",
-                              'role':"PowerUser",
-                              'status':1,
-                              'isAdmin':False}],
-                    'instances':[{'name':"instance_1"},
-                                 {'name':"instance_2"}],
-                    'volumes':[{'name':"vol_1",
-                                'capacity':"500GB"},
-                               {'name':"vol_2",
-                                'capacity':"1TB"}],
-                    'containers':[{'name':"container_1",
-                                   'capacity':"500GB"},
-                                  {'name':"container_2",
-                                   'capacity':"1TB"}],
-                    'snapshots':[{'name':"snapshot_1"},
-                                 {'name':"snapshot_2"}],
-                    'images':[{'name':"image_1"},
-                              {'name':"image_2"}],
-                    'securityGroups':[{'name':"securitygroup_1"},
-                                      {'name':"securitygroup_2"}],
-                    'keypairs':[{'name':"keypair_1"},
-                                {'name':"keypair_2"}],
-                    'networks':[{'name':"network_1"},
-                               {'name':"network_2"}]}]
-
+    
     userList = [{'name':"Snow White",
                  'role':"User",
                  'status':2,
@@ -1044,10 +986,10 @@ def dash(d):
         while(selection == "Projects"):
 
 #/============================Projects Start=========================
-
+            projectList = tenant_op.list_all_tenants()
             selection = projects(d, projectList)
             if(selection == "Add"):
-                projectAdd(d)
+                projectAdd(d, auth_dict)
                 selection = "Projects"
                 continue
             elif(selection == "Dashboard"):
@@ -1072,17 +1014,22 @@ def dash(d):
                                 while(selection == "ProjUsers"):
 
 #/----------------------------Project Users Start-------------------------
-
-                                    selection = projUsers(d, project)
+                                    userList = tenant_op.list_tenant_users(project['project_id'])
+                                    selection = projUsers(d, tenant_op, project)
                                     if(selection == "Add"):
-                                        userAdd(d)
-                                        selection = "ProjUsers"
-                                        continue
+                                        while(selection == "Add"):
+                                            userAdd(d, user_op, project)
+                                            if(userAdd == "Add"):
+                                                selection = "Add"
+                                                continue
+                                            else:
+                                                selection = "ProjUsers"
+                                                continue
                                     elif(selection == "Back"):
                                         selection = "ProjManage"
                                         continue
-                                    elif(int(selection) >= 1 and int(selection) <= len(project['users'])):
-                                        user = project['users'][int(selection) - 1]
+                                    elif(int(selection) >= 1 and int(selection) <= len(userList)):
+                                        user = userList[int(selection) - 1]
                                         selection = "UserManage"
                                         while(selection == "UserManage"):
                                             selection = userInfo(d, user)
@@ -1090,7 +1037,7 @@ def dash(d):
                                                 selection = userManage(d, user)
                                                 selection = "UserManage"
                                             elif(selection == "Delete"):
-                                                userDel(d, user)
+                                                userDel(d, user_op, user)
                                                 selection = "ProjUsers"
                                                 continue
                                             elif(selection == "Back"):
@@ -1362,7 +1309,7 @@ def dash(d):
 #/----------------------------Project Delete Start--------------------------
 
                             elif(selection == "Delete"):
-                                selection = projectDel(d, project)
+                                selection = projectDel(d, auth_dict, project)
                                 continue
 
 #-----------------------------Project Delete End---------------------------/
@@ -1506,7 +1453,7 @@ def process_command_line():
     return ("continue", None)
 
 
-def main():
+def main(auth_dict):
     what_to_do, code = process_command_line()
     if what_to_do == "exit":
         sys.exit(code)
@@ -1516,13 +1463,15 @@ def main():
         # argument), you can use:
         #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
         d = dialog.Dialog(dialog="dialog")
-        d.add_persistent_args(["--backtitle", "TransCirrus - CoalesceShell"])
+        d.add_persistent_args(["--colors"])
+        d.add_persistent_args(["--backtitle", "\Z1\ZbTransCirrus - CoalesceShell"])
+        
 
         # Show the additional widgets before the "normal demo", so that I can
         # test new widgets quickly and simply hit Ctrl-C once they've been
         # shown.
 
-        dash(d)
+        dash(d, auth_dict)
     except dialog.error, exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)

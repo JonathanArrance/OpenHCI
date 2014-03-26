@@ -540,6 +540,21 @@ def get_uplink_ip():
     uplink = db.pg_select(get_uplink)
     return uplink[0][0]
 
+def get_cluster_ip():
+    """
+    DESC: get the self assigned cluster ip address.
+    INPUT: None
+    OUTPUT: cluster ip
+    ACCESS: Wide open
+    NOTE: Get the cluster ip.
+    """
+    #r_dict - net_adapter
+    #               - net_ip
+    #               - net_mask
+    #               - net_mac
+    cluster = get_adapter_ip('bond3:avahi')
+    return cluster['net_ip']
+
 def get_system_defaults(node_id):
     """
     DESC: Return the system settings from the transcirrus system settings db.
@@ -710,14 +725,16 @@ def set_network_variables(input_dict):
                             - mgmt_ip - op
                             - mgmt_subnet - op
                             - mgmt_dhcp - dhcp/static - def dhcp
+                      - clust_dict - dictionary of cluster params
+                            - clust_ip - op
+                            - clust_subnet - op
     OUTPUT: array of file descriptors used to write the interface files
             ERROR - fail
             NA - unknown
     ACCESS - wide open
     NOTE: This is used to set the net adapters on the physical machines - neutron libs for virtual environments
           The defualt subnet is 255.255.255.0 and the gateway will be set to None if a gateway is not specified.
-          This is cumbersome but it just builds descriptors to re-rite the entire interface file. THIS WILL REWRITE THE
-          /ETC/NETWORK/INTERFACE FILE EVERY TIME.
+          This is cumbersome but it just builds descriptors to re-rite the entire interface file.
     """
     #do this today!
     #make sure none of the values are empty
@@ -728,12 +745,13 @@ def set_network_variables(input_dict):
 
     mgmt_dict = input_dict['mgmt_dict']
     uplink_dict = input_dict['uplink_dict']
+    cluster_dict = input_dict['cluster_dict']
 
     up_inet = 'static'
     for key,value in uplink_dict.items():
         if('up_ip' not in uplink_dict):
-            logger.sys_error('No net adapter was specified.')
-            raise Exception('No net adapter was specified.')
+            logger.sys_error('No uplink adapter ip was specified.')
+            raise Exception('No uplink adapter ip was specified.')
         if('up_subnet' not in uplink_dict):
             logger.sys_error('No uplink subnet was specified.')
             raise Exception('No uplink subnet was specified.')
@@ -761,6 +779,29 @@ def set_network_variables(input_dict):
     #connect to the db
     db = db_connect()
 
+    node = None
+    try:
+        get_node = {'select':'node_type,node_mgmt_ip','from':'trans_nodes','where':"node_id='%s'"%(input_dict['node_id'])}
+        node = db.pg_select(get_node)
+    except:
+        logger.sys_error("Could not get the node type from the Transcirrus db.")
+        raise Exception("Could not get the node type from the Transcirrus db.")
+
+    #set the cluster node ip stuff
+    c_adapter = None
+    clust_inet = "static"
+    if(node[0][0] == 'cc'):
+        for key,value in cluster_dict.items():
+            if('clust_ip' not in cluster_dict):
+                logger.sys_error('No cluster ip was specified.')
+                raise Exception('No cluster ip was specified.')
+            if('clust_subnet' not in cluster_dict):
+                logger.sys_error('No cluster subnet was specified.')
+                raise Exception('No cluster subnet was specified.')
+
+        get_cadpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='clust'"}
+        c_adapter = db.pg_select(get_cadpt)
+
     #check if the adapter already exsists on the system
     #Note - no try block - this is meerly a check to see if the adapter is in the db 
     get_upadpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='uplink'"}
@@ -769,19 +810,13 @@ def set_network_variables(input_dict):
     get_madpt = {'select':"net_alias",'from':"net_adapter_settings",'where':"node_id='%s'"%(input_dict['node_id']),'and':"net_alias='mgmt'"}
     m_adapter = db.pg_select(get_madpt)
 
-    try:
-        get_node = {'select':'node_type,node_mgmt_ip','from':'trans_nodes','where':"node_id='%s'"%(input_dict['node_id'])}
-        node = db.pg_select(get_node)
-    except:
-        logger.sys_error("Could not get the node type from the Transcirrus db.")
-        raise Exception("Could not get the node type from the Transcirrus db.")
-
     #add new config to the DB - This is a freaking hack but it is going away when the redhat switch happens
     try:
         db.pg_transaction_begin()
-        if(up_adapter == None):
+        #The inserts may need to be fixed unit testing is required.
+        if(len(up_adapter) == 0):
             #insert the new adapter
-            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_mtu':"%s"
+            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_mtu':"%s",'node_id':'%s'%(config.NODE_ID),'system_name':'%s'%(config.NODE_NAME)
                         %(uplink_dict['up_ip'],'br-ex',uplink_dict['up_subnet'],uplink_dict['up_gateway'],'br-ex',up_inet,'9000')}
             db.pg_insert("net_adapter_settings",ins_adpt)
         elif(up_adapter[0][0] == 'uplink'):
@@ -793,15 +828,30 @@ def set_network_variables(input_dict):
         else:
             return 'NA'
     
-        if(m_adapter == None):
+        if(len(m_adapter) == 0):
             #insert the new adapter
-            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_mtu':"%s"
-                        %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_adapter'],mgmt_dict['mgmt_subnet'],'NULL',bond0,mgmt_inet,'1500')}
+            ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_mtu':"%s",'node_id':'%s'%(config.NODE_ID),'system_name':'%s'%(config.NODE_NAME)
+                        %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_adapter'],mgmt_dict['mgmt_subnet'],'NULL','bond0',mgmt_inet,'1500')}
             db.pg_insert("net_adapter_settings",ins_adpt)
         elif(m_adapter[0][0] == 'mgmt'):
             #update the adapter row
             update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='%s',net_mtu='%s'"
                       %(mgmt_dict['mgmt_ip'],mgmt_dict['mgmt_subnet'],mgmt_inet,'1500'),'where':"net_adapter='bond0'",
+                      'and':"node_id='%s'"%(input_dict['node_id'])}
+            db.pg_update(update)
+        else:
+            return 'NA'
+    
+        print c_adapter
+        if(len(c_adapter) == 0):
+            #insert the new adapter
+            ins_adpt = {'net_ip':'%s'%(cluster_dict['clust_ip']),'net_alias':'HA','net_mask':'%s'%(cluster_dict['clust_subnet']),'net_adapter':'bond3','inet_setting':'static','net_mtu':'1500',
+                        'net_alias':'clust','node_id':'%s'%(config.NODE_ID),'system_name':'%s'%(config.NODE_NAME)}
+            db.pg_insert("net_adapter_settings",ins_adpt)
+        elif(c_adapter[0][0] == 'clust'):
+            #update the adapter row
+            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='static',net_mtu='1500'"
+                      %(cluster_dict['clust_ip'],cluster_dict['clust_subnet']),'where':"net_adapter='bond3'",
                       'and':"node_id='%s'"%(input_dict['node_id'])}
             db.pg_update(update)
         else:
@@ -821,12 +871,15 @@ def set_network_variables(input_dict):
     get_m_adapter = {'node_id':input_dict['node_id'],'net_adapter':'mgmt'}
     m_netadpt = get_network_variables(get_m_adapter)
 
+    get_clust_adapter = {'node_id':input_dict['node_id'],'net_adapter':'clust'}
+    c_netadpt = get_network_variables(get_clust_adapter)
+
     bond0 = []
     #bond0 is the mgmt interface on the nodes and the ciac
     #if(input_dict['net_adapter'] == 'mgmt'):
     #bond = 'DEVICE=bond0'
     #bond0.append(bond)
-    bond0 = ['DEVICE="bond0"','BONDING_OPTS="mode=balance-alb miimon=100 primary=eth0"','ONBOOT="yes"','IPV6INIT="no"','MTU="1500"','NM_CONTROLLED="no"','TYPE="Bond"']
+    bond0 = ['DEVICE="bond0"','BONDING_OPTS="mode=active-backup miimon=100 primary=eth0"','ONBOOT="yes"','IPV6INIT="no"','MTU="1500"','NM_CONTROLLED="no"','TYPE="Bond"']
     if(m_netadpt['inet_setting'] == 'static'):
         address = 'IPADDR="%s"'%(m_netadpt['net_ip'])
         bond0.append(address)
@@ -849,8 +902,9 @@ def set_network_variables(input_dict):
     #001 - compute
     #002 - storage
     br = []
+    ha = []
     if(node[0][0] == 'cc'):
-        br = ['DEVICE="br-ex"','TYPE="Bridge"','BOOTPROTO="static"','ONBOOT="yes"','TYPE="OVSBridge"','DEVICETYPE="ovs"','NM_CONTROLLED="no"']
+        br = ['DEVICE="br-ex"','BOOTPROTO="static"','ONBOOT="yes"','TYPE="OVSBridge"','DEVICETYPE="ovs"','NM_CONTROLLED="no"']
         if(up_netadpt['inet_setting'] == 'static'):
             address = 'IPADDR="%s"'%(up_netadpt['net_ip'])
             br.append(address)
@@ -861,6 +915,14 @@ def set_network_variables(input_dict):
                 br.append(gateway)
         br.append('')
 
+        ha = ['DEVICE="bond3"','BONDING_OPTS="mode=active-backup miimon=100 primary=eth2"','NM_CONTROLLED="no"','ONBOOT="yes"','TYPE="Bond"']
+        if(c_netadpt['inet_setting'] == 'static'):
+            address = 'IPADDR="%s"'%(c_netadpt['net_ip'])
+            ha.append(address)
+            netmask = 'NETMASK="%s"' %(c_netadpt['net_mask'])
+            ha.append(netmask)
+        ha.append('')
+
         #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
         #get the current ip settings
         b0 = get_adapter_ip('bond0')
@@ -870,12 +932,13 @@ def set_network_variables(input_dict):
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b1['net_ip']))
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(mgmt_dict['mgmt_ip']))
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(uplink_dict['up_ip']))
+        os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(cluster_dict['clust_ip']))
         os.system('sudo mv /transcirrus/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf')
         os.system('sudo chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf')
 
     node_flag = 0
     if((node[0][0] == 'cn') or (node[0][0] == 'sn')):
-        noce_flag = 1
+        node_flag = 1
 
     net_array = []
     bond_conf = {}
@@ -884,6 +947,7 @@ def set_network_variables(input_dict):
     bond_conf['file_group'] = 'root'
     bond_conf['file_perm'] = '644'
     bond_conf['file_path'] = '/etc/sysconfig/network-scripts'
+    #bond_conf['file_path'] = '/home/transuser/network-scripts'
     bond_conf['file_name'] = 'ifcfg-bond0'
     bond_conf['file_content'] = bond0
     bond_conf['file_backup'] = False
@@ -896,10 +960,23 @@ def set_network_variables(input_dict):
         br_conf['file_group'] = 'root'
         br_conf['file_perm'] = '644'
         br_conf['file_path'] = '/etc/sysconfig/network-scripts'
+        #br_conf['file_path'] = '/home/transuser/network-scripts'
         br_conf['file_name'] = 'ifcfg-br-ex'
         br_conf['file_content'] = br
         br_conf['file_backup'] = False
         net_array.append(br_conf)
+
+        ha_conf = {}
+        ha_conf['op'] = 'append'
+        ha_conf['file_owner'] = 'root'
+        ha_conf['file_group'] = 'root'
+        ha_conf['file_perm'] = '644'
+        ha_conf['file_path'] = '/etc/sysconfig/network-scripts'
+        #ha_conf['file_path'] = '/home/transuser/network-scripts'
+        ha_conf['file_name'] = 'ifcfg-bond3'
+        ha_conf['file_content'] = ha
+        ha_conf['file_backup'] = False
+        net_array.append(ha_conf)
 
     return net_array
 
@@ -929,7 +1006,7 @@ def get_network_variables(input_dict):
             logger.sys_error('A required value was not passed.')
             raise Exception('A required value was not passed.')
 
-    if((input_dict['net_adapter'] == 'uplink') or (input_dict['net_adapter'] == 'mgmt') or (input_dict['net_adapter'] == 'data')):
+    if((input_dict['net_adapter'] == 'uplink') or (input_dict['net_adapter'] == 'mgmt') or (input_dict['net_adapter'] == 'data') or (input_dict['net_adapter'] == 'clust')):
         logger.sys_info("Net adapter passed")
     else:
         logger.sys_error("Net adapter not passed in.")
@@ -1096,9 +1173,11 @@ def update_pg_hba():
     #get the current ip settings
     b0 = get_adapter_ip('bond0')
     b1 = get_adapter_ip('br-ex')
+    ha = get_adapter_ip('bond3')
     os.system('cp /transcirrus/pg_hba.proto /transcirrus/pg_hba.conf')
     os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b0['net_ip']))
     os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b1['net_ip']))
+    os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(ha['net_ip']))
     os.system('sudo mv /transcirrus/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf')
     os.system('sudo chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf')
 

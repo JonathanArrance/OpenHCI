@@ -311,6 +311,33 @@ def pacemaker(action):
     out  = _operator(pacemaker_array,action)
     return out
 
+def avahi(action):
+    """
+    DESC: Control the avahi service for link local ips on cluster bond
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS:
+    NOTES: This does not ues the private _operator def since the "sevice" statts and stops differently.
+    """
+    avahi = 0
+    if(action.lower() == 'start'):
+        avahi = os.system('sudo avahi-autoipd --force-bind -D bond3')
+    elif(action.lower() == 'stop'):
+        avahi = os.system('sudo avahi-autoipd --kill bond3')
+    elif(action.lower() == 'status'):
+        out = subprocess.Popen('sudo ps -o pid,cmd -C avahi-autoipd', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = out.stdout.readlines()
+        return process
+
+    if(avahi == 0):
+        return 'OK'
+    else:
+        return 'ERROR'
+
 def _operator(service_array,action):
     #need to check the status of the call and error corrctly - Figure this out later
     for service in service_array:
@@ -324,6 +351,8 @@ def _operator(service_array,action):
         elif(action.lower() == 'stop'):
             os.system('sudo chkconfig %s off'%(service))
             os.system('sudo service %s stop'%(service))
+            out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        elif(action.lower() == 'status'):
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process = out.stdout.readlines()
         print process[0]

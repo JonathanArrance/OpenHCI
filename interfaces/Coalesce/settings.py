@@ -1,6 +1,8 @@
+#!/usr/local/bin/python2.7
 # Django settings for transcirrus project.
 import os.path
 import sys
+import coalesce
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
 ROOT_PATH = os.path.dirname(__file__).replace('\\','/')
@@ -118,7 +120,7 @@ INSTALLED_APPS = (
     'django_tables2',
     'django_filters',
     'crispy_forms',
-    'Coalesce.coalesce.coal_beta',
+    'coalesce.coal_beta',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
