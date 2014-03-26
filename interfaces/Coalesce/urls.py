@@ -45,6 +45,10 @@ urlpatterns = patterns('',
         url(r'^projects/(?P<project_id>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
+        
+        url(r'^projects/(?P<project_id>\w+)/basic_view/$',
+            'coalesce.coal_beta.views.basic_project_view',
+            name='basic_project_view'),
 
         url(r'^projects/(?P<project_id>\w+)/(?P<project_name>\w+)/delete/$',
             'coalesce.coal_beta.views.destroy_project',

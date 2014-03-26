@@ -151,9 +151,9 @@ def project_view(request, project_id):
         instance_info[sname] = i_info
     
     try:
-        	images 	  = go.list_images()
+        images 	  = go.list_images()
     except:
-        	images =[]
+        images =[]
 
     private_networks={}
     for net in priv_net_list:
@@ -180,7 +180,7 @@ def project_view(request, project_id):
             ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
             fip['instance_name']=ip_info['instance_name']
         else:
-	    fip['instance_name']=''
+            fip['instance_name']=''
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, { 'project': project,
@@ -200,7 +200,98 @@ def project_view(request, project_id):
                                                         'snapshots':snapshots,
                                                         'images': images,
                                                         'instances': instances,
-							'instance_info': instance_info,
+                                                        'instance_info': instance_info,
+                                                        }))
+                               
+                               
+def basic_project_view(request, project_id):
+    auth = request.session['auth']
+    to = tenant_ops(auth)
+    project = to.get_tenant(project_id)
+    
+    """
+    so = server_ops(auth)
+    no = neutron_net_ops(auth)
+    l3o = layer_three_ops(auth)
+    vo = volume_ops(auth)
+    sno = snapshot_ops(auth)
+    go = glance_ops(auth)
+
+    project = to.get_tenant(project_id)
+    users = to.list_tenant_users(project_id)
+    userinfo = {}
+    uo = user_ops(auth)
+
+    for user in users:
+        user_dict = {'username': user['username'], 'project_name': project['project_name']}
+        user_info = uo.get_user_info(user_dict)
+        userinfo[user['username']] = user_info
+
+    try:
+        ousers = uo.list_orphaned_users()
+    except:
+        raise
+
+    ouserinfo = []
+    if ousers:
+        for ouser in ousers:
+            ouserinfo.append(ouser['username'])
+
+    priv_net_list = no.list_internal_networks(project_id)
+    pub_net_list  = no.list_external_networks()
+    routers       = l3o.list_routers(project_id)
+    volumes       = vo.list_volumes(project_id)
+    snapshots     = sno.list_snapshots(project_id)
+    sec_groups    = so.list_sec_group(project_id)
+    sec_keys      = so.list_sec_keys(project_id)
+    instances     = so.list_servers(project_id)
+    instance_info={}
+    for instance in instances:
+        i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
+        i_info = so.get_server(i_dict)
+        sname  = instance['server_name']
+        instance_info[sname] = i_info
+    
+    try:
+        images    = go.list_images()
+    except:
+        images =[]
+
+    private_networks={}
+    for net in priv_net_list:
+        try:
+            private_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+
+    public_networks={}
+    for net in pub_net_list:
+        try:
+            public_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+
+    try:
+        default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    except:
+        default_public = "NO PUBLIC NETWORK"
+
+    floating_ips = l3o.list_floating_ips(project_id)
+    for fip in floating_ips:
+        if fip["floating_in_use"]:
+            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
+            fip['instance_name']=ip_info['instance_name']
+        else:
+            fip['instance_name']=''
+    """
+
+    return render_to_response('coal/basic_project_view.html',
+                               RequestContext(request, { 'project': project,
+                                                        
+                                                        'volumes': volumes,
+                                                        
+                                                        'instances': instances,
+
                                                         }))
 
 def user_view(request, project_name, project_id, user_name):
@@ -210,8 +301,8 @@ def user_view(request, project_name, project_id, user_name):
     user_info = uo.get_user_info(user_dict)
 
     return render_to_response('coal/user_view.html',
-                               RequestContext(request, { 'project_name': project_name,
-							'project_id': project_id,
+                               RequestContext(request, {'project_name': project_name,
+                                                        'project_id': project_id,
                                                         'user_info': user_info,
                                                  }))
 
@@ -224,8 +315,8 @@ def key_view(request, sec_key_id, project_id):
     return render_to_response('coal/key_view.html',
                                RequestContext(request, { 
                                                         'key_info': key_info,
-							'project_id': project_id
-                                                 }))
+                                                        'project_id': project_id
+                                                        }))
 
 def download_public_key(request, sec_key_id, sec_key_name, project_id):
     auth = request.session['auth']
@@ -258,7 +349,7 @@ def volume_view(request, project_id, volume_id):
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         }))
-			       
+       
 def floating_ip_view(request, floating_ip_id):
     auth = request.session['auth']
     l3o = layer_three_ops(auth)
@@ -379,8 +470,8 @@ def delete_router(request, project_id, router_id):
 def destroy_project(request, project_id, project_name):
     try:
         auth = request.session['auth']
-	proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': False}
-	destroy.destroy_project(auth, proj_dict)
+        proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': False}
+        destroy.destroy_project(auth, proj_dict)
         return HttpResponseRedirect('/')
 
     except:
@@ -430,16 +521,16 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         auth = request.session['auth']
         so = server_ops(auth)
         no = neutron_net_ops(auth)
-	instance = {	'project_id':project_id, 'sec_group_name':sec_group_name,
-			'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
-			'network_name': network_name,'image_name': image_name,
-			'flavor_name':flavor_name, 'name':name}
+        instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
+                        'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
+                        'network_name': network_name,'image_name': image_name,
+                        'flavor_name':flavor_name, 'name':name}
 
-	server = so.create_server(instance)
+        server = so.create_server(instance)
         priv_net_list = no.list_internal_networks(project_id)
-	default_priv = priv_net_list[0]['net_id']
-    	input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
-    	net_info = so.attach_server_to_network(input_dict)
+        default_priv = priv_net_list[0]['net_id']
+        input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
+        net_info = so.attach_server_to_network(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -576,10 +667,10 @@ def update_user_password(request, user_id, project_id, password):
         auth = request.session['auth']
         uo = user_ops(auth)
         passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password }
-	uo.update_user_password(passwd_dict)
+        uo.update_user_password(passwd_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-	messages.warning(request, 'Password updated.')
+        messages.warning(request, 'Password updated.')
         return HttpResponseRedirect('/')
 
     except:
@@ -779,16 +870,16 @@ def login_page(request, template_name):
     if request.method == "POST":
         form = authentication_form(request.POST)
         if form.is_valid():
-	    try:
-		user = form.cleaned_data['username']
-		pw = form.cleaned_data['password']
-		a = authorization(user, pw)
-		auth = a.get_auth()
-		request.session['auth'] = auth
-            	return render_to_response('coal/welcome.html', RequestContext(request, {  }))
-	    except:
-		form = authentication_form()
-		messages.warning(request, 'Login failed.  Please verify your username and password.')
+            try:
+                user = form.cleaned_data['username']
+                pw = form.cleaned_data['password']
+                a = authorization(user, pw)
+                auth = a.get_auth()
+                request.session['auth'] = auth
+                return render_to_response('coal/welcome.html', RequestContext(request, {  }))
+            except:
+                form = authentication_form()
+                messages.warning(request, 'Login failed.  Please verify your username and password.')
                 return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
     else:
         form = authentication_form()
