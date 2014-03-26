@@ -38,10 +38,9 @@ clust_ip = {
            'clust_subnet':'255.255.0.0'
            }
 
-net_input = {'node_id':'000-10019194-37020',
+net_input = {'node_id':'000-10015992-38332',
              'uplink_dict':uplink_dict,
-             'mgmt_dict':mgmt_dict,
-             'cluster_dict':clust_ip
+             'mgmt_dict':mgmt_dict
             }
 
 uplink = util.set_network_variables(net_input)

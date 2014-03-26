@@ -199,7 +199,8 @@ class gluster_ops:
                 User - none
         NOTE: This is not the same as useing the Cinder volume create, this def
               adds gluster bricks to volumes using the gluster commands
-              brick = "ip":/"path_to_brick"
+              brick = "ip":/"brick name"
+              cinder brick name = /data/gluster/${HOSTNAME}
         """
         logger.sys_info('\n**Adding Gluster brick to volumes. Common Def: add_gluster_brick**\n')
         if(self.is_admin == 1):
