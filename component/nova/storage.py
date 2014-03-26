@@ -39,6 +39,12 @@ class server_storage_ops:
             self.is_admin = user_dict['is_admin']
             self.adm_token = user_dict['adm_token']
             self.user_id = user_dict['user_id']
+            
+            if(self.is_admin == 1):
+                self.adm_token = user_dict['adm_token']
+            else:
+                self.adm_token = 'NULL'
+
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
             else:
@@ -52,9 +58,9 @@ class server_storage_ops:
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
 
-        if(self.adm_token == ''):
+        if(self.is_admin == 1 and self.adm_token == ''):
             logger.sys_error("No admin tokens passed.")
-            #raise Exception("No admin tokens passed.")
+            raise Exception("No admin tokens passed.")
 
         if(self.token == 'error'):
             logger.sys_error("No tokens passed, or token was in error")
