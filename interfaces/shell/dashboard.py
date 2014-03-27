@@ -1016,16 +1016,16 @@ def dash(d, auth_dict):
 #/----------------------------Project Users Start-------------------------
                                     userList = tenant_op.list_tenant_users(project['project_id'])
                                     selection = projUsers(d, tenant_op, project)
-                                    if(selection == "Add"):
-                                        while(selection == "Add"):
-                                            userAdd(d, user_op, project)
-                                            if(userAdd == "Add"):
-                                                selection = "Add"
-                                                continue
-                                            else:
-                                                selection = "ProjUsers"
-                                                continue
-                                    elif(selection == "Back"):
+
+                                    while(selection == "Add"):
+                                        userAdd(d, user_op, project)
+                                        if(userAdd == "Add"):
+                                            selection = "Add"
+                                            continue
+                                        else:
+                                            selection = "ProjUsers"
+                                            continue
+                                    if(selection == "Back"):
                                         selection = "ProjManage"
                                         continue
                                     elif(int(selection) >= 1 and int(selection) <= len(userList)):

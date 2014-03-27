@@ -1,0 +1,83 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %}Manage Cloud{% endblock %}
+
+{% block content %}
+
+    <div class="row-fluid">
+      <div class="span12 well">
+        <div class="legend">
+            Nodes   
+        </div>
+        <table class="paleblue">
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Data IP</th>
+                    <th>Mgmt IP</th>
+                    <th>Controller</th>
+                    <th>Cloud Name</th>
+                    <th>Zone</th>
+                    <th>ISCSI IQN</th>
+                    <th>Swift Ring</th>
+                    <th>Status</th>
+                </tr>
+                {% for node in node_info %}
+                    <tr>
+                        <td><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></td>
+                        <td>{{node.node_type}}</td>
+                        <td>{{node.node_data_ip}}</td>
+                        <td>{{node.node_mgmt_ip}}</td>
+                        <td>{{node.node_controller}}</td>
+                        <td>{{node.node_cloud_name}}</td>
+                        <td>{{node.node_nova_zone}}</td>
+                        <td>{{node.node_iscsi_iqn}}</td>
+                        <td>{{node.node_swift_ring}}</td>
+                        <td>{{node.status}}</td>
+                    </tr>
+                {% endfor %}
+            </table> 
+       </div><!-- end span6-->
+   </div><!-- end row-fluid-->
+    <div class="row-fluid">
+      <div class="span12 well">
+        <div class="legend">
+            Projects  
+            <a href="/projects/build"  id="create-project" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Project</a>
+            
+        </div>
+        <table class="paleblue">
+            <tr>
+                <th>Project Name</th>
+                <th>Project Id</th>
+                <th>Host System Name</th>
+                <th>Host System IP</th>
+                <th>Security Group Name</th>
+                <th>Security Group ID</th>
+                <th>Security Key Name</th>
+                <th>Security Key ID</th>
+                <th>Network Name</th>
+                <th>Network ID</th>
+            </tr>
+            {% for proj in project_info %}
+                <tr>
+                    <td><a href={% url 'project_view' proj.project_id%}>{{proj.project_name}}</a></td>
+                    <td>{{proj.project_id}}</td>
+                    <td>{{proj.host_system_name}}</td>
+                    <td>{{proj.host_system_ip}}</td>
+                    <td>{{proj.def_security_group_name}}</td>
+                    <td>{{proj.def_security_group_id}}</td>
+                    <td>{{proj.def_security_key_name}}</td>
+                    <td>{{proj.def_security_key_id}}</td>
+                    <td>{{proj.def_network_name}}</td>
+                    <td>{{proj.def_network_id}}</td>
+
+                </tr>
+            {% endfor %}
+        </table>
+
+      </div><!-- end span6-->
+
+    </div><!-- end row-fluid-->
+
+{% endblock %}
