@@ -73,9 +73,33 @@ def node_view(request, node_id):
     node=get_node(node_id)
     return render_to_response('coal/node_view.html', RequestContext(request, {'node': node, }))
 
+def manage_cloud(request):
+    node_list = list_nodes()
+    node_info = []
+    auth = request.session['auth']
+    to = tenant_ops(auth)
+    project_list = to.list_all_tenants()
+    project_info = []
+    try:
+        for node in node_list:
+            nid = node['node_id']
+            ni = get_node(nid)
+            ni['node_id']= nid
+            node_info.append(ni)
+    except TypeError:
+        pass
+    try:
+        for proj in project_list:
+            pid = proj['project_id']
+            dict={}
+            pi = to.get_tenant(pid)
+            project_info.append(pi)
+    except:
+        raise
+    return render_to_response('coal/manage_cloud.html', RequestContext(request, {'project_info': project_info, 'node_info': node_info}))
+
 def manage_nodes(request):
     node_list = list_nodes()
-    print node_list
     node_info = []
     try:
         for node in node_list:
@@ -91,16 +115,13 @@ def manage_projects(request):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project_list = to.list_all_tenants()
-    print project_list
     project_info = []
     try:
         for proj in project_list:
             pid = proj['project_id']
-	    dict={}
+            dict={}
             pi = to.get_tenant(pid)
             project_info.append(pi)
-            print
-            print project_info
     except:
         raise
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
@@ -125,15 +146,14 @@ def project_view(request, project_id):
         user_info = uo.get_user_info(user_dict)
         userinfo[user['username']] = user_info
 
+    ouserinfo = []
     try:
         ousers = uo.list_orphaned_users()
+        if ousers:
+            for ouser in ousers:
+                ouserinfo.append(ouser['username'])
     except:
-        raise
-
-    ouserinfo = []
-    if ousers:
-        for ouser in ousers:
-            ouserinfo.append(ouser['username'])
+        ousers=[]
 
     priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
@@ -208,14 +228,50 @@ def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_id)
+    vo = volume_ops(auth)
+    go = glance_ops(auth)
+    so = server_ops(auth)
+    volumes       = vo.list_volumes(project_id)
+    sec_groups    = so.list_sec_group(project_id)
+    sec_keys      = so.list_sec_keys(project_id)
+    instances     = so.list_servers(project_id)
+    instance_info={}
+    for instance in instances:
+        i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
+        i_info = so.get_server(i_dict)
+        sname  = instance['server_name']
+        instance_info[sname] = i_info
+    
+    try:
+        images    = go.list_images()
+    except:
+        images =[]
     
     """
-    so = server_ops(auth)
+1. create a vm
+2. provision a new volume
+3. upload download delete swift objects
+4. add available floating ip to an instance
+5. remove a floating ip from an instance
+we need to build a function to request a vm resize
+6. delete a vm that they own
+7. confirm resize of an instance
+8. revert instance back to original size
+9. get the status of the instance
+10. get the novnc console of an instance
+3. delete volumes they own
+11 attach volumes to
+12 detach vols from instances they own
+13 update their password
+14. list the vms they own
+
+
+
     no = neutron_net_ops(auth)
     l3o = layer_three_ops(auth)
-    vo = volume_ops(auth)
+    
     sno = snapshot_ops(auth)
-    go = glance_ops(auth)
+
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -240,22 +296,10 @@ def basic_project_view(request, project_id):
     priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(project_id)
-    volumes       = vo.list_volumes(project_id)
+   
     snapshots     = sno.list_snapshots(project_id)
-    sec_groups    = so.list_sec_group(project_id)
-    sec_keys      = so.list_sec_keys(project_id)
-    instances     = so.list_servers(project_id)
-    instance_info={}
-    for instance in instances:
-        i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
-        i_info = so.get_server(i_dict)
-        sname  = instance['server_name']
-        instance_info[sname] = i_info
+
     
-    try:
-        images    = go.list_images()
-    except:
-        images =[]
 
     private_networks={}
     for net in priv_net_list:
@@ -287,9 +331,10 @@ def basic_project_view(request, project_id):
 
     return render_to_response('coal/basic_project_view.html',
                                RequestContext(request, { 'project': project,
-                                                        
+                                                        'sec_groups': sec_groups,
+                                                        'sec_keys': sec_keys,
                                                         'volumes': volumes,
-                                                        
+                                                        'images': images,
                                                         'instances': instances,
 
                                                         }))

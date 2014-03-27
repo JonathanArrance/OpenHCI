@@ -53,21 +53,27 @@
                         <div class="nav" id="main-menu">
 
                             <ul class="nav" id="main-menu-left">
-                             <li><a href="#">{{username}} ({{user_level}})</a></li>
+                             <li><a href="#">{{username}}</a></li>
                                 <li><a href={% url 'home' %}>Home</a></li>
                                 {% block navigation %}
-   
-                                        {% url 'basic_project_view' project_id as proj_url %}
-
-
-                                    <li><a href={{proj_url}}>Project Home</a></li>
-                                    <li><a href="/setup">Run Setup</a></li>
+                                  {% if project_id %}
+                                    {% if user_level == 2 %}
+                                        <li><a href={% url 'basic_project_view' project_id %}>Project Dashboard</a></li>
+                                    {% else %}
+                                        <li><a href={% url 'project_view' project_id %}>Project Dashboard</a></li>
+                                    {% endif %}
+                                    {% if user_level == 0 %}
+                                      <li><a href="/cloud/manage">Cloud Management</a></li>
+                                      <li><a href="/setup">Run Setup</a></li>
+                                    {% endif%}
+                                  {% endif %}
  
                                 {% endblock %}
-
                                 
-                                    <li><a href={% url 'logout' %}>Log Out</a></li>
+                                {% if token %}
                                     <li><a href={% url 'change-password' %}>Change Password</a></li>
+                                    <li><a href={% url 'logout' %}>Log Out</a></li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>
