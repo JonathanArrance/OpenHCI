@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/lib/python2.7
 import sys
 import os
 import shutil
@@ -553,6 +553,10 @@ def get_cluster_ip():
     #               - net_mask
     #               - net_mac
     cluster = get_adapter_ip('bond3')
+    if(cluster['net_ip'] == cluster['net_mask']):
+        cluster = get_adapter_ip('bond3:avahi')
+        if(cluster['net_ip'] == cluster['net_mask']):
+            return 'ERROR'
     return cluster['net_ip']
 
 def get_system_defaults(node_id):
