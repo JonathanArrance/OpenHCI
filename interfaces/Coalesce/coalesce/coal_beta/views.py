@@ -232,10 +232,23 @@ def basic_project_view(request, project_id):
     go = glance_ops(auth)
     so = server_ops(auth)
     l3o = layer_three_ops(auth)
+    no = neutron_net_ops(auth)
     volumes       = vo.list_volumes(project_id)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
+    #pub_net_list  = no.list_external_networks()
+    
+    priv_net_list = no.list_internal_networks(project_id)
+    private_networks={}
+    for net in priv_net_list:
+        try:
+            private_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+        
+
+        
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
@@ -276,7 +289,7 @@ we need to build a function to request a vm resize
 
 
 
-    no = neutron_net_ops(auth)
+
    
     
     sno = snapshot_ops(auth)
@@ -302,7 +315,7 @@ we need to build a function to request a vm resize
         for ouser in ousers:
             ouserinfo.append(ouser['username'])
 
-    priv_net_list = no.list_internal_networks(project_id)
+
     pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(project_id)
    
@@ -340,6 +353,8 @@ we need to build a function to request a vm resize
                                                         'images': images,
                                                         'instances': instances,
                                                         'floating_ips': floating_ips,
+                                                        'private_networks': private_networks,
+                                                        'priv_net_list':priv_net_list,
 
                                                         }))
 
