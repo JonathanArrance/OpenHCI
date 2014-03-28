@@ -154,7 +154,7 @@ class neutron_net_ops:
         ACCESS: All users. Admin can list all networks.
         NOTE:none
         """
-        if(self.user_level <= 1):
+        if(self.user_level <= 2):
             get_nets = {}
             if(self.is_admin == 1):
                 if(project_id):
