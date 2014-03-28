@@ -270,6 +270,8 @@ def basic_project_view(request, project_id):
             fip['instance_name']=''
             
     pub_net_list  = no.list_external_networks()
+    print "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ"
+    print pub_net_list
     public_networks={}
     for net in pub_net_list:
         try:
