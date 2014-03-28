@@ -102,8 +102,8 @@ class neutron_net_ops:
     def list_internal_networks(self,project_id=None):
         """
         DESC: List the networks available in a project. All user types can only
-              list the networks that are available in their project.Admin can list
-              all of the networks
+              list the networks that are available in their project.
+              Admin can list all of the networks
         INPUT: self object
         OUTPUT: array of r_dict - net_name
                                 - net_id
@@ -113,7 +113,7 @@ class neutron_net_ops:
         ACCESS: All users. Admin can list all networks.
         NOTE:none
         """
-        if(self.user_level <= 1):
+        if(self.user_level <= 2):
             get_nets = {}
             if(self.is_admin == 1):
                 if(project_id):
@@ -154,7 +154,7 @@ class neutron_net_ops:
         ACCESS: All users. Admin can list all networks.
         NOTE:none
         """
-        if(self.user_level <= 1):
+        if(self.user_level <= 2):
             get_nets = {}
             if(self.is_admin == 1):
                 if(project_id):

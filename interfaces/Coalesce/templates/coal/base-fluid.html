@@ -51,40 +51,28 @@
                 <div class="navbar-inner">
                     <div class="container-fluid">
                         <div class="nav" id="main-menu">
+
                             <ul class="nav" id="main-menu-left">
-                                <li><a href={% url 'home' %}>Home</a></li>
+                             <li><a href={% url 'home' %}>{{username}}</a></li>
                                 {% block navigation %}
-                                    {% if token %}
-                                        {% if 1 %}
-                                            <li class="dropdown">
-                                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Manage Nodes <b class="caret"></b></a>
-                                                <ul class="dropdown-menu" id="swatch-menu">
-                                                    <li><a href="/nodes/manage">View All Nodes</a></li>
-                                                    <li class="divider"></li>
-                                                    {% for node in node_list %}
-                                                        <li><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </li>
-
-                                            <li class="dropdown">
-                                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Manage Projects <b class="caret"></b></a>
-                                                <ul class="dropdown-menu" id="swatch-menu">
-                                                    <li><a href="/projects/build">New Project</a></li>
-                                                    <li class="divider"></li>
-                                                    <li><a href="/projects/manage">View All Projects</a></li>
-                                                    <li class="divider"></li>
-                                                    {% for project in project_list %}
-                                                        {% url 'project_view' project.project_id as proj_url %}
-                                                        <li><a href={{proj_url}}>{{project.project_name}}</a></li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </li>
-
-                                            <li><a href="/setup">Run Setup</a></li>
-                                        {% endif %}
+                                  {% if project_id %}
+                                    {% if user_level == 2 %}
+                                        <li><a href={% url 'basic_project_view' project_id %}>Project Dashboard</a></li>
+                                    {% else %}
+                                        <li><a href={% url 'project_view' project_id %}>Project Dashboard</a></li>
                                     {% endif %}
+                                    {% if user_level == 0 %}
+                                      <li><a href="/cloud/manage">Cloud Management</a></li>
+                                      <li><a href="/setup">Run Setup</a></li>
+                                    {% endif%}
+                                  {% endif %}
+ 
                                 {% endblock %}
+                                
+                                {% if token %}
+                                    <li><a href={% url 'change-password' %}>Change Password</a></li>
+                                    <li><a href={% url 'logout' %}>Log Out</a></li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>

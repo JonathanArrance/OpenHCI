@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/lib/python2.7
 import sys
 import os
 import shutil
@@ -552,7 +552,11 @@ def get_cluster_ip():
     #               - net_ip
     #               - net_mask
     #               - net_mac
-    cluster = get_adapter_ip('bond3:avahi')
+    cluster = get_adapter_ip('bond3')
+    if(cluster['net_ip'] == cluster['net_mask']):
+        cluster = get_adapter_ip('bond3:avahi')
+        if(cluster['net_ip'] == cluster['net_mask']):
+            return 'ERROR'
     return cluster['net_ip']
 
 def get_system_defaults(node_id):
@@ -745,7 +749,9 @@ def set_network_variables(input_dict):
 
     mgmt_dict = input_dict['mgmt_dict']
     uplink_dict = input_dict['uplink_dict']
-    cluster_dict = input_dict['cluster_dict']
+    cluster_dict = None
+    if('cluster_dict' in input_dict):
+        cluster_dict = input_dict['cluster_dict']
 
     up_inet = 'static'
     for key,value in uplink_dict.items():
@@ -790,7 +796,7 @@ def set_network_variables(input_dict):
     #set the cluster node ip stuff
     c_adapter = None
     clust_inet = "static"
-    if(node[0][0] == 'cc'):
+    if(node[0][0] == 'cc' and 'clust_dict' in input_dict):
         for key,value in cluster_dict.items():
             if('clust_ip' not in cluster_dict):
                 logger.sys_error('No cluster ip was specified.')
@@ -827,7 +833,7 @@ def set_network_variables(input_dict):
             db.pg_update(update)
         else:
             return 'NA'
-    
+
         if(len(m_adapter) == 0):
             #insert the new adapter
             ins_adpt = {'net_ip':"%s",'net_alias':"%s",'net_mask':"%s",'net_gateway':"%s",'net_adapter':"%s",'inet_setting':"%s",'net_mtu':"%s",'node_id':'%s'%(config.NODE_ID),'system_name':'%s'%(config.NODE_NAME)
@@ -841,21 +847,21 @@ def set_network_variables(input_dict):
             db.pg_update(update)
         else:
             return 'NA'
-    
-        print c_adapter
-        if(len(c_adapter) == 0):
-            #insert the new adapter
-            ins_adpt = {'net_ip':'%s'%(cluster_dict['clust_ip']),'net_alias':'HA','net_mask':'%s'%(cluster_dict['clust_subnet']),'net_adapter':'bond3','inet_setting':'static','net_mtu':'1500',
-                        'net_alias':'clust','node_id':'%s'%(config.NODE_ID),'system_name':'%s'%(config.NODE_NAME)}
-            db.pg_insert("net_adapter_settings",ins_adpt)
-        elif(c_adapter[0][0] == 'clust'):
-            #update the adapter row
-            update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='static',net_mtu='1500'"
-                      %(cluster_dict['clust_ip'],cluster_dict['clust_subnet']),'where':"net_adapter='bond3'",
-                      'and':"node_id='%s'"%(input_dict['node_id'])}
-            db.pg_update(update)
-        else:
-            return 'NA'
+
+        if(node[0][0] == 'cc' and 'clust_dict' in input_dict):
+            if(len(c_adapter) == 0):
+                #insert the new adapter
+                ins_adpt = {'net_ip':'%s'%(cluster_dict['clust_ip']),'net_alias':'HA','net_mask':'%s'%(cluster_dict['clust_subnet']),'net_adapter':'bond3','inet_setting':'static','net_mtu':'1500',
+                            'net_alias':'clust','node_id':'%s'%(config.NODE_ID),'system_name':'%s'%(config.NODE_NAME)}
+                db.pg_insert("net_adapter_settings",ins_adpt)
+            elif(c_adapter[0][0] == 'clust'):
+                #update the adapter row
+                update = {'table':"net_adapter_settings",'set':"net_ip='%s',net_mask='%s',inet_setting='static',net_mtu='1500'"
+                          %(cluster_dict['clust_ip'],cluster_dict['clust_subnet']),'where':"net_adapter='bond3'",
+                          'and':"node_id='%s'"%(input_dict['node_id'])}
+                db.pg_update(update)
+            else:
+                return 'NA'
     except:
         db.pg_transaction_rollback()
         logger.sql_error("Could not set the network adapter settings.")
@@ -871,14 +877,11 @@ def set_network_variables(input_dict):
     get_m_adapter = {'node_id':input_dict['node_id'],'net_adapter':'mgmt'}
     m_netadpt = get_network_variables(get_m_adapter)
 
-    get_clust_adapter = {'node_id':input_dict['node_id'],'net_adapter':'clust'}
-    c_netadpt = get_network_variables(get_clust_adapter)
+    if(node[0][0] == 'cc' and 'clust_dict' in input_dict):
+        get_clust_adapter = {'node_id':input_dict['node_id'],'net_adapter':'clust'}
+        c_netadpt = get_network_variables(get_clust_adapter)
 
     bond0 = []
-    #bond0 is the mgmt interface on the nodes and the ciac
-    #if(input_dict['net_adapter'] == 'mgmt'):
-    #bond = 'DEVICE=bond0'
-    #bond0.append(bond)
     bond0 = ['DEVICE="bond0"','BONDING_OPTS="mode=active-backup miimon=100 primary=eth0"','ONBOOT="yes"','IPV6INIT="no"','MTU="1500"','NM_CONTROLLED="no"','TYPE="Bond"']
     if(m_netadpt['inet_setting'] == 'static'):
         address = 'IPADDR="%s"'%(m_netadpt['net_ip'])
@@ -887,15 +890,11 @@ def set_network_variables(input_dict):
         bond0.append(netmask)
         proto = 'BOOTPROTO="static"'
         bond0.append(proto)
-        #ctl = 'USERCTL=no'
-        #bond0.append(ctl)
         if(m_netadpt['net_gateway'] != 'NULL' or m_netadpt['net_gateway'] != ''):
             logger.sys_info("No gateway set for Bond0")
     else:
         proto = 'BOOTPROTO="dhcp"'
         bond0.append(proto)
-        #ctl = 'USERCTL=no'
-        #bond0.append(ctl)
 
     #we know the node type based on the ID
     #000 - ciac
@@ -915,13 +914,14 @@ def set_network_variables(input_dict):
                 br.append(gateway)
         br.append('')
 
-        ha = ['DEVICE="bond3"','BONDING_OPTS="mode=active-backup miimon=100 primary=eth2"','NM_CONTROLLED="no"','ONBOOT="yes"','TYPE="Bond"']
-        if(c_netadpt['inet_setting'] == 'static'):
-            address = 'IPADDR="%s"'%(c_netadpt['net_ip'])
-            ha.append(address)
-            netmask = 'NETMASK="%s"' %(c_netadpt['net_mask'])
-            ha.append(netmask)
-        ha.append('')
+        if('clust_dict' in input_dict):
+            ha = ['DEVICE="bond3"','BONDING_OPTS="mode=active-backup miimon=100 primary=eth2"','NM_CONTROLLED="no"','ONBOOT="yes"','TYPE="Bond"']
+            if(c_netadpt['inet_setting'] == 'static'):
+                address = 'IPADDR="%s"'%(c_netadpt['net_ip'])
+                ha.append(address)
+                netmask = 'NETMASK="%s"' %(c_netadpt['net_mask'])
+                ha.append(netmask)
+            ha.append('')
 
         #apend on the new mgmt_ip and the new uplink_ip to pg_hba.conf
         #get the current ip settings
@@ -932,7 +932,8 @@ def set_network_variables(input_dict):
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(b1['net_ip']))
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(mgmt_dict['mgmt_ip']))
         os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(uplink_dict['up_ip']))
-        os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(cluster_dict['clust_ip']))
+        if(node[0][0] == 'cc' and 'clust_dict' in input_dict):
+            os.system('echo "host all all %s/32 md5" >> /transcirrus/pg_hba.conf'%(cluster_dict['clust_ip']))
         os.system('sudo mv /transcirrus/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf')
         os.system('sudo chown postgres:postgres /var/lib/pgsql/data/pg_hba.conf')
 
@@ -946,8 +947,8 @@ def set_network_variables(input_dict):
     bond_conf['file_owner'] = 'root'
     bond_conf['file_group'] = 'root'
     bond_conf['file_perm'] = '644'
-    #bond_conf['file_path'] = '/etc/sysconfig/network-scripts'
-    bond_conf['file_path'] = '/home/transuser/network-scripts'
+    bond_conf['file_path'] = '/etc/sysconfig/network-scripts'
+    #bond_conf['file_path'] = '/home/transuser/network-scripts'
     bond_conf['file_name'] = 'ifcfg-bond0'
     bond_conf['file_content'] = bond0
     bond_conf['file_backup'] = False
@@ -959,24 +960,25 @@ def set_network_variables(input_dict):
         br_conf['file_owner'] = 'root'
         br_conf['file_group'] = 'root'
         br_conf['file_perm'] = '644'
-        #br_conf['file_path'] = '/etc/sysconfig/network-scripts'
-        br_conf['file_path'] = '/home/transuser/network-scripts'
+        br_conf['file_path'] = '/etc/sysconfig/network-scripts'
+        #br_conf['file_path'] = '/home/transuser/network-scripts'
         br_conf['file_name'] = 'ifcfg-br-ex'
         br_conf['file_content'] = br
         br_conf['file_backup'] = False
         net_array.append(br_conf)
 
-        ha_conf = {}
-        ha_conf['op'] = 'append'
-        ha_conf['file_owner'] = 'root'
-        ha_conf['file_group'] = 'root'
-        ha_conf['file_perm'] = '644'
-        #ha_conf['file_path'] = '/etc/sysconfig/network-scripts'
-        ha_conf['file_path'] = '/home/transuser/network-scripts'
-        ha_conf['file_name'] = 'ifcfg-bond3'
-        ha_conf['file_content'] = ha
-        ha_conf['file_backup'] = False
-        net_array.append(ha_conf)
+        if(node[0][0] == 'cc' and 'clust_dict' in input_dict):
+            ha_conf = {}
+            ha_conf['op'] = 'append'
+            ha_conf['file_owner'] = 'root'
+            ha_conf['file_group'] = 'root'
+            ha_conf['file_perm'] = '644'
+            ha_conf['file_path'] = '/etc/sysconfig/network-scripts'
+            #ha_conf['file_path'] = '/home/transuser/network-scripts'
+            ha_conf['file_name'] = 'ifcfg-bond3'
+            ha_conf['file_content'] = ha
+            ha_conf['file_backup'] = False
+            net_array.append(ha_conf)
 
     return net_array
 

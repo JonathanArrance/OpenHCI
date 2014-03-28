@@ -1,3 +1,4 @@
+#!/usr/local/lib/python2.7
 #from celery import Celery
 #from celery import task
 #import rollback
@@ -43,21 +44,6 @@ def run_setup(new_system_variables,auth_dict):
     node_id = util.get_node_id()
     node_name = util.get_system_name()
     auth_dict['api_ip'] = util.get_api_ip()
-
-    #get the avahi cluster ip
-    logger.sys_info('Starting the avahi service.')
-    avahi_start = service.avahi('start')
-    if(avahi_start != 'OK'):
-        #fire off revert
-        return avahi_start
-    cluster_ip = util.get_cluster_ip()
-    time.sleep(1)
-    #kill avahi-autoipd since we statically assigned the ip to bond3
-    logger.sys_info('Stoping the avahi service.')
-    avahi_stop = service.keystone('stop')
-    if(avahi_stop != 'OK'):
-        #fire off revert
-        return avahi_stop
 
     #new_cloud_name = new_system_variables['cloud_name']
     #get the original system vars from the DB - used in case we need to rollback
@@ -341,15 +327,9 @@ def run_setup(new_system_variables,auth_dict):
                 'mgmt_dhcp':'static'
                 }
 
-    clust_dict = {
-                'clust_ip':cluster_ip,
-                'clust_subnet':'255.255.0.0'
-                }
-
     net_input = {'node_id':node_id,
                  'uplink_dict':uplink_dict,
-                 'mgmt_dict':mgmt_dict,
-                 'cluster_dict':clust_dict
+                 'mgmt_dict':mgmt_dict
                 }
 
     links = util.set_network_variables(net_input)

@@ -8,6 +8,13 @@
 
     <img border="0" src="{{ STATIC_URL }}images/coalesce.png"
                                         alt="coalesce" width="200" height="203"><br><br>
+                                        
+       <!-- node list:{{node_list}} <br>
+        project_list:{{project_list}} <br>
+        username:{{username}} <br>
+        user_level:{{user_level}} <br>
+        token:{{token}} <br>-->
+
 
 
         {% if token %}
@@ -15,7 +22,7 @@
 
             
             <br><br>
-            <p>Welcome, {{ user.username }} to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.</p>
+            <p>Welcome, {{ username }} to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.</p>
 
             <p>You can manage your account by <a href={% url 'logout' %}>logging out</a> or
             <a href={% url 'change-password' %}>changing your password</a>;</p>

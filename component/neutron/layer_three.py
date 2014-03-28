@@ -58,9 +58,9 @@ class layer_three_ops:
             logger.sys_error("No tokens passed, or token was in error")
             raise Exception("No tokens passed, or token was in error")
 
-        if(self.user_level > 1):
-            logger.sys_error("Users can not perform Layer 3 operations.")
-            raise Exception("Users can not perform Layer 3 operations.")
+        #if(self.user_level > 1):
+        #    logger.sys_error("Users can not perform Layer 3 operations.")
+        #    raise Exception("Users can not perform Layer 3 operations.")
 
         if ((self.status_level > 2) or (self.status_level < 0)):
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
@@ -897,8 +897,8 @@ class layer_three_ops:
         OUTPUT: r_dict - floating_ip
                        - floating_ip_id
         ACCESS: Admins can allocate a floating ip to any project, power users
-                can only allocate a floating ip to their project. Standard users
-                can not allocate a floating IP.
+                can only allocate a floating ip to their project.
+                Standard users can not allocate a floating IP.
         NOTE: update the transcirrus db accoridingly
         """
         if((input_dict['ext_net_id'] == '') or ('ext_net_id' not in input_dict)):

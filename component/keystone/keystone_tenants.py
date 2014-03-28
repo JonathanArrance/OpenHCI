@@ -43,6 +43,8 @@ class tenant_ops:
 
             if('adm_token' in user_dict):
                 self.adm_token = user_dict['adm_token']
+            else:
+                self.adm_token = 'NULL'
 
             if 'sec' in user_dict:
                 self.sec = user_dict['sec']
@@ -57,7 +59,7 @@ class tenant_ops:
             logger.sys_error("Credentials not properly passed.")
             raise Exception("Credentials not properly passed.")
 
-        if(self.adm_token == ''):
+        if(self.is_admin == 1 and self.adm_token == ''):
             logger.sys_error("No admin tokens passed.")
             raise Exception("No admin tokens passed.")
 

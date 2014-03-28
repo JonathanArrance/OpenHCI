@@ -5,13 +5,19 @@ from transcirrus.database.node_db import list_nodes
 def global_vars(request):
     try:
         auth = request.session['auth']
-        to = tenant_ops(auth)
-        project_list = to.list_all_tenants()
         token = auth['token']
+        username = auth['username']
+        user_level = auth['user_level']
+        project_id = auth['project_id']
     except:
-        project_list = []
         token = ""
-    node_list = list_nodes()
+        username=""
+        project_id=""
+        user_level="3"
 
 
-    return {'node_list': node_list, 'project_list': project_list, 'token': token}
+
+    return {'username': username, 
+            'user_level': user_level,
+            'project_id': project_id,
+            'token': token}

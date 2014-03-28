@@ -70,9 +70,9 @@ def destroy_project(auth_dict, project_dict):
     for volume in volume_list:
         remove_volume = cinder_vol.delete_volume(volume)
         if(remove_volume == "OK"):
-            logger.sys_info("Volume %s removed." % volume['vol_id'])
+            logger.sys_info("Volume %s removed." % volume['volume_id'])
         else:
-            logger.sys_info("ERROR, volume %s not removed." % volume['vol_id'])
+            logger.sys_info("ERROR, volume %s not removed." % volume['volume_id'])
             return "ERROR"
 
     #object storage containers (future)
