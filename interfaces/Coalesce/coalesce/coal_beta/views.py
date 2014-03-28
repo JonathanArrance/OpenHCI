@@ -181,7 +181,7 @@ def project_view(request, project_id):
             private_networks[net['net_name']]= no.get_network(net['net_id'])
         except:
             pass
-
+ 
     public_networks={}
     for net in pub_net_list:
         try:
@@ -268,6 +268,19 @@ def basic_project_view(request, project_id):
             fip['instance_name']=ip_info['instance_name']
         else:
             fip['instance_name']=''
+            
+    pub_net_list  = no.list_external_networks()
+    public_networks={}
+    for net in pub_net_list:
+        try:
+            public_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+
+    try:
+        default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    except:
+        default_public = "NO PUBLIC NETWORK"
     
     """
 1. create a vm
