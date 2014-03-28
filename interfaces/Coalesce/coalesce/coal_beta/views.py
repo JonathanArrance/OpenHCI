@@ -231,6 +231,7 @@ def basic_project_view(request, project_id):
     vo = volume_ops(auth)
     go = glance_ops(auth)
     so = server_ops(auth)
+    l3o = layer_three_ops(auth)
     volumes       = vo.list_volumes(project_id)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
@@ -246,6 +247,14 @@ def basic_project_view(request, project_id):
         images    = go.list_images()
     except:
         images =[]
+        
+    floating_ips = l3o.list_floating_ips(project_id)
+    for fip in floating_ips:
+        if fip["floating_in_use"]:
+            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
+            fip['instance_name']=ip_info['instance_name']
+        else:
+            fip['instance_name']=''
     
     """
 1. create a vm
@@ -268,7 +277,7 @@ we need to build a function to request a vm resize
 
 
     no = neutron_net_ops(auth)
-    l3o = layer_three_ops(auth)
+   
     
     sno = snapshot_ops(auth)
 
@@ -320,13 +329,7 @@ we need to build a function to request a vm resize
     except:
         default_public = "NO PUBLIC NETWORK"
 
-    floating_ips = l3o.list_floating_ips(project_id)
-    for fip in floating_ips:
-        if fip["floating_in_use"]:
-            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
-            fip['instance_name']=ip_info['instance_name']
-        else:
-            fip['instance_name']=''
+   
     """
 
     return render_to_response('coal/basic_project_view.html',
@@ -336,6 +339,7 @@ we need to build a function to request a vm resize
                                                         'volumes': volumes,
                                                         'images': images,
                                                         'instances': instances,
+                                                        'floating_ips': floating_ips,
 
                                                         }))
 
