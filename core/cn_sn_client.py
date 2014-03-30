@@ -174,6 +174,7 @@ def restartServices(node_id, node_type):
         return False
 
 
+
 def recv_data(sock):
 
     '''
@@ -188,37 +189,47 @@ def recv_data(sock):
     comments        :
     '''
     count=0
-    data = ''
-    chunk=''
+    data = ""
+    buffer=""
+    message=""
     recv_len=0
     msglen=0
     global retry_count
     global timeout_sec
 
-    # receive pkt length
-    data = recv_pkt_len(sock)
-    if data:
-        data = pickle.loads(data)
-        if data['Type'] == 'pkt_len':
-            msglen  = data['Value']
-        else:
-            logger.sys_error("recv_data: invalid tlv %s" %(data['Type']))
-            sys.exit()
-    else:
-        logger.sys_error("recv_data: pkt_len failed")
-        sys.exit()
-
     while True:
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
-            chunk = sock.recv(recv_buffer)
-            data = data + chunk
-            if len(data) == msglen:
-                logger.sys_info("recv_data: recv data len %s" %(len(data)))
+            data += sock.recv(recv_buffer)
+            if not data:
+                logger.sys_info("recv_data: no data received")
                 break
-            else:
-                logger.sys_info("recv_data: looping for more data")
+
+            buffer += data
+            while True:
+                if recv_len is None:
+                    if ':' not in buffer:
+                        break
+                    # remove recv_len bytes from front of buffer
+                    # leave any remaining bytes in buffer
+                    length_str, ignored, buffer = buffer.partition(':')
+                    recv_len = int(length_str)
+
+                if len(buffer) < recv_len:
+                    break
+
+                # split off message from remaining bytes
+                # leave any remaining bytes in buffer
+
+                message = buffer[:recv_len]
+                buffer = buffer[recv_len:]
+                recv_len=None
+
+                # process message here
+                break
+            break
         else:
+            print "data not received" # TEST
             count = count + 1
             if count >= retry_count:
                 logger.sys_error("recv_data: retry count expired")
@@ -229,7 +240,7 @@ def recv_data(sock):
             if __debug__ :
                 print "recv_data: retrying... ", count
 
-    return data
+    return message
 
 
 def send_data(msg, sock):
@@ -240,11 +251,14 @@ def send_data(msg, sock):
     totalsent = 0
     # send pkt length
     msglen = len(msg)
-    send_pkt_len(msglen, sock)
+    #send_pkt_len(msglen, sock)
 
     logger.sys_info("send_data: %s bytes" %(msglen))
-    while totalsent < msglen:
-        sent = sock.send(msg[totalsent:])
+    # appending size of the message to msg with colon as delimiter
+    msg = `msglen`+':'+msg
+
+    while True:
+        sent = sock.sendall(msg)
         if sent == 0:
             count = count+1
             if count >= retry_count:
@@ -254,7 +268,9 @@ def send_data(msg, sock):
             else:
                 logger.sys_info("socket send data retrying ...")
                 time.sleep(1)
-        totalsent = totalsent + sent
+        else:
+            logger.sys_info("send_data: sent %s bytes" %(sent))
+            break
 
 def recv_pkt_len(sock):
 
