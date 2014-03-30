@@ -192,7 +192,7 @@ def recv_data(sock):
     data = ""
     buffer=""
     message=""
-    recv_len=0
+    recv_len=None
     msglen=0
     global retry_count
     global timeout_sec

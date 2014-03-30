@@ -349,7 +349,7 @@ def recv_data(sock):
     data = ""
     buffer=""
     message=""
-    recv_len=0
+    recv_len=None
     msglen=0
     global retry_count
     global timeout_sec
@@ -373,20 +373,28 @@ def recv_data(sock):
     while True:
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
+            print "recv_data: got data"   #TEST
             data += sock.recv(recv_buffer)
+            print "recv_data: data=%s" %(data)
+
             if not data:
                 logger.sys_info("recv_data: no data received")
+                print "recv_data: no data received"
                 break
 
             buffer += data
             while True:
+                print "recv_data: In while trur inner"  # TEST
                 if recv_len is None:
+                    print "recv_data: recv_len is null"  #TEST
                     if ':' not in buffer:
+                        print "recv_data: break1"  # TEST
                         break
                     # remove recv_len bytes from front of buffer
                     # leave any remaining bytes in buffer
                     length_str, ignored, buffer = buffer.partition(':')
                     recv_len = int(length_str)
+                    print "recv_data: got length %s" %(recv_len)  # TEST
 
                 if len(buffer) < recv_len:
                     break
@@ -399,6 +407,7 @@ def recv_data(sock):
                 recv_len=None
 
                 # process message here
+                return message
                 break
             break
         else:
