@@ -175,6 +175,7 @@ def restartServices(node_id, node_type):
 
 
 
+
 def recv_data(sock):
 
     '''
@@ -201,6 +202,7 @@ def recv_data(sock):
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
             data += sock.recv(recv_buffer)
+
             if not data:
                 logger.sys_info("recv_data: no data received")
                 break
@@ -226,10 +228,10 @@ def recv_data(sock):
                 recv_len=None
 
                 # process message here
+                return message
                 break
             break
         else:
-            print "data not received" # TEST
             count = count + 1
             if count >= retry_count:
                 logger.sys_error("recv_data: retry count expired")
