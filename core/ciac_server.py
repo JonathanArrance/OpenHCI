@@ -14,18 +14,7 @@ import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
 import transcirrus.core.core_util as core_util
 
-_server_port=6161
-timeout_sec=1
 count=0
-retry_count=5
-recv_buffer=4096
-keep_alive_sec=10
-
-pkt_len = {
-'Type' : 'pkt_len',
-'Length': '1',
-'Value': 1
-}
 
 def setDbFlag(node_id, flag):
     '''
@@ -167,13 +156,13 @@ def sendStorageConfig(conn, node_id):
     if config:
         # send config files
         #conn.sendall(pickle.dumps(config, -1))
-        send_data(pickle.dumps(config, -1), conn)
+        core_util.send_data(pickle.dumps(config, -1), conn)
         logger.sys_info("node_id: %s, sent storage node config files")
         if __debug__ :
             print "node_id: %s, sent storage node config files"
 
         # listen for ok ack message
-        data = recv_data(conn)
+        data = core_util.recv_data(conn)
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status'  and data['Value'] == 'ok':
@@ -223,13 +212,13 @@ def sendComputeConfig(conn, node_id):
 
         # send config
         #conn.sendall(pickle.dumps(config, -1))
-        send_data(pickle.dumps(config, -1), conn)
+        core_util.send_data(pickle.dumps(config, -1), conn)
         logger.sys_info("node_id: %s sent cn nova config!!" %(node_id))
         if __debug__ :
             print "node_id: %s sent cn nova config!!" % node_id
 
         # listen for ok message, ack
-        data = recv_data(conn)
+        data = core_util.recv_data(conn)
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status'  and data['Value'] == 'ok':
@@ -256,13 +245,13 @@ def sendComputeConfig(conn, node_id):
             '''
             #print "sending ovs conf %s" % config
             #conn.sendall(pickle.dumps(config, -1))
-            send_data(pickle.dumps(config, -1), conn)
+            core_util.send_data(pickle.dumps(config, -1), conn)
             logger.sys_info("node_id: %s sent cn ovs conf" %(node_id))
             if __debug__ :
                 print "node_id: %s sent cn ovs conf" % (node_id)
 
             # listen for ok message, ack
-            data = recv_data(conn)
+            data = core_util.recv_data(conn)
             if data:
                 data = pickle.loads(data)
                 if data['Type'] == 'status' and data['Value'] == 'ok': 
@@ -328,222 +317,8 @@ def sendOk(conn):
             'Value': 'ok'
         }
     #conn.sendall(pickle.dumps(status_ok, -1))
-    send_data(pickle.dumps(status_ok, -1), conn)
+    core_util.send_data(pickle.dumps(status_ok, -1), conn)
 
-
-
-def recv_data(sock):
-
-    '''
-    @author         : Shashaa
-    comment         : receives data from connected socket to sock
-                      then deserializes it
-    return value    : received data
-    create date     :
-    ----------------------
-    modify date     :
-    @author         :
-    comments        :
-    '''
-    count=0
-    data = ""
-    buffer=""
-    message=""
-    recv_len=None
-    msglen=0
-    global retry_count
-    global timeout_sec
-
-    # receive pkt length
-    """
-    data = recv_pkt_len(sock)
-    if data:
-        data = pickle.loads(data)
-        if data['Type'] == 'pkt_len':
-            msglen  = data['Value']
-            logger.sys_info("recv_data: pkt_len %s" %(msglen))
-        else:
-            logger.sys_error("recv_data: invalid tlv %s" %(data['Type']))
-            sys.exit()
-    else:
-        logger.sys_error("recv_data: pkt_len failed")
-        sys.exit()
-    """
-
-    while True:
-        ready = select.select([sock], [], [], timeout_sec)
-        if ready[0]:
-            data += sock.recv(recv_buffer)
-
-            if not data:
-                logger.sys_info("recv_data: no data received")
-                break
-
-            buffer += data
-            while True:
-                if recv_len is None:
-                    if ':' not in buffer:
-                        break
-                    # remove recv_len bytes from front of buffer
-                    # leave any remaining bytes in buffer
-                    length_str, ignored, buffer = buffer.partition(':')
-                    recv_len = int(length_str)
-
-                if len(buffer) < recv_len:
-                    break
-
-                # split off message from remaining bytes
-                # leave any remaining bytes in buffer
-
-                message = buffer[:recv_len]
-                buffer = buffer[recv_len:]
-                recv_len=None
-
-                # process message here
-                return message
-                break
-            break
-        else:
-            count = count + 1
-            if count >= retry_count:
-                logger.sys_error("recv_data: retry count expired")
-                if __debug__ :
-                    print "recv_data: retry count expired..exiting!!"
-                sys.exit(1)
-            logger.sys_warning("recv_data: retrying...%s" %(count))
-            if __debug__ :
-                print "recv_data: retrying... ", count
-
-    return message
-
-"""
-def recv_data(conn):
-
-    '''
-    @author         : Shashaa
-    comment         : receives data from socket connected to conn
-                      retries 'retry_count' for 'timeout_sec' then exits
-                      out of the current thread control
-    return value    :
-    create date     :
-    ----------------------
-    modify date     :
-    @author         :
-    comments        :
-    '''
-    global count
-    global timeout_sec
-    global retry_count
-    while True:
-        ready = select.select([conn], [], [], timeout_sec)
-        if ready[0]:
-            data = conn.recv(recv_buffer)
-            break
-        else:
-            count = count + 1
-            if count >= retry_count:
-                logger.sys_error("retry count expired..exiting!!")
-                if __debug__ :
-                    print "retry count expired..exiting!!"
-                sys.exit(1)
-            logger.sys_warning("retrying...%s" %(count))
-            if __debug__ :
-                print "retrying... ", count
-
-    return data
-"""
-
-
-def send_data(msg, sock):
-
-    global retry_count
-    global timeout_sec
-    count=0
-    totalsent = 0
-    # send pkt length
-    msglen = len(msg)
-    #send_pkt_len(msglen, sock)
-
-    logger.sys_info("send_data: %s bytes" %(msglen))
-    """
-    while totalsent < msglen:
-        sent = sock.send(msg[totalsent:])
-        if sent == 0:
-            count = count+1
-            if count >= retry_count:
-                logger.sys_error("send failed !!")
-                raise RuntimeError("socket connection broken")
-                sys.exit()
-            else:
-                logger.sys_info("socket send data retrying ...")
-                time.sleep(1)
-        totalsent = totalsent + sent
-    """
-    # appending size of the message to msg with colon as delimiter
-    msg = `msglen`+':'+msg
-
-    while True:
-        sent = sock.sendall(msg)
-        if sent == 0:
-            count = count+1
-            if count >= retry_count:
-                logger.sys_error("send failed !!")
-                raise RuntimeError("socket connection broken")
-                sys.exit()
-            else:
-                logger.sys_info("socket send data retrying ...")
-                time.sleep(1)
-        else:
-            logger.sys_info("send_data: sent %s bytes" %(sent))
-            break
-
-
-def send_pkt_len(msglen, sock):
-
-    global pkt_len
-    global retry_count
-    global timeout_sec
-    count=0
-    pkt_len['Value']= msglen
-
-    while True:
-        sent = sock.send(pickle.dumps(pkt_len, -1))
-        if sent == 0:
-            count = count+1
-            if count >= retry_count:
-                logger.sys_error("send_pkt_len: send failed !!")
-                raise RuntimeError("socket connection broken")
-                sys.exit()
-            else:
-                logger.sys_info("send_pkt_len: socket send retrying ...")
-                time.sleep(1)
-        else:
-            logger.sys_info("send_pkt_len: ok")
-            break;
-
-def recv_pkt_len(sock):
-
-    count=0
-    global retry_count
-    global timeout_sec
-    data = ''
-    while True:
-        ready = select.select([sock], [], [], timeout_sec)
-        if ready[0]:
-            data = sock.recv(recv_buffer)
-            break
-        else:
-            count = count + 1
-            if count >= retry_count:
-                logger.sys_error("recv_pkt_len: retry count expired")
-                if __debug__ :
-                    print "retry count expired..exiting!!"
-                sys.exit(1)
-            logger.sys_warning("recv_pkt_len: retrying...%s" %(count))
-            if __debug__ :
-                print "recv_pkt_len: retrying... ", count
-
-    return data
 
 def keep_alive_check(node_id, conn):
 
@@ -568,7 +343,7 @@ def keep_alive_check(node_id, conn):
         if __debug__ :
             print "node_id: %s ***keep_alive***" %(node_id)
         conn.sendall(pickle.dumps(status_alive, -1))
-        data = recv_data(conn)
+        data = core_util.recv_data(conn)
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
@@ -579,7 +354,7 @@ def keep_alive_check(node_id, conn):
                 logger.sys_info("node_id: %s Error received %s" %(node_id, data))
 
         # sleep for keep_alive_sec
-        sleep(keep_alive_sec)
+        sleep(core_util.keep_alive_sec)
 
 
 def sendBuild(conn):
@@ -602,7 +377,7 @@ def sendBuild(conn):
             }
     try:
         #conn.sendall(pickle.dumps(status_build, -1))
-        send_data(pickle.dumps(status_build, -1), conn)
+        core_util.send_data(pickle.dumps(status_build, -1), conn)
     except socket.error , msg:
         logger.sys_error('Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
         if __debug__ :
@@ -632,7 +407,7 @@ def client_thread(conn, client_addr):
         while True:
 
             # receive data from client, retry_count
-            data = recv_data(conn)
+            data = core_util.recv_data(conn)
 
             # received data from client
             if data:
@@ -652,7 +427,7 @@ def client_thread(conn, client_addr):
 
 
                     # recv data, retry_count
-                    data = recv_data(conn)
+                    data = core_util.recv_data(conn)
 
                     # received data from client
                     if data:
@@ -693,9 +468,9 @@ def client_thread(conn, client_addr):
                                     sendComputeConfig(conn, node_id)
 
                                 while True:
-                                    ready = select.select([conn], [], [], timeout_sec)
+                                    ready = select.select([conn], [], [], core_util.timeout_sec)
                                     if ready[0]:
-                                        data = conn.recv(recv_buffer)
+                                        data = conn.recv(core_util.recv_buffer)
                                         break
                                     else:
                                         logger.sys_warning("node_id: %s ciac server waiting for status ready/halt from cn" %(node_id))
@@ -784,9 +559,9 @@ def client_thread(conn, client_addr):
                                     sendComputeConfig(conn, node_id)
 
                                 while True:
-                                    ready = select.select([conn], [], [], timeout_sec)
+                                    ready = select.select([conn], [], [], core_util.timeout_sec)
                                     if ready[0]:
-                                        data = conn.recv(recv_buffer)
+                                        data = conn.recv(core_util.recv_buffer)
                                         break
                                     else:
                                         logger.sys_warning("node_id: %s ciac server waiting for status ready/halt" %(node_id))
@@ -858,7 +633,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')
 
 # bind the socket on all interfaces
-sock.bind(('', _server_port))
+sock.bind(('', core_util._server_port))
 
 sock.listen(5)
 
