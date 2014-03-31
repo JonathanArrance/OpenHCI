@@ -12,6 +12,7 @@ import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
+import transcirrus.core.core_util as core_util
 
 _server_port=6161
 timeout_sec=1
