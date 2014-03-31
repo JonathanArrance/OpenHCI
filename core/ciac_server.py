@@ -159,7 +159,6 @@ def sendStorageConfig(conn, node_id):
     @author         :
     comments        :
     '''
-    print "In sendStorageConfig"
 
     # get cinder config
     config = node_db.get_node_cinder_config(node_id)
