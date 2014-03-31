@@ -650,7 +650,6 @@ def client_thread(conn, client_addr):
                     if __debug__ :
                         print "ciac_server: sent ok ack for connect"
 
-                    sys.exit() # TEST
 
                     # recv data, retry_count
                     data = recv_data(conn)
