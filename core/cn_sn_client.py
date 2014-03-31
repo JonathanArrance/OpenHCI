@@ -11,30 +11,10 @@ import transcirrus.common.util as util
 import transcirrus.database.node_db as node_db
 import transcirrus.common.service_control as service_controller
 import transcirrus.common.logger as logger
+import transcirrus.core.core_util as core_util
 
-timeout_sec = 1
-retry_count = 5
-recv_buffer = 4096
-dhcp_retry = 5
 services_retry = 5
-
-connect_pkt = {
-'Type' : 'connect',
-'Length': '1',
-'Value': 1
-}
-
-status_ready = {
-'Type':'status',
-'Length':'1',
-'Value':'node_ready'
-}
-
-status_halt = {
-'Type':'status',
-'length':'1',
-'Value':'node_halt'
-}
+count=0
 
 node_info = {
 'Type': 'Node_info', 
@@ -51,18 +31,6 @@ node_info = {
     'node_swift_ring':'',
     'node_id':'trans01'
     }
-}
-
-reply_alive = {
-'Type' : 'status',
-'Length': '1',
-'Value': 'alive'
-}
-
-pkt_len = {
-'Type' : 'pkt_len',
-'Length': '1',
-'Value': 1
 }
 
 def getNodeInfo():
@@ -113,7 +81,7 @@ def sendOk(sock):
             'Value': 'ok'
         }
     #sock.sendall(pickle.dumps(status_ok, -1))
-    send_data(pickle.dumps(status_ok, -1), sock)
+    core_util.send_data(pickle.dumps(status_ok, -1), sock)
 
 def restartServices(node_id, node_type):
 
@@ -174,135 +142,6 @@ def restartServices(node_id, node_type):
         return False
 
 
-def recv_data(sock):
-
-    '''
-    @author         : Shashaa
-    comment         : receives data from connected socket to sock
-                      then deserializes it
-    return value    : received data
-    create date     :
-    ----------------------
-    modify date     :
-    @author         :
-    comments        :
-    '''
-    count=0
-    data = ''
-    chunk=''
-    recv_len=0
-    msglen=0
-    global retry_count
-    global timeout_sec
-
-    # receive pkt length
-    data = recv_pkt_len(sock)
-    if data:
-        data = pickle.loads(data)
-        if data['Type'] == 'pkt_len':
-            msglen  = data['Value']
-        else:
-            logger.sys_error("recv_data: invalid tlv %s" %(data['Type']))
-            sys.exit()
-    else:
-        logger.sys_error("recv_data: pkt_len failed")
-        sys.exit()
-
-    while True:
-        ready = select.select([sock], [], [], timeout_sec)
-        if ready[0]:
-            chunk = sock.recv(recv_buffer)
-            data = data + chunk
-            if len(data) == msglen:
-                logger.sys_info("recv_data: recv data len %s" %(len(data)))
-                break
-            else:
-                logger.sys_info("recv_data: looping for more data")
-        else:
-            count = count + 1
-            if count >= retry_count:
-                logger.sys_error("recv_data: retry count expired")
-                if __debug__ :
-                    print "recv_data: retry count expired..exiting!!"
-                sys.exit(1)
-            logger.sys_warning("recv_data: retrying...%s" %(count))
-            if __debug__ :
-                print "recv_data: retrying... ", count
-
-    return data
-
-
-def send_data(msg, sock):
-
-    global retry_count
-    global timeout_sec
-    count=0
-    totalsent = 0
-    # send pkt length
-    msglen = len(msg)
-    send_pkt_len(msglen, sock)
-
-    logger.sys_info("send_data: %s bytes" %(msglen))
-    while totalsent < msglen:
-        sent = sock.send(msg[totalsent:])
-        if sent == 0:
-            count = count+1
-            if count >= retry_count:
-                logger.sys_error("send failed !!")
-                raise RuntimeError("socket connection broken")
-                sys.exit()
-            else:
-                logger.sys_info("socket send data retrying ...")
-                time.sleep(1)
-        totalsent = totalsent + sent
-
-def recv_pkt_len(sock):
-
-    count=0
-    global retry_count
-    global timeout_sec
-    data = ''
-    while True:
-        ready = select.select([sock], [], [], timeout_sec)
-        if ready[0]:
-            data = sock.recv(recv_buffer)
-            break
-        else:
-            count = count + 1
-            if count >= retry_count:
-                logger.sys_error("recv_pkt_len: retry count expired")
-                if __debug__ :
-                    print "retry count expired..exiting!!"
-                sys.exit(1)
-            logger.sys_warning("recv_pkt_len: retrying...%s" %(count))
-            if __debug__ :
-                print "recv_pkt_len: retrying... ", count
-
-    return data
-
-
-def send_pkt_len(msglen, sock):
-
-    global pkt_len
-    global retry_count
-    global timeout_sec
-    count=0
-    pkt_len['Value']= msglen
-
-    while True:
-        sent = sock.send(pickle.dumps(pkt_len, -1))
-        if sent == 0:
-            count = count+1
-            if count >= retry_count:
-                logger.sys_error("send_pkt_len: send failed !!")
-                raise RuntimeError("socket connection broken")
-                sys.exit()
-            else:
-                logger.sys_info("send_pkt_len: socket send retrying ...")
-                time.sleep(1)
-        else:
-            logger.sys_info("send_pkt_len: ok")
-            break;
 
 def restartNovaServices(node_id):
     '''
@@ -607,7 +446,7 @@ def processComputeConfig(sock, node_id):
     '''
 
     # receive compute node nova config file
-    cn_config = recv_data(sock)
+    cn_config = core_util.recv_data(sock)
 
     # parse config file
     if cn_config:
@@ -629,7 +468,7 @@ def processComputeConfig(sock, node_id):
         sys.exit()
 
     # receive ovs config structures
-    cn_config1 = recv_data(sock)
+    cn_config1 = core_util.recv_data(sock)
 
     if cn_config1:
         cn_config1 = pickle.loads(cn_config1)
@@ -756,12 +595,11 @@ def processComputeConfig(sock, node_id):
     if post_install_status == True:
 
         # send node_ready status message to cc
-        #sock.sendall(pickle.dumps(status_ready, -1))
-        send_data(pickle.dumps(status_ready, -1), sock)
+        core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
 
         # listen for ok message, ack -- loops infinetly
         while True:
-            data = recv_data(sock)
+            data = core_util.recv_data(sock)
 
             if data:
                 data = pickle.loads(data)
@@ -808,12 +646,11 @@ def processComputeConfig(sock, node_id):
         if post_install_status != True:
 
             # send node_halt status message to cc
-            #sock.sendall(pickle.dumps(status_halt, -1))
-            send_data(pickle.dumps(status_halt, -1), sock)
+            core_util.send_data(pickle.dumps(core_util.status_halt, -1), sock)
 
             # listen for ok message, ack -- loop infinetly
             while True:
-                data = recv_data(sock)
+                data = core_util.recv_data(sock)
 
                 if data:
                     data = pickle.loads(data)
@@ -829,12 +666,11 @@ def processComputeConfig(sock, node_id):
         else:
              
             # send node_ready status message to cc
-            #sock.sendall(pickle.dumps(status_ready, -1))
-            send_data(pickle.dumps(status_ready, -1), sock)
+            core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
 
             # listen for ok message, ack -- loops infinetly
             while True:
-                data = recv_data(sock)
+                data = core_util.recv_data(sock)
 
                 if data:
                     data = pickle.loads(data)
@@ -897,7 +733,7 @@ def processStorageConfig(sock, node_id):
 
     # receive cinder config files
 
-    sn_config = recv_data(sock)
+    sn_config = core_util.recv_data(sock)
 
     if sn_config:
         sn_config = pickle.loads(sn_config)
@@ -971,12 +807,11 @@ def processStorageConfig(sock, node_id):
 
     if post_install_status == True:
         # send node ready status to cc
-        #sock.sendall(pickle.loads(status_ready, -1))
-        send_data(pickle.dumps(status_ready, -1), sock)
+        core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
 
         # listen for ok ack message -- loop infinetly
         while True:
-            data = recv_data(sock)
+            data = core_util.recv_data(sock)
 
             if data:
                 data = pickle.loads(data)
@@ -1019,12 +854,11 @@ def processStorageConfig(sock, node_id):
         # check after stipulated retry's
         if post_install_status != True:
             # send node halt mesage to cc
-            #sock.sendall(pickle.loads(status_halt, -1))
-            send_data(pickle.dumps(status_halt, -1), sock)
+            core_util.send_data(pickle.dumps(core_util.status_halt, -1), sock)
 
             # listen for ok ack message
             while True:
-                data = recv_data(sock)
+                data = core_util.recv_data(sock)
 
                 if data:
                     data = pickle.loads(data)
@@ -1039,12 +873,11 @@ def processStorageConfig(sock, node_id):
                         print "node_id: %s listening for status_halt ack" % (node_id)
         else:
             # send node ready status message to cc
-            #sock.sendall(pickle.loads(status_ready, -1))
-            send_data(pickle.dumps(status_ready, -1), sock)
+            core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
 
             # listen for ok ack message
             while True:
-                data = recv_data(sock)
+                data = core_util.recv_data(sock)
 
                 if data:
                     data = pickle.loads(data)
@@ -1077,15 +910,15 @@ def keep_alive(sock):
     comments        :
     '''
     while True:
-        ready = select.select([sock], [], [], timeout_sec)
+        ready = select.select([sock], [], [], core_util.timeout_sec)
         if ready[0]:
-            data = sock.recv(recv_buffer)
+            data = sock.recv(core_util.recv_buffer)
 
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 logger.sys_info("***%s***" % (data['Value']))
                 # send reply as alive
-                sock.sendall(pickle.dumps(reply_alive, -1))
+                sock.sendall(pickle.dumps(core_util.reply_alive, -1))
                 if __debug__ :
                     print "***%s***" % data['Value']
             elif data['Type'] == 'command':
@@ -1127,41 +960,18 @@ server_address = (ciac_ip, 6161)
 print "connecting to %s port %s " % server_address
 sock.connect(server_address)
 sock.setblocking(0)
-count=0
-timeout_sec=1
-retry_count=5
-keep_alive_sec=10
 
 try:
     # send connect
     logger.sys_info("sending connect_pkt")
     if __debug__ :
         print "sending connect_pkt"
-    #sock.sendall(pickle.dumps(connect_pkt, -1))
-    send_data(pickle.dumps(connect_pkt, -1), sock)
+    core_util.send_data(pickle.dumps(core_util.connect_pkt, -1), sock)
     print "connect pkt sent" # TEST
 
 
-    data = recv_data(sock)
+    data = core_util.recv_data(sock)
 
-    """
-    # receive packet using select, retry_count
-    while True:
-        ready = select.select([sock], [], [], timeout_sec)
-        if ready[0]:
-            data = sock.recv(recv_buffer)
-            break
-        else:
-            count = count + 1
-            if count == retry_count:
-                logger.sys_error("retry count expired..exiting!!")
-                if __debug__ :
-                    print "retry count expired..exiting!!"
-                sys.exit(1)
-            logger.sys_warning("retrying...%s" %(count))
-            if __debug__ :
-                print "retrying... ", count
-    """
 
     if data:
         data = pickle.loads(data)
@@ -1184,10 +994,10 @@ try:
                 print "sending %s " % node_info
             #print "node_id = %s" % node_id
             #sock.sendall(pickle.dumps(node_info, -1))
-            send_data(pickle.dumps(node_info, -1), sock)
+            core_util.send_data(pickle.dumps(node_info, -1), sock)
 
             # receive status message, retry_count
-            data = recv_data(sock)
+            data = core_util.recv_data(sock)
 
             if data:
                 data = pickle.loads(data)
