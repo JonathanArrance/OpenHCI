@@ -23,7 +23,6 @@ class SetupForm(forms.Form):
     mgmt_domain_name  = forms.CharField(min_length = 1, max_length = 64, label='Management Domain Name')
     mgmt_subnet = forms.IPAddressField(label = 'Management Subnet')
     mgmt_dns  = forms.IPAddressField(label = 'Management DNS')
-    cloud_name  = forms.SlugField(min_length = 1, max_length = 64, label='Cloud Name', help_text = 'This is the region used in the OpenStack projects.')
     single_node = forms.BooleanField( label='Single Node?', help_text = 'If unchecked, this box will be setup with DHCP and listen for additional nodes to be added.  Check the box to improve performance if you do not plan to add nodes to this box.')
     admin_password = forms.CharField(widget=forms.PasswordInput(),  label='Administrator Password')
     admin_password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Administrator Password Confirm')
@@ -35,8 +34,45 @@ class SetupForm(forms.Form):
         self.helper.form_class = 'form-horizontal'
         self.helper.help_text_inline = True
         self.helper.error_text_inline = False
-        self.helper.add_input(Submit('cancel', 'Cancel Setup', css_class='btn-cancel'))
-        self.helper.add_input(Submit('submit', 'Setup Box'))
+        
+        self.helper.layout = Layout(
+            HTML('<div class="row">'),
+            
+            HTML('<div class="well span5  offset1"><div class="legend">Management Settings</div>'),
+                'management_ip',
+                'mgmt_subnet',
+                'mgmt_dns',
+                'mgmt_domain_name',
+            HTML('</div>'),
+            
+            HTML('<div class="well span5"><div class="legend">Uplink Settings</div>'),
+                'uplink_ip',
+                'uplink_subnet',
+                'uplink_dns',
+                'uplink_domain_name',
+                'uplink_gateway',
+            HTML('</div>'),
+            HTML('</div>'),
+            
+            HTML('<div class="row">'),
+            HTML('<div class="well span5  offset1"><div class="legend">Virtual Machine Range</div>'),
+                'vm_ip_min',
+                'vm_ip_max',
+            HTML('</div>'),
+            
+            HTML('<div class="well span5"><div class="legend">Global settings</div>'),
+                'admin_password',
+                'admin_password_confirm',
+                'single_node',
+            HTML('</div>'),
+            HTML('</div>'),
+            HTML('<div class="offset1">'),
+
+            Submit('cancel', 'Cancel Setup', css_class='btn-warning'),
+            Submit('submit', 'Setup Box'),
+
+            HTML('</div>'),
+        )
 
 class BuildProjectForm(forms.Form):
     proj_name = forms.SlugField(min_length = 1, max_length = 64, label='Project Name')
@@ -59,8 +95,39 @@ class BuildProjectForm(forms.Form):
         self.helper.form_class = 'form-horizontal'
         self.helper.help_text_inline = True
         self.helper.error_text_inline = False
-        self.helper.add_input(Submit('cancel', 'Cancel', css_class='btn-cancel'))
-        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.layout = Layout(
+            HTML('<div class="row">'),
+            
+            HTML('<div class="well span5  offset1"><div class="legend">Security Settings</div>'),
+                'proj_name',
+                'group_name',
+                'group_desc',
+                'sec_keys_name',
+            HTML('</div>'),
+            
+            HTML('<div class="well span5"><div class="legend">Power User Settings</div>'),
+                'username',
+                'email',
+                'password',
+                'password_confirm',
+            HTML('</div>'),
+            HTML('</div>'),
+            
+            HTML('<div class="row">'),
+            HTML('<div class="well span5  offset1"><div class="legend">Software Defined Network Settings</div>'),
+                'router_name',
+                'net_name',
+                'subnet_dns',
+            HTML('</div>'),
+            
+            HTML('</div>'),
+            HTML('<div class="offset1">'),
+
+            Submit('cancel', 'Cancel', css_class='btn-warning'),
+            Submit('submit', 'Create Project'),
+
+            HTML('</div>'),
+        )
 
 
 class authentication_form(forms.Form):
