@@ -19,7 +19,7 @@ _server_port=6161
 keep_alive_sec=10
 timeout_sec = 1
 retry_count = 5
-recv_buffer = 4096
+recv_buffer = 8192 
 dhcp_retry = 5
 
 connect_pkt = {
