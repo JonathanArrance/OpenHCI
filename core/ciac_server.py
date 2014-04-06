@@ -332,7 +332,7 @@ def keep_alive_check(node_id, conn):
     @author         :
     comments        :
     '''
-
+    terminate=0
     while True:
         status_alive = {
                 'Type': 'status',
@@ -342,7 +342,8 @@ def keep_alive_check(node_id, conn):
         logger.sys_info("node_id: %s ***keep_alive***" %(node_id))
         if __debug__ :
             print "node_id: %s ***keep_alive***" %(node_id)
-        conn.sendall(pickle.dumps(status_alive, -1))
+        #conn.sendall(pickle.dumps(status_alive, -1))
+        core_util.send_data(pickle.dumps(status_alive, -1), conn)
         data = core_util.recv_data(conn)
         if data:
             data = pickle.loads(data)
@@ -351,7 +352,9 @@ def keep_alive_check(node_id, conn):
                 if __debug__ :
                     print "node_id: %s ***alive***" %(node_id)
             else:
-                logger.sys_info("node_id: %s Error received %s" %(node_id, data))
+                logger.sys_info("node_id: %s keep alive error received %s" %(node_id, data))
+        else:
+            logger.sys_info("node_id: keep alive reply not received" %(node_id))
 
         # sleep for keep_alive_sec
         sleep(core_util.keep_alive_sec)
