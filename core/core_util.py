@@ -129,9 +129,13 @@ def recv_data(sock):
                 recv_len=None
 
                 # process message here
-                return message
+                #return message
+                print message #TEST
                 break
-            break
+            if len(buffer) < recv_len:
+                continue
+            else:
+                break
         else:
             count = count + 1
             if count >= retry_count:
@@ -142,5 +146,6 @@ def recv_data(sock):
             logger.sys_warning("recv_data: retrying...%s" %(count))
             if __debug__ :
                 print "recv_data: retrying... ", count
-
+    print "reached end" #TEST
     return message
+
