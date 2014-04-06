@@ -18,20 +18,20 @@ count=0
 
 node_info = {
 'Type': 'Node_info', 
-'Length': 10, 
+'Length': 8, 
 'Value': {
     'node_name':'box15',
     'node_type':'cn',
     'node_mgmt_ip':'',
     'node_data_ip':'',
     'node_controller':'',
-    'node_cloud_name':'',
-    'node_nova_zone':'',
-    'node_iscsi_iqn':'',
-    'node_swift_ring':'',
+    'node_cloud_name':'TransCirrusCloud',
+    'node_nova_zone':'nova',
     'node_id':'trans01'
     }
 }
+#'node_iscsi_iqn':'',
+    #'node_swift_ring':'',
 
 def getNodeInfo():
     '''

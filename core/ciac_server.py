@@ -118,17 +118,17 @@ def check_node_update(data):
                     update = 'NA'
                 else:
                     update = 'OK'
-            elif data['Value']['node_iscsi_iqn'] != node['node_iscsi_iqn']:
-                if data['Value']['node_iscsi_iqn'] == '':
-                    update = 'NA'
-                else:
-                    update = 'OK'
+            #elif data['Value']['node_iscsi_iqn'] != node['node_iscsi_iqn']:
+            #    if data['Value']['node_iscsi_iqn'] == '':
+            #        update = 'NA'
+            #    else:
+            #        update = 'OK'
 
-            elif data['Value']['node_swift_ring'] != node['node_swift_ring']:
-                if data['Value']['node_swift_ring'] == '':
-                    update = 'NA'
-                else:
-                    update = 'OK'
+            #elif data['Value']['node_swift_ring'] != node['node_swift_ring']:
+            #    if data['Value']['node_swift_ring'] == '':
+            #        update = 'NA'
+            #    else:
+            #        update = 'OK'
 
 
 
@@ -536,8 +536,8 @@ def client_thread(conn, client_addr):
                                     'node_controller':data['Value']['node_controller'],
                                     'node_cloud_name':data['Value']['node_cloud_name'],
                                     'node_nova_zone':data['Value']['node_nova_zone'],
-                                    'node_iscsi_iqn':data['Value']['node_iscsi_iqn'],
-                                    'node_swift_ring':data['Value']['node_swift_ring']
+                                    #'node_iscsi_iqn':data['Value']['node_iscsi_iqn'],
+                                    #'node_swift_ring':data['Value']['node_swift_ring']
                                     }
 
                             # insert into ciac DB
