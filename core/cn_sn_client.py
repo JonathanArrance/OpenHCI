@@ -448,6 +448,8 @@ def processComputeConfig(sock, node_id):
     # receive compute node nova config file
     cn_config = core_util.recv_data(sock)
 
+    print cn_config #TEST
+
     # parse config file
     if cn_config:
         cn_config = pickle.loads(cn_config)
