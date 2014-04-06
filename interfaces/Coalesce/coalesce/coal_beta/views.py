@@ -270,8 +270,7 @@ def basic_project_view(request, project_id):
             fip['instance_name']=''
             
     pub_net_list  = no.list_external_networks()
-    print "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ"
-    print pub_net_list
+
     public_networks={}
     for net in pub_net_list:
         try:
@@ -361,12 +360,13 @@ we need to build a function to request a vm resize
     """
 
     return render_to_response('coal/basic_project_view.html',
-                               RequestContext(request, { 'project': project,
+                               RequestContext(request, {'project': project,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
                                                         'images': images,
                                                         'instances': instances,
+                                                        'instance_info': instance_info,
                                                         'floating_ips': floating_ips,
                                                         'private_networks': private_networks,
                                                         'priv_net_list':priv_net_list,
