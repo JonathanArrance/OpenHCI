@@ -104,7 +104,6 @@ def recv_data(sock):
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
             data += sock.recv(recv_buffer)
-
             if not data:
                 logger.sys_info("recv_data: no data received")
                 break
