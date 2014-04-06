@@ -572,6 +572,7 @@ def client_thread(conn, client_addr):
                                         if __debug__ :
                                             print "node_id: %s ciac server waiting for status ready/halt" % (node_id)
                                 if data:
+                                    print data
                                     data = pickle.loads(data)
                                     if data['Type'] == 'status':
                                         logger.sys_info("node_id: %s ciac server received %s" %(node_id, data['Value']))
