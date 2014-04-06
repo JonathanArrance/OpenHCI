@@ -130,9 +130,12 @@ def recv_data(sock):
                 recv_len=None
 
                 # process message here
-                return message
+                #return message
                 break
-            break
+            if len(buffer) < recv_len:
+                continue
+            else:
+                break
         else:
             count = count + 1
             if count >= retry_count:
