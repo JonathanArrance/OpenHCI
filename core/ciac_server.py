@@ -474,7 +474,8 @@ def client_thread(conn, client_addr):
                                 while True:
                                     ready = select.select([conn], [], [], core_util.timeout_sec)
                                     if ready[0]:
-                                        data = conn.recv(core_util.recv_buffer)
+                                        #data = conn.recv(core_util.recv_buffer)
+                                        data = core_util.recv_data(conn)
                                         break
                                     else:
                                         logger.sys_warning("node_id: %s ciac server waiting for status ready/halt from cn" %(node_id))
@@ -565,7 +566,8 @@ def client_thread(conn, client_addr):
                                 while True:
                                     ready = select.select([conn], [], [], core_util.timeout_sec)
                                     if ready[0]:
-                                        data = conn.recv(core_util.recv_buffer)
+                                        #data = conn.recv(core_util.recv_buffer)
+                                        data = core_util.recv_data(conn)
                                         break
                                     else:
                                         logger.sys_warning("node_id: %s ciac server waiting for status ready/halt" %(node_id))
