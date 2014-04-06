@@ -1,3 +1,4 @@
+#!/usr/local/lib/python2.7
 #from celery import Celery
 #from celery import task
 #import rollback
