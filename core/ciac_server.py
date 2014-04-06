@@ -216,6 +216,7 @@ def sendComputeConfig(conn, node_id):
         logger.sys_info("node_id: %s sent cn nova config!!" %(node_id))
         if __debug__ :
             print "node_id: %s sent cn nova config!!" % node_id
+	    print config #TEST
 
         # listen for ok message, ack
         data = core_util.recv_data(conn)
