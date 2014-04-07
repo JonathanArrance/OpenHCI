@@ -181,7 +181,7 @@ def project_view(request, project_id):
             private_networks[net['net_name']]= no.get_network(net['net_id'])
         except:
             pass
-
+ 
     public_networks={}
     for net in pub_net_list:
         try:
@@ -231,10 +231,24 @@ def basic_project_view(request, project_id):
     vo = volume_ops(auth)
     go = glance_ops(auth)
     so = server_ops(auth)
+    l3o = layer_three_ops(auth)
+    no = neutron_net_ops(auth)
     volumes       = vo.list_volumes(project_id)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
+    #pub_net_list  = no.list_external_networks()
+    
+    priv_net_list = no.list_internal_networks(project_id)
+    private_networks={}
+    for net in priv_net_list:
+        try:
+            private_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+        
+
+        
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
@@ -246,6 +260,28 @@ def basic_project_view(request, project_id):
         images    = go.list_images()
     except:
         images =[]
+        
+    floating_ips = l3o.list_floating_ips(project_id)
+    for fip in floating_ips:
+        if fip["floating_in_use"]:
+            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
+            fip['instance_name']=ip_info['instance_name']
+        else:
+            fip['instance_name']=''
+            
+    pub_net_list  = no.list_external_networks()
+
+    public_networks={}
+    for net in pub_net_list:
+        try:
+            public_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+
+    try:
+        default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    except:
+        default_public = "NO PUBLIC NETWORK"
     
     """
 1. create a vm
@@ -267,8 +303,8 @@ we need to build a function to request a vm resize
 
 
 
-    no = neutron_net_ops(auth)
-    l3o = layer_three_ops(auth)
+
+   
     
     sno = snapshot_ops(auth)
 
@@ -293,7 +329,7 @@ we need to build a function to request a vm resize
         for ouser in ousers:
             ouserinfo.append(ouser['username'])
 
-    priv_net_list = no.list_internal_networks(project_id)
+
     pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(project_id)
    
@@ -320,22 +356,20 @@ we need to build a function to request a vm resize
     except:
         default_public = "NO PUBLIC NETWORK"
 
-    floating_ips = l3o.list_floating_ips(project_id)
-    for fip in floating_ips:
-        if fip["floating_in_use"]:
-            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
-            fip['instance_name']=ip_info['instance_name']
-        else:
-            fip['instance_name']=''
+   
     """
 
     return render_to_response('coal/basic_project_view.html',
-                               RequestContext(request, { 'project': project,
+                               RequestContext(request, {'project': project,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
                                                         'images': images,
                                                         'instances': instances,
+                                                        'instance_info': instance_info,
+                                                        'floating_ips': floating_ips,
+                                                        'private_networks': private_networks,
+                                                        'priv_net_list':priv_net_list,
 
                                                         }))
 

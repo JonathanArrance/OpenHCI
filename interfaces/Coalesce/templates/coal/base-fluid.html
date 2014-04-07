@@ -53,8 +53,7 @@
                         <div class="nav" id="main-menu">
 
                             <ul class="nav" id="main-menu-left">
-                             <li><a href="#">{{username}}</a></li>
-                                <li><a href={% url 'home' %}>Home</a></li>
+                             <li><a href={% url 'home' %}>{{username}}</a></li>
                                 {% block navigation %}
                                   {% if project_id %}
                                     {% if user_level == 2 %}

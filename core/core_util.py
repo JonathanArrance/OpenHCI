@@ -19,7 +19,7 @@ _server_port=6161
 keep_alive_sec=10
 timeout_sec = 1
 retry_count = 5
-recv_buffer = 4096
+recv_buffer = 8192 
 dhcp_retry = 5
 
 connect_pkt = {
@@ -104,7 +104,6 @@ def recv_data(sock):
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
             data += sock.recv(recv_buffer)
-
             if not data:
                 logger.sys_info("recv_data: no data received")
                 break
@@ -130,9 +129,13 @@ def recv_data(sock):
                 recv_len=None
 
                 # process message here
-                return message
+                #return message
+                #print message #TEST
                 break
-            break
+            if len(buffer) < recv_len:
+                continue
+            else:
+                break
         else:
             count = count + 1
             if count >= retry_count:
@@ -143,5 +146,6 @@ def recv_data(sock):
             logger.sys_warning("recv_data: retrying...%s" %(count))
             if __debug__ :
                 print "recv_data: retrying... ", count
-
+    print "reached end" #TEST
     return message
+
