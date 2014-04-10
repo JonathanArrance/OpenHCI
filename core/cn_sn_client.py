@@ -448,6 +448,8 @@ def processComputeConfig(sock, node_id):
     # receive compute node nova config file
     cn_config = core_util.recv_data(sock)
 
+    print cn_config #TEST
+
     # parse config file
     if cn_config:
         cn_config = pickle.loads(cn_config)
@@ -595,7 +597,8 @@ def processComputeConfig(sock, node_id):
     if post_install_status == True:
 
         # send node_ready status message to cc
-        core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
+        status_ready_pkt =  pickle.dumps(core_util.status_ready, -1)
+        core_util.send_data(status_ready_pkt, sock)
 
         # listen for ok message, ack -- loops infinetly
         while True:
@@ -646,7 +649,8 @@ def processComputeConfig(sock, node_id):
         if post_install_status != True:
 
             # send node_halt status message to cc
-            core_util.send_data(pickle.dumps(core_util.status_halt, -1), sock)
+            status_halt_pkt = pickle.dumps(core_util.status_halt, -1)
+            core_util.send_data(status_halt_pkt, sock)
 
             # listen for ok message, ack -- loop infinetly
             while True:
@@ -666,7 +670,8 @@ def processComputeConfig(sock, node_id):
         else:
              
             # send node_ready status message to cc
-            core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
+            status_ready_pkt = pickle.dumps(core_util.status_ready, -1)
+            core_util.send_data(status_ready_pkt, sock)
 
             # listen for ok message, ack -- loops infinetly
             while True:
@@ -807,7 +812,8 @@ def processStorageConfig(sock, node_id):
 
     if post_install_status == True:
         # send node ready status to cc
-        core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
+        status_ready_pkt = pickle.dumps(core_util.status_ready, -1)
+        core_util.send_data(status_ready_pkt, sock)
 
         # listen for ok ack message -- loop infinetly
         while True:
@@ -873,7 +879,8 @@ def processStorageConfig(sock, node_id):
                         print "node_id: %s listening for status_halt ack" % (node_id)
         else:
             # send node ready status message to cc
-            core_util.send_data(pickle.dumps(core_util.status_ready, -1), sock)
+            status_ready_pkt = pickle.dumps(core_util.status_ready, -1)
+            core_util.send_data(status_ready_pkt, sock)
 
             # listen for ok ack message
             while True:

@@ -136,6 +136,18 @@ class gluster_ops:
             if(len(start) == 0):
                 logger.sys_error('Could not start the new Gluster volume.')
                 return 'ERROR'
+
+            #mount the new gluster volume
+            make = os.system('sudo mkdir -p /mnt/gluster-vols/%s' %(input_dict['volume_name']))
+            if(make != 0):
+                logger.sys_error('Could not create the GlusterFS mount point.')
+                return 'ERROR'
+            out4 = subprocess.Popen('sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            mount = out4.stdout.readlines()
+            print mount
+            if(len(mount) != 0):
+                logger.sys_error('Could not mount the Gluster volume.')
+                return 'ERROR'
         else:
             logger.sys_error('Only admins can create gluster volumes.')
             raise Exeption('Only admins can create gluster volumes.')
