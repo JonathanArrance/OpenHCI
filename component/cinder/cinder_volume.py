@@ -252,9 +252,9 @@ class volume_ops:
         del_status = 0
         #if the user proj id matches the volume proj_id they can delete the volume
         if(self.user_level >=1):
-            if((self.project_id == vol_id[0][0]) and (self.user_id == vol_id[0][1])):
+            if((self.project_id == delete_vol['project_id']) and (self.user_id == vol_id[0][1])):
                 #del_status = 1 - DELETE volume
-                logger.sys_info("The user is not an and can delete the volume in their project.")
+                logger.sys_info("The user can delete volume with id %s"%(delete_vol['volume_id']))
                 del_status = 1
             else:
                 logger.sys_error("Users can not delete volumes outside of their project.")
@@ -281,13 +281,12 @@ class volume_ops:
                 body = ""
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
-                header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
+                header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
                 function = 'DELETE'
-                api_path = '/v1/%s/volumes/%s' %(self.project_id,vol_id[0][0])
+                api_path = '/v1/%s/volumes/%s' %(delete_vol['project_id'],delete_vol['volume_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
-                r_dict = ""
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
@@ -299,7 +298,7 @@ class volume_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    del_vol = {"table":'trans_system_vols',"where":"vol_id='%s'" %(vol_id[0][0])}
+                    del_vol = {"table":'trans_system_vols',"where":"vol_id='%s'" %(delete_vol['volume_id'])}
                     self.db.pg_delete(del_vol)
                 except:
                     self.db.pg_transaction_rollback()
