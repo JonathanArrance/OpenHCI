@@ -72,7 +72,9 @@ def build_project(auth_dict, project_dict):
         logger.sys_error("Couldn't create a subnet, %s" %(str(e)))
 
     try:
+        ports = ['22','80','443']
         project_dict['sec_group_dict']['project_id'] = proj
+        project_dict['sec_group_dict']['ports'] = ports
         sec_group = nova.create_sec_group(project_dict['sec_group_dict'])
         logger.sys_info("Created security group")
     except Exception as e:

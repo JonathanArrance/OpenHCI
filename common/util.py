@@ -496,6 +496,31 @@ def get_api_ip():
     """
     return config.API_IP
 
+def get_mgmt_ip():
+    """
+    DESC: get the system data ip from bond1 ethernet interface
+    INPUT: None
+    OUTPUT: node_data_ip
+    ACCESS: Wide open
+    NOTE: bond1 interface is the default data network interface for any
+    node added to the cloud cluster
+    """
+    mgmt_network = get_adapter_ip('bond0')
+    return mgmt_network['net_ip']
+
+def is_node_phy():
+    """
+    DESC: Check if the node is a physical node
+    INPUT: None
+    OUTPUT: 1 / 0
+    ACCESS: Wide open
+    NOTE: Hack to account for physical core nodes
+    """
+    db = db_connect()
+    get_phy = {'select':'param_value','from':'trans_system_settings','where':"parameter='physical_node'"}
+    phy = db.pg_select(get_phy)
+    return phy[0][0]
+
 def get_cloud_name():
     """
     DESC: get the cloud name from the transcirrus db
@@ -1042,7 +1067,7 @@ def get_network_variables(input_dict):
     return r_dict
 
 def list_network_variables():
-    return 1
+    pass
 
 
 #######System level calls used to run linux commands#######

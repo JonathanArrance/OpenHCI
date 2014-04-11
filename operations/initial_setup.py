@@ -11,6 +11,7 @@ import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.node_util as node_util
 import transcirrus.common.service_control as service
+import transcirrus.ha.ha_common as ha_common
 
 from transcirrus.component.neutron.network import neutron_net_ops
 #from transcirrus.component.neutron.layer_three import layer_three_ops
@@ -69,7 +70,6 @@ def run_setup(new_system_variables,auth_dict):
     if(boot == 'FALSE'):
         return "System already set up."
 
-    
     #properly format the key values to an array.
     content = []
     for key, val in sys_vars.items():
@@ -461,6 +461,13 @@ def run_setup(new_system_variables,auth_dict):
     time.sleep(1)
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
+    #set up the cluster ip 169.254.x.x
+    #cluster = ha_common.set_cluster_node_ha_ip()
+    #if(cluster == 'ERROR'):
+    #    logger.error("Could not set the cluster IP. Please see the admin.")
+    #else:
+    #    logger.sys_info("Cluster IP set to: %s"%(cluster))
+
     #if the node is set as multinode, enable multinode
     if(sys_vars['SINGLE_NODE'] == '0'):
         status = node_util.enable_multi_node()
@@ -468,7 +475,7 @@ def run_setup(new_system_variables,auth_dict):
             logger.error("Could not enable multi-node. Check the interface and try again.")
         else:
             logger.info("Multi-node configuration enabled.")
-    
+
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
     if(boot == 'ERROR'):

@@ -18,8 +18,12 @@ def nova(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: Only works on the ciac node for now
     """
-    nova_array = ['openstack-nova-api','openstack-nova-cert','openstack-nova-compute','openstack-nova-conductor','openstack-nova-console','openstack-nova-consoleauth',
-                  'openstack-nova-metadata-api','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-spicehtml5proxy','openstack-nova-xvpvncproxy']
+    nova_array = []
+    if(config.NODE_TYPE == 'cc'):
+        nova_array = ['openstack-nova-api','openstack-nova-cert','openstack-nova-compute','openstack-nova-conductor','openstack-nova-console','openstack-nova-consoleauth',
+                      'openstack-nova-metadata-api','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-spicehtml5proxy','openstack-nova-xvpvncproxy']
+    elif(config.NODE_TYPE == 'cn'):
+        nova_array = ['openstack-nova-compute']
     out = _operator(nova_array,action)
     return out
 
@@ -35,7 +39,11 @@ def neutron(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: These only work on the ciac node for now
     """
-    neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent']
+    neu_array = []
+    if(config.NODE_TYPE == 'cc'):
+        neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent','quantum-ovs-cleanup']
+    if(config.NODE_TYPE == 'cn'):
+        neu_array = ['quantum-openvswitch-agent','quantum-ovs-cleanup']
     out = _operator(neu_array,action)
     return out
 
@@ -146,6 +154,9 @@ def openvswitch(action):
     """
     ovs_array = ['openvswitch']
     out = _operator(ovs_array,action)
+    #HACK need to fix zero connect to take neutron service into consideration on compute nodes.
+    if(config.NODE_TYPE == 'cn'):
+        neutron(action)
     return out
 
 def apache(action):
@@ -348,6 +359,7 @@ def _operator(service_array,action):
             os.system('sudo chkconfig %s on'%(service))
             os.system('sudo service %s restart'%(service))
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            time.sleep(1)
         elif(action.lower() == 'stop'):
             os.system('sudo chkconfig %s off'%(service))
             os.system('sudo service %s stop'%(service))
@@ -355,7 +367,7 @@ def _operator(service_array,action):
         elif(action.lower() == 'status'):
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process = out.stdout.readlines()
-        print process[0]
+        #print process[0]
         #if(process[0] == ""):
         #    return 'ERROR'
     return 'OK'

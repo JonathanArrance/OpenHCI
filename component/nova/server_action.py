@@ -539,6 +539,7 @@ class server_actions:
         DESC: Suspend a running virtual server. Suspending saves the vm state to disk.
         INPUT: input_dict - project_id
                           - instance_id
+                          - type vnc/spice
         OUTPUT: NoVnc console address
         ACCESS: Admins can suspend an instance in the cloud.
         NOTES: This is not the same as pause.
