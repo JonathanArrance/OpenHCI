@@ -130,7 +130,7 @@ def recv_data(sock):
 
                 # process message here
                 return message
-                #print message #TEST
+                print message #TEST
                 break
             if len(buffer) < recv_len:
                 continue
