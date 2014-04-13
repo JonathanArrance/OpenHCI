@@ -41,9 +41,9 @@ def neutron(action):
     """
     neu_array = []
     if(config.NODE_TYPE == 'cc'):
-        neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent']
+        neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent','quantum-ovs-cleanup']
     if(config.NODE_TYPE == 'cn'):
-        neu_array = ['quantum-openvswitch-agent']
+        neu_array = ['quantum-openvswitch-agent','quantum-ovs-cleanup']
     out = _operator(neu_array,action)
     return out
 
@@ -154,6 +154,9 @@ def openvswitch(action):
     """
     ovs_array = ['openvswitch']
     out = _operator(ovs_array,action)
+    #HACK need to fix zero connect to take neutron service into consideration on compute nodes.
+    if(config.NODE_TYPE == 'cn'):
+        neutron(action)
     return out
 
 def apache(action):
