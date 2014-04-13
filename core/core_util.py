@@ -19,7 +19,7 @@ _server_port=6161
 keep_alive_sec=10
 timeout_sec = 1
 retry_count = 5
-recv_buffer = 8192 
+recv_buffer = 12 #TEST 
 dhcp_retry = 5
 
 connect_pkt = {
@@ -62,6 +62,7 @@ def send_data(msg, sock):
     msg = `msglen`+':'+msg
 
     while True:
+        print "sending ... %s" %(msg) #TEST
         sent = sock.sendall(msg)
         if sent == 0:
             count = count+1
@@ -74,6 +75,7 @@ def send_data(msg, sock):
                 time.sleep(1)
         else:
             logger.sys_info("send_data: sent %s bytes" %(sent))
+            print "sent = %s" %(sent) #TEST
             break
 
 
@@ -108,6 +110,7 @@ def recv_data(sock):
                 logger.sys_info("recv_data: no data received")
                 break
 
+            print "received data... %s" %(data) #TEST
             buffer += data
             while True:
                 if recv_len is None:
