@@ -4,6 +4,7 @@ from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.operations.build_complete_project import build_project
 from transcirrus.operations.destroy_project import destroy_project
+from transcirrus.database import node_db as node_op
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -94,9 +95,13 @@ def nodes(d, nodeList):
     delChoice = ("Remove", "Remove Node from Cloud", 0)
     dashChoice = ("Dashboard", "Return to Dashboard", 1)
     allChoices = []
-
+    counter = 0
     for entry in nodeList:
-        allChoices.append(entry)
+        if(entry == "OK"):
+            continue
+        counter += 1
+        choice = (str(counter), entry['node_type'] + ": " + entry['node_name'], 0)
+        allChoices.append(choice)
     allChoices.append(delChoice)
     allChoices.append(dashChoice)
     while True:
@@ -299,7 +304,7 @@ def projectRename(d, tenant_op, project):
     project_name = name
     if(project_name == ""):
         d.msgbox("Name cannot be blank, try again.")
-            return "Rename"
+        return "Rename"
     return "OK"
 
 
@@ -393,6 +398,8 @@ def userManage(d, user_op, user):
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
+        if handle_exit_code(d, code) == d.DIALOG_CANCEL:
+            return
     username, password, confirm, user_role, email = fields
     if(password != ""):
         if(password != confirm):
@@ -959,9 +966,7 @@ def dash(d, auth_dict):
     tenant_op = tenant_ops(auth_dict)
     user_op = user_ops(auth_dict)
     
-    nodeList = [("1", "Compute_1", 0),
-                ("2", "Storage_1", 0),
-                ("3", "Storage_2", 0)]
+    nodeList = node_op.list_nodes()
     
     userList = [{'name':"Snow White",
                  'role':"User",
