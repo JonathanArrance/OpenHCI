@@ -18,8 +18,12 @@ def nova(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: Only works on the ciac node for now
     """
-    nova_array = ['openstack-nova-api','openstack-nova-cert','openstack-nova-compute','openstack-nova-conductor','openstack-nova-console','openstack-nova-consoleauth',
-                  'openstack-nova-metadata-api','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-spicehtml5proxy','openstack-nova-xvpvncproxy']
+    nova_array = []
+    if(config.NODE_TYPE == 'cc'):
+        nova_array = ['openstack-nova-api','openstack-nova-cert','openstack-nova-compute','openstack-nova-conductor','openstack-nova-console','openstack-nova-consoleauth',
+                      'openstack-nova-metadata-api','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-spicehtml5proxy','openstack-nova-xvpvncproxy']
+    elif(config.NODE_TYPE == 'cn'):
+        nova_array = ['openstack-nova-compute']
     out = _operator(nova_array,action)
     return out
 
@@ -35,7 +39,11 @@ def neutron(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: These only work on the ciac node for now
     """
-    neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent']
+    neu_array = []
+    if(config.NODE_TYPE == 'cc'):
+        neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent']
+    if(config.NODE_TYPE == 'cn'):
+        neu_array = ['quantum-openvswitch-agent']
     out = _operator(neu_array,action)
     return out
 
