@@ -19,7 +19,11 @@ _server_port=6161
 keep_alive_sec=10
 timeout_sec = 1
 retry_count = 5
-recv_buffer = 12 #TEST 
+recv_buffer = 8192 #TEST 
+#Note: the buffer length must be a minimum of x + 1( 1-> for ':') bytes, whee x is the
+#length of the total message passed between the client and server i.e.
+#number of bytes occupied in senidng the length of the message at he
+#begining of the message
 dhcp_retry = 5
 
 connect_pkt = {
@@ -62,21 +66,48 @@ def send_data(msg, sock):
     msg = `msglen`+':'+msg
 
     while True:
-        print "sending ... %s" %(msg) #TEST
-        sent = sock.sendall(msg)
-        if sent == 0:
-            count = count+1
-            if count >= retry_count:
-                logger.sys_error("send failed !!")
-                raise RuntimeError("socket connection broken")
-                sys.exit()
+        #print "sending ... %s" %(msg) #TEST
+        try:
+            
+            sent = sock.sendall(msg)
+            if sent == 0:
+                '''
+                Note: This if clause will have no meaning as this method
+                continues to send data from string until either all data has
+                been sent or an error occurs. None is returned on success. On
+                error, an exception is raised, and there is no way to determine
+                how much data, if any, was successfully sent.
+                '''
+                count = count+1
+                if count >= retry_count:
+                    logger.sys_error("send failed !!")
+                    raise RuntimeError("socket connection broken")
+                    sys.exit()
+                else:
+                    logger.sys_info("socket send data retrying ...")
+                    time.sleep(1)
             else:
-                logger.sys_info("socket send data retrying ...")
-                time.sleep(1)
-        else:
-            logger.sys_info("send_data: sent %s bytes" %(sent))
-            print "sent = %s" %(sent) #TEST
-            break
+                # None is returned when the data is sucessfully sent
+                logger.sys_info("send_data: sent %s bytes" %(sent))
+                # print "sent = %s" %(sent) #TEST
+                break
+
+        except socket.error , msg:
+            logger.sys_error('send_data: Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+            if __debug__ :
+                print 'send_data: Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+
+                # retry code, NOT tested
+                count = count+1
+                if count >= retry_count:
+                    logger.sys_error("send failed !!")
+                    raise RuntimeError("socket connection broken")
+                    sys.exit()
+                else:
+                    logger.sys_info("socket send data retrying ...")
+                    time.sleep(1)
+                    continue
+
 
 
 
@@ -105,23 +136,29 @@ def recv_data(sock):
     while True:
         ready = select.select([sock], [], [], timeout_sec)
         if ready[0]:
-            data += sock.recv(recv_buffer)
+            data = sock.recv(recv_buffer)
             if not data:
                 logger.sys_info("recv_data: no data received")
+                #print "no data break outer loop" #TEST
                 break
 
-            print "received data... %s" %(data) #TEST
+            #print "received data... %s" %(data) #TEST
             buffer += data
+            #print "buffer append ...%s" %(buffer)         #TEST
             while True:
                 if recv_len is None:
                     if ':' not in buffer:
+                        #print ": break"  #TEST
                         break
                     # remove recv_len bytes from front of buffer
                     # leave any remaining bytes in buffer
                     length_str, ignored, buffer = buffer.partition(':')
                     recv_len = int(length_str)
+                    #print "recv_len... %s" %(recv_len) #TEST
 
                 if len(buffer) < recv_len:
+                    #print "len(buf):%s < recv_len" %(len(buffer))         #TEST
+                    #print "break inner loop" #TEST
                     break
 
                 # split off message from remaining bytes
@@ -131,13 +168,16 @@ def recv_data(sock):
                 buffer = buffer[recv_len:]
                 recv_len=None
 
+                #print "messsag ...%s" %(message) #TEST
+               # print "buffer ...%s" %(buffer)  #TEST
                 # process message here
                 return message
-                print message #TEST
                 break
             if len(buffer) < recv_len:
+                #print "continue..."              #TEST
                 continue
             else:
+                #print "break outer loop"              #TEST
                 break
         else:
             count = count + 1
