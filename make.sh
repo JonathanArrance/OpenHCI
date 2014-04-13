@@ -28,6 +28,11 @@ fi
 
 #add the django site to its proper place in the file system
 echo 'Adding Coalesce to the opt directory.'
+if [ -e /etc/httpd/conf.d/openstack-dashboard.conf]
+then
+rm /etc/httpd/conf.d/openstack-dashboard.conf
+fi
+cp -Rf ./interfaces/transcirrus.conf /etc/httpd/conf.d
 cp -Rf ./interfaces/Coalesce /opt
 chown -R apache:apache /opt/Coalesce
 
