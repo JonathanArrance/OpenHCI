@@ -52,7 +52,7 @@ def get_cluster_members():
 def get_cluster_status():
     pass
 
-def get_cluster_ha_ip():
+def get_cluster_node_ha_ip():
     """
     DESC: Get the cluster node cluster ip 169.254.x.x
     INPUT: None
@@ -66,7 +66,7 @@ def get_cluster_ha_ip():
         raise Exception('Could not get the ha cluster ip address.')
     return cluster_ip
 
-def set_cluster_ha_ip(input_dict):
+def set_cluster_node_ha_ip(input_dict):
     pass
 
 def get_cluster_vip():
