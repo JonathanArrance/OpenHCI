@@ -3,7 +3,7 @@
         <div class="well">
           <div class="legend">
              Volume Storage
-		<a href="#"  id="create-volume" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Volume</a>	
+		<a href="#"  id="create-volume" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New Volume</a>
           </div>
 
 	    <div id="volume-dialog-form" title="Create new volume">
@@ -21,13 +21,14 @@
                 </form>
             </div>
 
-	
+
 
            <table class="paleblue">
 	    {% if volumes %}
                 <tr> <th>Volume</th> <th>Actions</th></tr>
                     {% for volume in volumes %}
-		      <tr> <td>{{volume.volume_name}}</td>  <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> </td></tr>
+		      <tr> <td>{{volume.volume_name}}</td>
+               <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> </td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>
