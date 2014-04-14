@@ -194,6 +194,7 @@ def insert_node(input_dict):
         try:
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_qpid = {"parameter":"qpid_hostname","param_value":'172.38.24.10','file_name':"quantum.conf",'node':"%s" %(input_dict['node_id'])}
             neutron_array = [insert_neutron_region,insert_neutron_localip]
             for neutron in neutron_array:
                 db.pg_transaction_begin()
