@@ -366,7 +366,7 @@ def _operator(service_array,action):
         elif(action.lower() == 'status'):
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process = out.stdout.readlines()
-        print process[0]
+        #print process[0]
         #if(process[0] == ""):
         #    return 'ERROR'
     return 'OK'
