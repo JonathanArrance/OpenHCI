@@ -87,6 +87,7 @@ class volume_ops:
         ACCESS: Admins can create a volume in any project, Users can only create
                 volumes in their primary projects
         """
+        logger.sys_info('\n**Create Volume. Component: Cinder Def: create_volume**\n')
         #check to make sure all params have been passed
         if(not create_vol):
             logger.sys_error("Did not pass in create_vol dictionary to create volume operation.")
@@ -205,6 +206,7 @@ class volume_ops:
         ACCESS: Users and power users can only delete the volumes they created in a project
                 admins can delete any vol or a fault if there is an error
         """
+        logger.sys_info('\n**Delete a volume. Component: Cinder Def: delete_volume**\n')
         #NOTE: we will get all info from the Transcirrus DB
         if((not delete_vol) or delete_vol['volume_id'] == ""):
             logger.sys_error("Delete vol parameter was not given or is blank.")
@@ -322,6 +324,7 @@ class volume_ops:
         OUTPUT - array of volumes dict {"volume_id":'',"volume_name":'',"project_id":''}
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
+        logger.sys_info('\n**List volums. Component: Cinder Def: list_volumes**\n')
         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list volumes.")
@@ -370,6 +373,7 @@ class volume_ops:
                        - volume_instance
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
+        logger.sys_info('\n**Get specific info on a volume. Component: Cinder Def: get_volume_info**\n')
         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list volumes.")
