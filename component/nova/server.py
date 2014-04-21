@@ -1457,7 +1457,8 @@ class server_ops:
     def get_sec_keys(self,input_dict):
         """
         DESC: Get detailed info for a specific security key
-        INPUT: sec_key_id
+        INPUT: input_dict - project_id
+                          - sec_key_id
         OUTPUT: r_dict - sec_key_name
                        - user_name
                        - sec_key_id
@@ -1465,6 +1466,7 @@ class server_ops:
         ACCESS: Admins can get info on all keys in the project,
                 users and power users can only get info on the keys they own
         """
+        logger.sys_info('\n**Getting security key. Component: Nova Def: get_sec_keys**\n')
         if(('sec_key_id' not in input_dict) or (input_dict['sec_key_id'] == "")):
             logger.sys_error("Security key id was either blank or not specified for get security key operation.")
             raise Exception("Security key id was either blank or not specified for get security key operation.")
@@ -1482,9 +1484,11 @@ class server_ops:
             #users can only get their own security groups
             get_key_dict = None
             if(self.is_admin == 0):
-                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"user_id='%s' and sec_key_id='%s'" %(self.user_id,input_dict['sec_key_id'])}
+                #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"user_id='%s' and sec_key_id='%s'" %(self.user_id,input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
             else:
-                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
+                #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
             get_key = self.db.pg_select(get_key_dict)
         except:
             logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(get_key[0][0],input_dict['project_id']))
