@@ -1485,10 +1485,10 @@ class server_ops:
             get_key_dict = None
             if(self.is_admin == 0):
                 #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"user_id='%s' and sec_key_id='%s'" %(self.user_id,input_dict['sec_key_id'])}
-                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
             else:
                 #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
-                get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
             get_key = self.db.pg_select(get_key_dict)
         except:
             logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(get_key[0][0],input_dict['project_id']))
