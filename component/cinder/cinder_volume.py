@@ -427,3 +427,19 @@ class volume_ops:
         self.db.pg_close_connection()
         r_dict = {'volume_name':get_vol[0][1],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
         return r_dict
+
+    def create_volume_type(self,input_dict):
+        """
+        DESC: Create a volume tyo and add the volume key(target vlume) to it. Used to add new
+              types or to customize storage layout.
+        INPUT:  input_dict - volume_id
+                           - project_id - op -def user project id
+        OUTPUT: r_dict - volume_name
+                       - volume_id
+                       - volume_size
+                       - volume_attached
+                       - volume_instance
+        ACCESS: Admins can list all volumes, users can only list the volumes in their project
+        """
+        logger.sys_info('\n**Get specific info on a volume. Component: Cinder Def: get_volume_info**\n')
+        pass

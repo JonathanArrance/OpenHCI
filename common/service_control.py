@@ -359,6 +359,7 @@ def _operator(service_array,action):
             os.system('sudo chkconfig %s on'%(service))
             os.system('sudo service %s restart'%(service))
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            time.sleep(1)
         elif(action.lower() == 'stop'):
             os.system('sudo chkconfig %s off'%(service))
             os.system('sudo service %s stop'%(service))

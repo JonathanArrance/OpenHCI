@@ -139,6 +139,10 @@ def insert_node(input_dict):
     if(input_dict['node_virt_type'] == ''):
         input_dict['node_virt_type'] = 'qemu'
 
+    #hack to account for physical core node
+    if(util.is_node_phy() == '1'):
+        input_dict['node_virt_type'] = 'kvm'
+
     if('node_gluster_peer' not in input_dict):
         input_dict['node_gluster_peer'] = '0'
     if(input_dict['node_gluster_peer'] == ''):
@@ -180,7 +184,7 @@ def insert_node(input_dict):
         try:
             insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_mgmt_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
