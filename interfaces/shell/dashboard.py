@@ -133,7 +133,7 @@ def nodeDel(d, node):
 
 
 def nodeInfo(d, node):
-    return d.yesno(("Overview\n\n" + node[1]),
+    return d.yesno(("Overview\n\n" + node['node_name']),
     yes_label="Manage this Node",
     no_label="Return to Nodes", width=50)
 
