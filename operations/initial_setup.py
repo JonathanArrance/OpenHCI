@@ -93,7 +93,7 @@ def run_setup(new_system_variables,auth_dict):
         #Perform the rollback to the original values
         #rollback = util.update_system_variables(rollback_sys_vars)
 
-    #create a sevice controller object
+    #create an enpoint object
     endpoint = endpoint_ops(auth_dict)
     logger.sys_info('Re-building Swift endpoints')
     #reset the swift
