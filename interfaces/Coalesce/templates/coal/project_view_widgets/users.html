@@ -1,11 +1,14 @@
-{% load extratags %}
 <!-- Begin user widget-->
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Users   <a href="#"  id="create-user" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> New User</a>
+             Users   
+             <a href="#"  
+                id="create-usr" 
+                class="btn btn-mini btn-inverse" 
+                style="float:right">New User</a>
              {% if ouserinfo%}
-                <a href="#" id="add-existing-user" class="btn btn-mini" style="float:right"><i class="icon-plus"></i> Add Existing User</a>
+                <a href="#" id="add-existing-user" class="btn btn-mini btn-inverse" style="float:right"> Add Existing User</a>
              {% endif %}
           </div>
 
@@ -53,6 +56,7 @@
 
           <table class="paleblue" id="users">
                 <tr> <th>User</th>  <th>Actions</th>  </tr>
+                {% load extratags %}
                 {% for pu in users %}
                   {% with pu.username as username %}
 		    {% with userinfo|access:username as ui %}

@@ -108,7 +108,7 @@ $(function() {
 			}
 		});
 
-		$( "#create-user" )
+		$( "#create-usr" )
 			.button()
 			.click(function() {
 				$( "#dialog-form" ).dialog( "open" );
