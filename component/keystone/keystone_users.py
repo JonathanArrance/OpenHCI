@@ -722,8 +722,8 @@ class user_ops:
                          - project_name
         OUTPUT: r_dict - username
                        - user_id
-                       - primary_project
-                       - primary_proj_id
+                       - project_name
+                       - project_id
                        - user_role
                        - email
                        - user_enabled
@@ -763,7 +763,7 @@ class user_ops:
                 logger.sql_error("Could not find user information in Transcirrus DB., %s" %(e))
                 raise
 
-            r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"primary_project":user_info[0][6],"primary_proj_id":user_info[0][7],"user_role":user_info[0][2],"email":user_info[0][9],"user_enabled":user_info[0][4]}
+            r_dict = {"username":user_info[0][1],"user_id":user_info[0][5],"project_name":user_info[0][6],"project_id":user_info[0][7],"user_role":user_info[0][2],"email":user_info[0][9],"user_enabled":user_info[0][4]}
             return r_dict
 
         else:

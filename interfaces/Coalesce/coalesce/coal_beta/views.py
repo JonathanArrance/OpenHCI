@@ -169,7 +169,7 @@ def project_view(request, project_id):
         i_info = so.get_server(i_dict)
         sname  = instance['server_name']
         instance_info[sname] = i_info
-    
+
     try:
         images 	  = go.list_images()
     except:
@@ -181,7 +181,7 @@ def project_view(request, project_id):
             private_networks[net['net_name']]= no.get_network(net['net_id'])
         except:
             pass
- 
+
     public_networks={}
     for net in pub_net_list:
         try:
@@ -222,8 +222,8 @@ def project_view(request, project_id):
                                                         'instances': instances,
                                                         'instance_info': instance_info,
                                                         }))
-                               
-                               
+
+
 def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
@@ -238,7 +238,7 @@ def basic_project_view(request, project_id):
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
     #pub_net_list  = no.list_external_networks()
-    
+
     priv_net_list = no.list_internal_networks(project_id)
     private_networks={}
     for net in priv_net_list:
@@ -246,21 +246,21 @@ def basic_project_view(request, project_id):
             private_networks[net['net_name']]= no.get_network(net['net_id'])
         except:
             pass
-        
 
-        
+
+
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         i_info = so.get_server(i_dict)
         sname  = instance['server_name']
         instance_info[sname] = i_info
-    
+
     try:
         images    = go.list_images()
     except:
         images =[]
-        
+
     floating_ips = l3o.list_floating_ips(project_id)
     for fip in floating_ips:
         if fip["floating_in_use"]:
@@ -268,7 +268,7 @@ def basic_project_view(request, project_id):
             fip['instance_name']=ip_info['instance_name']
         else:
             fip['instance_name']=''
-            
+
     pub_net_list  = no.list_external_networks()
 
     public_networks={}
@@ -282,7 +282,7 @@ def basic_project_view(request, project_id):
         default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
     except:
         default_public = "NO PUBLIC NETWORK"
-    
+
     """
 1. create a vm
 2. provision a new volume
@@ -304,8 +304,8 @@ we need to build a function to request a vm resize
 
 
 
-   
-    
+
+
     sno = snapshot_ops(auth)
 
 
@@ -332,10 +332,10 @@ we need to build a function to request a vm resize
 
     pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(project_id)
-   
+
     snapshots     = sno.list_snapshots(project_id)
 
-    
+
 
     private_networks={}
     for net in priv_net_list:
@@ -356,7 +356,7 @@ we need to build a function to request a vm resize
     except:
         default_public = "NO PUBLIC NETWORK"
 
-   
+
     """
 
     return render_to_response('coal/basic_project_view.html',
@@ -392,7 +392,7 @@ def key_view(request, sec_key_id, project_id):
     key_info = so.get_sec_keys(key_dict)
 
     return render_to_response('coal/key_view.html',
-                               RequestContext(request, { 
+                               RequestContext(request, {
                                                         'key_info': key_info,
                                                         'project_id': project_id
                                                         }))
@@ -414,7 +414,7 @@ def attach_server_to_network(request, server_id, project_id, net_id):
     referer = request.META.get('HTTP_REFERER', None)
     redirect_to = urlsplit(referer, 'http', False)[2]
     return HttpResponseRedirect(redirect_to)
-    
+
 def volume_view(request, project_id, volume_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
@@ -428,7 +428,7 @@ def volume_view(request, project_id, volume_id):
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         }))
-       
+
 def floating_ip_view(request, floating_ip_id):
     auth = request.session['auth']
     l3o = layer_three_ops(auth)
@@ -502,6 +502,19 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         return HttpResponseRedirect(redirect_to)
     except:
         raise
+
+def delete_volume(request, volume_name, volume_size, description, project_id):
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
+        vo.create_volume(create_vol)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        raise
+
 
 def create_router(request, router_name, priv_net, default_public, project_id):
     try:
@@ -615,7 +628,7 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         return HttpResponseRedirect(redirect_to)
     except:
         raise
-      
+
 def pause_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -630,7 +643,7 @@ def pause_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to pause server.")
         return HttpResponseRedirect(redirect_to)
-      
+
 def unpause_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -645,7 +658,7 @@ def unpause_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to unpause server.")
         return HttpResponseRedirect(redirect_to)
-      
+
 def resize_server(request, project_id, instance_id, flavor_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -661,7 +674,7 @@ def resize_server(request, project_id, instance_id, flavor_id):
     except:
         messages.warning(request, "Unable to resize server.")
         return HttpResponseRedirect(redirect_to)
-      
+
 def confirm_resize(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -687,7 +700,7 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise    
+        raise
 
 def toggle_user(request, username, toggle):
     try:
@@ -774,7 +787,7 @@ def router_view(request, router_id):
                                RequestContext(request, {
                                                         'router': router,
                                                         }))
-			       
+
 def instance_view(request, project_id, server_id):
     auth = request.session['auth']
     so = server_ops(auth)
@@ -797,7 +810,7 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
         create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
         network = no.add_private_network(create_dict)
         subnet_dict={"net_id": network['net_id'], "subnet_dhcp_enable": "true", "subnet_dns": ["8.8.8.8"]}
-        subnet = no.add_net_subnet(subnet_dict)		
+        subnet = no.add_net_subnet(subnet_dict)
         return render(request, 'coalesce.coal_beta.views.project_view', {'project_name': 'ffvc2'})
 
     except:
@@ -923,7 +936,7 @@ def build_project(request):
 
             redirect_to = "/projects/%s/view/" % (pid)
             return HttpResponseRedirect(redirect_to)
- 
+
         else:
             return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
 

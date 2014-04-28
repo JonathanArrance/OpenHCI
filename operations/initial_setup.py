@@ -11,6 +11,7 @@ import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.node_util as node_util
 import transcirrus.common.service_control as service
+import transcirrus.ha.ha_common as ha_common
 
 from transcirrus.component.neutron.network import neutron_net_ops
 #from transcirrus.component.neutron.layer_three import layer_three_ops
@@ -69,7 +70,6 @@ def run_setup(new_system_variables,auth_dict):
     if(boot == 'FALSE'):
         return "System already set up."
 
-    
     #properly format the key values to an array.
     content = []
     for key, val in sys_vars.items():
@@ -93,8 +93,19 @@ def run_setup(new_system_variables,auth_dict):
         #Perform the rollback to the original values
         #rollback = util.update_system_variables(rollback_sys_vars)
 
-    #create a sevice controller object
+    #create an enpoint object
     endpoint = endpoint_ops(auth_dict)
+    logger.sys_info('Re-building Swift endpoints')
+    #reset the swift
+    del_swift = endpoint.delete_endpoint('swift')
+    if(del_swift == 'OK'):
+        input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+        create_swift = endpoint.create_endpoint(input_dict)
+        if(create_swift['endpoint_id']):
+            print "Swift endpoint set up complete."
+        else:
+            return "Swift error."
+
     logger.sys_info('Re-building Keystone endpoints')
     #reset the keystone endpoint
     del_keystone = endpoint.delete_endpoint('keystone')
@@ -115,6 +126,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Nova endpoint set up complete."
     else:
         return "Nova error."
+
     logger.sys_info('Building Cinder endpoints')
     cinder_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'cinder'}
     create_cinder = endpoint.create_endpoint(cinder_input_dict)
@@ -123,6 +135,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Cinder endpoint set up complete."
     else:
         return "Cinder error."
+
     logger.sys_info('Building Glance endpoints')
     glance_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'glance'}
     create_glance = endpoint.create_endpoint(glance_input_dict)
@@ -131,6 +144,7 @@ def run_setup(new_system_variables,auth_dict):
         print "Glance endpoint set up complete."
     else:
         return "Glance error."
+
     logger.sys_info('Building Quantum endpoints')
     quantum_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'quantum'}
     create_quantum = endpoint.create_endpoint(quantum_input_dict)
@@ -139,14 +153,14 @@ def run_setup(new_system_variables,auth_dict):
         print "Quantum endpoint set up complete."
     else:
         return "Quantum error."
-    logger.sys_info('Building Swift endpoints')
-    swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-    create_swift = endpoint.create_endpoint(swift_input_dict)
-    print create_swift
-    if(create_glance['endpoint_id']):
-        print "Swift endpoint set up complete."
-    else:
-        return "Swift error."
+    #logger.sys_info('Building Swift endpoints')
+    #swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
+    #create_swift = endpoint.create_endpoint(swift_input_dict)
+    #print create_swift
+    #if(create_glance['endpoint_id']):
+    #    print "Swift endpoint set up complete."
+    #else:
+    #    return "Swift error."
 
     logger.sys_info('Adding the core node to the trans_nodes table.')
     #insert the controller info into trans_nodes db table
@@ -281,17 +295,18 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default Ubuntu Precise image.')
 
     fedora_input = {
-                    'image_name':"Fedora-x86_64",
+                    'image_name':"CentOS-65-x86_64",
                     'image_disk_format':"qcow2",
                     'image_is_public':'True',
                     'image_is_protected':'True',
                     'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/fedora-latest.x86_64.qcow2"
+                    'file_location':"/transcirrus/centos-6.5-20140117.0.x86_64.qcow2"
                     }
     import_fedora = glance.import_image(fedora_input)
     if(import_fedora != 'OK'):
         logger.warn('Could not import the default Fedora image.')
 
+    
     logger.sys_info('Writing the network config files.')
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
@@ -461,6 +476,13 @@ def run_setup(new_system_variables,auth_dict):
     time.sleep(1)
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
+    #set up the cluster ip 169.254.x.x
+    #cluster = ha_common.set_cluster_node_ha_ip()
+    #if(cluster == 'ERROR'):
+    #    logger.error("Could not set the cluster IP. Please see the admin.")
+    #else:
+    #    logger.sys_info("Cluster IP set to: %s"%(cluster))
+
     #if the node is set as multinode, enable multinode
     if(sys_vars['SINGLE_NODE'] == '0'):
         status = node_util.enable_multi_node()
@@ -468,7 +490,7 @@ def run_setup(new_system_variables,auth_dict):
             logger.error("Could not enable multi-node. Check the interface and try again.")
         else:
             logger.info("Multi-node configuration enabled.")
-    
+
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
     if(boot == 'ERROR'):

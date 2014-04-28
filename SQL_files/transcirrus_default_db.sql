@@ -2032,7 +2032,7 @@ INSERT INTO nova_default VALUES ('admin_user', 'nova', 'api-paste.ini', 39);
 INSERT INTO nova_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 40);
 INSERT INTO nova_default VALUES ('signing_dir', '/tmp/keystone-signing-nova', 'api-paste.ini', 41);
 INSERT INTO nova_default VALUES ('auth_version', 'v2.0', 'api-paste.ini', 42);
---INSERT INTO nova_default VALUES ('libvirt_type', 'qemu', 'nova-compute.conf', 43);
+--INSERT INTO nova_default VALUES ('libvirt_type', 'kvm', 'nova-compute.conf', 43);
 INSERT INTO nova_default VALUES ('libvirt_ovs_bridge', 'br-int', 'nova-compute.conf', 44);
 INSERT INTO nova_default VALUES ('libvirt_vif_type', 'ethernet', 'nova-compute.conf', 45);
 INSERT INTO nova_default VALUES ('libvirt_vif_driver', 'nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver', 'nova-compute.conf', 46);
@@ -2045,7 +2045,7 @@ INSERT INTO nova_default VALUES ('glance_api_servers', '172.38.24.10:9292', 'nov
 INSERT INTO nova_default VALUES ('quantum_admin_auth_url', 'http://172.38.24.10:35357/v2.0', 'nova.conf', 51);
 INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 52);
 INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 53);
-INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 54);
+--INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 54);
 INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 55);
 INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter', 'nova.conf', 56);
 INSERT INTO nova_default VALUES ('default_schedule_zone', 'nova', 'nova.conf', 57);

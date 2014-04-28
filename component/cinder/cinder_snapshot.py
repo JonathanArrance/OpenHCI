@@ -84,6 +84,7 @@ class snapshot_ops:
         ACCESS: users can only snap volumes in their project, admins can snapshot any volume
         """
         #check to make sure all params have been passed
+        logger.sys_info('\n**Creating snapshot. Component: Cinder Def: create_snapshot**\n')
         if(not create_snap):
             logger.sys_error("Did not pass in create_snap dictionary to create snapshot operation.")
             raise Exception("Did not pass in create_snap dictionary to create snapshot operation.")
@@ -203,6 +204,7 @@ class snapshot_ops:
         ACCESS: Admins can delete any volume
                 Users can only snap volumes in their project.
         """
+        logger.sys_info('\n**Delete a volume snapshot. Component: Cinder Def: delete_snapshot**\n')
         #check to make sure all params have been passed
         if((input_dict['snapshot_id'] == '') or ('snapshot_id' not in input_dict)):
             logger.sys_error("Did not pass snapshot_id to delete_snapshot operation.")
@@ -321,6 +323,7 @@ class snapshot_ops:
         NOTE: This will only list out the snapshots that are for volume in the users project. All users
               can list the snapshots
         """
+        logger.sys_info('\n**List volume snapshots. Component: Cinder Def: list_snapshots**\n')
         #connect to the transcirrus DB
         try:
             #connect to the transcirrus db
@@ -371,6 +374,7 @@ class snapshot_ops:
                 project only
         NOTE: This need to be changed to incorporate project_id
         """
+        logger.sys_info('\n**Get snapshots. Component: Cinder Def: get_snapshot**\n')
         #check to make sure all params have been passed
         if(not snapshot_id):
             logger.sys_error("Did not pass snapshot_id to get_snapshot operation.")

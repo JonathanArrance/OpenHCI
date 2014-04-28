@@ -14,6 +14,7 @@ def check_node_exists(node_id):
     ACCESS: Wide open. This is not an openstack level call.
     NOTES: status of OK means the node exists in the DB. Status of NA means node does not exist in the DB. ERROR is a catch all.
     """
+    logger.sys_info('\n**Check if a node exists. Component: Database Def: check_node_exists**\n')
     #connect to the database
     #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
@@ -47,6 +48,7 @@ def get_node(node_id):
     ACCESS: Wide open
     NOTES: Return the r_dict with a status of OK, else status code of NA or ERROR is returned outside of the ductionary.
     """
+    logger.sys_info('\n**Get node info. Component: Database Def: get_node**\n')
     #connect to the database
     #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
@@ -102,6 +104,7 @@ def insert_node(input_dict):
            The node types are cc - cloud in a can, sn - storage node, cn - compute node.
            This function does not add a node to the openstack cloud
     """
+    logger.sys_info('\n**Insert a new node into the system. Component: Database Def: insert_node**\n')
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
@@ -135,6 +138,10 @@ def insert_node(input_dict):
         input_dict['node_virt_type'] = 'qemu'
     if(input_dict['node_virt_type'] == ''):
         input_dict['node_virt_type'] = 'qemu'
+
+    #hack to account for physical core node
+    if(util.is_node_phy() == '1'):
+        input_dict['node_virt_type'] = 'kvm'
 
     if('node_gluster_peer' not in input_dict):
         input_dict['node_gluster_peer'] = '0'
@@ -177,7 +184,7 @@ def insert_node(input_dict):
         try:
             insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_mgmt_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -192,8 +199,10 @@ def insert_node(input_dict):
             logger.sql_error("Could not insert node specific nova config into Transcirrus db.")
             return 'ERROR'
         try:
+            #insert_neutron_sql = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/quantum",'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_qpid = {"parameter":"qpid_hostname","param_value":'172.38.24.10','file_name':"quantum.conf",'node':"%s" %(input_dict['node_id'])}
             neutron_array = [insert_neutron_region,insert_neutron_localip]
             for neutron in neutron_array:
                 db.pg_transaction_begin()
@@ -230,6 +239,7 @@ def list_nodes():
     NOTES: The input dict is optional if no input is given then it is assumed that all nodes in
            the dictionary are to be returned. pushed to alpo.1
     """
+    logger.sys_info('\n**List the nkdes. Component: Database Def: list_nodes**\n')
     #connect to the DB
     #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
@@ -270,6 +280,7 @@ def delete_node(node_id):
            The function will check the db to see if the node exists before the deletion.
            If the node is not there then an NA is returned.
     """
+    logger.sys_info('\n**Delete a node from the system. Component: Database Def: delete_node**\n')
     #check if the node is in the DB
     check = check_node_exists(node_id)
 
@@ -325,6 +336,7 @@ def update_node(update_dict):
     ACCESS: wide open
     NOTES: This function will not update the physical node, only the DB.
     """
+    logger.sys_info('\n**Update the node info. Component: Database Def: update_node**\n')
     if(('node_id' not in update_dict) or (update_dict['node_id'] == "")):
         logger.sys_error("No node_id was given for update operation.")
         raise Exception("No node_id was given for update operation.")
@@ -392,6 +404,7 @@ def get_node_nova_config(node_id):
            out the new config file if desired
            default file operation can be new(write new file) or append(append to existing)
     """
+    logger.sys_info('\n**Get the config info of a node. Component: Database Def: get_node_nova_config**\n')
     if(node_id == ""):
         logger.sys_error("The node id was not specified")
         raise Exception("The node id was not specified")
@@ -523,6 +536,7 @@ def get_node_neutron_config(node_id):
            out the new config file if desired
            default file operation can be new(write new file) or append(append to existing)
     """
+    logger.sys_info('\n**Get the neutron config info. Component: Database Def: get_node_neutron_config**\n')
     if(node_id == ""):
         logger.sys_error("The node id was not specified")
         raise Exception("The node id was not specified")
@@ -731,6 +745,7 @@ def get_node_cinder_config(node_id):
            out the new config file if desired
            default file operation can be new(write new file) or append(append to existing)
     """
+    logger.sys_info('\n**Get the ciner config info. Component: Database Def: get_node_cinder_config**\n')
     if(node_id == ""):
         logger.sys_error("The node id was not specified")
         raise Exception("The node id was not specified")
@@ -829,6 +844,7 @@ def get_glance_config():
     NOTES: As of now this function will only write the info to the controller/ciab node. In the
            future we will add the ability to move glance to a seperate node.
     """
+    logger.sys_info('\n**Get glance config information. Component: Database Def: get_glance_config**\n')
     db = util.db_connect()
     logger.sys_info("Writing the Glance config file to the controller node.")
 

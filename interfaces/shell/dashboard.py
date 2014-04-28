@@ -4,6 +4,7 @@ from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.operations.build_complete_project import build_project
 from transcirrus.operations.destroy_project import destroy_project
+from transcirrus.database import node_db as node_op
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -94,9 +95,13 @@ def nodes(d, nodeList):
     delChoice = ("Remove", "Remove Node from Cloud", 0)
     dashChoice = ("Dashboard", "Return to Dashboard", 1)
     allChoices = []
-
+    counter = 0
     for entry in nodeList:
-        allChoices.append(entry)
+        if(entry == "OK"):
+            continue
+        counter += 1
+        choice = (str(counter), entry['node_type'] + ": " + entry['node_name'], 0)
+        allChoices.append(choice)
     allChoices.append(delChoice)
     allChoices.append(dashChoice)
     while True:
@@ -128,7 +133,7 @@ def nodeDel(d, node):
 
 
 def nodeInfo(d, node):
-    return d.yesno(("Overview\n\n" + node[1]),
+    return d.yesno(("Overview\n\n" + node['node_name']),
     yes_label="Manage this Node",
     no_label="Return to Nodes", width=50)
 
@@ -215,14 +220,15 @@ def projectAdd(d, auth_dict):
             ("Project Name:", 1, 1, "", 1, 32, 40, 40, 0x0),
             ("Project Power-User Name:", 2, 1, "", 2, 32, 40, 40, 0x0),
             ("Project Power-User Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
-            ("Project Power-User Email:", 4, 1, "", 4, 32, 40, 40, 0x0),
-            ("Net Name:", 5, 1, "", 5, 32, 40, 40, 0x0),
-            ("Subnet DNS:", 6, 1, "", 6, 32, 40, 40, 0x0),
-            ("Ports:", 7, 1, "", 7, 32, 40, 40, 0x0),
-            ("Security Group Name:", 8, 1, "", 8, 32, 40, 40, 0x0),
-            ("Security Group Description:", 9, 1, "", 9, 32, 40, 40, 0x0),
-            ("Security Keys Name:", 10, 1, "", 10, 32, 40, 40, 0x0),
-            ("Router Name:", 11, 1, "", 11, 32, 40, 40, 0x0)]
+            ("Re-Enter Power-User Password:", 4, 1, "", 4, 32, 40, 40, HIDDEN),
+            ("Project Power-User Email:", 5, 1, "", 5, 32, 40, 40, 0x0),
+            ("Net Name:", 6, 1, "", 6, 32, 40, 40, 0x0),
+            ("Subnet DNS:", 7, 1, "", 7, 32, 40, 40, 0x0),
+            ("Ports:", 8, 1, "", 8, 32, 40, 40, 0x0),
+            ("Security Group Name:", 9, 1, "", 9, 32, 40, 40, 0x0),
+            ("Security Group Description:", 10, 1, "", 10, 32, 40, 40, 0x0),
+            ("Security Keys Name:", 11, 1, "", 11, 32, 40, 40, 0x0),
+            ("Router Name:", 12, 1, "", 12, 32, 40, 40, 0x0)]
 
         (code, fields) = d.mixedform(
             "Please fill in Project Information:", elements, width=90, insecure=True)
@@ -232,11 +238,17 @@ def projectAdd(d, auth_dict):
         if handle_exit_code(d, code) == d.DIALOG_CANCEL:
             return
     project_name, username, password, email, net_name, subnet_dns, ports, group_name, group_desc, sec_keys_name, router_name = fields
+    if(project_name == "" or username == "" or password == "" or confirm == "" or email == "" or net_name == "" or subnet_dns == "" or ports == "" or group_name == "" or group_desc == "" or sec_keys_name == "" or router_name == ""):
+        d.msgbox("All fields are required, try again.")
+        return "Add"
+    if(password != confirm):
+        d.msgbox("Passwords did not match, try again.")
+        return "Add"
     user_dict = {"username":username, "password":password, "user_role":"pu", "email":email, "project_id": None}
     sec_group_dict = {"ports":None, "group_name":group_name, "group_desc":group_desc, "project_id": None}
     project_dict = {"project_name":project_name, "user_dict":user_dict, "net_name":net_name, "subnet_dns":[], "sec_group_dict":sec_group_dict, "sec_keys_name":sec_keys_name, "router_name":router_name}
     project = build_project(auth_dict, project_dict)
-    return project
+    return "Projects"
 
 
 def projectDel(d, auth_dict, project):
@@ -271,11 +283,29 @@ def projectManage(d, project):
                      ("Security Groups", "List and manage security groups", 0),
                      ("Keypairs", "List and manage keypairs", 0),
                      ("Networks", "Display and manage network", 0),
+                     ("Rename", "Rename this project", 0),
                      ("Delete", "Completely remove this project", 0),
                      ("Back", "Return to project info", 1)])
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
+
+def projectRename(d, tenant_op, project):
+    HIDDEN = 0x1
+    while True:
+        elements = [
+            ("Name:", 1, 1, project['project_name'], 1, 32, 40, 40, 0x0)]
+
+        (code, name) = d.mixedform(
+            "Rename Project:", elements, insecure=True, width=77)
+
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    project_name = name
+    if(project_name == ""):
+        d.msgbox("Name cannot be blank, try again.")
+        return "Rename"
+    return "OK"
 
 
 def projUsers(d, tenant_op, project):
@@ -316,11 +346,18 @@ def userAdd(d, user_op, project):
         if handle_exit_code(d, code) == d.DIALOG_CANCEL:
             return
     username, password, confirm, user_role, email = fields
+    if(username == "" or password == "" or confirm == "" or user_role == "" or email == ""):
+        d.msgbox("All fields are required, try again.")
+        return "Add"
     if(password != confirm):
-        d.msgbox("Passwords do not match, try again")
+        d.msgbox("Passwords did not match, try again.")
+        return "Add"
+    if(user_role != "admin" and user_role != "pu" and user_role != "user"):
+        d.msgbox("Role must be admin, pu or user, try again.")
         return "Add"
     new_user_dict = {"username":username, "password":password, "user_role":user_role, "email":email, "project_id":project['project_id']}
     user_op.create_user(new_user_dict)
+    return "ProjUsers"
 
 
 def userDel(d, user_op, user):
@@ -346,20 +383,43 @@ def userInfo(d, user):
     return tag
 
 
-def userManage(d, user):
+def userManage(d, user_op, user):
+    HIDDEN = 0x1
     while True:
         elements = [
-            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
-            ("Email Address:", 2, 1, "", 2, 24, 16, 16, 0x0),
-            ("Role:", 3, 1, "", 3, 24, 16, 16, 0x0)]
+            ("Name:", 1, 1, user['username'], 1, 32, 40, 40, 0x0),
+            ("Password:", 2, 1, "", 2, 32, 40, 40, HIDDEN),
+            ("Re-Enter Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
+            ("Role (admin/pu/user):", 4, 1, user['user_role'], 4, 32, 40, 40, 0x0),
+            ("Email", 5, 1, user['email'], 5, 32, 40, 40, 0x0)]
 
         (code, fields) = d.mixedform(
-            "Update User Info:", elements, width=77)
+            "Update User Info:", elements, insecure=True, width=77)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
-
-    return fields
+        if handle_exit_code(d, code) == d.DIALOG_CANCEL:
+            return
+    username, password, confirm, user_role, email = fields
+    if(password != ""):
+        if(password != confirm):
+            d.msgbox("Passwords did not match, try again.")
+            return "Manage"
+        else:
+            update_pass_dict = {"new_password": password, "project_id": user['project_id'], "user_id": user['user_id']}
+            user_op.update_user_password(update_pass_dict)
+    if(user_role != "admin" and user_role != "pu" and user_role != "user"):
+        d.msgbox("Role must be admin, pu or user, try again.")
+        return "Manage"
+    update_dict = {"username": user['username']}
+    if(username != user['username']):
+        update_dict['new_username'] = username
+    if(user_role != user['user_role']):
+        update_dict['new_role'] = user_role
+    if(email != user['email']):
+        update_dict['email'] = email
+    user_op.update_user (update_dict)
+    return "OK"
 
 
 def projInstances(d, project):
@@ -906,9 +966,7 @@ def dash(d, auth_dict):
     tenant_op = tenant_ops(auth_dict)
     user_op = user_ops(auth_dict)
     
-    nodeList = [("1", "Compute_1", 0),
-                ("2", "Storage_1", 0),
-                ("3", "Storage_2", 0)]
+    nodeList = node_op.list_nodes()
     
     userList = [{'name':"Snow White",
                  'role':"User",
@@ -989,9 +1047,8 @@ def dash(d, auth_dict):
             projectList = tenant_op.list_all_tenants()
             selection = projects(d, projectList)
             if(selection == "Add"):
-                projectAdd(d, auth_dict)
-                selection = "Projects"
-                continue
+                while(selection == "Add"):
+                    selection = projectAdd(d, auth_dict)
             elif(selection == "Dashboard"):
                 continue
             elif(int(selection) >= 1 and int(selection) <= len(projectList)):
@@ -1016,25 +1073,22 @@ def dash(d, auth_dict):
 #/----------------------------Project Users Start-------------------------
                                     userList = tenant_op.list_tenant_users(project['project_id'])
                                     selection = projUsers(d, tenant_op, project)
-
-                                    while(selection == "Add"):
-                                        userAdd(d, user_op, project)
-                                        if(userAdd == "Add"):
-                                            selection = "Add"
-                                            continue
-                                        else:
-                                            selection = "ProjUsers"
-                                            continue
-                                    if(selection == "Back"):
+                                    if(selection == "Add"):
+                                        while(selection == "Add"):
+                                            selection = userAdd(d, user_op, project)
+                                    elif(selection == "Back"):
                                         selection = "ProjManage"
                                         continue
                                     elif(int(selection) >= 1 and int(selection) <= len(userList)):
                                         user = userList[int(selection) - 1]
+                                        user_info_dict = {"username": user['username'], "project_name": project['project_name']}
+                                        user = user_op.get_user_info(user_info_dict)
                                         selection = "UserManage"
                                         while(selection == "UserManage"):
                                             selection = userInfo(d, user)
                                             if(selection == "Manage"):
-                                                selection = userManage(d, user)
+                                                while(selection == "Manage"):
+                                                    selection = userManage(d, user_op, user)
                                                 selection = "UserManage"
                                             elif(selection == "Delete"):
                                                 userDel(d, user_op, user)
