@@ -424,7 +424,7 @@ def volume_view(request, project_id, volume_id):
     volume_info = vo.get_volume_info(vol_dict)
 
     return render_to_response('coal/volume_view.html',
-                               RequestContext(request, { 'project_id' : project_id,
+                               RequestContext(request, {'my_project_id' : project_id,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         }))
@@ -503,15 +503,13 @@ def create_volume(request, volume_name, volume_size, description, project_id):
     except:
         raise
 
-def delete_volume(request, volume_name, volume_size, description, project_id):
+def delete_volume(request, volume_id, project_id):
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
-        vo.create_volume(create_vol)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        delete_vol = {'volume_id': volume_id, 'project_id': project_id}
+        vo.delete_volume(delete_vol)
+        return HttpResponseRedirect("/projects/%s/view" % project_id)
     except:
         raise
 
@@ -657,6 +655,19 @@ def unpause_server(request, project_id, instance_id):
         return HttpResponseRedirect(redirect_to)
     except:
         messages.warning(request, "Unable to unpause server.")
+        return HttpResponseRedirect(redirect_to)
+
+def delete_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        so.delete_server(input_dict)
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to delete instance.")
         return HttpResponseRedirect(redirect_to)
 
 def resize_server(request, project_id, instance_id, flavor_id):

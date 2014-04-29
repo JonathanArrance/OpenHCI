@@ -69,20 +69,21 @@ urlpatterns = patterns('',
         url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.volume_view',
             name='view_volume'),
+        
 
-	url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
-    url(r'^delete_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.delete_volume',
             name='delete_volume'),
 
-	url(r'^take_snapshot/(?P<snapshot_name>[^/]+)/(?P<snapshot_desc>[^/]+)/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^take_snapshot/(?P<snapshot_name>[^/]+)/(?P<snapshot_desc>[^/]+)/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.take_snapshot',
             name='take_snapshot'),
 
-	url(r'^create_image/(?P<name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_name>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_name>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^create_image/(?P<name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_name>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_name>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_image',
             name='create_image'),
 
@@ -141,6 +142,10 @@ urlpatterns = patterns('',
         url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/delete_server/$',
+	    'coalesce.coal_beta.views.delete_server',
+            name='delete_server'),
 
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<flavor_id>[^/]+)/resize_server/$',
 	    'coalesce.coal_beta.views.resize_server',
@@ -216,7 +221,6 @@ urlpatterns = patterns('',
 
 	    url(r'^coal/change-password/$',
             'coalesce.coal_beta.views.password_change',
-            {'template_name': 'coal/change-password.html', 'post_change_redirect': '/'},
             name='change-password'),
 
         # admin views

@@ -56,9 +56,12 @@
 			    <td>{{v.server_status}}</td>
 			    <td>{{v.server_os}} {{v.server_flavor}}</td>
 			    <td>
-			       <a href="{{v.novnc_console}}" target="_blank">console</a>
+			       <a href="{{v.novnc_console}}" target="_blank">console</a> | 
 			       {% if v.server_status = "ACTIVE" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a>{% endif%}
                                {% if v.server_status = "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a>{% endif%}
+			        | <a href="/server/{{ project.project_id }}/{{ v.server_id }}/delete_server/" 
+                                data-confirm="This will completely remove {{v.server_name}} from this project. Are you sure?"> delete
+                                </a>
 			    </td>
 			 </tr>
                 {% endfor %}  

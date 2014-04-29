@@ -30,7 +30,8 @@
                 <tr> <th>Volume</th> <th>Actions</th></tr>
                     {% for volume in volumes %}
 		      <tr> <td>{{volume.volume_name}}</td>
-               <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> </td></tr>
+               <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> | 
+               <a href="/delete_volume/{{volume.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a></td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>
