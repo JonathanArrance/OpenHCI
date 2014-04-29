@@ -141,6 +141,10 @@ urlpatterns = patterns('',
         url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/delete_server/$',
+	    'coalesce.coal_beta.views.delete_server',
+            name='delete_server'),
 
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<flavor_id>[^/]+)/resize_server/$',
 	    'coalesce.coal_beta.views.resize_server',

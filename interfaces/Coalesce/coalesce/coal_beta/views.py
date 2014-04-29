@@ -659,6 +659,19 @@ def unpause_server(request, project_id, instance_id):
         messages.warning(request, "Unable to unpause server.")
         return HttpResponseRedirect(redirect_to)
 
+def delete_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        so.delete_server(input_dict)
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to delete instance.")
+        return HttpResponseRedirect(redirect_to)
+
 def resize_server(request, project_id, instance_id, flavor_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
     referer = request.META.get('HTTP_REFERER', None)
