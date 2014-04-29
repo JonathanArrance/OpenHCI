@@ -35,7 +35,7 @@ urlpatterns = patterns('',
         url(r'^nodes/manage/$',
             'coalesce.coal_beta.views.manage_nodes',
             name='manage_nodes'),
-                
+
         url(r'^cloud/manage/$',
             'coalesce.coal_beta.views.manage_cloud',
             name='manage_cloud'),
@@ -49,7 +49,7 @@ urlpatterns = patterns('',
         url(r'^projects/(?P<project_id>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
-        
+
         url(r'^projects/(?P<project_id>\w+)/basic_view/$',
             'coalesce.coal_beta.views.basic_project_view',
             name='basic_project_view'),
@@ -73,6 +73,10 @@ urlpatterns = patterns('',
 	url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
+
+    url(r'^delete_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
+        'coalesce.coal_beta.views.delete_volume',
+            name='delete_volume'),
 
 	url(r'^take_snapshot/(?P<snapshot_name>[^/]+)/(?P<snapshot_desc>[^/]+)/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.take_snapshot',
@@ -124,28 +128,28 @@ urlpatterns = patterns('',
 	url(r'^assign_floating_ip/(?P<floating_ip>[^/]+)/(?P<instance_id>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.assign_floating_ip',
             name='assign_floating_ip'),
-	
+
 	# --- Server actions ----
 	url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
 	    'coalesce.coal_beta.views.instance_view',
             name='instance_view'),
-	
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/pause_server/$',
 	    'coalesce.coal_beta.views.pause_server',
             name='pause_server'),
-	
+
         url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
-	
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<flavor_id>[^/]+)/resize_server/$',
 	    'coalesce.coal_beta.views.resize_server',
             name='resize_server'),
-	
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/confirm_resize/$',
 	    'coalesce.coal_beta.views.confirm_resize',
             name='confirm_resize'),
-	
+
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<user_role>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_user',
@@ -154,8 +158,8 @@ urlpatterns = patterns('',
 	url(r'^add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_name>[^/]+)/$',
         'coalesce.coal_beta.views.add_existing_user',
             name='add_existing_user'),
-	
-	
+
+
 	url(r'^toggle_user/(?P<username>[^/]+)/(?P<toggle>[^/]+)/$',
 	    'coalesce.coal_beta.views.toggle_user',
             name='toggle_user'),
@@ -163,7 +167,7 @@ urlpatterns = patterns('',
 	url(r'^delete_user/(?P<username>[^/]+)/(?P<userid>[^/]+)/$',
 	    'coalesce.coal_beta.views.delete_user',
             name='delete_user'),
-	
+
 	url(r'^remove_user_from_project/(?P<user_id>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.remove_user_from_project',
             name='remove_user_from_project'),
