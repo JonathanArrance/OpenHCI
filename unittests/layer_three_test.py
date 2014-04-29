@@ -3,16 +3,16 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.neutron.ports import port_ops
 import time
 
-auth = authorization('shithead','password')
+auth = authorization('admin','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
 
-
+'''
 print "deleteing router"
 yo = router.delete_router("25ebbc49-c25f-4139-a782-e327f8a66b16")
 print yo
-'''
+
 
 print "Adding a new router"
 r = {'router_name':'inttestrouter','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
@@ -86,12 +86,12 @@ for z in yo5:
     print "Getting floating ip info"
     yo6 = router.get_floating_ip(z['floating_ip_id'])
     print yo6
-
+'''
 print "detaching floating ip from instance"
-update_dict = {'floating_ip':yo['floating_ip'],'instance_id':"e25caef9-a5af-4496-80e6-58a57faa0856",'project_id':"523e5098be6c4438b428d7f3f94b3a2d",'action':"remove"}
+update_dict = {'floating_ip':'192.168.2.202','instance_id':"aac0f01-bdf6-4368-b59d-4c04ae9697ae",'project_id':"02148ed01b7f441485503f9eac25c715",'action':"remove"}
 yo12 = router.update_floating_ip(update_dict)
 print yo12
-
+'''
 print "Listing floating ips"
 yo10 = router.list_floating_ips()
 print yo10
