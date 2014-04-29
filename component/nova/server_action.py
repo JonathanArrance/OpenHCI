@@ -346,6 +346,8 @@ class server_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(confirm_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,confirm_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -374,7 +376,7 @@ class server_actions:
             self.db.pg_update(update_inst)
             self.db.pg_transaction_commit()
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         return 'OK'
 
@@ -429,6 +431,8 @@ class server_actions:
         try:
             # build an API connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(revert_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,revert_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")

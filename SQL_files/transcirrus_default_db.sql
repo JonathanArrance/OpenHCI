@@ -1999,7 +1999,7 @@ INSERT INTO nova_default VALUES ('compute_scheduler_driver', 'nova.scheduler.sim
 --INSERT INTO nova_default VALUES ('qpid_password', 'guest', 'nova.conf', 8);
 --INSERT INTO nova_default VALUES ('qpid_username', 'guest', 'nova.conf', 9);
 INSERT INTO nova_default VALUES ('root_helper', 'sudo nova-rootwrap /etc/nova/rootwrap.conf', 'nova.conf', 10);
-INSERT INTO nova_default VALUES ('multi_host', 'False', 'nova.conf', 11);
+--INSERT INTO nova_default VALUES ('multi_host', 'False', 'nova.conf', 11);
 INSERT INTO nova_default VALUES ('enable_instance_password', 'true', 'nova.conf', 12);
 INSERT INTO nova_default VALUES ('use_deprecated_auth', 'false', 'nova.conf', 13);
 INSERT INTO nova_default VALUES ('auth_stratagy', 'keystone', 'nova.conf', 14);

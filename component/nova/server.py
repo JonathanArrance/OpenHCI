@@ -602,9 +602,9 @@ class server_ops:
                         self.db.pg_transaction_commit()
                         return 'OK'
                 else:
-                    util.http_codes(rest['response'],rest['reason'])
+                    util.http_codes(rest['response'],rest['reason'],rest['data'])
             else:
-                util.http_codes(get_rest['response'],get_rest['reason'])
+                util.http_codes(get_rest['response'],get_rest['reason'],rest['data'])
 
     def attach_server_to_network(self,input_dict):
         """
@@ -709,7 +709,7 @@ class server_ops:
                             }
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def update_server(self,update_dict):
         """
@@ -804,7 +804,7 @@ class server_ops:
                 return r_dict
         else:
             self.db.pg_transaction_rollback()
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def delete_server(self,delete_dict):
         """
@@ -887,7 +887,7 @@ class server_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
 #######Nova security#######
     def create_sec_group(self,create_sec):

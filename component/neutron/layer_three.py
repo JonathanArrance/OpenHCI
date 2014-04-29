@@ -1047,7 +1047,7 @@ class layer_three_ops:
         try:
             #build an api connection for the admin user
             logger.sys_info("project id given %s" %update_dict['project_id'])
-            api_dict = {"username":self.username, "password":self.password, "project_id":update_dict['project_id']}
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             logger.sys_info(api_dict)
             if(self.project_id != update_dict['project_id']):
                 self.token = get_token(self.username,self.password,update_dict['project_id'])
@@ -1063,7 +1063,7 @@ class layer_three_ops:
                 body = '{"removeFloatingIp": {"address": "%s"}}'%(update_dict['floating_ip'])
             elif(action == 'add'):
                 body = '{"addFloatingIp": {"address": "%s"}}'%(update_dict['floating_ip'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id": project[0][0]}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id": project[0][0], "Accept": "application/json"}
             function = 'POST'
             api_path = '/v2/%s/servers/%s/action'%(update_dict['project_id'],update_dict['instance_id'])
             token = self.token
