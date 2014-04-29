@@ -14,7 +14,7 @@
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-dialog-form.js"/></script>
     <script>
-      var PROJECT_ID = "{{ project_id}}";
+      var PROJECT_ID = "{{project_id}}";
     </script>
     <script>
       var VOL_ID = "{{volume_info.volume_id}}";
@@ -32,13 +32,24 @@
           <div class="legend">
               Details for {{volume_info.volume_name}}
           </div>
-          <table class="paleblue">
-              <tr><th>Id</th><td>{{volume_info.volume_id}}</td></tr>
-              <tr><th>Name</th><td>{{volume_info.volume_name}}</td></tr>
-              <tr><th>Volume Size</th><td>{{volume_info.volume_size}}</td></tr>
-              <tr><th>Volume Attached</th><td>{{volume_info.volume_attached}}</td></tr>
-              <tr><th>Volume Instance</th><td>{{volume_info.volume_instance}}</td></tr>              
-          </table>
+          <div class="row-fluid">
+            <div class="span7">
+            <table class="paleblue">
+                <tr><th>Id</th><td>{{volume_info.volume_id}}</td></tr>
+                <tr><th>Name</th><td>{{volume_info.volume_name}}</td></tr>
+                <tr><th>Volume Size</th><td>{{volume_info.volume_size}}</td></tr>
+                <tr><th>Volume Attached</th><td>{{volume_info.volume_attached}}</td></tr>
+                <tr><th>Volume Instance</th><td>{{volume_info.volume_instance}}</td></tr>
+                <tr><th>Project Id</th><td>{{project_id}}</td></tr>       
+            </table>
+          </div>
+          <div class="span4 offset1">
+            <b>Actions</b>
+            <ul>
+                <li><a href="/delete_volume/{{volume_info.volume_id}}/{{my_project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a></li>
+            </ul>    
+          </div>
+         </div> 
         </div>
       </div><!-- end span6-->
       <div class="span5 offset1">

@@ -306,7 +306,10 @@ def run_setup(new_system_variables,auth_dict):
     if(import_fedora != 'OK'):
         logger.warn('Could not import the default Fedora image.')
 
-    
+    #remove the images from the /transcirrus dir
+    os.system('rm -rf *.img')
+    os.system('rm -rf *.qcow2')
+
     logger.sys_info('Writing the network config files.')
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
