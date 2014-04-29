@@ -492,7 +492,7 @@ class user_ops:
             #NOTE: the log messages are not includeing the %s specifics.
             try:
                 #check if valid username
-                select_user = {"select":"keystone_user_uuid,user_project_id","from":"trans_user_info","where":"user_name='%s'" %(user_role_dict['username'])}
+                select_user = {"select":"keystone_user_uuid","from":"trans_user_info","where":"user_name='%s'" %(user_role_dict['username'])}
                 user = self.db.pg_select(select_user)
                 if(type(user[0][0]) is str):
                     logger.sys_info("Username is valid in the transcirrus DB, for operation add_role_to_user.")
