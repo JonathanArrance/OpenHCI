@@ -281,6 +281,8 @@ def run_setup(new_system_variables,auth_dict):
     import_cirros = glance.import_image(cirros_input)
     if(import_cirros != 'OK'):
         logger.warn('Could not import the default cirros image.')
+    else:
+        os.system('rm -rf /transcirrus/cirros-0.3.1-x86_64-disk.img')
 
     ubuntu_input = {
                     'image_name':"Ubuntu-12-04-x86_64",
@@ -293,6 +295,8 @@ def run_setup(new_system_variables,auth_dict):
     import_ubuntu = glance.import_image(ubuntu_input)
     if(import_ubuntu != 'OK'):
         logger.warn('Could not import the default Ubuntu Precise image.')
+    else:
+        os.system('rm -rf /transcirrus/precise-server-cloudimg-amd64-disk1.img')
 
     fedora_input = {
                     'image_name':"CentOS-65-x86_64",
@@ -305,10 +309,22 @@ def run_setup(new_system_variables,auth_dict):
     import_fedora = glance.import_image(fedora_input)
     if(import_fedora != 'OK'):
         logger.warn('Could not import the default Fedora image.')
+    else:
+        os.system('rm -rf /transcirrus/centos-6.5-20140117.0.x86_64.qcow2')
 
-    #remove the images from the /transcirrus dir
-    os.system('rm -rf *.img')
-    os.system('rm -rf *.qcow2')
+    #windows_input = {
+    #                'image_name':"CentOS-65-x86_64",
+    #                'image_disk_format':"qcow2",
+    #                'image_is_public':'True',
+    #                'image_is_protected':'True',
+    #                'project_id':auth_dict['project_id'],
+    #                'file_location':"/transcirrus/windows_server_2012_r2_standard_eval_kvm_20131117.qcow2.gz"
+    #                }
+    #import_windows = glance.import_image(windows_input)
+    #if(import_windows != 'OK'):
+    #    logger.warn('Could not import the default Windows 2012 Eval image.')
+    #else:
+    #    os.system('rm -rf /transcirrus/centos-6.5-20140117.0.x86_64.qcow2')
 
     logger.sys_info('Writing the network config files.')
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
