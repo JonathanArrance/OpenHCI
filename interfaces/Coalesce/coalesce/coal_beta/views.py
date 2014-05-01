@@ -138,6 +138,8 @@ def project_view(request, project_id):
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
+    print "#################################################"
+    print users
     userinfo = {}
     uo = user_ops(auth)
 
@@ -657,8 +659,8 @@ def unpause_server(request, project_id, instance_id):
         messages.warning(request, "Unable to unpause server.")
         return HttpResponseRedirect(redirect_to)
 
-def delete_server(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+def delete_server(request, project_id, server_id):
+    input_dict = {'project_id':project_id, 'server_id':server_id}
     referer = request.META.get('HTTP_REFERER', None)
     redirect_to = urlsplit(referer, 'http', False)[2]
     try:
@@ -752,11 +754,11 @@ def remove_user_from_project(request, user_id, project_id):
     except:
         raise
 
-def add_existing_user(request, username, user_role, project_name):
+def add_existing_user(request, username, user_role, project_id):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        user_dict = {'username': username, 'user_role':user_role, 'project_name': project_name}
+        user_dict = {'username': username, 'user_role':user_role, 'project_id': project_id}
         uo.add_user_to_project(user_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
