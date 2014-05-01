@@ -25,9 +25,13 @@
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
                     <select name="role" id="role">
+		      {% if user_level < 2 %}
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
+		      {% endif %}
+		      {% if user_level == 0 %}
                         <option value="admin">Admin</option>
+		      {% endif %}
                     </select>
                 </fieldset>
                 </form>
@@ -45,9 +49,13 @@
                         {% endfor %}
                     </select>
                     <select name="role" id="role">
+		      {% if user_level < 2 %}
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
+		      {% endif %}
+		      {% if user_level == 0 %}
                         <option value="admin">Admin</option>
+		      {% endif %}
                     </select>
                   
                 </fieldset>

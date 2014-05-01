@@ -72,7 +72,7 @@ $(function() {
 			width: 350,
 			modal: true,
 			buttons: {
-				"Create an image": function() {
+				"Create an instance": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 

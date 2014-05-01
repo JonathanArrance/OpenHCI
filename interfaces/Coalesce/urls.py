@@ -143,7 +143,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
 	
-	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/delete_server/$',
+	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/delete_server/$',
 	    'coalesce.coal_beta.views.delete_server',
             name='delete_server'),
 
@@ -160,7 +160,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_user',
             name='create_user'),
 
-	url(r'^add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_name>[^/]+)/$',
+	url(r'^add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.add_existing_user',
             name='add_existing_user'),
 
