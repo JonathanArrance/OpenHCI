@@ -12,6 +12,7 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
 from transcirrus.common.api_caller import caller
+from transcirrus.common.auth import get_token
 
 from transcirrus.database.postgres import pgsql
 
@@ -456,13 +457,14 @@ class user_ops:
               the user to project specified.
         """
         logger.sys_info('\n**Adding a user to a project. Component: Keystone Def: add_user_to_project**\n')
+
         if(not user_role_dict):
             logger.sys_error("user_role_dict not specified for add_role_to_user operation.")
             raise Exception("user_role_dict not specified for add_role_to_user operation.")
         if((user_role_dict['user_role'] == 'admin') or (user_role_dict['user_role'] == 'user') or (user_role_dict['user_role'] == 'pu')):
             logger.sys_info("Valid Keystone user role passed")
         if('update_primary' not in user_role_dict):
-            user_role_dict['update_primary'] = False
+            user_role_dict['update_primary'] = True
         else:
             logger.sys_info("Invalid Keystone user role passed")
             raise Exception("Invalid Keystone user role passed")
@@ -502,9 +504,9 @@ class user_ops:
             except:
                 logger.sql_error("Database Operation failed for add_user_to_project.")
                 raise Exception("Database Operation failed for add_user_to_project.")
-            
+
             try:
-                #check if project is valid
+            #check if project is valid
                 select_proj = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(user_role_dict['project_id'])}
                 proj = self.db.pg_select(select_proj)
                 if(type(proj[0][0]) is str):
@@ -512,10 +514,10 @@ class user_ops:
                 else:
                     logger.sys_error("Project name is not valid in the transcirrus DB, for operation add_role_to_user Project: %s." %(user_role_dict['project_id']))
                     raise Exception("Project name is not valid in the transcirrus DB, for operation add_role_to_user Project %s." %(user_role_dict['project_id']))
-            except:
-                logger.sql_error("Database Operation failed for add_user_to_project.")
-                raise Exception("Database Operation failed for add_user_to_project.")
-            
+            except Exception as e:
+                logger.sql_error("Database Operation failed for add_user_to_project. %s"%(e))
+                raise Exception("Database Operation failed for add_user_to_project.%s"%(e))
+
             #Determin the Keystone role ID
             #Query the DB to get the ID for the member role and the admin role
             try:
@@ -538,14 +540,16 @@ class user_ops:
 
             try:
                 #build an api connection for the admin user. NOTE project ID is the admin user project id
-                api_dict = {"username":self.username, "password":self.password, "project_id":user_role_dict['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != user_role_dict['project_id']):
+                    self.token = get_token(self.username,self.password,user_role_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
             try:
-                #add the user to the project with the proper keystone Role
+            #add the user to the project with the proper keystone Role
                 body = ""
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "python-keystoneclient"}
                 function = 'PUT'
@@ -562,7 +566,7 @@ class user_ops:
             if(rest['response'] == 200):
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                if(self.is_admin == 1):
+                if(user_role_dict['user_role'] == 'admin'):
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
@@ -570,7 +574,7 @@ class user_ops:
                         input_dict = {'proj_name': proj[0][0],'proj_id': user_role_dict['project_id'],'user_name': user_role_dict['username'],'user_id': user[0][0]}
                         insert = self.db.pg_insert("trans_user_projects",input_dict)
                         if(user_role_dict['update_primary'] == True):
-                            update_dict = {'table':"trans_user_info",'set':"user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                            update_dict = {'table':"trans_user_info",'set':"keystone_role='admin',user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
                             self.db.pg_update(update_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
@@ -673,6 +677,8 @@ class user_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != delete_dict['project_id']):
+                    self.token = get_token(self.username,self.password,delete_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -695,6 +701,21 @@ class user_ops:
 
             if(rest['response'] == 204):
                 #read the json that is returned
+                #need to add the ability to delete from trans_user_projects for admins 
+                if(user_id[0][1] == 'admin'):
+                    try:
+                        self.db.pg_transaction_begin()
+                        delete = {"table":'trans_user_projects',"where":"proj_id='%s'"%(delete_dict['project_id']), "and":"user_id='%s'"%(delete_dict['user_id'])}
+                        self.db.pg_delete(delete)
+                    except Exception as e:
+                        self.db.pg_transaction_rollback()
+                        self.db.pg_close_connection()
+                        logger.sql_error("%s"%(e))
+                        raise e
+                    else:
+                        self.db.pg_transaction_commit()
+                        self.db.pg_close_connection()
+
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 try:
                     self.db.pg_transaction_begin()
@@ -711,7 +732,7 @@ class user_ops:
                     r_dict = {"response":rest['response'],"reason":rest['reason']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Admin flag not set, could not remove the user from the DB.")
 
