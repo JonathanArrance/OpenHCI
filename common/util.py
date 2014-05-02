@@ -463,6 +463,16 @@ def get_node_id():
     """
     return config.NODE_ID
 
+def get_def_mem_role():
+    """
+    DESC: Get the ID for the default _member_ role.
+    INPUT: None
+    OUTPUT: node_id
+    ACCESS: Wide open
+    NOTE: All users except admins get this role. Need to be able to remove it from users at create time.
+    """
+    return config.DEF_MEMBER_ROLE_ID
+
 def get_node_type():
     """
     DESC: get the node type from the config.py file.

@@ -234,8 +234,13 @@ class user_ops:
                     logger.sys_error("Could not add the user to the role.")
                     raise Excption("Could not add the user to the role.")
 
-            r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":self.new_user_proj_id}
-            return r_dict
+                #remove the user from _member_ role
+                role_id = util.get_def_mem_role()
+                remove_role_dict = {'user_id':new_user_id,'role_id':role_id,'project_id':self.new_user_proj_id}
+                remove_def = self.remove_user_role(remove_role_dict)
+                if(remove_def == 'OK'):
+                    r_dict = {"username":new_user_dict['username'],"user_id":new_user_id,"project_id":self.new_user_proj_id}
+                    return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
             raise Exception("Admin flag not set, could not create the new user.")
@@ -464,7 +469,7 @@ class user_ops:
         if((user_role_dict['user_role'] == 'admin') or (user_role_dict['user_role'] == 'user') or (user_role_dict['user_role'] == 'pu')):
             logger.sys_info("Valid Keystone user role passed")
         if('update_primary' not in user_role_dict):
-            user_role_dict['update_primary'] = True
+            user_role_dict['update_primary'] = False
         else:
             logger.sys_info("Invalid Keystone user role passed")
             raise Exception("Invalid Keystone user role passed")
@@ -565,8 +570,24 @@ class user_ops:
 
             if(rest['response'] == 200):
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                if(user_role_dict['user_role'] == 'admin'):
+                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
+                # We can consolidate some of this code
+                if((user_role_dict['username'] == 'admin') and (self.is_admin == 1)):
+                    try:
+                        load = json.loads(rest['data'])
+                        self.db.pg_transaction_begin()
+                        #need to update trans_usr_table
+                        input_dict = {'proj_name': proj[0][0],'proj_id': user_role_dict['project_id'],'user_name': 'admin','user_id': user[0][0]}
+                        insert = self.db.pg_insert("trans_user_projects",input_dict)
+                    except Exception as e:
+                        self.db.pg_transaction_rollback()
+                        self.db.pg_close_connection()
+                        logger.sql_error('%s' %(e))
+                        raise e
+                    else:
+                        self.db.pg_transaction_commit()
+
+                elif((user_role_dict['username'] != 'admin') and (self.is_admin == 1)):
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
@@ -584,7 +605,7 @@ class user_ops:
                     else:
                         self.db.pg_transaction_commit()
 
-                if((user_role_dict['username'] != 'admin') and (self.is_admin == 0)):#may be able to remove this check, more testing needed
+                elif((user_role_dict['username'] != 'admin') and (self.is_admin == 0)):#may be able to remove this check, more testing needed
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
@@ -860,9 +881,69 @@ class user_ops:
     def create_user_role():
         #Glabal and tenit based
         print "not implemented"
-    def remove_user_role():
-        #global and tenant based
-        print "not implemeted"
+
+    def remove_user_role(self,delete_dict):
+        """
+        DESC: Remove a specific role from a user
+        INPUT: delete_dict - user_id - req
+                           - role_id - req
+                           - project_id - req
+        OUTPUT: OK - success
+                ERROR - fail
+        ACCESS: Only the admin can remove roles from users
+        NOTE:
+        """
+        try:
+            #Try to connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+            logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+        except:
+            logger.sql_error("Could not connect to the DB.")
+            raise Exception("Could not connect to the DB.")
+        
+        #make sure user id is valid
+        try:
+            get_user_id = {'select':'user_name','from':'trans_user_info','where':"keystone_user_uuid='%s'"%(delete_dict['user_id'])}
+            user = self.db.pg_select(get_user_id)
+        except Exception as e:
+            logger.sql_error('Could not find user with user id %s. Error: %s'%(delete_dict['user_id'], e))
+            raise Exception('Could not find user with user id %s'%(delete_dict['user_id']))
+
+        #make sure user id is valid
+        try:
+            get_proj_id = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(delete_dict['project_id'])}
+            proj = self.db.pg_select(get_proj_id)
+        except Exception as e:
+            logger.sql_error('Could not find project with id %s. Error: %s'%(delete_dict['project_id'], e))
+            raise Exception('Could not find project with id %s'%(delete_dict['project_id']))
+        
+        #Create an API connection with the admin
+        try:
+            #build an api connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            #remove the role from the user on the tenant
+            body = ""
+            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(delete_dict['project_id'],delete_dict['user_id'],delete_dict['role_id'])
+            token = self.adm_token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error('Could not remove role with id %s from user %s' %(delete_dict['role_id'],delete_dict['user_id']))
+            raise Exception('Could not remove role with id %s from user %s' %(delete_dict['role_id'],delete_dict['user_id']))
+
+        if(rest['response'] == 204):
+            return 'OK'
+        else:
+            return 'ERROR'
 
     def update_user(self,update_dict):
         """
