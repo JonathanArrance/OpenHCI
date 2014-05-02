@@ -572,7 +572,7 @@ class user_ops:
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
                 logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 # We can consolidate some of this code
-                if((user_role_dict['username'] == 'admin') and (self.is_admin == 1)):
+                if((user_role_dict['username'] == 'admin') and (user_group_id == 0)):
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
@@ -587,7 +587,7 @@ class user_ops:
                     else:
                         self.db.pg_transaction_commit()
 
-                elif((user_role_dict['username'] != 'admin') and (self.is_admin == 1)):
+                elif((user_role_dict['username'] != 'admin') and (user_group_id == 0)):
                     try:
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
@@ -605,8 +605,9 @@ class user_ops:
                     else:
                         self.db.pg_transaction_commit()
 
-                elif((user_role_dict['username'] != 'admin') and (self.is_admin == 0)):#may be able to remove this check, more testing needed
+                elif((user_role_dict['username'] != 'admin') and (user_group_id >= 1)):#may be able to remove this check, more testing needed
                     try:
+                        logger.sql_error('addina a user to the project')
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
