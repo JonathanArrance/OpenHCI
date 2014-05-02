@@ -6,6 +6,7 @@ import sys
 import time
 
 import transcirrus.common.logger
+import transcirrus.common.util as util
 import transcirrus.common.config
 from transcirrus.common.auth import authorization
 
@@ -13,12 +14,17 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","newpass")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating user_ops object."
 use = user_ops(d)
+
+role_id = util.get_def_mem_role()
+remove_role_dict = {'user_id':'49ebd750c3364a8fa7d2dc9332f45046','role_id':'9fe2ff9ee4384b1894a90878d3e92bab','project_id':'4ecbada824e14d80b444200c8ab96b44'}
+remove_def = use.remove_user_role(remove_role_dict)
+print remove_def
 
 '''
 print "listing orphaned users"
@@ -26,6 +32,7 @@ orph = use.list_orphaned_users()
 print orph
 '''
 '''
+
 print "Create a new standard user with no project."
 new_user_dict = {"username":'keven',"password":"test","user_role":"pu","email":"keven@domain.com"}
 create = use.create_user(new_user_dict)
@@ -39,8 +46,15 @@ add = use.add_user_to_project(add_user_dict)
 print add
 '''
 '''
+
+time.sleep(2)
+#print "Adding user %s to demo project" %(create['username'])
+add_user_dict = {"username":"test3","user_role":'admin',"project_id":'4ecbada824e14d80b444200c8ab96b44'}
+add = use.add_user_to_project(add_user_dict)
+print add
+
 print "Create a new standard user."
-new_user_dict = {"username":'ralph',"password":"test","userrole":"user","email":"ralph@domain.com","project_id":"5b5a1f8784a742bc8bae98021d7e884b"}
+new_user_dict = {"username":'ralph',"password":"test","user_role":"user","email":"ralph@domain.com","project_id":"4ecbada824e14d80b444200c8ab96b44"}
 create = use.create_user(new_user_dict)
 print create
 
@@ -135,6 +149,13 @@ print remove
 '''
 print "Deleteing a testuser"
 delete = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
+
+remove_user_dict = {"user_id":"a8ba2d4fccf6498da8a4d2baddfb3b71","project_id":'4ecbada824e14d80b444200c8ab96b44'}
+remove = use.remove_user_from_project(remove_user_dict)
+print remove
+
+print "Deleteing a testuser"
+delete = {"user_id":"a8ba2d4fccf6498da8a4d2baddfb3b71","project_id":'4ecbada824e14d80b444200c8ab96b44'}
 blah = use.delete_user(delete)
 print blah
 time.sleep(2)
