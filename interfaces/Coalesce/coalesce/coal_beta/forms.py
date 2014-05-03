@@ -133,7 +133,7 @@ class BuildProjectForm(forms.Form):
 class authentication_form(forms.Form):
 
     username  = forms.CharField(min_length = 2, max_length = 64, label='User Name')
-    password = forms.CharField(widget=forms.PasswordInput(),  label='Password')
+    password = forms.CharField(widget=forms.PasswordInput(),  label='Password',required=True)
 
 
     def __init__(self, *args, **kwargs):

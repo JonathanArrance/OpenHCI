@@ -19,7 +19,6 @@ $(function() {
 		
 		$(function() {
 
-		
 		function csrfSafeMethod(method) {
 		// these HTTP methods do not require CSRF protection
 		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -32,8 +31,6 @@ $(function() {
 				}
 			}
 		});
-		
-		
 		
 		var 	volume_name = $( "#volume_name" ),
 			volume_size = $( "#volume_size" ),
@@ -61,8 +58,6 @@ $(function() {
 			}
 		}
 
-	
-
 		$( "#volume-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
@@ -74,12 +69,12 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 
 					bValid = bValid && checkLength( volume_name, "volume_name", 3, 16 );
-
+                    bValid = bValid && checkLength( description, "description", 3, 256 );
+                    
 					if ( bValid ) {
 					  
-					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/');
-
-						$( this ).dialog( "close" );
+					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/'); 
+					   $( this ).dialog( "close" );
 					}
 				},
 				Cancel: function() {

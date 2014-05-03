@@ -191,3 +191,83 @@ def recv_data(sock):
                 print "recv_data: retrying... ", count
     return message
 
+
+
+def recv_data_alive(sock):
+
+    '''
+    @author         : Shashaa
+    comment         : receives data from connected socket to sock
+                      then deserializes it. Thi s function is exclusively used by keep alive code.
+    return value    : received data
+    create date     :
+    ----------------------
+    modify date     :
+    @author         :
+    comments        : This function doesnot exit if loop count expires
+    '''
+    count=0
+    data = ""
+    buffer=""
+    message=""
+    recv_len=None
+    msglen=0
+    global retry_count
+    global timeout_sec
+
+    while True:
+        ready = select.select([sock], [], [], timeout_sec)
+        if ready[0]:
+            data = sock.recv(recv_buffer)
+            if not data:
+                logger.sys_info("recv_data: no data received")
+                #print "no data break outer loop" #TEST
+                break
+
+            #print "received data... %s" %(data) #TEST
+            buffer += data
+            #print "buffer append ...%s" %(buffer)         #TEST
+            while True:
+                if recv_len is None:
+                    if ':' not in buffer:
+                        #print ": break"  #TEST
+                        break
+                    # remove recv_len bytes from front of buffer
+                    # leave any remaining bytes in buffer
+                    length_str, ignored, buffer = buffer.partition(':')
+                    recv_len = int(length_str)
+                    #print "recv_len... %s" %(recv_len) #TEST
+
+                if len(buffer) < recv_len:
+                    #print "len(buf):%s < recv_len" %(len(buffer))         #TEST
+                    #print "break inner loop" #TEST
+                    break
+
+                # split off message from remaining bytes
+                # leave any remaining bytes in buffer
+
+                message = buffer[:recv_len]
+                buffer = buffer[recv_len:]
+                recv_len=None
+
+                #print "messsag ...%s" %(message) #TEST
+               # print "buffer ...%s" %(buffer)  #TEST
+                # process message here
+                return message
+                break
+            if len(buffer) < recv_len:
+                #print "continue..."              #TEST
+                continue
+            else:
+                #print "break outer loop"              #TEST
+                break
+        else:
+            count = count + 1
+            if count >= retry_count:
+                logger.sys_error("recv_data: retry count expired, looping again")
+            logger.sys_warning("recv_data: retrying...%s" %(count))
+            if __debug__ :
+                print "recv_data: retrying... ", count
+    return message
+
+
