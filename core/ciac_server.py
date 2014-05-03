@@ -355,7 +355,7 @@ def keep_alive_check(node_id, conn):
             else:
                 logger.sys_info("node_id: %s keep alive error received %s" %(node_id, data))
         else:
-            logger.sys_info("node_id: keep alive reply not received" %(node_id))
+            logger.sys_info("node_id: %s keep alive reply not received" %(node_id))
 
         # sleep for keep_alive_sec
         sleep(core_util.keep_alive_sec)
