@@ -55,10 +55,10 @@ def build_project(auth_dict, project_dict):
 
     #HACK create a cluster vol for the project for swift, the keystone_tenants call not working for unknow reason
     #try:
-    gluster_vol_input = {'volume_name': '%s'%(str(proj))}
-    gluster.create_gluster_volume(gluster_vol_input)
-    #this has got to be forked into a new background process
-    gluster.create_gluster_swift_ring()
+        #gluster_vol_input = {'volume_name': '%s'%(str(proj))}
+        #gluster.create_gluster_volume(gluster_vol_input)
+        #this has got to be forked into a new background process
+        #gluster.create_gluster_swift_ring()
     #except Exception as e:
     #    logger.sys_error("Couldn't create a Gluster Swift vol, %s" %(str(e)))
 
