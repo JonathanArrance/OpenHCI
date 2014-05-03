@@ -95,7 +95,8 @@ def manage_cloud(request):
             pi = to.get_tenant(pid)
             project_info.append(pi)
     except:
-        raise
+        messages.warning(request, "Unable to manage cloud.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_cloud.html', RequestContext(request, {'project_info': project_info, 'node_info': node_info}))
 
 def manage_nodes(request):
@@ -108,7 +109,8 @@ def manage_nodes(request):
             ni['node_id']= nid
             node_info.append(ni)
     except:
-        pass
+        messages.warning(request, "Unable to manage nodes.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
 
 def manage_projects(request):
@@ -123,7 +125,8 @@ def manage_projects(request):
             pi = to.get_tenant(pid)
             project_info.append(pi)
     except:
-        raise
+        messages.warning(request, "Unable to manage projects.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
 def project_view(request, project_id):
@@ -450,7 +453,8 @@ def create_user(request, username, password, user_role, email, project_id):
         redirect_to = "/projects/%s/view/" % ("CHANGEME") #<<<<<<<<<< This doesn't work
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        messages.warning(request, "Unable to create user.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_security_group(request, groupname, groupdesc, ports, project_id):
     try:
@@ -465,7 +469,8 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         print "newgroup = %s" % newgroup
         return HttpResponseRedirect("/projects/manage")
     except:
-        raise
+        messages.warning(request, "Unable to create security group.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_sec_group(request, sec_group_id, project_id):
     try:
@@ -478,7 +483,8 @@ def delete_sec_group(request, sec_group_id, project_id):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        raise
+        messages.warning(request, "Unable to delete security group.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_keypair(request, key_name, project_id):
     try:
@@ -491,7 +497,8 @@ def create_keypair(request, key_name, project_id):
         response = HttpResponseRedirect(redirect_to)
         return render_to_response(response)
     except:
-        raise
+        messages.warning(request, "Unable to create keypair.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_volume(request, volume_name, volume_size, description, project_id):
     try:
@@ -503,7 +510,8 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        messages.warning(request, "Unable to create volume.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_volume(request, volume_id, project_id):
     try:
@@ -513,7 +521,8 @@ def delete_volume(request, volume_id, project_id):
         vo.delete_volume(delete_vol)
         return HttpResponseRedirect("/projects/%s/view" % project_id)
     except:
-        raise
+        messages.warning(request, "Unable to delete volume.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def create_router(request, router_name, priv_net, default_public, project_id):
@@ -538,7 +547,8 @@ def create_router(request, router_name, priv_net, default_public, project_id):
         return HttpResponseRedirect(reverse('project_view', project_name=('ffvc2',)))
 
     except:
-        raise
+        messages.warning(request, "Unable to create router.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_router(request, project_id, router_id):
     try:
@@ -557,7 +567,8 @@ def delete_router(request, project_id, router_id):
         return HttpResponseRedirect(reverse('project_view', args=('ffvc2',)))
 
     except:
-        raise
+        messages.warning(request, "Unable to delete router.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def destroy_project(request, project_id, project_name):
     try:
@@ -567,7 +578,8 @@ def destroy_project(request, project_id, project_name):
         return HttpResponseRedirect('/')
 
     except:
-        raise
+        messages.warning(request, "Unable to destroy project.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def allocate_floating_ip(request, project_id, ext_net_id):
     referer = request.META.get('HTTP_REFERER', None)
@@ -594,7 +606,8 @@ def deallocate_floating_ip(request, project_id, floating_ip):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        messages.warning(request, "Unable to deallocate floating ip.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
     try:
@@ -606,7 +619,8 @@ def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        messages.warning(request, "Unable to take snapshots.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
     try:
@@ -627,7 +641,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        messages.warning(request, "Unable to create image.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def pause_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
@@ -713,7 +728,8 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        raise
+        messages.warning(request, "Unable to assign floating ip.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER')) 
 
 def toggle_user(request, username, toggle):
     try:
@@ -726,7 +742,8 @@ def toggle_user(request, username, toggle):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        raise
+        messages.warning(request, "Unable to toggle user.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_user(request, username, userid):
     try:
@@ -739,7 +756,8 @@ def delete_user(request, username, userid):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        raise
+        messages.warning(request, "Unable to delete user.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def remove_user_from_project(request, user_id, project_id):
     try:
@@ -752,7 +770,8 @@ def remove_user_from_project(request, user_id, project_id):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        raise
+        messages.warning(request, "Unable to remove user from project.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def add_existing_user(request, username, user_role, project_id):
     try:
@@ -765,7 +784,8 @@ def add_existing_user(request, username, user_role, project_id):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        raise
+        messages.warning(request, "Unable to add existing user.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def update_user_password(request, user_id, project_id, password):
     try:
@@ -779,7 +799,8 @@ def update_user_password(request, user_id, project_id, password):
         return HttpResponseRedirect('/')
 
     except:
-        raise
+        messages.warning(request, "Unable to update user password.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def network_view(request, net_id):
     auth = request.session['auth']
@@ -827,7 +848,8 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
         return render(request, 'coalesce.coal_beta.views.project_view', {'project_name': 'ffvc2'})
 
     except:
-        raise
+        messages.warning(request, "Unable to add private network.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def remove_private_network(request, project_id, net_id):
     try:
@@ -855,7 +877,8 @@ def remove_private_network(request, project_id, net_id):
         return HttpResponseRedirect(redirect_to)
 
     except:
-        raise
+        messages.warning(request, "Unable to remove private network.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def setup(request):
     if request.method == 'POST':
@@ -983,6 +1006,10 @@ def login_page(request, template_name):
                 request.session['auth'] = auth
                 return render_to_response('coal/welcome.html', RequestContext(request, {  }))
             except:
+                form = authentication_form()
+                messages.warning(request, 'Login failed.  Please verify your username and password.')
+                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
+        else:
                 form = authentication_form()
                 messages.warning(request, 'Login failed.  Please verify your username and password.')
                 return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))

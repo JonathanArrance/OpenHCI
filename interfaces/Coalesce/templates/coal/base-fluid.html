@@ -57,17 +57,16 @@
                              <li><a href={% url 'home' %}>{{username}}</a></li>
                                 {% block navigation %}
                                   {% if project_id %}
-                                    {% if user_level == 2 %}
-                                        <li><a href={% url 'basic_project_view' project_id %}>My Project</a></li>
-                                    {% else %}
-                                        <li><a href={% url 'project_view' project_id %}>My Project</a></li>
-                                    {% endif %}
                                     {% if user_level == 0 %}
-                                      <li><a href="/cloud/manage">Cloud Management</a></li>
-                                      {% if first_time == 'TRUE' %}
-                                        <li><a href="/setup">Run Setup</a></li>
-                                      {% endif %}
-                                    {% endif %}
+                                        <li><a href="/cloud/manage">Cloud Management</a></li>
+                                        {% if first_time == 'TRUE' %}
+                                            <li><a href="/setup">Run Setup</a></li>
+                                        {% endif %}
+                                    {% elif user_level == 1 %}
+                                            <li><a href={% url 'project_view' project_id %}>My Project</a></li>
+                                    {% else %}
+                                            <li><a href={% url 'basic_project_view' project_id %}>My Project</a></li>
+                                    {% endif %}  
                                   {% endif %}
 
                                 {% endblock %}
