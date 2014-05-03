@@ -917,20 +917,25 @@ def keep_alive(sock):
     comments        :
     '''
     while True:
-        ready = select.select([sock], [], [], core_util.timeout_sec)
-        if ready[0]:
-            data = sock.recv(core_util.recv_buffer)
+        data = core_util.recv_data(sock)
+        if data:
 
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 logger.sys_info("***%s***" % (data['Value']))
                 # send reply as alive
-                sock.sendall(pickle.dumps(core_util.reply_alive, -1))
+                core_util.send_data(pickle.dumps(core_util.reply_alive,-1), sock)
+                #sock.sendall(pickle.dumps(core_util.reply_alive, -1))
                 if __debug__ :
                     print "***%s***" % data['Value']
             elif data['Type'] == 'command':
                 logger.sys_info("received command %s" %(data['Value']))
                 # TODO
+                '''
+                this is for cases where ciac node sends additional
+                commands to configure and control the compute/storage
+                node
+                '''
             else:
                 logger.sys_info("received %s" %(data))
                 if __debug__ :
