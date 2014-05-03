@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python2.7
 
 # get the user level from the transcirrus system DB
 #passes the user level out 
@@ -156,10 +156,10 @@ class tenant_ops:
                 #simple cleanup of failed project create
                 raise e
             else:
-                gluster_vol_input = {'volume_name':project_id}
-                self.gluster.create_gluster_volume(gluster_vol_input)
+                #gluster_vol_input = {'volume_name':str(project_id)}
+                #self.gluster.create_gluster_volume(gluster_vol_input)
                 #this has got to be forked into a new background process
-                self.gluster.create_gluster_swift_ring()
+                #self.gluster.create_gluster_swift_ring()
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
 

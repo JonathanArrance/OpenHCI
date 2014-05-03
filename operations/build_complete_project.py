@@ -1,10 +1,11 @@
+#!/usr/local/bin/python2.7
 import transcirrus.common.logger as logger
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
-
+from transcirrus.common.gluster import gluster_ops
 
 def build_project(auth_dict, project_dict):
     """
@@ -38,6 +39,8 @@ def build_project(auth_dict, project_dict):
     logger.sys_info("Instantiated server_ops object")
     neutron_router = layer_three_ops(auth_dict)
     logger.sys_info("Instantiated layer_three_ops object")
+    gluster = gluster_ops(auth_dict)
+    logger.sys_info("Instantiated Gluster object")
 
     proj = None
     net = None
@@ -49,6 +52,15 @@ def build_project(auth_dict, project_dict):
         logger.sys_info("Created project with project name: %s" % project_dict['project_name'])
     except Exception as e:
         logger.sys_error("Couldn't create a project, %s" %(str(e)))
+
+    #HACK create a cluster vol for the project for swift, the keystone_tenants call not working for unknow reason
+    #try:
+    gluster_vol_input = {'volume_name': '%s'%(str(proj))}
+    gluster.create_gluster_volume(gluster_vol_input)
+    #this has got to be forked into a new background process
+    gluster.create_gluster_swift_ring()
+    #except Exception as e:
+    #    logger.sys_error("Couldn't create a Gluster Swift vol, %s" %(str(e)))
 
     try:
         project_dict['user_dict']['project_id'] = proj

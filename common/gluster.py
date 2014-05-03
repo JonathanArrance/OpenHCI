@@ -1,8 +1,10 @@
+#!/usr/local/bin/python2.7
 #need to re-run the gluster swift ring create everytime a new project is added, also need to kick the proxy server
 import sys
 import subprocess
 import os
 import re
+from pprint import pprint
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -75,6 +77,7 @@ class gluster_ops:
         NOTE:
         """
         logger.sys_info('\n**Creating gluster swift ring. Common Def: create_gluster_swift_ring**\n')
+        #this needs to be forked to the background or a better way needs to be found could be just this version of gluster swift sucks
         if(self.is_admin == 1):
             #get a list of projects
             get_projects = {'select':"proj_id",'from':"projects"}
@@ -117,20 +120,17 @@ class gluster_ops:
             command = None
             if('bricks' in input_dict and len(input_dict['bricks']) >= 1):
                 brick = ' '.join(input_dict['bricks'])
-                #print brick
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
-                #print command
             else:
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
             #make a new directory for the gluster volume
-            out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            make = out.stdout.readlines()
-            print make
-            if(len(make) == 0):
+            out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+            vol = out.stdout.readlines()
+            if(len(vol) == 0):
                 logger.sys_error('Could not create a new Gluster volume.')
                 return 'ERROR'
 
-            out3 = subprocess.Popen('sudo gluster volume start %s'%(input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out3 = subprocess.Popen('sudo gluster volume start %s'%(input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             start = out3.stdout.readlines()
             print start
             if(len(start) == 0):
@@ -144,7 +144,7 @@ class gluster_ops:
                 return 'ERROR'
             out4 = subprocess.Popen('sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             mount = out4.stdout.readlines()
-            print mount
+            #print mount
             if(len(mount) != 0):
                 logger.sys_error('Could not mount the Gluster volume.')
                 return 'ERROR'
