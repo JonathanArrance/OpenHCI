@@ -917,7 +917,7 @@ def keep_alive(sock):
     comments        :
     '''
     while True:
-        data = core_util.recv_data(sock)
+        data = core_util.recv_data_alive(sock)
         if data:
 
             data = pickle.loads(data)

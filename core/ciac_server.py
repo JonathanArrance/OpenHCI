@@ -345,7 +345,7 @@ def keep_alive_check(node_id, conn):
             print "node_id: %s ***keep_alive***" %(node_id)
         #conn.sendall(pickle.dumps(status_alive, -1))
         core_util.send_data(pickle.dumps(status_alive, -1), conn)
-        data = core_util.recv_data(conn)
+        data = core_util.recv_data_alive(conn)
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
