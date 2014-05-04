@@ -924,7 +924,7 @@ def setup(request):
 
             run_setup(system_var_array, auth)
             change_admin_password (auth, admin_password)
-            return render_to_response('coal/setup_results.html', RequestContext(request, {'cloud_name':cloud_name, 'management_ip': management_ip}))
+            return render_to_response('coal/setup_results.html', RequestContext(request, {'management_ip': management_ip}))
         else:
             return render_to_response('coal/setup.html', RequestContext(request, { 'form':form, }))
     else:
