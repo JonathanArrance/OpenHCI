@@ -897,7 +897,7 @@ def setup(request):
             mgmt_domain_name       = form.cleaned_data['mgmt_domain_name']
             mgmt_subnet            = form.cleaned_data['mgmt_subnet']
             mgmt_dns               = form.cleaned_data['mgmt_dns']
-            cloud_name             = form.cleaned_data['cloud_name']
+            #cloud_name             = form.cleaned_data['cloud_name']
             single_node            = form.cleaned_data['single_node']
             admin_password         = form.cleaned_data['admin_password']
             admin_password_confirm = form.cleaned_data['admin_password_confirm']
