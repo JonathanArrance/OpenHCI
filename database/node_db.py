@@ -190,13 +190,14 @@ def insert_node(input_dict):
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_node_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt]
+            print nova_array
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
                 db.pg_transaction_commit()
-        except:
+        except Exception as e:
             db.pg_transaction_rollback()
-            logger.sql_error("Could not insert node specific nova config into Transcirrus db.")
+            logger.sql_error("Could not insert node specific nova config into Transcirrus db. %s"%(e))
             return 'ERROR'
         try:
             #insert_neutron_sql = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/quantum",'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
