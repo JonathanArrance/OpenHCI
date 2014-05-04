@@ -515,8 +515,9 @@ def get_mgmt_ip():
     NOTE: bond1 interface is the default data network interface for any
     node added to the cloud cluster
     """
-    mgmt_network = get_adapter_ip('bond0')
-    return mgmt_network['net_ip']
+    #mgmt_network = get_adapter_ip('bond0')
+    #return mgmt_network['net_ip']
+    return config.MGMT_IP
 
 def is_node_phy():
     """

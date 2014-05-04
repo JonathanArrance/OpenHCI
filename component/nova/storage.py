@@ -6,6 +6,7 @@ import json
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
+from transcirrus.common.auth import get_token
 
 from transcirrus.common.api_caller import caller
 
@@ -153,6 +154,8 @@ class server_storage_ops:
             try:
                 #build an api connection
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the api caller.")
@@ -243,6 +246,8 @@ class server_storage_ops:
         try:
             #build an api connection
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the api caller.")
