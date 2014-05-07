@@ -299,6 +299,8 @@ class neutron_net_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != create_dict['project_id']):
+                    self.token = get_token(self.username,self.password,create_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
