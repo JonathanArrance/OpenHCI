@@ -58,10 +58,6 @@ class layer_three_ops:
             logger.sys_error("No tokens passed, or token was in error")
             raise Exception("No tokens passed, or token was in error")
 
-        #if(self.user_level > 1):
-        #    logger.sys_error("Users can not perform Layer 3 operations.")
-        #    raise Exception("Users can not perform Layer 3 operations.")
-
         if ((self.status_level > 2) or (self.status_level < 0)):
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
@@ -188,6 +184,8 @@ class layer_three_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != router_dict['project_id']):
+                    self.token = get_token(self.username,self.password,router_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -203,15 +201,15 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-            except:
+            except Exception as e:
                 self.db.pg_transaction_rollback()
-                logger.sql_error("Could not add a new layer 3 device to Neutron.")
-                raise Exception("Could not add a new layer 3 device to Neutron.")
+                logger.sql_error("Could not add a new layer 3 device to Neutron. %s"%(e))
+                raise Exception("Could not add a new layer 3 device to Neutron. %s"%(e))
 
             #check the response and make sure it is a 201
             if(rest['response'] == 201):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
                 try:
                     self.db.pg_transaction_begin()
@@ -228,7 +226,7 @@ class layer_three_ops:
                     r_dict = {'router_name':router_dict['router_name'],'router_id':load['router']['id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Only an admin or a power user can create a new router.")
             raise Exception("Only an admin or a power user can create a new router.")
@@ -241,6 +239,7 @@ class layer_three_ops:
                            - router_external_gateway - op - ext_netwok_id
                            - router_snat - not used
                            - router_admin_state_up(true/false) - op - default true
+                           - project_id
         OUTPUT: r_dict - router_name
                        - router_admin_state
         ACCESS: Only an admin can update a routers info.
@@ -272,6 +271,8 @@ class layer_three_ops:
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != update_dict['project_id']):
+                    self.token = get_token(self.username,self.password,update_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -288,14 +289,14 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-            except:
+            except Exception as e:
                 self.db.pg_transaction_rollback()
-                logger.sql_error("Could not update router params.")
-                raise Exception("Could not update router params.")
+                logger.sql_error("Could not update router params. %e"%(e))
+                raise Exception("Could not update router params. %e"%(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
                 try:
                     self.db.pg_transaction_begin()
@@ -311,23 +312,35 @@ class layer_three_ops:
                     r_dict = {'router_name':self.name,'router_admin_state':self.state}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Only admins and power users can update router params.")
             raise Exception("Only admins and power users can update router params.")
 
-    def delete_router(self,router_id):
+    def delete_router(self,del_dict):
         """
         DESC: Remove a router from the project.
-        INPUT: router_id
+        INPUT: del_dict - router_id
+                        - project_id
         OUTPUT: OK or ERROR
         ACCESS: Admins can remove a router from any project, power users can only remove a router from their own project.
                 If any networks are attached an error will occure.
         NOTES: none
         """
-        if(router_id == ''):
-            logger.sys_error("No router id was specified.")
-            raise Exception("No router id was specified.")
+        if(('router_id' not in del_dict) or (del_dict['router_id'] == '')):
+            logger.sys_error("No router id given.")
+            raise Exception("No router id given.")
+        if(('project_id' not in del_dict) or (del_dict['project_id'] == '')):
+            logger.sys_error("No project id given.")
+            raise Exception("No project id given.")
+
+        #make sure the project exists
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(del_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
 
         if(self.user_level <= 1):
             self.flag = True
@@ -339,13 +352,15 @@ class layer_three_ops:
                     if(not get_router):
                         self.flag = False
             except:
-                logger.sys_error("Power user could not delete the router %s." %(router_id))
-                raise Exception("Power user could not delete router %s." %(router_id))
+                logger.sys_error("Power user could not delete the router %s." %(del_dict['router_id']))
+                raise Exception("Power user could not delete router %s." %(del_dict['router_id']))
 
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(self.project_id != del_dict['project_id']):
+                    self.token = get_token(self.username,self.password,del_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -356,22 +371,22 @@ class layer_three_ops:
                 body = ''
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'DELETE'
-                api_path = '/v2.0/routers/%s'%(router_id)
+                api_path = '/v2.0/routers/%s'%(del_dict['router_id'])
                 token = self.token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not delete the router.")
-                raise Exception("Could not delete the router.")
+            except Exception as e:
+                logger.sql_error("Could not delete the router. %s"%(e))
+                raise Exception("Could not delete the router. %s"%(e))
 
             if(rest['response'] == 204):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
-                    delete = {"table":'trans_routers',"where":"router_id='%s'"%(router_id)}
+                    delete = {"table":'trans_routers',"where":"router_id='%s'"%(del_dict['router_id'])}
                     self.db.pg_delete(delete)
                 except:
                     self.db.pg_transaction_rollback()
@@ -381,7 +396,7 @@ class layer_three_ops:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
                 return 'ERROR'
         else:
             logger.sys_error("Only an admin or a power user can delete a router.")
@@ -480,13 +495,13 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not add an internal port to router.")
-                raise Exception("Could not add an internal port to router.")
+            except Exception as e:
+                logger.sql_error("Could not add an internal port to router. %s"%(e))
+                raise Exception("Could not add an internal port to router. %s"%(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
                 try:
                     self.db.pg_transaction_begin()
@@ -502,7 +517,7 @@ class layer_three_ops:
                     r_dict = {'router_id': add_dict['router_id'],'router_name':self.router[0][1],'subnet_name': self.subnet[0][0],'subnet_id': load['subnet_id'],'port_id': load['port_id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Users can not add ports to routers.")
             raise Exception("Users can not add ports to routers.")
@@ -588,13 +603,13 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not remove an internal port to the router.")
-                raise Exception("Could not remove an internal port to the router.")
+            except Exception as e:
+                logger.sql_error("Could not remove an internal port to the router. %s"%(e))
+                raise Exception("Could not remove an internal port to the router. %s"%(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 try:
                     self.db.pg_transaction_begin()
                     #insert new net info
@@ -608,7 +623,7 @@ class layer_three_ops:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         else:
             logger.sys_error("Users can not remove ports to routers.")
@@ -630,8 +645,8 @@ class layer_three_ops:
             logger.sys_error("Can not add external gateway to router, no router id given.")
             raise Exception("Can not add external gateway to router, no router id given.")
         if(('ext_net_id' not in add_dict) or (add_dict['ext_net_id'] == '')):
-            logger.sys_error("Can not add external gateway to router, no subnet id given.")
-            raise Exception("Can not add external_gateway to router, no subnet id given.")
+            logger.sys_error("Can not add external gateway to router, no external net id.")
+            raise Exception("Can not add external_gateway to router, no external net id.")
 
         if(self.user_level <= 1):
             try:
@@ -680,13 +695,13 @@ class layer_three_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not add a gateway port to router.")
-                raise Exception("Could not add an gateway port to router.")
+            except Exception as e:
+                logger.sql_error("Could not add a gateway port to router. %s"%(e))
+                raise Exception("Could not add an gateway port to router. %s"%(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
                 try:
                     self.db.pg_transaction_begin()
@@ -724,11 +739,14 @@ class layer_three_ops:
         ACCESS: Only admins can remove an extrnal interface from the router.
         NOTE: transcirrus db will have to be updated accordingly - Haveing issues removeing gateways, bug in Grizzly
         """
-        if(remove_dict['router_id'] == ''):
-            logger.sys_error("Can not add external gateway to router, no router id given.")
-            raise Exception("Can not add external gateway to router, no router id given.")
+        if(('router_id' not in remove_dict) or (remove_dict['router_id'] == '')):
+            logger.sys_error("Can not remove external gateway from router, no router id given.")
+            raise Exception("Can not remove external gateway from router, no router id given.")
+        if(('project_id' not in remove_dict) or (remove_dict['project_id'] == '')):
+            logger.sys_error("Can not remove external gateway from router, no subnet id given.")
+            raise Exception("Can not remove external_gateway from router, no subnet id given.")
 
-        if(self.is_admin == 1):
+        if(self.user_level <= 1):
             try:
                 get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(remove_dict['project_id'])}
                 project = self.db.pg_select(get_proj)
@@ -767,13 +785,13 @@ class layer_three_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
                 logger.sys_info(rest)
-            except:
-                logger.sql_error("Could not remove gateway from router.")
-                raise Exception("Could not remove gateway from router.")
+            except Exception as e:
+                logger.sql_error("Could not remove gateway from router. %s"%(e))
+                raise Exception("Could not remove gateway from router. %s"%(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 try:
                     self.db.pg_transaction_begin()
                     #update the transcirrus router
@@ -781,17 +799,32 @@ class layer_three_ops:
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
-                    logger.sql_error("Could not remove gateway from router in Transcirrus DB.")
-                    raise Exception("Could not remove gateway from router in Transcirrus DB.")
+                    logger.sql_error("Could not remove gateway from router in Transcirrus DB. %s"%(e))
+                    raise Exception("Could not remove gateway from router in Transcirrus DB. %s"%(e))
                 else:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Users can not remove ports to routers.")
             raise Exception("Users can not remove ports to routers.")
 
+    def list_router_ports(self,input_dict):
+        """
+        DESC: List the ports attached to a router.
+        INPUT: self object
+        OUTPUT: array of r_dict - floating_ip
+                                - floating_ip_id
+                                - floating_in_use
+        ACCESS: Admin will be able to list floatingips in the system,
+                power users and standard users will only be able to list
+                floating ips in their project.
+        NOTE: This info can be obtained from the transcirrus db
+        """
+    
+    def remove_router_ports(self,remove_dict):
+        pass
 #Refer to http://docs.openstack.org/api/openstack-network/2.0/content/router_ext_ops_floatingip.html
 
     #ALL floating iP stuff updated/UNITTESTED
@@ -930,6 +963,8 @@ class layer_three_ops:
         try:
             #build an api connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -945,15 +980,15 @@ class layer_three_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
-        except:
-            logger.sys_error("Could not assign a floating ip to %s."%(input_dict['project_id']))
-            raise Exception("Could not assign a floating ip to %s."%(input_dict['project_id']))
+        except Exception as e:
+            logger.sys_error("Could not assign a floating ip to %s. %s"%(input_dict['project_id'],e))
+            raise Exception("Could not assign a floating ip to %s. %s"%(input_dict['project_id'],e))
 
         #new way to process db transaction after API call - experiment
         load = None
         if(rest['response'] == 201):
             #read the json that is returned
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
             self.db.pg_transaction_begin()
             load = json.loads(rest['data'])
             try:
@@ -970,7 +1005,7 @@ class layer_three_ops:
                 return r_dict
         
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'],rest['data'])
 
     def update_floating_ip(self,update_dict):
         """
@@ -1070,9 +1105,9 @@ class layer_three_ops:
             sec = self.sec
             rest_dict = {"body": str(body), "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-        except:
-            logger.sys_error("Could not assign a floating ip to %s."%(update_dict['project_id']))
-            raise Exception("Could not assign a floating ip to %s."%(update_dict['project_id']))
+        except Exception as e:
+            logger.sys_error("Could not assign a floating ip to %s. %s"%(update_dict['project_id'],e))
+            raise Exception("Could not assign a floating ip to %s. %s"%(update_dict['project_id'],e))
 
         if(rest['response'] == 202):
             update = None
@@ -1099,7 +1134,7 @@ class layer_three_ops:
                 r_dict = {'floating_ip':update_dict['floating_ip'],'floating_ip_id':floater[0][0],'instance_name':inst[0][0],'instance_id':inst[0][1]}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def deallocate_floating_ip(self,del_dict):
         """
@@ -1149,6 +1184,8 @@ class layer_three_ops:
         try:
             #build an api connection for the admin user
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != del_dict['project_id']):
+                self.token = get_token(self.username,self.password,del_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -1164,15 +1201,15 @@ class layer_three_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
-        except:
-            logger.sys_error("Could not deallocate the floating ip.")
-            raise Exception("Could not deallocate the floating ip.")
+        except Exception as e:
+            logger.sys_error("Could not deallocate the floating ip. %s"%(e))
+            raise Exception("Could not deallocate the floating ip. %s"%(e))
 
         #new way to process db transaction after API call - experiment
         load = None
         if(rest['response'] == 204):
             #read the json that is returned
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
             self.db.pg_transaction_begin()
             try:
                 delete = {"table":'trans_floating_ip',"where":"floating_ip_id='%s'"%(floater[0][0])}
@@ -1185,4 +1222,4 @@ class layer_three_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
