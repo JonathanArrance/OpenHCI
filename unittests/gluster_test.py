@@ -15,7 +15,7 @@ glust = gluster_ops(auth)
 
 #brick = ['172.38.24.10:/data/gluster/jonarrance2','172.38.24.12:/data/gluster/jonarrance2']
 #input_dict = {'volume_name':'jonarrance2','bricks': brick}
-input_dict = {'volume_name':'testvol6'}
+input_dict = {'volume_name':'testvol7'}
 print input_dict
 create = glust.create_gluster_volume(input_dict)
 print create
