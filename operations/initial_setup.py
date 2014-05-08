@@ -153,14 +153,6 @@ def run_setup(new_system_variables,auth_dict):
         print "Quantum endpoint set up complete."
     else:
         return "Quantum error."
-    #logger.sys_info('Building Swift endpoints')
-    #swift_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
-    #create_swift = endpoint.create_endpoint(swift_input_dict)
-    #print create_swift
-    #if(create_glance['endpoint_id']):
-    #    print "Swift endpoint set up complete."
-    #else:
-    #    return "Swift error."
 
     logger.sys_info('Adding the core node to the trans_nodes table.')
     #insert the controller info into trans_nodes db table
