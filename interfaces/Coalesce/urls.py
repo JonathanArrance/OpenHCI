@@ -75,7 +75,11 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
-        url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<mount_point>[^/]+)/$',
+        'coalesce.coal_beta.views.delete_volume',
+            name='delete_volume'),
+	
+	url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.delete_volume',
             name='delete_volume'),
 

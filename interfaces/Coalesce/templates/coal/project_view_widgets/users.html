@@ -3,10 +3,12 @@
         <div class="well">
           <div class="legend">
              Users   
-             <a href="#"  
+             {% if user_level == 0 %}
+	     <a href="#"  
                 id="create-usr" 
                 class="btn btn-mini btn-inverse" 
                 style="float:right">New User</a>
+	     {% endif %}
              {% if ouserinfo%}
                 <a href="#" id="add-existing-user" class="btn btn-mini btn-inverse" style="float:right"> Add Existing User</a>
              {% endif %}
@@ -25,13 +27,9 @@
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
                     <select name="role" id="role">
-		      {% if user_level < 2 %}
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
-		      {% endif %}
-		      {% if user_level == 0 %}
                         <option value="admin">Admin</option>
-		      {% endif %}
                     </select>
                 </fieldset>
                 </form>
@@ -49,13 +47,9 @@
                         {% endfor %}
                     </select>
                     <select name="role" id="role">
-		      {% if user_level < 2 %}
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
-		      {% endif %}
-		      {% if user_level == 0 %}
                         <option value="admin">Admin</option>
-		      {% endif %}
                     </select>
                   
                 </fieldset>
