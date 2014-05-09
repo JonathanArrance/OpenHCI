@@ -22,8 +22,22 @@
                 </fieldset>
                 </form>
             </div>
-
-
+	    
+	    <div id="volume-attach-dialog-form" title="Attach volume to instance">
+                <form>
+                {% csrf_token %}
+                <fieldset>
+		    <label for="instance">Instance</label>
+                    <select name="instance" id="instance">
+			{% for server in instances %}
+		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
+			{% endfor %}
+                    </select>
+		    <label for="mount_point">Mount Point (ex: /dev/vdc)</label>
+                    <input type="text" name="mount_point" id="mount_point"  class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+           </div>
 
            <table class="paleblue">
 	    {% if volumes %}
@@ -31,7 +45,8 @@
                     {% for volume in volumes %}
 		      <tr> <td>{{volume.volume_name}}</td>
                <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> | 
-               <a href="/delete_volume/{{volume.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a></td></tr>
+               <a href="/delete_volume/{{volume.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a> |
+	       <a href="#" id="attach_vol">attach</a></td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>

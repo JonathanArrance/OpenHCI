@@ -20,6 +20,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
+from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.admin_actions import server_admin_actions
 from transcirrus.component.neutron.network import neutron_net_ops
@@ -141,8 +142,6 @@ def project_view(request, project_id):
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
-    print "#################################################"
-    print users
     userinfo = {}
     uo = user_ops(auth)
 
@@ -506,6 +505,19 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         vo = volume_ops(auth)
         create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
         vo.create_volume(create_vol)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to create volume.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def attach_volume(request, project_id, instance_id, volume_id, mount_point):
+    try:
+        auth = request.session['auth']
+        sso = server_storage_ops(auth)
+        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
+        sso.attach_vol_to_server(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
