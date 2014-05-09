@@ -36,7 +36,7 @@ $(function() {
 		
 		
 		var 	instance = $( "#instance" ),
-                        mount_point = $( "#mount_point"),
+                        volume = $( "#volume" ),
                         
 
 			allFields = $( [] ).add( instance ),
@@ -70,14 +70,12 @@ $(function() {
 			width: 350,
 			modal: true,
 			buttons: {
-				"Assign": function() {
+				"Attach a volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
-
-
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.volume_id + '/' + '/' + mount_point.val());
+					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
 
 						$( this ).dialog( "close" );
 					}

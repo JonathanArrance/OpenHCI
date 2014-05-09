@@ -16,6 +16,7 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/keypair-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/volume-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/volume-attach-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/private-network-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/fip-assign-dialog-form.js"/></script>
@@ -57,13 +58,13 @@ $(document).ready(function() {
     </div>
 
     <div class="row-fluid">
-      {% include "coal/project_view_widgets/security_groups.html" %}
-      {% include "coal/project_view_widgets/key_pairs.html" %}
+      {% include "coal/project_view_widgets/instances.html" %}
+      {% include "coal/project_view_widgets/floating_ips.html" %}
       {% include "coal/project_view_widgets/volumes.html" %}
       {% include "coal/project_view_widgets/external_networks.html" %}
       {% include "coal/project_view_widgets/internal_networks.html" %}
-      {% include "coal/project_view_widgets/floating_ips.html" %}
-      {% include "coal/project_view_widgets/instances.html" %}
+      {% include "coal/project_view_widgets/security_groups.html" %}
+      {% include "coal/project_view_widgets/key_pairs.html" %}
 
     </div>
 

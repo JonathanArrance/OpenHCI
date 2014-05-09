@@ -19,6 +19,7 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/keypair-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/volume-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/volume-attach-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/private-network-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/router-dialog-form.js"/></script>
@@ -57,11 +58,11 @@ $(document).ready(function() {
 
 {% block content %}
 
-    <h4>Users/Security</h4>
+    <h4>Instance Management</h4>
     <div class="row-fluid">
-      {% include "coal/project_view_widgets/users.html" %}
-      {% include "coal/project_view_widgets/security_groups.html" %}
-      {% include "coal/project_view_widgets/key_pairs.html" %}
+      {% include "coal/project_view_widgets/instances.html" %}
+      {% include "coal/project_view_widgets/images.html" %}
+      {% include "coal/project_view_widgets/floating_ips.html" %}
     </div>
 
     <h4>Storage</h4>
@@ -77,14 +78,14 @@ $(document).ready(function() {
       {% include "coal/project_view_widgets/routers.html" %}
       {% include "coal/project_view_widgets/internal_networks.html" %}
     </div>
-
-    <h4>Instance Management</h4>
-    <div class="row-fluid">
-      {% include "coal/project_view_widgets/images.html" %}
-      {% include "coal/project_view_widgets/floating_ips.html" %}
-      {% include "coal/project_view_widgets/instances.html" %}
-    </div>
     
+    <h4>Users/Security</h4>
+    <div class="row-fluid">
+      {% include "coal/project_view_widgets/users.html" %}
+      {% include "coal/project_view_widgets/security_groups.html" %}
+      {% include "coal/project_view_widgets/key_pairs.html" %}
+    </div>
+
     {% if user_level == 0 %}
         <a href="/projects/{{project.project_id}}/{{project.project_name}}/delete" 
         data-confirm="Are you sure you want to delete?" 

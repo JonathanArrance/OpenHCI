@@ -507,17 +507,20 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         vo.create_volume(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except:
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def attach_volume(request, project_id, instance_id, volume_id, mount_point):
+def attach_volume(request, project_id, instance_id, volume_id):
     try:
+        mount_point = "/dev/vdc"
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
-        sso.attach_vol_to_server(create_vol)
+        out = sso.attach_vol_to_server(create_vol)
+        print "###########################"
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -556,7 +559,7 @@ def create_router(request, router_name, priv_net, default_public, project_id):
 
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(reverse('project_view', project_name=('ffvc2',)))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     except:
         messages.warning(request, "Unable to create router.")
@@ -576,7 +579,7 @@ def delete_router(request, project_id, router_id):
             l3o.delete_router_internal_interface(remove_dict)
         l3o.delete_router(router_id)
 
-        return HttpResponseRedirect(reverse('project_view', args=('ffvc2',)))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     except:
         messages.warning(request, "Unable to delete router.")
@@ -857,7 +860,7 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
         network = no.add_private_network(create_dict)
         subnet_dict={"net_id": network['net_id'], "subnet_dhcp_enable": "true", "subnet_dns": ["8.8.8.8"]}
         subnet = no.add_net_subnet(subnet_dict)
-        return render(request, 'coalesce.coal_beta.views.project_view', {'project_name': 'ffvc2'})
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     except:
         messages.warning(request, "Unable to add private network.")

@@ -4,8 +4,8 @@
           <div class="legend">
              Volume Storage
 
-		<a href="#"  id="create-volume" class="btn btn-mini btn-inverse" style="float:right">New Volume</a>	
-
+		<a href="#" id="create-volume" class="btn btn-mini" style="float:right">New Volume</a>	
+		<a href="#" id="attach_vol" class="btn btn-mini btn-inverse" style="float:right">Attach</a>
           </div>
 
 	    <div id="volume-dialog-form" title="Create new volume">
@@ -33,8 +33,12 @@
 		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
 			{% endfor %}
                     </select>
-		    <label for="mount_point">Mount Point (ex: /dev/vdc)</label>
-                    <input type="text" name="mount_point" id="mount_point"  class="text ui-widget-content ui-corner-all" />
+		    <label for="volume">Volume</label>
+                    <select name="volume" id="volume">
+			{% for vol in volumes %}
+		   	    <option value="{{vol.volume_id}}">{{vol.volume_name}}</option>
+			{% endfor %}
+                    </select>
                 </fieldset>
                 </form>
            </div>
@@ -45,8 +49,8 @@
                     {% for volume in volumes %}
 		      <tr> <td>{{volume.volume_name}}</td>
                <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> | 
-               <a href="/delete_volume/{{volume.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a> |
-	       <a href="#" id="attach_vol">attach</a></td></tr>
+               <a href="/delete_volume/{{volume.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a>
+	       </td></tr>
 		    {% endfor %}
 		{% else %}
 		  <p><i>This project has no volumes</i></p>
