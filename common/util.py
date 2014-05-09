@@ -1129,7 +1129,7 @@ def restart_network_card(net_adapter):
         #if(down == ''):
         #    return 'ERROR'
         time.sleep(2)
-        up = os.system('sudo ifup --force %s' %(net_adapter))
+        up = os.system('sudo ifup %s' %(net_adapter))
         print up
         if(up != 0):
             return 'ERROR'
