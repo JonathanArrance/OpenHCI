@@ -1124,10 +1124,10 @@ def restart_network_card(net_adapter):
     if(net_adapter.lower() == 'all'):
         os.system('sudo service network restart')
     else:
-        down = os.system('sudo ifdown --force %s' %(net_adapter))
+        down = os.system('sudo ifdown %s' %(net_adapter))
         print down
-        #if(down == ''):
-        #    return 'ERROR'
+        if(down == '256'):
+            return 'ERROR'
         time.sleep(2)
         up = os.system('sudo ifup %s' %(net_adapter))
         print up
