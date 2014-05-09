@@ -257,7 +257,7 @@ def run_setup(new_system_variables,auth_dict):
     if(neutron_start != 'OK'):
         #fire off revert
         return neutron_start
-
+    """
     #setup the pre-installed images
     logger.sys_info('Importing Default images.')
     print "Importing default images"
@@ -303,20 +303,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.warn('Could not import the default Fedora image.')
     #else:
     #    os.system('rm -rf /transcirrus/centos-6.5-20140117.0.x86_64.qcow2')
-
-    #windows_input = {
-    #                'image_name':"CentOS-65-x86_64",
-    #                'image_disk_format':"qcow2",
-    #                'image_is_public':'True',
-    #                'image_is_protected':'True',
-    #                'project_id':auth_dict['project_id'],
-    #                'file_location':"/transcirrus/windows_server_2012_r2_standard_eval_kvm_20131117.qcow2.gz"
-    #                }
-    #import_windows = glance.import_image(windows_input)
-    #if(import_windows != 'OK'):
-    #    logger.warn('Could not import the default Windows 2012 Eval image.')
-    #else:
-    #    os.system('rm -rf /transcirrus/centos-6.5-20140117.0.x86_64.qcow2')
+    """
 
     logger.sys_info('Writing the network config files.')
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
@@ -487,13 +474,6 @@ def run_setup(new_system_variables,auth_dict):
     time.sleep(1)
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
-    #set up the cluster ip 169.254.x.x
-    #cluster = ha_common.set_cluster_node_ha_ip()
-    #if(cluster == 'ERROR'):
-    #    logger.error("Could not set the cluster IP. Please see the admin.")
-    #else:
-    #    logger.sys_info("Cluster IP set to: %s"%(cluster))
-
     #if the node is set as multinode, enable multinode
     if(sys_vars['SINGLE_NODE'] == '0'):
         status = node_util.enable_multi_node()
@@ -501,6 +481,49 @@ def run_setup(new_system_variables,auth_dict):
             logger.error("Could not enable multi-node. Check the interface and try again.")
         else:
             logger.info("Multi-node configuration enabled.")
+
+    logger.sys_info("Restarting the uplink network adapter.")
+    util.restart_network_card("br-ex")
+
+    #setup the pre-installed images
+    logger.sys_info('Importing Default images.')
+    print "Importing default images"
+    glance = glance_ops(auth_dict)
+    cirros_input = {
+                    'image_name':"Cirros-x86_64-0-3-1",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
+                    'project_id':auth_dict['project_id'],
+                    'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
+                    }
+    import_cirros = glance.import_image(cirros_input)
+    if(import_cirros != 'OK'):
+        logger.warn('Could not import the default cirros image.')
+
+    ubuntu_input = {
+                    'image_name':"Ubuntu-12-04-x86_64",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
+                    'project_id':auth_dict['project_id'],
+                    'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
+                    }
+    import_ubuntu = glance.import_image(ubuntu_input)
+    if(import_ubuntu != 'OK'):
+        logger.warn('Could not import the default Ubuntu Precise image.')
+
+    fedora_input = {
+                    'image_name':"CentOS-65-x86_64",
+                    'image_disk_format':"qcow2",
+                    'image_is_public':'True',
+                    'image_is_protected':'True',
+                    'project_id':auth_dict['project_id'],
+                    'file_location':"/transcirrus/centos-6.5-20140117.0.x86_64.qcow2"
+                    }
+    import_fedora = glance.import_image(fedora_input)
+    if(import_fedora != 'OK'):
+        logger.warn('Could not import the default Fedora image.')
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
