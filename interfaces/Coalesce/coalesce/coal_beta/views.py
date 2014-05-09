@@ -518,9 +518,7 @@ def attach_volume(request, project_id, instance_id, volume_id):
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
-        out = sso.attach_vol_to_server(create_vol)
-        print "###########################"
-        print out
+        out = sso.attach_vol_to_server(attach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
