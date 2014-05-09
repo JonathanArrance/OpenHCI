@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import datetime
 import time
+import socket
 
 #from confparse import properties
 
@@ -1272,6 +1273,21 @@ def power_off_system():
     NOTE: VERY DANGEROUS. THIS IS WIDE OPEN AS OF NOW
     """
     os.system('sudo shutdown -P')
+
+def name_resolution(fqdn):
+    """
+    DESC: get the ip based on the name. Does revese DNS lookup.
+    INPUT: fqdn or name
+    OUTPUT: ip address
+    NOTE:
+    """
+    ip_list = []
+    ais = socket.getaddrinfo("%s"%(fqdn),0,0,0,0)
+    for result in ais:
+        ip_list.append(result[-1][0])
+    ip_list = list(set(ip_list))
+    
+    return ip_list[0]
 
 def compare_vm_range(new_start, new_end):
     """
