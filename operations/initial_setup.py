@@ -257,53 +257,6 @@ def run_setup(new_system_variables,auth_dict):
     if(neutron_start != 'OK'):
         #fire off revert
         return neutron_start
-    """
-    #setup the pre-installed images
-    logger.sys_info('Importing Default images.')
-    print "Importing default images"
-    glance = glance_ops(auth_dict)
-    cirros_input = {
-                    'image_name':"Cirros-x86_64-0-3-1",
-                    'image_disk_format':"qcow2",
-                    'image_is_public':'True',
-                    'image_is_protected':'True',
-                    'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
-                    }
-    import_cirros = glance.import_image(cirros_input)
-    if(import_cirros != 'OK'):
-        logger.warn('Could not import the default cirros image.')
-    #else:
-    #    os.system('rm -rf /transcirrus/cirros-0.3.1-x86_64-disk.img')
-
-    ubuntu_input = {
-                    'image_name':"Ubuntu-12-04-x86_64",
-                    'image_disk_format':"qcow2",
-                    'image_is_public':'True',
-                    'image_is_protected':'True',
-                    'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
-                    }
-    import_ubuntu = glance.import_image(ubuntu_input)
-    if(import_ubuntu != 'OK'):
-        logger.warn('Could not import the default Ubuntu Precise image.')
-    #else:
-    #    os.system('rm -rf /transcirrus/precise-server-cloudimg-amd64-disk1.img')
-
-    fedora_input = {
-                    'image_name':"CentOS-65-x86_64",
-                    'image_disk_format':"qcow2",
-                    'image_is_public':'True',
-                    'image_is_protected':'True',
-                    'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/centos-6.5-20140117.0.x86_64.qcow2"
-                    }
-    import_fedora = glance.import_image(fedora_input)
-    if(import_fedora != 'OK'):
-        logger.warn('Could not import the default Fedora image.')
-    #else:
-    #    os.system('rm -rf /transcirrus/centos-6.5-20140117.0.x86_64.qcow2')
-    """
 
     logger.sys_info('Writing the network config files.')
     g_input = {'uplink_ip':sys_vars['UPLINK_IP'],'uplink_gateway':sys_vars['UPLINK_GATEWAY'],'uplink_subnet':sys_vars['UPLINK_SUBNET']}
