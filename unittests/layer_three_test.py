@@ -3,7 +3,7 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.neutron.ports import port_ops
 import time
 
-auth = authorization('good2','password')
+auth = authorization('admin','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
@@ -42,7 +42,7 @@ update_dict = {'router_id':create['router_id'],'router_name':"jonarranceYO",'rou
 update = router.update_router(update_dict)
 print update
 
-del_dict = {'router_id':create['router_id'],'subnet_id':"7e45e5b6-f95b-415a-893a-c8e092f0150d",'project_id':"a38c70b7a87c404cab33d0a5959ba57a"}
+del_dict = {'router_id':'','subnet_id':"7e45e5b6-f95b-415a-893a-c8e092f0150d",'project_id':"a38c70b7a87c404cab33d0a5959ba57a"}
 delete = router.delete_router_internal_interface(del_dict)
 print delete
 time.sleep(1)
@@ -53,9 +53,9 @@ del_ext = router.delete_router_gateway_interface(router_stuff)
 print del_ext
 time.sleep(1)
 print "--------------------------------------------------"
-
+'''
 print "deleteing router"
-router_dict = {'router_id':create['router_id'],'project_id':"a38c70b7a87c404cab33d0a5959ba57a"}
+router_dict = {'router_id':'411fb076-5f22-474b-8b8b-d05bb646b197','project_id':"84d3e074012a42ce919771c503993f4e"}
 yo = router.delete_router(router_dict)
 print yo
 '''
@@ -73,12 +73,12 @@ for y in yo2:
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
     
-'''
+
 print "attaching floating ip to instance"
 update_dict = {'floating_ip':'192.168.10.227','instance_id':"ff48f2e3-dd9b-40c3-bf73-5b26d081cfb1",'project_id':"a38c70b7a87c404cab33d0a5959ba57a",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
-'''
+
 print "Listing floating ips"
 yo5 = router.list_floating_ips()
 print yo5
@@ -87,7 +87,7 @@ for z in yo5:
     print "Getting floating ip info"
     yo6 = router.get_floating_ip(z['floating_ip_id'])
     print yo6
-'''
+
 print "detaching floating ip from instance"
 update_dict = {'floating_ip':'192.168.2.202','instance_id':"aac0f01-bdf6-4368-b59d-4c04ae9697ae",'project_id':"a38c70b7a87c404cab33d0a5959ba57a",'action':"remove"}
 yo12 = router.update_floating_ip(update_dict)
@@ -101,7 +101,7 @@ for z2 in yo10:
     print "Getting floating ip info"
     yo11 = router.get_floating_ip(z2['floating_ip_id'])
     print yo11
-'''
+
 print "deallocating a new floating ip"
 e = {'floating_ip':yo['floating_ip'],'project_id':"a38c70b7a87c404cab33d0a5959ba57a"}
 yo7 = router.deallocate_floating_ip(e)
@@ -115,3 +115,4 @@ for z3 in yo13:
     print "Getting floating ip info"
     yo14 = router.get_floating_ip(z3['floating_ip_id'])
     print yo14
+'''
