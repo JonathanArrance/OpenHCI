@@ -139,6 +139,7 @@ def project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    ssa = server_admin_actions(auth)
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -163,11 +164,22 @@ def project_view(request, project_id):
     pub_net_list  = no.list_external_networks()
     routers       = l3o.list_routers(project_id)
     volumes       = vo.list_volumes(project_id)
+    volume_info={}
     snapshots     = sno.list_snapshots(project_id)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
     instance_info={}
+    
+    host_dict     = {'project_id': project_id, 'zone': 'nova'}
+    hosts         = ssa.list_compute_hosts(host_dict)
+    
+    for volume in volumes:
+        v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
+        v_info = vo.get_volume_info(v_dict)
+        vid = volume['volume_id']
+        volume_info[vid] = v_info
+    
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         i_info = so.get_server(i_dict)
@@ -220,7 +232,9 @@ def project_view(request, project_id):
                                                         'pub_net_list':pub_net_list,
                                                         'routers': routers,
                                                         'floating_ips': floating_ips,
+                                                        'hosts': hosts,
                                                         'volumes': volumes,
+                                                        'volume_info': volume_info,
                                                         'snapshots':snapshots,
                                                         'images': images,
                                                         'instances': instances,
@@ -518,7 +532,21 @@ def attach_volume(request, project_id, instance_id, volume_id):
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
-        out = sso.attach_vol_to_server(attach_vol)
+        sso.attach_vol_to_server(attach_vol)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to create volume.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def detach_volume(request, project_id, instance_id, volume_id):
+    print "in detach"
+    try:
+        auth = request.session['auth']
+        sso = server_storage_ops(auth)
+        detach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id}
+        out = sso.detach_vol_from_server(detach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -731,6 +759,36 @@ def confirm_resize(request, project_id, instance_id):
         messages.warning(request, "Unable to confirm resize.")
         return HttpResponseRedirect(redirect_to)
 
+def live_migrate_server(request, project_id, instance_id, host_name):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        print "calling live-migrate"
+        out = ssa.live_migrate_server(input_dict)
+        print out
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to unpause server.")
+        return HttpResponseRedirect(redirect_to)
+    
+def evacuate_server(request, project_id, instance_id, host_name):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        print "calling evacuate"
+        out = ssa.evacuate_server(input_dict)
+        print out
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to unpause server.")
+        return HttpResponseRedirect(redirect_to)
+
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
     try:
         auth = request.session['auth']
@@ -743,6 +801,19 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
     except:
         messages.warning(request, "Unable to assign floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER')) 
+
+def unassign_floating_ip(request, floating_ip, instance_id, project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'remove'}
+        l3o.update_floating_ip(update_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to assign floating ip.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def toggle_user(request, username, toggle):
     try:

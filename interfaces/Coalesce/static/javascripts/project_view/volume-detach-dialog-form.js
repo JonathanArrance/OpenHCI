@@ -37,7 +37,6 @@ $(function() {
 		
 		var 	instance = $( "#instance" ),
                         volume = $( "#volume" ),
-                        
 
 			allFields = $( [] ).add( instance ),
 			tips = $( ".validateTips" );
@@ -64,18 +63,18 @@ $(function() {
 
 	
 
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#volume-detach-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Attach volume": function() {
+				"Detach volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
+					   $.post('/detach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -89,9 +88,9 @@ $(function() {
 			}
 		});
 
-		$( "#attach_vol" )
+		$( "#detach_vol" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				$( "#volume-detach-dialog-form" ).dialog( "open" );
 			});
 			
 			

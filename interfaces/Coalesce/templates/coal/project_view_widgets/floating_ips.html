@@ -3,12 +3,14 @@
         <div class="well">
           <div class="legend">
              Floating IP's
-		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/"  id="allocate_floating_ip" class="btn btn-mini" style="float:right">Allocate</a>
-                <a href="#"  id="assign_ip" class="btn btn-mini  btn-inverse" style="float:right">Assign</a>	
+		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/"  id="allocate_floating_ip" class="btn btn-mini btn-inverse" style="float:right">Allocate</a>
+                <a href="#"  id="unassign_ip" class="btn btn-mini" style="float:right">Unassign</a>	
+		<a href="#"  id="assign_ip" class="btn btn-mini" style="float:right">Assign</a>	
           </div>
 
 	   <div id="fip-assign-dialog-form" title="Assign floating IP to instance">
-                <form>
+                <p class="validateTips">Assign a floating IP to an instance.  </p>
+		<form>
                 {% csrf_token %}
                 <fieldset>
 
@@ -16,6 +18,32 @@
                     <select name="floating_ip" id="floating_ip">
 			{% for fip in floating_ips %}
                            {% if fip.floating_in_use == 'false' %}
+		               <option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
+                           {% endif %}
+			{% endfor %}
+                    </select>
+
+		    <label for="instance">Instance</label>
+                    <select name="instance" id="instance">
+			{% for server in instances %}
+		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
+			{% endfor %}
+                    </select>
+
+                </fieldset>
+                </form>
+           </div>
+	   
+	   <div id="fip-unassign-dialog-form" title="Unassign floating IP from instance">
+                <p class="validateTips">Unassign a floating IP from an instance.  </p>
+		<form>
+                {% csrf_token %}
+                <fieldset>
+
+		    <label for="floating_ip">Floating IP</label>
+                    <select name="floating_ip" id="floating_ip">
+			{% for fip in floating_ips %}
+                           {% if fip.floating_in_use == 'true' %}
 		               <option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
                            {% endif %}
 			{% endfor %}
