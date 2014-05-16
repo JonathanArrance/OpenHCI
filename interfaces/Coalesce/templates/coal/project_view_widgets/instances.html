@@ -3,6 +3,10 @@
         <div class="well">
           <div class="legend">
              Instances <a href="#"  id="create-instance" class="btn btn-mini btn-inverse" style="float:right">New Instance</a>
+	     {% if user_level == 0 %}
+	       <a href="#"  id="evacuate-instance" class="btn btn-mini" style="float:right">Evacuate</a>
+	       <a href="#"  id="live-migrate-instance" class="btn btn-mini" style="float:right">Live Migrate</a>
+	     {% endif %}
           </div>
 
  	  <div id="instance-dialog-form" title="Create new instance">
@@ -44,7 +48,50 @@
                 </fieldset>
                 </form>
            </div>
+	  
+	  <div id="instance-live-migrate-form" title="Migrate live instance">
+		<p class="validateTips">Migrate a live instance to another host.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+		    <label for="instance">Instance</label>
+                    <select name="instance" id="instance">
+			{% for i in instances %}
+		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
+			{% endfor %}
+                    </select>
+		    <label for="host_name">Host</label>
+                    <select name="host_name" id="host_name">
+			{% for h in hosts %}
+		   	    <option value="{{h.host_name}}">{{h.host_name}}</option>
+			{% endfor %}
+                    </select>
 
+                </fieldset>
+                </form>
+           </div>
+
+	  <div id="instance-evacuate-form" title="Evacuate instance">
+                <p class="validateTips">Evacuate an instance from a failed host to a new host.  </p>
+		<form>
+                {% csrf_token %}
+                <fieldset>
+		    <label for="instance">Instance</label>
+                    <select name="instance" id="instance">
+			{% for i in instances %}
+		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
+			{% endfor %}
+                    </select>
+		    <label for="host_name">Host</label>
+                    <select name="host_name" id="host_name">
+			{% for h in hosts %}
+		   	    <option value="{{h.host_name}}">{{h.host_name}}</option>
+			{% endfor %}
+                    </select>
+
+                </fieldset>
+                </form>
+           </div>
 
 	  {% if instances %}
 	    <table class="paleblue">
@@ -57,11 +104,10 @@
 			    <td>{{v.server_os}} {{v.server_flavor}}</td>
 			    <td>
 			       <a href="{{v.novnc_console}}" target="_blank">console</a> | 
-			       {% if v.server_status = "ACTIVE" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a>{% endif%}
-                               {% if v.server_status = "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a>{% endif%}
-			        | <a href="/server/{{ project.project_id }}/{{ v.server_id }}/delete_server/" 
-                                data-confirm="This will completely remove {{v.server_name}} from this project. Are you sure?"> delete
-                                </a>
+			       {% if v.server_status = "ACTIVE" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a> | {% endif%}
+                               {% if v.server_status = "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> | {% endif%}
+			       <a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/" 
+                                data-confirm="This will completely remove {{v.server_name}} from this project. Are you sure?">delete</a>
 			    </td>
 			 </tr>
                 {% endfor %}  

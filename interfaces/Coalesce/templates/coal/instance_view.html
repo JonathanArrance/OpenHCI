@@ -58,10 +58,24 @@
 		<tr><th>ID</th><td>{{server.server_id}}</td></tr>
 		<tr><th>Key Name</th><td>{{server.server_key_name}}</td></tr>
 		<tr><th>Group Name</th><td>{{server.server_group_name}}</td></tr>
-		<tr><th>Public IPs</th><td>{{server.server_public_ips}}</td></tr>
+		<tr><th>Public IPs</th>
+		  {% for k,v in server.server_public_ips.items %}
+		    <td>{{k}}:
+		    {% for i in v %}
+		      {{i.addr}}</td>
+		    {% endfor  %}
+		  {% endfor %}
+		</tr>
 		<!--<tr><th>Node</th><td>{{server.server_node}}</td></tr>-->
 		<tr><th>Net ID</th><td>{{server.server_net_id}}</td></tr>
-		<tr><th>Internal Net</th><td>{{server.server_int_net}}</td></tr>
+		<tr><th>Internal Net</th>
+		  {% for k,v in server.server_int_net.items %}
+		    <td>{{k}}:
+		    {% for i in v %}
+		      {{i.addr}}</td>
+		    {% endfor %}
+		  {% endfor %}
+		</tr>
 
 	    </table>    
 	    

@@ -78,6 +78,10 @@ urlpatterns = patterns('',
         url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
         'coalesce.coal_beta.views.attach_volume',
             name='attach_volume'),
+
+        url(r'^detach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+        'coalesce.coal_beta.views.detach_volume',
+            name='detach_volume'),
 	
 	url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.delete_volume',
@@ -134,6 +138,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.assign_floating_ip',
             name='assign_floating_ip'),
 
+	url(r'^unassign_floating_ip/(?P<floating_ip>[^/]+)/(?P<instance_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.unassign_floating_ip',
+            name='unassign_floating_ip'),
+
 	# --- Server actions ----
 	url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
 	    'coalesce.coal_beta.views.instance_view',
@@ -158,6 +166,14 @@ urlpatterns = patterns('',
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/confirm_resize/$',
 	    'coalesce.coal_beta.views.confirm_resize',
             name='confirm_resize'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/live_migrate_server/$',
+	    'coalesce.coal_beta.views.live_migrate_server',
+            name='live_migrate_server'),
+	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/evacuate_server/$',
+	    'coalesce.coal_beta.views.evacuate_server',
+            name='evacuate_server'),
 
 	# --- User actions ----
 	url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<user_role>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',

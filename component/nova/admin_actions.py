@@ -501,7 +501,7 @@ class server_admin_actions:
             else:
                 #check if the zone given exists
                 try:
-                    select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(input_dict['avail_zone'])}
+                    select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(input_dict['zone'])}
                     get_zone = self.db.pg_select(select_zone)
                 except:
                     logger.sql_error('The specifed zone is not defined.')

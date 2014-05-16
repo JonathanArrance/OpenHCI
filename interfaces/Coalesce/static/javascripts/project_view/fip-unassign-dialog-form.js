@@ -35,11 +35,10 @@ $(function() {
 		
 		
 		
-		var 	instance = $( "#instance" ),
-                        volume = $( "#volume" ),
-                        
+		var 	floating_ip = $( "#floating_ip" ),
+			instance = $( "#instance" ),
 
-			allFields = $( [] ).add( instance ),
+			allFields = $( [] ).add( floating_ip ).add( instance ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -64,18 +63,20 @@ $(function() {
 
 	
 
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#fip-unassign-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Attach volume": function() {
+				"Unassign": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
+
+
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
+					   $.post('/unassign_floating_ip/' + floating_ip.val() + '/' + instance.val() + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -89,9 +90,9 @@ $(function() {
 			}
 		});
 
-		$( "#attach_vol" )
+		$( "#unassign_ip" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				$( "#fip-unassign-dialog-form" ).dialog( "open" );
 			});
 			
 			

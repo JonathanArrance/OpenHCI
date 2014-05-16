@@ -4,8 +4,10 @@
           <div class="legend">
              Volume Storage
 
-		<a href="#" id="create-volume" class="btn btn-mini" style="float:right">New Volume</a>	
-		<a href="#" id="attach_vol" class="btn btn-mini btn-inverse" style="float:right">Attach</a>
+		<a href="#" id="create-volume" class="btn btn-mini btn-inverse" style="float:right">New Volume</a>
+		<a href="#" id="detach_vol" class="btn btn-mini" style="float:right">Detach</a>
+		<a href="#" id="attach_vol" class="btn btn-mini" style="float:right">Attach</a>
+
           </div>
 
 	    <div id="volume-dialog-form" title="Create new volume">
@@ -22,21 +24,43 @@
                 </fieldset>
                 </form>
             </div>
-	    
+
 	    <div id="volume-attach-dialog-form" title="Attach volume to instance">
-                <form>
+                <p class="validateTips">Attach a volume to an instance.  </p>
+		<form>
                 {% csrf_token %}
                 <fieldset>
+		    <label for="volume">Volume</label>
+                    <select name="volume" id="volume">
+			{% for vol in volumes %}
+			    <option value="{{vol.volume_id}}">{{vol.volume_name}}</option>
+			{% endfor %}
+                    </select>
 		    <label for="instance">Instance</label>
                     <select name="instance" id="instance">
 			{% for server in instances %}
 		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
 			{% endfor %}
                     </select>
+                </fieldset>
+                </form>
+           </div>
+
+	  <div id="volume-detach-dialog-form" title="Detach volume from instance">
+                <p class="validateTips">Detach a volume from an instance.  </p>
+		<form>
+                {% csrf_token %}
+                <fieldset>
 		    <label for="volume">Volume</label>
                     <select name="volume" id="volume">
 			{% for vol in volumes %}
 		   	    <option value="{{vol.volume_id}}">{{vol.volume_name}}</option>
+			{% endfor %}
+                    </select>
+		    <label for="instance">Instance</label>
+                    <select name="instance" id="instance">
+			{% for server in instances %}
+		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
 			{% endfor %}
                     </select>
                 </fieldset>

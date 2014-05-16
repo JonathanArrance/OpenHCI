@@ -35,8 +35,8 @@ $(function() {
 		
 		
 		
-		var 	instance = $( "#instance" ),
-                        volume = $( "#volume" ),
+		var     instance = $( "#instance" ),
+                        host_name = $( "#host_name" ),
                         
 
 			allFields = $( [] ).add( instance ),
@@ -64,18 +64,18 @@ $(function() {
 
 	
 
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#instance-evacuate-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Attach volume": function() {
+				"Evacuate instance": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
+					   $.post('/server/' + PROJECT_ID + '/' + instance.val() + '/' + host_name.val() + '/evacuate_server/');
 
 						$( this ).dialog( "close" );
 					}
@@ -89,9 +89,9 @@ $(function() {
 			}
 		});
 
-		$( "#attach_vol" )
+		$( "#evacuate-instance" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				$( "#instance-evacuate-form" ).dialog( "open" );
 			});
 			
 			
