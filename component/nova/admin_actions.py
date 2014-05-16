@@ -410,9 +410,9 @@ class server_admin_actions:
 
         if(rest['response'] == 202):
                 # this method does not return any response body
-                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason'],rest['data']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         return 'OK'
 
@@ -465,7 +465,7 @@ class server_admin_actions:
 
         if(rest['response'] == 202):
                 # this method does not return any response body
-                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason'],rest['data']))
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
 
@@ -480,7 +480,7 @@ class server_admin_actions:
         OUTPUT: array of r_dict - zone
                                 - host_name
                                 - service
-        ACCESS: ONLY the admin can migrate an instance
+        ACCESS: ONLY the admin can list out the compute hosts
         NOTES: This is not the same as the transcirrus node ids. These are uuids assigend
                 by Nova, Compute host zone is set to nova by default.
         """
@@ -539,6 +539,20 @@ class server_admin_actions:
                     return load['hosts']
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
+
+    def list_storage_hosts(self,input_dict):
+        """
+        http://docs.openstack.org/api/openstack-compute/2/content/GET_os-hosts-v2_listHosts_v2__tenant_id__os-hosts_ext-os-hosts.html
+        DESC: Get the openstack storage nodes in the cloud.
+        INPUT: input_dict - project_id
+                          - zone
+        OUTPUT: array of r_dict - zone
+                                - host_name
+                                - service
+        ACCESS: ONLY the admin can list out the storgae nodes
+        NOTES: This is not the same as the transcirrus node ids. These are uuids assigend
+                by Nova, Compute host zone is set to nova by default.
+        """
 
     def get_os_host(self,input_dict):
         """
