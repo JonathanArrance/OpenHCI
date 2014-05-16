@@ -603,7 +603,7 @@ def delete_router(request, project_id, router_id):
         if subnet_id:
             remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
             l3o.delete_router_internal_interface(remove_dict)
-        l3o.delete_router(router_id)
+        l3o.delete_router(proj_rout_dict)
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
