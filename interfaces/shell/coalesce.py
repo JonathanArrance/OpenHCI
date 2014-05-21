@@ -108,23 +108,23 @@ def firstTimeFlag(d):
          no_label="No, take me to Coalesce Dashboard", width=80)
 
 
-def info(d):
+def info(d, info_dict):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, "", 1, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 2, 1, "", 2, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 3, 1, "", 3, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 4, 1, "", 4, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 5, 1, "", 5, 24, 40, 40, 0x0),
-            ("Management IP:", 6, 1, "", 6, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 7, 1, "", 7, 24, 40, 40, 0x0),
-            ("Management DNS:", 8, 1, "", 8, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 9, 1, "", 9, 24, 40, 40, 0x0),
-            ("VM Range Start-Point:", 10, 1, "", 10, 24, 40, 40, 0x0),
-            ("VM Range End-Point:", 11, 1, "", 11, 24, 40, 40, 0x0),
-            ("New Admin password:", 12, 1, "", 12, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 13, 1, "", 13, 24, 40, 40, HIDDEN)]
+            ("Uplink IP:", 1, 1, info_dict['uplink_ip'], 1, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 2, 1, info_dict['uplink_subnet'], 2, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 3, 1, info_dict['uplink_gateway'], 3, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 4, 1, info_dict['uplink_dns'], 4, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 5, 1, info_dict['uplink_domain'], 5, 24, 40, 40, 0x0),
+            ("Management IP:", 6, 1, info_dict['mgmt_ip'], 6, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 7, 1, info_dict['mgmt_subnet'], 7, 24, 40, 40, 0x0),
+            ("Management DNS:", 8, 1, info_dict['mgmt_dns'], 8, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 9, 1, info_dict['mgmt_domain'], 9, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 10, 1, info_dict['vm_ip_min'], 10, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 11, 1, info_dict['vm_ip_max'], 11, 24, 40, 40, 0x0),
+            ("New Admin password:", 12, 1, info_dict['pwd'], 12, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 13, 1, info_dict['cnfrm'], 13, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77, insecure=True)
@@ -237,9 +237,42 @@ def setup(d):
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
-
+    
+    info_dict = {'uplink_ip': "",
+                 'uplink_subnet': "",
+                 'uplink_gateway': "",
+                 'uplink_dns': "",
+                 'uplink_domain': "",
+                 'mgmt_ip': "",
+                 'mgmt_subnet': "",
+                 'mgmt_dns': "",
+                 'mgmt_domain': "",
+                 'vm_ip_min': "",
+                 'vm_ip_max': "",
+                 'pwd': "",
+                 'cnfrm': ""}
+    
     while(True):
-        uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d)
+        
+        uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d, info_dict)
+        info_dict['uplink_ip'] = uplink_ip
+        info_dict['uplink_subnet'] = uplink_subnet
+        info_dict['uplink_gateway'] = uplink_gateway
+        info_dict['uplink_dns'] = uplink_dns
+        info_dict['uplink_domain'] = uplink_domain
+        info_dict['mgmt_ip'] = mgmt_ip
+        info_dict['mgmt_subnet'] = mgmt_subnet
+        info_dict['mgmt_dns'] = mgmt_dns
+        info_dict['mgmt_domain'] = mgmt_domain
+        info_dict['vm_ip_min'] = vm_ip_min
+        info_dict['vm_ip_max'] = vm_ip_max
+        info_dict['pwd'] = pwd
+        info_dict['cnfrm'] = cnfrm
+        
+        # Confirm all entries exist
+        if(uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm):
+            d.msgbox("Please fill out all fields, try again.", width=60, height=10)
+            continue
         # Validate uplink ip
         if(valid_ip(uplink_ip) is False):
             d.msgbox("Invalid Uplink IP, try again.", width=60, height=10)
