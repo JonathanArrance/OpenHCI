@@ -140,6 +140,7 @@ def project_view(request, project_id):
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
     ssa = server_admin_actions(auth)
+    fo = flavor_ops(auth)
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -170,6 +171,7 @@ def project_view(request, project_id):
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
     instance_info={}
+    flavors       = fo.list_flavors()
     
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
@@ -219,7 +221,7 @@ def project_view(request, project_id):
             fip['instance_name']=''
 
     return render_to_response('coal/project_view.html',
-                               RequestContext(request, { 'project': project,
+                               RequestContext(request, {'project': project,
                                                         'users': users,
                                                         'ouserinfo': ouserinfo,
                                                         'userinfo':userinfo,
@@ -239,6 +241,7 @@ def project_view(request, project_id):
                                                         'images': images,
                                                         'instances': instances,
                                                         'instance_info': instance_info,
+                                                        'flavors': flavors
                                                         }))
 
 
@@ -479,7 +482,6 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         so = server_ops(auth)
         create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
         newgroup= so.create_sec_group(create_sec)
-        print "newgroup = %s" % newgroup
         return HttpResponseRedirect("/projects/manage")
     except:
         messages.warning(request, "Unable to create security group.")
@@ -541,7 +543,6 @@ def attach_volume(request, project_id, instance_id, volume_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def detach_volume(request, project_id, instance_id, volume_id):
-    print "in detach"
     try:
         auth = request.session['auth']
         sso = server_storage_ops(auth)
@@ -596,7 +597,6 @@ def delete_router(request, project_id, router_id):
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         router=l3o.get_router(router_id)
-        print router
         proj_rout_dict = {'router_id': router_id, 'project_id': project_id}
         l3o.delete_router_gateway_interface(proj_rout_dict)
         subnet_id=router["router_int_sub_id"]
@@ -672,7 +672,6 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
                         'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                         'network_name': network_name,'image_name': image_name,
                         'flavor_name':flavor_name, 'name':name}
-
         server = so.create_server(instance)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
@@ -764,9 +763,7 @@ def live_migrate_server(request, project_id, instance_id, host_name):
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        print "calling live-migrate"
         out = ssa.live_migrate_server(input_dict)
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -779,9 +776,7 @@ def evacuate_server(request, project_id, instance_id, host_name):
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        print "calling evacuate"
         out = ssa.evacuate_server(input_dict)
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

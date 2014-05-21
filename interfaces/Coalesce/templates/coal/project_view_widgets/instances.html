@@ -44,6 +44,13 @@
 		   	    <option value="{{image.image_name}}">{{image.image_name}}</option>
 			{% endfor %}
                     </select>
+		    
+		    <label for="flavor_name">Flavor</label>
+                    <select name="flavor_name" id="flavor_name">
+			{% for flavor in flavors %}
+		   	    <option value="{{flavor.flavor_name}}">{{flavor.flavor_name}}</option>
+			{% endfor %}
+                    </select>
 
                 </fieldset>
                 </form>
