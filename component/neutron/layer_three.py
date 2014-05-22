@@ -536,14 +536,14 @@ class layer_three_ops:
         NOTE: transcirrus db will have to be updated accordingly
         """
         if(('router_id' not in remove_dict) or (remove_dict['router_id'] == '')):
-            logger.sys_error("Can not add internal port to router, no router id given.")
-            raise Exception("Can not add internal port to router, no router id given.")
+            logger.sys_error("Can not remove internal port to router, no router id given.")
+            raise Exception("Can not remove internal port to router, no router id given.")
         if(('subnet_id' not in remove_dict) or (remove_dict['subnet_id'] == '')):
-            logger.sys_error("Can not add internal port to router, no subnet id given.")
-            raise Exception("Can not add internal port to router, no subnet id given.")
+            logger.sys_error("Can not remove internal port to router, no subnet id given.")
+            raise Exception("Can not remove internal port to router, no subnet id given.")
         if(('project_id' not in remove_dict) or (remove_dict['project_id'] == '')):
-            logger.sys_error("Can not add internal port to router, no project id given.")
-            raise Exception("Can not add internal port to router, no project id given.")
+            logger.sys_error("Can not remove internal port to router, no project id given.")
+            raise Exception("Can not remove internal port to router, no project id given.")
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(remove_dict['project_id'])}

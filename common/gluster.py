@@ -64,6 +64,25 @@ class gluster_ops:
 
         self.db = util.db_connect()
 
+    def get_gluster_brick(self):
+        """
+        DESC: Get the gluster brick name of the current storage or core node
+        INPUT None
+        OUTPUT: brick name
+                ERROR - FAIL
+        ACCESS: Admin - can get the gluster brick names
+                PU - none
+                User - none
+        NOTE: This does not get the brick name for a remote node.
+        """
+        if(self.is_admin == 1):
+            if(util.get_node_type() == 'cn'):
+                logger.sys_error('Compute nodes can not be used as Gluster bricks.')
+                raise Exception('Compute nodes can not be used as Gluster bricks.')
+            brick_path = util.get_node_data_ip() + ":/data/gluster-" + util.get_system_name()
+
+            return brick_path
+
     def create_gluster_swift_ring(self):
         """
         DESC: Build the gluster-swift ring. This needs to be run everytime a new project is added,
@@ -212,7 +231,10 @@ class gluster_ops:
         NOTE: This is not the same as useing the Cinder volume create, this def
               adds gluster bricks to volumes using the gluster commands
               brick = "ip":/"brick name"
-              cinder brick name = /data/gluster/${HOSTNAME}
+              EX. Gluster command: volume add-brick cinder-volume 172.38.24.12:/data/gluster/cinder-volume
+              brick = /data/gluster/cinder-volume
+              brick IP = 172.38.24.12
+              
         """
         logger.sys_info('\n**Adding Gluster brick to volumes. Common Def: add_gluster_brick**\n')
         if(self.is_admin == 1):
