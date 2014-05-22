@@ -15,10 +15,10 @@ glust = gluster_ops(auth)
 
 #brick = ['172.38.24.10:/data/gluster/jonarrance2','172.38.24.12:/data/gluster/jonarrance2']
 #input_dict = {'volume_name':'jonarrance2','bricks': brick}
-input_dict = {'volume_name':'testvol7'}
-print input_dict
-create = glust.create_gluster_volume(input_dict)
-print create
+#input_dict = {'volume_name':'testvol7'}
+#print input_dict
+#create = glust.create_gluster_volume(input_dict)
+#print create
 
 #yo = glust.create_gluster_swift_ring()
 #print yo
@@ -32,8 +32,8 @@ print create
 #yo3 = glust.delete_gluster_volume('jonarrance2')
 #print yo3
 
-yo4 = glust.list_gluster_volumes()
-print yo4
+#yo4 = glust.list_gluster_volumes()
+#print yo4
 
 #input_dict = {'volume_name':'jonarrance6','brick':'172.38.24.12:/data/gluster/jonarrance6'}
 #yo5 = glust.add_gluster_brick(input_dict)
@@ -64,3 +64,6 @@ print yo4
 #yo = account_service_ops(auth)
 #blah = yo.get_account_containers('f283a6409db24392b78b22c196813c3a')
 #print blah
+
+brick = glust.get_gluster_brick()
+print brick

@@ -66,17 +66,23 @@ class gluster_ops:
 
     def get_gluster_brick(self):
         """
-        DESC: Build the gluster-swift ring. This needs to be run everytime a new project is added,
-              or to rebuild the ring  tar.gz files in /etc/swift if they get corrupted.
+        DESC: Get the gluster brick name of the current storage or core node
         INPUT None
-        OUTPUT: Ok - SUCCESS
+        OUTPUT: brick name
                 ERROR - FAIL
-        ACCESS: Admin - can create a gluster swift ring
+        ACCESS: Admin - can get the gluster brick names
                 PU - none
                 User - none
-        NOTE:
+        NOTE: This does not get the brick name for a remote node.
         """
-    
+        if(self.is_admin == 1):
+            if(util.get_node_type() == 'cn'):
+                logger.sys_error('Compute nodes can not be used as Gluster bricks.')
+                raise Exception('Compute nodes can not be used as Gluster bricks.')
+            brick_path = util.get_node_data_ip() + ":/data/gluster-" + util.get_system_name()
+
+            return brick_path
+
     def create_gluster_swift_ring(self):
         """
         DESC: Build the gluster-swift ring. This needs to be run everytime a new project is added,
