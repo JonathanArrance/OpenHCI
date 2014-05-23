@@ -35,7 +35,7 @@ $(function() {
 		
 		
 		
-		var 	name = $( "#name" ),
+		var 	name = $( "#username" ),
 			role =$( "#role" ),
 			allFields = $( [] ).add( name ).add( role ),
 			tips = $( ".validateTips" );

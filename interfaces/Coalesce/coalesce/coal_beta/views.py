@@ -759,11 +759,15 @@ def confirm_resize(request, project_id, instance_id):
         return HttpResponseRedirect(redirect_to)
 
 def live_migrate_server(request, project_id, instance_id, host_name):
+    print "live-migrate"
     input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
+        print "ssa"
+        print 1
         out = ssa.live_migrate_server(input_dict)
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -776,6 +780,7 @@ def evacuate_server(request, project_id, instance_id, host_name):
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
+        print ssa
         out = ssa.evacuate_server(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
@@ -828,8 +833,8 @@ def delete_user(request, username, userid):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        user_dict = {'username': username, 'userid':userid}
-        uo.delete_user(user_dict)
+        user_dict = {'username': username, 'user_id':userid}
+        out = uo.delete_user(user_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
