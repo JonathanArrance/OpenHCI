@@ -17,12 +17,14 @@
                 <form>
                 {% csrf_token %}
                 <fieldset>
-                    <label for="name">Name</label>
-                    <input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+                    <label for="username">Name</label>
+                    <input type="text" name="username" id="username" class="text ui-widget-content ui-corner-all" />
                     <label for="email">Email</label>
                     <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
+		    <label for="confirm">Confirm Password</label>
+                    <input type="password" name="confirm" id="confirm" value="" class="text ui-widget-content ui-corner-all" />
                     <select name="role" id="role">
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
@@ -37,8 +39,8 @@
                 <form>
                 {% csrf_token %}
                 <fieldset>
-                    <label for="name">Name</label>
-                    <select name="name" id="name">
+                    <label for="username">Name</label>
+                    <select name="username" id="username">
                         {% for ouser in ouserinfo %}
                             <option value="{{ouser}}">{{ouser}}</option>
                         {% endfor %}
@@ -69,7 +71,12 @@
 
 			  </td>
 
-			  <td><a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/">view</a> | <a href="/delete_user/{{pu.username}}/{{ui.user_id}}/" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a>| {% include "coal/toggle_user.html" %}    | <a href="/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove user from project</a> </td></tr>
+			  <td>
+			    <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/">view</a> |
+			    <a href="/delete_user/{{pu.username}}/{{ui.user_id}}/" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a> |
+			    {% include "coal/toggle_user.html" %}    |
+			    <a href="/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove user from project</a>
+			  </td></tr>
 
                     {% endwith %}
                   {% endwith %}

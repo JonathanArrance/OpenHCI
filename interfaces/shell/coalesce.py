@@ -234,9 +234,6 @@ def setup(d):
         return
     else:
         d.msgbox("Continue to first time setup.")
-        flag_set = node_util.set_first_time_boot('UNSET')
-        if(flag_set['first_time_boot'] != 'OK'):
-            d.msgbox("An error has occured in setting the first time boot flag.")
     
     info_dict = {'uplink_ip': "",
                  'uplink_subnet': "",
@@ -270,7 +267,7 @@ def setup(d):
         info_dict['cnfrm'] = cnfrm
         
         # Confirm all entries exist
-        if(uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm):
+        if(uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm == ""):
             d.msgbox("Please fill out all fields, try again.", width=60, height=10)
             continue
         # Validate uplink ip
@@ -347,6 +344,9 @@ def setup(d):
 
     if(ran == "OK"):
         success_msg(d, timeout)
+        flag_set = node_util.set_first_time_boot('UNSET')
+        if(flag_set['first_time_boot'] != 'OK'):
+            d.msgbox("An error has occured in setting the first time boot flag.")
         clear_screen(d)
         util.reboot_system()
 
