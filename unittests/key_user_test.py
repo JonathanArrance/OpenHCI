@@ -21,11 +21,26 @@ d = a.get_auth()
 print "Instantiating user_ops object."
 use = user_ops(d)
 
+print "listing cloud users"
+cloud = use.list_cloud_users()
+print cloud
+
+x = []
+for y in cloud:
+    x.append(y['username'])
+
+userset = set(x)
+if('danpu' in userset):
+    print "here"
+else:
+    print "not here"
+
+'''
 role_id = util.get_def_mem_role()
 remove_role_dict = {'user_id':'49ebd750c3364a8fa7d2dc9332f45046','role_id':'9fe2ff9ee4384b1894a90878d3e92bab','project_id':'4ecbada824e14d80b444200c8ab96b44'}
 remove_def = use.remove_user_role(remove_role_dict)
 print remove_def
-
+'''
 '''
 print "listing orphaned users"
 orph = use.list_orphaned_users()
@@ -142,11 +157,11 @@ time.sleep(2)
 print "----------------------------------------------"
 
 print "Removing user from project"
-'''
+
 remove_user_dict = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
-'''
+
 print "Deleteing a testuser"
 delete = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
 

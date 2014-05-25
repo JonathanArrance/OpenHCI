@@ -68,7 +68,7 @@ class gluster_ops:
         """
         DESC: Get the gluster brick name of the current storage or core node
         INPUT None
-        OUTPUT: brick name
+        OUTPUT: brick_path
                 ERROR - FAIL
         ACCESS: Admin - can get the gluster brick names
                 PU - none
@@ -76,10 +76,14 @@ class gluster_ops:
         NOTE: This does not get the brick name for a remote node.
         """
         if(self.is_admin == 1):
+            brick_path = None
             if(util.get_node_type() == 'cn'):
                 logger.sys_error('Compute nodes can not be used as Gluster bricks.')
                 raise Exception('Compute nodes can not be used as Gluster bricks.')
-            brick_path = util.get_node_data_ip() + ":/data/gluster-" + util.get_system_name()
+            elif(util.get_node_type() == 'sn'):
+                brick_path = util.get_node_data_ip() + ":/data/gluster-" + util.get_system_name()
+            else:
+                brick_path = util.get_node_data_ip() + ":/data/gluster"
 
             return brick_path
 
