@@ -18,21 +18,25 @@
                     <th>Controller</th>
                     <th>Cloud Name</th>
                     <th>Zone</th>
-                    <th>ISCSI IQN</th>
-                    <th>Swift Ring</th>
                     <th>Status</th>
                 </tr>
                 {% for node in node_info %}
                     <tr>
                         <td><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></td>
-                        <td>{{node.node_type}}</td>
+                        <td>
+                          {% if node.node_type == "cc" %}
+                            core node
+                          {% elif node.node_type == "cn" %}
+                            compute node
+                          {% elif node.node_type == "sn" %}
+                            storage node
+                          {% endif %}
+                        </td>
                         <td>{{node.node_data_ip}}</td>
                         <td>{{node.node_mgmt_ip}}</td>
                         <td>{{node.node_controller}}</td>
                         <td>{{node.node_cloud_name}}</td>
                         <td>{{node.node_nova_zone}}</td>
-                        <td>{{node.node_iscsi_iqn}}</td>
-                        <td>{{node.node_swift_ring}}</td>
                         <td>{{node.status}}</td>
                     </tr>
                 {% endfor %}
