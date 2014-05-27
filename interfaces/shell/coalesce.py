@@ -282,6 +282,10 @@ def setup(d):
         if(valid_ip(uplink_gateway) is False):
             d.msgbox("Invalid Uplink Gateway, try again.", width=60, height=10)
             continue
+        # Validate gateway has same subnet as uplink
+        if(valid_ip_vm(uplink_ip, uplink_gateway) is False):
+            d.msgbox("Invalid Uplink Gateway, Uplink and Gateway must be on the same subnet, try again.", width=60, height=10)
+            continue
         # Validate uplink dns
         if(valid_ip(uplink_dns) is False):
             d.msgbox("Invalid Uplink DNS, try again.", width=60, height=10)
