@@ -534,7 +534,9 @@ def attach_volume(request, project_id, instance_id, volume_id):
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
-        sso.attach_vol_to_server(attach_vol)
+        out = sso.attach_vol_to_server(attach_vol)
+        print "***---Attach Volume---***"
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -542,11 +544,14 @@ def attach_volume(request, project_id, instance_id, volume_id):
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def detach_volume(request, project_id, instance_id, volume_id):
+def detach_volume(request, project_id, volume_id):
     try:
         auth = request.session['auth']
+        vo = volume_ops(auth)
         sso = server_storage_ops(auth)
-        detach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id}
+        v_dict = {'volume_id': volume_id, 'project_id': project_id}
+        v_info = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': v_info['volume_instance'], 'volume_id': volume_id}
         out = sso.detach_vol_from_server(detach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
@@ -759,15 +764,11 @@ def confirm_resize(request, project_id, instance_id):
         return HttpResponseRedirect(redirect_to)
 
 def live_migrate_server(request, project_id, instance_id, host_name):
-    print "live-migrate"
     input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        print "ssa"
-        print 1
         out = ssa.live_migrate_server(input_dict)
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -780,7 +781,6 @@ def evacuate_server(request, project_id, instance_id, host_name):
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        print ssa
         out = ssa.evacuate_server(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
