@@ -607,7 +607,7 @@ class user_ops:
 
                 elif((user_role_dict['username'] != 'admin') and (user_group_id >= 1)):#may be able to remove this check, more testing needed
                     try:
-                        logger.sql_error('addina a user to the project')
+                        logger.sql_error('adding a user to the project')
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
@@ -1109,12 +1109,51 @@ class user_ops:
     #OpenStack allows it, but for now we will not.
     def list_user_tenants():
         print "not implemented"
-    
+
     #Note at some point we will allow a user to be assigned to multiple Roles,
     #however one role must be the default admin, or Member role.
     def list_user_roles():
         print "not implemented"
-        
+
+    def list_cloud_users(self):
+        """
+        DESC: List all of the users that are in the cloud sysytem.
+        INPUT: none
+        OUTPUT: array of r_dict - username
+                                - user_project
+                                - user_group
+                                - user_enabled
+                                - keystone_user_id
+                                - user_email
+        ACCESS: Only admins can list all of the cloud users.
+        NOTE: 
+        """
+        if(self.is_admin == 1):
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except:
+                logger.sql_error("Could not connect to the DB.")
+                raise Exception("Could not connect to the DB.")
+
+            try:
+                get_users = {'select':'*', 'from':'trans_user_info'}
+                users = self.db.pg_select(get_users)
+            except:
+                logger.sql_error('Could not get a list of orphaned users.')
+                raise Exception('Could not get a list of orphaned users.')
+
+            r_array = []
+            for user in users:
+                r_dict = {'username':user[1],'user_projects':user[6],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
+                r_array.append(r_dict)
+
+            return r_array
+        else:
+            logger.error('Only admins can list the orphaned users.')
+            raise Exception('Only admins can list the orphaned users.')
+
     def list_orphaned_users(self):
         """
         DESC: List all of the orphaned or unaffiliated users in the system.
