@@ -301,7 +301,7 @@ class user_ops:
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
-
+            
             try:
                 #add the new user to openstack
                 body = ""

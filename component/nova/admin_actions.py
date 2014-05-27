@@ -374,6 +374,7 @@ class server_admin_actions:
         ACCESS: ONLY the admin can migrate an instance
         NOTES: This is not the same as the migration function
         """
+        print "in live-migrate def"
         for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
@@ -392,7 +393,7 @@ class server_admin_actions:
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
-
+        print "before call"
         try:
             # construct request header and body
             body='{"os-migrateLive": {"host": "%s","block_migration": "false", "disk_over_commit": "false"}}'%(openstack_host_id)
