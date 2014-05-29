@@ -59,14 +59,29 @@ $(document).ready(function() {
         {{ project.project_name}} ({{ project.project_id }})
     </div>
 
+    <h4>Instance Management</h4>
     <div class="row-fluid">
       {% include "coal/project_view_widgets/instances.html" %}
       {% include "coal/project_view_widgets/floating_ips.html" %}
+    </div>
+
+    <h4>Storage</h4>
+    <div class="row-fluid">
       {% include "coal/project_view_widgets/volumes.html" %}
+    </div>
+
+    <h4>Software Defined Networking </h4>
+    <div class="row-fluid">
       {% include "coal/project_view_widgets/external_networks.html" %}
       {% include "coal/project_view_widgets/internal_networks.html" %}
+    </div>
+    
+    <h4>Security</h4>
+    <div class="row-fluid">
       {% include "coal/project_view_widgets/security_groups.html" %}
       {% include "coal/project_view_widgets/key_pairs.html" %}
+    </div>
+
 
     </div>
 

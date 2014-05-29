@@ -6,9 +6,11 @@
 	     {% if user_level == 0 %}
 	       <a href="#"  id="evacuate-instance" class="btn btn-mini" style="float:right">Evacuate</a>
 	       <a href="#"  id="live-migrate-instance" class="btn btn-mini" style="float:right">Live Migrate</a>
+	       <a href="#"  id="migrate-instance" class="btn btn-mini" style="float:right">Migrate</a>
 	     {% endif %}
           </div>
-
+	
+	
  	  <div id="instance-dialog-form" title="Create new instance">
                 <form>
                 {% csrf_token %}
@@ -55,20 +57,20 @@
                 </fieldset>
                 </form>
            </div>
-	  
+	{% if user_level == 0 %}
 	  <div id="instance-live-migrate-form" title="Migrate live instance">
 		<p class="validateTips">Migrate a live instance to another host.  </p>
                 <form>
                 {% csrf_token %}
                 <fieldset>
-		    <label for="instance">Instance</label>
-                    <select name="instance" id="instance">
+		    <label for="live_instance">Instance</label>
+                    <select name="live_instance" id="live_instance">
 			{% for i in instances %}
 		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
 			{% endfor %}
                     </select>
-		    <label for="host_name">Host</label>
-                    <select name="host_name" id="host_name">
+		    <label for="live_host_name">Host</label>
+                    <select name="live_host_name" id="live_host_name">
 			{% for h in hosts %}
 		   	    <option value="{{h.host_name}}">{{h.host_name}}</option>
 			{% endfor %}
@@ -77,6 +79,21 @@
                 </fieldset>
                 </form>
            </div>
+
+	  <div id="instance-migrate-form" title="Migrate instance">
+		<p class="validateTips">Migrate an instance to another host automatically.</p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+		    <label for="mig_instance">Instance</label>
+                    <select name="mig_instance" id="mig_instance">
+			{% for i in instances %}
+		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
+			{% endfor %}
+                    </select>
+                </fieldset>
+                </form>
+           </div> 
 
 	  <div id="instance-evacuate-form" title="Evacuate instance">
                 <p class="validateTips">Evacuate an instance from a failed host to a new host.  </p>
@@ -85,7 +102,7 @@
                 <fieldset>
 		    <label for="instance">Instance</label>
                     <select name="instance" id="instance">
-			{% for i in instances %}
+			{% for i in instance_info.items %}
 		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
 			{% endfor %}
                     </select>
@@ -99,7 +116,8 @@
                 </fieldset>
                 </form>
            </div>
-
+	{% endif %}
+	
 	  {% if instances %}
 	    <table class="paleblue">
                 <tr> <th>Name</th>  <th>Status</th><th>OS flavor</th><th>Actions</th> </tr>
@@ -111,10 +129,15 @@
 			    <td>{{v.server_os}} {{v.server_flavor}}</td>
 			    <td>
 			       <a href="{{v.novnc_console}}" target="_blank">console</a> | 
-			       {% if v.server_status = "ACTIVE" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a> | {% endif%}
-                               {% if v.server_status = "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> | {% endif%}
-			       <a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/" 
+			       {% if v.server_status == "ACTIVE" %}
+				 <a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a> |
+			         <a href="/server/{{project.project_id}}/{{v.server_id}}/suspend_server">suspend</a> |
+			       {% endif%}
+                               {% if v.server_status == "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> | {% endif%}
+			       {% if v.server_status == "SUSPENDED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/resume_server">resume</a> | {% endif%}
+			       {% if user_level == 0 %}<a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/" 
                                 data-confirm="This will completely remove {{v.server_name}} from this project. Are you sure?">delete</a>
+			       {% endif %}
 			    </td>
 			 </tr>
                 {% endfor %}  

@@ -35,8 +35,7 @@ $(function() {
 		
 		
 		
-		var     instance = $( "#instance" ),
-                        host_name = $( "#host_name" ),
+		var     instance = $( "#mig_instance" ),
                         
 
 			allFields = $( [] ).add( instance ),
@@ -64,7 +63,7 @@ $(function() {
 
 	
 
-		$( "#instance-live-migrate-form" ).dialog({
+		$( "#instance-migrate-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
@@ -75,7 +74,7 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/server/' + PROJECT_ID + '/' + instance.val() + '/' + host_name.val() + '/live_migrate_server/');
+					   $.post('/server/' + PROJECT_ID + '/' + instance.val() + '/migrate_server/');
 
 						$( this ).dialog( "close" );
 					}
@@ -89,9 +88,9 @@ $(function() {
 			}
 		});
 
-		$( "#live-migrate-instance" )
+		$( "#migrate-instance" )
 			.click(function() {
-				$( "#instance-live-migrate-form" ).dialog( "open" );
+				$( "#instance-migrate-form" ).dialog( "open" );
 			});
 			
 			

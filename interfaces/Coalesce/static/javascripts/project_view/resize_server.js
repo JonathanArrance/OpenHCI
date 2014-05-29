@@ -88,7 +88,6 @@ $(function() {
 					  
 						$.post('/server/' + PROJECT_ID + '/' +  SERVER_ID + '/' + flavor.val() + '/resize_server/' );
 	
-						
 						$( this ).dialog( "close" );
 					}
 				},

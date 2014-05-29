@@ -155,6 +155,14 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
 	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/suspend_server/$',
+	    'coalesce.coal_beta.views.suspend_server',
+            name='suspend_server'),
+
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/resume_server/$',
+	    'coalesce.coal_beta.views.resume_server',
+            name='resume_server'),
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/delete_server/$',
 	    'coalesce.coal_beta.views.delete_server',
             name='delete_server'),
@@ -166,11 +174,23 @@ urlpatterns = patterns('',
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/confirm_resize/$',
 	    'coalesce.coal_beta.views.confirm_resize',
             name='confirm_resize'),
-	
+
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/reboot/$',
+	    'coalesce.coal_beta.views.reboot',
+            name='reboot'),
+
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_cycle/$',
+	    'coalesce.coal_beta.views.power_cycle',
+            name='power_cycle'),
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/live_migrate_server/$',
 	    'coalesce.coal_beta.views.live_migrate_server',
             name='live_migrate_server'),
 	
+	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/migrate_server/$',
+	    'coalesce.coal_beta.views.migrate_server',
+            name='migrate_server'),
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/evacuate_server/$',
 	    'coalesce.coal_beta.views.evacuate_server',
             name='evacuate_server'),
@@ -221,7 +241,6 @@ urlpatterns = patterns('',
 	url(r'^download_public_key/(?P<sec_key_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.download_public_key',
             name='download_public_key'),
-
 
         # --- Setup ----
         url(r'^setup/$',
