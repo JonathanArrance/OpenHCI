@@ -730,14 +730,9 @@ class layer_three_ops:
                 load2 = json.loads(rest['data'])
                 gateway_ip = None
                 for port in load2['ports']:
-                    print port
                     for fixed in port['fixed_ips']:
-                        print fixed
-                        print self.ext_sub[0][0]
-                        print fixed['subnet_id']
                         if(fixed['subnet_id'] == self.ext_sub[0][0]):
                             gateway_ip = fixed['ip_address']
-                print gateway_ip
                 try:
                     self.db.pg_transaction_begin()
                     update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],gateway_ip),'where':"router_id='%s'"%(add_dict['router_id'])}
