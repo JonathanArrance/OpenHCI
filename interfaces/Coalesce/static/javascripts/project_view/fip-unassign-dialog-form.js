@@ -35,8 +35,8 @@ $(function() {
 		
 		
 		
-		var 	floating_ip = $( "#floating_ip" ),
-			instance = $( "#instance" ),
+		var 	floating_ip = $( "#unassign_floating_ip" ),
+			instance = $( "#unassign_instance" ),
 
 			allFields = $( [] ).add( floating_ip ).add( instance ),
 			tips = $( ".validateTips" );

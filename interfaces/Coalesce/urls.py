@@ -138,7 +138,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.assign_floating_ip',
             name='assign_floating_ip'),
 
-	url(r'^unassign_floating_ip/(?P<floating_ip>[^/]+)/(?P<instance_id>[^/]+)/(?P<project_id>[^/]+)/$',
+	url(r'^unassign_floating_ip/(?P<floating_ip_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.unassign_floating_ip',
             name='unassign_floating_ip'),
 

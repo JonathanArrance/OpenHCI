@@ -187,9 +187,6 @@ def project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
-            print
-            print i_info
-            print
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -573,8 +570,6 @@ def attach_volume(request, project_id, instance_id, volume_id):
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
         out = sso.attach_vol_to_server(attach_vol)
-        print "***---Attach Volume---***"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -905,7 +900,7 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
-        l3o.update_floating_ip(update_dict)
+        out = l3o.update_floating_ip(update_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -913,11 +908,12 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         messages.warning(request, "Unable to assign floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER')) 
 
-def unassign_floating_ip(request, floating_ip, instance_id, project_id):
+def unassign_floating_ip(request, floating_ip_id):
     try:
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
-        update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'remove'}
+        ip = l3o.get_floating_ip(floating_ip_id)
+        update_dict = {'floating_ip':ip['floating_ip'], 'instance_id':ip['instance_id'], 'project_id':ip['project_id'], 'action': 'remove'}
         l3o.update_floating_ip(update_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
