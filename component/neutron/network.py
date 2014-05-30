@@ -162,7 +162,9 @@ class neutron_net_ops:
                 else:
                     get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"net_internal='false'"}
             else:
-                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='false'"}
+                #HACK: get the default external if not an admin. Need to make this so it gets default external and any externals thatbelong to the project.
+                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"net_internal='false'"}
+                #get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='false'"}
 
             nets = self.db.pg_select(get_nets)
             r_array = []
