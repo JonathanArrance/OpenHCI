@@ -69,6 +69,8 @@ class layer_three_ops:
         except Exception as e:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise Exception("Could not connect to db with error: %s" %(e))
+        
+        self.ports = port_ops(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -668,6 +670,14 @@ class layer_three_ops:
             else:
                 self.ext_net = config.DEFAULT_PUB_NET_ID
 
+            #get the external network subnet id
+            try:
+                get_ext_sub = {'select':"subnet_id",'from':"trans_public_subnets",'where':"net_id='%s'"%(add_dict['ext_net_id'])}
+                self.ext_sub = self.db.pg_select(get_ext_sub)
+            except:
+                logger.sys_error("No external subnet found.")
+                raise Exception("No external subnet found.")
+            
             try:
                 get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(add_dict['router_id'])}
                 self.router = self.db.pg_select(get_router)
@@ -703,17 +713,34 @@ class layer_three_ops:
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s. Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
+                #get the port
+                try:
+                    body = ''
+                    header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                    function = 'GET'
+                    api_path = '/v2.0/ports?device_id=%s'%(load['router']['id'])
+                    token = self.token
+                    sec = self.sec
+                    rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                    rest = api.call_rest(rest_dict)
+                except Exception as e:
+                    logger.sql_error("Could not get the extrnal gateway ip for %s"%(load['router']['id']))
+                    raise Exception("Could not get the extrnal gateway ip for %s"%(load['router']['id']))
+
+                load2 = json.loads(rest['data'])
+                gateway_ip = None
+                for port in load2['ports']:
+                    print port
+                    for fixed in port['fixed_ips']:
+                        print fixed
+                        print self.ext_sub[0][0]
+                        print fixed['subnet_id']
+                        if(fixed['subnet_id'] == self.ext_sub[0][0]):
+                            gateway_ip = fixed['ip_address']
+                print gateway_ip
                 try:
                     self.db.pg_transaction_begin()
-                    #get port device info - THIS NEEDS TO BE FIXED. NEED TO USE PORT ID
-                    #port = port_ops(self.auth)
-                    #get_port = port.get_port(PORT ID)
-                    #raw = get_port['fixed_ips']
-                    #possible to have multiple ip in the future
-                    #for x in raw:
-                    #    self.ip = x['ip_address']
-                    #update the transcirrus router
-                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip=NULL"%(load['router']['id']),'where':"router_id='%s'"%(add_dict['router_id'])}
+                    update = {'table':'trans_routers','set':"router_ext_gateway='%s',router_ext_ip='%s'"%(load['router']['id'],gateway_ip),'where':"router_id='%s'"%(add_dict['router_id'])}
                     self.db.pg_update(update)
                 except:
                     self.db.pg_transaction_rollback()
