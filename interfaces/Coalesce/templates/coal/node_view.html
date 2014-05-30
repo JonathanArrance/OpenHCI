@@ -14,14 +14,20 @@
           <table class="paleblue">
 
                 <tr><th>Name</th>                    <td>{{node.node_name}}</td></tr>
-                <tr class="odd"><th>Type</th>        <td>{{node.node_type}}</td></tr>
+                <tr class="odd"><th>Type</th>        <td>
+                                                      {% if node.node_type == "cc" %}
+                                                        core node
+                                                      {% elif node.node_type == "cn" %}
+                                                        compute node
+                                                      {% elif node.node_type == "sn" %}
+                                                        storage node
+                                                      {% endif %}
+                                                      </td></tr>
                 <tr><th>Data IP</th>                 <td>{{node.node_data_ip}}</td></tr>
                 <tr class="odd"><th>Mgmt IP</th>     <td>{{node.node_mgmt_ip}}</td></tr>
                 <tr><th>Controller</th>              <td>{{node.node_controller}}</td></tr>
                 <tr class="odd"><th>Cloud Name</th>  <td>{{node.node_cloud_name}}</td></tr>
                 <tr><th>Zone</th>                    <td>{{node.node_nova_zone}}</td></tr>
-                <tr class="odd"><th>ISCSI IQN</th>   <td>{{node.node_iscsi_iqn}}</td></tr>
-                <tr><th>Swift Ring</th>              <td>{{node.node_swift_ring}}</td></tr>
                 <tr class="odd"><th>Status</th>      <td>{{node.status}}</td></tr>
 
           </table>

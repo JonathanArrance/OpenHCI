@@ -35,8 +35,8 @@ $(function() {
 		
 		
 		
-		var 	instance = $( "#instance" ),
-                        volume = $( "#volume" ),
+		var 	instance = $( "#att_instance" ),
+                        volume = $( "#att_volume" ),
                         
 
 			allFields = $( [] ).add( instance ),

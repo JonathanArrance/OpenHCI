@@ -5,7 +5,6 @@
              Volume Storage
 
 		<a href="#" id="create-volume" class="btn btn-mini btn-inverse" style="float:right">New Volume</a>
-		<a href="#" id="detach_vol" class="btn btn-mini" style="float:right">Detach</a>
 		<a href="#" id="attach_vol" class="btn btn-mini" style="float:right">Attach</a>
 
           </div>
@@ -30,14 +29,16 @@
 		<form>
                 {% csrf_token %}
                 <fieldset>
-		    <label for="volume">Volume</label>
-                    <select name="volume" id="volume">
-			{% for vol in volumes %}
-			    <option value="{{vol.volume_id}}">{{vol.volume_name}}</option>
+		    <label for="att_volume">Volume</label>
+                    <select name="att_volume" id="att_volume">
+			{% for k,v in volume_info.items %}
+			  {% if v.volume_attached == 'false' %}
+			    <option value="{{v.volume_id}}">{{v.volume_name}}</option>
+			  {% endif %}
 			{% endfor %}
                     </select>
-		    <label for="instance">Instance</label>
-                    <select name="instance" id="instance">
+		    <label for="att_instance">Instance</label>
+                    <select name="att_instance" id="att_instance">
 			{% for server in instances %}
 		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
 			{% endfor %}
@@ -46,34 +47,17 @@
                 </form>
            </div>
 
-	  <div id="volume-detach-dialog-form" title="Detach volume from instance">
-                <p class="validateTips">Detach a volume from an instance.  </p>
-		<form>
-                {% csrf_token %}
-                <fieldset>
-		    <label for="volume">Volume</label>
-                    <select name="volume" id="volume">
-			{% for vol in volumes %}
-		   	    <option value="{{vol.volume_id}}">{{vol.volume_name}}</option>
-			{% endfor %}
-                    </select>
-		    <label for="instance">Instance</label>
-                    <select name="instance" id="instance">
-			{% for server in instances %}
-		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
-			{% endfor %}
-                    </select>
-                </fieldset>
-                </form>
-           </div>
 
            <table class="paleblue">
 	    {% if volumes %}
                 <tr> <th>Volume</th> <th>Actions</th></tr>
-                    {% for volume in volumes %}
-		      <tr> <td>{{volume.volume_name}}</td>
-               <td><a href="/projects/{{ project.project_id}}/volumes/{{volume.volume_id}}/">view</a> | 
-               <a href="/delete_volume/{{volume.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a>
+                    {% for k,v in volume_info.items %}
+		      <tr> <td>{{v.volume_name}}</td>
+               <td><a href="/projects/{{ project.project_id}}/volumes/{{v.volume_id}}/">view</a> | 
+               <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{v.volume_name}} from this project. Are you sure?">delete</a>
+	       {% if v.volume_attached == 'true' %}
+		  | <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/" class="btn btn-mini">detach</a>
+	       {% endif %}
 	       </td></tr>
 		    {% endfor %}
 		{% else %}

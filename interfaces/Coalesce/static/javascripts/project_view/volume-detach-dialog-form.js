@@ -35,8 +35,7 @@ $(function() {
 		
 		
 		
-		var 	instance = $( "#instance" ),
-                        volume = $( "#volume" ),
+		var 	volume = $( "#volume" ),
 
 			allFields = $( [] ).add( instance ),
 			tips = $( ".validateTips" );
@@ -74,7 +73,7 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/detach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
+					   $.post('/detach_volume/' + PROJECT_ID + '/' + volume.val() + '/');
 
 						$( this ).dialog( "close" );
 					}

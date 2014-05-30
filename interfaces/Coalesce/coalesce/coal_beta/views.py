@@ -52,6 +52,7 @@ from datetime import datetime
 from collections import defaultdict
 import csv
 import json
+import sys
 from urlparse import urlsplit
 
 # Custom imports
@@ -184,10 +185,30 @@ def project_view(request, project_id):
     
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
-        i_info = so.get_server(i_dict)
-        sname  = instance['server_name']
-        instance_info[sname] = i_info
-
+        try:
+            i_info = so.get_server(i_dict)
+            print
+            print i_info
+            print
+            sname  = instance['server_name']
+            instance_info[sname] = i_info
+        except Exception:
+            sys.exc_clear()
+            i_info = {'server_os': '',
+                      'server_key_name': '',
+                      'server_group_name': '',
+                      'server_zone': '',
+                      'server_public_ips': {},
+                      'server_id': '',
+                      'server_name': instance['server_name'],
+                      'server_status': u'BUILDING',
+                      'server_node': '',
+                      'server_int_net': {},
+                      'server_net_id': '',
+                      'server_flavor': ''}
+            sname = instance['server_name']
+            instance_info[sname] = i_info
+            
     try:
         images 	  = go.list_images()
     except:
@@ -273,9 +294,26 @@ def basic_project_view(request, project_id):
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
-        i_info = so.get_server(i_dict)
-        sname  = instance['server_name']
-        instance_info[sname] = i_info
+        try:
+            i_info = so.get_server(i_dict)
+            sname  = instance['server_name']
+            instance_info[sname] = i_info
+        except Exception:
+            sys.exc_clear()
+            i_info = {'server_os': '',
+                      'server_key_name': '',
+                      'server_group_name': '',
+                      'server_zone': '',
+                      'server_public_ips': {},
+                      'server_id': '',
+                      'server_name': instance['server_name'],
+                      'server_status': u'BUILDING',
+                      'server_node': '',
+                      'server_int_net': {},
+                      'server_net_id': '',
+                      'server_flavor': ''}
+            sname = instance['server_name']
+            instance_info[sname] = i_info
 
     try:
         images    = go.list_images()
@@ -534,7 +572,9 @@ def attach_volume(request, project_id, instance_id, volume_id):
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
-        sso.attach_vol_to_server(attach_vol)
+        out = sso.attach_vol_to_server(attach_vol)
+        print "***---Attach Volume---***"
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -542,11 +582,14 @@ def attach_volume(request, project_id, instance_id, volume_id):
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def detach_volume(request, project_id, instance_id, volume_id):
+def detach_volume(request, project_id, volume_id):
     try:
         auth = request.session['auth']
+        vo = volume_ops(auth)
         sso = server_storage_ops(auth)
-        detach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id}
+        v_dict = {'volume_id': volume_id, 'project_id': project_id}
+        v_info = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': v_info['volume_instance'], 'volume_id': volume_id}
         out = sso.detach_vol_from_server(detach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
@@ -714,6 +757,36 @@ def unpause_server(request, project_id, instance_id):
         messages.warning(request, "Unable to unpause server.")
         return HttpResponseRedirect(redirect_to)
 
+def suspend_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        saa.suspend_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to suspend server.")
+        return HttpResponseRedirect(redirect_to)
+
+def resume_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        saa.resume_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to resume server.")
+        return HttpResponseRedirect(redirect_to)
+
 def delete_server(request, project_id, server_id):
     input_dict = {'project_id':project_id, 'server_id':server_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -758,35 +831,73 @@ def confirm_resize(request, project_id, instance_id):
         messages.warning(request, "Unable to confirm resize.")
         return HttpResponseRedirect(redirect_to)
 
-def live_migrate_server(request, project_id, instance_id, host_name):
-    print "live-migrate"
-    input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
+def reboot(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"SOFT"}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
     try:
         auth = request.session['auth']
-        saa = server_admin_actions(auth)
-        print "ssa"
-        print 1
-        out = ssa.live_migrate_server(input_dict)
-        print out
+        sa = server_actions(auth)
+        out = sa.reboot_server(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        messages.warning(request, "Unable to unpause server.")
+        messages.warning(request, "Unable to reboot server.")
         return HttpResponseRedirect(redirect_to)
-    
+
+def power_cycle(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"HARD"}
+    referer = request.META.get('HTTP_REFERER', None)
+    redirect_to = urlsplit(referer, 'http', False)[2]
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        sa.reboot_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to power cycle server.")
+        return HttpResponseRedirect(redirect_to)
+
+def live_migrate_server(request, project_id, instance_id, host_name):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        out = ssa.live_migrate_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to live migrate server.")
+        return HttpResponseRedirect(redirect_to)
+
+def migrate_server(request, project_id, instance_id):
+    input_dict = {'project_id':project_id, 'instance_id':instance_id}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        out = ssa.migrate_server(input_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to migrate server.")
+        return HttpResponseRedirect(redirect_to)
+
 def evacuate_server(request, project_id, instance_id, host_name):
     input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        print ssa
         out = ssa.evacuate_server(input_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        messages.warning(request, "Unable to unpause server.")
+        messages.warning(request, "Unable to evacuate server.")
         return HttpResponseRedirect(redirect_to)
 
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
@@ -918,7 +1029,7 @@ def instance_view(request, project_id, server_id):
                                RequestContext(request, {
                                                         'server': server,
                                                         'flavors': flavors,
-                                                        'project_id': project_id,
+                                                        'current_project_id': project_id,
                                                         }))
 
 def add_private_network(request, net_name, admin_state, shared, project_id):
@@ -1064,6 +1175,7 @@ def build_project(request):
     else:
         form = BuildProjectForm()
     return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
+
 
 # --- Media ---
 def logo(request):

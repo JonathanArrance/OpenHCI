@@ -35,8 +35,8 @@ $(function() {
 		
 		
 		
-		var     instance = $( "#instance" ),
-                        host_name = $( "#host_name" ),
+		var     instance = $( "#live_instance" ),
+                        host_name = $( "#live_host_name" ),
                         
 
 			allFields = $( [] ).add( instance ),

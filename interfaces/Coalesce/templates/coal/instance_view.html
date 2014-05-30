@@ -14,10 +14,13 @@
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/resize_server.js"/></script>
     <script>
-      var PROJECT_ID = "{{ project_id}}";
+      var PROJECT_ID = "{{current_project_id}}";
     </script>
     <script>
       var SERVER_ID = "{{server.server_id}}";
+    </script>
+    <script>
+      var DEFAULT_PUBLIC = "{{ default_public }}";
     </script>
 
 {% endblock %}
@@ -27,7 +30,6 @@
 {% block content %}
 
     <div class="row-fluid">
-    
       <div class="span4">
       	<div class="row-fluid">
       	
@@ -43,10 +45,20 @@
                     </select>
 		</fieldset>
 		</form>
+	  </div>
+	  <div class="well">
+	    <div class="legend">
+	      Actions
+	      <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
 	    </div>
-	    <a href="#" id="resize-server">resize instance</a>
-      	
-              <a href="/server/{{project_id}}/{{server.server_id}}/confirm_resize">confirm resize</a>
+	    <div>
+	      <a href="#" id="resize-server" class="btn btn-mini">resize instance</a>
+	      <a href="/server/{{current_project_id}}/{{server.server_id}}/confirm_resize" class="btn btn-mini">confirm resize</a>
+	      <a href="/server/{{current_project_id}}/{{server.server_id}}/reboot" class="btn btn-mini">reboot</a>
+	      <a href="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" class="btn btn-mini">power cycle</a>
+	    </div>
+	  </div>
+
 	</div><!-- end inner row -->
         <div class="row-fluid">
 	    
@@ -80,7 +92,6 @@
 	    </table>    
 	    
 	</div><!-- end inner row -->
-	
       </div><!-- end span4 -->
                                      
 

@@ -292,15 +292,17 @@ class server_ops:
         #verify that the flavor requested exists
         #get the flavor from the list
         flav_list = self.flav.list_flavors()
+        found_flav = False
         for flav in flav_list:
             if(flav['flavor_name'] == create_dict['flavor_name']):
                 #get the flavor_id
                 self.flav_id = flav['flav_id']
+                found_flav = True
                 # as soon as the value we want is found break out of the loop
                 break
-            else:
-                logger.sys_error("The flavor: %s was not found" %(create_dict['flavor_name']))
-                raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
+        if found_flav == False:
+            logger.sys_error("The flavor: %s was not found" %(create_dict['flavor_name']))
+            raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
 
         #verify the image requested exsists
         #image_list = self.image.nova_list_images(create_dict['project_id'])

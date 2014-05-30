@@ -121,7 +121,7 @@ $(function() {
 			}
 		});
 
-		$( "#create-usr" )
+		$( "#create-user" )
 			.button()
 			.click(function() {
 				$( "#dialog-form" ).dialog( "open" );
