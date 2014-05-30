@@ -115,7 +115,7 @@ class volume_ops:
         if(self.is_admin == 0):
             if(self.project_id == create_vol['project_id']):
                 create_flag = 1
-                print create_flag
+            print create_flag
         elif(self.is_admin == 1):
             if(create_vol['project_id'] != self.project_id):
                 self.token = get_token(self.username,self.password,create_vol['project_id'])
@@ -166,7 +166,7 @@ class volume_ops:
 
             if(rest['response'] == 200):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
                 volname = str(load['volume']['display_name'])
                 volid = str(load['volume']['id'])
@@ -187,12 +187,10 @@ class volume_ops:
                     r_dict = {"volume_id": volid, "volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
             logger.sys_error("Could not create a new volume.")
             raise Exception("Could not create a new volume.")
-
-        
 
     def create_vol_from_snapshot(self):
         print "not implemented"
@@ -345,8 +343,10 @@ class volume_ops:
                 select_vol = {"select":'*',"from":'trans_system_vols',"where":"proj_id='%s'" %(project_id)}
             else:
                 select_vol = {"select":'*',"from":'trans_system_vols'}
-        elif(self.user_level >= 1):
+        elif(self.user_level == 1):
             select_vol = {"select":'*',"from":'trans_system_vols',"where":"proj_id='%s'" %(self.project_id)}
+        elif(self.user_level == 2):
+            select_vol = {"select":'*',"from":'trans_system_vols',"where":"proj_id='%s'" %(self.project_id),"and":"keystone_user_uuid='%s'"%(self.user_id)}
         else:
             raise Exception("Could not list volumes, invalid user level.")
 
