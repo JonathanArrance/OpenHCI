@@ -57,12 +57,12 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        }
 yo = store.attach_vol_to_server(inp)
 
-'''
+
 print "Createing a new virtual instance"
 server = {'sec_group_name':'keven5','avail_zone':'nova','sec_key_name':'keven5','network_name':'keven5','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'thevm','project_id':'441e0a31c2ed4168872ef9f53aad4e63'}
 yo = nova.create_server(server)
 print yo
-'''
+
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
@@ -78,8 +78,11 @@ time.sleep(2)
 
 print "Get the info for the virtual instances 2nd time in the database."
 for serv in serv_list:
-    get_server = nova.get_server(serv['server_id'])
-    print get_server
+'''
+input_dict = {'server_id':'57f1ebfb-f476-49e6-9083-87ade1dca73b','project_id':'84d3e074012a42ce919771c503993f4e'}
+get_server = nova.get_server(input_dict)
+print get_server
+'''
 print "---------------------------------------"
 time.sleep(2)
 

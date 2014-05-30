@@ -412,9 +412,9 @@ class server_ops:
         try:
             get_server = None
             if(self.is_admin == 1):
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id'])}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id'])}
             else:
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone.inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
             server = self.db.pg_select(get_server)
         except:
             logger.sys_error('Could not get server info: get_server')
@@ -452,7 +452,7 @@ class server_ops:
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
                       'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
-                      'server_node':load['server']['hostId'],'server_public_ips':load['server']['addresses'],'novnc_console':novnc}
+                      'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'novnc_console':novnc}
             return r_dict
 
     def detach_all_servers_from_network(self,input_dict):
