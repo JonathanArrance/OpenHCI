@@ -13,7 +13,7 @@ a = authorization("admin","password")
 d = a.get_auth()
 print d
 
-proj_dict = {'project_name': "kev", 'project_id':'c0717a60e91441a595ad67ef5a1cbfb4' , 'keep_users': 0}
+proj_dict = {'project_name': "robert", 'project_id':'3296e979f77f4e52b82e792417c6c78e' , 'keep_users': 0}
 #project_id = raw_input('project_id: ')
 #proj_dict['project_id'] = project_id
 
