@@ -36,13 +36,19 @@
 	  {% if floating_ips %}
 	    <table class="paleblue">
 
-                <tr> <th>Floating IP</th>  <th>In Use?</th> <th>Actions</th></tr>
+                <tr> <th>Floating IP</th>  <th>Assigned To</th> <th>Actions</th></tr>
 
                 {% for fip in floating_ips %}
 
 		    <tr> 
 			<td>{{fip.floating_ip}}</td>  
-			<td>{{fip.instance_name}}</td>
+			<td>
+			  {% if fip.instance_name == "" %}
+			    none
+			  {% else %}
+			    {{fip.instance_name}}
+			  {% endif %}
+			</td>
 			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">view</a> | 
 			    <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/" 
                                 data-confirm="This will deallocate {{fip.floating_ip}} from this project and make any associated VM's private. Are you sure?"> deallocate
