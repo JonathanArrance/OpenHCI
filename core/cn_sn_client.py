@@ -704,6 +704,8 @@ def restartStorageServices(node_id):
     @author         :
     comments        :
     '''
+    #only restart cinder
+    #common.service.cinder("restart") - cinder volume
 
     print "TODO"
 
