@@ -1318,7 +1318,9 @@ class server_ops:
         elif(self.user_level == 1):
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(self.project_id)}
         elif(self.user_level == 2):
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
+            #HACK: we need to make it so that only the defaults are shown for a standard user until they make their own groups.
+            #get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id)}
         else:
             logger.sys_error('Could not determin user type for sysgroup listing.')
 
@@ -1356,7 +1358,9 @@ class server_ops:
         elif(self.user_level == 1):
             get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(self.project_id)}
         else:
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
+            #HACK: this is temporary until we make it so that the defaults are shown as of now nothing is shown unti the user makes a key
+            #get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id)}
 
         try:
             keys = self.db.pg_select(get_key_dict)

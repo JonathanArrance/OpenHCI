@@ -162,7 +162,9 @@ class neutron_net_ops:
                 else:
                     get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"net_internal='false'"}
             else:
-                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='false'"}
+                #HACK: get the default external if not an admin. Need to make this so it gets default external and any externals thatbelong to the project.
+                get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"net_internal='false'"}
+                #get_nets = {'select':"net_name,net_id,proj_id",'from':"trans_network_settings",'where':"proj_id='%s'"%(self.project_id),'and':"net_internal='false'"}
 
             nets = self.db.pg_select(get_nets)
             r_array = []
@@ -200,7 +202,9 @@ class neutron_net_ops:
             if(self.is_admin == 1):
                 get_net = {'select':"net_name,net_id,user_id,net_admin_state,net_internal,net_shared,proj_id",'from':"trans_network_settings",'where':"net_id='%s'" %(net_id)}
             else:
-                get_net = {'select':"net_name,net_id,user_id,net_admin_state,net_internal,net_shared,proj_id",'from':"trans_network_settings",'where':"net_id='%s'" %(net_id),'and':"proj_id='%s'" %(self.project_id)}
+                #HACK - need to make this so it only gets info for public nets in a certain project 
+                #get_net = {'select':"net_name,net_id,user_id,net_admin_state,net_internal,net_shared,proj_id",'from':"trans_network_settings",'where':"net_id='%s'" %(net_id),'and':"proj_id='%s'" %(self.project_id)}
+                get_net = {'select':"net_name,net_id,user_id,net_admin_state,net_internal,net_shared,proj_id",'from':"trans_network_settings",'where':"net_id='%s'" %(net_id)}
             net = self.db.pg_select(get_net)
         except:
             logger.sql_error("Could not get the net_id %s from from the Transcirrus db."%(net_id))

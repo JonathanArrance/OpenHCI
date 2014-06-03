@@ -93,7 +93,8 @@ def destroy_project(auth_dict, project_dict):
         else:
             logger.sys_info("ERROR, Router %s internal interface not removed." % router_dict['router_id'])
             return "ERROR"
-        remove_router = neutron_router.delete_router(router_dict['router_id'])
+        del_dict = {'router_id': router_dict['router_id'],'project_id': project_dict['project_id']}
+        remove_router = neutron_router.delete_router(del_dict)
         if(remove_router == "OK"):
             logger.sys_info("Router %s removed." % router_dict['router_id'])
         else:
