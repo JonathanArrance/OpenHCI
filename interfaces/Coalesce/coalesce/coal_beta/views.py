@@ -272,10 +272,12 @@ def basic_project_view(request, project_id):
     so = server_ops(auth)
     l3o = layer_three_ops(auth)
     no = neutron_net_ops(auth)
+    fo = flavor_ops(auth)
     volumes       = vo.list_volumes(project_id)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
+    flavors       = fo.list_flavors()
     #pub_net_list  = no.list_external_networks()
 
     priv_net_list = no.list_internal_networks(project_id)
@@ -426,7 +428,7 @@ we need to build a function to request a vm resize
                                                         'floating_ips': floating_ips,
                                                         'private_networks': private_networks,
                                                         'priv_net_list':priv_net_list,
-
+                                                        'flavors': flavors
                                                         }))
 
 def user_view(request, project_name, project_id, user_name):
