@@ -131,7 +131,7 @@ def manage_projects(request):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
-def project_view(request, project_id):
+def project_view(request, project_id, user_level):
     auth = request.session['auth']
     to = tenant_ops(auth)
     so = server_ops(auth)
@@ -140,7 +140,8 @@ def project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
-    ssa = server_admin_actions(auth)
+    if user_level == 0:
+        ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
 
     project = to.get_tenant(project_id)
@@ -174,8 +175,10 @@ def project_view(request, project_id):
     instance_info={}
     flavors       = fo.list_flavors()
     
-    host_dict     = {'project_id': project_id, 'zone': 'nova'}
-    hosts         = ssa.list_compute_hosts(host_dict)
+    hosts=[]
+    if user_level == 0:
+        host_dict     = {'project_id': project_id, 'zone': 'nova'}
+        hosts         = ssa.list_compute_hosts(host_dict)
     
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
@@ -274,12 +277,19 @@ def basic_project_view(request, project_id):
     no = neutron_net_ops(auth)
     fo = flavor_ops(auth)
     volumes       = vo.list_volumes(project_id)
+    volume_info={}
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
     flavors       = fo.list_flavors()
     #pub_net_list  = no.list_external_networks()
 
+    for volume in volumes:
+        v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
+        v_info = vo.get_volume_info(v_dict)
+        vid = volume['volume_id']
+        volume_info[vid] = v_info
+    
     priv_net_list = no.list_internal_networks(project_id)
     private_networks={}
     for net in priv_net_list:
@@ -422,12 +432,15 @@ we need to build a function to request a vm resize
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
+                                                        'volume_info':volume_info,
                                                         'images': images,
                                                         'instances': instances,
                                                         'instance_info': instance_info,
                                                         'floating_ips': floating_ips,
                                                         'private_networks': private_networks,
+                                                        'public_networks': public_networks,
                                                         'priv_net_list':priv_net_list,
+                                                        'pub_net_list':pub_net_list,
                                                         'flavors': flavors
                                                         }))
 
