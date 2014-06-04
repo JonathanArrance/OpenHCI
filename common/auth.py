@@ -22,6 +22,10 @@ class authorization:
     #INPUT: Username in the form of an email address
     #OUTPUT: none
     def __init__(self,username,user_pass):
+        # setting username in logger dict
+        logger.sys_info ("Setting username in logger to %s" % username)
+        logger.SetUserDict (username, "0")
+
         #connect to the database
         try:
             #try to connect to the transcirrus db
@@ -46,6 +50,7 @@ class authorization:
         #check to see if the user exists in the DB
         #exist = user array of array
         exist = _get_user_info(self.db,self.username)
+
         #INFO: status levels determin user activity on the system
         #0 - User is not allowed to login to transcirus interface or Openstack
         #1 - User only has access to the transcirrus interface can not run anything
@@ -101,6 +106,12 @@ class authorization:
             else:
                 token = "error"
                 logger.sys_error("Could not get a token for the the user: %s. Check the system." %(self.username))
+
+            #set the username and user_id in the logger so it will have it for
+            #any further messages.
+            logger.sys_info ("Setting username and id in logger")
+            logger.SetUserDict (self.username, exist[0][5])
+            logger.sys_info ("Username and id set in logger")
 
             #dictionary containing the user login info. permissions, token and status
             #need to set PKI token and ADMIN token
