@@ -46,7 +46,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.build_project',
             name='build_project'),
 
-        url(r'^projects/(?P<project_id>\w+)/view/$',
+        url(r'^projects/(?P<project_id>\w+)/(?P<user_level>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 

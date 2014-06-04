@@ -1,6 +1,6 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %} Basic Project View{% endblock %}
+{% block title %}Project View{% endblock %}
 {% block javascripts %}
     <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
@@ -54,7 +54,7 @@ $(document).ready(function() {
 {% block content %}
 
     <div class="span12 well legend-header">
-        {{ project.project_name}} ({{ project.project_id }})
+        {{ project.project_name}}
     </div>
 
     <h4>Instance Management</h4>

@@ -50,10 +50,21 @@
 
            <table class="paleblue">
 	    {% if volumes %}
-                <tr> <th>Volume</th> <th>Actions</th></tr>
+                <tr> <th>Volume</th> <th>Attached To</th> <th>Actions</th></tr>
                     {% for k,v in volume_info.items %}
 		      <tr> <td>{{v.volume_name}}</td>
-               <td><a href="/projects/{{ project.project_id}}/volumes/{{v.volume_id}}/">view</a> | 
+               <td>
+		{% if v.volume_attached == 'false' %}
+		  NONE
+		{% else %}
+		  {% for server in instances %}
+		    {% if server.server_id == v.volume_instance %}
+		      {{server.server_name}}
+		    {% endif %}
+		  {% endfor %}
+		{% endif %}
+		</td>
+	       <td><a href="/projects/{{ project.project_id}}/volumes/{{v.volume_id}}/">view</a> |
                <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{v.volume_name}} from this project. Are you sure?">delete</a>
 	       {% if v.volume_attached == 'true' %}
 		  | <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/" class="btn btn-mini">detach</a>

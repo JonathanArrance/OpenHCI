@@ -36,7 +36,7 @@
 	  {% if floating_ips %}
 	    <table class="paleblue">
 
-                <tr> <th>Floating IP</th>  <th>Assigned To</th> <th>Actions</th></tr>
+                <tr> <th>Floating IP</th> <th>Assigned To</th> <th>Actions</th></tr>
 
                 {% for fip in floating_ips %}
 
@@ -44,7 +44,7 @@
 			<td>{{fip.floating_ip}}</td>  
 			<td>
 			  {% if fip.instance_name == "" %}
-			    none
+			    NONE
 			  {% else %}
 			    {{fip.instance_name}}
 			  {% endif %}
