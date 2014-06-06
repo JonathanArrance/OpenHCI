@@ -413,14 +413,16 @@ class server_ops:
         #get the detailed server info from openstack
         try:
             get_server = None
-            if(self.is_admin == 1):
+            if(self.user_level == 0):
                 get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id'])}
-            else:
-                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone.inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s' and proj_id='%s'" %(self.user_id,self.project_id)}
+            elif(self.user_level == 1):
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"proj_id='%s'" %(self.project_id)}
+            elif((self.user_level == 2) and (self.project_id == input_dict['project_id'])):
+                get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s'" %(self.user_id)}
             server = self.db.pg_select(get_server)
-        except:
-            logger.sys_error('Could not get server info: get_server')
-            raise Exception('Could not get server info: get_server')
+        except Exception as e:
+            logger.sys_error('Could not get server info: get_server %s'%(e))
+            raise Exception('Could not get server info: get_server %s'%(e))
 
         #this is a HACK to get the server internal IP - I want to have all this info in the DB, need a polling mechanisim to poll until the
         #server is up and then get the ip
@@ -431,7 +433,7 @@ class server_ops:
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
-            raise Esception("Could not connec to the REST api caller in create_server operation.")
+            raise Exception("Could not connec to the REST api caller in create_server operation.")
 
         #build the server
         try:
@@ -445,8 +447,9 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
-            raise e
+            raise Exception("Could not connec to the REST api caller in create_server operation. %s"%(e))
 
+        
         if(rest['response'] == 200):
             input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
             novnc = self.server_actions.get_instance_console(input_dict)

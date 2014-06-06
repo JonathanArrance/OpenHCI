@@ -1128,31 +1128,40 @@ class user_ops:
         ACCESS: Only admins can list all of the cloud users.
         NOTE: 
         """
-        if(self.is_admin == 1):
-            try:
-                #Try to connect to the transcirrus db
-                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
-            except:
-                logger.sql_error("Could not connect to the DB.")
-                raise Exception("Could not connect to the DB.")
+        #if(self.is_admin == 1):
+        try:
+            #Try to connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+            logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+        except:
+            logger.sql_error("Could not connect to the DB.")
+            raise Exception("Could not connect to the DB.")
 
+        user = None
+        if(self.user_level == 0):
             try:
                 get_users = {'select':'*', 'from':'trans_user_info'}
                 users = self.db.pg_select(get_users)
             except:
-                logger.sql_error('Could not get a list of orphaned users.')
-                raise Exception('Could not get a list of orphaned users.')
+                logger.sql_error('Could not get a list of users.')
+                raise Exception('Could not get a list of users.')
+        elif(self.user_level == 1):
+            try:
+                get_users = {'select':'*', 'from':'trans_user_info', 'where':"user_project_id='%s'"%(self.project_id)}
+                users = self.db.pg_select(get_users)
+            except:
+                logger.sql_error('Could not get a list of users.')
+                raise Exception('Could not get a list of users.')
 
-            r_array = []
-            for user in users:
-                r_dict = {'username':user[1],'user_projects':user[6],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
-                r_array.append(r_dict)
+        r_array = []
+        for user in users:
+            r_dict = {'username':user[1],'user_projects':user[6],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
+            r_array.append(r_dict)
 
-            return r_array
-        else:
-            logger.error('Only admins can list the orphaned users.')
-            raise Exception('Only admins can list the orphaned users.')
+        return r_array
+        #else:
+        #    logger.error('Only admins can list the users.')
+        #    raise Exception('Only admins can list the users.')
 
     def list_orphaned_users(self):
         """

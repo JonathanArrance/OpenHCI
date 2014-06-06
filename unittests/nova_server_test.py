@@ -5,7 +5,6 @@
 import sys
 import time
 
-import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 from transcirrus.common.auth import authorization
 from transcirrus.component.nova.server import server_ops
@@ -13,7 +12,7 @@ from transcirrus.component.nova.storage import server_storage_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("admin","password")
+auth = authorization("danpu","password")
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
@@ -82,6 +81,7 @@ for serv in serv_list:
 input_dict = {'server_id':'57f1ebfb-f476-49e6-9083-87ade1dca73b','project_id':'84d3e074012a42ce919771c503993f4e'}
 get_server = nova.get_server(input_dict)
 print get_server
+exit
 '''
 print "---------------------------------------"
 time.sleep(2)
