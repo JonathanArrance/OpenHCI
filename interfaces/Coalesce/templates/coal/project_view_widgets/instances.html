@@ -120,22 +120,22 @@
 	
 	  {% if instances %}
 	    <table class="paleblue">
-                <tr> <th>Name</th>  <th>Status</th><th>OS flavor</th><th>Actions</th> </tr>
+                <tr> <th>Name</th>  <th>Status</th><th>OS / flavor</th><th>Actions</th> </tr>
                 
                  {% for k,v in instance_info.items %}
 			<tr>
 			    <td><a href="/{{project.project_id}}/{{v.server_id}}/instance_view/">{{v.server_name}}</td>
 			    <td>{{v.server_status}}</td>
-			    <td>{{v.server_os}} {{v.server_flavor}}</td>
+			    <td>{{v.server_os}} / {{v.server_flavor}}</td>
 			    <td>
-			       <a href="{{v.novnc_console}}" target="_blank">console</a> | 
 			       {% if v.server_status == "ACTIVE" %}
-				 <a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a> |
-			         <a href="/server/{{project.project_id}}/{{v.server_id}}/suspend_server">suspend</a> |
+				 <a href="{{v.novnc_console}}" target="_blank">console</a>
+				 | <a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a>
+			         | <a href="/server/{{project.project_id}}/{{v.server_id}}/suspend_server">suspend</a>
 			       {% endif%}
-                               {% if v.server_status == "PAUSED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> | {% endif%}
-			       {% if v.server_status == "SUSPENDED" %}<a href="/server/{{project.project_id}}/{{v.server_id}}/resume_server">resume</a> | {% endif%}
-			       {% if user_level == 0 %}<a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/" 
+                               {% if v.server_status == "PAUSED" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> {% endif%}
+			       {% if v.server_status == "SUSPENDED" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/resume_server">resume</a> {% endif%}
+			       {% if user_level == 0 and v.server_status == "ACTIVE" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/" 
                                 data-confirm="This will completely remove {{v.server_name}} from this project. Are you sure?">delete</a>
 			       {% endif %}
 			    </td>

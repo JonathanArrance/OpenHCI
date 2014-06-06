@@ -70,6 +70,13 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.volume_view',
             name='view_volume'),
         
+	url(r'^import_image/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/$',
+	    'coalesce.coal_beta.views.import_image',
+            name='import_image'),
+
+	url(r'^delete_image/(?P<image_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.delete_image',
+            name='delete_image'),
 
         url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_volume',

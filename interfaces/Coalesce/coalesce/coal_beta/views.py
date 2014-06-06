@@ -27,7 +27,7 @@ from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
-from transcirrus.component.glance.glance_ops import glance_ops
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
@@ -564,6 +564,40 @@ def create_keypair(request, key_name, project_id):
     except:
         messages.warning(request, "Unable to create keypair.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def import_image(request, image_name, container_format, disk_format, image_type, image_location, visibility):
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'disk_format': disk_format, 'visibility': visibility}
+        image_location = image_location.replace("G", "/")
+        print image_location
+        if image_type == 'local':
+            import_dict['image_file'] = image_location
+        else:
+            import_dict['image_url'] = image_location
+        out = go.import_image(import_dict)
+        print "***---Image Import---***"
+        print out
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    except:
+        messages.warning(request, "Unable to create volume.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def delete_image(request, image_id):
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        out = go.delete_image(image_id)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    except:
+        messages.warning(request, "Unable to create volume.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 
 def create_volume(request, volume_name, volume_size, description, project_id):
     try:

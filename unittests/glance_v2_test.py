@@ -45,6 +45,7 @@ print "File: %s" %str(gi['image_file'])
 print "Schema: %s" %str(gi['schema'])
 print
 
+"""
 print "**Creating Image: test...**"
 input_dict = {'image_name':"test", 'image_file':"cirros-0.3.1-x86_64-disk.img", 'container_format': "bare", 'disk_format': "raw", 'visibility': "public"}
 ii = i.import_image(input_dict)
@@ -84,7 +85,7 @@ li = i.list_images()
 print li
 print
 
-"""
+
 # create a password manager
 password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
 
@@ -135,6 +136,7 @@ print "File: %s" %str(gi['image_file'])
 print "Schema: %s" %str(gi['schema'])
 print
 
+"""
 print "**Deleting Image: %s...**" %(del_name)
 di = i.delete_image(del_id)
 print di
@@ -144,3 +146,4 @@ print "**Listing Images...**"
 li = i.list_images()
 print li
 print
+"""
