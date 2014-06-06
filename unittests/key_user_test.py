@@ -5,7 +5,7 @@
 import sys
 import time
 
-import transcirrus.common.logger
+#import transcirrus.common.logger
 import transcirrus.common.util as util
 import transcirrus.common.config
 from transcirrus.common.auth import authorization
@@ -14,7 +14,7 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("danpu","password")
 #get the user dict
 d = a.get_auth()
 
@@ -29,11 +29,11 @@ x = []
 for y in cloud:
     x.append(y['username'])
 
-userset = set(x)
-if('danpu' in userset):
-    print "here"
-else:
-    print "not here"
+#userset = set(x)
+#if('danpu' in userset):
+#    print "here"
+#else:
+#    print "not here"
 
 '''
 role_id = util.get_def_mem_role()
