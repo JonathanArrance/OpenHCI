@@ -66,7 +66,7 @@
             {% for proj in project_info %}
               {% if proj.project_name != "trans_default" %}
                 <tr>
-                    <td><a href={% url 'project_view' proj.project_id user_level %}>{{proj.project_name}}</a></td>
+                    <td><a href="/projects/{{proj.project_id}}/view">{{proj.project_name}}</a></td>
                     <td>{{proj.project_id}}</td>
                     <td>{{proj.host_system_name}}</td>
                     <td>{{proj.host_system_ip}}</td>

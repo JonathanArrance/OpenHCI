@@ -41,13 +41,13 @@
 
                 {% for key,value in private_networks.items %}
 		   <tr> 
-			<td>{{key}}</td>  
+			<td><a href="/network/{{value.net_id}}/view/">{{key}}</a></td>  
 			<td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}} </td>  
 			<td>{% for subnet in value.net_subnet_id %}
 				{{subnet.subnet_name}}</br>
 			    {% endfor %}
                         </td>
-			<td><a href="/network/{{value.net_id}}/view/">view</a> | 
+			<td>
 
 				<a href="/delete_private_network/{{ project.project_id }}/{{value.net_id}}/" 
                                 data-confirm="This will completely remove {{key}} from this project. 

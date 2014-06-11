@@ -66,17 +66,20 @@
 			    {% if ui.user_enabled == "FALSE" %}
 			      <i class="icon-warning-sign"></i>
 			    {% endif %}
-			    <b>{{username}}
+			    <b>
+			      <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/">{{username}}</a>
 			    </b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
 
 			  </td>
 
 			  <td>
-			    <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/">view</a> |
+			   {% if user_level == 0 %}
 			    <a href="/delete_user/{{pu.username}}/{{ui.user_id}}/" data-confirm="This will completely erase {{pu.username}} from all projects. Are you sure?"> delete</a> |
 			    {% include "coal/toggle_user.html" %}    |
-			    <a href="/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove user from project</a>
-			  </td></tr>
+			    <a href="/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove</a>
+			   {% endif %}
+			  </td>
+			</tr>
 
                     {% endwith %}
                   {% endwith %}
