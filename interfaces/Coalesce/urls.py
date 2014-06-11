@@ -70,9 +70,9 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
 
-        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/$',
+        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.volume_view',
-            name='view_volume'),
+            name='volume_view'),
         
 	url(r'^import_image/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/$',
 	    'coalesce.coal_beta.views.import_image',

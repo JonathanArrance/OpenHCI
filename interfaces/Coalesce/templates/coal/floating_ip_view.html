@@ -20,8 +20,24 @@
           </table>
         </div>
       </div><!-- end span6-->
-
+      
+      <div class="span5 offset1">
+        <div class="well">
+          <div class="legend">
+            Actions
+            {% if user_level == 0 %}
+              <a href="{{ default_public }}/projects/{{fip.project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+            {% elif user_level == 1 %}
+              <a href="{{ default_public }}/projects/{{fip.project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+            {% else %}
+              <a href="{{ default_public }}/projects/{{fip.project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
     </div><!-- end row-fluid-->
+
 
 
 {% endblock %}

@@ -14,7 +14,7 @@
 
 
               <tr><th>Net Id</th><td>{{nw.net_id}}</td></tr>
-              <tr><th>Net Subnet Id</th><td>{{nw.net_subnet_id}}</td></tr>
+              <tr><th>Net Subnet Name: Id</th><td>{{subnet_name}}: {{subnet_id}}</td></tr>
               <tr><th>Project Id</th><td>{{nw.project_id}}</td></tr>
               <tr><th>Net Shared?</th><td>{{nw.net_shared}}</td></tr>
               <tr><th>Net Creator Id</th><td>{{nw.net_creator_id}}</td></tr>
@@ -44,9 +44,22 @@
           <a href="#" id="update-user-password">update password</a>
         </div>
       </div><!-- end span6-->
-
-
-
+    {% if nw.net_name != "DefaultPublic" %}
+      <div class="span5 offset1">
+        <div class="well">
+          <div class="legend">
+            Actions
+            {% if user_level == 0 %}
+              <a href="{{ default_public }}/projects/{{nw.project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+            {% elif user_level == 1 %}
+              <a href="{{ default_public }}/projects/{{nw.project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+            {% else %}
+              <a href="{{ default_public }}/projects/{{nw.project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
     </div><!-- end row-fluid-->
 
 

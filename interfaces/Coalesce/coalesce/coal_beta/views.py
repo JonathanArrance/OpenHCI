@@ -586,7 +586,7 @@ def key_view(request, sec_key_id, project_id):
     return render_to_response('coal/key_view.html',
                                RequestContext(request, {
                                                         'key_info': key_info,
-                                                        'project_id': project_id
+                                                        'current_project_id': project_id
                                                         }))
 
 
@@ -597,8 +597,6 @@ def key_delete(request, sec_key_name, project_id):
         so = server_ops(auth)
         key_dict = {'sec_key_name': sec_key_name, 'project_id': project_id}
         out = so.delete_sec_keys(key_dict)
-        print "---delete_sec_keys---"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -643,7 +641,7 @@ def volume_view(request, project_id, volume_id):
     volume_info = vo.get_volume_info(vol_dict)
 
     return render_to_response('coal/volume_view.html',
-                               RequestContext(request, {'my_project_id' : project_id,
+                               RequestContext(request, {'current_project_id' : project_id,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         }))
@@ -796,7 +794,7 @@ def delete_volume(request, volume_id, project_id):
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
         vo.delete_volume(delete_vol)
-        return HttpResponseRedirect("/projects/%s/view" % project_id)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except:
         messages.warning(request, "Unable to delete volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -1194,10 +1192,14 @@ def network_view(request, net_id):
     auth = request.session['auth']
     no = neutron_net_ops(auth)
     nw = no.get_network(net_id)
+    subnet_name = nw['net_subnet_id'][0]['subnet_name']
+    subnet_id = nw['net_subnet_id'][0]['subnet_id']
 
     return render_to_response('coal/network_view.html',
                                RequestContext(request, {
                                                         'nw': nw,
+                                                        'subnet_name': subnet_name,
+                                                        'subnet_id': subnet_id,
                                                         }))
 
 def router_view(request, router_id):
