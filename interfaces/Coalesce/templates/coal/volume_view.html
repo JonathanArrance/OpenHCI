@@ -34,57 +34,62 @@
           </div>
           <div class="row-fluid">
             <div class="span7">
-            <table class="paleblue">
-                <tr><th>Id</th><td>{{volume_info.volume_id}}</td></tr>
-                <tr><th>Name</th><td>{{volume_info.volume_name}}</td></tr>
-                <tr><th>Volume Size</th><td>{{volume_info.volume_size}}</td></tr>
-                <tr><th>Volume Attached</th><td>{{volume_info.volume_attached}}</td></tr>
-                <tr><th>Volume Instance</th><td>{{volume_info.volume_instance}}</td></tr>
-                <tr><th>Project Id</th><td>{{project_id}}</td></tr>       
-            </table>
-          </div>
-          <div class="span4 offset1">
-            <b>Actions</b>
-            <ul>
-                <li><a href="/delete_volume/{{volume_info.volume_id}}/{{my_project_id}}/" data-confirm="This will completely remove {{volume.volume_name}} from this project. Are you sure?">delete</a></li>
-            </ul>    
-          </div>
+	      <table class="paleblue">
+		  <tr><th>Id</th><td>{{volume_info.volume_id}}</td></tr>
+		  <tr><th>Name</th><td>{{volume_info.volume_name}}</td></tr>
+		  <tr><th>Volume Size</th><td>{{volume_info.volume_size}}</td></tr>
+		  <tr><th>Volume Attached</th><td>{{volume_info.volume_attached}}</td></tr>
+		  <tr><th>Volume Instance</th><td>{{volume_info.volume_instance}}</td></tr>
+		  <tr><th>Project Id</th><td>{{project_id}}</td></tr>       
+	      </table>
+	    </div>
+	    <div class="span5">
+	      <b>Take snaphots not yet implemented.</b>
+	      <table class="paleblue">
+		  {% if snapshots %}
+		      <tr> <th>snapshots</th> <th></th> <th></th></tr>
+			  {% for snapshot in snapshots %}
+			      {% if snapshot.volume_id == volume_info.volume_id %}
+				  <tr> <td>{{snapshot}}</td>  <td></td>  <td></td></tr>
+			      {% endif %}
+			  {% endfor %}
+		      {% else %}
+			<p><i>This volume has no snapshots</i></p>
+		  {% endif %}
+	      </table>
+	    </div>
          </div> 
         </div>
       </div><!-- end span6-->
+      
       <div class="span5 offset1">
-
-	<div id="snapshot-dialog-form" title="Take Snapshot">
- 		<p class="validateTips">All fields are required.  </p>
-                <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="snap_name">Snapshot Name</label>
-                    <input type="text" name="snap_name" id="snap_name"  class="text ui-widget-content ui-corner-all" />
-                    <label for="snap_desc">Description</label>
-                    <input type="text" name="snap_desc" id="snap_desc"  class="text ui-widget-content ui-corner-all" />
-                </fieldset>
-                </form>
-            </div>
-
-	<!--<a href="#" id="take-snapshot"><img src="{{ STATIC_URL }}images/camera_icon.jpg">Take snaphots not yet implemented.</a>-->
-	<b>Take snaphots not yet implemented.</b>
-
-	<table class="paleblue">
-	    {% if snapshots %}
-                <tr> <th>snapshots</th> <th></th> <th></th></tr>
-                    {% for snapshot in snapshots %}
-			{% if snapshot.volume_id == volume_info.volume_id %}
-		      	    <tr> <td>{{snapshot}}</td>  <td></td>  <td></td></tr>
-			{% endif %}
-		    {% endfor %}
-		{% else %}
-		  <p><i>This volume has no snapshots</i></p>
-		{% endif %}
-          </table>
+        <div class="well">
+          <div class="legend">
+              Actions
+              {% if user_level == 0 %}
+                <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+              {% elif user_level == 1 %}
+                <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+              {% else %}
+                <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+              {% endif %}
+          </div>
+	</div>
       </div>
 
     </div><!-- end row-fluid-->
 
+    <div id="snapshot-dialog-form" title="Take Snapshot">
+	<p class="validateTips">All fields are required.  </p>
+	<form>
+	{% csrf_token %}
+	<fieldset>
+	    <label for="snap_name">Snapshot Name</label>
+	    <input type="text" name="snap_name" id="snap_name"  class="text ui-widget-content ui-corner-all" />
+	    <label for="snap_desc">Description</label>
+	    <input type="text" name="snap_desc" id="snap_desc"  class="text ui-widget-content ui-corner-all" />
+	</fieldset>
+	</form>
+    </div>
 
 {% endblock %}

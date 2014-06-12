@@ -131,7 +131,7 @@ def manage_projects(request):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
 
-def project_view(request, project_id, user_level):
+def project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     so = server_ops(auth)
@@ -140,8 +140,7 @@ def project_view(request, project_id, user_level):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
-    if user_level == 0:
-        ssa = server_admin_actions(auth)
+    ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
 
     project = to.get_tenant(project_id)
@@ -176,9 +175,8 @@ def project_view(request, project_id, user_level):
     flavors       = fo.list_flavors()
     
     hosts=[]
-    if user_level == 0:
-        host_dict     = {'project_id': project_id, 'zone': 'nova'}
-        hosts         = ssa.list_compute_hosts(host_dict)
+    host_dict     = {'project_id': project_id, 'zone': 'nova'}
+    hosts         = ssa.list_compute_hosts(host_dict)
     
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
@@ -264,8 +262,131 @@ def project_view(request, project_id, user_level):
                                                         'instance_info': instance_info,
                                                         'flavors': flavors
                                                         }))
+def pu_project_view(request, project_id):
+    auth = request.session['auth']
+    to = tenant_ops(auth)
+    so = server_ops(auth)
+    no = neutron_net_ops(auth)
+    l3o = layer_three_ops(auth)
+    vo = volume_ops(auth)
+    sno = snapshot_ops(auth)
+    go = glance_ops(auth)
+    fo = flavor_ops(auth)
 
+    project = to.get_tenant(project_id)
+    users = to.list_tenant_users(project_id)
+    userinfo = {}
+    uo = user_ops(auth)
 
+    for user in users:
+        user_dict = {'username': user['username'], 'project_name': project['project_name']}
+        user_info = uo.get_user_info(user_dict)
+        userinfo[user['username']] = user_info
+
+    ouserinfo = []
+    try:
+        ousers = uo.list_orphaned_users()
+        if ousers:
+            for ouser in ousers:
+                ouserinfo.append(ouser['username'])
+    except:
+        ousers=[]
+
+    priv_net_list = no.list_internal_networks(project_id)
+    pub_net_list  = no.list_external_networks()
+    routers       = l3o.list_routers(project_id)
+    volumes       = vo.list_volumes(project_id)
+    volume_info={}
+    snapshots     = sno.list_snapshots(project_id)
+    sec_groups    = so.list_sec_group(project_id)
+    sec_keys      = so.list_sec_keys(project_id)
+    instances     = so.list_servers(project_id)
+    instance_info={}
+    flavors       = fo.list_flavors()
+    
+    for volume in volumes:
+        v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
+        v_info = vo.get_volume_info(v_dict)
+        vid = volume['volume_id']
+        volume_info[vid] = v_info
+    
+    for instance in instances:
+        i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
+        try:
+            i_info = so.get_server(i_dict)
+            sname  = instance['server_name']
+            instance_info[sname] = i_info
+        except Exception:
+            sys.exc_clear()
+            i_info = {'server_os': '',
+                      'server_key_name': '',
+                      'server_group_name': '',
+                      'server_zone': '',
+                      'server_public_ips': {},
+                      'server_id': '',
+                      'server_name': instance['server_name'],
+                      'server_status': u'BUILDING',
+                      'server_node': '',
+                      'server_int_net': {},
+                      'server_net_id': '',
+                      'server_flavor': ''}
+            sname = instance['server_name']
+            instance_info[sname] = i_info
+            
+    try:
+        images 	  = go.list_images()
+    except:
+        images =[]
+
+    private_networks={}
+    for net in priv_net_list:
+        try:
+            private_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+
+    public_networks={}
+    for net in pub_net_list:
+        try:
+            public_networks[net['net_name']]= no.get_network(net['net_id'])
+        except:
+            pass
+
+    try:
+        default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+    except:
+        default_public = "NO PUBLIC NETWORK"
+
+    floating_ips = l3o.list_floating_ips(project_id)
+    for fip in floating_ips:
+        if fip["floating_in_use"]:
+            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
+            fip['instance_name']=ip_info['instance_name']
+        else:
+            fip['instance_name']=''
+
+    return render_to_response('coal/project_view.html',
+                               RequestContext(request, {'project': project,
+                                                        'users': users,
+                                                        'ouserinfo': ouserinfo,
+                                                        'userinfo':userinfo,
+                                                        'sec_groups': sec_groups,
+                                                        'sec_keys': sec_keys,
+                                                        'private_networks': private_networks,
+                                                        'public_networks': public_networks,
+                                                        'default_public': default_public,
+                                                        'priv_net_list':priv_net_list,
+                                                        'pub_net_list':pub_net_list,
+                                                        'routers': routers,
+                                                        'floating_ips': floating_ips,
+                                                        'volumes': volumes,
+                                                        'volume_info': volume_info,
+                                                        'snapshots':snapshots,
+                                                        'images': images,
+                                                        'instances': instances,
+                                                        'instance_info': instance_info,
+                                                        'flavors': flavors
+                                                        }))
 def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
@@ -465,8 +586,33 @@ def key_view(request, sec_key_id, project_id):
     return render_to_response('coal/key_view.html',
                                RequestContext(request, {
                                                         'key_info': key_info,
+                                                        'current_project_id': project_id
+                                                        }))
+
+
+def key_delete(request, sec_key_name, project_id):
+
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        key_dict = {'sec_key_name': sec_key_name, 'project_id': project_id}
+        out = so.delete_sec_keys(key_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to delete key pair.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+    
+    return render_to_response('coal/key_view.html',
+                               RequestContext(request, {
+                                                        'key_info': key_info,
                                                         'project_id': project_id
                                                         }))
+
+
 
 def download_public_key(request, sec_key_id, sec_key_name, project_id):
     auth = request.session['auth']
@@ -495,7 +641,7 @@ def volume_view(request, project_id, volume_id):
     volume_info = vo.get_volume_info(vol_dict)
 
     return render_to_response('coal/volume_view.html',
-                               RequestContext(request, {'my_project_id' : project_id,
+                               RequestContext(request, {'current_project_id' : project_id,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         }))
@@ -648,7 +794,7 @@ def delete_volume(request, volume_id, project_id):
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
         vo.delete_volume(delete_vol)
-        return HttpResponseRedirect("/projects/%s/view" % project_id)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except:
         messages.warning(request, "Unable to delete volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -1046,10 +1192,14 @@ def network_view(request, net_id):
     auth = request.session['auth']
     no = neutron_net_ops(auth)
     nw = no.get_network(net_id)
+    subnet_name = nw['net_subnet_id'][0]['subnet_name']
+    subnet_id = nw['net_subnet_id'][0]['subnet_id']
 
     return render_to_response('coal/network_view.html',
                                RequestContext(request, {
                                                         'nw': nw,
+                                                        'subnet_name': subnet_name,
+                                                        'subnet_id': subnet_id,
                                                         }))
 
 def router_view(request, router_id):

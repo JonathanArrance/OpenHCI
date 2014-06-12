@@ -4,7 +4,9 @@
           <div class="legend">
              Floating IP's
 		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/"  id="allocate_floating_ip" class="btn btn-mini btn-inverse" style="float:right">Allocate</a>
-		<a href="#"  id="assign_ip" class="btn btn-mini" style="float:right">Assign</a>	
+	      {% if floating_ips %}
+		<a href="#"  id="assign_ip" class="btn btn-mini" style="float:right">Assign</a>
+	      {% endif %}
           </div>
 
 	   <div id="fip-assign-dialog-form" title="Assign floating IP to instance">
@@ -41,7 +43,7 @@
                 {% for fip in floating_ips %}
 
 		    <tr> 
-			<td>{{fip.floating_ip}}</td>  
+			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">{{fip.floating_ip}}</a></td>  
 			<td>
 			  {% if fip.instance_name == "" %}
 			    NONE
@@ -49,7 +51,7 @@
 			    {{fip.instance_name}}
 			  {% endif %}
 			</td>
-			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">view</a> | 
+			<td> 
 			    <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/" 
                                 data-confirm="This will deallocate {{fip.floating_ip}} from this project and make any associated VM's private. Are you sure?"> deallocate
                             </a> 

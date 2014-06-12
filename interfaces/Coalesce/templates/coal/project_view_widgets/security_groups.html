@@ -29,7 +29,12 @@
 		{% if sec_groups %}
 		  <tr> <th>Security Group</th>  <th>Owner</th> <th>Actions</th>  </tr>
 		    {% for sg in sec_groups %}
-		      <tr> <td>{{sg.sec_group_name}}</td>  <td>{{sg.username}}</td>  <td><a href="/delete_sec_group/{{sg.sec_group_id}}/{{project.project_id}}/">delete</a></td></tr>
+		      <tr> <td>{{sg.sec_group_name}}</td>
+		      <td>{{sg.username}}</td>
+		      <td>
+			<a href="/delete_sec_group/{{sg.sec_group_id}}/{{project.project_id}}/">delete</a>
+		      </td>
+		  </tr>
 		    {% endfor %}
 		{% else %}
 		

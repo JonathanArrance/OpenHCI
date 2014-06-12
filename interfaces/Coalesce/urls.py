@@ -46,11 +46,15 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.build_project',
             name='build_project'),
 
-        url(r'^projects/(?P<project_id>\w+)/(?P<user_level>\w+)/view/$',
+        url(r'^projects/(?P<project_id>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 
-        url(r'^projects/(?P<project_id>\w+)/basic_view/$',
+	url(r'^projects/(?P<project_id>\w+)/pu_project_view/$',
+            'coalesce.coal_beta.views.pu_project_view',
+            name='pu_project_view'),
+
+        url(r'^projects/(?P<project_id>\w+)/basic_project_view/$',
             'coalesce.coal_beta.views.basic_project_view',
             name='basic_project_view'),
 
@@ -66,9 +70,9 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
 
-        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/$',
+        url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.volume_view',
-            name='view_volume'),
+            name='volume_view'),
         
 	url(r'^import_image/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/$',
 	    'coalesce.coal_beta.views.import_image',
@@ -244,6 +248,10 @@ urlpatterns = patterns('',
 	url(r'^key_pair/(?P<sec_key_id>[^/]+)/(?P<project_id>[^/]+)/view/$',
 	    'coalesce.coal_beta.views.key_view',
             name='key_view'),
+
+	url(r'^key_pair/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/delete/$',
+	    'coalesce.coal_beta.views.key_delete',
+            name='key_delete'),
 
 	url(r'^download_public_key/(?P<sec_key_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.download_public_key',

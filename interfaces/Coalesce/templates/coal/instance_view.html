@@ -49,7 +49,13 @@
 	  <div class="well">
 	    <div class="legend">
 	      Actions
-	      <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+	      {% if user_level == 0 %}
+		<a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+	      {% elif user_level == 1 %}
+		<a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+	      {% else %}
+		<a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+	      {% endif %}
 	    </div>
 	    <div>
 	      <a href="#" id="resize-server" class="btn btn-mini">resize instance</a>
