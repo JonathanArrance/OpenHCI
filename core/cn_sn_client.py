@@ -483,7 +483,7 @@ def processComputeConfig(sock, node_id):
             if cn_config1[i]['file_name'] == 'ovs_quantum_plugin.ini':
                 ovs_conf = cn_config1[i]
 	    elif cn_config1[i]['file_name'] == 'quantum.conf':
-                net_conf = cn_config[i]
+                net_conf = cn_config1[i]
 
     else:
         logger.sys_error("compute node did not receive ovs config file, exiting!!!")
