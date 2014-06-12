@@ -12,11 +12,12 @@ from transcirrus.component.nova.storage import server_storage_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("danpu","password")
+auth = authorization("admin","password")
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
 nova = server_ops(perms)
+
 '''
 auth2 = authorization("bill","test")
 #get the user dict
@@ -77,12 +78,12 @@ time.sleep(2)
 
 print "Get the info for the virtual instances 2nd time in the database."
 for serv in serv_list:
-'''
+
 input_dict = {'server_id':'57f1ebfb-f476-49e6-9083-87ade1dca73b','project_id':'84d3e074012a42ce919771c503993f4e'}
 get_server = nova.get_server(input_dict)
 print get_server
 exit
-'''
+
 print "---------------------------------------"
 time.sleep(2)
 

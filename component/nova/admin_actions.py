@@ -560,7 +560,7 @@ class server_admin_actions:
         DESC: Get the detailed info on an OpenStack host.
         INPUT: input_dict - project_id
                           - host_name
-        OUTPUT: array of dict - project resources
+        OUTPUT: array of dict - host info
         ACCESS: ONLY the admin can get the the host.
         NOTES:
         """
@@ -595,9 +595,9 @@ class server_admin_actions:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                 rest = api.call_rest(rest_dict)
-            except:
-                logger.sys_error("Error getting OpenStack host.")
-                raise Exception("Error getting OpenStack host.")
+            except Exception as e:
+                logger.sys_error("Error getting OpenStack host %s."%(e))
+                raise Exception("Error getting OpenStack host %s."%(e))
     
             if(rest['response'] == 200):
                     # this method does not return any response body
