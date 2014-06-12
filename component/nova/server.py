@@ -16,12 +16,12 @@ from transcirrus.database.postgres import pgsql
 from flavor import flavor_ops
 from image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
+from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.component.nova.server_action import server_actions
+from transcirrus.component.nova.storage import server_storage_ops
 
 #######Special imports#######
-#sys.path.append('/home/jonathan/alpo.0/component/neutron')
-#from security import net_security_ops
 
 class server_ops:
     #UPDATED/UNIT TESTED
@@ -82,10 +82,11 @@ class server_ops:
 
         #build the nova image object
         self.image = nova_image_ops(user_dict)
-
+        self.layer_three = layer_three_ops(user_dict)
         self.net = neutron_net_ops(user_dict)
         self.glance = glance_ops(user_dict)
         self.server_actions = server_actions(user_dict)
+        self.server_storage_ops = server_storage_ops(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -852,6 +853,39 @@ class server_ops:
             if(self.user_id != user_id[0][0]):
                 logger.sys_error("Users can only delete virtual servers they own.")
                 raise Exception("Users can only delete virtual servers they own.")
+
+        #This has to be made into an OPS file, to much going on here
+        #remove the volumes attached to the instance.
+        try:
+            get_vols = {'select':'vol_id','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(delete_dict['server_id'])}
+            vols = self.db.pg_select(get_vols)
+        except:
+            logger.sys_error("Volume could not be found.")
+            raise Exception("Volume could not be found.")
+        #this will have to be forked some how, maybe use qpid to run in the back ground.
+        if(vols):
+            for vol in vols:
+                vol_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'volume_id':vol[0]}
+                remove = self.server_storage_ops.detach_vol_from_server(vol_dict)
+
+        #remove the floating ips from the instance
+        try:
+            get_float_id = {'select':'floating_ip_id','from':'trans_instances','where':"inst_id='%s'"%(delete_dict['server_id'])}
+            floater = self.db.pg_select(get_float_id)
+        except:
+            logger.sys_error("Floating ip id could not be found.")
+            raise Exception("Floating ip id could not be found.")
+        try:
+            get_float_ip = {'select':'floating_ip','from':'trans_floating_ip','where':"floating_ip_id='%s'"%(floater[0][0])}
+            floatip = self.db.pg_select(get_float_ip)
+        except:
+            logger.sys_error("Floating ip could not be found.")
+            raise Exception("Floating ip could not be found.")
+
+        float_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'floating_ip':floatip[0][0],'action':'remove'}
+        logger.sys_error("HACK: %s"%(float_dict))
+        remove_float = self.layer_three.update_floating_ip(float_dict)
+        logger.sys_error("HACK: %s"%(remove_float))
 
         #connect to the rest api caller
         try:
