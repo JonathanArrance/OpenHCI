@@ -1395,6 +1395,10 @@ def login_page(request, template_name):
                 pw = form.cleaned_data['password']
                 a = authorization(user, pw)
                 auth = a.get_auth()
+                if auth['token'] == None:
+                    form = authentication_form()
+                    messages.warning(request, 'Login failed.  Please verify your username and password.')
+                    return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
                 request.session['auth'] = auth
                 return render_to_response('coal/welcome.html', RequestContext(request, {  }))
             except:

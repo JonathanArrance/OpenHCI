@@ -69,7 +69,7 @@
 		  <td>
 		    <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{v.volume_name}} from this project. Are you sure?">delete</a>
 		    {% if v.volume_attached == 'true' %}
-		       | <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/" class="btn btn-mini">detach</a>
+		       | <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/">detach</a>
 		    {% endif %}
 		  </td>
 		</tr>

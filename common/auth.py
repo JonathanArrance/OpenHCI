@@ -50,9 +50,7 @@ class authorization:
         #check to see if the user exists in the DB
         #exist = user array of array
         exist = _get_user_info(self.db,self.username)
-        if(exist == 1):
-            #the user does not exist just return an error.
-            return 'ERROR'
+
         #INFO: status levels determin user activity on the system
         #0 - User is not allowed to login to transcirus interface or Openstack
         #1 - User only has access to the transcirrus interface can not run anything
