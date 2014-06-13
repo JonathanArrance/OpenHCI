@@ -1,7 +1,7 @@
 import transcirrus.common.logger as logger
 
 # Call the function required to get everything setup for logging.
-logger.InitLogging()
+#logger.InitLogging()
 
 # This function will setup the listener which listens for changes
 # to the logging config file and will reload the config when a 
