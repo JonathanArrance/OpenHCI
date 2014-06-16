@@ -26,6 +26,11 @@ chmod -R 776 /var/log/caclogs
 chown -R transuser:transystem /var/log/caclogs
 fi
 
+# We have to do this so multiple users/processes can write to the log file.
+# Do this every time in case it had changed or was set correctly the first time (previous installs).
+chmod -R g+s /var/log/caclogs
+chmod -R 777 /var/log/caclogs
+
 #add the django site to its proper place in the file system
 echo 'Adding Coalesce to the opt directory.'
 if [ -e /etc/httpd/conf.d/openstack-dashboard.conf]

@@ -2047,8 +2047,10 @@ INSERT INTO nova_default VALUES ('metadata_host', '172.38.24.10', 'nova.conf', 5
 INSERT INTO nova_default VALUES ('metadata_listen', '172.38.24.10', 'nova.conf', 53);
 --INSERT INTO nova_default VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@172.38.24.10/nova', 'nova.conf', 54);
 INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 55);
-INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter', 'nova.conf', 56);
+INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter,ComputeFilter,DifferentHostFilter', 'nova.conf', 56);
 INSERT INTO nova_default VALUES ('default_schedule_zone', 'nova', 'nova.conf', 57);
+INSERT INTO nova_default VALUES ('rpc_response_timeout', '180', 'nova.conf', 58);
+INSERT INTO nova_default VALUES ('live_migration_flag', 'VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE', 'nova.conf', 59);
 
 --maybe add novaurl? find out what it does first
 

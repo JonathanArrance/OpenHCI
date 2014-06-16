@@ -23,8 +23,8 @@ class authorization:
     #OUTPUT: none
     def __init__(self,username,user_pass):
         # setting username in logger dict
-        #logger.sys_info ("Setting username in logger to %s" % username)
-        #logger.SetUserDict (username, "0")
+        logger.sys_info ("Setting username in logger to %s" % username)
+        logger.SetUserDict (username, "0")
 
         #connect to the database
         try:
@@ -111,9 +111,9 @@ class authorization:
 
             #set the username and user_id in the logger so it will have it for
             #any further messages.
-            #logger.sys_info ("Setting username and id in logger")
-            #logger.SetUserDict (self.username, exist[0][5])
-            #logger.sys_info ("Username and id set in logger")
+            logger.sys_info ("Setting username and id in logger")
+            logger.SetUserDict (self.username, exist[0][5])
+            logger.sys_info ("Username and id set in logger")
 
             #dictionary containing the user login info. permissions, token and status
             #need to set PKI token and ADMIN token

@@ -14,7 +14,7 @@ from transcirrus.component.nova.flavor import flavor_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("power","password")
+a = authorization("admin","password")
 #a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()

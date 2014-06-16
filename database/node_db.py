@@ -153,6 +153,9 @@ def insert_node(input_dict):
     if(input_dict['node_cloud_name'] == ''):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
 
+    #get the cloud controllers mgmt_ip
+    cc_mgmt_ip = util.get_cloud_controller_mgmt_ip(input_dict['node_type'])
+
     #count up the number of nodes attached to controller
     elem_dict = {'table':"trans_nodes",'where':"node_controller='%s'" %(input_dict['node_controller'])}
     count = db.count_elements(elem_dict)
@@ -184,7 +187,7 @@ def insert_node(input_dict):
         try:
             insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(input_dict['node_mgmt_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_mgmt_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
