@@ -77,7 +77,7 @@ def build_project(auth_dict, project_dict):
             logger.sys_error("Couldn't create a power user for the project, %s" %(str(e)))
 
     try:
-        net_dict = {'net_name': project_dict['net_name'],'admin_state':"true", 'shared':"true",'project_id':proj}
+        net_dict = {'net_name': project_dict['net_name'],'admin_state':"true", 'shared':"false",'project_id':proj}
         net = neutron_net.add_private_network(net_dict)
         logger.sys_info("Created private netowrk with net name: %s" % project_dict['net_name'])
     except Exception as e:
