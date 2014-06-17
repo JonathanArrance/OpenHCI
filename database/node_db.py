@@ -154,7 +154,7 @@ def insert_node(input_dict):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
 
     #get the cloud controllers mgmt_ip
-    cc_mgmt_ip = util.get_cloud_controller_mgmt_ip(input_dict['node_type'])
+    cc_mgmt_ip = util.get_cloud_controller_mgmt_ip()
 
     #count up the number of nodes attached to controller
     elem_dict = {'table':"trans_nodes",'where':"node_controller='%s'" %(input_dict['node_controller'])}
