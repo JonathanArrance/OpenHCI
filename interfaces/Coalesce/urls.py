@@ -90,6 +90,14 @@ urlpatterns = patterns('',
         'coalesce.coal_beta.views.attach_volume',
             name='attach_volume'),
 
+        url(r'^create_snapshot/(?P<project_id>[^/]+)/(?P<name>[^/]+)/(?P<volume_id>[^/]+)/(?P<desc>[^/]+)/$',
+        'coalesce.coal_beta.views.create_snapshot',
+            name='create_snapshot'),
+
+        url(r'^delete_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+        'coalesce.coal_beta.views.delete_snapshot',
+            name='delete_snapshot'),
+
         url(r'^detach_volume/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
         'coalesce.coal_beta.views.detach_volume',
             name='detach_volume'),

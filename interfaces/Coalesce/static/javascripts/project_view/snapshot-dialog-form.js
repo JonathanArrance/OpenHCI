@@ -35,9 +35,12 @@ $(function() {
 		
 		
 		
-		var 	snap_name = $( "#snap_name" ),
-			snap_desc = $( "#snap_desc" ),
-			allFields = $( [] ).add( snap_name ).add( snap_desc ),
+		var 	name = $( "#snap_name" ),
+                        volume = $( "#snap_volume" ),
+                        desc = $('#snap_desc'),
+                        
+
+			allFields = $( [] ).add( instance ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -64,19 +67,16 @@ $(function() {
 
 		$( "#snapshot-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 300,
+			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Take a snapshot": function() {
+				"Snapshot volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
-
-					bValid = bValid && checkLength( snap_name, "snap_name", 3, 56 );
-
 					if ( bValid ) {
 					  
-					   $.post('/take_snapshot/' + snap_name.val() + '/' + snap_desc.val() + '/' + VOL_ID + '/' + PROJECT_ID + '/');
+					   $.post('/create_snapshot/' + PROJECT_ID + '/' + name.val() + '/' + volume.val() + '/' + desc.val() + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -90,7 +90,7 @@ $(function() {
 			}
 		});
 
-		$( "#take-snapshot" )
+		$( "#create-snapshot" )
 			.click(function() {
 				$( "#snapshot-dialog-form" ).dialog( "open" );
 			});

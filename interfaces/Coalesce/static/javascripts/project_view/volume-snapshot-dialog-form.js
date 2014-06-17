@@ -35,8 +35,9 @@ $(function() {
 		
 		
 		
-		var 	instance = $( "#att_instance" ),
-                        volume = $( "#att_volume" ),
+		var 	name = $( "#snap_name" ),
+                        volume = $( "#snap_volume" ),
+                        desc = $('#snap_desc'),
                         
 
 			allFields = $( [] ).add( instance ),
@@ -64,18 +65,18 @@ $(function() {
 
 	
 
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#volume-snapshot-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Attach volume": function() {
+				"Snapshot volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/');
+					   $.post('/create_snapshot/' + PROJECT_ID + '/' + name.val() + '/' + volume.val() + '/' + desc.val() + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -89,9 +90,9 @@ $(function() {
 			}
 		});
 
-		$( "#attach-volume" )
+		$( "#snapshot-volume" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				$( "#volume-snapshot-dialog-form" ).dialog( "open" );
 			});
 			
 			
