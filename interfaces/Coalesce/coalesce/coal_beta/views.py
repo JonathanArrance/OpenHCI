@@ -168,6 +168,9 @@ def project_view(request, project_id):
     volumes       = vo.list_volumes(project_id)
     volume_info={}
     snapshots     = sno.list_snapshots(project_id)
+    for snap in snapshots:
+        s = sno.get_snapshot(snap['snapshot_id'])
+        print "get_snap: %s" %(s)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
