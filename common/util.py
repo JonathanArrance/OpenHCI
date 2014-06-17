@@ -444,7 +444,7 @@ def get_cloud_controller_id():
     """
     return config.CLOUD_CONTROLLER_ID
 
-def get_cloud_controller_mgmt_ip(node_type):
+def get_cloud_controller_mgmt_ip():
     """
     DESC: Get the mgmt_ip of the cloud controller
     INPUT: node_type
@@ -452,14 +452,10 @@ def get_cloud_controller_mgmt_ip(node_type):
     ACCESS: Wide open
     NOTE:
     """
-    cont_mgmt_ip = None
-    if(node_type == 'cn'):
-        db = db_connect()
-        get_ip = {'select':'param_value','from':'trans_system_settings','where':"parameter='physical_node'"}
-        controller_mgmt_ip = db.pg_select(get_ip)
-        cont_mgmt_ip = controller_mgmt_ip[0][0]
-    else:
-        cont_mgmt_ip = get_mgmt_ip()
+    db = db_connect()
+    get_ip = {'select':'param_value','from':'trans_system_settings','where':"parameter='uplink_ip'"}
+    controller_mgmt_ip = db.pg_select(get_ip)
+    cont_mgmt_ip = controller_mgmt_ip[0][0]
     return cont_mgmt_ip
 
 def get_node_name():
