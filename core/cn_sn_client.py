@@ -741,6 +741,7 @@ def processStorageConfig(sock, node_id):
     # receive cinder config files
 
     sn_config = core_util.recv_data(sock)
+    print sn_config
 
     if sn_config:
         sn_config = pickle.loads(sn_config)
