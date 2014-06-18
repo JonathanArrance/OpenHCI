@@ -168,6 +168,9 @@ def project_view(request, project_id):
     volumes       = vo.list_volumes(project_id)
     volume_info={}
     snapshots     = sno.list_snapshots(project_id)
+    for snap in snapshots:
+        s = sno.get_snapshot(snap['snapshot_id'])
+        print "get_snap: %s" %(s)
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
@@ -771,6 +774,37 @@ def attach_volume(request, project_id, instance_id, volume_id):
     except:
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def create_snapshot(request, project_id, name, volume_id, desc):
+    try:
+        auth = request.session['auth']
+        sno = snapshot_ops(auth)
+        create_snap = {'project_id': project_id, 'snapshot_name': name, 'volume_id': volume_id, 'snapshot_desc': desc}
+        out = sno.create_snapshot(create_snap)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to create snapshot.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+def delete_snapshot(request, project_id, snapshot_id):
+    try:
+        print "   ---   delete_snapshot in try   ---"
+        auth = request.session['auth']
+        sno = snapshot_ops(auth)
+        delete_snap = {'project_id': project_id, 'snapshot_id': snapshot_id}
+        out = sno.delete_snapshot(delete_snap)
+        print "   ---   delete_snapshot   ---"
+        print out
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+    except:
+        messages.warning(request, "Unable to delete snapshot.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 
 def detach_volume(request, project_id, volume_id):
     try:

@@ -740,10 +740,15 @@ def processStorageConfig(sock, node_id):
 
     # receive cinder config files
 
+    api_conf = {}
+    cin_conf = {}
+
     sn_config = core_util.recv_data(sock)
+    print sn_config
 
     if sn_config:
         sn_config = pickle.loads(sn_config)
+        print sn_config
 
         # send ok, ack
         sendOk(sock)
