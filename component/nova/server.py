@@ -886,10 +886,11 @@ class server_ops:
             logger.sys_error("Floating ip could not be found.")
             raise Exception("Floating ip could not be found.")
 
-        float_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'floating_ip':floatip[0][0],'action':'remove'}
-        logger.sys_error("HACK: %s"%(float_dict))
-        remove_float = self.layer_three.update_floating_ip(float_dict)
-        logger.sys_error("HACK: %s"%(remove_float))
+        if(len(floatip) >= 1):
+            float_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'floating_ip':floatip[0][0],'action':'remove'}
+            logger.sys_error("HACK: %s"%(float_dict))
+            remove_float = self.layer_three.update_floating_ip(float_dict)
+            logger.sys_error("HACK: %s"%(remove_float))
 
         #connect to the rest api caller
         try:
