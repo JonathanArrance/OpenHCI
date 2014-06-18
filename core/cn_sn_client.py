@@ -749,7 +749,8 @@ def processStorageConfig(sock, node_id):
         sendOk(sock)
 
         # parse config file packet
-        for i in range(0, len(sn_config)-1):
+        #for i in range(0, len(sn_config)-1):
+        for i in range(0,len(sn_config)):
             if sn_config[i]['file_name'] == 'api-paste.ini':
                 api_conf = sn_config[i]
             elif sn_config[i]['file_name'] == 'cinder.conf':
