@@ -71,6 +71,7 @@ def write_new_config_file(file_dict):
            The defualt file permissions should be sufficient for any config
            file written. Default file operation is write. -Need to add the ability to append to a config file
     """
+    print "In util.py %s"%(file_dict)
     #make sure none of the values are empty
     for key, val in file_dict.items():
         #skip over these

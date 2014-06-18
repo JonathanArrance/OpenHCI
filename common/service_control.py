@@ -79,6 +79,26 @@ def cinder(action):
     out = _operator(cinder_array,action)
     return out
 
+def cinder_sn(action):
+    """
+    DESC: Control the Cinder service
+    INPUT: start
+           #restart
+           #stop
+    OUTPUT: OK
+            #ERROR
+            #NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: These only work on the ciac node for now
+    """
+    cinder_array1 = ['openstack-cinder-api', 'openstack-cinder-scheduler']
+    out1 = _operator(cinder_array1,'stop')
+    cinder_array = ['openstack-cinder-volume']
+    
+    out = _operator(cinder_array,action)
+    
+    return out
+
 def keystone(action):
     """
     DESC: Control the keystone service

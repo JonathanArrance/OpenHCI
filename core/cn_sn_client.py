@@ -744,11 +744,9 @@ def processStorageConfig(sock, node_id):
     cin_conf = {}
 
     sn_config = core_util.recv_data(sock)
-    print sn_config
 
     if sn_config:
         sn_config = pickle.loads(sn_config)
-        print sn_config
 
         # send ok, ack
         sendOk(sock)
@@ -767,7 +765,9 @@ def processStorageConfig(sock, node_id):
 
 
     # write config files
+    print api_conf
     ret = util.write_new_config_file(api_conf)
+    print ret
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("node_id: %s error in writing api conf, exiting!!!" %(node_id))
         if __debug__ :
@@ -778,7 +778,9 @@ def processStorageConfig(sock, node_id):
         if __debug__ :
             print "node_id: %s write success, api conf" % node_id
 
+    print cin_conf
     ret = util.write_new_config_file(cin_conf)
+    print ret
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("node_id: %s error in writing cinder conf, exiting!!!" %(node_id))
         if __debug__ :
@@ -796,7 +798,7 @@ def processStorageConfig(sock, node_id):
     post_install_status = True
 
     # restart services
-    sn_services = service_controller.cinder("restart")
+    sn_services = service_controller.cinder_sn("restart")
     if sn_services == "NA" or sn_services == "ERROR":
         logger.sys_error("node_id: %s, error in restarting cinder services")
         if __debug__ :
@@ -844,7 +846,7 @@ def processStorageConfig(sock, node_id):
         while(retry >= 0):
 
             # restart services
-            sn_services = service_controller.cinder("restart")
+            sn_services = service_controller.cinder_sn("restart")
             if sn_services == "NA" or sn_services == "ERROR":
                 logger.sys_error("node_id: %s, error in restarting cinder services" %(node_id))
                 if __debug__ :
