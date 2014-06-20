@@ -7,7 +7,7 @@
              <a href="#" id="create-container" class="btn btn-mini btn-inverse" style="float:right">New Container</a>
           </div>
 
-        <div id="container-dialog-form" title="Create new volume">
+        <div id="container-dialog-form" title="Create new container">
         <p class="validateTips">All fields are required.  </p>
                 <form>
                 {% csrf_token %}
@@ -25,7 +25,7 @@
           <tr> <td>{{c}}</td> </tr>
         {% endfor %}
         {% else %}
-          <p><i>This project has no volumes</i></p>
+          <p><i>This project has no containers</i></p>
         {% endif %}
           </table>
 
