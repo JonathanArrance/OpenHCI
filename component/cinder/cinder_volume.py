@@ -80,8 +80,10 @@ class volume_ops:
                         volume_name - REQ
                         volume_size - REQ
                         project_id - REQ
+                        volume_type - Optional default is ssd
                         description - Optional
         OUTPUTS: r_dict - volume_name
+                        - volume_type
                         - volume_id
                         - volume_size
         ACCESS: Admins can create a volume in any project, Users can only create
@@ -115,11 +117,20 @@ class volume_ops:
         if(self.is_admin == 0):
             if(self.project_id == create_vol['project_id']):
                 create_flag = 1
-            print create_flag
         elif(self.is_admin == 1):
             if(create_vol['project_id'] != self.project_id):
                 self.token = get_token(self.username,self.password,create_vol['project_id'])
             create_flag = 1
+
+        #default to ssd 
+        if('volume_type' not in create_vol):
+            create_vol['volume_type'] == 'ssd'
+        else:
+            #check if the volume type is ssd or spindle
+            if((create_vol['volume_type'] == 'ssd') or (create_vol['volume_type'] == 'spindle')):
+                pass
+            else:
+                raise Exception("The volume type specified does not exist.")
 
         #get the name of the project based on the id
         try:
@@ -136,8 +147,9 @@ class volume_ops:
             logger.sql_error("Could not get the user uuid from Transcirrus DB.")
             raise Exception("Could not get the user uuid from Transcirrus DB.")
 
-        #check the project capacity
         
+        #check the project capacity
+        # nned to impliment quatas
 
         if(create_flag == 1):
             try:
@@ -150,7 +162,7 @@ class volume_ops:
     
             try:
                 #add the new user to openstack 
-                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": null, "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'])
+                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],create_vol['volume_type'])
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
@@ -174,7 +186,7 @@ class volume_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_attached_to_inst":"NONE"}
+                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":create_vol['volume_type'],"vol_attached_to_inst":"NONE"}
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except:
                     self.db.pg_transaction_rollback()
@@ -184,7 +196,7 @@ class volume_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
-                    r_dict = {"volume_id": volid, "volume_name": volname, "volume_size": volsize}
+                    r_dict = {"volume_id": volid, "volume_type": create_vol['volume_type'],"volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
@@ -428,18 +440,123 @@ class volume_ops:
         r_dict = {'volume_name':get_vol[0][1],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4]}
         return r_dict
 
-    def create_volume_type(self,input_dict):
+    def create_volume_type(self,volume_type_name):
         """
-        DESC: Create a volume tyo and add the volume key(target vlume) to it. Used to add new
+        DESC: Create a volume type and add the volume key(target vlume) to it. Used to add new
               types or to customize storage layout.
-        INPUT:  input_dict - volume_id
-                           - project_id - op -def user project id
+        INPUT:  volume_type_name
+        OUTPUT: r_dict - volume_type_name
+                       - volume_type_id
+        ACCESS: Admins can create volume types.
+        """
+        logger.sys_info('\n**Create a new volume type. Component: Cinder Def: get_volume_info**\n')
+        if(not 'volume_type_name'):
+            logger.sys_error("Requiered parameter volume_id not given for create volume type operation.")
+            raise Exception("Requiered parameter volume_id not given for create volume type operation.")
+
+        #sanity check
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to create volume types.")
+            raise Exception("Status level not sufficient to create volume types.")
+
+        #Talk to the cinder API
+        if(self.is_admin == 1):
+            try:
+                #build an api connection
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+    
+            try:
+                #add the new user to openstack 
+                body = '{"volume_type": {"name": "%s"}}'%(volume_type)
+                token = self.token
+                header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+                function = 'POST'
+                api_path = '/v1/%s/types' %(self.project_id)
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error("Could not add the volume type %s" %(e))
+                #back the user out of the transcirrus DB if the db works and the REST API fails
+                raise
+
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
+                load = json.loads(rest['data'])
+                vol_type_name = str(load['volume_type']['display_name'])
+                vol_type_id = str(load['volume_type']['id'])
+                r_dict = {"vol_type_name": vol_type_name, "vol_type_id": vol_type_id}
+                return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
+        else:
+            logger.sys_error("Could not create a new volume type, not an admin.")
+            raise Exception("Could not create a new volume type, not an admin.")
+
+    def assign_volume_type(self,input_dict):
+        pass
+        """
+        DESC: Assign a volume type to an existing volume.
+        INPUT:  input_dict - volume_type_id
+                           - volume_name
         OUTPUT: r_dict - volume_name
                        - volume_id
                        - volume_size
                        - volume_attached
                        - volume_instance
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
-        """
+        
         logger.sys_info('\n**Get specific info on a volume. Component: Cinder Def: get_volume_info**\n')
-        pass
+        if(not 'volume_type_name'):
+            logger.sys_error("Requiered parameter volume_id not given for create volume type operation.")
+            raise Exception("Requiered parameter volume_id not given for create volume type operation.")
+
+        #sanity check
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to create volume types.")
+            raise Exception("Status level not sufficient to create volume types.")
+
+        #Talk to the cinder API
+        if(self.is_admin == 1):
+            try:
+                #build an api connection
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+    
+            try:
+                #add the new user to openstack 
+                body = '{"volume_type": {"name": "%s"}}'%(volume_type)
+                token = self.token
+                header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+                function = 'POST'
+                api_path = '/v1/%s/types' %(self.project_id)
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error("Could not add the volume type %s" %(e))
+                #back the user out of the transcirrus DB if the db works and the REST API fails
+                raise
+
+            if(rest['response'] == 200):
+                #read the json that is returned
+                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
+                load = json.loads(rest['data'])
+                vol_type_name = str(load['volume_type']['display_name'])
+                vol_type_id = str(load['volume_type']['id'])
+                r_dict = {"vol_type_name": vol_type_name, "vol_type_id": vol_type_id}
+                return r_dict
+            else:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
+        else:
+            logger.sys_error("Could not create a new volume type, not an admin.")
+            raise Exception("Could not create a new volume type, not an admin.")
+        """

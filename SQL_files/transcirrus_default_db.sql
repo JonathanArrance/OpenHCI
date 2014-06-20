@@ -1866,6 +1866,8 @@ INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.
 INSERT INTO cinder_default VALUES ('default_availability_zone', 'nova', 'cinder.conf', 21);
 INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter', 'cinder.conf', 22);
 
+
+
 --
 -- TOC entry 2167 (class 0 OID 16399)
 -- Dependencies: 163

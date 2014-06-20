@@ -12,28 +12,28 @@ from transcirrus.common.auth import authorization
 #sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from transcirrus.component.cinder.cinder_volume import volume_ops
 
-a = authorization("dude","password")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "instantiating a volume abject."
 vol = volume_ops(d)
-"""
+
 print "createing a new volume"
-create = {'volume_name':'ffvcvol3','volume_size':'1','project_id':"84d3e074012a42ce919771c503993f4e"}
+create = {'volume_name':'ffvcvol6','volume_size':'1','project_id':"84d3e074012a42ce919771c503993f4e",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
-
+"""
 print "------------------------------------------"
 print "sleeping for 15 seconds"
 time.sleep(15)
-"""
+
 print "list current volumes"
 listit = vol.list_volumes()
 print listit
 time.sleep(2)
 print "------------------------------------------"
-"""
+
 print "deleteing volume"
 de={'volume_id':'1b95ab3c-7fa5-4be5-955c-e946cdd7361c','project_id':'e20744efbb384c9abbc888b9a0961574'}
 y=vol.delete_volume(de)
