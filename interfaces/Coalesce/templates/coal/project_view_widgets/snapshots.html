@@ -2,9 +2,10 @@
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Snapshots
-	     
+             Snapshots (not supported)
+	     {% if volumes %}
 	     <a href="#" id="create-snapshot" class="btn btn-mini btn-inverse" style="float:right">New Snapshot</a>
+	     {% endif %}
           </div>
 	  
 	    <div id="snapshot-dialog-form" title="Snapshot a volume">
@@ -41,7 +42,7 @@
 		      </tr>
 		    {% endfor %}
 		{% else %}
-		  <p>><i>This project has no snapshots</i></p>
+		  <p><i>This project has no snapshots</i></p>
 		{% endif %}
           </table>
         </div>

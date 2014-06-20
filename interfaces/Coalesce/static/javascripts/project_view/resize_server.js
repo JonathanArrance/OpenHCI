@@ -101,7 +101,6 @@ $(function() {
 		});
 
 		$( "#resize-server" )
-			.button()
 			.click(function() {
 				$( "#dialog-form-resize-server" ).dialog( "open" );
 			});

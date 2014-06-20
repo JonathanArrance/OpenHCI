@@ -29,6 +29,8 @@ from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.flavor import flavor_ops
+from transcirrus.component.swift.container_services import container_service_ops
+from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -142,6 +144,8 @@ def project_view(request, project_id):
     go = glance_ops(auth)
     ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
+    cso = container_service_ops(auth)
+    aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -168,9 +172,10 @@ def project_view(request, project_id):
     volumes       = vo.list_volumes(project_id)
     volume_info={}
     snapshots     = sno.list_snapshots(project_id)
-    for snap in snapshots:
-        s = sno.get_snapshot(snap['snapshot_id'])
-        print "get_snap: %s" %(s)
+    try:
+        containers    = aso.get_account_containers(project_id)
+    except:
+        containers = []
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
@@ -211,7 +216,7 @@ def project_view(request, project_id):
             instance_info[sname] = i_info
             
     try:
-        images 	  = go.list_images()
+        images    = go.list_images()
     except:
         images =[]
 
@@ -259,7 +264,8 @@ def project_view(request, project_id):
                                                         'hosts': hosts,
                                                         'volumes': volumes,
                                                         'volume_info': volume_info,
-                                                        'snapshots':snapshots,
+                                                        'snapshots': snapshots,
+                                                        'containers': containers,
                                                         'images': images,
                                                         'instances': instances,
                                                         'instance_info': instance_info,
@@ -275,6 +281,8 @@ def pu_project_view(request, project_id):
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
     fo = flavor_ops(auth)
+    cso = container_service_ops(auth)
+    aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -337,7 +345,7 @@ def pu_project_view(request, project_id):
             instance_info[sname] = i_info
             
     try:
-        images 	  = go.list_images()
+        images    = go.list_images()
     except:
         images =[]
 
@@ -1305,6 +1313,20 @@ def remove_private_network(request, project_id, net_id):
         messages.warning(request, "Unable to remove private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def create_container(request, name, project_id):
+    try:
+        auth = request.session['auth']
+        cso = container_service_ops(auth)
+        create_dict = {"container_name": name, "project_id": project_id}
+        out = cso.create_container(create_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        messages.warning(request, "Unable to add private network.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 def setup(request):
     if request.method == 'POST':
         if request.POST.get('cancel'):
@@ -1318,7 +1340,7 @@ def setup(request):
             uplink_dns             = form.cleaned_data['uplink_dns']
             uplink_gateway         = form.cleaned_data['uplink_gateway']
             uplink_domain_name     = form.cleaned_data['uplink_domain_name']
-            uplink_subnet 	   = form.cleaned_data['uplink_subnet']
+            uplink_subnet      = form.cleaned_data['uplink_subnet']
             mgmt_domain_name       = form.cleaned_data['mgmt_domain_name']
             mgmt_subnet            = form.cleaned_data['mgmt_subnet']
             mgmt_dns               = form.cleaned_data['mgmt_dns']
