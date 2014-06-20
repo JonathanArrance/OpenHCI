@@ -3,7 +3,31 @@
         <div class="well">
           <div class="legend">
              Object Containers
+             
+             <a href="#" id="create-container" class="btn btn-mini btn-inverse" style="float:right">New Container</a>
           </div>
-          <p> Not yet implemented.</p>
+
+        <div id="container-dialog-form" title="Create new volume">
+        <p class="validateTips">All fields are required.  </p>
+                <form>
+                {% csrf_token %}
+                <fieldset>
+                    <label for="create_cont_name">Container Name</label>
+                    <input type="text" name="create_cont_name" id="create_cont_name"  class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+                </form>
+            </div>
+
+          <table class="paleblue">
+        {% if containers %}
+              <tr> <th>Container</th> </tr>
+                {% for c in containers %}
+          <tr> <td>{{c}}</td> </tr>
+        {% endfor %}
+        {% else %}
+          <p><i>This project has no volumes</i></p>
+        {% endif %}
+          </table>
+
         </div>
       </div>

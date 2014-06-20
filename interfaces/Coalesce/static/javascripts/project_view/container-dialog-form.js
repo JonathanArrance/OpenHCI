@@ -19,7 +19,6 @@ $(function() {
 		
 		$(function() {
 
-		
 		function csrfSafeMethod(method) {
 		// these HTTP methods do not require CSRF protection
 		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -33,11 +32,8 @@ $(function() {
 			}
 		});
 		
-		
-		
-		var 	name = $( "#username" ),
-			role =$( "#role" ),
-			allFields = $( [] ).add( name ).add( role ),
+		var 	cont_name = $( "#create_cont_name" ),
+			allFields = $( [] ).add( cont_name ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -60,32 +56,22 @@ $(function() {
 			}
 		}
 
-		function checkRegexp( o, regexp, n ) {
-			if ( !( regexp.test( o.val() ) ) ) {
-				o.addClass( "ui-state-error" );
-				updateTips( n );
-				return false;
-			} else {
-				return true;
-			}
-		}
-
-		$( "#dialog-form-add-existing-user" ).dialog({
+		$( "#container-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 300,
+			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Add an existing user": function() {
+				"Create a container": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
-					bValid = bValid && checkLength( name, "username", 3, 16 );
-					bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
 
+					bValid = bValid && checkLength( cont_name, "container_name", 3, 16 );
+                    
 					if ( bValid ) {
-						$.post('/add_existing_user/' + name.val() + '/' + role.val() + '/' + PROJECT_ID + '/');
-						$( this ).dialog( "close" );
-                        
+					  
+					   $.post('/create_container/' + cont_name.val() + '/' + PROJECT_ID + '/'); 
+					   $( this ).dialog( "close" );
 					}
 				},
 				Cancel: function() {
@@ -97,18 +83,11 @@ $(function() {
 			}
 		});
 
-		$( "#add-existing-user" )
+		$( "#create-container" )
 			.click(function() {
-				$( "#dialog-form-add-existing-user" ).dialog( "open" );
+				$( "#container-dialog-form" ).dialog( "open" );
 			});
 			
 			
 	});
 	});
-
-
-
-
-
-
-
