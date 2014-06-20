@@ -8,7 +8,7 @@ from transcirrus.common.gluster import gluster_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-au = authorization("shithead","password")
+au = authorization("admin","password")
 auth = au.get_auth()
 
 a = accounts(auth)
@@ -19,10 +19,14 @@ glust = gluster_ops(auth)
 #yo = glust.create_gluster_swift_ring()
 #print yo
 
-#gac1 = a.get_account_info("634911ba0d794a4dadefdf872e0d8abe")
-#print gac1
+id1 = {'container_name':'container2','project_id':"84d3e074012a42ce919771c503993f4e"}
+container1= c.create_container(id1)
+print container1
 
-gac = a.get_account_containers("634911ba0d794a4dadefdf872e0d8abe")
+gac1 = a.get_account_info("84d3e074012a42ce919771c503993f4e")
+print gac1
+
+gac = a.get_account_containers("84d3e074012a42ce919771c503993f4e")
 print gac
 
 #id1 = {'container_name':'container2','project_id':"634911ba0d794a4dadefdf872e0d8abe"}
@@ -48,7 +52,7 @@ print gac
 #god = {'container_name':'container2','project_id':"634911ba0d794a4dadefdf872e0d8abe",'object_name':'auth_test.py'}
 #out = o.get_object_details(god)
 #print out
-
+"""
 do = {'container_name':'container1','project_id':"634911ba0d794a4dadefdf872e0d8abe",'object_name':'home/transuser/alpo_rhel/unittests/auth_test.py'}
 delob = o.delete_object(do)
 print delob
@@ -57,3 +61,4 @@ print delob
 dc1 = {'container_name':'container1','project_id':"634911ba0d794a4dadefdf872e0d8abe"}
 delete1 = c.delete_container(dc1)
 print delete1
+"""
