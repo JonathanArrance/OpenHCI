@@ -728,14 +728,11 @@ def import_image(request, image_name, container_format, disk_format, image_type,
         go = glance_ops(auth)
         import_dict = {'image_name': image_name, 'container_format': container_format, 'disk_format': disk_format, 'visibility': visibility}
         image_location = image_location.replace("G", "/")
-        print image_location
         if image_type == 'local':
             import_dict['image_file'] = image_location
         else:
             import_dict['image_url'] = image_location
         out = go.import_image(import_dict)
-        print "***---Image Import---***"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -799,13 +796,10 @@ def create_snapshot(request, project_id, name, volume_id, desc):
 
 def delete_snapshot(request, project_id, snapshot_id):
     try:
-        print "   ---   delete_snapshot in try   ---"
         auth = request.session['auth']
         sno = snapshot_ops(auth)
         delete_snap = {'project_id': project_id, 'snapshot_id': snapshot_id}
         out = sno.delete_snapshot(delete_snap)
-        print "   ---   delete_snapshot   ---"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
