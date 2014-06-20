@@ -40,7 +40,7 @@ $(function() {
                         desc = $('#snap_desc'),
                         
 
-			allFields = $( [] ).add( instance ),
+			allFields = $( [] ).add( name ).add( volume ).add( desc ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
