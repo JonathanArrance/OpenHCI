@@ -769,12 +769,12 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def attach_volume(request, project_id, instance_id, volume_id):
+def attach_volume(request, project_id, instance_id, volume_id, mount):
     try:
-        mount_point = "/dev/vdc"
+        mount = mount.replace("G", "/")
         auth = request.session['auth']
         sso = server_storage_ops(auth)
-        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount_point}
+        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount}
         out = sso.attach_vol_to_server(attach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
