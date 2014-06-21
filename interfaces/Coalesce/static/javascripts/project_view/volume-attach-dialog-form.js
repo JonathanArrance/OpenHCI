@@ -76,7 +76,7 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
                                         var mount = "";
                                         mount = mount_point.val();
-                                        mount = mount.replace(/\//g, '%47');
+                                        mount = mount.replace(/\//g, '&47');
 					if ( bValid ) {
 					  
 					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/' + mount + '/');

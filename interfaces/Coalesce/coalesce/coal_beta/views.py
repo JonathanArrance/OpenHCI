@@ -768,7 +768,9 @@ def create_volume(request, volume_name, volume_size, description, project_id):
 
 def attach_volume(request, project_id, instance_id, volume_id, mount):
     try:
-        mount = mount.replace("G", "/")
+        mount = mount.replace("&47", "/")
+        print "   ---   mount   ---"
+        print mount
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount}
@@ -1228,14 +1230,12 @@ def network_view(request, net_id):
     auth = request.session['auth']
     no = neutron_net_ops(auth)
     nw = no.get_network(net_id)
-    subnet_name = nw['net_subnet_id'][0]['subnet_name']
-    subnet_id = nw['net_subnet_id'][0]['subnet_id']
+    sn = no.get_net_subnet(nw['net_subnet_id'][0]['subnet_id'])
 
     return render_to_response('coal/network_view.html',
                                RequestContext(request, {
                                                         'nw': nw,
-                                                        'subnet_name': subnet_name,
-                                                        'subnet_id': subnet_id,
+                                                        'sn': sn,
                                                         }))
 
 def router_view(request, router_id):
