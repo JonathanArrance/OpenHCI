@@ -58,28 +58,31 @@
 	      {% endif %}
 	    </div>
 	    <div>
-	      <a href="#" id="resize-server" class="btn btn-mini">resize instance</a>
-	      <a href="/server/{{current_project_id}}/{{server.server_id}}/confirm_resize" class="btn btn-mini">confirm resize</a>
-	      <a href="/server/{{current_project_id}}/{{server.server_id}}/reboot" class="btn btn-mini">reboot</a>
-	      <a href="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" class="btn btn-mini">power cycle</a>
+	      <a href="#" id="resize-server" class="btn">resize instance</a>
+	      <a href="/server/{{current_project_id}}/{{server.server_id}}/confirm_resize" class="btn">confirm resize</a>
+	      <a href="/server/{{current_project_id}}/{{server.server_id}}/reboot" class="btn">reboot</a>
+	      <a href="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" class="btn">power cycle</a>
 	    </div>
 	  </div>
 
 	</div><!-- end inner row -->
         <div class="row-fluid">
-	    
+	  <div class="well">
+	    <div class="legend">
+	      Instance Details
+	    </div>
 	    <table class="paleblue">
 		<tr><th>Name</th><td>{{server.server_name}}</td></tr>
+		<tr><th>Id</th><td>{{server.server_id}}</td></tr>
 		<tr><th>Status</th><td>{{server.server_status}}</td></tr>
 		<tr><th>OS</th><td>{{server.server_os}}</td></tr>
 		<tr><th>Flavor</th><td>{{server.server_flavor}}</td></tr>
-		<tr><th>ID</th><td>{{server.server_id}}</td></tr>
 		<tr><th>Key Name</th><td>{{server.server_key_name}}</td></tr>
 		<tr><th>Group Name</th><td>{{server.server_group_name}}</td></tr>
 		<tr><th>Public IPs</th><td>{{server.server_public_ips}}</td></tr>
 		<!--<tr><th>Node</th><td>{{server.server_node}}</td></tr>-->
-		<tr><th>Net ID</th><td>{{server.server_net_id}}</td></tr>
-		<tr><th>Internal Net</th>
+		<tr><th>Network Id</th><td>{{server.server_net_id}}</td></tr>
+		<tr><th>Internal Network</th>
 		  {% for k,v in server.server_int_net.items %}
 		    <td>{{k}}:
 		    {% for i in v %}
@@ -87,9 +90,8 @@
 		    {% endfor %}
 		  {% endfor %}
 		</tr>
-
 	    </table>    
-	    
+	  </div>
 	</div><!-- end inner row -->
       </div><!-- end span4 -->
                                      

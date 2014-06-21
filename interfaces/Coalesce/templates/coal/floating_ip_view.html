@@ -8,15 +8,14 @@
       <div class="span6">
         <div class="well">
           <div class="legend">
-              Details for {{fip.floating_ip}}
+              Floating IP Details
           </div>
           <table class="paleblue">
-              <tr><th>floating_ip_id</th><td>{{fip.floating_ip_id}}</td></tr>
-              <tr><th>instance_name</th><td>{{fip.instance_name}}</td></tr>
-              <tr><th>instance_id</th><td>{{fip.instance_id}}</td></tr>
-              <tr><th>internal_net_name</th><td>{{fip.internal_net_name}}</td></tr>
-              <tr><th>internal_net_id</th><td>{{fip.internal_net_id}}</td></tr>
-              <tr><th>project_id</th><td>{{fip.project_id}}</td></tr>
+              <tr><th>Address</th><td>{{fip.floating_ip}}</td></tr>
+              <tr><th>Id</th><td>{{fip.floating_ip_id}}</td></tr>
+              <tr><th>Assigned To (Name: Id)</th><td>{{fip.instance_name}}: {{fip.instance_id}}</td></tr>
+              <tr><th>Internal Network (Name: Id)</th><td>{{fip.internal_net_name}}: {{fip.internal_net_id}}</td></tr>
+              <tr><th>Project Id</th><td>{{fip.project_id}}</td></tr>
           </table>
         </div>
       </div><!-- end span6-->

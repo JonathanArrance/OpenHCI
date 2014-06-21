@@ -584,7 +584,7 @@ def user_view(request, project_name, project_id, user_name):
 
     return render_to_response('coal/user_view.html',
                                RequestContext(request, {'project_name': project_name,
-                                                        'project_id': project_id,
+                                                        'current_project_id': project_id,
                                                         'user_info': user_info,
                                                  }))
 
@@ -647,14 +647,20 @@ def volume_view(request, project_id, volume_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
+    so = server_ops(auth)
     snapshots = sno.list_snapshots()
     vol_dict = {'project_id': project_id, 'volume_id': volume_id}
     volume_info = vo.get_volume_info(vol_dict)
+    attached_to = None
+    if volume_info['volume_instance']:
+        server_dict = {'project_id': project_id, 'server_id': volume_info['volume_instance']}
+        attached_to = so.get_server(server_dict)
 
     return render_to_response('coal/volume_view.html',
                                RequestContext(request, {'current_project_id' : project_id,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
+                                                        'attached_to': attached_to,
                                                         }))
 
 def floating_ip_view(request, floating_ip_id):
@@ -769,8 +775,6 @@ def create_volume(request, volume_name, volume_size, description, project_id):
 def attach_volume(request, project_id, instance_id, volume_id, mount):
     try:
         mount = mount.replace("&47", "/")
-        print "   ---   mount   ---"
-        print mount
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount}
