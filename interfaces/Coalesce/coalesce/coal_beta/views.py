@@ -648,6 +648,7 @@ def volume_view(request, project_id, volume_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     so = server_ops(auth)
+    instances = so.list_servers(project_id)
     snapshots = sno.list_snapshots()
     vol_dict = {'project_id': project_id, 'volume_id': volume_id}
     volume_info = vo.get_volume_info(vol_dict)
@@ -661,6 +662,7 @@ def volume_view(request, project_id, volume_id):
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         'attached_to': attached_to,
+                                                        'instances': instances,
                                                         }))
 
 def floating_ip_view(request, floating_ip_id):
