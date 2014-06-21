@@ -1,5 +1,27 @@
 {% extends "coal/base-fluid.html" %}
 
+{% block javascripts %}
+  
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/fip_view/fip-view-assign-dialog-form.js"/></script>
+    <script>
+      var PROJECT_ID = "{{fip.project_id}}";
+    </script>
+    <script>
+      var FIP = "{{fip.floating_ip}}";
+    </script>
+{% endblock %}
+
 {% block title %} Details for {{fip.floating_ip}}{% endblock %}
 
 {% block content %}
@@ -13,26 +35,64 @@
           <table class="paleblue">
               <tr><th>Address</th><td>{{fip.floating_ip}}</td></tr>
               <tr><th>Id</th><td>{{fip.floating_ip_id}}</td></tr>
-              <tr><th>Assigned To (Name: Id)</th><td>{{fip.instance_name}}: {{fip.instance_id}}</td></tr>
-              <tr><th>Internal Network (Name: Id)</th><td>{{fip.internal_net_name}}: {{fip.internal_net_id}}</td></tr>
+              <tr><th>Assigned To (Name: Id)</th><td>
+                {% if fip.instance_name != "" %}
+                  {{fip.instance_name}}: {{fip.instance_id}}
+                {% else %}
+                  None
+                {% endif %}
+              </td></tr>
+              <tr><th>Internal Network (Name: Id)</th><td>
+                {% if fip.internal_net_name != "" %}
+                  {{fip.internal_net_name}}: {{fip.internal_net_id}}
+                {% else %}
+                  None
+                {% endif %}
+              </td></tr>
               <tr><th>Project Id</th><td>{{fip.project_id}}</td></tr>
           </table>
         </div>
       </div><!-- end span6-->
       
+      
       <div class="span5 offset1">
+        
         <div class="well">
-          <div class="legend">
-            Actions
-            {% if user_level == 0 %}
-              <a href="{{ default_public }}/projects/{{fip.project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-            {% elif user_level == 1 %}
-              <a href="{{ default_public }}/projects/{{fip.project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-            {% else %}
-              <a href="{{ default_public }}/projects/{{fip.project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-            {% endif %}
+          <div class="row-fluid">
+            <div id="fip-view-assign-dialog-form" title="Assign floating IP to instance">
+                  <p class="validateTips">Assign {{fip.floating_ip}} to an instance.  </p>
+                  <form>
+                  {% csrf_token %}
+                  <fieldset>
+                      <label for="assign_instance">Instance</label>
+                      <select name="assign_instance" id="assign_instance">
+                          {% for server in instances %}
+                              <option value="{{server.server_id}}">{{server.server_name}}</option>
+                          {% endfor %}
+                      </select>
+                  </fieldset>
+                  </form>
+            </div>
+            
+            <div class="legend">
+              Actions
+              {% if user_level == 0 %}
+                <a href="{{ default_public }}/projects/{{fip.project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+              {% elif user_level == 1 %}
+                <a href="{{ default_public }}/projects/{{fip.project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+              {% else %}
+                <a href="{{ default_public }}/projects/{{fip.project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
+              {% endif %}
+            </div>
+            <div>
+              {% if fip.instance_name == "" %}
+                <a href="#"  id="view-assign_ip" class="btn">Assign</a>
+              {% else %}
+                <a href="/unassign_floating_ip/{{fip.floating_ip_id}}/" class="btn">Unassign</a>
+              {% endif %}
+            </div>
           </div>
-        </div>
+        </div><!-- end row-fluid-->
       </div>
       
     </div><!-- end row-fluid-->

@@ -667,10 +667,13 @@ def floating_ip_view(request, floating_ip_id):
     auth = request.session['auth']
     l3o = layer_three_ops(auth)
     fip = l3o.get_floating_ip(floating_ip_id)
+    so = server_ops(auth)
+    instances = so.list_servers(fip['project_id'])
 
     return render_to_response('coal/floating_ip_view.html',
                                RequestContext(request, {
                                                         'fip': fip,
+                                                        'instances': instances,
                                                  }))
 
 def create_user(request, username, password, user_role, email, project_id):
