@@ -584,7 +584,7 @@ def user_view(request, project_name, project_id, user_name):
 
     return render_to_response('coal/user_view.html',
                                RequestContext(request, {'project_name': project_name,
-                                                        'project_id': project_id,
+                                                        'current_project_id': project_id,
                                                         'user_info': user_info,
                                                  }))
 
@@ -647,24 +647,35 @@ def volume_view(request, project_id, volume_id):
     auth = request.session['auth']
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
+    so = server_ops(auth)
+    instances = so.list_servers(project_id)
     snapshots = sno.list_snapshots()
     vol_dict = {'project_id': project_id, 'volume_id': volume_id}
     volume_info = vo.get_volume_info(vol_dict)
+    attached_to = None
+    if volume_info['volume_instance']:
+        server_dict = {'project_id': project_id, 'server_id': volume_info['volume_instance']}
+        attached_to = so.get_server(server_dict)
 
     return render_to_response('coal/volume_view.html',
                                RequestContext(request, {'current_project_id' : project_id,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
+                                                        'attached_to': attached_to,
+                                                        'instances': instances,
                                                         }))
 
 def floating_ip_view(request, floating_ip_id):
     auth = request.session['auth']
     l3o = layer_three_ops(auth)
     fip = l3o.get_floating_ip(floating_ip_id)
+    so = server_ops(auth)
+    instances = so.list_servers(fip['project_id'])
 
     return render_to_response('coal/floating_ip_view.html',
                                RequestContext(request, {
                                                         'fip': fip,
+                                                        'instances': instances,
                                                  }))
 
 def create_user(request, username, password, user_role, email, project_id):
@@ -728,14 +739,11 @@ def import_image(request, image_name, container_format, disk_format, image_type,
         go = glance_ops(auth)
         import_dict = {'image_name': image_name, 'container_format': container_format, 'disk_format': disk_format, 'visibility': visibility}
         image_location = image_location.replace("G", "/")
-        print image_location
         if image_type == 'local':
             import_dict['image_file'] = image_location
         else:
             import_dict['image_url'] = image_location
         out = go.import_image(import_dict)
-        print "***---Image Import---***"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -771,7 +779,7 @@ def create_volume(request, volume_name, volume_size, description, project_id):
 
 def attach_volume(request, project_id, instance_id, volume_id, mount):
     try:
-        mount = mount.replace("G", "/")
+        mount = mount.replace("&47", "/")
         auth = request.session['auth']
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount}
@@ -799,13 +807,10 @@ def create_snapshot(request, project_id, name, volume_id, desc):
 
 def delete_snapshot(request, project_id, snapshot_id):
     try:
-        print "   ---   delete_snapshot in try   ---"
         auth = request.session['auth']
         sno = snapshot_ops(auth)
         delete_snap = {'project_id': project_id, 'snapshot_id': snapshot_id}
         out = sno.delete_snapshot(delete_snap)
-        print "   ---   delete_snapshot   ---"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -1234,14 +1239,12 @@ def network_view(request, net_id):
     auth = request.session['auth']
     no = neutron_net_ops(auth)
     nw = no.get_network(net_id)
-    subnet_name = nw['net_subnet_id'][0]['subnet_name']
-    subnet_id = nw['net_subnet_id'][0]['subnet_id']
+    sn = no.get_net_subnet(nw['net_subnet_id'][0]['subnet_id'])
 
     return render_to_response('coal/network_view.html',
                                RequestContext(request, {
                                                         'nw': nw,
-                                                        'subnet_name': subnet_name,
-                                                        'subnet_id': subnet_id,
+                                                        'sn': sn,
                                                         }))
 
 def router_view(request, router_id):

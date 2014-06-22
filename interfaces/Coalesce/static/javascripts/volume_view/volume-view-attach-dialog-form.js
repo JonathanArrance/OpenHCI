@@ -36,11 +36,10 @@ $(function() {
 		
 		
 		var 	instance = $( "#att_instance" ),
-                        volume = $( "#att_volume" ),
                         mount_point = $("#att_mount_point"),
                         
 
-			allFields = $( [] ).add( instance ).add( volume ).add( mount_point ),
+			allFields = $( [] ).add( instance ).add( mount_point ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -65,7 +64,7 @@ $(function() {
 
 	
 
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#volume-view-attach-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
@@ -79,7 +78,7 @@ $(function() {
                                         mount = mount.replace(/\//g, '&47');
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/' + mount + '/');
+					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + VOL_ID + '/' + mount + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -93,9 +92,9 @@ $(function() {
 			}
 		});
 
-		$( "#attach-volume" )
+		$( "#view-attach-volume" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				$( "#volume-view-attach-dialog-form" ).dialog( "open" );
 			});
 			
 			

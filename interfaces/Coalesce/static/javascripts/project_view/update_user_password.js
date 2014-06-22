@@ -103,7 +103,6 @@ $(function() {
 		});
 
 		$( "#update-user-password" )
-			.button()
 			.click(function() {
 				$( "#dialog-form-update-password" ).dialog( "open" );
 			});

@@ -35,12 +35,9 @@ $(function() {
 		
 		
 		
-		var 	instance = $( "#att_instance" ),
-                        volume = $( "#att_volume" ),
-                        mount_point = $("#att_mount_point"),
-                        
+		var 	instance = $( "#assign_instance" ),
 
-			allFields = $( [] ).add( instance ).add( volume ).add( mount_point ),
+			allFields = $( [] ).add( instance ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -65,21 +62,20 @@ $(function() {
 
 	
 
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#fip-view-assign-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Attach volume": function() {
+				"Assign": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
-                                        var mount = "";
-                                        mount = mount_point.val();
-                                        mount = mount.replace(/\//g, '&47');
+
+
 					if ( bValid ) {
 					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/' + mount + '/');
+					   $.post('/assign_floating_ip/' + FIP + '/' + instance.val() + '/' + PROJECT_ID + '/');
 
 						$( this ).dialog( "close" );
 					}
@@ -93,9 +89,9 @@ $(function() {
 			}
 		});
 
-		$( "#attach-volume" )
+		$( "#view-assign_ip" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				$( "#fip-view-assign-dialog-form" ).dialog( "open" );
 			});
 			
 			

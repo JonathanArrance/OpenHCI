@@ -44,7 +44,7 @@
 		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
 			{% endfor %}
                     </select>
-		    <label for="att_mount_point">Mount Point (ex: /dev/vdc)</label>
+		    <label for="att_mount_point">Mount Point</label>
 		    <input type="text" name="att_mount_point" id="att_mount_point" class="text ui-widget-content ui-corner-all" />
                 </fieldset>
                 </form>
@@ -57,7 +57,7 @@
 		      <tr> <td><a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/">{{v.volume_name}}</a></td>
 		  <td>
 		   {% if v.volume_attached == 'false' %}
-		     NONE
+		     None
 		   {% else %}
 		     {% for server in instances %}
 		       {% if server.server_id == v.volume_instance %}
@@ -67,10 +67,10 @@
 		   {% endif %}
 		  </td>
 		  <td>
-		    <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{v.volume_name}} from this project. Are you sure?">delete</a>
 		    {% if v.volume_attached == 'true' %}
-		       | <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/">detach</a>
+		       <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/">detach</a> |
 		    {% endif %}
+		    <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/" data-confirm="This will completely remove {{v.volume_name}} from this project. Are you sure?">delete</a>
 		  </td>
 		</tr>
 		    {% endfor %}
