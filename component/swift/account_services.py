@@ -101,13 +101,13 @@ class account_service_ops:
         #check the response and make sure it is a 204
         if(rest['response'] == 204 or rest['response'] == 200):
             #read the json that is returned
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason'],rest['data']))
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             #r_array = rest['data'].split('\n')
             #r_array.pop()
             #return r_array
             print rest
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            util.http_codes(rest['response'],rest['reason'])
 
     def get_account_containers(self,project_id):
         """
@@ -156,7 +156,7 @@ class account_service_ops:
         #check the response and make sure it is a 204
         if(rest['response'] == 204 or rest['response'] == 200):
             #read the json that is returned
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason'],rest['data']))
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             r_array = rest['data'].split('\n')
             r_array.pop()
             return r_array

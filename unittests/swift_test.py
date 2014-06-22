@@ -16,19 +16,17 @@ c = container(auth)
 o = objects(auth)
 glust = gluster_ops(auth)
 
-yo = glust.create_gluster_swift_ring()
-print yo
-"""
-id1 = {'container_name':'container2','project_id':"84d3e074012a42ce919771c503993f4e"}
-container1= c.create_container(id1)
-print container1
 
-gac1 = a.get_account_info("84d3e074012a42ce919771c503993f4e")
-print gac1
+#id1 = {'container_name':'container4','project_id':"84d3e074012a42ce919771c503993f4e"}
+#container1= c.create_container(id1)
+#print container1
+
+#gac1 = a.get_account_info("84d3e074012a42ce919771c503993f4e")
+#print gac1
 
 gac = a.get_account_containers("84d3e074012a42ce919771c503993f4e")
 print gac
-"""
+
 #id1 = {'container_name':'container2','project_id':"634911ba0d794a4dadefdf872e0d8abe"}
 #container1= c.create_container(id1)
 #print container1
