@@ -1330,6 +1330,20 @@ def create_container(request, name, project_id):
         messages.warning(request, "Unable to add private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def delete_container(request, name, project_id):
+    try:
+        auth = request.session['auth']
+        cso = container_service_ops(auth)
+        create_dict = {"container_name": name, "project_id": project_id}
+        out = cso.delete_container(create_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        messages.warning(request, "Unable to add private network.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 def setup(request):
     if request.method == 'POST':
         if request.POST.get('cancel'):

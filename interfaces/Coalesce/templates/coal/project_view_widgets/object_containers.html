@@ -2,9 +2,9 @@
       <div class="span4">
         <div class="well">
           <div class="legend">
-             Object Containers (not fully implemented)
+             Object Containers
              
-             <a href="#" id="create-container-disabled" class="btn btn-mini btn-inverse" style="float:right">New Container</a>
+             <a href="#" id="create-container" class="btn btn-mini btn-inverse" style="float:right">New Container</a>
           </div>
 
         <div id="container-dialog-form" title="Create new container">
@@ -20,9 +20,14 @@
 
           <table class="paleblue">
         {% if containers %}
-              <tr> <th>Container</th> </tr>
+              <tr> <th>Container</th> <th>Actions</th> </tr>
                 {% for c in containers %}
-          <tr> <td>{{c}}</td> </tr>
+          <tr>
+	    <td>{{c}}</td>
+	    <td>
+	      <a href="/delete_container/{{c}}/{{ project.project_id}}/" data-confirm="This will completely remove {{c}} from this project. Are you sure?">delete</a>
+	    </td>
+	  </tr>
         {% endfor %}
         {% else %}
           <p><i>This project has no containers</i></p>
