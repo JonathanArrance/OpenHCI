@@ -124,7 +124,7 @@ class volume_ops:
 
         #default to ssd 
         if('volume_type' not in create_vol):
-            create_vol['volume_type'] == 'ssd'
+            create_vol['volume_type'] = 'ssd'
         else:
             #check if the volume type is ssd or spindle
             if((create_vol['volume_type'] == 'ssd') or (create_vol['volume_type'] == 'spindle')):
