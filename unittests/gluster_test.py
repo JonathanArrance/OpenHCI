@@ -20,8 +20,8 @@ glust = gluster_ops(auth)
 #create = glust.create_gluster_volume(input_dict)
 #print create
 
-#yo = glust.create_gluster_swift_ring()
-#print yo
+yo = glust.create_gluster_swift_ring()
+print yo
 
 #yo = glust.list_gluster_volumes()
 #print yo
@@ -65,5 +65,5 @@ glust = gluster_ops(auth)
 #blah = yo.get_account_containers('f283a6409db24392b78b22c196813c3a')
 #print blah
 
-brick = glust.get_gluster_brick()
-print brick
+#brick = glust.get_gluster_brick()
+#print brick
