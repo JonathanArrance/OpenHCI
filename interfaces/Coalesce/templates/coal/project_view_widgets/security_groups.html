@@ -14,12 +14,12 @@
                 <form>
                 {% csrf_token %}
                 <fieldset>
-                    <label for="name">Ports</label>
-                    <input type="text" name="ports" id="ports" value="443,80,22" class="text ui-widget-content ui-corner-all" />
                     <label for="groupname">Group Name</label>
                     <input type="text" name="groupname" id="groupname" value="" class="text ui-widget-content ui-corner-all" />
                     <label for="groupdesc">Group Description</label>
                     <input type="text" name="groupdesc" id="groupdesc" value="" class="text ui-widget-content ui-corner-all" />
+		    <label for="name">Ports</label>
+                    <input type="text" name="ports" id="ports" value="443,80,22" class="text ui-widget-content ui-corner-all" />
                 </fieldset>
                 </form>
             </div>
