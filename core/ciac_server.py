@@ -13,7 +13,7 @@ import transcirrus.database.node_db as node_db
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
 import transcirrus.core.core_util as core_util
-import transcirrus.common.gluster as gluster_ops
+from transcirrus.common.gluster import gluster_ops
 
 count=0
 
