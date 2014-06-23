@@ -50,11 +50,11 @@
                 </form>
            </div>
 
-           <table class="paleblue">
+           <table id="volume_table" class="paleblue">
 	    {% if volumes %}
                 <tr> <th>Volume</th> <th>Attached To</th> <th>Actions</th></tr>
                     {% for k,v in volume_info.items %}
-		      <tr> <td><a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/">{{v.volume_name}}</a></td>
+		      <tr> <td id="{{v.volume_id}}"><a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/">{{v.volume_name}}</a></td>
 		  <td>
 		   {% if v.volume_attached == 'false' %}
 		     None

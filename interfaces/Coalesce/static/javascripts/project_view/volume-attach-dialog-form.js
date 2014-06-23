@@ -78,8 +78,11 @@ $(function() {
                                         mount = mount_point.val();
                                         mount = mount.replace(/\//g, '&47');
 					if ( bValid ) {
-					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/' + mount + '/');
+                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/' + mount + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                });
+                                                
 
 						$( this ).dialog( "close" );
 					}

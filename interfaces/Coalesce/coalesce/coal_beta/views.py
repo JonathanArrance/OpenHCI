@@ -769,7 +769,13 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
-        vo.create_volume(create_vol)
+        print "   ---   create volume before call   ---"
+        out = vo.create_volume(create_vol)
+        print
+        print "   ---   create volume   ---"
+        print
+        print out
+        print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -781,14 +787,17 @@ def attach_volume(request, project_id, instance_id, volume_id, mount):
     try:
         mount = mount.replace("&47", "/")
         auth = request.session['auth']
+        vo = volume_ops(auth)
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount}
-        out = sso.attach_vol_to_server(attach_vol)
+        att = sso.attach_vol_to_server(attach_vol)
+        get_vol = {'project_id': project_id, 'volume_id': volume_id}
+        out = vo.get_volume_info(get_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except:
-        messages.warning(request, "Unable to create volume.")
+        messages.warning(request, "Unable to attach volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
