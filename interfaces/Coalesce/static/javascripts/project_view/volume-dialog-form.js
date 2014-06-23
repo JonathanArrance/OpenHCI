@@ -73,7 +73,10 @@ $(function() {
                     
 					if ( bValid ) {
 					  
-					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/'); 
+					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 					   $( this ).dialog( "close" );
 					}
 				},

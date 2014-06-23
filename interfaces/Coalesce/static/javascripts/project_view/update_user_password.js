@@ -87,7 +87,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/update_user_password/' + USER_ID + '/' + password1.val() + '/' + PROJECT_ID + '/');
+						$.post('/update_user_password/' + USER_ID + '/' + password1.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 					  
 						
 						$( this ).dialog( "close" );

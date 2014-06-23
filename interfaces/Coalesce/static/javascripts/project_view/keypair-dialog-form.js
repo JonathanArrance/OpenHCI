@@ -75,7 +75,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/create_sec_keys/' + key_name.val() + '/' + PROJECT_ID + '/');
+						$.post('/create_sec_keys/' + key_name.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 
 						$( this ).dialog( "close" );
 					}

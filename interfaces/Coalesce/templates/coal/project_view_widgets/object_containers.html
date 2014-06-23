@@ -4,7 +4,7 @@
           <div class="legend">
              Object Containers
              
-             <a href="#" id="create-container" class="btn btn-mini btn-inverse" style="float:right">New Container</a>
+             <a href="#" id="create-container" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> New Container</a>
           </div>
 
         <div id="container-dialog-form" title="Create new container">
@@ -23,7 +23,9 @@
               <tr> <th>Container</th> <th>Actions</th> </tr>
                 {% for c in containers %}
           <tr>
-	    <td>{{c}}</td>
+	    <td>
+	      <a href="/projects/{{project.project_id}}/containers/{{c}}/view/">{{c}}</a>
+	    </td>
 	    <td>
 	      <a href="/delete_container/{{c}}/{{ project.project_id}}/" data-confirm="This will completely remove {{c}} from this project. Are you sure?">delete</a>
 	    </td>

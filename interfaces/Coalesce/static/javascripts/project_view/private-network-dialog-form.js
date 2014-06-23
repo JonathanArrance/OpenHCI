@@ -77,7 +77,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					   $.post('/add_private_network/' + net_name.val() + '/' + admin_state.val() + '/' + shared.val() + '/' + PROJECT_ID + '/');
+					   $.post('/add_private_network/' + net_name.val() + '/' + admin_state.val() + '/' + shared.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 
 						$( this ).dialog( "close" );
 					}

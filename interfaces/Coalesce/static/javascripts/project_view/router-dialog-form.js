@@ -77,7 +77,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					   $.post('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/');
+					   $.post('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 
 						$( this ).dialog( "close" );
 					}

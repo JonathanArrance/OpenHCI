@@ -86,7 +86,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/server/' + PROJECT_ID + '/' +  SERVER_ID + '/' + flavor.val() + '/resize_server/' );
+						$.post('/server/' + PROJECT_ID + '/' +  SERVER_ID + '/' + flavor.val() + '/resize_server/' ,
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 	
 						$( this ).dialog( "close" );
 					}

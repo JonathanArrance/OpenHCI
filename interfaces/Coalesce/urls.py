@@ -194,6 +194,10 @@ urlpatterns = patterns('',
 
 	# --- Containers ----
 
+        url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',
+            'coalesce.coal_beta.views.container_view',
+            name='container_view'),
+
         url(r'^create_container/(?P<name>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.create_container',
             name='create_container'),

@@ -106,7 +106,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-						$.post('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT_ID + '/');
+						$.post('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 	
 						$( this ).dialog( "close" );
 

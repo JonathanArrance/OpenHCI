@@ -684,7 +684,8 @@ def create_user(request, username, password, user_role, email, project_id):
         uo = user_ops(auth)
         user_dict = {'username': username, 'password':password, 'user_role':user_role, 'email': email, 'project_id': project_id}
         newuser= uo.create_user(user_dict)
-        redirect_to = "/projects/%s/view/" % ("CHANGEME") #<<<<<<<<<< This doesn't work
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
         messages.warning(request, "Unable to create user.")
@@ -769,7 +770,13 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
-        vo.create_volume(create_vol)
+        print "   ---   create volume before call   ---"
+        out = vo.create_volume(create_vol)
+        print
+        print "   ---   create volume   ---"
+        print
+        print out
+        print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -781,14 +788,17 @@ def attach_volume(request, project_id, instance_id, volume_id, mount):
     try:
         mount = mount.replace("&47", "/")
         auth = request.session['auth']
+        vo = volume_ops(auth)
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': mount}
-        out = sso.attach_vol_to_server(attach_vol)
+        att = sso.attach_vol_to_server(attach_vol)
+        get_vol = {'project_id': project_id, 'volume_id': volume_id}
+        out = vo.get_volume_info(get_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except:
-        messages.warning(request, "Unable to create volume.")
+        messages.warning(request, "Unable to attach volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
@@ -1315,6 +1325,18 @@ def remove_private_network(request, project_id, net_id):
     except:
         messages.warning(request, "Unable to remove private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def container_view(request, project_id, container_name):
+    auth = request.session['auth']
+    cso = container_service_ops(auth)
+    container_dict = {'project_id': project_id, 'container_name': container_name}
+    container_objects = cso.list_container_objects(container_dict)
+
+    return render_to_response('coal/container_view.html',
+                               RequestContext(request, {'current_project_id' : project_id,
+                                                        'container_name': container_name,
+                                                        'container_objects': container_objects,
+                                                        }))
 
 def create_container(request, name, project_id):
     try:

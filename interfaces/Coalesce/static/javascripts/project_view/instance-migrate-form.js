@@ -74,7 +74,10 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/server/' + PROJECT_ID + '/' + instance.val() + '/migrate_server/');
+					   $.post('/server/' + PROJECT_ID + '/' + instance.val() + '/migrate_server/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 
 						$( this ).dialog( "close" );
 					}

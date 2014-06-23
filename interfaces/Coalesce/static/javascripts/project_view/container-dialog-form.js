@@ -70,7 +70,10 @@ $(function() {
                     
 					if ( bValid ) {
 					  
-					   $.post('/create_container/' + cont_name.val() + '/' + PROJECT_ID + '/'); 
+					   $.post('/create_container/' + cont_name.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                });  
 					   $( this ).dialog( "close" );
 					}
 				},
