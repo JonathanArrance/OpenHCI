@@ -1326,6 +1326,18 @@ def remove_private_network(request, project_id, net_id):
         messages.warning(request, "Unable to remove private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def container_view(request, project_id, container_name):
+    auth = request.session['auth']
+    cso = container_service_ops(auth)
+    container_dict = {'project_id': project_id, 'container_name': container_name}
+    container_objects = cso.list_container_objects(container_dict)
+
+    return render_to_response('coal/container_view.html',
+                               RequestContext(request, {'current_project_id' : project_id,
+                                                        'container_name': container_name,
+                                                        'container_objects': container_objects,
+                                                        }))
+
 def create_container(request, name, project_id):
     try:
         auth = request.session['auth']
