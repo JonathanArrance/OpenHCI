@@ -684,7 +684,8 @@ def create_user(request, username, password, user_role, email, project_id):
         uo = user_ops(auth)
         user_dict = {'username': username, 'password':password, 'user_role':user_role, 'email': email, 'project_id': project_id}
         newuser= uo.create_user(user_dict)
-        redirect_to = "/projects/%s/view/" % ("CHANGEME") #<<<<<<<<<< This doesn't work
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
         messages.warning(request, "Unable to create user.")

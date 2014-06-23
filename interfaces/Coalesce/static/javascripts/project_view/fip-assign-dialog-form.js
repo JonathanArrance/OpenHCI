@@ -76,7 +76,10 @@ $(function() {
 
 					if ( bValid ) {
 					  
-					   $.post('/assign_floating_ip/' + floating_ip.val() + '/' + instance.val() + '/' + PROJECT_ID + '/');
+					   $.post('/assign_floating_ip/' + floating_ip.val() + '/' + instance.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 
 						$( this ).dialog( "close" );
 					}

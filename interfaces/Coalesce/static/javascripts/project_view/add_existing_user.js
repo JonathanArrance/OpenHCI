@@ -83,7 +83,10 @@ $(function() {
 					bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
 
 					if ( bValid ) {
-						$.post('/add_existing_user/' + name.val() + '/' + role.val() + '/' + PROJECT_ID + '/');
+						$.post('/add_existing_user/' + name.val() + '/' + role.val() + '/' + PROJECT_ID + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 						$( this ).dialog( "close" );
                         
 					}
