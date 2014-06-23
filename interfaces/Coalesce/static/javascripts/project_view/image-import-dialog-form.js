@@ -88,7 +88,10 @@ $(function() {
                                         loc = loc.replace(/\//g, '%47');
 					if ( bValid ) {
 					  
-					   $.post('/import_image/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/'); 
+					   $.post('/import_image/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                });  
 					   $( this ).dialog( "close" );
 					}
 				},

@@ -76,7 +76,10 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 					if ( bValid ) {
 					  
-					   $.post('/create_snapshot/' + PROJECT_ID + '/' + name.val() + '/' + volume.val() + '/' + desc.val() + '/');
+					   $.post('/create_snapshot/' + PROJECT_ID + '/' + name.val() + '/' + volume.val() + '/' + desc.val() + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                }); 
 
 						$( this ).dialog( "close" );
 					}
