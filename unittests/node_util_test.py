@@ -3,7 +3,10 @@
 import transcirrus.common.node_util as node_util
 import time
 
+check_sn = node_util.get_all_storage_nodes()
+print check_sn
 
+'''
 print "Checking admin password set to new password"
 check_admin = node_util.check_admin_pass_status()
 print check_admin
@@ -69,3 +72,4 @@ print "------------------------------------------------"
 time.sleep(1)
 flag2 = node_util.check_config_type();
 print flag2
+'''

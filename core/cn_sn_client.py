@@ -561,7 +561,6 @@ def processComputeConfig(sock, node_id):
         logger.sys_info("write success, net_conf")
         if __debug__ :
             print "write success, net_conf"
-                                                                                   
 
     post_install_status = True
 

@@ -17,7 +17,11 @@ class gluster_ops:
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
-        else:
+        elif('obj' in user_dict and user_dict['obj'] == 1):
+            self.username = user_dict['username']
+            self.is_admin = user_dict['is_admin']
+            self.user_level = user_dict['user_level']
+        elif('obj' not in user_dict):
             self.username = user_dict['username']
             self.password = user_dict['password']
             self.project_id = user_dict['project_id']
@@ -50,17 +54,17 @@ class gluster_ops:
             self.api_ip = config.API_IP
             #self.db = user_dict['db']
 
-        if((self.username == "") or (self.password == "")):
-            logger.sys_error("Credentials not properly passed.")
-            raise Exception("Credentials not properly passed.")
-
-        if(self.token == 'error'):
-            logger.sys_error("No tokens passed, or token was in error")
-            raise Exception("No tokens passed, or token was in error")
-
-        if((self.status_level > 2) or (self.status_level < 0)):
-            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
-            raise Exception("Invalid status level passed for user: %s" %(self.username))
+            if((self.username == "") or (self.password == "")):
+                logger.sys_error("Credentials not properly passed.")
+                raise Exception("Credentials not properly passed.")
+    
+            if(self.token == 'error'):
+                logger.sys_error("No tokens passed, or token was in error")
+                raise Exception("No tokens passed, or token was in error")
+    
+            if((self.status_level > 2) or (self.status_level < 0)):
+                logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+                raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         self.db = util.db_connect()
 

@@ -13,6 +13,7 @@ import transcirrus.database.node_db as node_db
 import transcirrus.common.node_util as node_util
 import transcirrus.common.logger as logger
 import transcirrus.core.core_util as core_util
+import transcirrus.common.gluster as gluster_ops
 
 count=0
 
@@ -118,19 +119,6 @@ def check_node_update(data):
                     update = 'NA'
                 else:
                     update = 'OK'
-            #elif data['Value']['node_iscsi_iqn'] != node['node_iscsi_iqn']:
-            #    if data['Value']['node_iscsi_iqn'] == '':
-            #        update = 'NA'
-            #    else:
-            #        update = 'OK'
-
-            #elif data['Value']['node_swift_ring'] != node['node_swift_ring']:
-            #    if data['Value']['node_swift_ring'] == '':
-            #        update = 'NA'
-            #    else:
-            #        update = 'OK'
-
-
 
     return update
 
@@ -152,10 +140,12 @@ def sendStorageConfig(conn, node_id):
 
     # get cinder config
     config = node_db.get_node_cinder_config(node_id)
+    node_info = node_db.get_node(node_id)
 
     if config:
-        # send config files
-        #conn.sendall(pickle.dumps(config, -1))
+        #add the Gluster storage node before configureing cinder
+        SNglusterOperations(conn,node_info['node_data_ip'])
+
         core_util.send_data(pickle.dumps(config, -1), conn)
         logger.sys_info("node_id: %s, sent storage node config files")
         if __debug__ :
@@ -216,7 +206,7 @@ def sendComputeConfig(conn, node_id):
         logger.sys_info("node_id: %s sent cn nova config!!" %(node_id))
         if __debug__ :
             print "node_id: %s sent cn nova config!!" % node_id
-	    print config #TEST
+            print config #TEST
 
         # listen for ok message, ack
         data = core_util.recv_data(conn)
@@ -283,6 +273,44 @@ def sendComputeConfig(conn, node_id):
     if __debug__ :
         print "node_id:%s ciac server send config completed" % (node_id)
     
+def SNglusterOperations(conn,data_ip):
+    '''
+    @author:
+    comments: Carrying out various operations like adding a brick, listing
+    volumes and rebalancing all the current volumes 
+    '''
+    #HUGE HACK - not going to work.
+    input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
+    gluster = gluster_ops(input_dict)
+
+    new = gluster.attach_gluster_peer(data_ip)
+    glust_vols = []
+    if new == "OK":
+        #get the gluster volumes on the core node
+        glust_vols = gluster.list_gluster_volumes()
+    else:
+        SNglusterOperations(conn,data_ip)
+
+    #adding brick to all the listed volumes
+    for vol in glust_vols:
+        logger.sys_info('Adding storage to gluster volume %s'%(vol))
+        brick = "%s:/data/gluster/%s"%(data_ip,vol)
+        expand = {'vol_name':"%s",'brick':"%s"%(vol,brick)}
+        add_storage = gluster.add_gluster_brick(expand)
+        if add_storage == "OK":
+            print "Success: Brick %s added to volume %s"%(brick,vol)
+            logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
+        else:
+            print "Error: Brick %s not added to volumes %s"%(brick,vol)
+            logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
+
+        #rebalance the volume over the new brick
+        rebalance = gluster.rebalance_gluster_volume(vol)
+        if rebalance == 'OK':
+            logger.sys_info("Success: volume %s rebalanced."%(vol))
+        elif rebalance == 'ERROR':
+            logger.sys_info("Error: volumes %s not rebalanced"%(vol))
+
 def handle():
 
     '''
