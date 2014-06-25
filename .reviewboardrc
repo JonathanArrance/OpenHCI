@@ -1,0 +1,3 @@
+REVIEWBOARD_URL = "http://192.168.3.110"
+REPOSITORY = "Alpo-Rhel"
+BRANCH = "master"
