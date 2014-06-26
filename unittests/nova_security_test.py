@@ -13,7 +13,7 @@ from transcirrus.component.nova.server import server_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("Rob","1234567")
+a = authorization("rob","password")
 #get the user dict
 d = a.get_auth()
 nova = server_ops(d)
@@ -98,17 +98,11 @@ sec_group2 = nova.create_sec_group(create_group2)
 print sec_group2
 print "------------------------------------------------"
 time.sleep(1)
-
+'''
 print "listing the security keys"
 list_key = nova.list_sec_keys()
-for lk in list_key:
-    try:
-        get_key = nova.get_sec_keys(lk['key_id'])
-        print get_key
-    except:
-        pass
-time.sleep(1)
-
+print list_key
+'''
 print "listing the security groups"
 list_group = nova.list_sec_group()
 for lg in list_group:
@@ -132,7 +126,7 @@ create_def_key3 = nova2.create_sec_keys(key3)
 print create_def_key3
 print "------------------------------------------------"
 time.sleep(1)
-'''
+
 #try code path that does not include default key
 print "creating a new security key"
 key4 = {'project_id':"3d19b7ed1452415a9173e7b32dd62cd3",'key_name':'jonkeys2'}
@@ -140,7 +134,7 @@ create_def_key4 = nova.create_sec_keys(key4)
 print create_def_key4
 print "------------------------------------------------"
 time.sleep(1)
-'''
+
 print "Createing security group with default ports - default"
 #create a security group with default ports
 create_group3 = {"group_name": 'ffvcsec3',"group_desc": 'This is a test3','project_id':"523e5098be6c4438b428d7f3f94b3a2d"}

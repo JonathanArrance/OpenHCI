@@ -8,10 +8,11 @@ print "Loggin in as the default admin."
 #onlyt an admin can create a new user
 a = authorization("admin","password")
 #get the user dict
-auth = a.get_auth()
+#auth = a.get_auth()
+#glust = gluster_ops(auth)
 
-
-glust = gluster_ops(auth)
+input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
+glust = gluster_ops(input_dict)
 
 #brick = ['172.38.24.10:/data/gluster/jonarrance2','172.38.24.12:/data/gluster/jonarrance2']
 #input_dict = {'volume_name':'jonarrance2','bricks': brick}

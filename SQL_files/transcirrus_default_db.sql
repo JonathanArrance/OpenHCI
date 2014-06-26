@@ -560,7 +560,7 @@ CREATE TABLE projects (
     host_system_name character varying,
     host_system_ip character varying,
     def_network_name character varying,
-    def_network_id character varying
+    def_network_id character varying DEFAULT 0
 );
 
 
@@ -1864,8 +1864,8 @@ INSERT INTO cinder_default VALUES ('lock_path', '/var/lib/cinder', 'cinder.conf'
 INSERT INTO cinder_default VALUES ('qpid_hostname', '172.38.24.10', 'cinder.conf', 19);
 INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 20);
 INSERT INTO cinder_default VALUES ('default_availability_zone', 'nova', 'cinder.conf', 21);
-INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter', 'cinder.conf', 22);
-
+INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter', 'cinder.conf', 22);
+INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.conf', 23);
 
 
 --

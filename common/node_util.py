@@ -386,7 +386,7 @@ def set_node_fault_flag(node_id):
 
     db.pg_close_connection()
     return r_dict
-    
+
 def clear_node_fault_flag(node_id):
     """
     DESC: Unset the node falt flag when the node is not in a fault state in the Transcirrsu db.
@@ -412,7 +412,7 @@ def clear_node_fault_flag(node_id):
 
     db.pg_close_connection()
     return r_dict
-    
+
 def check_node_fault_flag(node_id):
     """
     DESC: Get the node fault flag in the Transcirrsu db.
@@ -440,3 +440,22 @@ def check_node_fault_flag(node_id):
 
     db.pg_close_connection()
     return r_dict
+
+def get_all_storage_nodes():
+    """
+    DESC: Get all of the dedicated storage nodes in the cloud.
+    INPUT: None
+    OUTPUT: array of r_dict - sn_name
+                            - sn_id
+                            - sn_data_ip
+    ACCESS: Wide open
+    NOTE: none
+    """
+    db = util.db_connect()
+    get_sn = {'select':'node_name,node_id,node_data_ip','from':'trans_nodes','where':"node_type='sn'"}
+    nodes = db.pg_select(get_sn)
+    r_array = []
+    for node in nodes:
+        r_dict = {'sn_name':node[0],'sn_id':node[1],'sn_data_ip':node[2]}
+        r_array.append(r_dict)
+    return r_array

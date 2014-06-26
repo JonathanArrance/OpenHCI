@@ -757,8 +757,6 @@ def get_node_cinder_config(node_id):
     #get the node type based on the node ID
     node_info = get_node(node_id)
 
-    #connect to the db
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
 
     cinraw = None
