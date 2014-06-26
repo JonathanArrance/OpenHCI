@@ -1,0 +1,16 @@
+#!/bin/bash -x
+
+#put the correct packages in place
+rpm -ivh libffi-devel-3.0.5-3.2.el6.x86_64.rpm
+tar -zxvf ./swift-1.8.0.tar.gz -C .
+cd ./swift-1.8.0
+python ./setup.py build
+python ./setup.py install
+
+#rebuild the swift ring
+python2.7 ~/alpo_rhel/unittests/gluster_test.py
+
+#add the new valuse to the cinder table
+psql -U postgres -d transcirrus -c "UPDATE cinder_default SET param_value='AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter' WHERE parameter='scheduler_default_filters';"
+psql -U postgres -d transcirrus -c "INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.conf');"
+
