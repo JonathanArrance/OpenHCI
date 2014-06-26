@@ -332,21 +332,18 @@ class server_ops:
             raise Esception("Could not connec to the REST api caller in create_server operation.")
 
         #build the server
-        #try:
-        body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
-        print body
-        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-        function = 'POST'
-        api_path = '/v2/%s/servers' %(create_dict['project_id'])
-        print api_path
-        token = self.token
-        sec = self.sec
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-        rest = api.call_rest(rest_dict)
-        print rest
-        #except Exception as e:
-        #    logger.sys_error("Could not remove the project %s" %(e))
-        #    raise e
+        try:
+            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers' %(create_dict['project_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
 
         if(rest['response'] == 202):
             #NOTE: need to add in a polling mechanism to report back status of the creation
@@ -372,7 +369,7 @@ class server_ops:
                           'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def get_server(self,input_dict):
         """
@@ -1398,11 +1395,11 @@ class server_ops:
         if(self.user_level == 0):
             get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(project_id)}
         elif(self.user_level == 1):
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(self.project_id)}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'"%(self.user_id)}
         else:
             #HACK: this is temporary until we make it so that the defaults are shown as of now nothing is shown unti the user makes a key
             #get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id)}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'"%(self.user_id)}
 
         try:
             keys = self.db.pg_select(get_key_dict)

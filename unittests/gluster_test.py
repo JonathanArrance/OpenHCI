@@ -21,8 +21,8 @@ glust = gluster_ops(input_dict)
 #create = glust.create_gluster_volume(input_dict)
 #print create
 
-#yo = glust.create_gluster_swift_ring()
-#print yo
+yo = glust.create_gluster_swift_ring()
+print yo
 
 yo = glust.list_gluster_volumes()
 print yo

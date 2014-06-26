@@ -32,8 +32,9 @@ chmod -R g+s /var/log/caclogs
 chmod -R 777 /var/log/caclogs
 
 #add two new fields to postgres - SQLalchemy would make this so much easier.
-sudo psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_type varchar(15)"
-sudo psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_zone varchar"
+#sudo psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_type varchar(15)"
+#sudo psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_zone varchar"
+sudo psql -U postgres -d transcirrus -c "ALTER TABLE ONLY projects ALTER COLUMN def_network_id SET DEFAULT '0'"
 
 #add the django site to its proper place in the file system
 echo 'Adding Coalesce to the opt directory.'

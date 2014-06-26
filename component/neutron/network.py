@@ -328,11 +328,17 @@ class neutron_net_ops:
 
             #check the response and make sure it is a 201
             if(rest['response'] == 201):
+                get_def_net = {"select":"def_network_id", "from":"projects", "where":"proj_id='%s'" %(create_dict['project_id'])}
+                def_net = self.db.pg_select(get_def_net)
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
                 try:
                     self.db.pg_transaction_begin()
+                    if(def_net[0][0] == '0'):
+                        if(self.is_admin == 1):
+                            update_dict = {'table':"projects",'set':"""def_network_id='%s',def_network_name='%s'""" %(str(load['network']['id']),str(load['network']['name'])),'where':"proj_id='%s'" %(create_dict['project_id'])}
+                            self.db.pg_update(update_dict)
                     #insert new net info
                     insert_dict = {"net_name":create_dict['net_name'],"net_id":load['network']['id'],"user_id":self.user_id,"proj_id":create_dict['project_id'],"net_internal":"true","net_shared":create_dict['shared'],"net_admin_state":create_dict['admin_state']}
                     self.db.pg_insert("trans_network_settings",insert_dict)

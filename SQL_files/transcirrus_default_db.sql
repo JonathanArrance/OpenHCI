@@ -560,7 +560,7 @@ CREATE TABLE projects (
     host_system_name character varying,
     host_system_ip character varying,
     def_network_name character varying,
-    def_network_id character varying
+    def_network_id character varying DEFAULT 0
 );
 
 
