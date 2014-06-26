@@ -82,9 +82,12 @@ $(function() {
                                                                 function(){
                                                                                 location.reload();
                                                                 });
-                                                
 
 						$( this ).dialog( "close" );
+                                                $( "#progressbar" ).progressbar({
+                                                                value: false
+                                                });
+
 					}
 				},
 				Cancel: function() {
