@@ -99,7 +99,7 @@ def restartServices(node_id, node_type):
     if node_type == "sn":
 
         # restart cinder services
-        ret = service_controller.cinder("restart")
+        ret = service_controller.cinder_sn("restart")
 
         if ret == "OK":
             logger.sys_info("node_id: %s, services restart success" %(node_id))

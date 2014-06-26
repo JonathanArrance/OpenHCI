@@ -143,9 +143,6 @@ def sendStorageConfig(conn, node_id):
     node_info = node_db.get_node(node_id)
 
     if config:
-        #add the Gluster storage node before configureing cinder
-        SNglusterOperations(conn,node_info['node_data_ip'])
-
         core_util.send_data(pickle.dumps(config, -1), conn)
         logger.sys_info("node_id: %s, sent storage node config files")
         if __debug__ :
@@ -156,6 +153,8 @@ def sendStorageConfig(conn, node_id):
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status'  and data['Value'] == 'ok':
+                #add the Gluster storage node before configureing cinder
+                SNglusterOperations(node_info['node_data_ip'])
                 logger.sys_info("node_id: %s, ciac server received %s" %(node_id, data['Value']))
             else:
                 logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
@@ -273,7 +272,7 @@ def sendComputeConfig(conn, node_id):
     if __debug__ :
         print "node_id:%s ciac server send config completed" % (node_id)
     
-def SNglusterOperations(conn,data_ip):
+def SNglusterOperations(data_ip):
     '''
     @author:
     comments: Carrying out various operations like adding a brick, listing
@@ -289,15 +288,16 @@ def SNglusterOperations(conn,data_ip):
         #get the gluster volumes on the core node
         glust_vols = gluster.list_gluster_volumes()
     else:
-        SNglusterOperations(conn,data_ip)
+        SNglusterOperations(data_ip)
 
     #adding brick to all the listed volumes
+    print glust_vols
     for vol in glust_vols:
         print vol
         logger.sys_info('Adding storage to gluster volume %s'%(vol))
         brick = "%s:/data/gluster/%s"%(data_ip,vol)
         print brick
-        expand = {'vol_name':"%s",'brick':"%s"%(vol,brick)}
+        expand = {'volume_name':"%s",'brick':"%s"%(vol,brick)}
         add_storage = gluster.add_gluster_brick(expand)
         if add_storage == "OK":
             print "Success: Brick %s added to volume %s"%(brick,vol)
