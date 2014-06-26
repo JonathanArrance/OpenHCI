@@ -8,7 +8,7 @@ python ./setup.py build
 python ./setup.py install
 
 #rebuild the swift ring
-python2.7 ~/alpo_rhel/unittests/gluster_test.py
+python2.7 /home/transuser/alpo_rhel/unittests/gluster_test.py
 
 #add the new valuse to the cinder table
 psql -U postgres -d transcirrus -c "UPDATE cinder_default SET param_value='AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter' WHERE parameter='scheduler_default_filters';"
@@ -19,4 +19,4 @@ sed -i 's/scheduler_default_filters=AvailabilityZoneFilter/scheduler_default_fil
 echo "storage_availability_zone=nova" >> /etc/hosts
 
 #restart cinder
-python2.7 ~/alpo_rhel/unittests/service_test.py
+python2.7 /home/transuser/alpo_rhel/unittests/service_test.py
