@@ -82,6 +82,9 @@ $(function() {
                                                                 }); 
 
 						$( this ).dialog( "close" );
+                                                $( "#fip_progressbar" ).progressbar({
+                                                                value: false
+                                                });
 					}
 				},
 				Cancel: function() {
