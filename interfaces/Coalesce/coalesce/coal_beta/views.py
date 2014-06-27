@@ -775,13 +775,7 @@ def create_volume(request, volume_name, volume_size, description, project_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
-        print "   ---   create volume before call   ---"
         out = vo.create_volume(create_vol)
-        print
-        print "   ---   create volume   ---"
-        print
-        print out
-        print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -1158,6 +1152,8 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         l3o = layer_three_ops(auth)
         update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
         out = l3o.update_floating_ip(update_dict)
+        print "   ---   assign fip   ---"
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

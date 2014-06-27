@@ -52,8 +52,8 @@
                 </form>
             </div>
 
-           <table class="paleblue">
-	    {% if volumes %}
+	  {% if volumes %}
+            <table class="paleblue">
                 <tr> <th>Volume</th> <th>Attached To</th> <th>Actions</th></tr>
                     {% for k,v in volume_info.items %}
 		      <tr> <td><a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/">{{v.volume_name}}</a></td>
@@ -76,9 +76,10 @@
 		  </td>
 		</tr>
 		    {% endfor %}
-		{% else %}
-		  <p><i>This project has no volumes</i></p>
-		{% endif %}
-          </table>
+	    </table>
+	  {% else %}
+	    <p><i>This project has no volumes</i></p>
+	  {% endif %}
+	  <div id="vol_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
         </div>
       </div>

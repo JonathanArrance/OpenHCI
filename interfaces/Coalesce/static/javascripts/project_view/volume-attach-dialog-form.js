@@ -84,7 +84,7 @@ $(function() {
                                                                 });
 
 						$( this ).dialog( "close" );
-                                                $( "#progressbar" ).progressbar({
+                                                $( "#vol_progressbar" ).progressbar({
                                                                 value: false
                                                 });
 
