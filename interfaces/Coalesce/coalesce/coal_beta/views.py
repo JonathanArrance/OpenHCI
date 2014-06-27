@@ -309,6 +309,10 @@ def pu_project_view(request, project_id):
     volumes       = vo.list_volumes(project_id)
     volume_info={}
     snapshots     = sno.list_snapshots(project_id)
+    try:
+        containers    = aso.get_account_containers(project_id)
+    except:
+        containers = []
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
@@ -392,7 +396,8 @@ def pu_project_view(request, project_id):
                                                         'floating_ips': floating_ips,
                                                         'volumes': volumes,
                                                         'volume_info': volume_info,
-                                                        'snapshots':snapshots,
+                                                        'snapshots': snapshots,
+                                                        'containers': containers,
                                                         'images': images,
                                                         'instances': instances,
                                                         'instance_info': instance_info,

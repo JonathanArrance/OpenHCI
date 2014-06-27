@@ -41,14 +41,16 @@
 		    <label for="att_instance">Instance</label>
                     <select name="att_instance" id="att_instance">
 			{% for server in instances %}
+			  {% if server.server_status != "BUILDING" or server.server_status != "ERROR" %}
 		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
+			  {% endif %}
 			{% endfor %}
                     </select>
 		    <label for="att_mount_point">Mount Point</label>
 		    <input type="text" name="att_mount_point" id="att_mount_point" class="text ui-widget-content ui-corner-all" />
                 </fieldset>
                 </form>
-           </div>
+            </div>
 
            <table class="paleblue">
 	    {% if volumes %}
