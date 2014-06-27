@@ -489,7 +489,7 @@ class volume_ops:
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
-                vol_type_name = str(load['volume_type']['display_name'])
+                vol_type_name = str(load['volume_type']['name'])
                 vol_type_id = str(load['volume_type']['id'])
                 r_dict = {"vol_type_name": vol_type_name, "vol_type_id": vol_type_id}
                 return r_dict
