@@ -473,7 +473,7 @@ class volume_ops:
     
             try:
                 #add the new user to openstack 
-                body = '{"volume_type": {"name": "%s"}}'%(volume_type)
+                body = '{"volume_type": {"name": "%s"}}'%(volume_type_name)
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
                 function = 'POST'
