@@ -13,6 +13,8 @@ python2.7 /home/transuser/alpo_rhel/unittests/gluster_test.py
 #add the new valuse to the cinder table
 psql -U postgres -d transcirrus -c "UPDATE cinder_default SET param_value='AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter' WHERE parameter='scheduler_default_filters';"
 psql -U postgres -d transcirrus -c "INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.conf');"
+psql -U postgres -d transcirrus -c "INSERT INTO nova_default VALUES ('rpc_response_timeout', '180', 'nova.conf');"
+psql -U postgres -d transcirrus -c "INSERT INTO nova_default VALUES ('live_migration_flag', 'VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE', 'nova.conf');"
 psql -U postgres -d transcirrus -c "ALTER TABLE projects ALTER COLUMN def_network_id SET DEFAULT 0;"
 psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_type varchar(15)"
 psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_zone varchar"
