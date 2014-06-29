@@ -20,9 +20,9 @@ print "instantiating a volume abject."
 vol = volume_ops(d)
 
 
-voltype = vol.create_volume_type("jonathan2")
+voltype = vol.create_volume_type("ssd")
 print voltype
-voltype2 = vol.create_volume_type("JonAthAnArr1")
+voltype2 = vol.create_volume_type("spindle")
 print voltype2
 """
 get = {'volume_id':'8d4204fd-4d9e-4d83-8949-e33c963650a0','project_id':'84d3e074012a42ce919771c503993f4e'}
