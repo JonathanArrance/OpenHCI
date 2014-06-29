@@ -579,6 +579,7 @@ def get_system_name():
     return config.NODE_NAME
 
 def get_uplink_ip():
+    #This def may be able to be erased.
     """
     DESC: get the uplink ip from the config.py file.
     INPUT: None

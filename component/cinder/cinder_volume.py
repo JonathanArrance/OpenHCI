@@ -122,15 +122,19 @@ class volume_ops:
                 self.token = get_token(self.username,self.password,create_vol['project_id'])
             create_flag = 1
 
-        #default to ssd 
+        #default to ssd
+        voltype = None
         if('volume_type' not in create_vol):
-            create_vol['volume_type'] = 'ssd'
+            voltype = 'ssd'
+        elif('volume_type' in create_vol):
+            voltype = create_vol['volume_type'].lower()
+            print voltype
+
+        #check if the volume type is ssd or spindle
+        if((voltype == 'ssd') or (voltype == 'spindle')):
+            pass
         else:
-            #check if the volume type is ssd or spindle
-            if((create_vol['volume_type'] == 'ssd') or (create_vol['volume_type'] == 'spindle')):
-                pass
-            else:
-                raise Exception("The volume type specified does not exist.")
+            raise Exception("The volume type specified does not exist.")
 
         #get the name of the project based on the id
         try:
@@ -162,7 +166,8 @@ class volume_ops:
     
             try:
                 #add the new user to openstack 
-                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],create_vol['volume_type'])
+                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
+                print body
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
@@ -196,7 +201,7 @@ class volume_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
-                    r_dict = {"volume_id": volid, "volume_type": create_vol['volume_type'],"volume_name": volname, "volume_size": volsize}
+                    r_dict = {"volume_id": volid, "volume_type": voltype,"volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
@@ -463,6 +468,7 @@ class volume_ops:
 
         #Talk to the cinder API
         if(self.is_admin == 1):
+            voltype = volume_type_name.lower()
             try:
                 #build an api connection
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -473,7 +479,7 @@ class volume_ops:
     
             try:
                 #add the new user to openstack 
-                body = '{"volume_type": {"name": "%s"}}'%(volume_type_name)
+                body = '{"volume_type": {"name": "%s"}}'%(voltype)
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
                 function = 'POST'

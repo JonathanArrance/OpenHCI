@@ -440,6 +440,14 @@ def get_node_nova_config(node_id):
             compdefraw = db.pg_select(get_compute_dict)
             get_nodecomp_dict = {'select':"parameter,param_value",'from':"nova_node",'where':"file_name='nova-compute.conf'",'and':"node='%s'" %(node_id)}
             compnoderaw = db.pg_select(get_nodecomp_dict)
+            #HACK that may not be neccessary
+            #if (node_info['node_type'] == 'cn'):
+            #    novnc_proxy = util.get_uplink_ip()
+            #    print "HACK %s"%(novnc_proxy)
+                #['libvirt_ovs_bridge', 'br-int']
+            #    proxy = ['novncproxy_base_url']
+            #    proxy.append(novnc_proxy + ":6080/vnc_auto.html")
+            #    compnoderaw.append(proxy)
             compraw = compdefraw + compnoderaw
         except:
             logger.sys_error('Could not get the nova-compute.conf entries from the Transcirrus nova db.')

@@ -1,14 +1,17 @@
 import transcirrus.database.node_db as node
 
+yo = node.get_node_nova_config('44444')
+print yo
 
+'''
 print "Inserting a node"
-node1 = {'node_id':'13','node_name':'node13','node_type':"cc",'node_data_ip':"192.168.10.3",'node_mgmt_ip':"192.168.11.3",'node_controller':"ciac-03",'node_cloud_name':"test",'avail_zone':'nova'}
+node1 = {'node_id':'44444','node_name':'node44444','node_type':"cn",'node_data_ip':"172.38.24.16",'node_mgmt_ip':"192.168.10.4",'node_controller':"ciac-42296",'node_cloud_name':"test",'avail_zone':'nova'}
 inserter = node.insert_node(node1)
 print inserter
 
 print "---------------------------------------"
 
-'''
+
 print "listing nodes"
 lister = node.list_nodes()
 print lister

@@ -8,7 +8,7 @@ auth = authorization('admin','password')
 a = auth.get_auth()
 router = layer_three_ops(a)
 
-
+'''
 print "Adding a new router"
 r = {'router_name':'inttestrouter10','project_id':"84d3e074012a42ce919771c503993f4e"}
 create = router.add_router(r)
@@ -30,7 +30,7 @@ print ext_int
 time.sleep(1)
 print "-------------------------------------------------"
 
-'''
+
 print "listing the routers"
 lister = router.list_routers()
 print lister
@@ -73,12 +73,12 @@ for y in yo2:
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
     
-
+'''
 print "attaching floating ip to instance"
-update_dict = {'floating_ip':'192.168.10.227','instance_id':"ff48f2e3-dd9b-40c3-bf73-5b26d081cfb1",'project_id':"a38c70b7a87c404cab33d0a5959ba57a",'action':"add"}
+update_dict = {'floating_ip':'192.168.10.75','instance_id':"6c21d791-33a4-45dc-9d20-f00a1164cd3f",'project_id':"4ecbada824e14d80b444200c8ab96b44",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
-
+'''
 print "Listing floating ips"
 yo5 = router.list_floating_ips()
 print yo5
