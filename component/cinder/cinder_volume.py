@@ -437,7 +437,6 @@ class volume_ops:
             get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst,vol_type,vol_mount_location','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
 
         try:
-            print get_vol_dict
             get_vol = self.db.pg_select(get_vol_dict)
         except:
             logger.sql_error("Could not get the volume info for %s" %(volume_id))

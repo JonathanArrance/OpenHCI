@@ -1151,9 +1151,11 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
-        out = l3o.update_floating_ip(update_dict)
-        print "   ---   assign fip   ---"
-        print out
+        try:
+            out = l3o.update_floating_ip(update_dict)
+        except Exception as e:
+            print "   ---   assign fip exception   ---"
+            print e
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -1250,7 +1252,9 @@ def network_view(request, net_id):
     auth = request.session['auth']
     no = neutron_net_ops(auth)
     nw = no.get_network(net_id)
-    sn = no.get_net_subnet(nw['net_subnet_id'][0]['subnet_id'])
+    sn = {}
+    if nw['net_name'] != "DefaultPublic":
+        sn = no.get_net_subnet(nw['net_subnet_id'][0]['subnet_id'])
 
     return render_to_response('coal/network_view.html',
                                RequestContext(request, {

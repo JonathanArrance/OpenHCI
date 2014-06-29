@@ -5,7 +5,7 @@
 {% block content %}
 
     <div class="row-fluid">
-      <div class="span3">
+      <div class="span4">
         <div class="well">
           <div class="legend">
               Network Details
@@ -21,7 +21,8 @@
           </table>
         </div>
       </div><!-- end span3-->
-      <div class="span3">
+      {% if nw.net_name != "DefaultPublic" %}
+      <div class="span4">
         <div class="well">
           <div class="legend">
             Subnet Details
@@ -39,28 +40,10 @@
           </table>
         </div>
       </div><!-- end span3-->
-      <!--<div class="span5 offset1">
-        <div class="well">
-          <div class="legend">
-              Actions for {{ user_info.username }}
-          </div>
-          <div id="dialog-form-update-password" title="Update Password">
-                <p class="validateTips">All form fields are required.</p>
-                <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="password1">Password</label>
-                    <input type="password" name="password1" id="password1" value="" class="text ui-widget-content ui-corner-all" />
-                    <label for="password2">Confirm Password</label>
-                    <input type="password" name="password2" id="password2" value="" class="text ui-widget-content ui-corner-all" />
-                </fieldset>
-                </form>
-            </div>
-          <a href="#" id="update-user-password">update password</a>
-        </div>
-      </div><!-- end span6-->
+    {% endif %}
+    
     {% if nw.net_name != "DefaultPublic" %}
-      <div class="span5 offset1">
+      <div class="span4">
         <div class="well">
           <div class="legend">
             Actions
