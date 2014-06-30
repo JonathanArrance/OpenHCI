@@ -23,7 +23,7 @@ update_ip = router.update_floating_ip(update_dict)
 print "update ip"
 print update_ip
 
-
+'''
 print "Adding a new router"
 r = {'router_name':'inttestrouter10','project_id':"84d3e074012a42ce919771c503993f4e"}
 create = router.add_router(r)
@@ -90,7 +90,7 @@ for y in yo2:
     
 '''
 print "attaching floating ip to instance"
-update_dict = {'floating_ip':'192.168.10.162','instance_id':"98bbebcf-4245-4373-815a-5f70a5721169",'project_id':"d7b57ec600724d429a3c7916d2243474",'action':"add"}
+update_dict = {'floating_ip':'192.168.10.75','instance_id':"6c21d791-33a4-45dc-9d20-f00a1164cd3f",'project_id':"4ecbada824e14d80b444200c8ab96b44",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
 '''

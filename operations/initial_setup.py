@@ -213,6 +213,10 @@ def run_setup(new_system_variables,auth_dict):
     if(cinder_start != 'OK'):
         #fire off revert
         return cinder_start
+    #add the spindle and SSD vol types
+    volumes = volume_ops(auth_dict)
+    volumes.create_volume_type("ssd")
+    volumes.create_volume_type("spindle")
 
     #enable glance
     logger.sys_info('Writing the Glance Config files.')
