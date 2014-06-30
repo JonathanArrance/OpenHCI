@@ -7,6 +7,21 @@ auth = authorization('admin','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
+'''
+ip_list = router.list_floating_ips("d7b57ec600724d429a3c7916d2243474")
+print "fip list"
+print ip_list
+print
+
+get_ip = router.get_floating_ip("2476890a-ab03-4c16-b99c-b5fddd92d8e4");
+print "get ip"
+print get_ip
+print
+
+update_dict = {'floating_ip':"192.168.10.162",'instance_id':"aa6a498e-dbd7-44fa-8dd5-b56feefcdaf1",'project_id':"d7b57ec600724d429a3c7916d2243474",'action':"add"}
+update_ip = router.update_floating_ip(update_dict)
+print "update ip"
+print update_ip
 
 
 print "Adding a new router"
@@ -30,7 +45,7 @@ print ext_int
 time.sleep(1)
 print "-------------------------------------------------"
 
-'''
+
 print "listing the routers"
 lister = router.list_routers()
 print lister
@@ -73,12 +88,12 @@ for y in yo2:
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
     
-
+'''
 print "attaching floating ip to instance"
-update_dict = {'floating_ip':'192.168.10.227','instance_id':"ff48f2e3-dd9b-40c3-bf73-5b26d081cfb1",'project_id':"a38c70b7a87c404cab33d0a5959ba57a",'action':"add"}
+update_dict = {'floating_ip':'192.168.10.162','instance_id':"98bbebcf-4245-4373-815a-5f70a5721169",'project_id':"d7b57ec600724d429a3c7916d2243474",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
-
+'''
 print "Listing floating ips"
 yo5 = router.list_floating_ips()
 print yo5
