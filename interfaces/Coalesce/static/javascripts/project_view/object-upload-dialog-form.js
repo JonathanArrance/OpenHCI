@@ -32,13 +32,9 @@ $(function() {
 			}
 		});
 		
-		var 	image_name = $( "#import_img_name" ),
-			container_format = $( "#import_img_cont" ),
-			disk_format = $( "#import_img_disk" ),
-                        image_type = $( "#import_img_type" ),
-                        image_location = $( "#import_img_location" ),
-                        visibility = $( "#import_img_vis" ),
-			allFields = $( [] ).add( image_name ).add( container_format ).add( disk_format ).add( image_location ).add( visibility ),
+		var 	container = $( "#upload_obj_cont" ),
+                        obj_location = $( "#upload_obj_location" ),
+			allFields = $( [] ).add( container ).add( location ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -71,24 +67,24 @@ $(function() {
                         return url;
                 }
 
-		$( "#image-import-dialog-form" ).dialog({
+		$( "#object-upload-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Import image": function() {
+				"Upload object": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 
-					bValid = bValid && checkLength( image_name, "image_name", 3, 16 );
+					bValid = bValid && checkLength( container, "container", 3, 16 );
                                         //image_location = convertURL( image_location );
                                         var loc = "";
-                                        loc = image_location.val();
+                                        loc = obj_location.val();
                                         loc = loc.replace(/\//g, '&47');
 					if ( bValid ) {
 					  
-					   $.post('/import_image/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/',
+					   $.post('/upload_object/' + container.val() + '/' + loc + '/' + PROJECT_ID + '/',
                                                                 function(){
                                                                                 location.reload();
                                                                 });  
@@ -104,9 +100,9 @@ $(function() {
 			}
 		});
 
-		$( "#import-image" )
+		$( "#upload-object" )
 			.click(function() {
-				$( "#image-import-dialog-form" ).dialog( "open" );
+				$( "#object-upload-dialog-form" ).dialog( "open" );
 			});
 			
 			

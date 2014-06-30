@@ -31,6 +31,7 @@ from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.swift.container_services import container_service_ops
 from transcirrus.component.swift.account_services import account_service_ops
+from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -744,7 +745,7 @@ def import_image(request, image_name, container_format, disk_format, image_type,
         auth = request.session['auth']
         go = glance_ops(auth)
         import_dict = {'image_name': image_name, 'container_format': container_format, 'disk_format': disk_format, 'visibility': visibility}
-        image_location = image_location.replace("G", "/")
+        image_location = image_location.replace("&47", "/")
         if image_type == 'local':
             import_dict['image_file'] = image_location
         else:
@@ -1363,6 +1364,25 @@ def delete_container(request, name, project_id):
         cso = container_service_ops(auth)
         create_dict = {"container_name": name, "project_id": project_id}
         out = cso.delete_container(create_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
+
+    except:
+        messages.warning(request, "Unable to add private network.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def upload_object(request, container, location, project_id):
+    try:
+        auth = request.session['auth']
+        oso = object_service_ops(auth)
+        print location
+        location = location.replace("&47", "/")
+        print location
+        create_dict = {"container_name": container, "object_path": location, "project_id": project_id}
+        out = oso.create_object(create_dict)
+        print "   ---   upload_object   ---"
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

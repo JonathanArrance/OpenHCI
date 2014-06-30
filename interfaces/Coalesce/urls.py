@@ -206,6 +206,10 @@ urlpatterns = patterns('',
         'coalesce.coal_beta.views.delete_container',
             name='delete_container'),
 
+        url(r'^upload_object/(?P<container>[^/]+)/(?P<location>[^/]+)/(?P<project_id>[^/]+)/$',
+        'coalesce.coal_beta.views.upload_object',
+            name='upload_object'),
+
 	# --- Networks ----
 
 	url(r'^network/(?P<net_id>[^/]+)/view/$',

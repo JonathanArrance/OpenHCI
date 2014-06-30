@@ -7,6 +7,21 @@ auth = authorization('admin','password')
 
 a = auth.get_auth()
 router = layer_three_ops(a)
+'''
+ip_list = router.list_floating_ips("d7b57ec600724d429a3c7916d2243474")
+print "fip list"
+print ip_list
+print
+
+get_ip = router.get_floating_ip("2476890a-ab03-4c16-b99c-b5fddd92d8e4");
+print "get ip"
+print get_ip
+print
+
+update_dict = {'floating_ip':"192.168.10.162",'instance_id':"aa6a498e-dbd7-44fa-8dd5-b56feefcdaf1",'project_id':"d7b57ec600724d429a3c7916d2243474",'action':"add"}
+update_ip = router.update_floating_ip(update_dict)
+print "update ip"
+print update_ip
 
 '''
 print "Adding a new router"
