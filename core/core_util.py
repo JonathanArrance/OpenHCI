@@ -50,6 +50,25 @@ reply_alive = {
 'Value': 'alive'
 }
 
+#mgmt ip changed
+mgmt_ip_chnaged = {
+'Type':'status',
+'Length':'1',
+'Value':'mgmt_ip_changed'
+}
+
+gluster_ready = {
+'Type':'status',
+'Length':'1',
+'Value':'gluster_ready'
+}
+
+gluster_set = {
+'Type':'status',
+'Length':'1',
+'Value':'gluster_set'
+}
+
 def send_data(msg, sock):
 
     global retry_count

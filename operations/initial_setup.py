@@ -18,6 +18,7 @@ from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 from transcirrus.component.glance.glance_ops import glance_ops
+from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.database import node_db
 
 #get the passed in vars

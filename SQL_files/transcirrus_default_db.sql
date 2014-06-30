@@ -1354,7 +1354,9 @@ CREATE TABLE trans_system_vols (
     vol_set_bootable character varying DEFAULT false,
     vol_attached character varying DEFAULT false,
     vol_attached_to_inst character varying,
-    vol_mount_location character varying
+    vol_mount_location character varying,
+    vol_type character varying(15),
+    vol_zone character varying,
 );
 
 

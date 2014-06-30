@@ -168,7 +168,7 @@ def insert_node(input_dict):
     #insert node info into specific service dbs based on node_type
     print input_dict['node_type']
     if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
-        #do the cinder config for now. Swift is up in the air still
+        #do the cinder config for now.
         #HACK need to add in a supersecret db password
         try:
             insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.38.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}

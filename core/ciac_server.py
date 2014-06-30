@@ -141,6 +141,7 @@ def sendStorageConfig(conn, node_id):
     # get cinder config
     config = node_db.get_node_cinder_config(node_id)
     node_info = node_db.get_node(node_id)
+    SNglusterOperations(node_info['node_data_ip'])
 
     if config:
         core_util.send_data(pickle.dumps(config, -1), conn)
@@ -153,8 +154,6 @@ def sendStorageConfig(conn, node_id):
         if data:
             data = pickle.loads(data)
             if data['Type'] == 'status'  and data['Value'] == 'ok':
-                #add the Gluster storage node before configureing cinder
-                SNglusterOperations(node_info['node_data_ip'])
                 logger.sys_info("node_id: %s, ciac server received %s" %(node_id, data['Value']))
             else:
                 logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
@@ -278,7 +277,7 @@ def SNglusterOperations(data_ip):
     comments: Carrying out various operations like adding a brick, listing
     volumes and rebalancing all the current volumes 
     '''
-    #HUGE HACK - not going to work.
+    #HUGE HACK
     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
     gluster = gluster_ops(input_dict)
 
@@ -418,6 +417,11 @@ def sendBuild(conn):
             print 'Failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
         sys.exit()
 
+def send_node_mgmt_ip():
+    pass
+
+def send_node_update():
+    pass
 
 def client_thread(conn, client_addr):
     '''

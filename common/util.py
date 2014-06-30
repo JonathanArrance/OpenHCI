@@ -578,6 +578,27 @@ def get_system_name():
     """
     return config.NODE_NAME
 
+def get_gluster_brick():
+    """
+    DESC: get the name of the gluster brick.
+    INPUT: None
+    OUTPUT: 
+    ACCESS: Wide open
+    NOTE: note the name returned will be gluster-sn-1111, and the brick name will be constructed
+          172.334.28.x:/data/gluster-sn-1111
+    """
+    return config.GLUSTER_BRICK
+
+def get_disk_type():
+    """
+    DESC: get the storage node disk type.
+    INPUT: None
+    OUTPUT: 
+    ACCESS: Wide open
+    NOTE:
+    """
+    return config.DISK_TYPE
+
 def get_uplink_ip():
     #This def may be able to be erased.
     """
