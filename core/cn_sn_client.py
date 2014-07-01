@@ -53,6 +53,11 @@ def getNodeInfo():
     node_info['Value']['node_type'] = util.get_node_type()
     node_info['Value']['node_data_ip'] = util.get_node_data_ip()
 
+    #used for storage node gluster brick
+    if(node_info['Value']['node_type'] == 'sn'):
+        node_info['Value']['node_brick'] = util.get_gluster_brick()
+        node_info['value']['disk_type'] = util.get_disk_type()
+
     # node_mgmt_ip is left as default, NOT set to any predefined ip
     # for reasons of ip clashes in the mgmgt network
 
@@ -80,7 +85,6 @@ def sendOk(sock):
             'Length': '1',
             'Value': 'ok'
         }
-    #sock.sendall(pickle.dumps(status_ok, -1))
     core_util.send_data(pickle.dumps(status_ok, -1), sock)
 
 def restartServices(node_id, node_type):
@@ -370,7 +374,6 @@ def checkNovaServices(node_id):
     # check nova services
     out = os.popen('service nova-compute status')
     status = out.read()
-    #print "nova compute :: %s" % status
     ret = checkNovaCompute(status)
     if ret == False:
         logger.sys_error("node_id: %s, nova-compute status failure !!!" %(node_id))
@@ -389,7 +392,6 @@ def checkNovaServices(node_id):
 
     out = os.popen('service quantum-plugin-openvswitch-agent status')
     status = out.read()
-    #print "quantun-plugin :: %s" % status
     ret = checkOpenvswitch(status)
     if ret == False:
         logger.sys_error("node_id: %s, quantum openvswitch agent failure !!!" %(node_id))
@@ -500,7 +502,8 @@ def processComputeConfig(sock, node_id):
     #sys.exit() # TEST
     # write compute nodes nova config files
 
-    print "***********nova_conf************ %s" % nova_conf  # TEST
+    #print "***********nova_conf************ %s" % nova_conf  # TEST
+    print "***********Configureing Nova************"
     ret = util.write_new_config_file(nova_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("eror in writing nova conf, exiting!!!")
@@ -512,7 +515,8 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, nova conf"
 
-    print "***********comp_conf************ %s" % comp_conf  # TEST
+    #print "***********comp_conf************ %s" % comp_conf  # TEST
+    print "***********Configureing Nova Compute************"
     ret = util.write_new_config_file(comp_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing comp conf, exiting!!!")
@@ -524,7 +528,8 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, comp conf"
 
-    print "***********api_conf************ %s" % api_conf  # TEST
+    #print "***********api_conf************ %s" % api_conf  # TEST
+    print "***********Configureing Nova API************"
     ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing api conf, exiting!!!")
@@ -538,7 +543,8 @@ def processComputeConfig(sock, node_id):
 
     # write compute nodes ovs config file
 
-    print "***********ovs_conf************ %s" % ovs_conf  # TEST
+    #print "***********ovs_conf************ %s" % ovs_conf  # TEST
+    print "***********Configureing OpenVswitch************"
     ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing ovs conf, exiting!!!")
@@ -550,7 +556,8 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, ovs conf"
 
-    print "***********net_conf************ %s" % net_conf  # TEST
+    #print "***********net_conf************ %s" % net_conf  # TEST
+    print "***********Configureing Neutron************"
     ret = util.write_new_config_file(net_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing net conf, exiting!!!")
@@ -748,7 +755,6 @@ def processStorageConfig(sock, node_id):
         sendOk(sock)
 
         # parse config file packet
-        #for i in range(0, len(sn_config)-1):
         for i in range(0,len(sn_config)):
             if sn_config[i]['file_name'] == 'api-paste.ini':
                 api_conf = sn_config[i]
@@ -776,9 +782,9 @@ def processStorageConfig(sock, node_id):
             print "node_id: %s write success, api conf" % node_id
 
     print cin_conf
-    ret = util.write_new_config_file(cin_conf)
-    print ret
-    if ret == "ERROR" or ret == "NA":
+    ret_cin = util.write_new_config_file(cin_conf)
+    print ret_cin
+    if ret_cin == "ERROR" or ret_cin == "NA":
         logger.sys_error("node_id: %s error in writing cinder conf, exiting!!!" %(node_id))
         if __debug__ :
             print "node_id: %s error in writing cinder conf, exiting!!!" % node_id
@@ -788,9 +794,12 @@ def processStorageConfig(sock, node_id):
         if __debug__ :
             print "write success, cinder conf"
 
+    #send the gluster set flag.
+    gluster_set_pkt = pickle.dumps(core_util.gluster_set, -1)
+    core_util.send_data(gluster_set_pkt, sock)
 
-    # create service_controller object: TODO auth_dict      
-    #controller = service_controller(auth_dict)
+    # create service_controller object: TODO auth_dict
+    # controller = service_controller(auth_dict)
     # check for post install tests
     post_install_status = True
 
