@@ -37,9 +37,11 @@
 	    <div class="span5">
 	      <table class="paleblue">
 		  {% if container_objects %}
-		      <tr> <th>Object</th> <td><b>Id</b></td> </tr>
+		      <tr> <th>Object</th> </tr>
 			  {% for object in container_objects %}
-				  <tr> <td>{{object}}</td> <td></td> </tr>
+			    {% if object != "" %}
+				  <tr> <td>{{object}}</td> </tr>
+			    {% endif %}
 			  {% endfor %}
 		      {% else %}
 			<p><i>This container has no objects</i></p>

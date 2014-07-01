@@ -116,7 +116,9 @@ class container_service_ops:
         if(rest['response'] == 204 or rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            return rest['data']
+            objects = rest['data']
+            objects = objects.split("\n")
+            return objects
         else:
             util.http_codes(rest['response'],rest['reason'])
 

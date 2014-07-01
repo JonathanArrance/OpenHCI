@@ -1337,6 +1337,8 @@ def container_view(request, project_id, container_name):
     cso = container_service_ops(auth)
     container_dict = {'project_id': project_id, 'container_name': container_name}
     container_objects = cso.list_container_objects(container_dict)
+    print "   ---   container_objects   ---"
+    print container_objects
 
     return render_to_response('coal/container_view.html',
                                RequestContext(request, {'current_project_id' : project_id,
