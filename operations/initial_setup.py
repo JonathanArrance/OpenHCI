@@ -214,10 +214,6 @@ def run_setup(new_system_variables,auth_dict):
     if(cinder_start != 'OK'):
         #fire off revert
         return cinder_start
-    #add the spindle and SSD vol types
-    volumes = volume_ops(auth_dict)
-    volumes.create_volume_type("ssd")
-    volumes.create_volume_type("spindle")
 
     #enable glance
     logger.sys_info('Writing the Glance Config files.')
@@ -442,6 +438,11 @@ def run_setup(new_system_variables,auth_dict):
 
     logger.sys_info("Restarting the uplink network adapter.")
     util.restart_network_card("br-ex")
+
+    #add the spindle and SSD vol types
+    volumes = volume_ops(auth_dict)
+    volumes.create_volume_type("ssd")
+    volumes.create_volume_type("spindle")
 
     #setup the pre-installed images
     logger.sys_info('Importing Default images.')
