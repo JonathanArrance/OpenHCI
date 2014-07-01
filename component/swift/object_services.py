@@ -167,9 +167,8 @@ class object_service_ops:
             raise Exception("Could not connect to the API")
 
         try:
-            #add the new user to openstack
             body = ''
-            header = {"X-Auth-Token":self.token, "Content-Length": "0", }
+            header = {"X-Auth-Token":self.token, "Content-Length": "0"}
             function = 'PUT'
             api_path = '/v1/AUTH_%s/%s%s' %(input_dict['project_id'],input_dict['container_name'],input_dict['object_path'])
             token = self.token
