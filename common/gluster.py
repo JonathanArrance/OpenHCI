@@ -226,6 +226,9 @@ class gluster_ops:
             logger.sys_error('Only admins can list Gluster volumes.')
             raise Exeption('Only admins can list Gluster volumes.')
 
+    def get_gluster_vol_info(self):
+        pass
+    
     def add_gluster_brick(self,input_dict):
         """
         DESC: Add a brick to a volume 
