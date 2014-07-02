@@ -295,7 +295,7 @@ def SNglusterOperations(data_ip):
         logger.sys_info('Adding storage to gluster volume %s'%(vol))
         brick = "%s:/data/gluster/%s"%(data_ip,vol)
         print brick
-        expand = {'volume_name':"%s",'brick':"%s"%(vol,brick)}
+        expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
         add_storage = gluster.add_gluster_brick(expand)
         if add_storage == "OK":
             print "Success: Brick %s added to volume %s"%(brick,vol)
