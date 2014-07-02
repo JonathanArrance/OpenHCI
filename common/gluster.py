@@ -81,10 +81,11 @@ class gluster_ops:
         """
         if(self.is_admin == 1):
             brick_path = None
-            if(util.get_node_type() == 'cn'):
+            node_type = util.get_node_type()
+            if( node_type == 'cn'):
                 logger.sys_error('Compute nodes can not be used as Gluster bricks.')
                 raise Exception('Compute nodes can not be used as Gluster bricks.')
-            elif(util.get_node_type() == 'sn'):
+            elif(node_type == 'sn'):
                 brick_path = util.get_node_data_ip() + ":/data/gluster-" + util.get_system_name()
             else:
                 brick_path = util.get_node_data_ip() + ":/data/gluster"
