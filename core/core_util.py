@@ -66,7 +66,7 @@ gluster_ready = {
 gluster_set = {
 'Type':'status',
 'Length':'1',
-'Value':'gluster_set'
+'Value':'node_ready'
 }
 
 def send_data(msg, sock):
