@@ -574,9 +574,7 @@ def client_thread(conn, client_addr):
                                     'node_mgmt_ip':data['Value']['node_mgmt_ip'],
                                     'node_controller':data['Value']['node_controller'],
                                     'node_cloud_name':data['Value']['node_cloud_name'],
-                                    'node_nova_zone':data['Value']['node_nova_zone'],
-                                    #'node_iscsi_iqn':data['Value']['node_iscsi_iqn'],
-                                    #'node_swift_ring':data['Value']['node_swift_ring']
+                                    'node_nova_zone':data['Value']['node_nova_zone']
                                     }
 
                             # insert into ciac DB

@@ -91,6 +91,71 @@ class server_admin_actions:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise Exception("Could not connect to db with error: %s" %(e))
 
+    def check_instance_status(self,input_dict):
+        """
+        DESC: Get the status of a specific instance.
+        INPUT: input_dict - project_id
+                          - instance_id
+        OUTPUT: Virtual instance usage stats
+        ACCESS: Admins can get the status for any instance.
+                Power users can get the status of instances in their project.
+                Users can only get status of instances they own.
+        NOTES: 
+        """
+        logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_status**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+
+        #see if the user has access to the instance
+        get_inst = None
+        if(self.user_level == 2):
+            if(self.project_id == input_dict['project_id']):
+                get_inst = {"select":'inst_name',"from":'trans_instances',"where":"inst_user_id='%s'"%(self.user_id),"and":"inst_id='%s'"%(input_dict['instance_id'])}
+        elif(self.user_level <= 1):
+            #PU and admin
+            get_inst = {"select":'inst_name',"from":'trans_instances',"where":"proj_id='%s'"%(input_dict['project_id']),"and":"inst_id='%s'"%(input_dict['instance_id'])}
+        inst = self.db.pg_select(get_inst)
+        if(len(inst) == 0):
+            logger.sys_error('The instance does not exist: check_instance_status')
+            raise Exception('The instance does not exist: check_instance_status')
+
+        # Create an API connection with the Admin
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        #try:
+        body=''
+        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+        function = 'GET'
+        api_path = '/v2/%s/servers/%s/diagnostics' %(input_dict['project_id'],input_dict['instance_id'])
+        print api_path
+        token = self.token
+        sec = self.sec
+        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+        rest = api.call_rest(rest_dict)
+        #except:
+        #    logger.sys_error("Error in server status/diag request.")
+        #    raise Exception("Error in server status/diag request")
+
+        if(rest['response'] == 200):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                return load
+        else:
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
+
     def pause_server(self,input_dict):
         """
         DESC: Pause a running virtual server. Pauseing saves vm state to memory.

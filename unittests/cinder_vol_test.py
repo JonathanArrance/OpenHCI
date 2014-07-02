@@ -31,7 +31,7 @@ print yo
 
 """
 print "createing a new volume"
-create = {'volume_name':'ffvcvol20','volume_size':'1','project_id':"03617193e49c450a8e234f3655b36afa",'volume_type':'SSD'}
+create = {'volume_name':'kevenduerr','volume_size':'1','project_id':"03617193e49c450a8e234f3655b36afa",'volume_type':'spindle'}
 create_vol = vol.create_volume(create)
 print create_vol
 """
