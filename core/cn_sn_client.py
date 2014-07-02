@@ -46,6 +46,7 @@ def getNodeInfo():
     @author         :
     comments        :
     '''
+    #globals are bad, this needs to be changed asap
     global node_info
 
     node_info['Value']['node_id'] = util.get_node_id()
@@ -976,7 +977,7 @@ ciac_ip = util.getDhcpServer()
 logger.sys_info("ciac_ip: %s" % ciac_ip)
 
 # data network ip
-data_ip = "172.38.24.11"
+#data_ip = "172.38.24.11"
 
 # Bind it to data network interface
 sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface

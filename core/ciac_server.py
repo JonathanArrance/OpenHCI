@@ -140,8 +140,6 @@ def sendStorageConfig(conn, node_id):
 
     # get cinder config
     config = node_db.get_node_cinder_config(node_id)
-    node_info = node_db.get_node(node_id)
-    SNglusterOperations(node_info['node_data_ip'])
 
     if config:
         core_util.send_data(pickle.dumps(config, -1), conn)
@@ -277,6 +275,7 @@ def SNglusterOperations(data_ip):
     comments: Carrying out various operations like adding a brick, listing
     volumes and rebalancing all the current volumes 
     '''
+
     #HUGE HACK
     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
     gluster = gluster_ops(input_dict)
@@ -499,8 +498,10 @@ def client_thread(conn, client_addr):
                                 sendBuild(conn)
 
                                 node_id = data['Value']['node_id']
-                                # check node type
+                                # check node typestart
                                 if data['Value']['node_type'] == 'sn':
+                                    node_info = node_db.get_node(node_id)
+                                    SNglusterOperations(node_info['node_data_ip'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
