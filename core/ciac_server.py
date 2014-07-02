@@ -144,9 +144,9 @@ def sendStorageConfig(conn, node_id):
 
     if config:
         core_util.send_data(pickle.dumps(config, -1), conn)
-        logger.sys_info("node_id: %s, sent storage node config files")
+        logger.sys_info("node_id: %s, sent storage node config files"%(node_id))
         if __debug__ :
-            print "node_id: %s, sent storage node config files"
+            print "node_id: %s, sent storage node config files"%(node_id)
 
         # listen for ok ack message
         data = core_util.recv_data(conn)
@@ -595,6 +595,9 @@ def client_thread(conn, client_addr):
                                 node_id = data['Value']['node_id']
 
                                 if data['Value']['node_type'] == 'sn':
+                                    node_info = node_db.get_node(node_id)
+                                    print "HACK line 506 %s"%(node_info)
+                                    SNglusterOperations(node_info['node_data_ip'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
