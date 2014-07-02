@@ -270,7 +270,7 @@ def sendComputeConfig(conn, node_id):
     if __debug__ :
         print "node_id:%s ciac server send config completed" % (node_id)
     
-def SNglusterOperations(data_ip):
+def SNglusterOperations(data_ip,sn_name):
     '''
     @author:
     comments: Carrying out various operations like adding a brick, listing
@@ -282,7 +282,6 @@ def SNglusterOperations(data_ip):
     gluster = gluster_ops(input_dict)
 
     new = gluster.attach_gluster_peer(data_ip)
-    print "HACK new %s"%(new)
     glust_vols = []
     if new == "OK":
         #get the gluster volumes on the core node
@@ -291,11 +290,9 @@ def SNglusterOperations(data_ip):
         SNglusterOperations(data_ip)
 
     #adding brick to all the listed volumes
-    print "HACK in Gluster def"
     for vol in glust_vols:
-        print "HACK vol %s"%(vol)
         logger.sys_info('Adding storage to gluster volume %s'%(vol))
-        brick = "%s:/data/gluster/%s"%(data_ip,vol)
+        brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
         print "HACK brick %s"%(brick)
         expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
         add_storage = gluster.add_gluster_brick(expand)
@@ -503,8 +500,7 @@ def client_thread(conn, client_addr):
                                 # check node typestart
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    print "HACK line 506 %s"%(node_info)
-                                    SNglusterOperations(node_info['node_data_ip'])
+                                    SNglusterOperations(node_info['node_data_ip'],node_info['node_name'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
@@ -597,7 +593,7 @@ def client_thread(conn, client_addr):
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
                                     print "HACK line 506 %s"%(node_info)
-                                    SNglusterOperations(node_info['node_data_ip'])
+                                    SNglusterOperations(node_info['node_data_ip'],node_info['node_name'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)

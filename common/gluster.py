@@ -68,7 +68,7 @@ class gluster_ops:
 
         self.db = util.db_connect()
 
-    def get_gluster_brick(self):
+    def get_gluster_brick(self, node_type = None):
         """
         DESC: Get the gluster brick name of the current storage or core node
         INPUT None
@@ -81,7 +81,7 @@ class gluster_ops:
         """
         if(self.is_admin == 1):
             brick_path = None
-            node_type = util.get_node_type()
+            #node_type = util.get_node_type()
             if( node_type == 'cn'):
                 logger.sys_error('Compute nodes can not be used as Gluster bricks.')
                 raise Exception('Compute nodes can not be used as Gluster bricks.')
@@ -295,6 +295,7 @@ class gluster_ops:
                 PU - none
                 User - none
         NOTE: This operation uses the glusterfs commands.
+              brick = 172.38.24.11:/data/gluster-sn-12602
         """
         logger.sys_info('\n**Removeing Gluster brick from volumes. Common Def: remove_gluster_brick**\n')
         if(self.is_admin == 1):
@@ -390,7 +391,7 @@ class gluster_ops:
                 User - none
         NOTE: Uses the GlusterFS commands
         """
-        out = subprocess.Popen('sudo gluster peer detach %s'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = subprocess.Popen('sudo gluster peer detach %s force'%(server_ip), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         det = out.stdout.readlines()
         if(len(det) == 1):
             try:
