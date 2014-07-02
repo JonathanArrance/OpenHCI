@@ -29,8 +29,7 @@ def setDbFlag(node_id, flag):
     @author         :
     comments        :
     '''
-    print node_id
-    print flag
+
     if flag == 'node_ready':
         r_dict = node_util.set_node_ready_flag(node_id)
         if r_dict['ready_flag_set'] == 'SET':
@@ -283,6 +282,7 @@ def SNglusterOperations(data_ip):
     gluster = gluster_ops(input_dict)
 
     new = gluster.attach_gluster_peer(data_ip)
+    print "HACK new %s"%(new)
     glust_vols = []
     if new == "OK":
         #get the gluster volumes on the core node
@@ -291,12 +291,12 @@ def SNglusterOperations(data_ip):
         SNglusterOperations(data_ip)
 
     #adding brick to all the listed volumes
-    print glust_vols
+    print "HACK in Gluster def"
     for vol in glust_vols:
-        print vol
+        print "HACK vol %s"%(vol)
         logger.sys_info('Adding storage to gluster volume %s'%(vol))
         brick = "%s:/data/gluster/%s"%(data_ip,vol)
-        print brick
+        print "HACK brick %s"%(brick)
         expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
         add_storage = gluster.add_gluster_brick(expand)
         if add_storage == "OK":
@@ -577,7 +577,7 @@ def client_thread(conn, client_addr):
                                     'node_mgmt_ip':data['Value']['node_mgmt_ip'],
                                     'node_controller':data['Value']['node_controller'],
                                     'node_cloud_name':data['Value']['node_cloud_name'],
-                                    'node_nova_zone':data['Value']['node_nova_zone']
+                                    'avail_zone':data['Value']['avail_zone']
                                     }
 
                             # insert into ciac DB
@@ -609,7 +609,6 @@ def client_thread(conn, client_addr):
                                         if __debug__ :
                                             print "node_id: %s ciac server waiting for status ready/halt" % (node_id)
                                 if data:
-                                    print data
                                     data = pickle.loads(data)
                                     if data['Type'] == 'status':
                                         logger.sys_info("node_id: %s ciac server received %s" %(node_id, data['Value']))

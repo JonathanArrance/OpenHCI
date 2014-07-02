@@ -26,7 +26,7 @@ node_info = {
     'node_data_ip':'',
     'node_controller':'',
     'node_cloud_name':'TransCirrusCloud',
-    'node_nova_zone':'nova',
+    'avail_zone':'nova',
     'node_id':'trans01'
     }
 }
@@ -48,6 +48,8 @@ def getNodeInfo():
     '''
     #globals are bad, this needs to be changed asap
     global node_info
+    
+    #get the availability zone
     
     #get node controller
     
@@ -71,8 +73,6 @@ def getNodeInfo():
     # node_cloud_name, node_controller, node_nova_zone, node_iscsi_iqn,
     # node_swift_ring set to null values; as the node added to the
     # cluster is cloud information agnostic. 
-
-
 
 def sendOk(sock):
 
