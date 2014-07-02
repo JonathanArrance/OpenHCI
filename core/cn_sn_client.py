@@ -58,7 +58,7 @@ def getNodeInfo():
     node_info['Value']['node_name'] = util.get_node_name()
     node_info['Value']['node_type'] = util.get_node_type()
     node_info['Value']['node_data_ip'] = util.get_node_data_ip()
-    node_info['Value']['node_mgmt_ip'] = mgmt_ip
+    node_info['Value']['node_mgmt_ip'] = mgmt_ip['net_ip']
 
     #used for storage node gluster brick
     if(node_info['Value']['node_type'] == 'sn'):
