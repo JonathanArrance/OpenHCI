@@ -29,6 +29,8 @@ def setDbFlag(node_id, flag):
     @author         :
     comments        :
     '''
+    print node_id
+    print flag
     if flag == 'node_ready':
         r_dict = node_util.set_node_ready_flag(node_id)
         if r_dict['ready_flag_set'] == 'SET':
