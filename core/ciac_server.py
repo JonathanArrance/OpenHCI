@@ -503,6 +503,7 @@ def client_thread(conn, client_addr):
                                 # check node typestart
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
+                                    print "HACK line 506 %s"%(node_info)
                                     SNglusterOperations(node_info['node_data_ip'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
