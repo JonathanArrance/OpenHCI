@@ -19,7 +19,7 @@ _server_port=6161
 keep_alive_sec=10
 timeout_sec = 1
 #retry_count = 5
-retry_count = 100
+retry_count = 200
 recv_buffer = 8192 #TEST 
 #Note: the buffer length must be a minimum of x + 1( 1-> for ':') bytes, whee x is the
 #length of the total message passed between the client and server i.e.

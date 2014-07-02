@@ -295,7 +295,7 @@ class gluster_ops:
                 PU - none
                 User - none
         NOTE: This operation uses the glusterfs commands.
-              brick = 172.38.24.11:/data/gluster-sn-12602
+              brick = 172.38.24.11:/data/gluster-sn-12602/"vol-name"
         """
         logger.sys_info('\n**Removeing Gluster brick from volumes. Common Def: remove_gluster_brick**\n')
         if(self.is_admin == 1):
