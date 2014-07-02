@@ -57,7 +57,7 @@ def getNodeInfo():
     #used for storage node gluster brick
     if(node_info['Value']['node_type'] == 'sn'):
         node_info['Value']['node_brick'] = util.get_gluster_brick()
-        node_info['value']['disk_type'] = util.get_disk_type()
+        node_info['Value']['disk_type'] = util.get_disk_type()
 
     # node_mgmt_ip is left as default, NOT set to any predefined ip
     # for reasons of ip clashes in the mgmgt network
