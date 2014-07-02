@@ -272,7 +272,8 @@ def sendComputeConfig(conn, node_id):
     
 def SNglusterOperations(data_ip,sn_name):
     '''
-    @author:
+    data_ip - the datanet ip of the storage node
+    sn_name - name of the storage node
     comments: Carrying out various operations like adding a brick, listing
     volumes and rebalancing all the current volumes 
     '''

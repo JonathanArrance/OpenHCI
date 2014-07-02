@@ -756,7 +756,6 @@ def processStorageConfig(sock, node_id):
 
     if sn_config:
         sn_config = pickle.loads(sn_config)
-        print "unpickle %s"%(sn_config)
 
         # send ok, ack
         sendOk(sock)
@@ -1026,8 +1025,6 @@ try:
             logger.sys_info("sending %s " %(node_info))
             if __debug__ :
                 print "sending %s " % node_info
-            #print "node_id = %s" % node_id
-            #sock.sendall(pickle.dumps(node_info, -1))
             core_util.send_data(pickle.dumps(node_info, -1), sock)
 
             # receive status message, retry_count
