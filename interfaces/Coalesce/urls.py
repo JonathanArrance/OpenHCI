@@ -162,7 +162,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.volume_view',
             name='volume_view'),
         
-        url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<volume_type>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 

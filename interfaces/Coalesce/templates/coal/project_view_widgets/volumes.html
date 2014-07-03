@@ -11,7 +11,7 @@
           </div>
 
 	    <div id="volume-dialog-form" title="Create new volume">
- 		<p class="validateTips">All fields except description are required.  </p>
+ 		<p class="validateTips">All fields are required.  </p>
                 <form>
                 {% csrf_token %}
                 <fieldset>
@@ -21,6 +21,11 @@
                     <input type="text" name="volume_size" id="volume_size"  class="text ui-widget-content ui-corner-all" />
                     <label for="description">Description</label>
                     <input type="text" name="description" id="description"  class="text ui-widget-content ui-corner-all" />
+		    <label for="volume_type">Volume Type</label>
+                    <select name="volume_type" id="volume_type">
+		      <option value="ssd">ssd</option>
+		      <option value="spindle">spindle</option>
+		    </select>
                 </fieldset>
                 </form>
             </div>

@@ -193,6 +193,9 @@ def project_view(request, project_id):
         vid = volume['volume_id']
         volume_info[vid] = v_info
     
+    print "   ---   volumes   ---"
+    print volumes
+    
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
@@ -771,11 +774,11 @@ def delete_image(request, image_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
-def create_volume(request, volume_name, volume_size, description, project_id):
+def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
+        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'volume_type': volume_type, 'project_id': project_id}
         out = vo.create_volume(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]

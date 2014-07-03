@@ -27,7 +27,7 @@
 {% block content %}
 
     <div class="row-fluid">
-      <div class="span7">
+      <div class="span8">
         <div class="well">
           <div class="legend">
               Volume Details
@@ -38,6 +38,7 @@
 		  <tr><th>Name</th><td>{{volume_info.volume_name}}</td></tr>
 		  <tr><th>Id</th><td>{{volume_info.volume_id}}</td></tr>
 		  <tr><th>Size</th><td>{{volume_info.volume_size}}GB</td></tr>
+		  <tr><th>Type</th><td>{{volume_info.volume_type}}</td></tr>
 		  <tr><th>Attached</th><td>{{volume_info.volume_attached}}</td></tr>
 		  <tr><th>Mount Point</th><td>{{volume_info.volume_mount}}</td></tr>
 		  <tr><th>Attached To (Name: Id)</th><td>
@@ -68,7 +69,7 @@
         </div>
       </div><!-- end span6-->
       
-      <div class="span4 offset1">
+      <div class="span4">
         <div class="well">
 	  <div class="row-fluid">
             <div id="volume-view-attach-dialog-form" title="Attach volume to instance">
