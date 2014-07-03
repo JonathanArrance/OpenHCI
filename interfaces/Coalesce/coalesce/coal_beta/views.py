@@ -853,8 +853,12 @@ def delete_volume(request, volume_id, project_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
-        vo.delete_volume(delete_vol)
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out = vo.delete_volume(delete_vol)
+        print "   ---   delete_volume   ---"
+        print out
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
     except:
         messages.warning(request, "Unable to delete volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
