@@ -1374,20 +1374,27 @@ def delete_container(request, name, project_id):
         messages.warning(request, "Unable to add private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def upload_object(request, container, location, project_id):
+def upload_object(request, container, filename, project_id, project_name):
     try:
         auth = request.session['auth']
+        print filename
+        with open('home/transuser/times.txt', 'wb+') as destination:
+            for chunk in filename.chunks():
+                destination.write(chunk)
+        """
         oso = object_service_ops(auth)
         print location
         location = location.replace("&47", "/")
         print location
-        create_dict = {"container_name": container, "object_path": location, "project_id": project_id}
+        create_dict = {"container_name": container, "object_path": location, "project_id": project_id, "project_name": project_name}
         out = oso.create_object(create_dict)
         print "   ---   upload_object   ---"
         print out
+        """
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
+        
 
     except:
         messages.warning(request, "Unable to add private network.")
