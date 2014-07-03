@@ -9,14 +9,16 @@ import transcirrus.common.config as config
 from transcirrus.common.auth import authorization
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.nova.storage import server_storage_ops
+from transcirrus.component.nova.admin_actions import server_admin_actions
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("rob","password")
+auth = authorization("admin","password")
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
 nova = server_ops(perms)
+action = server_admin_actions(perms)
 
 '''
 auth2 = authorization("bill","test")
@@ -56,7 +58,11 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        'mount_point': '/dev/vdc'
        }
 yo = store.attach_vol_to_server(inp)
-
+'''
+input_dict = {'project_id':'4ecbada824e14d80b444200c8ab96b44','instance_id':'6c21d791-33a4-45dc-9d20-f00a1164cd3f'}
+act = action.check_instance_status(input_dict)
+print act
+'''
 
 print "Createing a new virtual instance"
 server = {'sec_group_name':'trans','avail_zone':'nova','sec_key_name':'rob','network_name':'trans','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'thevm2','project_id':'4ecbada824e14d80b444200c8ab96b44'}

@@ -336,7 +336,7 @@ class volume_ops:
         DESC: list the volumes for a particular project if the user is a member
               only admins can list all volumes on the system
         INPUT: project_id - op
-        OUTPUT - array of volumes dict {"volume_id":'',"volume_name":'',"project_id":''}
+        OUTPUT - array of volumes dict {"volume_id":'',"volume_name":'', "volume_type": "","project_id":''}
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
         logger.sys_info('\n**List volums. Component: Cinder Def: list_volumes**\n')
@@ -372,7 +372,7 @@ class volume_ops:
 
         vol_array = []
         for vol in volumes:
-            vol_dict = {"volume_id":vol[0],"volume_name":vol[3],"project_id":vol[1]}
+            vol_dict = {"volume_id":vol[0],"volume_name":vol[3],"volume_type":vol[10],"project_id":vol[1]}
             vol_array.append(vol_dict)
 
         return vol_array
