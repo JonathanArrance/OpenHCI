@@ -193,9 +193,6 @@ def project_view(request, project_id):
         vid = volume['volume_id']
         volume_info[vid] = v_info
     
-    print "   ---   volumes   ---"
-    print volumes
-    
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
@@ -854,8 +851,6 @@ def delete_volume(request, volume_id, project_id):
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
         out = vo.delete_volume(delete_vol)
-        print "   ---   delete_volume   ---"
-        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -1162,8 +1157,6 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         try:
             out = l3o.update_floating_ip(update_dict)
         except Exception as e:
-            print "   ---   assign fip exception   ---"
-            print e
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -1344,8 +1337,6 @@ def container_view(request, project_id, container_name):
     cso = container_service_ops(auth)
     container_dict = {'project_id': project_id, 'container_name': container_name}
     container_objects = cso.list_container_objects(container_dict)
-    print "   ---   container_objects   ---"
-    print container_objects
 
     return render_to_response('coal/container_view.html',
                                RequestContext(request, {'current_project_id' : project_id,
