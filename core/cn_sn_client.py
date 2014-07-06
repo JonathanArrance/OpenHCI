@@ -510,7 +510,7 @@ def processComputeConfig(sock, node_id):
     # write compute nodes nova config files
 
     #print "***********nova_conf************ %s" % nova_conf  # TEST
-    print "***********Configureing Nova************"
+    print "******Configureing Nova******"
     ret = util.write_new_config_file(nova_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("eror in writing nova conf, exiting!!!")
@@ -523,7 +523,7 @@ def processComputeConfig(sock, node_id):
             print "write success, nova conf"
 
     #print "***********comp_conf************ %s" % comp_conf  # TEST
-    print "***********Configureing Nova Compute************"
+    print "******Configureing Nova Compute******"
     ret = util.write_new_config_file(comp_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing comp conf, exiting!!!")
@@ -536,7 +536,7 @@ def processComputeConfig(sock, node_id):
             print "write success, comp conf"
 
     #print "***********api_conf************ %s" % api_conf  # TEST
-    print "***********Configureing Nova API************"
+    print "******Configureing Nova API******"
     ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing api conf, exiting!!!")
@@ -551,7 +551,7 @@ def processComputeConfig(sock, node_id):
     # write compute nodes ovs config file
 
     #print "***********ovs_conf************ %s" % ovs_conf  # TEST
-    print "***********Configureing OpenVswitch************"
+    print "******Configureing OpenVswitch******"
     ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing ovs conf, exiting!!!")
@@ -564,7 +564,7 @@ def processComputeConfig(sock, node_id):
             print "write success, ovs conf"
 
     #print "***********net_conf************ %s" % net_conf  # TEST
-    print "***********Configureing Neutron************"
+    print "******Configureing Neutron******"
     ret = util.write_new_config_file(net_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing net conf, exiting!!!")
@@ -774,9 +774,8 @@ def processStorageConfig(sock, node_id):
 
 
     # write config files
-    print api_conf
+    print "******Configureing Cinder API file.******"
     ret = util.write_new_config_file(api_conf)
-    print ret
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("node_id: %s error in writing api conf, exiting!!!" %(node_id))
         if __debug__ :
@@ -787,9 +786,8 @@ def processStorageConfig(sock, node_id):
         if __debug__ :
             print "node_id: %s write success, api conf" % node_id
 
-    print cin_conf
+    print "******Configureing Cinder Config file.******"
     ret_cin = util.write_new_config_file(cin_conf)
-    print ret_cin
     if ret_cin == "ERROR" or ret_cin == "NA":
         logger.sys_error("node_id: %s error in writing cinder conf, exiting!!!" %(node_id))
         if __debug__ :
@@ -801,6 +799,7 @@ def processStorageConfig(sock, node_id):
             print "write success, cinder conf"
 
     #send the gluster set flag.
+    print "******Setting up storage******"
     gluster_set_pkt = pickle.dumps(core_util.gluster_set, -1)
     core_util.send_data(gluster_set_pkt, sock)
 
@@ -1020,6 +1019,22 @@ try:
 
             # send node data
             getNodeInfo()
+            print "Sending the following node data to core node.\n\n"
+            print "Node Name: %s"%(node_info['Value']['node_name'])
+            print "Node ID: %s"%(node_info['Value']['node_id'])
+            print "Node Mgmt IP: %s"%(node_info['Value']['node_mgmt_ip'])
+            print "Node DataNet IP: %s"%(node_info['Value']['node_data_ip'])
+            if(node_info['Value']['node_type'] == 'sn'):
+                print "Node Gluster Brick: %s"%(node_info['Value']['node_brick'])
+                print "Node Disk Type: %s"%(node_info['Value']['disk_type'])
+            logger.sys_info("Sending the following node data core node, Node Name: %s, Node ID: %s, Node Mgmt IP: %s,Node DataNet IP: %s, Node Gluster Brick: %s, Node Disk Type: %s"%(node_info['Value']['node_name'],
+                                                                                                                                                                                       node_info['Value']['node_id'],
+                                                                                                                                                                                       node_info['Value']['node_mgmt_ip'],
+                                                                                                                                                                                       node_info['Value']['node_data_ip'],
+                                                                                                                                                                                       node_info['Value']['node_brick'],
+                                                                                                                                                                                       node_info['Value']['disk_type'])
+                            )
+
             node_type = node_info['Value']['node_type']
             node_id = node_info['Value']['node_id']
             logger.sys_info("sending %s " %(node_info))

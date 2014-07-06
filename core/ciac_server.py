@@ -585,9 +585,7 @@ def client_thread(conn, client_addr):
                             if(input_dict['node_type'] == 'sn'):
                                 #input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
                                 input_dict['node_gluster_drives'] = data['Value']['disk_type']
-
-                            print input_dict
-			    # insert into ciac DB
+                            # insert into ciac DB
                             insert = node_db.insert_node(input_dict)
 
                             if insert == 'OK':
@@ -602,7 +600,6 @@ def client_thread(conn, client_addr):
 
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    print "HACK line 506 %s"%(node_info)
                                     SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
