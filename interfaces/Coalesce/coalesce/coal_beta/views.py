@@ -771,11 +771,11 @@ def delete_image(request, image_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
-def create_volume(request, volume_name, volume_size, description, project_id):
+def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'project_id': project_id}
+        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'volume_type': volume_type, 'project_id': project_id}
         out = vo.create_volume(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
@@ -850,8 +850,10 @@ def delete_volume(request, volume_id, project_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
-        vo.delete_volume(delete_vol)
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out = vo.delete_volume(delete_vol)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        return HttpResponseRedirect(redirect_to)
     except:
         messages.warning(request, "Unable to delete volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -1155,8 +1157,6 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         try:
             out = l3o.update_floating_ip(update_dict)
         except Exception as e:
-            print "   ---   assign fip exception   ---"
-            print e
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
@@ -1337,8 +1337,6 @@ def container_view(request, project_id, container_name):
     cso = container_service_ops(auth)
     container_dict = {'project_id': project_id, 'container_name': container_name}
     container_objects = cso.list_container_objects(container_dict)
-    print "   ---   container_objects   ---"
-    print container_objects
 
     return render_to_response('coal/container_view.html',
                                RequestContext(request, {'current_project_id' : project_id,
@@ -1374,20 +1372,27 @@ def delete_container(request, name, project_id):
         messages.warning(request, "Unable to add private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def upload_object(request, container, location, project_id):
+def upload_object(request, container, filename, project_id, project_name):
     try:
         auth = request.session['auth']
+        print filename
+        with open('home/transuser/times.txt', 'wb+') as destination:
+            for chunk in filename.chunks():
+                destination.write(chunk)
+        """
         oso = object_service_ops(auth)
         print location
         location = location.replace("&47", "/")
         print location
-        create_dict = {"container_name": container, "object_path": location, "project_id": project_id}
+        create_dict = {"container_name": container, "object_path": location, "project_id": project_id, "project_name": project_name}
         out = oso.create_object(create_dict)
         print "   ---   upload_object   ---"
         print out
+        """
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
+        
 
     except:
         messages.warning(request, "Unable to add private network.")

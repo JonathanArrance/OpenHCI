@@ -35,7 +35,8 @@ $(function() {
 		var 	volume_name = $( "#volume_name" ),
 			volume_size = $( "#volume_size" ),
 			description = $( "#description" ),
-			allFields = $( [] ).add( volume_name ).add( volume_size ).add( description ),
+                        volume_type = $( "#volume_type" ),
+			allFields = $( [] ).add( volume_name ).add( volume_size ).add( description ).add( volume_type ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -60,7 +61,7 @@ $(function() {
 
 		$( "#volume-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 400,
+			height: 450,
 			width: 350,
 			modal: true,
 			buttons: {
@@ -69,11 +70,10 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 
 					bValid = bValid && checkLength( volume_name, "volume_name", 3, 16 );
-                    bValid = bValid && checkLength( description, "description", 3, 256 );
                     
 					if ( bValid ) {
 					  
-					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + PROJECT_ID + '/',
+					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + volume_type.val() + '/' + PROJECT_ID + '/',
                                                                 function(){
                                                                                 location.reload();
                                                                 }); 

@@ -48,14 +48,7 @@
 			    {% endfor %}
                         </td>
 			<td>
-
-				<a href="/delete_private_network/{{ project.project_id }}/{{value.net_id}}/" 
-                                data-confirm="This will completely remove {{key}} from this project. 
-					      Any virtual machines connected to its subnets will be detached from
-                                              this network, and any routers using this network will also be detached.
-					      Are you sure?"> delete
-                                </a>
-
+			  <a href="/delete_private_network/{{ project.project_id }}/{{value.net_id}}/"> delete</a>
 	                </td>
 		   </tr>
 		{% endfor %}

@@ -31,8 +31,8 @@
 		      <option value="{{c}}">{{c}}</option>
 		    {% endfor %}
 		  </select>
-		  <label for="upload_obj_location">Object Location (filepath/url)</label>
-		  <input type="text" name="upload_obj_location" id="upload_obj_location"  class="text ui-widget-content ui-corner-all" />
+		  <label for="upload_obj">Object</label>
+		  <input type="file" name="upload_obj" id="upload_obj"  class="text ui-widget-content ui-corner-all" />
 	      </fieldset>
 	      </form>
 	  </div>
@@ -46,7 +46,7 @@
 	      <a href="/projects/{{project.project_id}}/containers/{{c}}/view/">{{c}}</a>
 	    </td>
 	    <td>
-	      <a href="/delete_container/{{c}}/{{ project.project_id}}/" data-confirm="This will completely remove {{c}} from this project. Are you sure?">delete</a>
+	      <a href="/delete_container/{{c}}/{{ project.project_id}}/">delete</a>
 	    </td>
 	  </tr>
         {% endfor %}

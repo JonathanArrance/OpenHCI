@@ -165,7 +165,12 @@ class object_service_ops:
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
+        
 
+        out = subprocess.Popen('cd /home/transuser; swift --auth-version 2 -A http://%s:5000/v2.0 -U %s:%s -K %s upload %s test.txt'%(util.get_uplink_ip(),input_dict['project_name'],self.username,self.password,input_dict['container_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        print "   ---   object_services: create_object   ---"
+        print out
+        """
         try:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Length": "0", "X-Detect-Content-Type": "true"}
@@ -187,7 +192,7 @@ class object_service_ops:
             return 'OK'
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
-    
+        """
     def update_object(self):
         pass
         #most likey we can use create_object

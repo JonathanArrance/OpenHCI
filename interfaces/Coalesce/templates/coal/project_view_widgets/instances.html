@@ -136,8 +136,7 @@
                                {% if v.server_status == "PAUSED" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> {% endif%}
 			       {% if v.server_status == "SUSPENDED" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/resume_server">resume</a> {% endif%}
 			       {% if user_level == 0 and v.server_status == "ACTIVE" %}| {% endif %}
-			       {% if user_level == 0 %}<a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/" 
-                                data-confirm="This will completely remove {{v.server_name}} from this project. Are you sure?">delete</a>
+			       {% if user_level == 0 %}<a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/">delete</a>
 			       {% endif %}
 			    </td>
 			 </tr>

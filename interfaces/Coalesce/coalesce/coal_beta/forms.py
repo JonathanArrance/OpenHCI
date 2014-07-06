@@ -23,7 +23,7 @@ class SetupForm(forms.Form):
     mgmt_domain_name  = forms.CharField(min_length = 1, max_length = 64, label='Management Domain Name')
     mgmt_subnet = forms.IPAddressField(label = 'Management Subnet')
     mgmt_dns  = forms.IPAddressField(label = 'Management DNS')
-    single_node = forms.BooleanField( label='Single Node?', help_text = 'If unchecked, this box will be setup with DHCP and listen for additional nodes to be added.  Check the box to improve performance if you do not plan to add nodes to this box.')
+    single_node = forms.BooleanField( label='Single Node?', help_text = 'If unchecked, this box will be setup with DHCP and listen for additional nodes to be added.  Check the box to improve performance if you do not plan to add nodes to this box.',required=False)
     admin_password = forms.CharField(widget=forms.PasswordInput(),  label='Administrator Password')
     admin_password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Administrator Password Confirm')
 

@@ -33,8 +33,8 @@ $(function() {
 		});
 		
 		var 	container = $( "#upload_obj_cont" ),
-                        obj_location = $( "#upload_obj_location" ),
-			allFields = $( [] ).add( container ).add( location ),
+                        obj = $( "#upload_obj" ),
+			allFields = $( [] ).add( container ).add( obj ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -78,13 +78,9 @@ $(function() {
 					allFields.removeClass( "ui-state-error" );
 
 					bValid = bValid && checkLength( container, "container", 3, 16 );
-                                        //image_location = convertURL( image_location );
-                                        var loc = "";
-                                        loc = obj_location.val();
-                                        loc = loc.replace(/\//g, '&47');
 					if ( bValid ) {
 					  
-					   $.post('/upload_object/' + container.val() + '/' + loc + '/' + PROJECT_ID + '/',
+					   $.post('/upload_object/' + container.val() + '/' + obj + '/' + PROJECT_ID + '/' + PROJECT + '/',
                                                                 function(){
                                                                                 location.reload();
                                                                 });  
