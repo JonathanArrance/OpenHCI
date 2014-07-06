@@ -96,6 +96,7 @@ def insert_node(input_dict):
                       - node_cloud_name - op
                       - node_virt_type - op
                       - node_gluster_peer - op
+                      - node_gluster_disks - op
     OUTPUT: OK if successful
             ERROR if not successful
             raise error
@@ -219,7 +220,7 @@ def insert_node(input_dict):
     try:
         insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
                        'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['avail_zone'],'node_fault_flag':'0',
-                       'node_ready_flag':'1','node_gluster_peer':input_dict['node_gluster_peer']}
+                       'node_ready_flag':'1','node_gluster_peer':input_dict['node_gluster_peer'],'node_gluster_disks':input_dict['node_gluster_disks']}
         db.pg_transaction_begin()
         db.pg_insert('trans_nodes',insert_dict)
         db.pg_transaction_commit()
@@ -327,14 +328,14 @@ def update_node(update_dict):
     """
     DESC: Update a nodes info in the transcirrus DB.
     INPUT: update_dict - node_id - req - transcirrus assigned node_id
-                      - node_name
-                      - node_type
-                      - node_mgmt_ip
-                      - node_data_ip
-                      - node_controller
-                      - node_cloud_name
-                      - node_avail_zone
-                      - node_gluster_peer
+                      - node_name - op
+                      - node_type - op
+                      - node_mgmt_ip - op
+                      - node_data_ip - op
+                      - node_controller - op
+                      - node_cloud_name - op
+                      - node_avail_zone - op
+                      - node_gluster_peer - op
     OUTPUT: OK if successful
             ERROR if not successful
     ACCESS: wide open
@@ -369,7 +370,7 @@ def update_node(update_dict):
             cloud_name = "node_cloud_name='%s'" %(update_dict['node_cloud_name'])
             update.append(cloud_name)
         if(('node_avail_zone' in update_dict) and update_dict['node_avail_zone'] != ""):
-            zone = "node_avail_zone='%s'" %(update_dict['node_avail_zone'])
+            zone = "node_nova_zone='%s'" %(update_dict['node_avail_zone'])
             update.append(zone)
         if(('node_gluster_peer' in update_dict) and update_dict['node_gluster_peer'] != ""):
             peer = "node_gluster_peer='%s'" %(update_dict['node_gluster_peer'])

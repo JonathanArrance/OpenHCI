@@ -491,7 +491,7 @@ def processComputeConfig(sock, node_id):
         for i in range(0,len(cn_config1)):
             if cn_config1[i]['file_name'] == 'ovs_quantum_plugin.ini':
                 ovs_conf = cn_config1[i]
-	    elif cn_config1[i]['file_name'] == 'quantum.conf':
+            elif cn_config1[i]['file_name'] == 'quantum.conf':
                 net_conf = cn_config1[i]
 
     else:

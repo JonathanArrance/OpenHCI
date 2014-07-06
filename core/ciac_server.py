@@ -270,7 +270,7 @@ def sendComputeConfig(conn, node_id):
     if __debug__ :
         print "node_id:%s ciac server send config completed" % (node_id)
     
-def SNglusterOperations(data_ip,sn_name):
+def SNglusterOperations(node_id,data_ip,sn_name):
     '''
     data_ip - the datanet ip of the storage node
     sn_name - name of the storage node
@@ -285,10 +285,15 @@ def SNglusterOperations(data_ip,sn_name):
     new = gluster.attach_gluster_peer(data_ip)
     glust_vols = []
     if new == "OK":
+        #update the trans nodes db to reflect node is a Gluster peer
+        update_dict = {'node_id':node_id,'node_gluster_peer':'1'}
+        update_node = node_db.update_node(update_dict)
+        if(update_node == 'ERROR'):
+            SNglusterOperations(node_id,data_ip,sn_name)
         #get the gluster volumes on the core node
         glust_vols = gluster.list_gluster_volumes()
     else:
-        SNglusterOperations(data_ip)
+        SNglusterOperations(node_id,data_ip,sn_name)
 
     #adding brick to all the listed volumes
     for vol in glust_vols:
@@ -501,7 +506,7 @@ def client_thread(conn, client_addr):
                                 # check node typestart
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    SNglusterOperations(node_info['node_data_ip'],node_info['node_name'])
+                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
@@ -577,6 +582,9 @@ def client_thread(conn, client_addr):
                                     'node_cloud_name':data['Value']['node_cloud_name'],
                                     'avail_zone':data['Value']['avail_zone']
                                     }
+                            if(input_dict['node_type'] == 'sn'):
+                                input_dict['node_gluster_peer'] = data['value']['node_gluster_peer']
+                                input_dict['node_gluster_drives'] = data['value']['node_gluster_drives']
 
                             # insert into ciac DB
                             insert = node_db.insert_node(input_dict)
@@ -594,7 +602,7 @@ def client_thread(conn, client_addr):
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
                                     print "HACK line 506 %s"%(node_info)
-                                    SNglusterOperations(node_info['node_data_ip'],node_info['node_name'])
+                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
