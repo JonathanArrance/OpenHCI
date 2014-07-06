@@ -583,7 +583,7 @@ def client_thread(conn, client_addr):
                                     'avail_zone':data['Value']['avail_zone']
                                     }
                             if(input_dict['node_type'] == 'sn'):
-                                input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
+                                #input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
                                 input_dict['node_gluster_drives'] = data['Value']['node_gluster_drives']
 
                             # insert into ciac DB
