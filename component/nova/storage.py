@@ -173,7 +173,6 @@ class server_storage_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
                 rest = api.call_rest(rest_dict)
-                print rest
                 if(rest['response'] == 200):
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
@@ -181,10 +180,9 @@ class server_storage_ops:
                     self.db.pg_update(update_vol)
                     self.db.pg_transaction_commit()
                 else:
-                    util.http_codes(rest['response'],rest['reason'])
+                    util.http_codes(rest['response'],rest['reason'],rest['data'])
             except Exception as e:
                 self.db.pg_transaction_rollback()
-                print "%s" %(e)
                 raise e
         return "OK"
 

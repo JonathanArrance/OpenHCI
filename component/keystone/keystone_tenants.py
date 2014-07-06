@@ -4,6 +4,7 @@
 #passes the user level out 
 import sys
 import json
+import os
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -158,8 +159,19 @@ class tenant_ops:
             else:
                 gluster_vol_input = {'volume_name':str(project_id)}
                 self.gluster.create_gluster_volume(gluster_vol_input)
-                #this has got to be forked into a new background process
-                self.gluster.create_gluster_swift_ring()
+
+                # Create a process to handle running the create_gluster_swift_ring function because it can take some
+                # time to complete.
+                logger.sys_info('Forking process to call gluster_swift_ring for project %s' % project_name)
+                newpid = os.fork()
+                if newpid == 0:
+                    # This is the child process running which calls the long running function and then exits.
+                    logger.sys_info('Forked process calling gluster_swift_ring for project %s' % project_name)
+                    self.gluster.create_gluster_swift_ring()
+                    logger.sys_info('Forked process for project %s exiting' % project_name)
+                    os._exit(0)
+
+                # This is the parent process which continues to run.
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
 

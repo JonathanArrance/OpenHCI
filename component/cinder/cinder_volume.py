@@ -88,6 +88,7 @@ class volume_ops:
                         - volume_size
         ACCESS: Admins can create a volume in any project, Users can only create
                 volumes in their primary projects
+        NOTE: You can not create two volumes with the same name in the same project.
         """
         logger.sys_info('\n**Create Volume. Component: Cinder Def: create_volume**\n')
         #check to make sure all params have been passed
@@ -151,6 +152,18 @@ class volume_ops:
             logger.sql_error("Could not get the user uuid from Transcirrus DB.")
             raise Exception("Could not get the user uuid from Transcirrus DB.")
 
+        #check to see if a vol in the project with same name already exists
+        try:
+            select_vol = {"select":"vol_id","from":"trans_system_vols","where":"proj_id='%s'" %(create_vol['project_id']),"and":"vol_name='%s'"%(create_vol['volume_name'])}
+            volume = self.db.pg_select(select_vol)
+        except:
+            logger.sql_error("Could not get the volume name from Transcirrus DB.")
+            raise Exception("Could not get the volume name from Transcirrus DB.")
+
+        print volume
+        if(len(volume) >= 1):
+            logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
+            raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
         
         #check the project capacity
         # nned to impliment quatas
@@ -167,7 +180,6 @@ class volume_ops:
             try:
                 #add the new user to openstack 
                 body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
-                print body
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}

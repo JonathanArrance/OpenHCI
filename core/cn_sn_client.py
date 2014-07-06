@@ -26,7 +26,7 @@ node_info = {
     'node_data_ip':'',
     'node_controller':'',
     'node_cloud_name':'TransCirrusCloud',
-    'node_nova_zone':'nova',
+    'avail_zone':'nova',
     'node_id':'trans01'
     }
 }
@@ -46,17 +46,26 @@ def getNodeInfo():
     @author         :
     comments        :
     '''
+    #globals are bad, this needs to be changed asap
     global node_info
+    
+    #get the availability zone
+    
+    #get node controller
+    
+    #get node mgmt_ip
+    mgmt_ip = util.get_adapter_ip('bond0')
 
     node_info['Value']['node_id'] = util.get_node_id()
     node_info['Value']['node_name'] = util.get_node_name()
     node_info['Value']['node_type'] = util.get_node_type()
     node_info['Value']['node_data_ip'] = util.get_node_data_ip()
+    node_info['Value']['node_mgmt_ip'] = mgmt_ip['net_ip']
 
     #used for storage node gluster brick
     if(node_info['Value']['node_type'] == 'sn'):
         node_info['Value']['node_brick'] = util.get_gluster_brick()
-        node_info['value']['disk_type'] = util.get_disk_type()
+        node_info['Value']['disk_type'] = util.get_disk_type()
 
     # node_mgmt_ip is left as default, NOT set to any predefined ip
     # for reasons of ip clashes in the mgmgt network
@@ -64,8 +73,6 @@ def getNodeInfo():
     # node_cloud_name, node_controller, node_nova_zone, node_iscsi_iqn,
     # node_swift_ring set to null values; as the node added to the
     # cluster is cloud information agnostic. 
-
-
 
 def sendOk(sock):
 
@@ -484,7 +491,7 @@ def processComputeConfig(sock, node_id):
         for i in range(0,len(cn_config1)):
             if cn_config1[i]['file_name'] == 'ovs_quantum_plugin.ini':
                 ovs_conf = cn_config1[i]
-	    elif cn_config1[i]['file_name'] == 'quantum.conf':
+            elif cn_config1[i]['file_name'] == 'quantum.conf':
                 net_conf = cn_config1[i]
 
     else:
@@ -503,7 +510,7 @@ def processComputeConfig(sock, node_id):
     # write compute nodes nova config files
 
     #print "***********nova_conf************ %s" % nova_conf  # TEST
-    print "***********Configureing Nova************"
+    print "******Configureing Nova******"
     ret = util.write_new_config_file(nova_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("eror in writing nova conf, exiting!!!")
@@ -516,7 +523,7 @@ def processComputeConfig(sock, node_id):
             print "write success, nova conf"
 
     #print "***********comp_conf************ %s" % comp_conf  # TEST
-    print "***********Configureing Nova Compute************"
+    print "******Configureing Nova Compute******"
     ret = util.write_new_config_file(comp_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing comp conf, exiting!!!")
@@ -529,7 +536,7 @@ def processComputeConfig(sock, node_id):
             print "write success, comp conf"
 
     #print "***********api_conf************ %s" % api_conf  # TEST
-    print "***********Configureing Nova API************"
+    print "******Configureing Nova API******"
     ret = util.write_new_config_file(api_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing api conf, exiting!!!")
@@ -544,7 +551,7 @@ def processComputeConfig(sock, node_id):
     # write compute nodes ovs config file
 
     #print "***********ovs_conf************ %s" % ovs_conf  # TEST
-    print "***********Configureing OpenVswitch************"
+    print "******Configureing OpenVswitch******"
     ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing ovs conf, exiting!!!")
@@ -557,7 +564,7 @@ def processComputeConfig(sock, node_id):
             print "write success, ovs conf"
 
     #print "***********net_conf************ %s" % net_conf  # TEST
-    print "***********Configureing Neutron************"
+    print "******Configureing Neutron******"
     ret = util.write_new_config_file(net_conf)
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing net conf, exiting!!!")
@@ -749,7 +756,6 @@ def processStorageConfig(sock, node_id):
 
     if sn_config:
         sn_config = pickle.loads(sn_config)
-        print "unpickle %s"%(sn_config)
 
         # send ok, ack
         sendOk(sock)
@@ -768,9 +774,8 @@ def processStorageConfig(sock, node_id):
 
 
     # write config files
-    print api_conf
+    print "******Configureing Cinder API file.******"
     ret = util.write_new_config_file(api_conf)
-    print ret
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("node_id: %s error in writing api conf, exiting!!!" %(node_id))
         if __debug__ :
@@ -781,9 +786,8 @@ def processStorageConfig(sock, node_id):
         if __debug__ :
             print "node_id: %s write success, api conf" % node_id
 
-    print cin_conf
+    print "******Configureing Cinder Config file.******"
     ret_cin = util.write_new_config_file(cin_conf)
-    print ret_cin
     if ret_cin == "ERROR" or ret_cin == "NA":
         logger.sys_error("node_id: %s error in writing cinder conf, exiting!!!" %(node_id))
         if __debug__ :
@@ -795,6 +799,7 @@ def processStorageConfig(sock, node_id):
             print "write success, cinder conf"
 
     #send the gluster set flag.
+    print "******Setting up storage******"
     gluster_set_pkt = pickle.dumps(core_util.gluster_set, -1)
     core_util.send_data(gluster_set_pkt, sock)
 
@@ -976,7 +981,7 @@ ciac_ip = util.getDhcpServer()
 logger.sys_info("ciac_ip: %s" % ciac_ip)
 
 # data network ip
-data_ip = "172.38.24.11"
+#data_ip = "172.38.24.11"
 
 # Bind it to data network interface
 sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
@@ -1014,13 +1019,27 @@ try:
 
             # send node data
             getNodeInfo()
+            print "Sending the following node data to core node.\n\n"
+            print "Node Name: %s"%(node_info['Value']['node_name'])
+            print "Node ID: %s"%(node_info['Value']['node_id'])
+            print "Node Mgmt IP: %s"%(node_info['Value']['node_mgmt_ip'])
+            print "Node DataNet IP: %s"%(node_info['Value']['node_data_ip'])
+            if(node_info['Value']['node_type'] == 'sn'):
+                print "Node Gluster Brick: %s"%(node_info['Value']['node_brick'])
+                print "Node Disk Type: %s"%(node_info['Value']['disk_type'])
+            logger.sys_info("Sending the following node data core node, Node Name: %s, Node ID: %s, Node Mgmt IP: %s,Node DataNet IP: %s, Node Gluster Brick: %s, Node Disk Type: %s"%(node_info['Value']['node_name'],
+                                                                                                                                                                                       node_info['Value']['node_id'],
+                                                                                                                                                                                       node_info['Value']['node_mgmt_ip'],
+                                                                                                                                                                                       node_info['Value']['node_data_ip'],
+                                                                                                                                                                                       node_info['Value']['node_brick'],
+                                                                                                                                                                                       node_info['Value']['disk_type'])
+                            )
+
             node_type = node_info['Value']['node_type']
             node_id = node_info['Value']['node_id']
             logger.sys_info("sending %s " %(node_info))
             if __debug__ :
                 print "sending %s " % node_info
-            #print "node_id = %s" % node_id
-            #sock.sendall(pickle.dumps(node_info, -1))
             core_util.send_data(pickle.dumps(node_info, -1), sock)
 
             # receive status message, retry_count

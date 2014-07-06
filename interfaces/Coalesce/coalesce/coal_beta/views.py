@@ -1157,9 +1157,9 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         try:
             out = l3o.update_floating_ip(update_dict)
         except Exception as e:
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+            referer = request.META.get('HTTP_REFERER', None)
+            redirect_to = urlsplit(referer, 'http', False)[2]
+            return HttpResponseRedirect(redirect_to)
     except:
         messages.warning(request, "Unable to assign floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER')) 
