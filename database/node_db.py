@@ -111,7 +111,7 @@ def insert_node(input_dict):
         #skip over these
         if((key == 'avail_zone') or (key == 'node_virt_type') or \
                 (key == 'node_cloud_name') or (key == 'node_gluster_peer') or \
-                (key == 'node_mgmt_ip') or (key == 'node_controller')):
+                (key == 'node_mgmt_ip') or (key == 'node_controller') or (key == 'node_gluster_disks')):
             continue
         if(val == ""):
             logger.sys_error("The value %s::%s was left blank" %(key, val))
@@ -153,6 +153,11 @@ def insert_node(input_dict):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
     if(input_dict['node_cloud_name'] == ''):
         input_dict['node_cloud_name'] = 'TransCirrusCloud'
+
+    if('node_gluster_disks' not in input_dict):
+        input_dict['node_gluster_disks'] = 'None'
+    if(input_dict['node_gluster_disks'] == ''):
+        input_dict['node_gluster_disks'] = 'None'
 
     #get the cloud controllers mgmt_ip
     cc_mgmt_ip = util.get_cloud_controller_mgmt_ip()
