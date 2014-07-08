@@ -154,7 +154,7 @@ class volume_ops:
 
         #check to see if a vol in the project with same name already exists
         try:
-            select_vol = {"select":"vol_name","from":"trans_system_vols","where":"proj_id='%s'" %(create_vol['project_id'])}
+            select_vol = {"select":"vol_id","from":"trans_system_vols","where":"proj_id='%s'" %(create_vol['project_id']),"and":"vol_name='%s'"%(create_vol['vol_name'])}
             volume = self.db.pg_select(select_vol)
         except:
             logger.sql_error("Could not get the volume name from Transcirrus DB.")
