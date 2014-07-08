@@ -223,10 +223,10 @@ class gluster_ops:
                     del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"}
                     self.db.pg_delete(del_vol)
                 except:
-                    logger.sys_error('Gluster volume info for %s could not be removed.'%(input_dict['volume_name']))
+                    logger.sys_error('Gluster volume info for %s could not be removed.'%(volume_name))
                     self.db.pg_transaction_rollback()
                 else:
-                    logger.sys_error('Gluster volume info for %s removed.'%(input_dict['volume_name']))
+                    logger.sys_error('Gluster volume info for %s removed.'%(volume_name))
                     self.db.pg_transaction_commit()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
