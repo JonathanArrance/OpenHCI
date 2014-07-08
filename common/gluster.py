@@ -67,6 +67,7 @@ class gluster_ops:
                 raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         self.db = util.db_connect()
+        self.data_ip = get_node_data_ip()
 
     def get_gluster_brick(self, node_type = None):
         """
@@ -142,8 +143,10 @@ class gluster_ops:
         NOTE: This is not the same as useing the Cinder volume create, this def
               creates volumes using the gluster commands,
               bricks[172.38.24.11:/data/gluster/'volume_name']
+              This may need to be expaned on as we add in a spindle based node.
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
+        self.state = 'OK'
         if(self.is_admin == 1):
             command = None
             if('bricks' in input_dict and len(input_dict['bricks']) >= 1):
@@ -156,31 +159,45 @@ class gluster_ops:
             vol = out.stdout.readlines()
             if(len(vol) == 0):
                 logger.sys_error('Could not create a new Gluster volume.')
-                return 'ERROR'
+                self.state = 'ERROR'
 
             out3 = subprocess.Popen('sudo gluster volume start %s'%(input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             start = out3.stdout.readlines()
-            print start
             if(len(start) == 0):
                 logger.sys_error('Could not start the new Gluster volume.')
-                return 'ERROR'
+                self.state = 'ERROR'
+                self.vol_state = "Stop"
+            else:
+                self.vol_state = "Start"
 
             #mount the new gluster volume
             make = os.system('sudo mkdir -p /mnt/gluster-vols/%s' %(input_dict['volume_name']))
             if(make != 0):
                 logger.sys_error('Could not create the GlusterFS mount point.')
-                return 'ERROR'
+                self.state = 'ERROR'
             out4 = subprocess.Popen('sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             mount = out4.stdout.readlines()
             #print mount
             if(len(mount) != 0):
                 logger.sys_error('Could not mount the Gluster volume.')
-                return 'ERROR'
+                self.state = 'ERROR'
         else:
             logger.sys_error('Only admins can create gluster volumes.')
             raise Exeption('Only admins can create gluster volumes.')
 
-        return 'OK'
+        for brick in input_dict['bricks']:
+            try:
+                self.db.pg_transaction_begin()
+                insert_vol = {"gluster_vol_name":"%s"%(input_dict['volume_name']),"gluster_brick_name":"%s"%(brick),"gluster_vol_sync_state":"OK","gluster_vol_state":"%s"%(self.vol_state)}
+                self.db.pg_insert("trans_gluster_vols",insert_vol)
+            except:
+                logger.sys_error('Gluster volume info for %s could not be set.'%(input_dict['volume_name']))
+                self.db.pg_transaction_rollback()
+            else:
+                logger.sys_error('Gluster volume info for %s set.'%(input_dict['volume_name']))
+                self.db.pg_transaction_commit()
+
+        return self.state
     
     def delete_gluster_volume(self,volume_name):
         """
@@ -337,16 +354,17 @@ class gluster_ops:
             logger.sys_error('Could not rebalance the volume %s'%(volume_name))
             self.sync_state = 'ERROR'
 
-        try:
-            self.db.pg_transaction_begin()
-            update_flag = {'table':"trans_system_vols",'set':"vol_gluster_sync='%s'"%(self.sync_state),'where':"vol_name='%s'"%(volume_name)}
-            self.db.pg_update(update_flag)
-        except:
-            logger.sys_error('Sync state for %s could not be set.'%(volume_name))
-            self.db.pg_transaction_rollback()
-        else:
-            logger.sys_error('Sync state for %s set to NA.'%(volume_name))
-            self.db.pg_transaction_commit()
+        if(self.sync_state == 'OK'):
+            try:
+                self.db.pg_transaction_begin()
+                update_flag = {'table':"trans_gluster_vols",'set':"vol_gluster_sync='%s'"%(self.sync_state),'where':"vol_name='%s'"%(volume_name)}
+                self.db.pg_update(update_flag)
+            except:
+                logger.sys_error('Sync state for %s could not be set.'%(volume_name))
+                self.db.pg_transaction_rollback()
+            else:
+                logger.sys_error('Sync state for %s set to NA.'%(volume_name))
+                self.db.pg_transaction_commit()
 
         return self.sync_state
 
