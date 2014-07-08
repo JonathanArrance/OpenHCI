@@ -161,8 +161,8 @@ class volume_ops:
             raise Exception("Could not get the volume name from Transcirrus DB.")
 
         if(len(volume) >= 1):
-            logger.sql_error("Volume with the name %s already exists."%(create_vol['vol_name']))
-            raise Exception("Volume with the name %s already exists."%(create_vol['vol_name']))
+            logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
+            raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
         
         #check the project capacity
         # nned to impliment quatas
