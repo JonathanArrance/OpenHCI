@@ -118,7 +118,7 @@ class gluster_ops:
             for project_id in projects:
                 string = string + project_id[0] + ' '
                 #add the new drive to a mount file so it can be remouted if the system is rebooted.
-                echo = {'echo sudo mount.glusterfs localhost:/%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'}%(project_id,project_id)
+                echo = {'echo sudo mount.glusterfs localhost:/%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'%(project_id,project_id)}
                 out5 = subprocess.Popen('%s'%(echo), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
                 mount = out5.stdout.readlines()
                 if(len(mount) == 0):
