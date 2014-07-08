@@ -154,7 +154,8 @@ class gluster_ops:
                 brick = ' '.join(input_dict['bricks'])
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
             else:
-                input_dict['bricks'] = brick_array.append("172.38.24.10:/data/gluster/%s"%(input_dict['volume_name']))
+                x = "172.38.24.10:/data/gluster/%s"%(input_dict['volume_name'])
+                input_dict['bricks'] = brick_array.append(x)
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
