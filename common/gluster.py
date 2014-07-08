@@ -67,7 +67,7 @@ class gluster_ops:
                 raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         self.db = util.db_connect()
-        self.data_ip = get_node_data_ip()
+        self.data_ip = util.get_node_data_ip()
 
     def get_gluster_brick(self, node_type = None):
         """
