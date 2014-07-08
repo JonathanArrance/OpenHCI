@@ -147,13 +147,14 @@ class gluster_ops:
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
         self.state = 'OK'
+        brick_array = []
         if(self.is_admin == 1):
             command = None
             if('bricks' in input_dict and len(input_dict['bricks']) >= 1):
                 brick = ' '.join(input_dict['bricks'])
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
             else:
-                input_dict['bricks'] = "172.38.24.10:/data/gluster/%s"%(input_dict['volume_name'])
+                input_dict['bricks'] = brick_array.append("172.38.24.10:/data/gluster/%s"%(input_dict['volume_name']))
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
