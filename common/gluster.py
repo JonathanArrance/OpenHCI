@@ -153,6 +153,7 @@ class gluster_ops:
                 brick = ' '.join(input_dict['bricks'])
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
             else:
+                input_dict['bricks'] = "172.38.24.10:/data/gluster/%s"%(input_dict['volume_name'])
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
@@ -185,6 +186,7 @@ class gluster_ops:
             logger.sys_error('Only admins can create gluster volumes.')
             raise Exeption('Only admins can create gluster volumes.')
 
+        print "HACK: %s"%(input_dict['bricks'])
         for brick in input_dict['bricks']:
             try:
                 self.db.pg_transaction_begin()
