@@ -120,7 +120,7 @@ class gluster_ops:
             for project_id in projects:
                 string = string + project_id[0] + ' '
                 #add the new drive to a mount file so it can be remouted if the system is rebooted.
-                out = os.system('echo sudo mount.glusterfs localhost:/%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'%(project_id,project_id))
+                out = os.system('echo sudo mount.glusterfs localhost:%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'%(project_id[0],project_id[0]))
                 if(out != 0):
                     logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
 
