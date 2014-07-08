@@ -186,7 +186,6 @@ class gluster_ops:
             logger.sys_error('Only admins can create gluster volumes.')
             raise Exeption('Only admins can create gluster volumes.')
 
-        print "HACK: %s"%(input_dict['bricks'])
         for brick in input_dict['bricks']:
             try:
                 self.db.pg_transaction_begin()
@@ -218,6 +217,17 @@ class gluster_ops:
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume delete %s'%(volume_name))
             if(out != 0):
                 return 'ERROR'
+            else:
+                try:
+                    self.db.pg_transaction_begin()
+                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"}
+                    self.db.pg_delete(del_vol)
+                except:
+                    logger.sys_error('Gluster volume info for %s could not be removed.'%(input_dict['volume_name']))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('Gluster volume info for %s removed.'%(input_dict['volume_name']))
+                    self.db.pg_transaction_commit()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
             raise Exeption('Only admins can delete Gluster volumes.')
