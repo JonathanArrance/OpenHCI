@@ -326,18 +326,29 @@ class gluster_ops:
         start = out.stdout.readlines()
         #print start
         #get the vol ID based on name and project_id
-        
+        self.sync_state = None
         if(len(start) == 0):
-            # set rebalance flag to NA
-            update_falg = {'table':"trans_system_vols",'set':"vol_gluster_sync='NA'",'where':"vol_id=''"}
             logger.sys_error('Unknown output while rebalancing Gluster volume.')
-            return 'NA'
+            self.sync_state = 'NA'
         if(os.system("echo '%s' | grep 'success'"%(start[0])) == 0):
             logger.sys_info("Starting rebalance of gluster volume %s" %(volume_name))
-            return 'OK'
+            self.sync_state = 'OK'
         else:
             logger.sys_error('Could not rebalance the volume %s'%(volume_name))
-            return 'ERROR'
+            self.sync_state = 'ERROR'
+
+        try:
+            self.db.pg_transaction_begin()
+            update_flag = {'table':"trans_system_vols",'set':"vol_gluster_sync='%s'"%(self.sync_state),'where':"vol_name='%s'"%(volume_name)}
+            self.db.pg_update(update_flag)
+        except:
+            logger.sys_error('Sync state for %s could not be set.'%(volume_name))
+            self.db.pg_transaction_rollback()
+        else:
+            logger.sys_error('Sync state for %s set to NA.'%(volume_name))
+            self.db.pg_transaction_commit()
+
+        return self.sync_state
 
     def replace_gluster_brick(self,input_dict):
         """
