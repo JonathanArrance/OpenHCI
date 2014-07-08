@@ -115,15 +115,14 @@ class gluster_ops:
             #call the gluster-swift create ring
             #projects is an array of arrays
             string = ''
+            os.system('mv /transcirrus/gluster-object-mount /transcirrus/gluster-object-mount.bak')
+            os.system('touch /transcirrus/gluster-object-mount; chmod 777 /transcirrus/gluster-object-mount')
             for project_id in projects:
                 string = string + project_id[0] + ' '
                 #add the new drive to a mount file so it can be remouted if the system is rebooted.
-                echo = {'echo sudo mount.glusterfs localhost:/%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'%(project_id,project_id)}
-                out5 = subprocess.Popen('%s'%(echo), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
-                mount = out5.stdout.readlines()
-                if(len(mount) == 0):
-                    logger.sys_error('Could not add object Gluster mount.')
-                    self.state = 'ERROR'
+                out = os.system('echo sudo mount.glusterfs localhost:/%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'%(project_id,project_id))
+                if(out != 0):
+                    logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
 
             ring = subprocess.Popen('sudo gluster-swift-gen-builders %s'%(string), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             create_ring = ring.stdout.readlines()
