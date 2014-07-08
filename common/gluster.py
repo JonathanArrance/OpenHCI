@@ -115,14 +115,14 @@ class gluster_ops:
             #call the gluster-swift create ring
             #projects is an array of arrays
             string = ''
-            #os.system('mv /transcirrus/gluster-object-mount /transcirrus/gluster-object-mount.bak')
-            #os.system('touch /transcirrus/gluster-object-mount; chmod 777 /transcirrus/gluster-object-mount')
+            os.system('mv /transcirrus/gluster-object-mount /transcirrus/gluster-object-mount.bak')
+            os.system('touch /transcirrus/gluster-object-mount; chmod 777 /transcirrus/gluster-object-mount')
             for project_id in projects:
                 string = string + project_id[0] + ' '
                 #add the new drive to a mount file so it can be remouted if the system is rebooted.
-                #out = os.system('echo sudo mount.glusterfs localhost:%s /mnt/gluster-objects/%s >> /transcirrus/gluster-object-mount'%(project_id[0],project_id[0]))
-                #if(out != 0):
-                #    logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
+                out = os.system('echo sudo mount.glusterfs localhost:%s /mnt/gluster-object/%s >> /transcirrus/gluster-object-mount'%(project_id[0],project_id[0]))
+                if(out != 0):
+                    logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
 
             ring = subprocess.Popen('sudo gluster-swift-gen-builders %s'%(string), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             create_ring = ring.stdout.readlines()
@@ -188,7 +188,7 @@ class gluster_ops:
                 self.state = 'ERROR'
 
             #add the new drive to a mount file so it can be remouted if the system is rebooted.
-            out = os.system('echo sudo mount.glusterfs localhost:%s /mnt/gluster-objects/%s >> /transcirrus/gluster-mounts'%(input_dict['volume_name'],input_dict['volume_name']))
+            out = os.system('echo sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s >> /transcirrus/gluster-mounts'%(input_dict['volume_name'],input_dict['volume_name']))
             if(out != 0):
                 logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
 
@@ -239,6 +239,9 @@ class gluster_ops:
                 else:
                     logger.sys_error('Gluster volume info for %s removed.'%(volume_name))
                     self.db.pg_transaction_commit()
+                    
+                #remove the entry from gluster-mounts
+                
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
             raise Exeption('Only admins can delete Gluster volumes.')
