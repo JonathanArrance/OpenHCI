@@ -116,9 +116,14 @@ class gluster_ops:
             #projects is an array of arrays
             string = ''
             for project_id in projects:
-                #input_dict = {'volume_name':project_id[0],'gluster_dir_name':project_id[0]}
-                #create_vol = self.create_gluster_volume(input_dict)
                 string = string + project_id[0] + ' '
+                #add the new drive to a mount file so it can be remouted if the system is rebooted.
+                echo = {'echo "sudo mount.glusterfs localhost:/%s /mnt/gluster-objects/%s" >> /transcirrus/gluster-object-mount'}%(project_id,project_id)
+                out5 = subprocess.Popen('%s'%(echo), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+                mount = out5.stdout.readlines()
+                if(len(mount) == 0):
+                    logger.sys_error('Could not add object Gluster mount.')
+                    self.state = 'ERROR'
 
             ring = subprocess.Popen('sudo gluster-swift-gen-builders %s'%(string), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             create_ring = ring.stdout.readlines()
@@ -182,10 +187,20 @@ class gluster_ops:
             if(len(mount) != 0):
                 logger.sys_error('Could not mount the Gluster volume.')
                 self.state = 'ERROR'
+
+            #add the new drive to a mount file so it can be remouted if the system is rebooted.
+            echo = {'echo "sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s" >> /transcirrus/gluster-mounts'}%(input_dict['volume_name'],input_dict['volume_name'])
+            out5 = subprocess.Popen('%s'%(echo), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+            mount = out5.stdout.readlines()
+            if(len(mount) == 0):
+                logger.sys_error('Could not create a new Gluster volume.')
+                self.state = 'ERROR'
+
         else:
             logger.sys_error('Only admins can create gluster volumes.')
             raise Exeption('Only admins can create gluster volumes.')
 
+        #add everything to the 
         for brick in input_dict['bricks']:
             try:
                 self.db.pg_transaction_begin()
