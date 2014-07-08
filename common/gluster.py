@@ -325,7 +325,11 @@ class gluster_ops:
         out = subprocess.Popen('sudo gluster volume rebalance %s start'%(volume_name), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         start = out.stdout.readlines()
         #print start
+        #get the vol ID based on name and project_id
+        
         if(len(start) == 0):
+            # set rebalance flag to NA
+            update_falg = {'table':"trans_system_vols",'set':"vol_gluster_sync='NA'",'where':"vol_id=''"}
             logger.sys_error('Unknown output while rebalancing Gluster volume.')
             return 'NA'
         if(os.system("echo '%s' | grep 'success'"%(start[0])) == 0):
@@ -334,7 +338,7 @@ class gluster_ops:
         else:
             logger.sys_error('Could not rebalance the volume %s'%(volume_name))
             return 'ERROR'
-    
+
     def replace_gluster_brick(self,input_dict):
         """
         DESC: Reblance gluster volumes across bricks.
