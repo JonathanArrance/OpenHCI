@@ -346,6 +346,7 @@ class gluster_ops:
                 return 'ERROR'
             else:
                 #update the vol state
+                
                 return 'OK'
         else:
             logger.sys_error('Only admins can stop a Gluster volume.')
@@ -372,7 +373,16 @@ class gluster_ops:
                 return 'ERROR'
             else:
                 #remove the vol brick from the db
-
+                try:
+                    self.db.pg_transaction_begin()
+                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(input_dict['volume_name']),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                    self.db.pg_delete(del_vol)
+                except:
+                    logger.sys_error('Gluster brick info for %s could not be removed.'%(input_dict['brick']))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('Gluster brick info for %s removed.'%(input_dict['brick']))
+                    self.db.pg_transaction_commit()
                 return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
