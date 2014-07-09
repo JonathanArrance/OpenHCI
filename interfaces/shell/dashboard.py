@@ -134,7 +134,7 @@ def nodeInfo(d, node):
                     "Gluster Peer: " + node_info['node_gluster_peer'] + "\n" +
                     "Status: " + node_info['status']),
                     yes_label="Manage this Node",
-                    no_label="Return to Nodes", width=60, height=30)
+                    no_label="Return to Nodes", width=32, height=24)
 
 
 def nodeManage(d, node):
@@ -155,7 +155,7 @@ def nodeManage(d, node):
             ("Status:", 4, 1, "", 4, 24, 16, 16, 0x2)]
 
         (code, fields) = d.mixedform(
-            "Update Node Info:", elements, width=77)
+            "Update Node Info:", elements, width=32, height=24)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
