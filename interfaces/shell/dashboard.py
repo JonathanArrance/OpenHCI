@@ -135,18 +135,7 @@ def nodeManage(d, node):
     node_info = node_op.get_node(node['node_id'])
     while True:
         elements = [
-            ("Name:", 1, 1, node_info['node_name'], 1, 24, 16, 16, 0x2),
-            ("Id:", 2, 1, node['node_id'], 2, 24, 16, 16, 0x2),
-            ("Type:", 3, 1, node_info['node_type'], 3, 24, 16, 16, 0x2),
-            ("Data IP:", 4, 1, node_info['node_data_ip'], 4, 24, 16, 16, 0x2),
-            ("Management IP:", 5, 1, node_info['node_mgmt_ip'], 5, 24, 16, 16, 0x0),
-            ("Controller:", 6, 1, node_info['node_controller'], 6, 24, 16, 16, 0x2),
-            ("Cloud Name:", 7, 1, node_info['node_cloud_name'], 7, 24, 16, 16, 0x2),
-            ("Zone:", 8, 1, node_info['availability_zone'], 8, 24, 16, 16, 0x2),
-            ("Fault:", 9, 1, node_info['node_fault_flag'], 9, 24, 16, 16, 0x2),
-            ("Ready:", 10, 1, node_info['node_ready_flag'], 10, 24, 16, 16, 0x2),
-            ("Gluster Peer:", 11, 1, node_info['node_gluster_peer'], 11, 24, 16, 16, 0x2),
-            ("Status:", 12, 1, node_info['status'], 12, 24, 16, 16, 0x2)]
+            ("Management IP:", 5, 1, node_info['node_mgmt_ip'], 5, 24, 16, 16, 0x0)]
 
         (code, fields) = d.mixedform(
             "Update Node Info:", elements, width=77, height=20)
