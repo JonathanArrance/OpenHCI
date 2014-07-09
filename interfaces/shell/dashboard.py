@@ -7,24 +7,10 @@ from transcirrus.operations.destroy_project import destroy_project
 from transcirrus.database import node_db as node_op
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.3"
-version_blurb = """Demonstration program and cheap test suite for pythondialog.
+progversion = "0.1"
+version_blurb = """Transcirrus CoalesceShell Beta"""
 
-Copyright (C) 2002-2010  Florent Rougon
-Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
-
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
-
-usage = """Usage: %(progname)s [option ...]
-Demonstration program and cheap test suite for pythondialog.
-
-Options:
-  -t, --test-suite             test all widgets; implies --fast
-  -f, --fast                   fast mode (e.g., makes the gauge demo run faster)
-      --help                   display this message and exit
-      --version                output version information and exit""" \
-  % { "progname": progname }
+usage = ""
 
 # Global parameters
 params = {}
@@ -133,18 +119,39 @@ def nodeDel(d, node):
 
 
 def nodeInfo(d, node):
-    return d.yesno(("Overview\n\n" + node['node_name']),
-    yes_label="Manage this Node",
-    no_label="Return to Nodes", width=50)
+    node_info = node_op.get_node(node['node_id'])
+    return d.yesno(("Node Overview\n\n"
+                    "Name: " + node['node_name']
+                    "Type: " + node['node_type']
+                    "Data IP: " + node['node_data_ip']
+                    "Management IP: " + node['node_management_ip']
+                    "Controller: " + node['node_controller']
+                    "Cloud Name: " + node['node_cloud_name']
+                    "Zone: " + node['availability_zone']
+                    "Fault: " + node['node_fault_flag']
+                    "Ready: " + node['node_ready_flag']
+                    "Gluster Peer: " + node['node_gluster_peer']
+                    "Status: " + node['status']),
+                    yes_label="Manage this Node",
+                    no_label="Return to Nodes", width=50)
 
 
 def nodeManage(d, node):
+    node_info = node_op.get_node(node['node_id'])
     while True:
         elements = [
-            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x0),
-            ("Type:", 2, 1, "", 2, 24, 16, 16, 0x0),
-            ("Node IP:", 3, 1, "", 3, 24, 16, 16, 0x0),
-            ("Management IP:", 4, 1, "", 4, 24, 16, 16, 0x0)]
+            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Type:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Data IP:", 2, 1, "", 2, 24, 16, 16, 0x2),
+            ("Management IP:", 1, 1, "", 1, 24, 16, 16, 0x0),
+            ("Controller:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Cloud Name:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Zone:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Fault:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Ready:", 3, 1, "", 3, 24, 16, 16, 0x2),
+            ("Gluster Peer:", 1, 1, "", 1, 24, 16, 16, 0x2),
+            ("Status:", 4, 1, "", 4, 24, 16, 16, 0x2)]
 
         (code, fields) = d.mixedform(
             "Update Node Info:", elements, width=77)
@@ -153,7 +160,6 @@ def nodeManage(d, node):
             break
 
     return fields
-
 
 def projects(d, projectList):
     addChoice = ("Add", "Add a Project", 0)
