@@ -245,7 +245,6 @@ class gluster_ops:
                     self.db.pg_transaction_commit()
 
                 #remove the entry from gluster-mounts
-                #os.system("sed -i 's/sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s/ /' /transcirrus/gluster-mounts"%(volume_name,volume_name))
                 entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
                 gluster_mounts = open("/transcirrus/gluster-mounts","r")
                 lines = gluster_mounts.readlines()
@@ -310,6 +309,17 @@ class gluster_ops:
             if(out != 0):
                 return 'ERROR'
             else:
+                #add the new vol brick to the DB
+                try:
+                    self.db.pg_transaction_begin()
+                    insert_brick = {"gluster_vol_name":"%s","gluster_brick_name":"%s","gluster_vol_sync_state":"NA","gluster_vol_state":"Start"%(input_dict['volume_name'],input_dict['brick'])}
+                    self.db.pg_insert("trans_gluster_vols",insert_brick)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['vol_name']))
+                else:
+                    self.db.pg_transaction_commit()
+                    logger.sys_info("Added the brick info into the database for %s"%(input_dict['vol_name']))
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
             logger.sys_error('Only admins can add a gluster brick.')
@@ -335,6 +345,7 @@ class gluster_ops:
             if(out != 0):
                 return 'ERROR'
             else:
+                #update the vol state
                 return 'OK'
         else:
             logger.sys_error('Only admins can stop a Gluster volume.')
@@ -360,6 +371,8 @@ class gluster_ops:
                 logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
                 return 'ERROR'
             else:
+                #remove the vol brick from the db
+
                 return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
