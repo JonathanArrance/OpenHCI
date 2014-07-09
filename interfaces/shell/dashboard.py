@@ -58,12 +58,6 @@ def handle_exit_code(d, code):
         return code
 
 
-def controls(d):
-    d.msgbox("Use SPACE to select items (ie in a radio list) "
-              "Use ARROW KEYS to move the cursor \n"
-              "Use ENTER to submit and advance (OK or Cancel)", width=50)
-
-
 def dashboard(d):
     while True:
         (code, tag) = d.radiolist(
@@ -992,8 +986,6 @@ def dash(d, auth_dict):
                  'status':1,
                  'isAdmin':False}]
 
-    controls(d)
-
     while True:
         selection = dashboard(d)
         while(selection == "Nodes"):
@@ -1524,8 +1516,7 @@ def main(auth_dict):
         # argument), you can use:
         #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
         d = dialog.Dialog(dialog="dialog")
-        d.add_persistent_args(["--colors"])
-        d.add_persistent_args(["--backtitle", "\Z1\ZbTransCirrus - CoalesceShell"])
+        d.add_persistent_args(["--backtitle", "TransCirrus - CoalesceShell"])
         
 
         # Show the additional widgets before the "normal demo", so that I can
