@@ -310,17 +310,16 @@ class gluster_ops:
                 return 'ERROR'
             else:
                 #add the new vol brick to the DB
-                #try:
-                #    self.db.pg_transaction_begin()
-                insert_brick = {"gluster_vol_name":"%s"%(input_dict['volume_name']),"gluster_brick_name":"%s"%(input_dict['brick']),"gluster_vol_sync_state":"NA","gluster_vol_state":"Start"}
-                print insert_brick
-                self.db.pg_insert("trans_gluster_vols",insert_brick)
-                #except:
-                #    self.db.pg_transaction_rollback()
-                #    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['vol_name']))
-                #else:
-                #    self.db.pg_transaction_commit()
-                #    logger.sys_info("Added the brick info into the database for %s"%(input_dict['vol_name']))
+                try:
+                    self.db.pg_transaction_begin()
+                    insert_brick = {"gluster_vol_name":"%s"%(input_dict['volume_name']),"gluster_brick_name":"%s"%(input_dict['brick']),"gluster_vol_sync_state":"NA","gluster_vol_state":"Start"}
+                    self.db.pg_insert("trans_gluster_vols",insert_brick)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['vol_name']))
+                else:
+                    self.db.pg_transaction_commit()
+                    logger.sys_info("Added the brick info into the database for %s"%(input_dict['vol_name']))
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
             logger.sys_error('Only admins can add a gluster brick.')
@@ -394,7 +393,6 @@ class gluster_ops:
         logger.sys_info('\n**Rebalanceing Gluster volumes. Common Def: rebalance_gluster_volume**\n')
         out = subprocess.Popen('sudo gluster volume rebalance %s start'%(volume_name), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         start = out.stdout.readlines()
-        #print start
         #get the vol ID based on name and project_id
         self.sync_state = None
         if(len(start) == 0):
@@ -410,7 +408,7 @@ class gluster_ops:
         if(self.sync_state == 'OK'):
             try:
                 self.db.pg_transaction_begin()
-                update_flag = {'table':"trans_gluster_vols",'set':"vol_gluster_sync='%s'"%(self.sync_state),'where':"vol_name='%s'"%(volume_name)}
+                update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_sync_state='%s'"%(self.sync_state),'where':"gluster_vol_name='%s'"%(volume_name)}
                 self.db.pg_update(update_flag)
             except:
                 logger.sys_error('Sync state for %s could not be set.'%(volume_name))
