@@ -316,10 +316,10 @@ class gluster_ops:
                     self.db.pg_insert("trans_gluster_vols",insert_brick)
                 except:
                     self.db.pg_transaction_rollback()
-                    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['vol_name']))
+                    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['volume_name']))
                 else:
                     self.db.pg_transaction_commit()
-                    logger.sys_info("Added the brick info into the database for %s"%(input_dict['vol_name']))
+                    logger.sys_info("Added the brick info into the database for %s"%(input_dict['volume_name']))
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
             logger.sys_error('Only admins can add a gluster brick.')
