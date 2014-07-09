@@ -143,8 +143,8 @@ def nodeManage(d, node):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     try:
-        d.msgbox("test")
-        update_dict = {'node_id': node['node_id'], 'node_mgmt_ip': mgmt_ip}
+        d.msgbox("test " + fields)
+        update_dict = {'node_id': node['node_id'], 'node_mgmt_ip': fields}
         upd = node_op.update_node(update_dict)
         d.msgbox(upd)
     except Exception as e:
