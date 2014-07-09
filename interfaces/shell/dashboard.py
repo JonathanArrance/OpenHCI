@@ -135,18 +135,21 @@ def nodeManage(d, node):
     node_info = node_op.get_node(node['node_id'])
     while True:
         elements = [
-            ("Management IP:", 5, 1, node_info['node_mgmt_ip'], 5, 24, 16, 16, 0x0)]
+            ("Management IP:", 1, 1, node_info['node_mgmt_ip'], 1, 24, 16, 16, 0x0)]
 
         (code, fields) = d.mixedform(
             "Update Node Info:", elements, width=77, height=20)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
-    mgmt_ip = fields
-    d.msgbox(mgmt_ip)
-    update_dict = {'node_id': node['node_id'], 'node_mgmt_ip': mgmt_ip}
-    upd = node_op.update_node(update_dict)
-    d.msgbox(upd)
+    try:
+        mgmt_ip = fields
+        d.msgbox(mgmt_ip)
+        update_dict = {'node_id': node['node_id'], 'node_mgmt_ip': mgmt_ip}
+        upd = node_op.update_node(update_dict)
+        d.msgbox(upd)
+    except Exception as e:
+        print e
 
     return
 
