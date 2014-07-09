@@ -10,7 +10,7 @@ import transcirrus.common.node_util as node_util
 import transcirrus.common.config as config
 import transcirrus.database.postgres as postgres
 
-class stat_ops():
+class stat_ops:
 
     def __init__(self,user_dict):
         if(not user_dict):
