@@ -312,7 +312,7 @@ class gluster_ops:
                 #add the new vol brick to the DB
                 #try:
                 #    self.db.pg_transaction_begin()
-                insert_brick = {"gluster_vol_name":"%s","gluster_brick_name":"%s","gluster_vol_sync_state":"NA","gluster_vol_state":"Start"%(input_dict['volume_name'],input_dict['brick'])}
+                insert_brick = {"gluster_vol_name":"%s"%(input_dict['volume_name']),"gluster_brick_name":"%s"%(input_dict['brick']),"gluster_vol_sync_state":"NA","gluster_vol_state":"Start"}
                 print insert_brick
                 self.db.pg_insert("trans_gluster_vols",insert_brick)
                 #except:
