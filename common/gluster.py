@@ -310,16 +310,17 @@ class gluster_ops:
                 return 'ERROR'
             else:
                 #add the new vol brick to the DB
-                try:
-                    self.db.pg_transaction_begin()
-                    insert_brick = {"gluster_vol_name":"%s","gluster_brick_name":"%s","gluster_vol_sync_state":"NA","gluster_vol_state":"Start"%(input_dict['volume_name'],input_dict['brick'])}
-                    self.db.pg_insert("trans_gluster_vols",insert_brick)
-                except:
-                    self.db.pg_transaction_rollback()
-                    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['vol_name']))
-                else:
-                    self.db.pg_transaction_commit()
-                    logger.sys_info("Added the brick info into the database for %s"%(input_dict['vol_name']))
+                #try:
+                #    self.db.pg_transaction_begin()
+                insert_brick = {"gluster_vol_name":"%s","gluster_brick_name":"%s","gluster_vol_sync_state":"NA","gluster_vol_state":"Start"%(input_dict['volume_name'],input_dict['brick'])}
+                print insert_brick
+                self.db.pg_insert("trans_gluster_vols",insert_brick)
+                #except:
+                #    self.db.pg_transaction_rollback()
+                #    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['vol_name']))
+                #else:
+                #    self.db.pg_transaction_commit()
+                #    logger.sys_info("Added the brick info into the database for %s"%(input_dict['vol_name']))
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
             logger.sys_error('Only admins can add a gluster brick.')
