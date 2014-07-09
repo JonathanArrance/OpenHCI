@@ -134,7 +134,7 @@ def nodeInfo(d, node):
                     "Gluster Peer: " + node_info['node_gluster_peer'] + "\n" +
                     "Status: " + node_info['status']),
                     yes_label="Manage this Node",
-                    no_label="Return to Nodes", width=32, height=24)
+                    no_label="Return to Nodes", width=77, height=16)
 
 
 def nodeManage(d, node):
@@ -142,20 +142,20 @@ def nodeManage(d, node):
     while True:
         elements = [
             ("Name:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Type:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Name:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Data IP:", 2, 1, "", 2, 24, 16, 16, 0x2),
-            ("Management IP:", 1, 1, "", 1, 24, 16, 16, 0x0),
-            ("Controller:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Cloud Name:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Zone:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Fault:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Ready:", 3, 1, "", 3, 24, 16, 16, 0x2),
-            ("Gluster Peer:", 1, 1, "", 1, 24, 16, 16, 0x2),
-            ("Status:", 4, 1, "", 4, 24, 16, 16, 0x2)]
+            ("Id:", 2, 1, "", 2, 24, 16, 16, 0x2),
+            ("Type:", 3, 1, "", 3, 24, 16, 16, 0x2),
+            ("Data IP:", 4, 1, "", 4, 24, 16, 16, 0x2),
+            ("Management IP:", 5, 1, "", 5, 24, 16, 16, 0x0),
+            ("Controller:", 6, 1, "", 6, 24, 16, 16, 0x2),
+            ("Cloud Name:", 7, 1, "", 7, 24, 16, 16, 0x2),
+            ("Zone:", 8, 1, "", 8, 24, 16, 16, 0x2),
+            ("Fault:", 9, 1, "", 9, 24, 16, 16, 0x2),
+            ("Ready:", 10, 1, "", 10, 24, 16, 16, 0x2),
+            ("Gluster Peer:", 11, 1, "", 11, 24, 16, 16, 0x2),
+            ("Status:", 12, 1, "", 12, 24, 16, 16, 0x2)]
 
         (code, fields) = d.mixedform(
-            "Update Node Info:", elements, width=32, height=24)
+            "Update Node Info:", elements, width=77, height=16)
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
