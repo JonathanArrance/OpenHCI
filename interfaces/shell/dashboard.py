@@ -134,7 +134,7 @@ def nodeInfo(d, node):
                     "Gluster Peer: " + node_info['node_gluster_peer'] + "\n" +
                     "Status: " + node_info['status']),
                     yes_label="Manage this Node",
-                    no_label="Return to Nodes", width=50)
+                    no_label="Return to Nodes", width=60, height=30)
 
 
 def nodeManage(d, node):
