@@ -115,18 +115,18 @@ def nodeDel(d, node):
 def nodeInfo(d, node):
     node_info = node_op.get_node(node['node_id'])
     return d.yesno(("Node Overview\n\n" +
-                    "Name: " + node_info['node_name'] + "\n" +
-                    "Id: " + node['node_id'] + "\n" +
-                    "Type: " + node_info['node_type'] + "\n" +
-                    "Data IP: " + node_info['node_data_ip'] + "\n" +
+                    "Name:          " + node_info['node_name'] + "\n" +
+                    "Id:            " + node['node_id'] + "\n" +
+                    "Type:          " + node_info['node_type'] + "\n" +
+                    "Data IP:       " + node_info['node_data_ip'] + "\n" +
                     "Management IP: " + node_info['node_mgmt_ip'] + "\n" +
-                    "Controller: " + node_info['node_controller'] + "\n" +
-                    "Cloud Name: " + node_info['node_cloud_name'] + "\n" +
-                    "Zone: " + node_info['availability_zone'] + "\n" +
-                    "Fault: " + node_info['node_fault_flag'] + "\n" +
-                    "Ready: " + node_info['node_ready_flag'] + "\n" +
-                    "Gluster Peer: " + node_info['node_gluster_peer'] + "\n" +
-                    "Status: " + node_info['status']),
+                    "Controller:    " + node_info['node_controller'] + "\n" +
+                    "Cloud Name:    " + node_info['node_cloud_name'] + "\n" +
+                    "Zone:          " + node_info['availability_zone'] + "\n" +
+                    "Fault:         " + node_info['node_fault_flag'] + "\n" +
+                    "Ready:         " + node_info['node_ready_flag'] + "\n" +
+                    "Gluster Peer:  " + node_info['node_gluster_peer'] + "\n" +
+                    "Status:        " + node_info['status']),
                     yes_label="Manage this Node",
                     no_label="Return to Nodes", width=77, height=20)
 
@@ -153,8 +153,12 @@ def nodeManage(d, node):
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
+    
+    update_dict = {'node_id': node['node_id'], 'node_mgmt_ip': fields}
+    upd = node_op.update_node(update_dict)
+    d.msgbox(upd)
 
-    return fields
+    return
 
 def projects(d, projectList):
     addChoice = ("Add", "Add a Project", 0)
