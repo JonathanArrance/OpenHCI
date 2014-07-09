@@ -22,6 +22,6 @@ print s
 print
 
 print "**Getting Number of Projects...**"
-num_proj = s.get_num_project()
+num_proj = s.get_total_cloud_memory()
 print num_proj
 print
