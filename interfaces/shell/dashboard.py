@@ -120,17 +120,17 @@ def nodeDel(d, node):
 
 def nodeInfo(d, node):
     node_info = node_op.get_node(node['node_id'])
-    return d.yesno(("Node Overview\n\n"
-                    "Name: " + node['node_name']
-                    "Type: " + node['node_type']
-                    "Data IP: " + node['node_data_ip']
-                    "Management IP: " + node['node_management_ip']
-                    "Controller: " + node['node_controller']
-                    "Cloud Name: " + node['node_cloud_name']
-                    "Zone: " + node['availability_zone']
-                    "Fault: " + node['node_fault_flag']
-                    "Ready: " + node['node_ready_flag']
-                    "Gluster Peer: " + node['node_gluster_peer']
+    return d.yesno(("Node Overview\n\n" +
+                    "Name: " + node['node_name'] + "\n" +
+                    "Type: " + node['node_type'] + "\n" +
+                    "Data IP: " + node['node_data_ip'] + "\n" +
+                    "Management IP: " + node['node_management_ip'] + "\n" +
+                    "Controller: " + node['node_controller'] + "\n" +
+                    "Cloud Name: " + node['node_cloud_name'] + "\n" +
+                    "Zone: " + node['availability_zone'] + "\n" +
+                    "Fault: " + node['node_fault_flag'] + "\n" +
+                    "Ready: " + node['node_ready_flag'] + "\n" +
+                    "Gluster Peer: " + node['node_gluster_peer'] + "\n" +
                     "Status: " + node['status']),
                     yes_label="Manage this Node",
                     no_label="Return to Nodes", width=50)
