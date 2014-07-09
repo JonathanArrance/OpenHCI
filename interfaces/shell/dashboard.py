@@ -125,7 +125,7 @@ def nodeInfo(d, node):
                     "Id: " + node['node_id'] + "\n" +
                     "Type: " + node_info['node_type'] + "\n" +
                     "Data IP: " + node_info['node_data_ip'] + "\n" +
-                    "Management IP: " + node_info['node_management_ip'] + "\n" +
+                    "Management IP: " + node_info['node_mgmt_ip'] + "\n" +
                     "Controller: " + node_info['node_controller'] + "\n" +
                     "Cloud Name: " + node_info['node_cloud_name'] + "\n" +
                     "Zone: " + node_info['availability_zone'] + "\n" +
