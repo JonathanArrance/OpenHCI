@@ -223,6 +223,10 @@ class gluster_ops:
         NOTE: Deletes a Gluster volume.
         """
         logger.sys_info('\n**Deleteing a gluster volume. Common Def: delete_gluster_volume**\n')
+        #do not remove system level gluster vols.
+        if(volume_name == 'instances' or volume_name == 'glance' or volume_name == 'cinder-volume'):
+            return 'ERROR'
+
         if(self.is_admin == 1):
             self.stop_gluster_volume('%s'%(volume_name))
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume delete %s'%(volume_name))
@@ -231,7 +235,7 @@ class gluster_ops:
             else:
                 try:
                     self.db.pg_transaction_begin()
-                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"}
+                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(volume_name)}
                     self.db.pg_delete(del_vol)
                 except:
                     logger.sys_error('Gluster volume info for %s could not be removed.'%(volume_name))
@@ -239,9 +243,18 @@ class gluster_ops:
                 else:
                     logger.sys_error('Gluster volume info for %s removed.'%(volume_name))
                     self.db.pg_transaction_commit()
-                    
+
                 #remove the entry from gluster-mounts
-                
+                #os.system("sed -i 's/sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s/ /' /transcirrus/gluster-mounts"%(volume_name,volume_name))
+                entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
+                gluster_mounts = open("/transcirrus/gluster-mounts","r")
+                lines = gluster_mounts.readlines()
+                gluster_mounts.close()
+                gluster_mounts = open("/transcirrus/gluster-mounts","w")
+                for line in lines:
+                    if line!=entry+"\n":
+                        gluster_mounts.write(line)
+                gluster_mounts.close()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
             raise Exeption('Only admins can delete Gluster volumes.')

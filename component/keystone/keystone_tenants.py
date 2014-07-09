@@ -276,6 +276,18 @@ class tenant_ops:
                         raise
                     #close all of the db connections that are open
                     self.db.pg_close_connection()
+
+                    #remove the mount entry for the object store
+                    entry = 'sudo mount.glusterfs localhost:%s /mnt/gluster-objects/%s'%(project_id,project_id)
+                    gluster_mounts = open("/transcirrus/gluster-object-mount","r")
+                    lines = gluster_mounts.readlines()
+                    gluster_mounts.close()
+                    gluster_mounts = open("/transcirrus/gluster-object-mount","w")
+                    for line in lines:
+                        if line!=entry+"\n":
+                            gluster_mounts.write(line)
+                    gluster_mounts.close()
+
                     #return OK if good to go
                     return "OK"
                 else:
