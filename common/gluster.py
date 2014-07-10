@@ -394,6 +394,11 @@ class gluster_ops:
                 logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
                 return 'ERROR'
             else:
+                #we need to commit the rmoval to make it take hold
+                out = os.system('sudo gluster volume remove-brick %s %s commit'%(input_dict['volume_name'],input_dict['brick']))
+                if(out != 0):
+                    logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
+                    print "it failed"
                 #remove the vol brick from the db
                 #this is removeing all entries from db with the vol name in them.
                 #try:
