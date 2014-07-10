@@ -398,20 +398,29 @@ class gluster_ops:
                 out = os.system('echo \''+'y'+'\n\' | sudo gluster volume remove-brick %s %s commit'%(input_dict['volume_name'],input_dict['brick']))
                 if(out != 0):
                     logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
-                    print "it failed"
+                    try:
+                        self.db.pg_transaction_begin()
+                        update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_sync_state='ERROR'",'where':"gluster_vol_name='%s'"%(volume_name),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                        self.db.pg_update(update_flag)
+                    except:
+                        logger.sys_error('Sync state for %s could not be set.'%(volume_name))
+                        self.db.pg_transaction_rollback()
+                    else:
+                        logger.sys_error('Sync state for %s set to NA.'%(volume_name))
+                        self.db.pg_transaction_commit()
+                    return 'ERROR'
                 #remove the vol brick from the db
                 #this is removeing all entries from db with the vol name in them.
-                #try:
-                #   self.db.pg_transaction_begin()
-                del_vol = {"table":'trans_gluster_vols',"where":"gluster_brick_name='%s'"%(input_dict['brick'])}
-                print del_vol
-                self.db.pg_delete(del_vol)
-                #except:
-                #    logger.sys_error('Gluster brick info for %s could not be removed.'%(input_dict['brick']))
-                #    self.db.pg_transaction_rollback()
-                #else:
-                #    logger.sys_error('Gluster brick info for %s removed.'%(input_dict['brick']))
-                #    self.db.pg_transaction_commit()
+                try:
+                    self.db.pg_transaction_begin()
+                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                    self.db.pg_delete(del_vol)
+                except:
+                    logger.sys_error('Gluster brick info for %s could not be removed.'%(input_dict['brick']))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('Gluster brick info for %s removed.'%(input_dict['brick']))
+                    self.db.pg_transaction_commit()
                 return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
