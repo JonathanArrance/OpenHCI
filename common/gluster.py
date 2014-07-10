@@ -395,7 +395,7 @@ class gluster_ops:
                 return 'ERROR'
             else:
                 #we need to commit the rmoval to make it take hold
-                out = os.system('sudo gluster volume remove-brick %s %s commit'%(input_dict['volume_name'],input_dict['brick']))
+                out = os.system('echo \''+'y'+'\n\' | sudo gluster volume remove-brick %s %s commit'%(input_dict['volume_name'],input_dict['brick']))
                 if(out != 0):
                     logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
                     print "it failed"
@@ -403,7 +403,7 @@ class gluster_ops:
                 #this is removeing all entries from db with the vol name in them.
                 #try:
                 #   self.db.pg_transaction_begin()
-                del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(input_dict['volume_name']),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                del_vol = {"table":'trans_gluster_vols',"where":"gluster_brick_name='%s'"%(input_dict['brick'])}
                 print del_vol
                 self.db.pg_delete(del_vol)
                 #except:
