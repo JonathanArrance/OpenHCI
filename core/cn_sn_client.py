@@ -1027,6 +1027,9 @@ try:
             if(node_info['Value']['node_type'] == 'sn'):
                 print "Node Gluster Brick: %s"%(node_info['Value']['node_brick'])
                 print "Node Disk Type: %s"%(node_info['Value']['disk_type'])
+            if(node_info['Value']['node_type'] == 'cn'):
+                node_info['Value']['node_brick'] = None
+                node_info['Value']['disk_type'] = None
             logger.sys_info("Sending the following node data core node, Node Name: %s, Node ID: %s, Node Mgmt IP: %s,Node DataNet IP: %s, Node Gluster Brick: %s, Node Disk Type: %s"%(node_info['Value']['node_name'],
                                                                                                                                                                                        node_info['Value']['node_id'],
                                                                                                                                                                                        node_info['Value']['node_mgmt_ip'],
