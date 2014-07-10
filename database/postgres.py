@@ -115,11 +115,11 @@ class pgsql:
     
         if 'and' in options:
             andopt = options['and']
-            SQL += 'AND %s' % andopt
+            SQL += 'AND %s' %andopt
 
         if 'or' in options:
             oropt = options['or']
-            SQL += 'OR %s' % oropt
+            SQL += 'OR %s' %oropt
 
         # execute the built up simple select statement
         logger.sql_info(SQL)
@@ -165,7 +165,7 @@ class pgsql:
 
         if 'and' in options:
             andopt = options['and']
-            SQL += 'AND %s' % andopt
+            SQL += 'AND %s' %andopt
 
         if self.cur == "" or self.conn == "":
             logger.sql_error("Cursor or Connection object not passed in")

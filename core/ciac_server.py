@@ -115,8 +115,8 @@ def check_node_update(data):
                 update = 'OK'
             elif data['Value']['node_cloud_name'] != node['node_cloud_name']:
                 update = 'OK'
-            elif data['Value']['node_nova_zone'] != node['node_nova_zone']:
-                if data['Value']['node_nova_zone'] == '':
+            elif data['Value']['avail_zone'] != node['avail_zone']:
+                if data['Value']['avail_zone'] == '':
                     update = 'NA'
                 else:
                     update = 'OK'

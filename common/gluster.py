@@ -233,6 +233,24 @@ class gluster_ops:
             if(out != 0):
                 return 'ERROR'
             else:
+                #remove the entry from gluster-mounts
+                #note this will have to change when we start mounting volumes on other storage nodes.
+                entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
+                gluster_mounts = open("/transcirrus/gluster-mounts","r")
+                lines = gluster_mounts.readlines()
+                gluster_mounts.close()
+                gluster_mounts = open("/transcirrus/gluster-mounts","w")
+                for line in lines:
+                    if line!=entry+"\n":
+                        gluster_mounts.write(line)
+                gluster_mounts.close()
+
+                #remove the physical space from /data/gluster on all bricks
+                #1. get a list of bricks from db
+                #2. delete from all bricks useing zero connect to loop through
+                #3. check to see if one brick is core if so then delete
+                #os.system('rm -rf /data/gluster/testvol')
+
                 try:
                     self.db.pg_transaction_begin()
                     del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(volume_name)}
@@ -243,22 +261,14 @@ class gluster_ops:
                 else:
                     logger.sys_error('Gluster volume info for %s removed.'%(volume_name))
                     self.db.pg_transaction_commit()
-
-                #remove the entry from gluster-mounts
-                entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
-                gluster_mounts = open("/transcirrus/gluster-mounts","r")
-                lines = gluster_mounts.readlines()
-                gluster_mounts.close()
-                gluster_mounts = open("/transcirrus/gluster-mounts","w")
-                for line in lines:
-                    if line!=entry+"\n":
-                        gluster_mounts.write(line)
-                gluster_mounts.close()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
             raise Exeption('Only admins can delete Gluster volumes.')
 
         return 'OK'
+
+    def cleanup_gluster_space(self):
+        pass
 
     def list_gluster_volumes(self):
         """
@@ -344,10 +354,22 @@ class gluster_ops:
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume stop %s'%(volume_name))
             if(out != 0):
                 return 'ERROR'
+            """
+            Not sure this actually matters since we only stop when we are going to delete.
             else:
                 #update the vol state
-                
-                return 'OK'
+                try:
+                    self.db.pg_transaction_begin()
+                    update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_state='Stop'",'where':"gluster_vol_name='%s'"%(volume_name),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                    self.db.pg_update(update_flag)
+                except:
+                    logger.sys_error('State for %s could not be set.'%(volume_name))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('State for %s set to Stop.'%(volume_name))
+                    self.db.pg_transaction_commit()
+                    return 'OK'
+            """
         else:
             logger.sys_error('Only admins can stop a Gluster volume.')
             raise Exeption('Only admins can stop a gluster volume.')
@@ -373,16 +395,18 @@ class gluster_ops:
                 return 'ERROR'
             else:
                 #remove the vol brick from the db
-                try:
-                    self.db.pg_transaction_begin()
-                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(input_dict['volume_name']),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
-                    self.db.pg_delete(del_vol)
-                except:
-                    logger.sys_error('Gluster brick info for %s could not be removed.'%(input_dict['brick']))
-                    self.db.pg_transaction_rollback()
-                else:
-                    logger.sys_error('Gluster brick info for %s removed.'%(input_dict['brick']))
-                    self.db.pg_transaction_commit()
+                #this is removeing all entries from db with the vol name in them.
+                #try:
+                #   self.db.pg_transaction_begin()
+                del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(input_dict['volume_name']),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                print del_vol
+                self.db.pg_delete(del_vol)
+                #except:
+                #    logger.sys_error('Gluster brick info for %s could not be removed.'%(input_dict['brick']))
+                #    self.db.pg_transaction_rollback()
+                #else:
+                #    logger.sys_error('Gluster brick info for %s removed.'%(input_dict['brick']))
+                #    self.db.pg_transaction_commit()
                 return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
