@@ -842,7 +842,7 @@ def detach_volume(request, project_id, volume_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        messages.warning(request, "Unable to create volume.")
+        messages.warning(request, "Unable to detach volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_volume(request, volume_id, project_id):

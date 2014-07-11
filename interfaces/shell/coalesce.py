@@ -342,8 +342,7 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    p = subprocess.Popen('cd /usr/local/lib/python2.7/transcirrus/operations; python2.7 -c from initial_setup import run_setup; run_setup(' + new_system_variables + ',' + user_dict + ')',stdout=subprocess.PIPE,shell=True,stderr=subprocess.STDOUT,close_fds=True)
-    d.programbox(fd=p.stdout.fileno(),text="Running Setup...")
+    run_setup(new_system_variables, user_dict)
     change_admin_password(user_dict, pwd)
     timeout = 20
     ran = "OK"
