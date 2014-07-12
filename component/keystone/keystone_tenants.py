@@ -204,6 +204,7 @@ class tenant_ops:
         ACCESS: Only the admin can remove the project
         OUTPUT: 'OK' if task completed successfully
         """
+        logger.sys_info('\n**Deleteing Keystone project. Keystone Def: remove_tenant**\n')
         if((not project_id) or (project_id == "")):
             logger.sys_error("No project id was specified for the new project.")
             raise EXception("No project id was specified for the new project.")
@@ -227,19 +228,18 @@ class tenant_ops:
             if(self.user_level >= 1):
                 logger.sys_error("Only admins and power users can may list endpoints.")
                 raise Exception("Only admins and power users can may list endpoints.")
-            """
-            #need to get the project ID from the Transcirrus DB
+
+            #check the project_id is valid
             try:
-                select_dict = {"select":"proj_id", "from":"projects", "where":"proj_name='%s'" %(project_name)}
+                select_dict = {"select":"proj_name", "from":"projects", "where":"proj_id='%s'" %(project_id)}
                 select = self.db.pg_select(select_dict)
-                print select
             except Exception as e:
-                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
-                raise
-            """
+                logger.sql_error("Could not fine the project in the Transcirrus DB.%s" %(e))
+                raise e
+
             try:
                 #build an api connection for the admin user.
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -287,6 +287,9 @@ class tenant_ops:
                         if line!=entry+"\n":
                             gluster_mounts.write(line)
                     gluster_mounts.close()
+
+                    #remove the gluster volume used for object storage
+                    self.gluster.delete_gluster_volume(project_id)
 
                     #return OK if good to go
                     return "OK"
@@ -372,7 +375,7 @@ class tenant_ops:
               they belong to.
         NOTE: If any of the project variables are empty a None will be returned for that variable.
         """
-        
+        logger.sys_info('\n**Get project details. Keystone Def: get_tenant**\n')
         if(not project_id):
             logger.sys_error("Did not pass a project id to the get_tenant operation.")
             raise Exception ("Did not pass a project id to the get_tenant operation.")
@@ -415,6 +418,7 @@ class tenant_ops:
                 in any project.
         NOTE:none
         """
+        logger.sys_info('\n**List the users in a project. Keystone Def: list_tenant_users**\n')
         if(project_id == ""):
             logger.sys_error("Must specify the project id.")
             raise Exception("Must specify the project id.")

@@ -1869,7 +1869,6 @@ INSERT INTO cinder_default VALUES ('default_availability_zone', 'nova', 'cinder.
 INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter', 'cinder.conf', 22);
 INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.conf', 23);
 
-
 --
 -- TOC entry 2167 (class 0 OID 16399)
 -- Dependencies: 163

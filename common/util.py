@@ -416,17 +416,37 @@ def get_cloud_controller_name():
     NOTE: The cloud controller is also the ciac node system name. These are human readable names. This
           is not the same as the node id.
     """
-    '''
+
     db = db_connect()
     try:
         get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='default_cloud_controller'"}
-        name = db.pg_select(get_name)
-        r_dict = {'cloud_controller':name[0][0]}
+        controller_name = db.pg_select(get_name)
     except:
         logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")
         raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
-    '''
-    return config.CLOUD_CONTROLLER
+
+    #return config.CLOUD_CONTROLLER
+    return conroller_name[0][0]
+
+def get_spindle_node_enabled():
+    """
+    DESC: Check to see if there is a spindle based storage node in the cloud
+    INPUT: None
+    OUTPUT: 1 = Yes
+            0 = No
+    ACCESS: Wide open
+    NOTE:
+    """
+
+    db = db_connect()
+    try:
+        get_spindle = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='spindle_node'"}
+        spindle = db.pg_select(get_spindle)
+    except:
+        logger.sql_error("Could not determin if a spindle based node is attached.")
+        raise Exception("Could not determin if a spindle based node is attached.")
+
+    return spindle[0][0]
 
 def get_default_pub_net_id():
     return config.DEFAULT_PUB_NET_ID

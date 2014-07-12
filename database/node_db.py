@@ -187,8 +187,18 @@ def insert_node(input_dict):
                 db.pg_transaction_commit()
         except:
             db.pg_transaction_rollback()
-            logger.sql_error("Could not insert node specific cinder config into Transcirrus db.")
+            logger.sql_error("Could not insert node specific cinder config into TransCirrus db.")
             return 'ERROR'
+        #set the spindle_node flag in the system config table to 1 if new disks are spindle
+        check_spindle = util.get_spindle_node_enabled()
+        if((input_dict['node_gluster_disks'] == 'spindle') and (check_spindle == '0')):
+            controller = util.get_cloud_controller_name()
+            set_spindle = {'system_name':"%s"%(controller),'param':"spindle_node",'param_value':"1"}
+            input_array = [set_spindle]
+            set_param = util.update_system_variables(input_array)
+            if(set_param == 'ERROR'):
+                logger.sql_error("Could not set add the spindle node to the TransCirrus cloud.")
+
     if((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
         try:
             insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
