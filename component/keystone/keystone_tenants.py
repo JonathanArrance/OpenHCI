@@ -290,6 +290,16 @@ class tenant_ops:
 
                     #remove the gluster volume used for object storage
                     self.gluster.delete_gluster_volume(project_id)
+                    logger.sys_info('Forking process to call gluster_swift_ring for project %s' % project_name)
+
+                    #re-build the gluster ring after the project vol deleted
+                    newpid = os.fork()
+                    if newpid == 0:
+                        # This is the child process running which calls the long running function and then exits.
+                        logger.sys_info('Forked process calling gluster_swift_ring for project %s' % project_name)
+                        self.gluster.create_gluster_swift_ring()
+                        logger.sys_info('Forked process for project %s exiting' % project_name)
+                        os._exit(0)
 
                     #return OK if good to go
                     return "OK"
