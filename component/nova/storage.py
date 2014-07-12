@@ -92,7 +92,7 @@ class server_storage_ops:
     def destructor(self):
         #close any open db connections
         self.db.pg_close_connection()
-        
+       
     def attach_vol_to_server(self,input_dict):
         #curl -i http://192.168.10.30:8774/v2/7c9b14b98b7944e7a829a2abdab12e02/servers/1d0abaa2-e981-449b-a3b2-7e52f400cb30/os-volume_attachments -X POST -H "X-Auth-Project-Id: demo"
         #-d '{"volumeAttachment": {"device": "/dev/vdc", "volumeId": "a5d6820b-140b-4a35-b5a3-57f05e3b23f6"}}'
@@ -164,6 +164,25 @@ class server_storage_ops:
     
             try:
                 #add the new user to openstack 
+
+                # First we need find the next available mountpoint for this instance.
+                # We have to get the mountpoint(s) already in use (if any) by the instance.
+                select_dev = {'select':'vol_mount_location','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(input_dict['instance_id'])}
+                dev_list = self.db.pg_select (select_dev)
+                if (len(dev_list) == 0):
+                    # We didn't get any devices so we need to make sure we have a valid instance.
+                    select_inst = {'select':'inst_id','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id'])}
+                    inst_list = self.db.pg_select (select_inst)
+                    if (len(inst_list) == 0):
+                        # We got a bad instance because it wasn't in the db.
+                        logger.sys_error("The given instance for the mountpoint does not exist.")
+                        raise Exception("The given instance for the mountpoint does not exist.")
+
+                # Go get the next available mountpoint based on what the instance already is using and update the dict for later use.
+                mountpoint = self.find_available_mountpoint(dev_list)
+                logger.sys_info("Given mountpoint: %s being changed to %s" % (input_dict['mount_point'], mountpoint))
+                input_dict['mount_point'] = mountpoint
+
                 body = '{"volumeAttachment": {"device": "%s", "volumeId": "%s"}}'%(input_dict['mount_point'],input_dict['volume_id'])
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
@@ -275,3 +294,33 @@ class server_storage_ops:
             self.db.pg_transaction_rollback()
             raise e
         return "OK"
+
+    def find_available_mountpoint(self,used_list):
+        """
+        DESC: Find the first available mount point based on the given list of used mountpoints.
+        INPUT: used_list - list of lists (or DictRows) to used mount points
+        OUTPUT: a mountpoint - success
+                None - if no available mount points were found
+        NOTE: If the list is empty it should not be an empty list of lists, just an empty list.
+              A list of lists or list of DictRows is fine.
+        """
+        complete_list = ["/dev/vdc", "/dev/vdd", "/dev/vde", "/dev/vdf", "/dev/vdg", "/dev/vdh", "/dev/vdi", "/dev/vdj",
+                         "/dev/vdk", "/dev/vdl", "/dev/vdm", "/dev/vdn", "/dev/vdo", "/dev/vdp", "/dev/vdq", "/dev/vdr",
+                         "/dev/vds", "/dev/vdt", "/dev/vdu", "/dev/vdv", "/dev/vdw", "/dev/vdx", "/dev/vdy", "/dev/vdz"]
+
+        # Since this is a list of lists, we need to check if there is anything in the list first. If there isn't
+        # anything there then just return the first device from this complete list.
+        num_items = len(used_list)
+        if (num_items < 1):
+            return (complete_list[0])
+
+        # Loop through the complete list until we don't find a match which means its available to be used.
+        found = None
+        for index in range (len(complete_list)):
+            if (any(complete_list[index] in x[0] for x in used_list)):
+                continue
+            else:
+                found = complete_list[index]
+                break
+
+        return (found)
