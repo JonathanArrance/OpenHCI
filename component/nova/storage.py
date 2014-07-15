@@ -92,7 +92,7 @@ class server_storage_ops:
     def destructor(self):
         #close any open db connections
         self.db.pg_close_connection()
-       
+
     def attach_vol_to_server(self,input_dict):
         #curl -i http://192.168.10.30:8774/v2/7c9b14b98b7944e7a829a2abdab12e02/servers/1d0abaa2-e981-449b-a3b2-7e52f400cb30/os-volume_attachments -X POST -H "X-Auth-Project-Id: demo"
         #-d '{"volumeAttachment": {"device": "/dev/vdc", "volumeId": "a5d6820b-140b-4a35-b5a3-57f05e3b23f6"}}'
@@ -161,7 +161,7 @@ class server_storage_ops:
             except:
                 logger.sys_error("Could not connect to the api caller.")
                 raise Exception("Could not connect to the api caller.")
-    
+
             try:
                 #add the new user to openstack 
 
