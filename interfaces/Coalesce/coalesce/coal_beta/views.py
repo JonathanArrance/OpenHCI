@@ -789,7 +789,7 @@ def attach_volume(request, project_id, instance_id, volume_id):
         auth = request.session['auth']
         vo = volume_ops(auth)
         sso = server_storage_ops(auth)
-        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id 'mount_point': ""}
+        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': ""}
         att = sso.attach_vol_to_server(attach_vol)
         get_vol = {'project_id': project_id, 'volume_id': volume_id}
         out = vo.get_volume_info(get_vol)
