@@ -37,10 +37,9 @@ $(function() {
 		
 		var 	instance = $( "#att_instance" ),
                         volume = $( "#att_volume" ),
-                        mount_point = $("#att_mount_point"),
                         
 
-			allFields = $( [] ).add( instance ).add( volume ).add( mount_point ),
+			allFields = $( [] ).add( instance ).add( volume ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -74,11 +73,9 @@ $(function() {
 				"Attach volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
-                                        var mount = "";
-                                        mount = mount_point.val();
-                                        mount = mount.replace(/\//g, '&47');
+
 					if ( bValid ) {
-                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/' + mount + '/',
+                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/',
                                                                 function(){
                                                                                 location.reload();
                                                                 });
