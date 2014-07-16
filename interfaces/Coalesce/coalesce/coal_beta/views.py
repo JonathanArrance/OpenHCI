@@ -793,6 +793,8 @@ def attach_volume(request, project_id, instance_id, volume_id):
         att = sso.attach_vol_to_server(attach_vol)
         get_vol = {'project_id': project_id, 'volume_id': volume_id}
         out = vo.get_volume_info(get_vol)
+        print "   ---   attach_volume   ---"
+        print out
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
