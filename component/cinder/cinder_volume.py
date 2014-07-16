@@ -160,7 +160,6 @@ class volume_ops:
             logger.sql_error("Could not get the volume name from Transcirrus DB.")
             raise Exception("Could not get the volume name from Transcirrus DB.")
 
-        print volume
         if(len(volume) >= 1):
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
             raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))

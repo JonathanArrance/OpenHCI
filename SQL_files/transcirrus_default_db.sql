@@ -1356,8 +1356,7 @@ CREATE TABLE trans_system_vols (
     vol_attached_to_inst character varying,
     vol_mount_location character varying,
     vol_type character varying(15),
-    vol_zone character varying,
-    vol_gluster_sync character varying
+    vol_zone character varying
 );
 
 
@@ -2838,6 +2837,81 @@ CREATE INDEX trans_subnets_subnet_id_idx ON trans_subnets USING btree (subnet_id
 --
 
 CREATE INDEX trans_user_info_user_name_idx ON trans_user_info USING btree (user_name);
+
+
+-- add the gluster table 07092014
+--
+-- TOC entry 205 (class 1259 OID 27591)
+-- Name: trans_gluster_vols; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE trans_gluster_vols (
+    gluster_vol_id integer NOT NULL,
+    gluster_vol_name character varying,
+    gluster_brick_name character varying,
+    gluster_vol_sync_state character varying,
+    gluster_vol_state character varying
+);
+
+
+ALTER TABLE public.trans_gluster_vols OWNER TO transuser;
+
+--
+-- TOC entry 204 (class 1259 OID 27589)
+-- Name: trans_gluster_vols_gluster_vol_id_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_gluster_vols_gluster_vol_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_gluster_vols_gluster_vol_id_seq OWNER TO transuser;
+
+--
+-- TOC entry 1975 (class 0 OID 0)
+-- Dependencies: 204
+-- Name: trans_gluster_vols_gluster_vol_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_gluster_vols_gluster_vol_id_seq OWNED BY trans_gluster_vols.gluster_vol_id;
+
+
+--
+-- TOC entry 1976 (class 0 OID 0)
+-- Dependencies: 204
+-- Name: trans_gluster_vols_gluster_vol_id_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_gluster_vols_gluster_vol_id_seq', 1, false);
+
+
+--
+-- TOC entry 1967 (class 2604 OID 27594)
+-- Name: gluster_vol_id; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_gluster_vols ALTER COLUMN gluster_vol_id SET DEFAULT nextval('trans_gluster_vols_gluster_vol_id_seq'::regclass);
+
+
+--
+-- TOC entry 1970 (class 0 OID 27591)
+-- Dependencies: 205
+-- Data for Name: trans_gluster_vols; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+
+
+--
+-- TOC entry 1969 (class 2606 OID 27599)
+-- Name: trans_gluster_vols_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_gluster_vols
+    ADD CONSTRAINT trans_gluster_vols_pkey PRIMARY KEY (gluster_vol_id);
 
 
 --

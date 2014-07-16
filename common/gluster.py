@@ -67,6 +67,7 @@ class gluster_ops:
                 raise Exception("Invalid status level passed for user: %s" %(self.username))
 
         self.db = util.db_connect()
+        self.data_ip = util.get_node_data_ip()
 
     def get_gluster_brick(self, node_type = None):
         """
@@ -114,10 +115,14 @@ class gluster_ops:
             #call the gluster-swift create ring
             #projects is an array of arrays
             string = ''
+            os.system('mv /transcirrus/gluster-object-mount /transcirrus/gluster-object-mount.bak')
+            os.system('touch /transcirrus/gluster-object-mount; chmod 777 /transcirrus/gluster-object-mount')
             for project_id in projects:
-                #input_dict = {'volume_name':project_id[0],'gluster_dir_name':project_id[0]}
-                #create_vol = self.create_gluster_volume(input_dict)
                 string = string + project_id[0] + ' '
+                #add the new drive to a mount file so it can be remouted if the system is rebooted.
+                out = os.system('echo sudo mount.glusterfs localhost:%s /mnt/gluster-object/%s >> /transcirrus/gluster-object-mount'%(project_id[0],project_id[0]))
+                if(out != 0):
+                    logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
 
             ring = subprocess.Popen('sudo gluster-swift-gen-builders %s'%(string), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             create_ring = ring.stdout.readlines()
@@ -142,45 +147,69 @@ class gluster_ops:
         NOTE: This is not the same as useing the Cinder volume create, this def
               creates volumes using the gluster commands,
               bricks[172.38.24.11:/data/gluster/'volume_name']
+              This may need to be expaned on as we add in a spindle based node.
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
+        self.state = 'OK'
         if(self.is_admin == 1):
             command = None
             if('bricks' in input_dict and len(input_dict['bricks']) >= 1):
                 brick = ' '.join(input_dict['bricks'])
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
             else:
+                input_dict['bricks'] = ["172.38.24.10:/data/gluster/%s"%(input_dict['volume_name'])]
                 command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             vol = out.stdout.readlines()
             if(len(vol) == 0):
                 logger.sys_error('Could not create a new Gluster volume.')
-                return 'ERROR'
+                self.state = 'ERROR'
 
             out3 = subprocess.Popen('sudo gluster volume start %s'%(input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             start = out3.stdout.readlines()
-            print start
             if(len(start) == 0):
                 logger.sys_error('Could not start the new Gluster volume.')
-                return 'ERROR'
+                self.state = 'ERROR'
+                self.vol_state = "Stop"
+            else:
+                self.vol_state = "Start"
 
             #mount the new gluster volume
             make = os.system('sudo mkdir -p /mnt/gluster-vols/%s' %(input_dict['volume_name']))
             if(make != 0):
                 logger.sys_error('Could not create the GlusterFS mount point.')
-                return 'ERROR'
+                self.state = 'ERROR'
             out4 = subprocess.Popen('sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             mount = out4.stdout.readlines()
             #print mount
             if(len(mount) != 0):
                 logger.sys_error('Could not mount the Gluster volume.')
-                return 'ERROR'
+                self.state = 'ERROR'
+
+            #add the new drive to a mount file so it can be remouted if the system is rebooted.
+            out = os.system('echo sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s >> /transcirrus/gluster-mounts'%(input_dict['volume_name'],input_dict['volume_name']))
+            if(out != 0):
+                logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
+
         else:
             logger.sys_error('Only admins can create gluster volumes.')
             raise Exeption('Only admins can create gluster volumes.')
 
-        return 'OK'
+        #add everything to the 
+        for brick in input_dict['bricks']:
+            try:
+                self.db.pg_transaction_begin()
+                insert_vol = {"gluster_vol_name":"%s"%(input_dict['volume_name']),"gluster_brick_name":"%s"%(brick),"gluster_vol_sync_state":"OK","gluster_vol_state":"%s"%(self.vol_state)}
+                self.db.pg_insert("trans_gluster_vols",insert_vol)
+            except:
+                logger.sys_error('Gluster volume info for %s could not be set.'%(input_dict['volume_name']))
+                self.db.pg_transaction_rollback()
+            else:
+                logger.sys_error('Gluster volume info for %s set.'%(input_dict['volume_name']))
+                self.db.pg_transaction_commit()
+
+        return self.state
     
     def delete_gluster_volume(self,volume_name):
         """
@@ -194,16 +223,52 @@ class gluster_ops:
         NOTE: Deletes a Gluster volume.
         """
         logger.sys_info('\n**Deleteing a gluster volume. Common Def: delete_gluster_volume**\n')
+        #do not remove system level gluster vols.
+        if(volume_name == 'instances' or volume_name == 'glance' or volume_name == 'cinder-volume'):
+            return 'ERROR'
+
         if(self.is_admin == 1):
             self.stop_gluster_volume('%s'%(volume_name))
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume delete %s'%(volume_name))
             if(out != 0):
                 return 'ERROR'
+            else:
+                #remove the entry from gluster-mounts
+                #note this will have to change when we start mounting volumes on other storage nodes.
+                entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
+                gluster_mounts = open("/transcirrus/gluster-mounts","r")
+                lines = gluster_mounts.readlines()
+                gluster_mounts.close()
+                gluster_mounts = open("/transcirrus/gluster-mounts","w")
+                for line in lines:
+                    if line!=entry+"\n":
+                        gluster_mounts.write(line)
+                gluster_mounts.close()
+
+                #remove the physical space from /data/gluster on all bricks
+                #1. get a list of bricks from db
+                #2. delete from all bricks useing zero connect to loop through
+                #3. check to see if one brick is core if so then delete
+                #os.system('rm -rf /data/gluster/testvol')
+
+                try:
+                    self.db.pg_transaction_begin()
+                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_vol_name='%s'"%(volume_name)}
+                    self.db.pg_delete(del_vol)
+                except:
+                    logger.sys_error('Gluster volume info for %s could not be removed.'%(volume_name))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('Gluster volume info for %s removed.'%(volume_name))
+                    self.db.pg_transaction_commit()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
             raise Exeption('Only admins can delete Gluster volumes.')
 
         return 'OK'
+
+    def cleanup_gluster_space(self):
+        pass
 
     def list_gluster_volumes(self):
         """
@@ -254,6 +319,17 @@ class gluster_ops:
             if(out != 0):
                 return 'ERROR'
             else:
+                #add the new vol brick to the DB
+                try:
+                    self.db.pg_transaction_begin()
+                    insert_brick = {"gluster_vol_name":"%s"%(input_dict['volume_name']),"gluster_brick_name":"%s"%(input_dict['brick']),"gluster_vol_sync_state":"NA","gluster_vol_state":"Start"}
+                    self.db.pg_insert("trans_gluster_vols",insert_brick)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sys_warn("Could not add the brick info into the database for %s"%(input_dict['volume_name']))
+                else:
+                    self.db.pg_transaction_commit()
+                    logger.sys_info("Added the brick info into the database for %s"%(input_dict['volume_name']))
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
             logger.sys_error('Only admins can add a gluster brick.')
@@ -278,8 +354,22 @@ class gluster_ops:
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume stop %s'%(volume_name))
             if(out != 0):
                 return 'ERROR'
+            """
+            Not sure this actually matters since we only stop when we are going to delete.
             else:
-                return 'OK'
+                #update the vol state
+                try:
+                    self.db.pg_transaction_begin()
+                    update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_state='Stop'",'where':"gluster_vol_name='%s'"%(volume_name),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                    self.db.pg_update(update_flag)
+                except:
+                    logger.sys_error('State for %s could not be set.'%(volume_name))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('State for %s set to Stop.'%(volume_name))
+                    self.db.pg_transaction_commit()
+                    return 'OK'
+            """
         else:
             logger.sys_error('Only admins can stop a Gluster volume.')
             raise Exeption('Only admins can stop a gluster volume.')
@@ -304,6 +394,33 @@ class gluster_ops:
                 logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
                 return 'ERROR'
             else:
+                #we need to commit the rmoval to make it take hold
+                out = os.system('echo \''+'y'+'\n\' | sudo gluster volume remove-brick %s %s commit'%(input_dict['volume_name'],input_dict['brick']))
+                if(out != 0):
+                    logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
+                    try:
+                        self.db.pg_transaction_begin()
+                        update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_sync_state='ERROR'",'where':"gluster_vol_name='%s'"%(volume_name),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                        self.db.pg_update(update_flag)
+                    except:
+                        logger.sys_error('Sync state for %s could not be set.'%(volume_name))
+                        self.db.pg_transaction_rollback()
+                    else:
+                        logger.sys_error('Sync state for %s set to NA.'%(volume_name))
+                        self.db.pg_transaction_commit()
+                    return 'ERROR'
+                #remove the vol brick from the db
+                #this is removeing all entries from db with the vol name in them.
+                try:
+                    self.db.pg_transaction_begin()
+                    del_vol = {"table":'trans_gluster_vols',"where":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                    self.db.pg_delete(del_vol)
+                except:
+                    logger.sys_error('Gluster brick info for %s could not be removed.'%(input_dict['brick']))
+                    self.db.pg_transaction_rollback()
+                else:
+                    logger.sys_error('Gluster brick info for %s removed.'%(input_dict['brick']))
+                    self.db.pg_transaction_commit()
                 return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
@@ -324,20 +441,31 @@ class gluster_ops:
         logger.sys_info('\n**Rebalanceing Gluster volumes. Common Def: rebalance_gluster_volume**\n')
         out = subprocess.Popen('sudo gluster volume rebalance %s start'%(volume_name), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         start = out.stdout.readlines()
-        #print start
         #get the vol ID based on name and project_id
-        
+        self.sync_state = None
         if(len(start) == 0):
-            # set rebalance flag to NA
-            update_falg = {'table':"trans_system_vols",'set':"vol_gluster_sync='NA'",'where':"vol_id=''"}
             logger.sys_error('Unknown output while rebalancing Gluster volume.')
-            return 'NA'
+            self.sync_state = 'NA'
         if(os.system("echo '%s' | grep 'success'"%(start[0])) == 0):
             logger.sys_info("Starting rebalance of gluster volume %s" %(volume_name))
-            return 'OK'
+            self.sync_state = 'OK'
         else:
             logger.sys_error('Could not rebalance the volume %s'%(volume_name))
-            return 'ERROR'
+            self.sync_state = 'ERROR'
+
+        if(self.sync_state == 'OK'):
+            try:
+                self.db.pg_transaction_begin()
+                update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_sync_state='%s'"%(self.sync_state),'where':"gluster_vol_name='%s'"%(volume_name)}
+                self.db.pg_update(update_flag)
+            except:
+                logger.sys_error('Sync state for %s could not be set.'%(volume_name))
+                self.db.pg_transaction_rollback()
+            else:
+                logger.sys_error('Sync state for %s set to NA.'%(volume_name))
+                self.db.pg_transaction_commit()
+
+        return self.sync_state
 
     def replace_gluster_brick(self,input_dict):
         """

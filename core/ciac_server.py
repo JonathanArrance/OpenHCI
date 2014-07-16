@@ -115,8 +115,8 @@ def check_node_update(data):
                 update = 'OK'
             elif data['Value']['node_cloud_name'] != node['node_cloud_name']:
                 update = 'OK'
-            elif data['Value']['node_nova_zone'] != node['node_nova_zone']:
-                if data['Value']['node_nova_zone'] == '':
+            elif data['Value']['avail_zone'] != node['avail_zone']:
+                if data['Value']['avail_zone'] == '':
                     update = 'NA'
                 else:
                     update = 'OK'
@@ -348,13 +348,14 @@ def SNglusterOperations(node_id,data_ip,sn_name):
                 logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
  
             #rebalance the volume over the new brick
-            rebalance = gluster.rebalance_gluster_volume(vol)
-            if rebalance == 'OK':
-                logger.sys_info("Success: volume %s rebalanced."%(vol))
-            elif rebalance == 'ERROR':
-                logger.sys_info("Error: volumes %s not rebalanced"%(vol))
+            #rebalance = gluster.rebalance_gluster_volume(vol)
+            #if rebalance == 'OK':
+            #    logger.sys_info("Success: volume %s rebalanced."%(vol))
+            #elif rebalance == 'ERROR':
+            #    logger.sys_info("Error: volumes %s not rebalanced"%(vol))
  
             # Insert code here to add completion status to DB.
+            
  
             # Child process has to exit now.
             os._exit(0)
