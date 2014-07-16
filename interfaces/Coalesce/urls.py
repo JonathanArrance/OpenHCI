@@ -161,12 +161,12 @@ urlpatterns = patterns('',
         url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.volume_view',
             name='volume_view'),
-        
+
         url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<volume_type>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
-        url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<mount>[^/]+)/$',
+        url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
         'coalesce.coal_beta.views.attach_volume',
             name='attach_volume'),
 

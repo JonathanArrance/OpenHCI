@@ -76,7 +76,7 @@ def handle_exit_code(d, code):
 def controls(d):
     """Defines the UI controls for the user"""
     d.msgbox("Use SPACE to select items (ie in a radio list) "
-             "Use ARROW KEYS to move the cursor \n"
+             "Use ARROW KEYS / TAB to move the cursor \n"
              "Use ENTER to submit and advance (OK or Cancel)", width=50)
 
 

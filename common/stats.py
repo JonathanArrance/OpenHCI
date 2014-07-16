@@ -8,9 +8,8 @@ import transcirrus.common.logger as logger
 import transcirrus.common.util as util
 import transcirrus.common.node_util as node_util
 import transcirrus.common.config as config
-import transcirrus.database.postgres as postgres
 
-class stat_ops():
+class stat_ops:
 
     def __init__(self,user_dict):
         if(not user_dict):
@@ -66,14 +65,7 @@ class stat_ops():
         if(self.is_admin == 0):
             logger.sys_error("Stats are admin-only.")
             raise Exception("Stats are admin-only.")
-        else:
-            try:
-                #connect to the transcirrus db
-                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-            except Exception as e:
-                logger.sql_error("Could not connect to the Transcirrus DB ")
-                raise e
-            
+        else:            
             proj_dict = {'table':'trans_user_projects'}
             num_proj = self.db.count_elements(proj_dict)
             return num_proj
