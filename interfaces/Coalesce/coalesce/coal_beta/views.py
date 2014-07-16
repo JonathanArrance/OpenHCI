@@ -790,14 +790,9 @@ def attach_volume(request, project_id, instance_id, volume_id):
         vo = volume_ops(auth)
         sso = server_storage_ops(auth)
         attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc"}
-        try:
-            att = sso.attach_vol_to_server(attach_vol)
-            get_vol = {'project_id': project_id, 'volume_id': volume_id}
-            out = vo.get_volume_info(get_vol)
-            print "   ---   attach_volume   ---"
-            print att
-        except Exception as e:
-            print e
+        att = sso.attach_vol_to_server(attach_vol)
+        get_vol = {'project_id': project_id, 'volume_id': volume_id}
+        out = vo.get_volume_info(get_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
