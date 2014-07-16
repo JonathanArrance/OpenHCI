@@ -32,12 +32,9 @@ $(function() {
 				}
 			}
 		});
-		
-		
-		
-		var 	instance = $( "#att_instance" ),
+
+		var     instance = $( "#att_instance" ),
                         volume = $( "#att_volume" ),
-                        
 
 			allFields = $( [] ).add( instance ).add( volume ),
 			tips = $( ".validateTips" );
@@ -61,8 +58,6 @@ $(function() {
 				return true;
 			}
 		}
-
-	
 
 		$( "#volume-attach-dialog-form" ).dialog({
 			autoOpen: false,
@@ -100,7 +95,5 @@ $(function() {
 			.click(function() {
 				$( "#volume-attach-dialog-form" ).dialog( "open" );
 			});
-			
-			
 	});
 	});
