@@ -277,17 +277,6 @@ class tenant_ops:
                     #close all of the db connections that are open
                     self.db.pg_close_connection()
 
-                    #remove the mount entry for the object store
-                    entry = 'sudo mount.glusterfs localhost:%s /mnt/gluster-objects/%s'%(project_id,project_id)
-                    gluster_mounts = open("/transcirrus/gluster-object-mount","r")
-                    lines = gluster_mounts.readlines()
-                    gluster_mounts.close()
-                    gluster_mounts = open("/transcirrus/gluster-object-mount","w")
-                    for line in lines:
-                        if line!=entry+"\n":
-                            gluster_mounts.write(line)
-                    gluster_mounts.close()
-
                     #remove the gluster volume used for object storage
                     self.gluster.delete_gluster_volume(project_id)
                     logger.sys_info('Forking process to call gluster_swift_ring for project %s' % project_name)
