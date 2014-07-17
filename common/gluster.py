@@ -235,15 +235,26 @@ class gluster_ops:
             else:
                 #remove the entry from gluster-mounts
                 #note this will have to change when we start mounting volumes on other storage nodes.
-                entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
+                vol_entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
                 gluster_mounts = open("/transcirrus/gluster-mounts","r")
-                lines = gluster_mounts.readlines()
+                vol_lines = gluster_mounts.readlines()
                 gluster_mounts.close()
                 gluster_mounts = open("/transcirrus/gluster-mounts","w")
-                for line in lines:
-                    if line!=entry+"\n":
+                for line in vol_lines:
+                    if line!=vol_entry+"\n":
                         gluster_mounts.write(line)
                 gluster_mounts.close()
+
+                #remove the entry from gluster-object-mount
+                obj_entry = 'sudo mount.glusterfs localhost:%s /mnt/gluster-object/%s'%(volume_name,volume_name)
+                gluster_obj_mounts = open("/transcirrus/gluster-object-mount","r")
+                obj_lines = gluster_obj_mounts.readlines()
+                gluster_obj_mounts.close()
+                gluster_obj_mounts = open("/transcirrus/gluster-object-mount","w")
+                for line in obj_lines:
+                    if line!=obj_entry+"\n":
+                        gluster_obj_mounts.write(line)
+                gluster_obj_mounts.close()
 
                 #remove the physical space from /data/gluster on all bricks
                 #1. get a list of bricks from db
