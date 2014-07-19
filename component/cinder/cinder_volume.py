@@ -523,6 +523,70 @@ class volume_ops:
             logger.sys_error("Could not create a new volume type, not an admin.")
             raise Exception("Could not create a new volume type, not an admin.")
 
+    def list_volume_types(self):
+        """
+        DESC: List the available volume types.
+        INPUT: none
+        OUTPUT: array of r_dict - name
+                                - id
+                                - extra_specs - backends, etc...
+        ACCESS: Admin - can assign volume types to backends
+                PU - none
+                user - none
+        NOTE:
+        """
+        #sanity check
+        if(self.status_level < 2):
+            logger.sys_error("Status level not sufficient to create volume types.")
+            raise Exception("Status level not sufficient to create volume types.")
+
+        #Talk to the cinder API
+        if(self.is_admin == 1):
+            try:
+                #build an api connection
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+
+            try:
+                #add the new user to openstack 
+                body = ''
+                token = self.token
+                header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+                function = 'GET'
+                api_path = '/v1/%s/types' %(self.project_id)
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error("Could not get volume type list, %s" %(e))
+                #back the user out of the transcirrus DB if the db works and the REST API fails
+                raise ("Could not get volume type list, %s" %(e))
+
+            if(rest['response'] == 200):
+                print rest['volume_types']
+            else:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
+        else:
+            logger.sys_error("Could not get volume type list.")
+            raise ("Could not get volume type list.")
+
+    def list_volume_backends(self):
+        """
+        DESC: List the available volume backend names.
+        INPUT: none
+        OUTPUT: r_array - backend names
+        ACCESS: Admin - can assign volume types to backends
+                PU - none
+                user - none
+        NOTE: as of now only spindle and ssd will be displayed
+        """
+        if(self.is_admin == 1):
+            r_array = ['ssd','spindle']
+            return r_array
+
     def assign_volume_type_to_backend(self,input_dict):
         """
         DESC: Assign a volume type to a volume backend
