@@ -566,7 +566,7 @@ class volume_ops:
                 raise ("Could not get volume type list, %s" %(e))
 
             if(rest['response'] == 200):
-                return rest['data']['volume_types']
+                return rest['data']
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
