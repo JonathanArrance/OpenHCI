@@ -808,6 +808,9 @@ def processStorageConfig(sock, node_id):
     # check for post install tests
     post_install_status = True
 
+    #if the node is spindle based we need to set up the cinder volume?
+    
+
     # restart services
     sn_services = service_controller.cinder_sn("restart")
     if sn_services == "NA" or sn_services == "ERROR":

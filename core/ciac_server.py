@@ -270,7 +270,7 @@ def sendComputeConfig(conn, node_id):
     if __debug__ :
         print "node_id:%s ciac server send config completed" % (node_id)
     
-def SNglusterOperations(node_id,data_ip,sn_name):
+def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
     '''
     data_ip - the datanet ip of the storage node
     sn_name - name of the storage node
@@ -318,47 +318,46 @@ def SNglusterOperations(node_id,data_ip,sn_name):
     """
     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
     gluster = gluster_ops(input_dict)
- 
-    new = gluster.attach_gluster_peer(data_ip)
-    glust_vols = []
-    if new == "OK":
-        update_dict = {'node_id':node_id,'node_gluster_peer':'1'}
-        update_node = node_db.update_node(update_dict)
-        #get the gluster volumes on the core node
-        glust_vols = gluster.list_gluster_volumes()
-    else:
-        SNglusterOperations(data_ip)
- 
     #adding brick to all the listed volumes
-    for vol in glust_vols:
-        logger.sys_info('Adding storage to gluster volume %s'%(vol))
-        brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
-        expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
- 
-        childpid = os.fork()
-        if childpid == 0:
-            # This is the child process running which will call the function that will take some time to run
-            # and then we exit.
-            add_storage = gluster.add_gluster_brick(expand)
-            if add_storage == "OK":
-                print "Success: Brick %s added to volume %s"%(brick,vol)
-                logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
-            else:
-                print "Error: Brick %s not added to volumes %s"%(brick,vol)
-                logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
- 
-            #rebalance the volume over the new brick
-            #rebalance = gluster.rebalance_gluster_volume(vol)
-            #if rebalance == 'OK':
-            #    logger.sys_info("Success: volume %s rebalanced."%(vol))
-            #elif rebalance == 'ERROR':
-            #    logger.sys_info("Error: volumes %s not rebalanced"%(vol))
- 
-            # Insert code here to add completion status to DB.
-            
- 
-            # Child process has to exit now.
-            os._exit(0)
+    if(disk_type == 'ssd'):
+        #attach ssd sn to ssd core node
+        new = gluster.attach_gluster_peer(data_ip)
+        glust_vols = []
+        if new == "OK":
+            update_dict = {'node_id':node_id,'node_gluster_peer':'1'}
+            update_node = node_db.update_node(update_dict)
+            #get the gluster volumes on the core node
+            glust_vols = gluster.list_gluster_volumes()
+        else:
+            SNglusterOperations(data_ip)
+
+        for vol in glust_vols:
+            logger.sys_info('Adding storage to gluster volume %s'%(vol))
+            brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
+            expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
+            childpid = os.fork()
+            if childpid == 0:
+                # This is the child process running which will call the function that will take some time to run
+                # and then we exit.
+                add_storage = gluster.add_gluster_brick(expand)
+                if add_storage == "OK":
+                    print "Success: Brick %s added to volume %s"%(brick,vol)
+                    logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
+                else:
+                    print "Error: Brick %s not added to volumes %s"%(brick,vol)
+                    logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
+                # Child process has to exit now.
+                os._exit(0)
+    elif(disk_type == 'spindle'):
+        #check the spindle storage node bit
+        enable = util.get_spindle_node_enabled()
+        if(enable == '1'):
+            #add the spindle node to the Shares file
+            os.system('sudo echo %s:cinder-volume-spindle >> /etc/cinder/shares.conf'%(data_ip))
+
+            #Future
+            #check to see if there are any other spindle based nodes
+                #if so expand the spindle nodes vols to the existing spindle nodes
 
 def handle():
 
@@ -550,7 +549,7 @@ def client_thread(conn, client_addr):
                                 # check node typestart
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
+                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'],node_info('disk_type'))
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)

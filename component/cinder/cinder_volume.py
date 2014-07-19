@@ -71,6 +71,9 @@ class volume_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
+        #get the db object
+        self.db = util.db_connect()
+
     def create_volume(self,create_vol):
         """
         DESC: Create a new volume in a project
@@ -107,12 +110,12 @@ class volume_ops:
             raise Exception("Status level not sufficient to create volumes.")
 
         #connect to the transcirrus DB
-        try:
-            #connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sql_error("Could not connect to the Transcirrus DB ")
-            raise e
+        #try:
+        #    #connect to the transcirrus db
+        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        #except Exception as e:
+        #    logger.sql_error("Could not connect to the Transcirrus DB ")
+        #    raise e
 
         create_flag = 0
         if(self.is_admin == 0):
@@ -226,8 +229,8 @@ class volume_ops:
     def delete_volume(self,delete_vol):
         """
         DESC: Delete a volume from the environmnet.
-        INPUT delete_vol - volume_id
-                         - project_id
+        INPUT delete_vol - volume_id - req
+                         - project_id - req
         OUTPUT 'OK' - success
         ACCESS: Users and power users can only delete the volumes they created in a project
                 admins can delete any vol or a fault if there is an error
@@ -250,12 +253,12 @@ class volume_ops:
             raise Exception("Status level not sufficient to delete volumes.")
 
         #connect to the transcirrus DB
-        try:
-            #connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sql_error("Could not connect to the Transcirrus DB ")
-            raise e
+        #try:
+        #    #connect to the transcirrus db
+        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        #except Exception as e:
+        #    logger.sql_error("Could not connect to the Transcirrus DB ")
+        #    raise e
 
         #get the name of the project based on the id
         try:
@@ -357,12 +360,12 @@ class volume_ops:
             raise Exception("Status level not sufficient to list volumes.")
 
         #connect to the transcirrus DB
-        try:
-            #connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sql_error("Could not connect to the Transcirrus DB ")
-            raise e
+        #try:
+        #    #connect to the transcirrus db
+        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        #except Exception as e:
+        #    logger.sql_error("Could not connect to the Transcirrus DB ")
+        #    raise e
 
         #build the select statement
         select_vol = ""
@@ -392,7 +395,7 @@ class volume_ops:
         """
         DESC: Get all of the information for a specific volume. Admins and power users can get info on
               any volume in their project. Users can only list their own volumes
-        INPUT:  vol_dict - volume_id
+        INPUT:  vol_dict - volume_id - req
                          - project_id - op -def user project id
         OUTPUT: r_dict - volume_name
                        - volume_type
@@ -405,17 +408,21 @@ class volume_ops:
         """
         logger.sys_info('\n**Get specific info on a volume. Component: Cinder Def: get_volume_info**\n')
         #sanity check
+        if(('volume_id' not in vol_dict) or vol_dict['volume_id'] == ''):
+            logger.sys_error("Did not pass required params to get volume info.")
+            raise Exception("Did not pass required params to get volume info.")
+        
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list volumes.")
             raise Exception("Status level not sufficient to list volumes.")
 
          #connect to the transcirrus DB
-        try:
-            #connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sql_error("Could not connect to the Transcirrus DB ")
-            raise e
+        #try:
+        #    #connect to the transcirrus db
+        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        #except Exception as e:
+        #    logger.sql_error("Could not connect to the Transcirrus DB ")
+        #    raise e
 
         #make sure the project exists
         proj_id = None
@@ -461,7 +468,7 @@ class volume_ops:
         """
         DESC: Create a volume type and add the volume key(target vlume) to it. Used to add new
               types or to customize storage layout.
-        INPUT:  volume_type_name
+        INPUT:  volume_type_name - req
         OUTPUT: r_dict - volume_type_name
                        - volume_type_id
         ACCESS: Admins can create volume types.
@@ -516,23 +523,24 @@ class volume_ops:
             logger.sys_error("Could not create a new volume type, not an admin.")
             raise Exception("Could not create a new volume type, not an admin.")
 
-    def assign_volume_type(self,input_dict):
-        pass
+    def assign_volume_type_to_backend(self,input_dict):
         """
-        DESC: Assign a volume type to an existing volume.
-        INPUT:  input_dict - volume_type_id
-                           - volume_name
-        OUTPUT: r_dict - volume_name
-                       - volume_id
-                       - volume_size
-                       - volume_attached
-                       - volume_instance
-        ACCESS: Admins can list all volumes, users can only list the volumes in their project
-        
+        DESC: Assign a volume type to a volume backend
+        INPUT:  input_dict - volume_type_id - req
+                           - volume_backend_name - req
+        OUTPUT: OK - success
+                ERROR - fail
+        ACCESS: Admin - can assign volume types to backends
+                PU - none
+                user - none
+        """
         logger.sys_info('\n**Get specific info on a volume. Component: Cinder Def: get_volume_info**\n')
-        if(not 'volume_type_name'):
-            logger.sys_error("Requiered parameter volume_id not given for create volume type operation.")
-            raise Exception("Requiered parameter volume_id not given for create volume type operation.")
+        if(('volume_type_id' not in input_dict) or input_dict['volume_type_id'] == ''):
+            logger.sys_error("Did not pass required params to assign volume type to volume backend.")
+            raise Exception("Did not pass required params to assign volume type to volume backend.")
+        if(('volume_backend_name' not in input_dict) or input_dict['volume_backend_name'] == ''):
+            logger.sys_error("Did not pass required params to assign volume type to volume backend.")
+            raise Exception("Did not pass required params to assign volume type to volume backend.")
 
         #sanity check
         if(self.status_level < 2):
@@ -551,30 +559,23 @@ class volume_ops:
     
             try:
                 #add the new user to openstack 
-                body = '{"volume_type": {"name": "%s"}}'%(volume_type)
+                body = '{"extra_specs": {"volume_backend_name": "%s"}'%(input_dict['volume_backend_name'])
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
                 function = 'POST'
-                api_path = '/v1/%s/types' %(self.project_id)
+                api_path = '/v1/%s/types/%s/extra_specs' %(self.project_id,input_dict['volume_type_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error("Could not add the volume type %s" %(e))
+                logger.sys_error("Could not add the volume type backend, %s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise
+                return 'ERROR'
 
             if(rest['response'] == 200):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
-                load = json.loads(rest['data'])
-                vol_type_name = str(load['volume_type']['display_name'])
-                vol_type_id = str(load['volume_type']['id'])
-                r_dict = {"vol_type_name": vol_type_name, "vol_type_id": vol_type_id}
-                return r_dict
+                return 'OK'
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
-            logger.sys_error("Could not create a new volume type, not an admin.")
-            raise Exception("Could not create a new volume type, not an admin.")
-        """
+            logger.sys_error("Could not add volume type backing.")
+            return 'ERROR'
