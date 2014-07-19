@@ -527,13 +527,20 @@ class volume_ops:
         """
         DESC: List the available volume types.
         INPUT: none
-        OUTPUT: array of r_dict - name
+        OUTPUT: r_dict of array - name
                                 - id
                                 - extra_specs - backends, etc...
         ACCESS: Admin - can assign volume types to backends
                 PU - none
                 user - none
         NOTE:
+        The output is like this
+        {"volume_types": [
+        {"extra_specs": {"volume_backend_name": "RHS"}, "name": "test", "id": "3e1c9036-4ccd-40e1-9b44-6fd2cc3dff4b"},
+        {"extra_specs": {"volume_backend_name": "ssd"}, "name": "ssd", "id": "97109e9a-198f-4509-9ecc-d9859e919446"},
+        {"extra_specs": {"volume_backend_name": "spindle"}, "name": "spindle", "id": "411e8c4a-7f74-4ac9-8d1a-56fdc838b973"},
+        {"extra_specs": {}, "name": "jon", "id": "d1c4878f-aa43-4483-8cfe-e0a7a4262b8f"}
+        ]}
         """
         #sanity check
         if(self.status_level < 2):
