@@ -441,8 +441,21 @@ def run_setup(new_system_variables,auth_dict):
 
     #add the spindle and SSD vol types
     volumes = volume_ops(auth_dict)
-    volumes.create_volume_type("ssd")
-    volumes.create_volume_type("spindle")
+    ssd = volumes.create_volume_type("ssd")
+    spindle = volumes.create_volume_type("spindle")
+
+    #add the volume backings
+    ssd_input = {"volume_type_id":"%s"%(ssd['volume_type_id']),"volume_backend_name":"ssd"}
+    spindle_input = {"volume_type_id":"%s"%(spindle['volume_type_id']),"volume_backend_name":"spindle"}
+    ssd_back = volumes.assign_volume_type_to_backend(ssd_input)
+    if(ssd_back == 'ERROR'):
+        logger.error("Could not assign the backing to the ssd volume type.")
+        return 'ERROR'
+
+    spindle_back = volumes.assign_volume_type_to_backend(spindle_input)
+    if(spindle_back == 'ERROR'):
+        logger.error("Could not assign the backing to the spindle volume type.")
+        return 'ERROR'
 
     #setup the pre-installed images
     logger.sys_info('Importing Default images.')
