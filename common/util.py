@@ -423,9 +423,10 @@ def get_cloud_controller_name():
         controller_name = db.pg_select(get_name)
     except:
         logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")
-        raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
+        #raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
+        #return the cloud controller from the config file
+        return config.CLOUD_CONTROLLER
 
-    #return config.CLOUD_CONTROLLER
     return conroller_name[0][0]
 
 def get_spindle_node_enabled():
