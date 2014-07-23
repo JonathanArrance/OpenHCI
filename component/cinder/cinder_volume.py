@@ -409,27 +409,26 @@ class volume_ops:
         get_vol_dict = None
         if(self.user_level == 2):
             if(self.project_id == proj_id):
-                get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst,vol_type,vol_mount_location','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"keystone_user_uuid='%s'" %(self.user_id)}
+                get_vol_dict = {'select':'*','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"keystone_user_uuid='%s'" %(self.user_id)}
             else:
                 logger.sys_error('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
                 raise Exception('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
         elif(self.user_level == 1):
             if(self.project_id == proj_id):
-                get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst,vol_type,vol_mount_location','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
+                get_vol_dict = {'select':'*','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
             else:
                 logger.sys_error('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
                 raise Exception('User could not get vol info for vol: %s'%(vol_dict['volume_id']))
         else:
-            get_vol_dict = {'select':'vol_id,vol_name,vol_size,vol_attached,vol_attached_to_inst,vol_type,vol_mount_location','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
-
+            get_vol_dict = {'select':'*','from':'trans_system_vols','where':"vol_id='%s'" %(vol_dict['volume_id']),'and':"proj_id='%s'" %(vol_dict['project_id'])}
         try:
             get_vol = self.db.pg_select(get_vol_dict)
         except:
-            logger.sql_error("Could not get the volume info for %s" %(volume_id))
-            raise Exception("Could not get the volume info for %s" %(volume_id))
+            logger.sql_error("Could not get the volume info for %s" %(vol_dict['volume_id']))
+            raise Exception("Could not get the volume info for %s" %(vol_dict['volume_id']))
 
         self.db.pg_close_connection()
-        r_dict = {'volume_name':get_vol[0][1],'volume_type':get_vol[0][5],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4],'volume_mount':get_vol[0][6]}
+        r_dict = {'volume_name':get_vol[0][1],'volume_type':get_vol[0][5],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4],'volume_mount':get_vol[0][6],'volume_type':get_vol[0][10]}
         return r_dict
 
     def create_volume_type(self,volume_type_name):
