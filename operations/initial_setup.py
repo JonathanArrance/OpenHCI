@@ -165,7 +165,8 @@ def run_setup(new_system_variables,auth_dict):
                       'node_controller':sys_vars['CLOUD_CONTROLLER'],
                       'node_cloud_name':sys_vars['CLOUD_NAME'],
                       'avail_zone':'nova',
-                      'node_gluster_peer':'1'}
+                      'node_gluster_peer':'1',
+                      'node_gluster_disks':'ssd'}
     insert_cc = node_db.insert_node(cc_insert_dict)
     if(insert_cc != 'OK'):
         return 'ERROR'
