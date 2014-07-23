@@ -419,7 +419,7 @@ def get_cloud_controller_name():
 
     db = db_connect()
     try:
-        get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='default_cloud_controller'"}
+        get_name = {'select':"param_value",'from':"trans_system_settings",'where':"parameter='cloud_controller'"}
         controller_name = db.pg_select(get_name)
     except:
         logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")

@@ -109,14 +109,6 @@ class volume_ops:
             logger.sys_error("Status level not sufficient to create volumes.")
             raise Exception("Status level not sufficient to create volumes.")
 
-        #connect to the transcirrus DB
-        #try:
-        #    #connect to the transcirrus db
-        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        #except Exception as e:
-        #    logger.sql_error("Could not connect to the Transcirrus DB ")
-        #    raise e
-
         create_flag = 0
         if(self.is_admin == 0):
             if(self.project_id == create_vol['project_id']):
@@ -252,14 +244,6 @@ class volume_ops:
             logger.sys_error("Status level not sufficient to delete volumes.")
             raise Exception("Status level not sufficient to delete volumes.")
 
-        #connect to the transcirrus DB
-        #try:
-        #    #connect to the transcirrus db
-        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        #except Exception as e:
-        #    logger.sql_error("Could not connect to the Transcirrus DB ")
-        #    raise e
-
         #get the name of the project based on the id
         try:
             select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(delete_vol['project_id'])}
@@ -359,14 +343,6 @@ class volume_ops:
             logger.sys_error("Status level not sufficient to list volumes.")
             raise Exception("Status level not sufficient to list volumes.")
 
-        #connect to the transcirrus DB
-        #try:
-        #    #connect to the transcirrus db
-        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        #except Exception as e:
-        #    logger.sql_error("Could not connect to the Transcirrus DB ")
-        #    raise e
-
         #build the select statement
         select_vol = ""
         if(self.user_level == 0):
@@ -415,14 +391,6 @@ class volume_ops:
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list volumes.")
             raise Exception("Status level not sufficient to list volumes.")
-
-         #connect to the transcirrus DB
-        #try:
-        #    #connect to the transcirrus db
-        #    self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        #except Exception as e:
-        #    logger.sql_error("Could not connect to the Transcirrus DB ")
-        #    raise e
 
         #make sure the project exists
         proj_id = None

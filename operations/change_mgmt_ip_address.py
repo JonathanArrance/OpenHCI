@@ -60,6 +60,7 @@ def change_mgmt_ip(auth_dict,input_dict):
         logger.sys_error('Could not get the mgmt net adapter info. Can not update uplink ip.')
         return 'ERROR'
 
+    #get the uplink info but do not change any of it
     uplink_net = util.get_network_variables({'net_adapter':'uplink','node_id':node_id})
     if(uplink_net == 'ERROR'):
         logger.sys_error('Could not get the uplink net adapter info. Can not update uplink ip.')
