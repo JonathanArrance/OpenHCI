@@ -921,7 +921,8 @@ CREATE TABLE trans_nodes (
     node_nova_zone character varying,
     node_fault_flag character varying,
     node_ready_flag character varying,
-    node_gluster_peer character varying
+    node_gluster_peer character varying,
+    node_gluster_disks character varying
 );
 
 

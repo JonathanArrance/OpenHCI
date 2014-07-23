@@ -232,20 +232,20 @@ def insert_node(input_dict):
             db.pg_transaction_rollback()
             logger.sys_error("Could not insert node specific neutron config into Transcirrus db.")
             return 'ERROR'
-    #try:
-    insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
-                   'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['avail_zone'],'node_fault_flag':'0',
-                   'node_ready_flag':'1','node_gluster_peer':input_dict['node_gluster_peer'],'node_gluster_disks':input_dict['node_gluster_disks']}
-    logger.sys_error("HACK: %s"%(insert_dict))
-    db.pg_transaction_begin()
-    db.pg_insert('trans_nodes',insert_dict)
-    db.pg_transaction_commit()
-    db.pg_close_connection()
-    return 'OK'
-    #except:
-    #    db.pg_transaction_rollback()
-    #    logger.sys_error("Could not insert the new node in the DB.")
-    #    return 'ERROR'
+    try:
+        insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
+                       'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['avail_zone'],'node_fault_flag':'0',
+                       'node_ready_flag':'1','node_gluster_peer':input_dict['node_gluster_peer'],'node_gluster_disks':input_dict['node_gluster_disks']}
+        logger.sys_error("HACK: %s"%(insert_dict))
+        db.pg_transaction_begin()
+        db.pg_insert('trans_nodes',insert_dict)
+        db.pg_transaction_commit()
+        db.pg_close_connection()
+        return 'OK'
+    except:
+        db.pg_transaction_rollback()
+        logger.sys_error("Could not insert the new node in the DB.")
+        return 'ERROR'
 
 def list_nodes():
     """
