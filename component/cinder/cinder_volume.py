@@ -290,7 +290,7 @@ class volume_ops:
             except:
                 logger.sys_error("Could not connect to the Keystone API")
                 raise Exception("Could not connect to the Keystone API")
-    
+
             try:
                 #add the new user to openstack 
                 body = ""
@@ -387,7 +387,7 @@ class volume_ops:
         if(('volume_id' not in vol_dict) or vol_dict['volume_id'] == ''):
             logger.sys_error("Did not pass required params to get volume info.")
             raise Exception("Did not pass required params to get volume info.")
-        
+
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list volumes.")
             raise Exception("Status level not sufficient to list volumes.")
@@ -595,7 +595,7 @@ class volume_ops:
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
-    
+
             try:
                 #add the new user to openstack 
                 body = '{"extra_specs": {"volume_backend_name": "%s"}}'%(input_dict['volume_backend_name'])
