@@ -393,7 +393,7 @@ class volume_ops:
             raise Exception("Status level not sufficient to list volumes.")
 
         #make sure the project exists
-        proj_id = None
+        proj_id = 'b3467f3bbb534fc38a692c80f58ca49e'
         if('project_id' in vol_dict):
             try:
                 select_proj = {'select':"proj_id",'from':"projects",'where':"proj_id='%s'"%(vol_dict['project_id'])}
