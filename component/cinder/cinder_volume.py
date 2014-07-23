@@ -428,7 +428,7 @@ class volume_ops:
             raise Exception("Could not get the volume info for %s" %(vol_dict['volume_id']))
 
         self.db.pg_close_connection()
-        r_dict = {'volume_name':get_vol[0][1],'volume_type':get_vol[0][5],'volume_id':get_vol[0][0],'volume_size':get_vol[0][2],'volume_attached':get_vol[0][3],'volume_instance':get_vol[0][4],'volume_mount':get_vol[0][6],'volume_type':get_vol[0][10]}
+        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8]}
         return r_dict
 
     def create_volume_type(self,volume_type_name):
