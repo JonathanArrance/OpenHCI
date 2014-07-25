@@ -201,12 +201,10 @@ class volume_ops:
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except:
                     self.db.pg_transaction_rollback()
-                    self.db.pg_close_connection()
                     logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
                     raise Exception("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
                 else:
                     self.db.pg_transaction_commit()
-                    self.db.pg_close_connection()
                     r_dict = {"volume_id": volid, "volume_type": voltype,"volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
@@ -317,12 +315,10 @@ class volume_ops:
                     self.db.pg_delete(del_vol)
                 except:
                     self.db.pg_transaction_rollback()
-                    self.db.pg_close_connection()
                     logger.sql_error("Could not delete volume %s information into Transcirrus DB" %(vol_id[0][0]))
                     raise Exception("Could not delete volume %s information into Transcirrus DB" %(vol_id[0][0]))
                 else:
                     self.db.pg_transaction_commit()
-                    self.db.pg_close_connection()
                     return 'OK'
             else:
                 util.http_codes(rest['response'],rest['reason'])
@@ -358,7 +354,6 @@ class volume_ops:
             raise Exception("Could not list volumes, invalid user level.")
 
         volumes = self.db.pg_select(select_vol)
-        self.db.pg_close_connection()
 
         vol_array = []
         for vol in volumes:
@@ -427,7 +422,6 @@ class volume_ops:
             logger.sql_error("Could not get the volume info for %s" %(vol_dict['volume_id']))
             raise Exception("Could not get the volume info for %s" %(vol_dict['volume_id']))
 
-        self.db.pg_close_connection()
         r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8]}
         return r_dict
 
