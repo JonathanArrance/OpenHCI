@@ -369,21 +369,31 @@ def avahi(action):
     else:
         return 'ERROR'
 
-def _operator(service_array,action):
+def _operator(service_array,action,silent=True):
     #need to check the status of the call and error corrctly - Figure this out later
     for service in service_array:
         process = []
         out = None
         time.sleep(1)
         if(action.lower() == 'start' or action.lower() == 'restart'):
-            os.system('sudo chkconfig %s on'%(service))
-            os.system('sudo service %s restart'%(service))
-            out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if(silent is True):
+                os.system('sudo chkconfig %s on >> /dev/null'%(service))
+                os.system('sudo service %s restart >> /dev/null'%(service))
+                out = subprocess.Popen('sudo service %s status >> /dev/null'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            else:
+                os.system('sudo chkconfig %s on'%(service))
+                os.system('sudo service %s restart'%(service))
+                out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             time.sleep(1)
         elif(action.lower() == 'stop'):
-            os.system('sudo chkconfig %s off'%(service))
-            os.system('sudo service %s stop'%(service))
-            out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if(silent is True):
+                os.system('sudo chkconfig %s off >> /dev/null'%(service))
+                os.system('sudo service %s stop >> /dev/null'%(service))
+                out = subprocess.Popen('sudo service %s status >> /dev/null'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            else:
+                os.system('sudo chkconfig %s off'%(service))
+                os.system('sudo service %s stop'%(service))
+                out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         elif(action.lower() == 'status'):
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process = out.stdout.readlines()
