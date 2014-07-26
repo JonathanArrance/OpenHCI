@@ -643,7 +643,8 @@ def client_thread(conn, client_addr):
 
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
+                                    #SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
+                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'],node_info('disk_type'))
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
