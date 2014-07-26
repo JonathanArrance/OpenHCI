@@ -44,6 +44,7 @@ def get_node(node_id):
                     - node_fault_flag
                     - node_ready_flag
                     - node_gluster_peer
+                    - node_disk_type
                     - status
     ACCESS: Wide open
     NOTES: Return the r_dict with a status of OK, else status code of NA or ERROR is returned outside of the ductionary.
@@ -58,7 +59,7 @@ def get_node(node_id):
         db.pg_close_connection()
         if(node[0][0] == node_id):
             r_dict = {'node_name':node[0][1],'node_type':node[0][2],'node_data_ip':node[0][4],'node_mgmt_ip':node[0][3],'node_controller':node[0][5],
-                      'node_cloud_name':node[0][6],'availability_zone':node[0][7],'node_fault_flag':node[0][8],'node_ready_flag':node[0][9],'node_gluster_peer':node[0][10],'status':"OK"}
+                      'node_cloud_name':node[0][6],'availability_zone':node[0][7],'node_fault_flag':node[0][8],'node_ready_flag':node[0][9],'node_gluster_peer':node[0][10],'node_disk_type':node[0][11],'status':"OK"}
         else:
             return'ERROR'
     except:
