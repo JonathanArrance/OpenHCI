@@ -193,7 +193,7 @@ def insert_node(input_dict):
         check_spindle = util.get_spindle_node_enabled()
         if((input_dict['node_gluster_disks'] == 'spindle') and (check_spindle == '0')):
             controller = util.get_cloud_controller_name()
-            set_spindle = {'system_name':"%s"%(controller),'param':"spindle_node",'param_value':"1"}
+            set_spindle = {'system_name':"%s"%(controller),'parameter':"spindle_node",'param_value':"1"}
             input_array = [set_spindle]
             set_param = util.update_system_variables(input_array)
             if(set_param == 'ERROR'):

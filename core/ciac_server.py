@@ -629,7 +629,6 @@ def client_thread(conn, client_addr):
                                 #input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
                                 input_dict['node_gluster_disks'] = data['Value']['disk_type']
                             # insert into ciac DB
-			    print "HACK: input_dict %s"%(input_dict)
                             insert = node_db.insert_node(input_dict)
 
                             if insert == 'OK':
