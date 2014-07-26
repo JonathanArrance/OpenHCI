@@ -6,6 +6,8 @@ import commands
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 
+#Note need ability to add a verbose out put so we can watch service restart since the silent flag has been added.
+
 def nova(action):
     """
     DESC: Control the nova service
