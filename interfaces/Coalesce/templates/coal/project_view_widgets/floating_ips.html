@@ -53,9 +53,10 @@
 			</td>
 			<td> 
 			    {% if fip.floating_in_use == 'true' %}
-			      <a href="/unassign_floating_ip/{{fip.floating_ip_id}}/">unassign</a> |
+			      <a href="/unassign_floating_ip/{{fip.floating_ip_id}}/">unassign</a>
+			    {% else %}
+			      <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/"> deallocate
 			    {% endif %}
-			    <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/"> deallocate
                             </a> 
                         </td>
                     </tr>
