@@ -19,7 +19,7 @@ def destroy_project(auth_dict, project_dict):
     ACCESS:
     NOTES:
     """
-        try:
+    try:
         tenant = tenant_ops(auth_dict)
         logger.sys_info("Instantiated tenant_ops object")
         user = user_ops(auth_dict)
