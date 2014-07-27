@@ -103,7 +103,7 @@ def run_setup(new_system_variables,auth_dict):
         input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'swift'}
         create_swift = endpoint.create_endpoint(input_dict)
         if(create_swift['endpoint_id']):
-            print "Swift endpoint set up complete."
+            logger.sys_info("Swift endpoint set up complete.")
         else:
             return "Swift error."
 
@@ -114,7 +114,7 @@ def run_setup(new_system_variables,auth_dict):
         input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'keystone'}
         create_keystone = endpoint.create_endpoint(input_dict)
         if(create_keystone['endpoint_id']):
-            print "Keystone endpoint set up complete."
+            logger.sys_info("Keystone endpoint set up complete.")
         else:
             return "Keystone error."
 
@@ -122,36 +122,32 @@ def run_setup(new_system_variables,auth_dict):
     #set up all of the other endpoint based on the new mgmt IP address
     nova_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'nova'}
     create_nova = endpoint.create_endpoint(nova_input_dict)
-    print create_nova
     if(create_nova['endpoint_id']):
-        print "Nova endpoint set up complete."
+        logger.sys_info("Nova endpoint set up complete.")
     else:
         return "Nova error."
 
     logger.sys_info('Building Cinder endpoints')
     cinder_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'cinder'}
     create_cinder = endpoint.create_endpoint(cinder_input_dict)
-    print create_cinder
     if(create_cinder['endpoint_id']):
-        print "Cinder endpoint set up complete."
+        logger.sys_info("Cinder endpoint set up complete.")
     else:
         return "Cinder error."
 
     logger.sys_info('Building Glance endpoints')
     glance_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'glance'}
     create_glance = endpoint.create_endpoint(glance_input_dict)
-    print create_glance
     if(create_glance['endpoint_id']):
-        print "Glance endpoint set up complete."
+        logger.sys_info("Glance endpoint set up complete.")
     else:
         return "Glance error."
 
     logger.sys_info('Building Quantum endpoints')
     quantum_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'quantum'}
     create_quantum = endpoint.create_endpoint(quantum_input_dict)
-    print create_quantum
     if(create_quantum['endpoint_id']):
-        print "Quantum endpoint set up complete."
+        logger.sys_info( "Quantum endpoint set up complete.")
     else:
         return "Quantum error."
 
@@ -182,7 +178,6 @@ def run_setup(new_system_variables,auth_dict):
             #Exit the setup return to factory default
             return write_nova_config
         else:
-            print "Nova config file written."
             logger.sys_info("Nova config file written.")
     time.sleep(1)
     #HACK CentOS6.5 may not be needed in the future
@@ -205,7 +200,6 @@ def run_setup(new_system_variables,auth_dict):
             #Exit the setup return to factory default
             return write_cinder_config
         else:
-            print "Cinder config file written."
             logger.sys_info("Cinder config file written.")
     time.sleep(1)
     os.system("sudo cinder-manage db sync")
@@ -226,7 +220,6 @@ def run_setup(new_system_variables,auth_dict):
             #Exit the setup return to factory default
             return write_glance_config
         else:
-            print "Glance config file written."
             logger.sys_info("Glance config file written.")
     #start the cinder service
     glance_start = service.glance('restart')
@@ -249,7 +242,6 @@ def run_setup(new_system_variables,auth_dict):
             #Exit the setup return to factory default
             return write_neutron_config
         else:
-            print "Neutron config file written."
             logger.sys_info("Neutron config file written.")
     #HACK - centOS6.5 - may not be needed in future
     os.system('sudo ln -s /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugin.ini')
@@ -279,7 +271,6 @@ def run_setup(new_system_variables,auth_dict):
         #Exit the setup return to factory default
         return write_name_config
     else:
-        print "Name service config file written."
         logger.sys_info("Name service config file written.")
 
     #set up br-ex and enable ovs.
@@ -308,7 +299,6 @@ def run_setup(new_system_variables,auth_dict):
             #Exit the setup return to factory default
             return write_net_config
         else:
-            print "Net config file written."
             logger.sys_info("Net config file written.")
 
 
@@ -460,7 +450,6 @@ def run_setup(new_system_variables,auth_dict):
 
     #setup the pre-installed images
     logger.sys_info('Importing Default images.')
-    print "Importing default images"
     glance = glance_ops(auth_dict)
     cirros_input = {
                     'image_name':"Cirros-x86_64-0-3-1",

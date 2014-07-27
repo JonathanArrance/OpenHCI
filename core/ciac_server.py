@@ -549,7 +549,7 @@ def client_thread(conn, client_addr):
                                 # check node typestart
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'],node_info('disk_type'))
+                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'],node_info['node_disk_type'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
@@ -629,7 +629,6 @@ def client_thread(conn, client_addr):
                                 #input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
                                 input_dict['node_gluster_disks'] = data['Value']['disk_type']
                             # insert into ciac DB
-			    print "HACK: input_dict %s"%(input_dict)
                             insert = node_db.insert_node(input_dict)
 
                             if insert == 'OK':
@@ -644,7 +643,8 @@ def client_thread(conn, client_addr):
 
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
+                                    #SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
+                                    SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'],node_info['node_disk_type'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
                                     sendComputeConfig(conn, node_id)
