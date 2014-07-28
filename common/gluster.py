@@ -139,6 +139,7 @@ class gluster_ops:
         DESC: Create a new gluster volume
         INPUT input_dict - volume_name - req
                          - bricks[] - op
+                         - mount_node - op 
         OUTPUT: OK - SUCCESS
                 ERROR - FAIL
         ACCESS: Admin - can create a gluster volumes directly
@@ -148,6 +149,7 @@ class gluster_ops:
               creates volumes using the gluster commands,
               bricks[172.38.24.11:/data/gluster/'volume_name']
               This may need to be expaned on as we add in a spindle based node.
+              Mount Node is optional the gluster vol will be mounted on 172.38.24.10 by default unless a differnt node specified.
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
         self.state = 'OK'
@@ -180,7 +182,12 @@ class gluster_ops:
             if(make != 0):
                 logger.sys_error('Could not create the GlusterFS mount point.')
                 self.state = 'ERROR'
-            out4 = subprocess.Popen('sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            #If mount node not specified use 172.38.24.10
+            if(input_dict['mount_node'] == '' or 'mount_node' not in input_dict):
+                input_dict['mount_node'] = '172.38.24.10'
+
+            out4 = subprocess.Popen('sudo mount.glusterfs %s:/%s /mnt/gluster-vols/%s'%(input_dict['mount_node'],input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             mount = out4.stdout.readlines()
             #print mount
             if(len(mount) != 0):
