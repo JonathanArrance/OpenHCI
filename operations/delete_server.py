@@ -17,7 +17,7 @@ def delete_server(auth_dict, delete_dict):
     """
     nova = server_ops(auth_dict)
     layer_three = layer_three_ops(auth_dict)
-    server_storage_ops = server_storage_ops(auth_dict)
+    server_storage = server_storage_ops(auth_dict)
 
     #remove the volumes attached to the instance.
     try:
@@ -30,7 +30,7 @@ def delete_server(auth_dict, delete_dict):
     if(vols):
         for vol in vols:
             vol_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'volume_id':vol[0]}
-            server_storage_ops.detach_vol_from_server(vol_dict)
+            server_storage.detach_vol_from_server(vol_dict)
 
     #remove the floating ips from the instance
     try:

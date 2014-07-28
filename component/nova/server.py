@@ -857,6 +857,7 @@ class server_ops:
 
         #This has to be made into an OPS file, to much going on here
         #remove the volumes attached to the instance.
+        """
         try:
             get_vols = {'select':'vol_id','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(delete_dict['server_id'])}
             vols = self.db.pg_select(get_vols)
@@ -888,7 +889,7 @@ class server_ops:
             logger.sys_error("HACK: %s"%(float_dict))
             remove_float = self.layer_three.update_floating_ip(float_dict)
             logger.sys_error("HACK: %s"%(remove_float))
-
+        """
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
