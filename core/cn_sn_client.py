@@ -1036,7 +1036,7 @@ try:
                     print input_dict
                     gluster = gluster_ops(input_dict)
                     print gluster
-                    create_vol = {'volume_name':'cinder-volume-spindle'}
+                    create_vol = {'volume_name':'cinder-volume-spindle','mount_node':"%s"%(node_info['Value']['node_data_ip'])}
                     print create_vol
                     create_vol['bricks'] = ["%s:/data/gluster-%s/cinder-volume-spindle"%(node_info['Value']['node_data_ip'],node_info['Value']['node_name'])]
                     print create_vol
