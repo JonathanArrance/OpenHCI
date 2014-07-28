@@ -1029,13 +1029,15 @@ try:
                 print "Node Disk Type: %s"%(node_info['Value']['disk_type'])
                 #if the node is spindle based we need to set up the cinder volume
                 #check to see if the node is spindle type
+                #this may have to be back grounded.
                 if(node_info['Value']['disk_type'] == 'spindle'):
                     #create a gluster object
                     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
                     gluster = gluster_ops(input_dict)
                     create_vol = {'volume_name':'cinder-volume-spindle'}
-                    create_vol['bricks'] = ["%s:/data/gluster/cinder-volume-spindle"%(node_info['Value']['node_data_ip'])]
+                    create_vol['bricks'] = ["%s:/data/gluster-%s/cinder-volume-spindle"%(node_info['Value']['node_data_ip'],node_info['Value']['node_name'])]
                     create_spindle = gluster.create_gluster_volume(create_vol)
+                    
                     if(create_spindle == 'ERROR'):
                         logger.sys_error("Could not create the Gluster volume on the spindle node.")
                         sys.exit(1)
