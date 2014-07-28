@@ -331,23 +331,24 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
         else:
             SNglusterOperations(node_id,data_ip,sn_name,disk_type)
 
+        #we will have to implement threading here to background the brick add procedure this could take a while
         for vol in glust_vols:
             logger.sys_info('Adding storage to gluster volume %s'%(vol))
             brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
             expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
-            childpid = os.fork()
-            if childpid == 0:
-                # This is the child process running which will call the function that will take some time to run
-                # and then we exit.
-                add_storage = gluster.add_gluster_brick(expand)
-                if add_storage == "OK":
-                    print "Success: Brick %s added to volume %s"%(brick,vol)
-                    logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
-                else:
-                    print "Error: Brick %s not added to volumes %s"%(brick,vol)
-                    logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
-                # Child process has to exit now.
-                os._exit(0)
+            #childpid = os.fork()
+            #if childpid == 0:
+            # This is the child process running which will call the function that will take some time to run
+            # and then we exit.
+            add_storage = gluster.add_gluster_brick(expand)
+            if add_storage == "OK":
+                print "Success: Brick %s added to volume %s"%(brick,vol)
+                logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
+            else:
+                print "Error: Brick %s not added to volumes %s"%(brick,vol)
+                logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
+            # Child process has to exit now.
+            #os._exit(0)
     elif(disk_type == 'spindle'):
         #check the spindle storage node bit
         enable = util.get_spindle_node_enabled()
