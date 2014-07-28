@@ -329,7 +329,7 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
             #get the gluster volumes on the core node
             glust_vols = gluster.list_gluster_volumes()
         else:
-            SNglusterOperations(data_ip)
+            SNglusterOperations(node_id,data_ip,sn_name,disk_type)
 
         for vol in glust_vols:
             logger.sys_info('Adding storage to gluster volume %s'%(vol))
