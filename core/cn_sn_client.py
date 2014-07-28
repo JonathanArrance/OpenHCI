@@ -12,6 +12,7 @@ import transcirrus.database.node_db as node_db
 import transcirrus.common.service_control as service_controller
 import transcirrus.common.logger as logger
 import transcirrus.core.core_util as core_util
+from transcirrus.common.gluster import gluster_ops
 
 services_retry = 5
 count=0
@@ -772,7 +773,6 @@ def processStorageConfig(sock, node_id):
             print "node_id: %s client did not receive cinder config files" % node_id
         sys.exit()
 
-
     # write config files
     print "******Configureing Cinder API file.******"
     ret = util.write_new_config_file(api_conf)
@@ -807,9 +807,6 @@ def processStorageConfig(sock, node_id):
     # controller = service_controller(auth_dict)
     # check for post install tests
     post_install_status = True
-
-    #if the node is spindle based we need to set up the cinder volume?
-    
 
     # restart services
     sn_services = service_controller.cinder_sn("restart")
@@ -1030,6 +1027,18 @@ try:
             if(node_info['Value']['node_type'] == 'sn'):
                 print "Node Gluster Brick: %s"%(node_info['Value']['node_brick'])
                 print "Node Disk Type: %s"%(node_info['Value']['disk_type'])
+                #if the node is spindle based we need to set up the cinder volume
+                #check to see if the node is spindle type
+                if(node_info['Value']['disk_type'] == 'spindle'):
+                    #create a gluster object
+                    input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
+                    gluster = gluster_ops(input_dict)
+                    create_vol = {'volume_name':'cinder-volume-spindle'}
+                    create_vol['bricks'] = ["%s:/data/gluster/cinder-volume-spindle"%(node_info['Value']['node_data_ip'])]
+                    create_spindle = gluster.create_gluster_volume(create_vol)
+                    if(create_spindle == 'ERROR'):
+                        logger.sys_error("Could not create the Gluster volume on the spindle node.")
+                        sys.exit(1)
             if(node_info['Value']['node_type'] == 'cn'):
                 node_info['Value']['node_brick'] = None
                 node_info['Value']['disk_type'] = None
