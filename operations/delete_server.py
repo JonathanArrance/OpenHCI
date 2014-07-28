@@ -18,11 +18,12 @@ def delete_server(auth_dict, delete_dict):
     nova = server_ops(auth_dict)
     layer_three = layer_three_ops(auth_dict)
     server_storage = server_storage_ops(auth_dict)
+    db = util.db_connect()
 
     #remove the volumes attached to the instance.
     try:
         get_vols = {'select':'vol_id','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(delete_dict['server_id'])}
-        vols = util.db.pg_select(get_vols)
+        vols = db.pg_select(get_vols)
     except:
         logger.sys_error("Volume could not be found.")
         raise Exception("Volume could not be found.")
@@ -35,13 +36,13 @@ def delete_server(auth_dict, delete_dict):
     #remove the floating ips from the instance
     try:
         get_float_id = {'select':'floating_ip_id','from':'trans_instances','where':"inst_id='%s'"%(delete_dict['server_id'])}
-        floater = util.db.pg_select(get_float_id)
+        floater = db.pg_select(get_float_id)
     except:
         logger.sys_error("Floating ip id could not be found.")
         raise Exception("Floating ip id could not be found.")
     try:
         get_float_ip = {'select':'floating_ip','from':'trans_floating_ip','where':"floating_ip_id='%s'"%(floater[0][0])}
-        floatip = util.db.pg_select(get_float_ip)
+        floatip = db.pg_select(get_float_ip)
     except:
         logger.sys_error("Floating ip could not be found.")
         raise Exception("Floating ip could not be found.")
