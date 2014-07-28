@@ -184,7 +184,7 @@ class gluster_ops:
                 self.state = 'ERROR'
 
             #If mount node not specified use 172.38.24.10
-            if(input_dict['mount_node'] == '' or 'mount_node' not in input_dict):
+            if('mount_node' not in input_dict):
                 input_dict['mount_node'] = '172.38.24.10'
 
             out4 = subprocess.Popen('sudo mount.glusterfs %s:/%s /mnt/gluster-vols/%s'%(input_dict['mount_node'],input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
