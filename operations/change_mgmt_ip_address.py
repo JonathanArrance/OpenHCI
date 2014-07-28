@@ -128,7 +128,7 @@ def change_mgmt_ip(auth_dict,input_dict):
         return change_mgmt
     else:
         logger.sys_info("writing the network config file.")
-        write_up_net = util.write_new_config_file(change_mgmt)
+        write_up_net = util.write_new_config_file(change_mgmt[0])
         if(write_up_net == 'OK'):
             #write the sysconfigs and the new config.py
             mg_info = [{'system_name':node_name,'parameter':"mgmt_ip",'param_value':input_dict['mgmt_ip']},
