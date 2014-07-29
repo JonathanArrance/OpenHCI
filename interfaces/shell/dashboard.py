@@ -187,7 +187,7 @@ def users(d, userList):
     counter = 0
     for entry in userList:
         counter += 1
-        choice = (str(counter), entry['name'], 0)
+        choice = (str(counter), entry['username'], 0)
         allChoices.append(choice)
     allChoices.append(addChoice)
     #allChoices.append(delChoice)
@@ -396,8 +396,7 @@ def userManage(d, user_op, user):
             ("Name:", 1, 1, user['username'], 1, 32, 40, 40, 0x0),
             ("Password:", 2, 1, "", 2, 32, 40, 40, HIDDEN),
             ("Re-Enter Password:", 3, 1, "", 3, 32, 40, 40, HIDDEN),
-            ("Role (admin/pu/user):", 4, 1, user['user_role'], 4, 32, 40, 40, 0x0),
-            ("Email", 5, 1, user['email'], 5, 32, 40, 40, 0x0)]
+            ("Email", 4, 1, user['user_email'], 4, 32, 40, 40, 0x0)]
 
         (code, fields) = d.mixedform(
             "Update User Info:", elements, insecure=True, width=77)
@@ -974,22 +973,7 @@ def dash(d, auth_dict):
     
     nodeList = node_op.list_nodes()
     
-    userList = [{'name':"Snow White",
-                 'role':"User",
-                 'status':2,
-                 'isAdmin':False},
-                {'name':"Pocahontas",
-                 'role':"PowerUser",
-                 'status':1,
-                 'isAdmin':False},
-                {'name':"Rapunzel",
-                 'role':"PowerUser",
-                 'status':1,
-                 'isAdmin':False},
-                {'name':"Tiana",
-                 'role':"PowerUser",
-                 'status':1,
-                 'isAdmin':False}]
+    userList = user_op.list_cloud_users()
 
     while True:
         selection = dashboard(d)

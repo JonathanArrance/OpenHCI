@@ -104,7 +104,6 @@ $(document).ready(function() {
 
     {% if user_level == 0 %}
         <a href="/projects/{{project.project_id}}/{{project.project_name}}/delete" 
-        data-confirm="Are you sure you want to delete?" 
         class="btn btn-danger" 
         style="float:right">
             <i class="icon-white icon-trash"></i> Delete Project
