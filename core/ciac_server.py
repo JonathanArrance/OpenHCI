@@ -277,45 +277,7 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
     comments: Carrying out various operations like adding a brick, listing
     volumes and rebalancing all the current volumes 
     '''
-    """
     #HUGE HACK
-    input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
-    gluster = gluster_ops(input_dict)
-
-    new = gluster.attach_gluster_peer(data_ip)
-    glust_vols = []
-    if new == "OK":
-        #update the trans nodes db to reflect node is a Gluster peer
-        update_dict = {'node_id':node_id,'node_gluster_peer':'1'}
-        update_node = node_db.update_node(update_dict)
-        if(update_node == 'ERROR'):
-            SNglusterOperations(node_id,data_ip,sn_name)
-        #get the gluster volumes on the core node
-        glust_vols = gluster.list_gluster_volumes()
-    else:
-        SNglusterOperations(node_id,data_ip,sn_name)
-
-    #adding brick to all the listed volumes
-    for vol in glust_vols:
-        logger.sys_info('Adding storage to gluster volume %s'%(vol))
-        brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
-        print "HACK brick %s"%(brick)
-        expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
-        add_storage = gluster.add_gluster_brick(expand)
-        if add_storage == "OK":
-            print "Success: Brick %s added to volume %s"%(brick,vol)
-            logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
-        else:
-            print "Error: Brick %s not added to volumes %s"%(brick,vol)
-            logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
-
-        #rebalance the volume over the new brick
-        rebalance = gluster.rebalance_gluster_volume(vol)
-        if rebalance == 'OK':
-            logger.sys_info("Success: volume %s rebalanced."%(vol))
-        elif rebalance == 'ERROR':
-            logger.sys_info("Error: volumes %s not rebalanced"%(vol))
-    """
     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
     gluster = gluster_ops(input_dict)
     #adding brick to all the listed volumes
