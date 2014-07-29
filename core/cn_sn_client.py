@@ -1033,15 +1033,10 @@ try:
                 if(node_info['Value']['disk_type'] == 'spindle'):
                     #create a gluster object
                     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
-                    print input_dict
                     gluster = gluster_ops(input_dict)
-                    print gluster
                     create_vol = {'volume_name':'cinder-volume-spindle','mount_node':"%s"%(node_info['Value']['node_data_ip'])}
-                    print create_vol
                     create_vol['bricks'] = ["%s:/data/gluster-%s/cinder-volume-spindle"%(node_info['Value']['node_data_ip'],node_info['Value']['node_name'])]
-                    print create_vol
                     create_spindle = gluster.create_gluster_volume(create_vol)
-                    print create_spindle
                     if(create_spindle == 'ERROR'):
                         logger.sys_error("Could not create the Gluster volume on the spindle node.")
                         sys.exit(1)
