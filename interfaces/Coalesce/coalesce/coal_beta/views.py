@@ -34,6 +34,7 @@ from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
+import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
 from transcirrus.database.node_db import list_nodes, get_node
@@ -1041,10 +1042,10 @@ def delete_server(request, project_id, server_id):
     redirect_to = urlsplit(referer, 'http', False)[2]
     try:
         auth = request.session['auth']
-        so = server_ops(auth)
-        so.delete_server(input_dict)
+        del_serv = ds.delete_server(auth, input_dict)
         return HttpResponseRedirect(redirect_to)
-    except:
+    except Exception as e:
+        print e
         messages.warning(request, "Unable to delete instance.")
         return HttpResponseRedirect(redirect_to)
 
