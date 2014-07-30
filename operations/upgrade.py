@@ -10,8 +10,8 @@ import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 
 # Global constants.
-Username = "root"                                     # Default user to login in with, must be root to rpm install
-Password = config.TRAN_DB_PASS                        # Default password to login in with, transuser and root have same pwd
+Username = "root"                                       # Default user to login in with, must be root to rpm install
+Password = config.TRAN_DB_PASS                          # Default password to login in with, transuser and root have same pwd
 RemoteRPMPath = "/tmp"                                  # Location on the remote host to put the rpm file
 RemoteInstallPath = "/usr/local/lib/python2.7"          # Location to install the software in
 RemoteInstallDir = RemoteInstallPath + "/transcirrus"   # Full path to transcirrus softare
