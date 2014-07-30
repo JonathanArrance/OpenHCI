@@ -6,15 +6,12 @@ import getopt
 import ssh_utils
 import subprocess
 import paramiko
-import db
-##import transcirrus.common.config as config
-##from transcirrus.database.postgres import pgsql
+import transcirrus.common.config as config
+from transcirrus.database.postgres import pgsql
 
 # Global constants.
-##Username = "root"                                     # Default user to login in with, must be root to rpm install
-##Password = config.TRAN_DB_PASS                        # Default password to login in with, transuser and root have same pwd
-Username = "brett"
-Password = "FredFred44"
+Username = "root"                                     # Default user to login in with, must be root to rpm install
+Password = config.TRAN_DB_PASS                        # Default password to login in with, transuser and root have same pwd
 RemoteRPMPath = "/tmp"                                  # Location on the remote host to put the rpm file
 RemoteInstallPath = "/usr/local/lib/python2.7"          # Location to install the software in
 RemoteInstallDir = RemoteInstallPath + "/transcirrus"   # Full path to transcirrus softare
@@ -142,8 +139,7 @@ def InstallRPM (RPMFile, Host, Handle):
 # Goes through the database and returns a dict of all nodes with the node's name and data IP address.
 def FindNodesToUpgrade():
     try:
-        ##handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
-        handle = db.pgsql (db.TRANSCIRRUS_DB, db.TRAN_DB_PORT, db.TRAN_DB_NAME, db.TRAN_DB_USER, db.TRAN_DB_PASS)
+        handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
     except Exception as e:
         print "Could not connect to db with error: %s" % (e)
         raise Exception ("Could not connect to db with error: %s" %(e))
