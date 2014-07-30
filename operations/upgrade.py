@@ -335,7 +335,7 @@ def ProcessCmdLine (argv):
 
 # Main function when used from the command line.
 if __name__ == "__main__":
-    paramiko.util.log_to_file("filename.log")       # paramiko needs a log file to log messages to
+    paramiko.util.log_to_file("paramiko.log")       # paramiko needs a log file to log messages to
     CmdLine = True
     Status = ProcessCmdLine (sys.argv[1:])
     if Status != -1:
