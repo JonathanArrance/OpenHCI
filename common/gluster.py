@@ -574,8 +574,7 @@ class gluster_ops:
         os.system('sudo gluster vol set %s performance.quick-read off'%(volume_name))
         os.system('sudo gluster vol set %s performance.io-cache off'%(volume_name))
         os.system('sudo gluster vol set %s server.allow-insecure on'%(volume_name))
-        
-        
+
     def list_gluster_nodes(self):
         """
         DESC: List all of the Gluster storage nodes
