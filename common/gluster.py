@@ -565,15 +565,15 @@ class gluster_ops:
         #these are the default and standard volume values
         #used to add values to the spindle node volumes for now sort of a HACK
         logger.sys_info('Adding the default GlusterFS parameters to the new cinder volume %s'%(volume_name))
-        os.system('gluster vol set %s storage.owner-uid 165'%(volume_name))
-        os.system('gluster vol set %s storage.owner-gid 165'%(volume_name))
-        os.system('gluster vol set %s network.remote-dio enable'%(volume_name))
-        os.system('gluster vol set %s cluster.eager-lock enable'%(volume_name))
-        os.system('gluster vol set %s performance.stat-prefetch off'%(volume_name))
-        os.system('gluster vol set %s performance.read-ahead off'%(volume_name))
-        os.system('gluster vol set %s performance.quick-read off'%(volume_name))
-        os.system('gluster vol set %s performance.io-cache off'%(volume_name))
-        os.system('gluster vol set %s server.allow-insecure on'%(volume_name))
+        os.system('sudo gluster vol set %s storage.owner-uid 165'%(volume_name))
+        os.system('sudo gluster vol set %s storage.owner-gid 165'%(volume_name))
+        os.system('sudo gluster vol set %s network.remote-dio enable'%(volume_name))
+        os.system('sudo gluster vol set %s cluster.eager-lock enable'%(volume_name))
+        os.system('sudo gluster vol set %s performance.stat-prefetch off'%(volume_name))
+        os.system('sudo gluster vol set %s performance.read-ahead off'%(volume_name))
+        os.system('sudo gluster vol set %s performance.quick-read off'%(volume_name))
+        os.system('sudo gluster vol set %s performance.io-cache off'%(volume_name))
+        os.system('sudo gluster vol set %s server.allow-insecure on'%(volume_name))
         
         
     def list_gluster_nodes(self):
