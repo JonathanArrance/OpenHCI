@@ -1040,6 +1040,8 @@ try:
                     if(create_spindle == 'ERROR'):
                         logger.sys_error("Could not create the Gluster volume on the spindle node.")
                         sys.exit(1)
+                    else:
+                        gluster.add_default_gluster_cinder_params('cinder-volume-spindle')
             if(node_info['Value']['node_type'] == 'cn'):
                 node_info['Value']['node_brick'] = None
                 node_info['Value']['disk_type'] = None
