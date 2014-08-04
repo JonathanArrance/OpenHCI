@@ -73,9 +73,10 @@
 		  </td>
 		  <td>
 		    {% if v.volume_attached == 'true' %}
-		       <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/">detach</a> |
+		       <a href="/detach_volume/{{ project.project_id}}/{{v.volume_id}}/">detach</a>
+		    {% else %}
+		       <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/">delete</a>
 		    {% endif %}
-		    <a href="/delete_volume/{{v.volume_id}}/{{ project.project_id}}/">delete</a>
 		  </td>
 		</tr>
 		    {% endfor %}
