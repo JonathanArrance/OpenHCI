@@ -449,8 +449,9 @@ def run_setup(new_system_variables,auth_dict):
         return 'ERROR'
 
     #setup the pre-installed images
-    logger.sys_info('Importing Default images.')
+    logger.info('Importing Default images.')
     glance = glance_ops(auth_dict)
+    logger.info('Importing Cirros image.')
     cirros_input = {
                     'image_name':"Cirros-x86_64-0-3-1",
                     'image_disk_format':"qcow2",
@@ -463,6 +464,7 @@ def run_setup(new_system_variables,auth_dict):
     if(import_cirros != 'OK'):
         logger.warn('Could not import the default cirros image.')
 
+    logger.info('Importing Ubuntu 12.04 image.')
     ubuntu_input = {
                     'image_name':"Ubuntu-12-04-x86_64",
                     'image_disk_format':"qcow2",
@@ -475,6 +477,7 @@ def run_setup(new_system_variables,auth_dict):
     if(import_ubuntu != 'OK'):
         logger.warn('Could not import the default Ubuntu Precise image.')
 
+    logger.info('Importing CentOS 6.5 image.')
     fedora_input = {
                     'image_name':"CentOS-65-x86_64",
                     'image_disk_format':"qcow2",
@@ -489,7 +492,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
-    if(boot == 'ERROR'):
+    if(first_boot == 'ERROR'):
         logger.error("Could not set the first time boot flag to the UNSET status.")
 
     return 'OK'
