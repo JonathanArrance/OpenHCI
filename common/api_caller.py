@@ -59,7 +59,8 @@ class caller:
             self.host = self.db.pg_select(host_dict)
 
             #get the ip used to access the api form the transcirrus db and the admin token for verification in call_rest
-            api_dict = {"select":"param_value", "from":"trans_system_settings", "where":"parameter='api_ip'", "and":"host_system='%s'" %(self.host[0][0])}
+            #changed to os_db from api_ip so that we could get the 172.38.24.10 address on the data net
+            api_dict = {"select":"param_value", "from":"trans_system_settings", "where":"parameter='os_db'", "and":"host_system='%s'" %(self.host[0][0])}
             ip = self.db.pg_select(api_dict)
             self.api_ip = ip[0][0]
 
@@ -100,9 +101,10 @@ class caller:
 
         #overide the api_ip found in the db if needed
         #used mostly during init and re-init
-        if('api_ip' in api_dict):
-            self.api_ip = api_dict['api_ip']
-        logger.sys_info("Attaching to api_ip %s"%(self.api_ip))
+        #if('api_ip' in api_dict):
+        #    self.api_ip = api_dict['api_ip']
+        #logger.sys_info("Attaching to api_ip %s"%(self.api_ip))
+        logger.sys_info("Attaching to api_ip 172.38.24.10")
 
         #set the url for the api caller
         url = "%s:%s" %(self.api_ip,port)

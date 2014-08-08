@@ -423,9 +423,9 @@ def run_setup(new_system_variables,auth_dict):
     if(sys_vars['SINGLE_NODE'] == '0'):
         status = node_util.enable_multi_node()
         if(status != 'OK'):
-            logger.error("Could not enable multi-node. Check the interface and try again.")
+            logger.sys_error("Could not enable multi-node. Check the interface and try again.")
         else:
-            logger.info("Multi-node configuration enabled.")
+            logger.sys_info("Multi-node configuration enabled.")
 
     logger.sys_info("Restarting the uplink network adapter.")
     util.restart_network_card("br-ex")
@@ -440,18 +440,18 @@ def run_setup(new_system_variables,auth_dict):
     spindle_input = {"volume_type_id":"%s"%(spindle['volume_type_id']),"volume_backend_name":"spindle"}
     ssd_back = volumes.assign_volume_type_to_backend(ssd_input)
     if(ssd_back == 'ERROR'):
-        logger.error("Could not assign the backing to the ssd volume type.")
+        logger.sys_error("Could not assign the backing to the ssd volume type.")
         return 'ERROR'
 
     spindle_back = volumes.assign_volume_type_to_backend(spindle_input)
     if(spindle_back == 'ERROR'):
-        logger.error("Could not assign the backing to the spindle volume type.")
+        logger.sys_error("Could not assign the backing to the spindle volume type.")
         return 'ERROR'
 
     #setup the pre-installed images
-    logger.info('Importing Default images.')
+    logger.sys_info('Importing Default images.')
     glance = glance_ops(auth_dict)
-    logger.info('Importing Cirros image.')
+    logger.sys_info('Importing Cirros image.')
     cirros_input = {
                     'image_name':"Cirros-x86_64-0-3-1",
                     'image_disk_format':"qcow2",
@@ -462,9 +462,9 @@ def run_setup(new_system_variables,auth_dict):
                     }
     import_cirros = glance.import_image(cirros_input)
     if(import_cirros != 'OK'):
-        logger.warn('Could not import the default cirros image.')
+        logger.sys_warning('Could not import the default cirros image.')
 
-    logger.info('Importing Ubuntu 12.04 image.')
+    logger.sys_info('Importing Ubuntu 12.04 image.')
     ubuntu_input = {
                     'image_name':"Ubuntu-12-04-x86_64",
                     'image_disk_format':"qcow2",
@@ -475,9 +475,9 @@ def run_setup(new_system_variables,auth_dict):
                     }
     import_ubuntu = glance.import_image(ubuntu_input)
     if(import_ubuntu != 'OK'):
-        logger.warn('Could not import the default Ubuntu Precise image.')
+        logger.sys_warning('Could not import the default Ubuntu Precise image.')
 
-    logger.info('Importing CentOS 6.5 image.')
+    logger.sys_info('Importing CentOS 6.5 image.')
     fedora_input = {
                     'image_name':"CentOS-65-x86_64",
                     'image_disk_format':"qcow2",
@@ -488,12 +488,12 @@ def run_setup(new_system_variables,auth_dict):
                     }
     import_fedora = glance.import_image(fedora_input)
     if(import_fedora != 'OK'):
-        logger.warn('Could not import the default Fedora image.')
+        logger.sys_warning('Could not import the default Fedora image.')
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
     if(first_boot == 'ERROR'):
-        logger.error("Could not set the first time boot flag to the UNSET status.")
+        logger.sys_error("Could not set the first time boot flag to the UNSET status.")
 
     return 'OK'
 
