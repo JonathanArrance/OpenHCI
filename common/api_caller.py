@@ -101,10 +101,9 @@ class caller:
 
         #overide the api_ip found in the db if needed
         #used mostly during init and re-init
-        #if('api_ip' in api_dict):
-        #    self.api_ip = api_dict['api_ip']
-        #logger.sys_info("Attaching to api_ip %s"%(self.api_ip))
-        logger.sys_info("Attaching to api_ip 172.38.24.10")
+        if('api_ip' in api_dict):
+            self.api_ip = api_dict['api_ip']
+        logger.sys_info("Attaching to api_ip %s"%(self.api_ip))
 
         #set the url for the api caller
         url = "%s:%s" %(self.api_ip,port)
