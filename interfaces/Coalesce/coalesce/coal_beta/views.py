@@ -907,7 +907,8 @@ def destroy_project(request, project_id, project_name):
     try:
         auth = request.session['auth']
         proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': False}
-        destroy.destroy_project(auth, proj_dict)
+        des_proj = destroy.destroy_project(auth, proj_dict)
+        print des_proj
         return HttpResponseRedirect('/')
 
     except:
@@ -1045,7 +1046,6 @@ def delete_server(request, project_id, server_id):
         del_serv = ds.delete_server(auth, input_dict)
         return HttpResponseRedirect(redirect_to)
     except Exception as e:
-        print e
         messages.warning(request, "Unable to delete instance.")
         return HttpResponseRedirect(redirect_to)
 

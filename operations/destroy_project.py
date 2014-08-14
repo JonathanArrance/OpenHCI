@@ -2,6 +2,7 @@ import transcirrus.common.logger as logger
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.neutron.network import neutron_net_ops
+import transcirrus.operations.delete_server as ds
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
@@ -43,17 +44,18 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Floating IP %s deallocated." % floating_ip['floating_ip_id'])
         else:
             logger.sys_info("ERROR, floating IP %s not deallocated." % floating_ip['floating_ip_id'])
-            return "ERROR"
+            return "fip ERROR"
 
     #instances
     server_list = nova.list_servers(project_dict['project_id'])
     for server in server_list:
-        remove_server = nova.delete_server(server)
+        input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
+        remove_server = ds.delete_server(auth_dict, input_dict)
         if(remove_server == "OK"):
             logger.sys_info("Server %s removed." % server['server_id'])
         else:
             logger.sys_info("ERROR, server %s not removed." % server['server_id'])
-            return "ERROR"
+            return "inst ERROR"
 
     #snapshots
     snapshot_list = cinder_snap.list_snapshots(project_dict['project_id'])
@@ -64,6 +66,7 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Snapshot %s removed." % snapshot['snapshot_id'])
         else:
             logger.sys_info("ERROR, snapshot %s not removed." % snapshot['snapshot_id'])
+            return "snap ERROR"
 
     #volumes
     volume_list = cinder_vol.list_volumes(project_dict['project_id'])
@@ -73,7 +76,7 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Volume %s removed." % volume['volume_id'])
         else:
             logger.sys_info("ERROR, volume %s not removed." % volume['volume_id'])
-            return "ERROR"
+            return "volume ERROR"
 
     #object storage containers (future)
 
@@ -86,20 +89,20 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Router %s gateway removed." % router_dict['router_id'])
         else:
             logger.sys_info("ERROR, Router %s gateway not removed." % router_dict['router_id'])
-            return "ERROR"
+            return "gateway ERROR"
         remove_internal_interface = neutron_router.delete_router_internal_interface(router_dict)
         if(remove_internal_interface == "OK"):
             logger.sys_info("Router %s internal interface removed." % router_dict['router_id'])
         else:
             logger.sys_info("ERROR, Router %s internal interface not removed." % router_dict['router_id'])
-            return "ERROR"
+            return "internal interface ERROR"
         del_dict = {'router_id': router_dict['router_id'],'project_id': project_dict['project_id']}
         remove_router = neutron_router.delete_router(del_dict)
         if(remove_router == "OK"):
             logger.sys_info("Router %s removed." % router_dict['router_id'])
         else:
             logger.sys_info("ERROR, Router %s not removed." % router_dict['router_id'])
-            return "ERROR"
+            return "router ERROR"
 
     #security keys
     sec_key_list = nova.list_sec_keys(project_dict['project_id'])
@@ -112,7 +115,7 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("sec_key %s removed." % sec_key_dict['sec_key_name'])
         else:
             logger.sys_info("ERROR, sec_key %s not removed." % sec_key_dict['sec_key_name'])
-            return "ERROR"
+            return "sec_key ERROR"
 
     #security groups
     sec_group_list = nova.list_sec_group(project_dict['project_id'])
@@ -123,7 +126,7 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("sec_group %s removed." % sec_group['sec_group_name'])
         else:
             logger.sys_info("ERROR, sec_group %s not removed." % sec_group['sec_group_name'])
-            return "ERROR"
+            return "sec_group ERROR"
 
     #internal networks
     internal_network_list = neutron_net.list_internal_networks(project_dict['project_id'])
@@ -136,13 +139,13 @@ def destroy_project(auth_dict, project_dict):
                 logger.sys_info("Subnet %s removed." % subnet['subnet_id'])
             else:
                 logger.sys_info("ERROR, subnet %s not removed." % subnet['subnet_id'])
-                return "ERROR"
+                return "subnet ERROR"
         remove_network = neutron_net.remove_network(network)
         if(remove_network == "OK"):
                 logger.sys_info("Network %s removed." % network['net_id'])
         else:
             logger.sys_info("ERROR, network %s not removed." % network['net_id'])
-            return "ERROR"
+            return "net ERROR"
 
     #users
     user_list = tenant.list_tenant_users(project_dict['project_name'])
@@ -154,7 +157,7 @@ def destroy_project(auth_dict, project_dict):
                 logger.sys_info("User %s removed." % usr['user_id'])
             else:
                 logger.sys_info("ERROR, user %s not removed." % usr['user_id'])
-                return "ERROR"
+                return "user ERROR"
         else:
             usr['userid'] = usr['user_id']
             remove_user = user.delete_user(usr)
@@ -162,7 +165,7 @@ def destroy_project(auth_dict, project_dict):
                 logger.sys_info("User %s deleted." % usr['user_id'])
             else:
                 logger.sys_info("ERROR, user %s not deleted." % usr['user_id'])
-                return "ERROR"
+                return "user ERROR"
 
     #tenant
     remove_tenant = tenant.remove_tenant(project_dict['project_id'])
@@ -170,6 +173,6 @@ def destroy_project(auth_dict, project_dict):
         logger.sys_info("Project %s removed." % project_dict['project_id'])
     else:
         logger.sys_info("ERROR, project %s not removed." % project_dict['project_id'])
-        return "ERROR"
+        return "tenant ERROR"
 
     return "OK"
