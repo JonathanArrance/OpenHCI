@@ -291,8 +291,6 @@ class server_actions:
             logger.sys_error("Only an admin or a power user can resize the server.")
             raise Exception("Only an admin or a power user can resize the server.")
 
-        
-
     def confirm_resize(self, confirm_dict):
         """
         DESC: During a resize operation, the original server is saved for a

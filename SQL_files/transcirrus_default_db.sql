@@ -1857,7 +1857,7 @@ INSERT INTO cinder_default VALUES ('rootwrap_config', '/etc/cinder/rootwrap.conf
 INSERT INTO cinder_default VALUES ('api_paste_config', '/etc/cinder/api-paste.ini', 'cinder.conf', 11);
 --INSERT INTO cinder_default VALUES ('iscsi_helper', 'tgtadm', 'cinder.conf', 12);
 INSERT INTO cinder_default VALUES ('volume_name_template', 'volume-%s', 'cinder.conf', 13);
-INSERT INTO cinder_default VALUES ('volume_group', 'cinder-volumes', 'cinder.conf', 14);
+--INSERT INTO cinder_default VALUES ('volume_group', 'cinder-volumes', 'cinder.conf', 14);
 INSERT INTO cinder_default VALUES ('verbose', 'True', 'cinder.conf', 15);
 INSERT INTO cinder_default VALUES ('auth_stratagy', 'keystone', 'cinder.conf', 16);
 INSERT INTO cinder_default VALUES ('state_path', '/var/lib/cinder', 'cinder.conf', 17);

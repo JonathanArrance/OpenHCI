@@ -84,6 +84,7 @@ class volume_ops:
                         volume_size - REQ
                         project_id - REQ
                         volume_type - Optional default is ssd
+                        volume_zone - Optional default is nova
                         description - Optional
         OUTPUTS: r_dict - volume_name
                         - volume_type

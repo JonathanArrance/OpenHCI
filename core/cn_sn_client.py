@@ -321,7 +321,7 @@ def checkNovaManage(status):
                     print "nova-compute is not running"
 
 
-    # make sure all services are listed            
+    # make sure all services are listed
     if ret == 5:
         return True
     else:
