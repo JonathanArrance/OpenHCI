@@ -15,8 +15,8 @@ Password = config.TRAN_DB_PASS                          # Default password to lo
 RemoteRPMPath = "/tmp"                                  # Location on the remote host to put the rpm file
 RemoteInstallPath = "/usr/local/lib/python2.7"          # Location to install the software in
 RemoteInstallDir = RemoteInstallPath + "/transcirrus"   # Full path to transcirrus softare
-WgetURL = "http://www.transcirrus.com/download/repo/"   # URL for retrieving rpm files
 WgetDownloadToDir = "/home/transuser"                   # Location to put retrieved rpm files
+WgetURL = "http://transuser:transcirrus1@www.transcirrus.com/download/repo/" # URL for retrieving rpm files
 
 # Global vars that are used throughout the module and in unit testing.
 AllNodes = True                     # Should all nodes be updated or just a single node
@@ -137,19 +137,26 @@ def InstallRPM (RPMFile, Host, Handle):
         raise
 
 # Goes through the database and returns a dict of all nodes with the node's name and data IP address.
-def FindNodesToUpgrade():
+def FindNodesToUpgrade (Nodename=None):
     try:
         handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
     except Exception as e:
         print "Could not connect to db with error: %s" % (e)
         raise Exception ("Could not connect to db with error: %s" %(e))
 
-    select_nodes = {'select':'node_name,node_data_ip','from':'trans_nodes'}
+    if Nodename == None:
+        select_nodes = {'select':'node_name,node_data_ip','from':'trans_nodes'}
+    else:
+        select_nodes = {'select':'node_name,node_data_ip','from':'trans_nodes','where':"node_name='%s'" %(Nodename)}
     nodes = handle.pg_select (select_nodes)
-    if (nodes == ''):
-        db.pg_close_connection()
-        print "No other nodes where found in the database"
-        raise Exception ("No other nodes where found in the database")
+    if len(nodes) == 0:
+        handle.pg_close_connection()
+        if Nodename == None:
+            print "No other nodes where found in the database"
+        else:
+            print "Could not find a node in the database with a name of %s" % Nodename
+        Nodes = []
+        return (Nodes)
 
     Nodes = []
     for node in nodes:
@@ -195,8 +202,15 @@ def DoUpgrade():
     if AllNodes:
         NodesToUpgrade = FindNodesToUpgrade()
     else:
-        NodesToUpgrade = []
-        NodesToUpgrade.append ({'node_name': Node, 'node_data_ip': Node})
+        # Determine if we were given a name or IP address.
+        if Node.split('.')[-1].isdigit():
+            # We have an IP address so just use it for the name and address.
+            NodesToUpgrade = []
+            NodesToUpgrade.append ({'node_name': Node, 'node_data_ip': Node})
+        else:
+            # We have a name so go lookup the the IP address in the database.
+            NodesToUpgrade = FindNodesToUpgrade (Node)
+
 
     if RPMFileToInstall != "":
         # The user gave us a path to a local rpm file to use so make sure it exists.
@@ -226,6 +240,7 @@ def DoUpgrade():
 
         try:
             print "--Connecting to remote host"
+            Handle = None
             Handle = ssh_utils.SSHConnect (HostIP, Username=Username, Password=Password)
             print "--Determining remote version"
             RemoteVersion = GetRemoteVersion (Hostname, Handle)
@@ -236,7 +251,6 @@ def DoUpgrade():
                 BackupFiles (RemoteVersion, Hostname, Handle)
                 print "--Installing rpm file on remote host"
                 InstallRPM (RemoteRPMFile, Hostname, Handle)
-                ssh_utils.SSHDisconnect (Handle)
                 print "--Node %s has been upgraded to version %s" % (Hostname, NewVersion)
             else:
                 print "Node %s is already at version %s and will not be upgraded" % (Hostname, RemoteVersion)
@@ -244,6 +258,9 @@ def DoUpgrade():
         except Exception, e:
             print "Exception msg: %s" % e
             print "Node %s was not upgraded due to the above error" % Hostname
+        finally:
+            if Handle != None:
+                ssh_utils.SSHDisconnect (Handle)
     return
 
 # Output how to use this script.
