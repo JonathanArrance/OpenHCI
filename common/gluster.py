@@ -310,7 +310,7 @@ class gluster_ops:
             logger.sys_error('Only admins can list Gluster volumes.')
             raise Exeption('Only admins can list Gluster volumes.')
 
-    def check_gluster_vol(self, gluster_vol_name):
+    def check_gluster_volume(self, gluster_vol_name):
         get_vol = {'select':"gluster_vol_id",'from':"trans_gluster_vols",'where':"gluster_vol_name='%s'"%(gluster_vol_name)}
         vol_id = None
         vol_id = self.db.pg_select(get_vol)
