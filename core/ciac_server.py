@@ -571,6 +571,7 @@ def client_thread(conn, client_addr):
                                 
 
                         # node does not exists in the ciac DB
+                        #need to have an elif that accounts for != 'OK' instead of else
                         else:
                             logger.sys_info("node_id: %s new node being inserted in DB" %(node_id))
                             if __debug__ :
@@ -578,6 +579,7 @@ def client_thread(conn, client_addr):
 
                             #global input_dict
                             # make a DB compatible dictionary 
+                            print "HACK line 582 %s" %data
                             input_dict = {
                                     'node_id':data['Value']['node_id'],
                                     'node_name':data['Value']['node_name'],
@@ -588,6 +590,7 @@ def client_thread(conn, client_addr):
                                     'node_cloud_name':data['Value']['node_cloud_name'],
                                     'avail_zone':data['Value']['avail_zone']
                                     }
+                            print "HACK line 593 %s" %input_dict
                             if(input_dict['node_type'] == 'sn'):
                                 #input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
                                 input_dict['node_gluster_disks'] = data['Value']['disk_type']
@@ -642,12 +645,12 @@ def client_thread(conn, client_addr):
                                 if __debug__ :
                                     print "node_id: %s ciac server sending keep alive messages" % (node_id)
                                 keep_alive_check(node_id, conn)
-
                             else:
                                 logger.sys_error("node_id: %s error in inserting in DB, exiting !!!" %(node_id))
                                 if __debug__ :
                                     print "noe_id: %s error in inserting in DB, exiting !!!" % (node_id)
                                 sys.exit()
+                        #need to have an else statement that just sends back an OK message
 
                     
                     # server did not receive node_info
