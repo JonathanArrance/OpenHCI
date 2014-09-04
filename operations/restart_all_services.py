@@ -42,9 +42,11 @@ def restart_services():
     sc.cinder('restart')
     sc.neutron('restart')
     sc.glance('restart')
-    sc.ceilometer('restart')
+    #sc.ceilometer('restart')
 
     #restart apache2
     sc.apache('restart')
 
     #start the monit service
+    
+    return 'OK'

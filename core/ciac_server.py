@@ -316,7 +316,8 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
         enable = util.get_spindle_node_enabled()
         if(enable == '1'):
             #add the spindle node to the Shares file
-            os.system('sudo echo %s:cinder-volume-spindle >> /etc/cinder/shares.conf'%(data_ip))
+            #This was chnaged to create a new shares file since the scheduler was getting confused
+            os.system('sudo echo %s:cinder-volume-spindle >> /etc/cinder/shares_two.conf'%(data_ip))
 
             #Future
             #check to see if there are any other spindle based nodes
@@ -573,6 +574,7 @@ def client_thread(conn, client_addr):
                         # node does not exists in the ciac DB
                         #need to have an elif that accounts for != 'OK' instead of else
                         else:
+                        #elif exists != 'OK':
                             logger.sys_info("node_id: %s new node being inserted in DB" %(node_id))
                             if __debug__ :
                                 print "node_id: %s new node being inserted in DB" %(node_id)
@@ -607,7 +609,6 @@ def client_thread(conn, client_addr):
 
                                 if data['Value']['node_type'] == 'sn':
                                     node_info = node_db.get_node(node_id)
-                                    #SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'])
                                     SNglusterOperations(node_id,node_info['node_data_ip'],node_info['node_name'],node_info['node_disk_type'])
                                     sendStorageConfig(conn, node_id)
                                 elif data['Value']['node_type'] == 'cn':
@@ -616,7 +617,6 @@ def client_thread(conn, client_addr):
                                 while True:
                                     ready = select.select([conn], [], [], core_util.timeout_sec)
                                     if ready[0]:
-                                        #data = conn.recv(core_util.recv_buffer)
                                         data = core_util.recv_data(conn)
                                         break
                                     else:
