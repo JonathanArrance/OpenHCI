@@ -272,7 +272,7 @@ class server_ops:
         else:
             #check if the network specified is associated with the users project
             try:
-                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'", "and":"net_name='%s'" %(create_dict['project_id'],create_dict['network_name'])}
+                select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'"%(create_dict['project_id']), "and":"net_name='%s'" %(create_dict['network_name'])}
                 logger.sys_info("HACK %s"%select_net)
                 net = self.db.pg_select(select_net)
                 self.net_id = net[0][0]
