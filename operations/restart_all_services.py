@@ -33,7 +33,7 @@ def restart_services():
     sc.qpid('restart')
 
     #restart Gluster
-    sc.gluster('restart')
+    #sc.gluster('restart')
 
     #restart all openstack services
     sc.keystone('restart')
