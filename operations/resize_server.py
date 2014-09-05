@@ -32,7 +32,7 @@ def resize_and_confirm(auth_dict,server_dict):
         raise Exception('The instance %s was not resized to flavor %s'%(server_dict['server_id'],server_dict[' flavor_id']))
 
     #get the server status
-    status = {}
+    status = server.get_server(server_dict)
     while(status['server_status'] == 'RESIZE'):
         logger.sys_info("Server is resizeing.")
         status = server.get_server(server_dict)
