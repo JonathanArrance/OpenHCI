@@ -7,8 +7,8 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
 
-import transcirrus.component.nova.server_action as sa
-import transcirrus.component.nova.server as server_ops
+from transcirrus.component.nova.server_action import server_actions
+from transcirrus.component.nova.server import server_ops
 
 def resize_and_confirm(auth_dict,server_dict):
     """
@@ -22,7 +22,7 @@ def resize_and_confirm(auth_dict,server_dict):
     ACCESS: Only admins and power users can resize a server.
     NOTE:None
     """
-    action = sa(auth_dict)
+    action = server_actions(auth_dict)
     server = server_ops(auth_dict)
 
     #resize the server
