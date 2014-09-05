@@ -273,6 +273,7 @@ class server_ops:
             #check if the network specified is associated with the users project
             try:
                 select_net = {"select":'net_id', "from":'trans_network_settings', "where":"proj_id='%s'", "and":"net_name='%s'" %(create_dict['project_id'],create_dict['network_name'])}
+                print select_net
                 net = self.db.pg_select(select_net)
                 self.net_id = net[0][0]
             except:
