@@ -498,9 +498,13 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_error("Could not set the first time boot flag to the UNSET status.")
 
     logger.sys_info("Restarting all services")
-    checkpoint = restart_services()
 
-    return 'OK'
+    #restart all of the services and return the statuses
+    checkpoint = restart_services()
+    checkpoint['status'] = 'OK'
+    logger.sys_info("Service status: %s"%(checkpoint))
+
+    return checkpoint
 
 def check_setup():
     pass
