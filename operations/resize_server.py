@@ -35,6 +35,7 @@ def resize_and_confirm(auth_dict,server_dict):
     status = server.get_server(server_dict)
     while(status['server_status'] == 'RESIZE'):
         logger.sys_info("Server is resizeing.")
+        time.sleep(20)
         status = server.get_server(server_dict)
         logger.sys_info("Server status is %s."%(status['server_status']))
 
