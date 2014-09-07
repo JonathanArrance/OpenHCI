@@ -39,7 +39,7 @@ def resize_and_confirm(auth_dict,server_dict):
         status = server.get_server(server_dict)
         logger.sys_info("Server status is %s."%(status['server_status']))
 
-    logge.sys_info('Sleeping for 60 seconds while instance %s stabilizes.'%(server_dict['server_id']))
+    logger.sys_info('Sleeping for 60 seconds while instance %s stabilizes.'%(server_dict['server_id']))
     time.sleep(60)
 
     #we need to confirm the resize of the server
