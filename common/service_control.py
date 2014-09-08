@@ -390,6 +390,36 @@ def avahi(action):
     else:
         return 'ERROR'
 
+def monit(action):
+    """
+    DESC: Control the monit service for local monitoring of processes, cpu, memory disk, etc.
+    INPUT: start
+           restart
+           stop
+           status
+    OUTPUT: OK
+            ERROR
+            pid (for status command)
+    ACCESS:
+    NOTES: This does not use the private _operator def since the "service" starts and stops differently.
+    """
+    monit = 0
+    if(action.lower() == 'start'):
+        monit = os.system('sudo monit')
+    elif(action.lower() == 'stop'):
+        monit = os.system('sudo monit quit')
+    elif(action.lower() == 'restart'):
+        monit = os.system('sudo monit reload')
+    elif(action.lower() == 'status'):
+        out = subprocess.Popen('sudo ps -o pid -C monit', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = out.stdout.readlines()
+        return process
+
+    if(monit == 0):
+        return 'OK'
+    else:
+        return 'ERROR'
+
 def _operator(service_array,action,silent=True):
     #need to check the status of the call and error corrctly - Figure this out later
     for service in service_array:
