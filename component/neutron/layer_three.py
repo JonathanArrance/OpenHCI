@@ -1197,7 +1197,7 @@ class layer_three_ops:
         inst_name = None
         get_inst = {'select':"inst_name",'from':"trans_instances",'where':"floating_ip_id='%s'"%(floater[0][0])}
         inst_name = self.db.pg_select(get_inst)
-        print inst_name
+
         if(inst_name):
             logger.sys_error("Floating ip attached to instance %s"%(inst_name[0][0]))
             raise Exception("Floating ip attached to inst %s"%(inst_name[0][0]))

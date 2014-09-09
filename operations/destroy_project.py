@@ -35,6 +35,17 @@ def destroy_project(auth_dict, project_dict):
     cinder_snap = snapshot_ops(auth_dict)
     logger.sys_info("Instantiated snapshot_ops object")
 
+    #instances
+    server_list = nova.list_servers(project_dict['project_id'])
+    for server in server_list:
+        input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
+        remove_server = ds.delete_server(auth_dict, input_dict)
+        if(remove_server == "OK"):
+            logger.sys_info("Server %s removed." % server['server_id'])
+        else:
+            logger.sys_info("ERROR, server %s not removed." % server['server_id'])
+            return "inst ERROR"
+
     #floating ips
     floating_ip_list = neutron_router.list_floating_ips(project_dict['project_id'])
     for floating_ip in floating_ip_list:
@@ -47,15 +58,15 @@ def destroy_project(auth_dict, project_dict):
             return "fip ERROR"
 
     #instances
-    server_list = nova.list_servers(project_dict['project_id'])
-    for server in server_list:
-        input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
-        remove_server = ds.delete_server(auth_dict, input_dict)
-        if(remove_server == "OK"):
-            logger.sys_info("Server %s removed." % server['server_id'])
-        else:
-            logger.sys_info("ERROR, server %s not removed." % server['server_id'])
-            return "inst ERROR"
+    #server_list = nova.list_servers(project_dict['project_id'])
+    #for server in server_list:
+    #    input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
+    #    remove_server = ds.delete_server(auth_dict, input_dict)
+    #    if(remove_server == "OK"):
+    #        logger.sys_info("Server %s removed." % server['server_id'])
+    #    else:
+    #        logger.sys_info("ERROR, server %s not removed." % server['server_id'])
+    #        return "inst ERROR"
 
     #snapshots
     snapshot_list = cinder_snap.list_snapshots(project_dict['project_id'])
