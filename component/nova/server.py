@@ -938,6 +938,8 @@ class server_ops:
               if no ports are specifed the default ports 22,80,443 are used
               users can create security groups on in their project
         INPUT: dictionary create_sec - ports[] - op
+                                     - transport - op - tcp/udp
+                                     - enable_ping - op - true/false
                                      - group_name - req
                                      - group_desc - req
                                      - project_id - req
@@ -945,6 +947,9 @@ class server_ops:
                        - sec_group_id
         ACCESS: Admins can create a security group in any prject, users and power
                 users can only create security groups in their own projects.
+        NOTE: The defualts are ports - 22,80,443
+                               transport - tcp
+                               enable_ping - false
         """
         logger.sys_info('\n**Creating security group. Nova:server.py Def: create_sec_group**\n')
         #NOTE: after prototype we will want to have the ability to have more then one security group in a project
@@ -975,6 +980,22 @@ class server_ops:
             ports = [443,80,22]
         else:
             ports = create_sec['ports']
+
+        #the transport protocol for the group tcp/udp
+        transport = 'tcp'
+        if('transport' in create_sec):
+            if(create_sec['transport'] == 'tcp' or create_sec['transport'] == 'udp'):
+                transport = create_sec['transport']
+            else:
+                logger.sys_error("Invalid transport for security group %s"%(create_sec['group_name']))
+                raise Exception("Invalid transport for security group %s"%(create_sec['group_name']))
+
+        #enable ping in the sec group
+        if(enable_ping not in create_sec):
+            ports.append(-1)
+        else:
+            if(create_sec['enable_ping'] == 'true'):
+                ports.append(-1)
 
         #connect to the rest api caller.
         try:
@@ -1033,7 +1054,7 @@ class server_ops:
         #network libs, it uses the quantum REST API for time sake keeping function here
         try:
             for i in range(len(ports)):
-                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "tcp", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],self.sec_group_id)
+                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],transport,self.sec_group_id)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/security-group-rules'

@@ -57,17 +57,6 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("ERROR, floating IP %s not deallocated." % floating_ip['floating_ip_id'])
             return "fip ERROR"
 
-    #instances
-    #server_list = nova.list_servers(project_dict['project_id'])
-    #for server in server_list:
-    #    input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
-    #    remove_server = ds.delete_server(auth_dict, input_dict)
-    #    if(remove_server == "OK"):
-    #        logger.sys_info("Server %s removed." % server['server_id'])
-    #    else:
-    #        logger.sys_info("ERROR, server %s not removed." % server['server_id'])
-    #        return "inst ERROR"
-
     #snapshots
     snapshot_list = cinder_snap.list_snapshots(project_dict['project_id'])
     for snapshot in snapshot_list:
@@ -129,8 +118,10 @@ def destroy_project(auth_dict, project_dict):
             return "sec_key ERROR"
 
     #security groups
+    print project_dict['project_id']
     sec_group_list = nova.list_sec_group(project_dict['project_id'])
     for sec_group in sec_group_list:
+        print project_dict['project_id']
         sec_group['project_id'] = project_dict['project_id']
         remove_sec_group = nova.delete_sec_group(sec_group)
         if(remove_sec_group == "OK"):
