@@ -991,11 +991,10 @@ class server_ops:
                 raise Exception("Invalid transport for security group %s"%(create_sec['group_name']))
 
         #enable ping in the sec group
-        if('enable_ping' not in create_sec):
-            ports.append(-1)
-        else:
+        enable_ping = false
+        if('enable_ping' in create_sec):
             if(create_sec['enable_ping'] == 'true'):
-                ports.append(-1)
+                enable_ping = 'true'
 
         #connect to the rest api caller.
         try:
@@ -1052,28 +1051,41 @@ class server_ops:
 
         #add the ports to the sec group NOTE need to determin if we move this to the
         #network libs, it uses the quantum REST API for time sake keeping function here
-        #try:
-        for i in range(len(ports)):
-            body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],transport,self.sec_group_id)
-            print body
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/security-group-rules'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            print rest
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 200) or (rest['response'] == 201)):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
-            else:
-                util.http_codes(rest['response'],rest['reason'],rest['body'])
-        #except Exception as e:
-         #   logger.sys_error("Could not remove the project %s" %(e))
-         #   raise "%s"%(e)
+        try:
+            for i in range(len(ports)):
+                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],transport,self.sec_group_id)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/security-group-rules'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 200) or (rest['response'] == 201)):
+                    #build up the return dictionary and return it if everythig is good to go
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+                else:
+                    util.http_codes(rest['response'],rest['reason'],rest['body'])
+            if(enable_ping == 'true'):
+                body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],ports[i],self.sec_group_id)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/security-group-rules'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                if((rest['response'] == 200) or (rest['response'] == 201)):
+                    #build up the return dictionary and return it if everythig is good to go
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+                else:
+                    util.http_codes(rest['response'],rest['reason'],rest['body'])
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise "%s"%(e)
 
         #return dictionary
         r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
