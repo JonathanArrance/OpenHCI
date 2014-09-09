@@ -991,7 +991,7 @@ class server_ops:
                 raise Exception("Invalid transport for security group %s"%(create_sec['group_name']))
 
         #enable ping in the sec group
-        if(enable_ping not in create_sec):
+        if('enable_ping' not in create_sec):
             ports.append(-1)
         else:
             if(create_sec['enable_ping'] == 'true'):
