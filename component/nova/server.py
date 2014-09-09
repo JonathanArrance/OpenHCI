@@ -991,9 +991,9 @@ class server_ops:
                 raise Exception("Invalid transport for security group %s"%(create_sec['group_name']))
 
         #enable ping in the sec group
-        enable_ping = false
+        enable_ping = False
         if('enable_ping' in create_sec):
-            if(create_sec['enable_ping'] == 'true'):
+            if(create_sec['enable_ping'] == True):
                 enable_ping = 'true'
 
         #connect to the rest api caller.
@@ -1068,7 +1068,7 @@ class server_ops:
                     logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
                 else:
                     util.http_codes(rest['response'],rest['reason'],rest['body'])
-            if(enable_ping == 'true'):
+            if(enable_ping is True):
                 body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],ports[i],self.sec_group_id)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
                 function = 'POST'
