@@ -1071,7 +1071,7 @@ class server_ops:
                     util.http_codes(rest['response'],rest['reason'])
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
-            raise e
+            raise "%s"%(e)
 
         #return dictionary
         r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
