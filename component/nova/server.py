@@ -1049,7 +1049,7 @@ class server_ops:
                     self.db.pg_transaction_commit()
                     self.sec_group_id = str(security['security_group']['id'])
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'],rest['body'])
         elif(create_sec['update'] == 'true'):
             self.sec_group_id = create_sec['group_id']
 
@@ -1088,7 +1088,7 @@ class server_ops:
                 else:
                     util.http_codes(rest['response'],rest['reason'],rest['body'])
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not add ports to security group %s" %(e))
             raise "%s"%(e)
 
         #return dictionary
