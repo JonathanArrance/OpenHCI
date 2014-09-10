@@ -333,20 +333,18 @@ class server_ops:
             raise Esception("Could not connec to the REST api caller in create_server operation.")
 
         #build the server
-        #try:
-        body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
-        print body
-        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-        function = 'POST'
-        api_path = '/v2/%s/servers' %(create_dict['project_id'])
-        token = self.token
-        sec = self.sec
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-        rest = api.call_rest(rest_dict)
-        print rest
-        #except Exception as e:
-        #    logger.sys_error("Could not remove the project %s" %(e))
-        #    raise e
+        try:
+            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers' %(create_dict['project_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
 
         if(rest['response'] == 202):
             #NOTE: need to add in a polling mechanism to report back status of the creation
@@ -968,7 +966,14 @@ class server_ops:
             if(('group_name' not in create_sec) or ('group_desc' not in create_sec)):
                 logger.sys_error("Required value not passed to create_sec_group operation")
                 raise Exception("Required value not passed to create_sec_group operation")
-        
+            #check if the group name exists, this is a huge hack
+            try:
+                get_group_name = {'select':'sec_group_name','from':'trans_security_group',"where":"sec_group_name='%s'"%(create_sec['group_name'])}
+                group = self.db.pg_select(get_group_name)
+            except:
+                logger.sys_error("Security group already exists in the cloud, please choose a new name.")
+                raise Exception("Security group already exists in the cloud, please choose a new name.")
+
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(create_sec['project_id'])}
             project = self.db.pg_select(get_proj)
@@ -1065,7 +1070,6 @@ class server_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                print rest
                 #check the response and make sure it is a 200 or 201
                 if((rest['response'] == 200) or (rest['response'] == 201)):
                     #build up the return dictionary and return it if everythig is good to go
@@ -1084,7 +1088,6 @@ class server_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
                 rest = api.call_rest(rest_dict)
-                print rest
                 if((rest['response'] == 200) or (rest['response'] == 201)):
                     #build up the return dictionary and return it if everythig is good to go
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
