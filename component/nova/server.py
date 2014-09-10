@@ -1098,8 +1098,11 @@ class server_ops:
         #    raise Exception("Could not add ports to security group")
 
         #return dictionary
-        r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
-        return r_dict
+        if(create_sec['update'] == 'true'):
+            return 'OK'
+        else:
+            r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
+            return r_dict
 
     def update_sec_group(self,update_sec):
         """
