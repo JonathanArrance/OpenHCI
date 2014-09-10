@@ -7,8 +7,8 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
 
-import transcirrus.component.nova.server_action as sa
-import transcirrus.component.nova.server as server_ops
+from transcirrus.component.nova.server_action import server_actions
+from transcirrus.component.nova.server import server_ops
 
 def resize_and_confirm(auth_dict,server_dict):
     """
@@ -22,7 +22,7 @@ def resize_and_confirm(auth_dict,server_dict):
     ACCESS: Only admins and power users can resize a server.
     NOTE:None
     """
-    action = sa(auth_dict)
+    action = server_actions(auth_dict)
     server = server_ops(auth_dict)
 
     #resize the server
@@ -32,12 +32,14 @@ def resize_and_confirm(auth_dict,server_dict):
         raise Exception('The instance %s was not resized to flavor %s'%(server_dict['server_id'],server_dict[' flavor_id']))
 
     #get the server status
+    status = server.get_server(server_dict)
     while(status['server_status'] == 'RESIZE'):
         logger.sys_info("Server is resizeing.")
+        time.sleep(20)
         status = server.get_server(server_dict)
         logger.sys_info("Server status is %s."%(status['server_status']))
 
-    logge.sys_info('Sleeping for 60 seconds while instance %s stabilizes.'%(server_dict['server_id']))
+    logger.sys_info('Sleeping for 60 seconds while instance %s stabilizes.'%(server_dict['server_id']))
     time.sleep(60)
 
     #we need to confirm the resize of the server

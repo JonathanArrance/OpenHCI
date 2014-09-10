@@ -96,9 +96,7 @@ def cinder_sn(action):
     cinder_array1 = ['openstack-cinder-api', 'openstack-cinder-scheduler']
     out1 = _operator(cinder_array1,'stop')
     cinder_array = ['openstack-cinder-volume']
-    
     out = _operator(cinder_array,action)
-    
     return out
 
 def keystone(action):
@@ -296,6 +294,27 @@ def zero_connect_server(action):
     out = _operator(zero_array,action)
     return out
 
+def zero_connect_node(action):
+    """
+    DESC: Control the pacemaker service
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the pacemaker services.
+    NOTES:
+    """
+    out = None
+    if(config.NODE_TYPE == 'cn'):
+        zero_array = ['cn_zero_connect']
+        out = _operator(zero_array,action)
+    if(config.NODE_TYPE == 'sn'):
+        zero_array = ['sn_zero_connect']
+        out = _operator(zero_array,action)
+    return out
+
 def dhcp_server(action):
     """
     DESC: Control the dhcp server
@@ -367,6 +386,36 @@ def avahi(action):
         return process
 
     if(avahi == 0):
+        return 'OK'
+    else:
+        return 'ERROR'
+
+def monit(action):
+    """
+    DESC: Control the monit service for local monitoring of processes, cpu, memory disk, etc.
+    INPUT: start
+           restart
+           stop
+           status
+    OUTPUT: OK
+            ERROR
+            pid (for status command)
+    ACCESS:
+    NOTES: This does not use the private _operator def since the "service" starts and stops differently.
+    """
+    monit = 0
+    if(action.lower() == 'start'):
+        monit = os.system('sudo monit')
+    elif(action.lower() == 'stop'):
+        monit = os.system('sudo monit quit')
+    elif(action.lower() == 'restart'):
+        monit = os.system('sudo monit reload')
+    elif(action.lower() == 'status'):
+        out = subprocess.Popen('sudo ps -o pid -C monit', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = out.stdout.readlines()
+        return process
+
+    if(monit == 0):
         return 'OK'
     else:
         return 'ERROR'

@@ -19,6 +19,8 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
+from transcirrus.operations.restart_all_services import restart_services
+
 from transcirrus.database import node_db
 
 #get the passed in vars
@@ -420,12 +422,12 @@ def run_setup(new_system_variables,auth_dict):
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
 
     #if the node is set as multinode, enable multinode
-    if(sys_vars['SINGLE_NODE'] == '0'):
-        status = node_util.enable_multi_node()
-        if(status != 'OK'):
-            logger.sys_error("Could not enable multi-node. Check the interface and try again.")
-        else:
-            logger.sys_info("Multi-node configuration enabled.")
+    #if(sys_vars['SINGLE_NODE'] == '0'):
+    #    status = node_util.enable_multi_node()
+    #    if(status != 'OK'):
+    #        logger.sys_error("Could not enable multi-node. Check the interface and try again.")
+    #    else:
+    #        logger.sys_info("Multi-node configuration enabled.")
 
     logger.sys_info("Restarting the uplink network adapter.")
     util.restart_network_card("br-ex")
@@ -495,7 +497,14 @@ def run_setup(new_system_variables,auth_dict):
     if(first_boot == 'ERROR'):
         logger.sys_error("Could not set the first time boot flag to the UNSET status.")
 
-    return 'OK'
+    logger.sys_info("Restarting all services")
+
+    #restart all of the services and return the statuses
+    checkpoint = restart_services()
+    checkpoint['status'] = 'OK'
+    logger.sys_info("Service status: %s"%(checkpoint))
+
+    return checkpoint
 
 def check_setup():
     pass

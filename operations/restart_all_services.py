@@ -20,33 +20,91 @@ def restart_services():
     ACCESS: Only an admin can control the dhcp services.
     NOTES:
     """
+    success = {}
 
     #stop the monit service
+    sc.monit('stop')
 
     #restart network cards
-    util.restart_network_card('all')
+    try:
+        util.restart_network_card('all')
+        success['network'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart network after setup completed: %s.'%(e))
+        success['network'] = 'False'
 
     #restart OpenVswitch
-    sc.openvswitch('restart')
+    try:
+        sc.openvswitch('restart')
+        success['vnet'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart the virtual networking layer: %s.'%(e))
+        success['vnet'] = 'False'
 
     #restart Qpid/rabbit
-    sc.qpid('restart')
+    try:
+        sc.qpid('restart')
+        success['queue'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart the queue mechanism %s.'%(e))
+        success['queue'] = 'False'
 
     #restart Gluster
-    sc.gluster('restart')
+    #sc.gluster('restart')
+    try:
+        sc.keystone('restart')
+        success['keystone'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart keystone %s.'%(e))
+        success['keystone'] = 'False'
 
-    #restart all openstack services
-    sc.keystone('restart')
-    sc.gluster_swift('restart')
-    sc.nova('restart')
-    sc.cinder('restart')
-    sc.neutron('restart')
-    sc.glance('restart')
+    try:
+        sc.gluster_swift('restart')
+        success['gluster_swift'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart gluster swift %s.'%(e))
+        success['gluster_swift'] = 'False'
+
+    try:
+        sc.nova('restart')
+        success['nova'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart nova %s.'%(e))
+        success['nova'] = 'False'
+
+    try:
+        sc.cinder('restart')
+        success['cinder'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart cinder %s.'%(e))
+        success['cinder'] = 'False'
+
+    try:
+        sc.neutron('restart')
+        success['neutron'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart neutron %s.'%(e))
+        success['neutron'] = 'False'
+
+    try:
+        sc.glance('restart')
+        success['glance'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart glance %s.'%(e))
+        success['glance'] = 'False'
+
     #sc.ceilometer('restart')
 
-    #restart apache2
-    sc.apache('restart')
+    #restart Qpid/rabbit
+    try:
+        sc.apache('restart')
+        success['apache'] = 'True'
+    except Exception as e:
+        logger.sys_error('Could not restart the apache server %s.'%(e))
+        success['apache'] = 'False'
 
-    #start the monit service
-    
-    return 'OK'
+    #start the monit service back up again
+    sc.monit('start')
+
+    #always return the services successfully restarted
+    return success
