@@ -935,7 +935,7 @@ class server_ops:
     def create_sec_group(self,create_sec):
         """
         DESC: Create a new security group with ports the ports specified,
-              if no ports are specifed the default ports 22,80,443 are used
+              if no ports are specifed the default ports 22,80,443,3389 are used
               users can create security groups on in their project
         INPUT: dictionary create_sec - ports[] - op
                                      - transport - op - tcp/udp
@@ -947,7 +947,7 @@ class server_ops:
                        - sec_group_id
         ACCESS: Admins can create a security group in any prject, users and power
                 users can only create security groups in their own projects.
-        NOTE: The defualts are ports - 22,80,443
+        NOTE: The defualts are ports - 22,80,443,3389
                                transport - tcp
                                enable_ping - false
         """
@@ -977,7 +977,7 @@ class server_ops:
         #account for optional params
         ports = []
         if('ports' not in create_sec):
-            ports = [443,80,22]
+            ports = [443,80,22,3389]
         else:
             ports = create_sec['ports']
 
@@ -1069,9 +1069,7 @@ class server_ops:
                 else:
                     util.http_codes(rest['response'],rest['reason'],rest['body'])
             if(create_sec['enable_ping'] == 'true'):
-                print "fuck you bitch"
                 body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],self.sec_group_id)
-                print "body %s"%(body)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/security-group-rules'
