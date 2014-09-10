@@ -1108,7 +1108,7 @@ class server_ops:
         ACCESS: Admins can update any security group
                 power users and users can only update security groups that they own
         """
-        update_sec['update'] == 'true'
+        update_sec['update'] = 'true'
         self.create_sec_group(update_sec)
 
     def create_sec_keys(self,key_dict):
