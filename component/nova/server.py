@@ -1065,6 +1065,7 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
+            print rest
             #check the response and make sure it is a 200 or 201
             if((rest['response'] == 200) or (rest['response'] == 201)):
                 #build up the return dictionary and return it if everythig is good to go
@@ -1081,12 +1082,13 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
+            print rest
             if((rest['response'] == 200) or (rest['response'] == 201)):
                 #build up the return dictionary and return it if everythig is good to go
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['body'])
+                util.http_codes(rest['response'],rest['reason'])
         #except:
         #    logger.sys_error("Could not add ports to security group")
         #    raise Exception("Could not add ports to security group")
