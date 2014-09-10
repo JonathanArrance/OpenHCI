@@ -1088,8 +1088,8 @@ class server_ops:
                 else:
                     util.http_codes(rest['response'],rest['reason'],rest['body'])
         except Exception:
-            logger.sys_error("Could not add ports to security group %s" %(rest['body']))
-            raise "%s"%(rest['body'])
+            logger.sys_error("Could not add ports to security group")
+            raise "Could not add ports to security group"
 
         #return dictionary
         r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
