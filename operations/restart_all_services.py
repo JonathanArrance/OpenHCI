@@ -23,6 +23,7 @@ def restart_services():
     success = {}
 
     #stop the monit service
+    sc.monit('stop')
 
     #restart network cards
     try:
@@ -101,6 +102,9 @@ def restart_services():
     except Exception as e:
         logger.sys_error('Could not restart the apache server %s.'%(e))
         success['apache'] = 'False'
+
+    #start the monit service back up again
+    sc.monit('start')
 
     #always return the services successfully restarted
     return success

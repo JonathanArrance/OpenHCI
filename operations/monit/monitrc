@@ -1,0 +1,70 @@
+# Monit control file
+#
+# Global section
+#
+# Start Monit in the background (run as a daemon):
+#
+set daemon 30           # check everything at 30 seconds intervals
+  with start delay 60   # delay the first check by 30 seconds
+
+# Set the location for the log file.
+#
+set logfile /var/log/monit.log
+
+# Set the location for the pid file.
+#
+set pidfile /var/run/monit/monit.pid
+
+# Set the location of the Monit id file which stores the unique id for the
+# Monit instance. The id is generated and stored on first Monit start.
+#
+set idfile /var/run/monit/.monit.id
+
+# Set the location of the Monit state file which saves monitoring states
+# on each cycle. If the state file is stored on a persistent filesystem,
+# Monit will recover the monitoring state across reboots.
+#
+set statefile /var/run/monit/monit.state
+
+# By default Monit will drop alert events if no mail servers are available. 
+# To keep the alerts for later delivery retry, we set EVENTQUEUE statement.
+# The base directory where undelivered alerts will be stored is specified
+# by the BASEDIR option. We limit the maximal queue size using the SLOTS
+# option (if omitted, the queue is limited by space available).
+#
+set eventqueue
+    basedir /var/run/monit/events	# set the base directory where events will be stored
+    slots 500						# optionally limit the queue size
+
+# Set the email message format
+#
+set mail-format
+{
+      from: transcirrus-monitor@transcirrus.com
+  reply-to: support@transcirrus.com
+   subject: $HOST : $SERVICE $EVENT on $DATE
+   message: The TransCirrus Cloud Monitor logged and took the given action for the event below.
+
+            Date:        $DATE
+            Service:     $SERVICE
+            Event:       $EVENT
+            Action:      $ACTION
+            Host:        $HOST
+            Description: $DESCRIPTION
+
+            A copy of this message has also been sent to the TransCirrus Support team.
+            For questions or additional help, please reply to this message or email
+            support at support@transcirrus.com.
+
+            TransCirrus Support
+}
+
+# Enable the embedded web server which can be used to view status of 
+# services monitored and manage services from a web interface.
+#
+set httpd port 2812 and
+  allow admin:monit      # require user 'admin' with password 'monit'
+
+# Include process specific conf files for additional configuation settings.
+#
+include /usr/local/lib/python2.7/transcirrus/operations/monit/*.conf
