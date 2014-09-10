@@ -232,7 +232,8 @@ class server_ops:
         else:
             #check if the group specified is associated with the users project
             try:
-                select_sec = {"select":'sec_group_name', "from":'trans_security_group', "where":"proj_id='%s'" %(create_dict['project_id'])}
+                select_sec = {"select":'sec_group_id', "from":'trans_security_group', "where":"proj_id='%s'" %(create_dict['project_id']),"and":"sec_group_name='%s'"%(create_dict['sec_group_name'])}
+                print select_sec
                 get_sec = self.db.pg_select(select_sec)
                 if(not get_sec[0][0]):
                     raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
@@ -332,18 +333,20 @@ class server_ops:
             raise Esception("Could not connec to the REST api caller in create_server operation.")
 
         #build the server
-        try:
-            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2/%s/servers' %(create_dict['project_id'])
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-            rest = api.call_rest(rest_dict)
-        except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
-            raise e
+        #try:
+        body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+        print body
+        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+        function = 'POST'
+        api_path = '/v2/%s/servers' %(create_dict['project_id'])
+        token = self.token
+        sec = self.sec
+        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+        rest = api.call_rest(rest_dict)
+        print rest
+        #except Exception as e:
+        #    logger.sys_error("Could not remove the project %s" %(e))
+        #    raise e
 
         if(rest['response'] == 202):
             #NOTE: need to add in a polling mechanism to report back status of the creation
@@ -943,6 +946,7 @@ class server_ops:
                                      - group_name - req
                                      - group_desc - req
                                      - project_id - req
+                                     - update - op - true/false
         OUTPUT: r_dict - sec_group_name
                        - sec_group_id
         ACCESS: Admins can create a security group in any prject, users and power
@@ -955,12 +959,15 @@ class server_ops:
         #NOTE: after prototype we will want to have the ability to have more then one security group in a project
         #      for now building out 1 in enough. Will also have to make a table in the DB to track them.
         #do variable checks
+        if('update' not in create_sec):
+            create_sec['update'] == 'false'
         if(not create_sec):
             logger.sys_error("No dictionary passed into create_sec_group operation.")
             raise Exception("No dictionary passed into create_sec_group operation.")
-        if(('group_name' not in create_sec) or ('group_desc' not in create_sec)):
-            logger.sys_error("Required value not passed to create_sec_group operation")
-            raise Exception("Required value not passed to create_sec_group operation")
+        if(create_sec['update'] == 'false'):
+            if(('group_name' not in create_sec) or ('group_desc' not in create_sec)):
+                logger.sys_error("Required value not passed to create_sec_group operation")
+                raise Exception("Required value not passed to create_sec_group operation")
         
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(create_sec['project_id'])}
@@ -990,12 +997,6 @@ class server_ops:
                 logger.sys_error("Invalid transport for security group %s"%(create_sec['group_name']))
                 raise Exception("Invalid transport for security group %s"%(create_sec['group_name']))
 
-        #enable ping in the sec group
-        #enable_ping = 'false'
-        #if('enable_ping' in create_sec):
-        #    if(create_sec['enable_ping'] == 'true'):
-        #        enable_ping = 'true'
-
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":create_sec['project_id']}
@@ -1007,47 +1008,50 @@ class server_ops:
             raise Exception("Could not connect to the API caller")
 
         #create a new security group in the project
-        try:
-            body = '{"security_group": {"name": "%s", "description": "%s"}}' %(create_sec['group_name'],create_sec['group_desc'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id":project[0][0]}
-            function = 'POST'
-            api_path = '/v2/%s/os-security-groups' %(create_sec['project_id'])
-            logger.sys_info('%s'%(api_path))
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-            rest = api.call_rest(rest_dict)
-        except Exception as e:
-            self.db.pg_transaction_rollback()
-            logger.sys_error("Could not create security group %s" %(e))
-            raise e
-
-        if((rest['response'] == 200) or (rest['response'] == 203)):
-            #build up the return dictionary and return it if everythig is good to go
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            security = json.loads(rest['data'])
-            get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(create_sec['project_id'])}
-            def_group = self.db.pg_select(get_def_group)
-            logger.sys_info("%s"%(def_group))
+        if(create_sec['update'] == 'false'):
             try:
-                self.db.pg_transaction_begin()
-                #if the default is empty and the user is an admin add a default
-                if(def_group[0][0] == '0'):
-                    if(self.is_admin == 1):
-                        update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
-                        self.db.pg_update(update_dict)
-                #add the security group info to the database
-                insert_dict = {"proj_id":create_sec['project_id'],"user_name":self.username,"user_id":self.user_id,"sec_group_id":str(security['security_group']['id']),"sec_group_name":str(security['security_group']['name']),"sec_group_desc":create_sec['group_desc']}
-                self.db.pg_insert("trans_security_group",insert_dict)
-            except:
+                body = '{"security_group": {"name": "%s", "description": "%s"}}' %(create_sec['group_name'],create_sec['group_desc'])
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json","X-Auth-Project-Id":project[0][0]}
+                function = 'POST'
+                api_path = '/v2/%s/os-security-groups' %(create_sec['project_id'])
+                logger.sys_info('%s'%(api_path))
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
                 self.db.pg_transaction_rollback()
-                logger.sql_error("Could not add in the new security group")
-                raise Exception("Could not add in the new security group")
+                logger.sys_error("Could not create security group %s" %(e))
+                raise e
+
+            if((rest['response'] == 200) or (rest['response'] == 203)):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                security = json.loads(rest['data'])
+                get_def_group = {"select":"def_security_group_id", "from":"projects", "where":"proj_id='%s'" %(create_sec['project_id'])}
+                def_group = self.db.pg_select(get_def_group)
+                logger.sys_info("%s"%(def_group))
+                try:
+                    self.db.pg_transaction_begin()
+                    #if the default is empty and the user is an admin add a default
+                    if(def_group[0][0] == '0'):
+                        if(self.is_admin == 1):
+                            update_dict = {'table':"projects",'set':"""def_security_group_id='%s',def_security_group_name='%s'""" %(str(security['security_group']['id']),str(security['security_group']['name'])),'where':"proj_id='%s'" %(create_sec['project_id'])}
+                            self.db.pg_update(update_dict)
+                    #add the security group info to the database
+                    insert_dict = {"proj_id":create_sec['project_id'],"user_name":self.username,"user_id":self.user_id,"sec_group_id":str(security['security_group']['id']),"sec_group_name":str(security['security_group']['name']),"sec_group_desc":create_sec['group_desc']}
+                    self.db.pg_insert("trans_security_group",insert_dict)
+                except:
+                    self.db.pg_transaction_rollback()
+                    logger.sql_error("Could not add in the new security group")
+                    raise Exception("Could not add in the new security group")
+                else:
+                    self.db.pg_transaction_commit()
+                    self.sec_group_id = str(security['security_group']['id'])
             else:
-                self.db.pg_transaction_commit()
-                self.sec_group_id = str(security['security_group']['id'])
-        else:
-            util.http_codes(rest['response'],rest['reason'])
+                util.http_codes(rest['response'],rest['reason'])
+        elif(create_sec['update'] == 'true'):
+            self.sec_group_id = create_sec['group_id']
 
         #add the ports to the sec group NOTE need to determin if we move this to the
         #network libs, it uses the quantum REST API for time sake keeping function here
@@ -1090,6 +1094,22 @@ class server_ops:
         #return dictionary
         r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
         return r_dict
+
+    def update_sec_group(self,update_sec):
+        """
+        DESC: Update an exisitng security group with new tcp/udp ports or enable pings
+        INPUT: dictionary update_sec - ports[] - op
+                                     - transport - op - tcp/udp
+                                     - enable_ping - op - true/false
+                                     - group_id - req
+                                     - project_id - req
+        OUTPUT: OK - success
+                ERROR - failure
+        ACCESS: Admins can update any security group
+                power users and users can only update security groups that they own
+        """
+        update_sec['update'] == 'true'
+        self.create_sec_group(update_sec)
 
     def create_sec_keys(self,key_dict):
         """
@@ -1462,6 +1482,7 @@ class server_ops:
         OUTPUT: r_dict - sec_group_name
                        - sec_group_id
                        - sec_group_desc
+                       - transport - tcp/udp
                        - ports - array of ports
         NOTE: we will use a combination of the openstack and transcirrus db
         """
@@ -1528,7 +1549,7 @@ class server_ops:
             load = json.loads(rest['data'])
             rule_array = []
             for rule in load['security_group']['rules']:
-                rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr'])}
+                rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr']),'transport':str(rule['ip_protocol'])}
                 rule_array.append(rule_dict)
             r_dict = {'sec_group_name':get_group[0][5], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array}
             return r_dict
