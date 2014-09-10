@@ -960,7 +960,7 @@ class server_ops:
         #      for now building out 1 in enough. Will also have to make a table in the DB to track them.
         #do variable checks
         if('update' not in create_sec):
-            create_sec['update'] == 'false'
+            create_sec['update'] = 'false'
         if(not create_sec):
             logger.sys_error("No dictionary passed into create_sec_group operation.")
             raise Exception("No dictionary passed into create_sec_group operation.")
