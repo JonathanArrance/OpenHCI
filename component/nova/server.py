@@ -968,11 +968,14 @@ class server_ops:
                 raise Exception("Required value not passed to create_sec_group operation")
             #check if the group name exists, this is a huge hack
             try:
-                get_group_name = {'select':'sec_group_name','from':'trans_security_group',"where":"sec_group_name='%s'"%(create_sec['group_name'])}
+                get_group_name = {'select':'sec_group_id','from':'trans_security_group',"where":"sec_group_name='%s'"%(create_sec['group_name'])}
                 group = self.db.pg_select(get_group_name)
+                if(group):
+                    logger.sys_error("Security group already exists in the cloud, please choose a new name.")
+                    raise Exception("Security group already exists in the cloud, please choose a new name.")
             except:
-                logger.sys_error("Security group already exists in the cloud, please choose a new name.")
-                raise Exception("Security group already exists in the cloud, please choose a new name.")
+                logger.sys_error("Failed while checking security group.")
+                raise Exception("Failed while checking security group.")
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(create_sec['project_id'])}
