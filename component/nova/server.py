@@ -1069,8 +1069,9 @@ class server_ops:
                 else:
                     util.http_codes(rest['response'],rest['reason'],rest['body'])
             if(enable_ping is True):
+                print "fuck you bitch"
                 body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],self.sec_group_id)
-                print body
+                print "body %s"%(body)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/security-group-rules'
