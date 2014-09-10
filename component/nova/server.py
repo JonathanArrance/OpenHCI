@@ -1071,6 +1071,8 @@ class server_ops:
                 #build up the return dictionary and return it if everythig is good to go
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+            elif(rest['response'] == 409):
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['body'])
         if(create_sec['enable_ping'] == 'true'):
@@ -1087,6 +1089,8 @@ class server_ops:
                 #build up the return dictionary and return it if everythig is good to go
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+            elif(rest['response'] == 409):
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             else:
                 util.http_codes(rest['response'],rest['reason'])
         #except:
