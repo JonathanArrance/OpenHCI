@@ -172,8 +172,7 @@ def get_node_stats (node_list):
 # OR just the name and IP address of the given node.
 def get_list_of_nodes (node_name=None):
     try:
-        ##handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
-        handle = db.pgsql (db.TRANSCIRRUS_DB, db.TRAN_DB_PORT, db.TRAN_DB_NAME, db.TRAN_DB_USER, db.TRAN_DB_PASS)
+        handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
     except Exception as e:
         print "Could not connect to db with error: %s" % (e)
         raise Exception ("Could not connect to db with error: %s" %(e))
