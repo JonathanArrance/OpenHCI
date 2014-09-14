@@ -345,16 +345,29 @@ class server_ops:
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             raise e
+        else:
+            self.load = json.loads(rest['data'])
+            #poll the status, if the status is ACTIVE
+            server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
+            while(True):
+                status = self.get_server(server)
+                if(status['server_status'] == 'ACTIVE'):
+                    break;
+                elif(status['server_status'] == 'BUILD'):
+                    logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
+                elif(status['server_status'] == 'ERROR'):
+                    logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
+                    raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
 
         if(rest['response'] == 202):
             #NOTE: need to add in a polling mechanism to report back status of the creation
-            load = json.loads(rest['data'])
+            #load = json.loads(rest['data'])
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
                 # ALL NONE USED TO BE "NULL"
                 ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':create_dict['project_id'],
-                            'in_use':"1",'floating_ip_id':None,'inst_id':load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],
+                            'in_use':"1",'floating_ip_id':None,'inst_id':self.load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],
                             'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,
                             'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],
                             'inst_int_net_name':create_dict['network_name'],'inst_zone':create_dict['avail_zone']}
@@ -366,7 +379,7 @@ class server_ops:
             else:
                 #commit the db transaction
                 self.db.pg_transaction_commit()
-                r_dict = {'vm_name':create_dict['name'],'vm_id':load['server']['id'],'sec_key_name':create_dict['sec_key_name'],
+                r_dict = {'vm_name':create_dict['name'],'vm_id':self.load['server']['id'],'sec_key_name':create_dict['sec_key_name'],
                           'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
                 return r_dict
         else:
@@ -856,41 +869,6 @@ class server_ops:
                 logger.sys_error("Users can only delete virtual servers they own.")
                 raise Exception("Users can only delete virtual servers they own.")
 
-        #This has to be made into an OPS file, to much going on here
-        #remove the volumes attached to the instance.
-        """
-        try:
-            get_vols = {'select':'vol_id','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(delete_dict['server_id'])}
-            vols = self.db.pg_select(get_vols)
-        except:
-            logger.sys_error("Volume could not be found.")
-            raise Exception("Volume could not be found.")
-        #this will have to be forked some how, maybe use qpid to run in the back ground.
-        if(vols):
-            for vol in vols:
-                vol_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'volume_id':vol[0]}
-                remove = self.server_storage_ops.detach_vol_from_server(vol_dict)
-
-        #remove the floating ips from the instance
-        try:
-            get_float_id = {'select':'floating_ip_id','from':'trans_instances','where':"inst_id='%s'"%(delete_dict['server_id'])}
-            floater = self.db.pg_select(get_float_id)
-        except:
-            logger.sys_error("Floating ip id could not be found.")
-            raise Exception("Floating ip id could not be found.")
-        try:
-            get_float_ip = {'select':'floating_ip','from':'trans_floating_ip','where':"floating_ip_id='%s'"%(floater[0][0])}
-            floatip = self.db.pg_select(get_float_ip)
-        except:
-            logger.sys_error("Floating ip could not be found.")
-            raise Exception("Floating ip could not be found.")
-
-        if(len(floatip) >= 1):
-            float_dict = {'project_id':delete_dict['project_id'] ,'instance_id': delete_dict['server_id'],'floating_ip':floatip[0][0],'action':'remove'}
-            logger.sys_error("HACK: %s"%(float_dict))
-            remove_float = self.layer_three.update_floating_ip(float_dict)
-            logger.sys_error("HACK: %s"%(remove_float))
-        """
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -1063,45 +1041,45 @@ class server_ops:
 
         #add the ports to the sec group NOTE need to determin if we move this to the
         #network libs, it uses the quantum REST API for time sake keeping function here
-        #try:
-        for i in range(len(ports)):
-            body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],transport,self.sec_group_id)
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/security-group-rules'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            #check the response and make sure it is a 200 or 201
-            if((rest['response'] == 200) or (rest['response'] == 201)):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
-            elif(rest['response'] == 409):
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            else:
-                util.http_codes(rest['response'],rest['reason'],rest['body'])
-        if(create_sec['enable_ping'] == 'true'):
-            body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],self.sec_group_id)
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/security-group-rules'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            if((rest['response'] == 200) or (rest['response'] == 201)):
-                #build up the return dictionary and return it if everythig is good to go
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
-            elif(rest['response'] == 409):
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            else:
-                util.http_codes(rest['response'],rest['reason'])
-        #except:
-        #    logger.sys_error("Could not add ports to security group")
-        #    raise Exception("Could not add ports to security group")
+        try:
+            for i in range(len(ports)):
+                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],transport,self.sec_group_id)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/security-group-rules'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 200) or (rest['response'] == 201)):
+                    #build up the return dictionary and return it if everythig is good to go
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+                elif(rest['response'] == 409):
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'],rest['body'])
+            if(create_sec['enable_ping'] == 'true'):
+                body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],self.sec_group_id)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/security-group-rules'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                if((rest['response'] == 200) or (rest['response'] == 201)):
+                    #build up the return dictionary and return it if everythig is good to go
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+                elif(rest['response'] == 409):
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
+        except:
+            logger.sys_error("Could not add ports to security group")
+            raise Exception("Could not add ports to security group")
 
         #return dictionary
         if(create_sec['update'] == 'true'):
