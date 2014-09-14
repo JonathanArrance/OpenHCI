@@ -521,5 +521,7 @@ class server_actions:
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
                 return load['console']['url']
+        elif(rest['response'] == 409):
+            logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
