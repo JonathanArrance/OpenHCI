@@ -465,6 +465,7 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
+            logger.sys_info("HACK: %s"%(rest))
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             raise Exception("Could not connec to the REST api caller in create_server operation. %s"%(e))
