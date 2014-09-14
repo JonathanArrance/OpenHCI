@@ -469,10 +469,10 @@ class server_ops:
         if(rest['response'] == 200):
             load = json.loads(rest['data'])
             #If the field is empty just return
-            if('inst_id' not in server):
-                #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
-                r_dict = {'server_status':load['server']['status']}
-                return r_dict
+            #if('inst_id' not in server):
+            #    #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
+            #    r_dict = {'server_status':load['server']['status']}
+            #    return r_dict
             input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
             novnc = self.server_actions.get_instance_console(input_dict)
             #build the return dictionary
