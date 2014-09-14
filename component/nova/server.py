@@ -352,9 +352,10 @@ class server_ops:
             while(True):
                 status = self.get_server(server)
                 if(status['server_status'] == 'ACTIVE'):
+                    logger.sys_info('Hack: Active server with ID %s.'%(self.load['server']['id']))
                     break
                 elif(status['server_status'] == 'BUILD'):
-                    logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
+                    logger.sys_info('Hack: Building server with ID %s.'%(self.load['server']['id']))
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
                     break
