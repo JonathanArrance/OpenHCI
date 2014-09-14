@@ -357,7 +357,7 @@ class server_ops:
                     logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
-                    raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
+                    #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
 
         if(rest['response'] == 202):
             #NOTE: need to add in a polling mechanism to report back status of the creation
