@@ -466,6 +466,7 @@ class server_ops:
             raise Exception("Could not connec to the REST api caller in create_server operation. %s"%(e))
 
         if(rest['response'] == 200):
+            load = json.loads(rest['data'])
             #If the field is empty just return
             if('inst_id' not in server):
                 #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
@@ -473,7 +474,6 @@ class server_ops:
                 return r_dict
             input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
             novnc = self.server_actions.get_instance_console(input_dict)
-            load = json.loads(rest['data'])
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
                       'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
