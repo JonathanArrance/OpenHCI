@@ -350,7 +350,9 @@ class server_ops:
             #poll the status, if the status is ACTIVE
             server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
             while(True):
+                logger.sys_info('Hack: While loop')
                 status = self.get_server(server)
+                logger.sys_info('Hack %s'%(status))
                 if(status['server_status'] == 'ACTIVE'):
                     logger.sys_info('Hack: Active server with ID %s.'%(self.load['server']['id']))
                     break
