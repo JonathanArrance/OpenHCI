@@ -436,9 +436,6 @@ class server_ops:
             elif((self.user_level == 2) and (self.project_id == input_dict['project_id'])):
                 get_server = {'select':"inst_name,inst_id,inst_key_name,inst_sec_group_name,inst_flav_name,inst_image_name,inst_int_net_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"inst_id='%s'" %(input_dict['server_id']), 'and':"inst_user_id='%s'" %(self.user_id)}
             server = self.db.pg_select(get_server)
-            #If the field is empty just return
-            if('inst_id' not in server):
-                return
         except Exception as e:
             logger.sys_error('Could not get server info: get_server %s'%(e))
             raise Exception('Could not get server info: get_server %s'%(e))
@@ -469,6 +466,11 @@ class server_ops:
             raise Exception("Could not connec to the REST api caller in create_server operation. %s"%(e))
 
         if(rest['response'] == 200):
+            #If the field is empty just return
+            if('inst_id' not in server):
+                #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
+                r_dict = {'server_status':load['server']['status']}
+                return r_dict
             input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
             novnc = self.server_actions.get_instance_console(input_dict)
             load = json.loads(rest['data'])
