@@ -465,7 +465,6 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            logger.sys_info("HACK: %s"%(rest))
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             raise Exception("Could not connec to the REST api caller in create_server operation. %s"%(e))
@@ -473,10 +472,10 @@ class server_ops:
         if(rest['response'] == 200):
             load = json.loads(rest['data'])
             #If the field is empty just return
-            #if('inst_id' not in server):
-            #    #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
-            #    r_dict = {'server_status':load['server']['status']}
-            #    return r_dict
+            if(not server):
+                #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
+                r_dict = {'server_status':load['server']['status']}
+                return r_dict
             input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
             novnc = self.server_actions.get_instance_console(input_dict)
             #build the return dictionary
