@@ -475,6 +475,8 @@ class server_ops:
                       'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
                       'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'novnc_console':novnc}
             return r_dict
+        elif(rest['response'] == 409):
+            logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
 
     def detach_all_servers_from_network(self,input_dict):
         """
