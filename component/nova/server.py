@@ -352,11 +352,12 @@ class server_ops:
             while(True):
                 status = self.get_server(server)
                 if(status['server_status'] == 'ACTIVE'):
-                    break;
+                    break
                 elif(status['server_status'] == 'BUILD'):
                     logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
+                    break
                     #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
 
         if(rest['response'] == 202):
