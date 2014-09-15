@@ -106,15 +106,17 @@ def destroy_project(auth_dict, project_dict):
 
     #security keys
     sec_key_list = nova.list_sec_keys(project_dict['project_id'])
+    logger.sys_info("HACK: sec_key_list %s"%(sec_key_list))
     for sec_key in sec_key_list:
+        logger.sys_info("HACK: sec_key %s"%(sec_key))
         #sec_key_dict = nova.get_sec_keys(sec_key['key_id'])
         #sec_key_dict['project_id'] = project_dict['project_id']
         sec_key_dict = {'sec_key_name': sec_key['key_name'], 'project_id': project_dict['project_id']}
         remove_sec_key = nova.delete_sec_keys(sec_key_dict)
         if(remove_sec_key == "OK"):
-            logger.sys_info("sec_key %s removed." % sec_key_dict['sec_key_name'])
+            logger.sys_info("HACK: sec_key %s removed." % sec_key_dict['sec_key_name'])
         else:
-            logger.sys_info("ERROR, sec_key %s not removed." % sec_key_dict['sec_key_name'])
+            logger.sys_info("HACK: ERROR, sec_key %s not removed." % sec_key_dict['sec_key_name'])
             return "sec_key ERROR"
 
     #security groups
