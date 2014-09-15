@@ -213,7 +213,7 @@ class gluster_ops:
                 logger.sys_error('Gluster volume info for %s could not be set.'%(input_dict['volume_name']))
                 self.db.pg_transaction_rollback()
             else:
-                logger.sys_error('Gluster volume info for %s set.'%(input_dict['volume_name']))
+                logger.sys_info('Gluster volume info for %s set.'%(input_dict['volume_name']))
                 self.db.pg_transaction_commit()
 
         return self.state
@@ -277,7 +277,7 @@ class gluster_ops:
                     logger.sys_error('Gluster volume info for %s could not be removed.'%(volume_name))
                     self.db.pg_transaction_rollback()
                 else:
-                    logger.sys_error('Gluster volume info for %s removed.'%(volume_name))
+                    logger.sys_info('Gluster volume info for %s removed.'%(volume_name))
                     self.db.pg_transaction_commit()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
