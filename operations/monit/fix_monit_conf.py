@@ -56,7 +56,7 @@ def fix_storage_conf():
 
     # Update the disks.conf file with our device.
     handle = open (MONIT_CONF_LOC + DK_CONF, 'a')
-    handle.write ("check filesystem rootfs with path %s\n" % dev)
+    handle.write ("check filesystem sn-gluster-vol with path %s\n" % dev)
     handle.write ("  if space usage > 80% then alert\n")
     handle.write ("  if inode usage > 80% then alert\n")
     handle.close()
