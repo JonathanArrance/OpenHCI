@@ -38,7 +38,7 @@ def node_stats (node="all"):
 
 # Return some random stats for 3 simulated nodes.
 def get_demo_stats():
-    stats_dict = {}
+    stats_array = []
 
     # We will simulate the stats for 3 nodes (core, compute & storage) in a cloud.
     host_name         = "demo_core-1"
@@ -62,12 +62,16 @@ def get_demo_stats():
     gluster_usage     = "%.1f" % (float(gluster_total) - random.uniform(0, 1400000))
     gluster_precent   = "%.1f" % (float(gluster_usage) / float(gluster_total) * 100)
 
-    stats_dict['node0'] = {'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
+   
+    
+    disk_array0 = []
+    disk_array0.append({'name': rootfs_name, 'total_space': rootfs_total, 'space_usage_mb': rootfs_usage, 'space_usage_precent': rootfs_precent})
+    disk_array0.append({'name': gluster_name, 'total_space': gluster_total, 'space_usage_mb': gluster_usage, 'space_usage_precent': gluster_precent})
+    
+    stats_array.append({'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
                            'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
-                           'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent}
-
-    stats_dict['node0']['disk0'] = {'name': rootfs_name, 'total_space': rootfs_total, 'space_usage_mb': rootfs_usage, 'space_usage_precent': rootfs_precent}
-    stats_dict['node0']['disk1'] = {'name': gluster_name, 'total_space': gluster_total, 'space_usage_mb': gluster_usage, 'space_usage_precent': gluster_precent}
+                           'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent,
+                           'disks': disk_array0})
     
     host_name         = "demo_compute-1"
     host_type         = "compute"
@@ -84,12 +88,14 @@ def get_demo_stats():
     rootfs_total      = "49214.7"
     rootfs_usage      = "%.1f" % (float(rootfs_total) - random.uniform(0, 40000))
     rootfs_precent    = "%.1f" % (float(rootfs_usage) / float(rootfs_total) * 100)
+    
+    disk_array1 = []
+    disk_array1.append({'name': rootfs_name, 'total_space': rootfs_total, 'space_usage_mb': rootfs_usage, 'space_usage_precent': rootfs_precent})
 
-    stats_dict['node1'] = {'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
+    stats_array.append({'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
                            'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
-                           'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent}
-
-    stats_dict['node1']['disk0'] = {'name': rootfs_name, 'total_space': rootfs_total, 'space_usage_mb': rootfs_usage, 'space_usage_precent': rootfs_precent}
+                           'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent,
+                           'disks': disk_array1})
     
     host_name         = "demo_storage-1"
     host_type         = "storage"
@@ -112,32 +118,32 @@ def get_demo_stats():
     gluster_usage     = "%.1f" % (float(gluster_total) - random.uniform(0, 1400000))
     gluster_precent   = "%.1f" % (float(gluster_usage) / float(gluster_total) * 100)
 
-    stats_dict['node2'] = {'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
+    disk_array2 = []
+    disk_array2.append({'name': rootfs_name, 'total_space': rootfs_total, 'space_usage_mb': rootfs_usage, 'space_usage_precent': rootfs_precent})
+    disk_array2.append({'name': gluster_name, 'total_space': gluster_total, 'space_usage_mb': gluster_usage, 'space_usage_precent': gluster_precent})
+    
+    stats_array.append({'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
                            'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
-                           'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent}
+                           'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent,
+                           'disks': disk_array2})
 
-    stats_dict['node2']['disk0'] = {'name': rootfs_name, 'total_space': rootfs_total, 'space_usage_mb': rootfs_usage, 'space_usage_precent': rootfs_precent}
-    stats_dict['node2']['disk1'] = {'name': gluster_name, 'total_space': gluster_total, 'space_usage_mb': gluster_usage, 'space_usage_precent': gluster_precent}
-
-    return (stats_dict)
+    return (stats_array)
 
 
 # Get the stats for each node in the node_list.
 def get_node_stats (node_list):
-    stats_dict = {}
+    stats_array = []
 
     # Loop through the node(s) and get the stats for each.
-    node_idx = 0
     for node in node_list:
         node_name = node['node_name']
         node_ip   = node['node_data_ip']
         node_type = node['node_type']
-        dict_name = "node%d" % node_idx
 
         # Get and parse the xml from the node.
         if (get_and_parse_xml (node_ip) != None):
             # There was a problem getting the xml.
-            stats_dict[dict_name] = {'name': node_name, 'type': "error"}
+            stats_array.append({'name': node_name, 'type': "error"})
             continue
 
         host_name         = get_host_name()
@@ -151,21 +157,21 @@ def get_node_stats (node_list):
         mem_used_percent  = get_mem_used_percent()
         swap_used_percent = get_swap_used_percent()
 
-        stats_dict[dict_name] = {'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
-                                 'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
-                                 'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent}
-
         # Get the stats for each disk in the xml.
+        disk_array = []
         num_disks = find_disks()
         for i in range(0, num_disks):
-            disk_dict_name = "disk%d" % i
             disk_name    = get_disk_name(i)
             disk_usage   = get_disk_usage(i)
             disk_percent = get_disk_percent(i)
             disk_total   = get_disk_total(i)
-            stats_dict[dict_name][disk_dict_name] = {'name': disk_name, 'total_space': disk_total, 'space_usage_mb': disk_usage, 'space_usage_precent': disk_percent}
+            disk_array.append({'name': disk_name, 'total_space': disk_total, 'space_usage_mb': disk_usage, 'space_usage_precent': disk_percent})
 
-    return (stats_dict)
+        stats_array.append({'name': host_name, 'type': host_type, 'load_avg01': load_avg01, 'load_avg05': load_avg05,
+                                 'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
+                                 'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent,
+                                 'disks': disk_array})
+    return (stats_array)
 
 
 # Goes through the database and returns a dictonary of all nodes with the node's name and data IP address
@@ -313,6 +319,8 @@ def get_swap_used_percent():
 
 # Return the number of disks from the xml and keep the list of disks for later use.
 def find_disks():
+    global disk_list
+    disk_list = []
     service_list = xmldoc.getElementsByTagName ('service')
     for service in service_list:
         if service.attributes['type'].value == "0":

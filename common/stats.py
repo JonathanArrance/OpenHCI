@@ -162,7 +162,14 @@ class stat_ops:
                 User none
         NOTES: Returns a number
         """
-        pass
+        #check if admin
+        if(self.is_admin == 0):
+            logger.sys_error("Stats are admin-only.")
+            raise Exception("Stats are admin-only.")
+        else:            
+            user_dict = {'table':'trans_user_info'}
+            num_users = self.db.count_elements(user_dict)
+            return num_users
     
     def get_num_volumes(self,project_id = None):
         """

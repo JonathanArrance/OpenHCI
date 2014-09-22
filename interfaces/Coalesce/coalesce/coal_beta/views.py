@@ -17,6 +17,8 @@ import time
 
 
 from transcirrus.common.auth import authorization
+from transcirrus.common.stats import stat_ops
+import transcirrus.common.node_stats as node_stats
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
@@ -64,7 +66,68 @@ from urlparse import urlsplit
 from coalesce.coal_beta.forms import *
 
 def welcome(request):
-    return render_to_response('coal/welcome.html', RequestContext(request, ))
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            #Cloud/Node stats
+            stats = stat_ops(auth)
+            ns = node_stats
+            tot_users = stats.get_total_cloud_users()
+            tot_proj = stats.get_num_project()
+            full_stats = ns.node_stats()
+            tot_nodes = len(full_stats)
+            
+            #Project stats
+            to = tenant_ops(auth)
+            so = server_ops(auth)
+            l3 = layer_three_ops(auth)
+            vo = volume_ops(auth)
+            ao = account_service_ops(auth)
+            no = neutron_net_ops(auth)
+
+            tl = to.list_all_tenants()
+            tenant_info = []
+            for tenant in tl:
+                servers = so.list_servers(tenant['project_id'])
+                num_servers = len(servers)
+                
+                fips = l3.list_floating_ips(tenant['project_id'])
+                num_fips = len(fips)
+                
+                volumes = vo.list_volumes(tenant['project_id'])
+                num_vol = len(volumes)
+                
+                #containers = ao.get_account_info(tenant['project_id'])
+                #num_cont = len(containers)
+                #print num_cont
+                num_cont = 0
+                
+                routers = l3.list_routers(tenant['project_id'])
+                num_rout = len(routers)
+                
+                networks = no.list_internal_networks(tenant['project_id'])
+                num_net = len(networks)
+                
+                users = to.list_tenant_users(tenant['project_id'])
+                num_users = len(users)
+                
+                tenant_info.append({'project_name': tenant['project_name'],
+                                    'num_servers': num_servers,
+                                    'num_fips': num_fips,
+                                    'num_vol': num_vol,
+                                    'num_cont': num_cont,
+                                    'num_rout': num_rout,
+                                    'num_net': num_net,
+                                    'num_users': num_users})
+            
+            return render_to_response('coal/stat_panel.html', RequestContext(request, {'full_stats': full_stats,
+                                                                                       'tot_users': tot_users,
+                                                                                       'tot_proj': tot_proj,
+                                                                                       'tot_nodes': tot_nodes,
+                                                                                       'tenant_info': tenant_info,}))
+    except Exception as e:
+        print e
+        return render_to_response('coal/welcome.html', RequestContext(request,))
 
 def privacy_policy(request):
     return render_to_response('coal/privacy-policy.html', RequestContext(request,))
