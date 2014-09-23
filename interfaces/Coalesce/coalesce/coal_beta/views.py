@@ -125,6 +125,9 @@ def welcome(request):
                                                                                        'tot_proj': tot_proj,
                                                                                        'tot_nodes': tot_nodes,
                                                                                        'tenant_info': tenant_info,}))
+        else:
+            return render_to_response('coal/welcome.html', RequestContext(request,))
+        
     except Exception as e:
         print e
         return render_to_response('coal/welcome.html', RequestContext(request,))
