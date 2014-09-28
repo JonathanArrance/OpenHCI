@@ -359,7 +359,8 @@ class server_ops:
                     time.sleep(10)
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
-                    break
+                    #break
+                    return rest
                     #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
 
         if(rest['response'] == 202):
