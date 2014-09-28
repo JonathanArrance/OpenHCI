@@ -386,7 +386,8 @@ class server_ops:
                           'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
                 return r_dict
         else:
-            return util.http_codes(rest['response'],rest['reason'],rest['data'])
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            return rest
 
     def get_server(self,input_dict):
         """
