@@ -25,10 +25,10 @@ dhcp_retry=5
 def http_codes(code,reason=None,data=None):
     if(code):
         logger.sys_error("Response %s with Reason %s Data:%s" %(code,reason,data))
-        raise Exception("Response %s with Reason %s Data:%s" %(code,reason,data))
+        #raise Exception("Response %s with Reason %s Data:%s" %(code,reason,data))
     else:
         logger.sys_error("Error for unknown reason.")
-        raise Exception("Error for unknown reason.")
+        #raise Exception("Error for unknown reason.")
 
 def db_connect():
     try:

@@ -1027,6 +1027,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         auth = request.session['auth']
         so = server_ops(auth)
         no = neutron_net_ops(auth)
+        #need to check available resources before createion: error if not enough
+
         instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
                         'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                         'network_name': network_name,'image_name': image_name,
@@ -1040,7 +1042,7 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        messages.warning(request, "Unable to create image.")
+        messages.warning(request, "Unable to create new instance.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def pause_server(request, project_id, instance_id):

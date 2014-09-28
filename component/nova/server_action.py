@@ -17,6 +17,8 @@ from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
+from flavor import flavor_ops
+
 
 class server_actions:
     #UPDATED and Unit tested
@@ -525,3 +527,27 @@ class server_actions:
             logger.sys_error("Could not get server status %s"%(input_dict['instance_id']))
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
+
+    def validate_instance(self,input_dict):
+        """
+        DESC: Get the novnc console associated with an instance.
+        INPUT: input_dict - project_id
+                          - flavor_id
+        OUTPUT: OK - instance can be created
+                ERROR - instance can not be created
+        ACCESS: Admin - can validate an instance in any project they are an admin of
+                PU - can validate an instance only in the project they are in
+                User - can validate an instance only in the project they are in
+        NOTES: 
+        """
+        #make sure the dictionaty vals are good
+        #make sure the project exists
+        #make sure the flavor exists
+        
+        #get flavor attributes
+        #get quota for project
+        
+        #check if attributes are under granted quota
+        
+        
+        

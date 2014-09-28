@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python2.7
 #######standard impots#######
 import sys
 import json
@@ -233,7 +233,6 @@ class server_ops:
             #check if the group specified is associated with the users project
             try:
                 select_sec = {"select":'sec_group_id', "from":'trans_security_group', "where":"proj_id='%s'" %(create_dict['project_id']),"and":"sec_group_name='%s'"%(create_dict['sec_group_name'])}
-                print select_sec
                 get_sec = self.db.pg_select(select_sec)
                 if(not get_sec[0][0]):
                     raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
@@ -350,14 +349,12 @@ class server_ops:
             #poll the status, if the status is ACTIVE
             server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
             while(True):
-                logger.sys_info('Hack: While loop')
                 status = self.get_server(server)
-                logger.sys_info('Hack %s'%(status))
                 if(status['server_status'] == 'ACTIVE'):
-                    logger.sys_info('Hack: Active server with ID %s.'%(self.load['server']['id']))
+                    logger.sys_info('Active server with ID %s.'%(self.load['server']['id']))
                     break
                 elif(status['server_status'] == 'BUILD'):
-                    logger.sys_info('Hack: Building server with ID %s.'%(self.load['server']['id']))
+                    logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
                     break
@@ -387,7 +384,7 @@ class server_ops:
                           'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            return util.http_codes(rest['response'],rest['reason'],rest['data'])
 
     def get_server(self,input_dict):
         """
