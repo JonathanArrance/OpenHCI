@@ -333,39 +333,53 @@ class server_ops:
             raise Esception("Could not connec to the REST api caller in create_server operation.")
 
         #build the server
-        #try:
-        body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
-        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-        function = 'POST'
-        api_path = '/v2/%s/servers' %(create_dict['project_id'])
-        token = self.token
-        sec = self.sec
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-        rest = api.call_rest(rest_dict)
-        #except Exception as e:
-            #logger.sys_error("Could not remove the project %s" %(e))
-            #raise e
+        try:
+            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers' %(create_dict['project_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            return rest
         #else:
-        self.load = json.loads(rest['data'])
-        #poll the status, if the status is ACTIVE
-        server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
-        while(True):
-            status = self.get_server(server)
-            if(status['server_status'] == 'ACTIVE'):
-                logger.sys_info('Active server with ID %s.'%(self.load['server']['id']))
-                break
-            elif(status['server_status'] == 'BUILD'):
-                logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
-                time.sleep(10)
-            elif(status['server_status'] == 'ERROR'):
-                logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
-                #break
-                return rest
-                #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
+        #    self.load = json.loads(rest['data'])
+            #poll the status, if the status is ACTIVE
+        #    server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
+        #    while(True):
+        #        status = self.get_server(server)
+        #        if(status['server_status'] == 'ACTIVE'):
+        #            logger.sys_info('Active server with ID %s.'%(self.load['server']['id']))
+        #            break
+        #        elif(status['server_status'] == 'BUILD'):
+        #            logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
+        #            time.sleep(10)
+        #        elif(status['server_status'] == 'ERROR'):
+        #            logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
+                    #break
+        #            return rest
+                    #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
 
         if(rest['response'] == 202):
-            #NOTE: need to add in a polling mechanism to report back status of the creation
-            #load = json.loads(rest['data'])
+            self.load = json.loads(rest['data'])
+            #poll the status, if the status is ACTIVE
+            server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
+            while(True):
+                status = self.get_server(server)
+                if(status['server_status'] == 'ACTIVE'):
+                    logger.sys_info('Active server with ID %s.'%(self.load['server']['id']))
+                    break
+                elif(status['server_status'] == 'BUILD'):
+                    logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
+                    time.sleep(10)
+                elif(status['server_status'] == 'ERROR'):
+                    logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
+                    #break
+                    return rest
+                    #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
