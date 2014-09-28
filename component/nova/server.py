@@ -345,23 +345,6 @@ class server_ops:
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
             return rest
-        #else:
-        #    self.load = json.loads(rest['data'])
-            #poll the status, if the status is ACTIVE
-        #    server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
-        #    while(True):
-        #        status = self.get_server(server)
-        #        if(status['server_status'] == 'ACTIVE'):
-        #            logger.sys_info('Active server with ID %s.'%(self.load['server']['id']))
-        #            break
-        #        elif(status['server_status'] == 'BUILD'):
-        #            logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
-        #            time.sleep(10)
-        #        elif(status['server_status'] == 'ERROR'):
-        #            logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
-                    #break
-        #            return rest
-                    #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
 
         if(rest['response'] == 202):
             self.load = json.loads(rest['data'])
@@ -378,6 +361,8 @@ class server_ops:
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
                     #break
+                    rest['response'] = '503'
+                    rest['reason'] = 'Could not launch instance'
                     return rest
                     #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
             try:
