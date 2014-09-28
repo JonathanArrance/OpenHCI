@@ -383,7 +383,7 @@ class server_ops:
                 #commit the db transaction
                 self.db.pg_transaction_commit()
                 r_dict = {'vm_name':create_dict['name'],'vm_id':self.load['server']['id'],'sec_key_name':create_dict['sec_key_name'],
-                          'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id']}
+                          'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id'],'response':'202'}
                 return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
@@ -870,8 +870,8 @@ class server_ops:
             select_id = {'select':"inst_user_id", 'from':"trans_instances", 'where':"inst_id='%s'" %(delete_dict['server_id']), 'and':"proj_id='%s'" %(delete_dict['project_id'])}
             user_id = self.db.pg_select(select_id)
         except:
-            logger.sql_error("Could not get the instance id or username from Transcirrus db fo update_server operation")
-            raise Exception("Could not get the instance id or username from Transcirrus db fo update_server operation")
+            logger.sql_error("Could not get the instance user id from the TransCirrus DB.")
+            raise Exception("Could not get the instance user id from the TransCirrus DB.")
 
         #check the user name can delete server name
         if(self.user_level != 0):
