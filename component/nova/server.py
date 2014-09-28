@@ -2,6 +2,7 @@
 #######standard impots#######
 import sys
 import json
+import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -355,6 +356,7 @@ class server_ops:
                     break
                 elif(status['server_status'] == 'BUILD'):
                     logger.sys_info('Building server with ID %s.'%(self.load['server']['id']))
+                    time.sleep(10)
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
                     break
