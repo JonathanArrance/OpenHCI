@@ -1035,7 +1035,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
                         'flavor_name':flavor_name, 'name':name}
         server = so.create_server(instance)
         if(server['response'] != '202'):
-            messages.warning(request, "Unable to create new instance. '%s'"%server['reason'])
+            print server
+            messages.error(request, "Unable to create new instance. '%s'"%server['reason'])
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
         input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
@@ -1044,7 +1045,7 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
     except:
-        messages.warning(request, "Unable to create new instance.")
+        messages.error(request, "Unable to create new instance.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def pause_server(request, project_id, instance_id):
