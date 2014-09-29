@@ -361,10 +361,9 @@ class server_ops:
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
                     #break
-                    rest['response'] = '503'
+                    rest['response'] = '501'
                     rest['reason'] = 'Could not launch instance'
                     return rest
-                    #raise Exception('Server with ID %s failed to build.'%(self.load['server']['id']))
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
