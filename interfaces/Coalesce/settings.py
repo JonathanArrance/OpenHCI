@@ -121,6 +121,7 @@ INSTALLED_APPS = (
     'django_filters',
     'crispy_forms',
     'coalesce.coal_beta',
+    'django.contrib.messages',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (

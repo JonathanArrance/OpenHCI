@@ -1034,8 +1034,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
                         'network_name': network_name,'image_name': image_name,
                         'flavor_name':flavor_name, 'name':name}
         server = so.create_server(instance)
+        print server
         if(server['response'] != '202'):
-            print server
             messages.error(request, "Unable to create new instance. '%s'"%server['reason'])
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
