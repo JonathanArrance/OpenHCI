@@ -363,7 +363,8 @@ class server_ops:
                     #break
                     rest['response'] = '501'
                     rest['reason'] = 'Could not launch instance'
-                    return rest
+                    #return rest
+                    raise Exception('%s'%(rest))
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
