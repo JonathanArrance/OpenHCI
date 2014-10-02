@@ -387,7 +387,8 @@ class server_ops:
                 return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
-            return rest
+            #return rest
+            raise Exception('%s'%(rest))
 
     def get_server(self,input_dict):
         """
