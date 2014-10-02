@@ -1027,16 +1027,11 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         auth = request.session['auth']
         so = server_ops(auth)
         no = neutron_net_ops(auth)
-        #need to check available resources before createion: error if not enough
-
         instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
                         'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                         'network_name': network_name,'image_name': image_name,
                         'flavor_name':flavor_name, 'name':name}
         server = so.create_server(instance)
-        if(server['response'] != '202'):
-            messages.error(request, "Unable to create new instance. '%s'"%server['reason'])
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
         input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
@@ -1044,8 +1039,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
-    except:
-        messages.error(request, "Unable to create new instance.")
+    except Exception as e:
+        messages.error(request, "%s. %s"%(e['reason'],e['data']['overLimit']['message']))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def pause_server(request, project_id, instance_id):
