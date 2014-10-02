@@ -183,12 +183,15 @@ class volume_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
+                print "yo"
+                print rest
             except Exception as e:
                 logger.sys_error('%s'%(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise '%s'%(e)
 
             if(rest['response'] == 200):
+                print rest
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
