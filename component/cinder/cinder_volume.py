@@ -165,8 +165,9 @@ class volume_ops:
 
         if(create_flag == 1):
             try:
-                #build an api connection
-                api_dict = {"username":self.username, "password":self.password, "project_id":create_vol['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(create_vol['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,create_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -183,21 +184,36 @@ class volume_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
-                print "yo"
-                print rest
             except Exception as e:
                 logger.sys_error('%s'%(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise '%s'%(e)
 
             if(rest['response'] == 200):
-                print rest
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
                 load = json.loads(rest['data'])
                 volname = str(load['volume']['display_name'])
                 volid = str(load['volume']['id'])
                 volsize = int(load['volume']['size'])
+
+                input_dict = {'volume_id':volid,'project_id':create_vol['project_id']}
+                while(True):
+                    status = self.get_volume(input_dict)
+                    if(status['server_status'] == 'ACTIVE'):
+                        logger.sys_info('Active server with ID %s.'%(volid))
+                        break
+                    elif(status['server_status'] == 'BUILD'):
+                        logger.sys_info('Building server with ID %s.'%(volid))
+                        time.sleep(10)
+                    elif(status['server_status'] == 'ERROR'):
+                        logger.sys_info('Server with ID %s failed to build.'%(volid))
+                        #break
+                        rest['response'] = '501'
+                        rest['reason'] = 'Could not launch instance'
+                        #return rest
+                        raise '%s'%(rest)
+
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
@@ -217,6 +233,55 @@ class volume_ops:
         else:
             logger.sys_error("Could not create a new volume.")
             raise Exception("Could not create a new volume.")
+
+    def get_volume(self,input_dict):
+        """
+        DESC: Strictly call the v1 cinder API to get real time vol info
+        INPUTS: self object
+                input_dict - dictionary containing the
+                        volume_id - REQ
+                        project_id - REQ
+        OUTPUTS: rest_api_output
+        ACCESS: Admins can create a volume in any project, Users can only create
+                volumes in their primary projects
+        NOTE: Admins can list all volumes, users can only list the volumes in their project.
+            This will need to be combined with get_volume_info in the future.
+        """
+        if(not input_dict):
+            logger.sys_error("Did not pass in input_dict dictionary to get volume operation.")
+            raise Exception("Did not pass in input_dict dictionary to get volume operation.")
+        if(('volume_id' not in input_dict) or ('project_id' not in input_dict)):
+            logger.sys_error("Did not pass required params to get volume operation.")
+            raise Exception("Did not pass required params to get volume operation.")
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            #add the new user to openstack 
+            body = ''
+            token = self.token
+            #NOTE: if token is not converted python will pass unicode and not a string
+            header = {"Content-Type": "application/json", "X-Auth-Token": token}
+            function = 'GET'
+            api_path = '/v1/%s/volumes/%s' %(input_dict['project_id'],input_dict['project_id'])
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error('%s'%(e))
+            #back the user out of the transcirrus DB if the db works and the REST API fails
+            raise '%s'%(e)
+
+        return rest
+
+
 
     def create_vol_from_snapshot(self):
         print "not implemented"
@@ -288,7 +353,11 @@ class volume_ops:
 
         if(del_status == 1):
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":delete_vol['project_id']}
+                #api_dict = {"username":self.username, "password":self.password, "project_id":delete_vol['project_id']}
+                #api = caller(api_dict)
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(delete_vol['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,delete_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
