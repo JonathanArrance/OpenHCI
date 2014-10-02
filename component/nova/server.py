@@ -375,10 +375,10 @@ class server_ops:
                             'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],
                             'inst_int_net_name':create_dict['network_name'],'inst_zone':create_dict['avail_zone']}
                 self.db.pg_insert("trans_instances",ins_dict)
-            except:
+            except Exception as e:
                 self.db.pg_transaction_rollback()
                 logger.sql_error('Could not add the new virtual instance to the Transcirrus DB.')
-                raise Exception('Could not add the new virtual instance to the Transcirrus DB.')
+                raise Exception('Could not add the new virtual instance to the Transcirrus DB. %s'%(e))
             else:
                 #commit the db transaction
                 self.db.pg_transaction_commit()

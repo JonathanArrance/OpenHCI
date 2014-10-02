@@ -184,9 +184,9 @@ class volume_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
+                logger.sys_error('%s'%(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise
+                raise '%s'%(e)
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -210,6 +210,7 @@ class volume_ops:
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
+                raise '%s'%(rest)
         else:
             logger.sys_error("Could not create a new volume.")
             raise Exception("Could not create a new volume.")
