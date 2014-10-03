@@ -24,7 +24,7 @@ dhcp_retry=5
 #       reason - message from REST API
 #OUTPUT: void
 def http_codes(code,reason=None,data=None):
-    out = load.json(data)
+    out = json.loads(data)
     if(code):
         output_dict = {'response':'%s'%(code),'reason':'%s'%(reason),'data':'%s'%(out)}
         logger.sys_error("%s" %(output_dict))
