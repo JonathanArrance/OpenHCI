@@ -847,7 +847,8 @@ def create_volume(request, volume_name, volume_size, description, volume_type, p
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    except:
+    except Exception as e:
+        print e
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 

@@ -28,13 +28,11 @@ def http_codes(code,reason=None,data=None):
     if(code):
         output_dict = {'response':'%s'%(code),'reason':'%s'%(reason),'data':'%s'%(out)}
         logger.sys_error("%s" %(output_dict))
-        #raise Exception("%s" %(output_dict))
-        raise
+        raise Exception("%s" %(output_dict))
     else:
         output_dict = {'response':'555','reason':'%s'%(reason),'data':'%s'%(out)}
         logger.sys_error("%s" %(output_dict))
-        #raise Exception("%s" %(output_dict))
-        raise
+        raise Exception("%s" %(output_dict))
 
 def db_connect():
     try:

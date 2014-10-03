@@ -204,7 +204,7 @@ class volume_ops:
                         break
                     elif(status['volume']['status'] == 'creating'):
                         logger.sys_info('Volume with ID %s creating.'%(volid))
-                        time.sleep(5)
+                        time.sleep(2)
                     elif(status['volume']['status'] == 'unknown'):
                         logger.sys_info('Volume with ID %s in unknown state.'%(volid))
                         util.http_codes(rest['response'],rest['reason'],rest['data'])
