@@ -23,12 +23,15 @@ dhcp_retry=5
 #       reason - message from REST API
 #OUTPUT: void
 def http_codes(code,reason=None,data=None):
+    out = load.json(data)
     if(code):
-        logger.sys_error("Response %s with Reason %s Data:%s" %(code,reason,data))
-        #raise Exception("Response %s with Reason %s Data:%s" %(code,reason,data))
+        output_dict = {'response':'%s'%(code),'reason':'%s'%(reason),'data':'%s'%(out)}
+        logger.sys_error("%s" %(output_dict))
+        raise Exception("%s" %(output_dict))
     else:
-        logger.sys_error("Error for unknown reason.")
-        #raise Exception("Error for unknown reason.")
+        output_dict = {'response':'555','reason':'%s'%(reason),'data':'%s'%(out)}
+        logger.sys_error("%s" %(output_dict))
+        raise Exception("%s" %(output_dict))
 
 def db_connect():
     try:

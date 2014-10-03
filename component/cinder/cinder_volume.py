@@ -4,6 +4,7 @@
 #passes the user level out 
 import sys
 import json
+import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -184,10 +185,8 @@ class volume_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
-            except Exception as e:
-                logger.sys_error('%s'%(e))
-                #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise '%s'%(e)
+            except:
+                util.http_codes(rest['response'],rest['reason'],rest['data'])
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -200,19 +199,21 @@ class volume_ops:
                 input_dict = {'volume_id':volid,'project_id':create_vol['project_id']}
                 while(True):
                     status = self.get_volume(input_dict)
-                    if(status['server_status'] == 'ACTIVE'):
-                        logger.sys_info('Active server with ID %s.'%(volid))
+                    if(status['volume']['status'] == 'available'):
+                        logger.sys_info('Volume with id %s provisioned.'%(volid))
                         break
-                    elif(status['server_status'] == 'BUILD'):
-                        logger.sys_info('Building server with ID %s.'%(volid))
-                        time.sleep(10)
-                    elif(status['server_status'] == 'ERROR'):
-                        logger.sys_info('Server with ID %s failed to build.'%(volid))
+                    elif(status['volume']['status'] == 'creating'):
+                        logger.sys_info('Volume with ID %s creating.'%(volid))
+                        time.sleep(5)
+                    elif(status['volume']['status'] == 'unknown'):
+                        logger.sys_info('Volume with ID %s in unknown state.'%(volid))
+                        util.http_codes(rest['response'],rest['reason'],rest['data'])
+                    elif(status['volume']['status'] == 'error'):
+                        logger.sys_info('Volume with ID %s failed to provision.'%(volid))
                         #break
                         rest['response'] = '501'
-                        rest['reason'] = 'Could not launch instance'
-                        #return rest
-                        raise '%s'%(rest)
+                        rest['reason'] = 'Could not provision volume'
+                        util.http_codes(rest['response'],rest['reason'],rest['data'])
 
                 try:
                     #insert the volume info into the DB
@@ -229,7 +230,6 @@ class volume_ops:
                     return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
-                raise '%s'%(rest)
         else:
             logger.sys_error("Could not create a new volume.")
             raise Exception("Could not create a new volume.")
@@ -270,16 +270,17 @@ class volume_ops:
             #NOTE: if token is not converted python will pass unicode and not a string
             header = {"Content-Type": "application/json", "X-Auth-Token": token}
             function = 'GET'
-            api_path = '/v1/%s/volumes/%s' %(input_dict['project_id'],input_dict['project_id'])
+            api_path = '/v1/%s/volumes/%s' %(input_dict['project_id'],input_dict['volume_id'])
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error('%s'%(e))
             #back the user out of the transcirrus DB if the db works and the REST API fails
-            raise '%s'%(e)
+            raise Exception('%s'%(e))
+        load = json.loads(rest['data'])
 
-        return rest
+        return load
 
 
 

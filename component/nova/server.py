@@ -342,9 +342,8 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-        except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
-            return rest
+        except:
+            util.http_codes(rest['response'],rest['reason'],rest['data'])
 
         if(rest['response'] == 202):
             self.load = json.loads(rest['data'])
@@ -364,7 +363,7 @@ class server_ops:
                     rest['response'] = '501'
                     rest['reason'] = 'Could not launch instance'
                     #return rest
-                    raise Exception('%s'%(rest))
+                    util.http_codes(rest['response'],rest['reason'],rest['data'])
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
@@ -387,8 +386,6 @@ class server_ops:
                 return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
-            #return rest
-            raise Exception('%s'%(rest))
 
     def get_server(self,input_dict):
         """
