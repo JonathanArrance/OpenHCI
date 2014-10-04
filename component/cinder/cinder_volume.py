@@ -185,8 +185,9 @@ class volume_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
-            except:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+            except Exception, e:
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                raise e
 
             if(rest['response'] == 200):
                 #read the json that is returned
