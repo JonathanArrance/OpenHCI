@@ -41,7 +41,7 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 import transcirrus.common.util as util
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
-import transcirrus.operations.resize_server.py as rs_server
+import transcirrus.operations.resize_server as rs_server
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
