@@ -77,7 +77,7 @@ $(function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 
-					bValid = bValid && checkLength( name, "router_name", 3, 16 );
+					bValid = bValid && checkLength( name, "image_name", 3, 16 );
 
 					if ( bValid ) {
 					  
