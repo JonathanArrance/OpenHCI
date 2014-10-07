@@ -13,6 +13,7 @@ from django.db.utils import DatabaseError
 from django.db import connection
 from django.views.decorators.cache import never_cache
 from django.core import serializers
+from django.utils import simplejson
 import time
 
 
@@ -846,11 +847,11 @@ def create_volume(request, volume_name, volume_size, description, volume_type, p
         out = vo.create_volume(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        messages.warning(request, 'New volume %s created.'%(out['volume_name']))
+        return HttpResponse(simplejson.dumps(out))
     except Exception, e:
-        print e
-        messages.warning(request, "Unable to create volume.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        messages.warning(request, "%s"%(e))
+        return HttpResponse(request.META.get('HTTP_REFERER'))
 
 def attach_volume(request, project_id, instance_id, volume_id):
     try:
@@ -863,9 +864,11 @@ def attach_volume(request, project_id, instance_id, volume_id):
         out = vo.get_volume_info(get_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    except:
-        messages.warning(request, "Unable to attach volume.")
+        messages.warning(request, 'The volume %s has been attached'%(out['volume_name']))
+        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        return HttpResponse(redirect_to)
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
@@ -876,9 +879,10 @@ def create_snapshot(request, project_id, name, volume_id, desc):
         out = sno.create_snapshot(create_snap)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
+        messages.warning(request, 'The snapshot %s has been created for volume id %s'%(name,volume_id))
         return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to create snapshot.")
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
@@ -890,9 +894,10 @@ def delete_snapshot(request, project_id, snapshot_id):
         out = sno.delete_snapshot(delete_snap)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
+        messages.warning(request, 'The snapshot with id %s has been deleted.'%(snapshot_id))
         return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to delete snapshot.")
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
@@ -907,9 +912,10 @@ def detach_volume(request, project_id, volume_id):
         out = sso.detach_vol_from_server(detach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
+        messages.warning(request, 'Volume id %s has been detached.'%(volume_id))
         return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to detach volume.")
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_volume(request, volume_id, project_id):
@@ -920,9 +926,11 @@ def delete_volume(request, volume_id, project_id):
         out = vo.delete_volume(delete_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
+        messages.warning(request, 'The volume with id %s has been deleted.'%(volume_id))
         return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to delete volume.")
+        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
@@ -947,8 +955,8 @@ def create_router(request, router_name, priv_net, default_public, project_id):
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-    except:
-        messages.warning(request, "Unable to create router.")
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def delete_router(request, project_id, router_id):
