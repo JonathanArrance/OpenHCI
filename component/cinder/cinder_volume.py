@@ -453,6 +453,7 @@ class volume_ops:
                        - volume_size
                        - volume_attached
                        - volume_instance
+                       - volume_instance_name
                        - volume_mount
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
@@ -474,8 +475,8 @@ class volume_ops:
                 proj = self.db.pg_select(select_proj)
                 proj_id = proj[0][0]
             except:
-                logger.sql_error('Project given does not exist.')
-                raise Exception('Project given does not exist.')
+                logger.sql_error('Project %s given does not exist.'%(vol_dict['project_id']))
+                raise Exception('Project %s given does not exist.'%(vol_dict['project_id']))
         else:
             proj_id = self.project_id
 
@@ -501,7 +502,17 @@ class volume_ops:
             logger.sql_error("Could not get the volume info for %s" %(vol_dict['volume_id']))
             raise Exception("Could not get the volume info for %s" %(vol_dict['volume_id']))
 
-        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8]}
+        instance_name = None
+        if(get_vol[0][8]):
+            try:
+                get_server = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(get_vol[0][8])}
+                inst_name = self.db.pg_select(get_server)
+                instance_name = inst_name[0][0]
+            except Exception as e:
+                logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
+                #raise Exception("Could not get the instance name for instance id %s"%(get_vol[0][8]))
+
+        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name}
         return r_dict
 
     def create_volume_type(self,volume_type_name):

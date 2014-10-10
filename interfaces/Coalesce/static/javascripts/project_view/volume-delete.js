@@ -19,6 +19,7 @@ $(function() {
 		
 		$(function() {
 
+		
 		function csrfSafeMethod(method) {
 		// these HTTP methods do not require CSRF protection
 		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -31,12 +32,11 @@ $(function() {
 				}
 			}
 		});
-		
-		var 	volume_name = $( "#volume_name" ),
-			volume_size = $( "#volume_size" ),
-			description = $( "#description" ),
-                        volume_type = $( "#volume_type" ),
-			allFields = $( [] ).add( volume_name ).add( volume_size ).add( description ).add( volume_type ),
+
+		var     instance = $( "#att_instance" ),
+                        volume = $( "#att_volume" ),
+
+			allFields = $( [] ).add( instance ).add( volume ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -59,28 +59,27 @@ $(function() {
 			}
 		}
 
-		$( "#volume-dialog-form" ).dialog({
+		$( "#volume-attach-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 450,
+			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Create a volume": function() {
+				"Attach volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 
-					bValid = bValid && checkLength( volume_name, "volume_name", 3, 16 );
-                    
 					if ( bValid ) {
-					   $.getJSON('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + volume_type.val() + '/' + PROJECT_ID + '/'
-                                                                ).success(function(data){
-                                                                                $('#volume_list')
-                                                                                .append('<tr><td><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/">'+data.volume_name+'</a></td><td>None</td><td><a href="/delete_volume/'+data.volume_id+'/'+PROJECT_ID+'/">delete</a></td></tr>');
-                                                                                alert("New volume " + data.volume_name + " created.");
-                                                                }).error(function(){
-                                                                location.reload();
-                                                });;
-					   $( this ).dialog( "close" );
+                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/',
+                                                                function(){
+                                                                                location.reload();
+                                                                });
+
+						$( this ).dialog( "close" );
+                                                $( "#vol_progressbar" ).progressbar({
+                                                                value: false
+                                                });
+
 					}
 				},
 				Cancel: function() {
@@ -92,11 +91,9 @@ $(function() {
 			}
 		});
 
-		$( "#create-volume" )
+		$( "#attach-volume" )
 			.click(function() {
-				$( "#volume-dialog-form" ).dialog( "open" );
+				$( "#volume-attach-dialog-form" ).dialog( "open" );
 			});
-			
-			
 	});
 	});
