@@ -56,7 +56,7 @@
             </div>
 
 	  {% if volumes %}
-            <table class="paleblue">
+            <table class="paleblue" id="volume_list">
                 <tr> <th>Volume</th> <th>Attached To</th> <th>Actions</th></tr>
                     {% for k,v in volume_info.items %}
 		      <tr> <td><a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/">{{v.volume_name}}</a></td>

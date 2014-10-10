@@ -4,10 +4,12 @@
 #passes the user level out 
 import sys
 import json
+import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
+import transcirrus.component.cinder.error as ec
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -165,8 +167,9 @@ class volume_ops:
 
         if(create_flag == 1):
             try:
-                #build an api connection
-                api_dict = {"username":self.username, "password":self.password, "project_id":create_vol['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(create_vol['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,create_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the API")
@@ -183,36 +186,105 @@ class volume_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
-            except Exception as e:
-                logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
-                #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise
+            except Exception, e:
+                raise e
 
+            load = json.loads(rest['data'])
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
-                load = json.loads(rest['data'])
                 volname = str(load['volume']['display_name'])
                 volid = str(load['volume']['id'])
                 volsize = int(load['volume']['size'])
+
+                input_dict = {'volume_id':volid,'project_id':create_vol['project_id']}
+                while(True):
+                    status = self.get_volume(input_dict)
+                    if(status['volume']['status'] == 'available'):
+                        logger.sys_info('Volume with id %s provisioned.'%(volid))
+                        break
+                    elif(status['volume']['status'] == 'creating'):
+                        logger.sys_info('Volume with ID %s creating.'%(volid))
+                        time.sleep(2)
+                    elif(status['volume']['status'] == 'unknown'):
+                        logger.sys_info('Volume with ID %s in unknown state.'%(volid))
+                        raise Exception("Could not create a new volume. Unknown error occured.")
+                    elif(status['volume']['status'] == 'error'):
+                        logger.sys_info('Volume with ID %s failed to provision.'%(volid))
+                        raise Exception("Could not create a new volume. ERROR: 555")
+
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
                     insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":create_vol['volume_type'],"vol_attached_to_inst":"NONE"}
                     self.db.pg_insert("trans_system_vols",insert_vol)
-                except:
+                except Exception, e:
                     self.db.pg_transaction_rollback()
                     logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
-                    raise Exception("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
+                    raise e
                 else:
                     self.db.pg_transaction_commit()
                     r_dict = {"volume_id": volid, "volume_type": voltype,"volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
-            logger.sys_error("Could not create a new volume.")
-            raise Exception("Could not create a new volume.")
+            logger.sys_error("Could not create a new volume. Unknown error occured. ERROR: 555")
+            raise Exception("Could not create a new volume. Unknown error occured. ERROR: 555")
+
+    def get_volume(self,input_dict):
+        """
+        DESC: Strictly call the v1 cinder API to get real time vol info
+        INPUTS: self object
+                input_dict - dictionary containing the
+                        volume_id - REQ
+                        project_id - REQ
+        OUTPUTS: rest_api_output
+        ACCESS: Admins can create a volume in any project, Users can only create
+                volumes in their primary projects
+        NOTE: Admins can list all volumes, users can only list the volumes in their project.
+            This will need to be combined with get_volume_info in the future.
+        """
+        if(not input_dict):
+            logger.sys_error("Did not pass in input_dict dictionary to get volume operation.")
+            raise Exception("Did not pass in input_dict dictionary to get volume operation.")
+        if(('volume_id' not in input_dict) or ('project_id' not in input_dict)):
+            logger.sys_error("Did not pass required params to get volume operation.")
+            raise Exception("Did not pass required params to get volume operation.")
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            #add the new user to openstack 
+            body = ''
+            token = self.token
+            #NOTE: if token is not converted python will pass unicode and not a string
+            header = {"Content-Type": "application/json", "X-Auth-Token": token}
+            function = 'GET'
+            api_path = '/v1/%s/volumes/%s' %(input_dict['project_id'],input_dict['volume_id'])
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error('%s'%(e))
+            #back the user out of the transcirrus DB if the db works and the REST API fails
+            raise e
+
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+        else:
+            ec.error_codes(rest)
+
+        return load
+
+
 
     def create_vol_from_snapshot(self):
         print "not implemented"
@@ -284,7 +356,11 @@ class volume_ops:
 
         if(del_status == 1):
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":delete_vol['project_id']}
+                #api_dict = {"username":self.username, "password":self.password, "project_id":delete_vol['project_id']}
+                #api = caller(api_dict)
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(delete_vol['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,delete_vol['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the Keystone API")
@@ -304,7 +380,7 @@ class volume_ops:
             except Exception as e:
                 logger.sql_error("Could not get the project_id from the Transcirrus DB.%s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise
+                raise e
 
             if(rest['response'] == 202):
                 #read the json that is returned
@@ -316,15 +392,17 @@ class volume_ops:
                     self.db.pg_delete(del_vol)
                 except:
                     self.db.pg_transaction_rollback()
-                    logger.sql_error("Could not delete volume %s information into Transcirrus DB" %(vol_id[0][0]))
-                    raise Exception("Could not delete volume %s information into Transcirrus DB" %(vol_id[0][0]))
+                    logger.sql_error("Could not delete volume %s information from Transcirrus DB" %(vol_id[0][0]))
+                    raise Exception("Could not delete volume %s information from Transcirrus DB" %(vol_id[0][0]))
                 else:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
+            raise Exception("The user level is invalid, can not delete the volume.")
 
     def list_volumes(self,project_id=None):
         """
@@ -480,7 +558,8 @@ class volume_ops:
                 r_dict = {"volume_type_name": vol_type_name, "volume_type_id": vol_type_id}
                 return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Could not create a new volume type, not an admin.")
             raise Exception("Could not create a new volume type, not an admin.")
@@ -532,12 +611,13 @@ class volume_ops:
             except Exception as e:
                 logger.sys_error("Could not get volume type list, %s" %(e))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise ("Could not get volume type list, %s" %(e))
+                raise e
 
             if(rest['response'] == 200):
                 return rest['data']
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Could not get volume type list.")
             raise ("Could not get volume type list.")
@@ -608,7 +688,8 @@ class volume_ops:
             if(rest['response'] == 200):
                 return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Could not add volume type backing.")
             return 'ERROR'

@@ -77,10 +77,11 @@ $(function() {
                                         mount = mount_point.val();
                                         mount = mount.replace(/\//g, '&47');
 					if ( bValid ) {
-					  
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + VOL_ID + '/' + mount + '/',
-                                                                function(){
-                                                                                location.reload();
+					   alert('bablha')
+					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + VOL_ID + '/' + mount + '/'
+                                                                ).success(function(data){
+                                                                                 console.log('stuff',data);
+                                                                                //location.reload();
                                                                 });
 
 						$( this ).dialog( "close" );

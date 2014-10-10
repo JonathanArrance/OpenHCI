@@ -72,11 +72,14 @@ $(function() {
 					bValid = bValid && checkLength( volume_name, "volume_name", 3, 16 );
                     
 					if ( bValid ) {
-					  
-					   $.post('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + volume_type.val() + '/' + PROJECT_ID + '/',
-                                                                function(){
-                                                                                location.reload();
-                                                                }); 
+					   $.getJSON('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + volume_type.val() + '/' + PROJECT_ID + '/'
+                                                                ).success(function(data){
+                                                                                $('#volume_list')
+                                                                                .append('<tr><td><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/">'+data.volume_name+'</a></td><td>none</td><td><a href="/delete_volume/'+PROJECT_ID+'/'+data.volume_id+'/">Delete</a></td></tr>');
+                                                                                alert("New volume " + data.volume_name + " created.");
+                                                                }).error(function(){
+                                                                location.reload();
+                                                });;
 					   $( this ).dialog( "close" );
 					}
 				},

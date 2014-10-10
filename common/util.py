@@ -6,6 +6,7 @@ import subprocess
 import datetime
 import time
 import socket
+import json
 
 #from confparse import properties
 
@@ -22,13 +23,17 @@ dhcp_retry=5
 #INPUT: code - https error code
 #       reason - message from REST API
 #OUTPUT: void
+#This needs to go away and be replaced with actual HTTP error codes method
 def http_codes(code,reason=None,data=None):
+    out = json.loads(data)
     if(code):
-        logger.sys_error("Response %s with Reason %s Data:%s" %(code,reason,data))
-        raise Exception("Response %s with Reason %s Data:%s" %(code,reason,data))
+        output_dict = {"response":"%s"%(code),"reason":"%s"%(reason)}
+        logger.sys_error("%s" %(output_dict))
+        raise Exception("%s" %(output_dict))
     else:
-        logger.sys_error("Error for unknown reason.")
-        raise Exception("Error for unknown reason.")
+        output_dict = {"response":"%s"%(code),"reason":"%s"%(reason)}
+        logger.sys_error("%s" %(output_dict))
+        raise Exception("%s" %(output_dict))
 
 def db_connect():
     try:
@@ -38,7 +43,7 @@ def db_connect():
         logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
     except Exception as e:
         logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
-        raise
+        raise e
 
     return db
 

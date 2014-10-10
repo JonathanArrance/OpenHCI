@@ -58,17 +58,17 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        'mount_point': '/dev/vdc'
        }
 yo = store.attach_vol_to_server(inp)
-'''
+
 input_dict = {'project_id':'4ecbada824e14d80b444200c8ab96b44','instance_id':'6c21d791-33a4-45dc-9d20-f00a1164cd3f'}
 act = action.check_instance_status(input_dict)
 print act
-'''
 
+'''
 print "Createing a new virtual instance"
-server = {'sec_group_name':'trans','avail_zone':'nova','sec_key_name':'rob','network_name':'trans','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'thevm2','project_id':'4ecbada824e14d80b444200c8ab96b44'}
+server = {'sec_group_name':'project1','avail_zone':'nova','sec_key_name':'project1','network_name':'project1','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.large','name':'blah','project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1'}
 yo = nova.create_server(server)
 print yo
-
+'''
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
