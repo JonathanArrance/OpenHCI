@@ -2,6 +2,8 @@ from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
+from django.conf.urls.static import static
+
 ROOT_PATH = settings.ROOT_PATH
 
 # Uncomment the next two lines to enable the admin:
@@ -125,10 +127,13 @@ urlpatterns = patterns('',
             name='evacuate_server'),
 
 	# --- Images ----
-	
-	url(r'^import_image/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/$',
-	    'coalesce.coal_beta.views.import_image',
-            name='import_image'),
+	url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/$',
+	    'coalesce.coal_beta.views.import_local',
+         name='import_local'),
+
+	url(r'^import_remote/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/$',
+	    'coalesce.coal_beta.views.import_remote',
+         name='import_remote'),
 	
 	url(r'^delete_image/(?P<image_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.delete_image',
@@ -321,7 +326,7 @@ urlpatterns = patterns('',
         (r'^admin/', include(admin.site.urls)),
 
 
-)
+)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     urlpatterns += patterns('',

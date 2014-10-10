@@ -61,7 +61,7 @@ MEDIA_ROOT = os.path.join(PROJECT_PATH, 'csvfiles')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = '/upload_images/'
 
 
 
@@ -134,6 +134,10 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'coalesce.coal_beta.context_processors.global_vars',
 
 )
+
+FILE_UPLOAD_HANDLERS = (
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",)
 
 LOGIN_REDIRECT_URL = '/'
 

@@ -82,17 +82,18 @@ class glance_ops:
         #close any open db connections
         self.db.close_connection()
 
-    def import_image(self,input_dict):
+    def import_image (self,input_dict):
         """
         DESC: Import a pre-made glance image .img file
         INPUT: input_dict - image_name - req
                           - container_format - req (bare, ovf, aki, ari, ami)
                           - disk_format - req (raw, vhd, vmdk, vdi, iso, qcow2, aki, ari, ami)
-                          - image_file -
-                                        \ must specify EITHER image_file OR image_url NOT BOTH
-                                        / image_file used for local, image_url used for remote
-                          - image_url - 
+                          - image_type - must specify EITHER image_file OR image_url
+                                         image_file used for local files & image_url used for remote files
                           - visibility - op ("public" or "private", will default to "public" if not provided)
+                          - image_location - location of the image file to upload
+                                               image_url: url to download file from
+                                               image_file: location on this system where the file already resides
         OUTPUT: OK - success
                 ERROR - fail
         ACCESS: Admins will be able to create universal images and images in projects
@@ -102,6 +103,8 @@ class glance_ops:
         NOTE: Either image_url or image_file need to be specified if neither are specified and ERROR will be
               thrown. If you specify both a file location and a url error will be thrown
         """
+        print ("--glance_v2::import_image")
+
         if((self.status_level > 2) or (self.status_level < 0)):
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
@@ -113,23 +116,19 @@ class glance_ops:
         if(('image_name' not in input_dict) or (input_dict['image_name'] == '')):
             logger.sys_error('Image name not specified')
             raise Exception('Image name not specified')
-        
+
         if(('container_format' not in input_dict) or (input_dict['container_format'] == '')):
             logger.sys_error('Image container format not specified')
             raise Exception('Image container format not specified')
-        
+
         if(('disk_format' not in input_dict) or (input_dict['disk_format'] == '')):
             logger.sys_error('Image disk format not specified')
             raise Exception('Image disk format not specified')
-        
-        if(('image_file' in input_dict) and ('image_url' in input_dict)):
-            logger.sys_error('Cannot specify both an image_file and an image_url')
-            raise Exception('Cannot specify both an image_file and an image_url')
-        
-        if(('image_file' not in input_dict) and ('image_url' not in input_dict)):
-            logger.sys_error('Must specify an image_file or an image_url')
-            raise Exception('Must specify an image_file or an image_url')
-        
+
+        if(('image_type' not in input_dict) or (input_dict['image_type'] == '')):
+            logger.sys_error('Image type not specified')
+            raise Exception('Image type not specified')
+
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -137,7 +136,47 @@ class glance_ops:
         except:
             logger.sys_error("Could not connect to the API caller")
             raise Exception("Could not connect to the API caller")
-        
+
+        try:
+            if(input_dict['image_type'] == 'image_file'):
+                # We have a local file that has already been uploaded so all we need to do is open it.
+                print ("glance::import_image opening local file %s" % input_dict['image_location'])
+                download_file  = input_dict['image_location']
+                file_open = open(download_file, 'rb')
+
+            else:
+                # We have a remote file that we need to download and then open.
+                print ("glance::import_image getting remote file %s" % input_dict['image_location'])
+
+                download_dir   = "/var/lib/glance/images/"
+                download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+                download_file  = download_dir + download_fname
+                command = "sudo wget -nv -t 40 -O " + download_file + " " + input_dict['image_location'] + "; dir -la " + download_dir
+
+                print "wget command: %s" % command
+
+                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                std_out, std_err = subproc.communicate()
+
+                print "std_out: %s" % std_out
+                print "std_err: %s" % std_err
+
+                # For some strange reason all the output ends up in std_err
+                std_out = std_err
+                if subproc.returncode != 0:
+                    print "Error downloading remote file from %s, exit status: %d" % (input_dict['image_location'], subproc.returncode)
+                    print "Error message: %s" % std_err
+                    util.http_codes(subproc.returncode, "Unable to download remote file %s" %(input_dict['image_location']))
+                    return "ERROR"
+                print "upload complete: %d" % subproc.returncode
+                time.sleep(5)
+                file_open = open(download_file, 'rb')
+                print "file opened"
+        except Exception as e:
+            print ("Could not upload or open image file: %s" % (e))
+            logger.sys_error("Could not upload or open image data, %s" %(e))
+            raise e
+                
         if('visibility' in input_dict):
             body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility']})
         else:
@@ -151,24 +190,17 @@ class glance_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
             rest = api.call_rest(rest_dict)
+            print ("Added image to db")
         except Exception as e:
             logger.sys_error("Could not reserve image, %s" %(e))
             raise e
 
         if((rest['response'] == 201)):
+            print ("Added image to db - good status")
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             image_id = load['id']
-            if('image_file' in input_dict):
-                file_open = open(input_dict['image_file'], 'rb')
-            else:
-                out = subprocess.Popen('sudo wget -O /var/lib/glance/images/import.img %s' %(input_dict['image_url']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                if(out != None):
-                    time.sleep(5)
-                    file_open = open('/var/lib/glance/images/import.img', 'rb')
-                else:
-                    util.http_codes(out,"Unable to open remote file %s" %(input_dict['image_url']))
-                    return "ERROR"
+
             try:
                 body = file_open
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/octet-stream"}
@@ -178,23 +210,38 @@ class glance_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
                 rest = api.call_rest(rest_dict)
+                print ("Uploaded image data via glance")
             except Exception as e:
-                logger.sys_error("Could not upload image data, %s" %(e))
+                logger.sys_error("Could not upload image data via glance, %s" %(e))
                 raise e
     
             if((rest['response'] == 201 or rest['response'] == 204)):
+                print ("Uploaded image data via glance - good status")
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 file_open.close()
-                if('image_file' not in input_dict):
-                    out = subprocess.Popen('sudo rm -f /var/lib/glance/images/import.img %s' %(input_dict['image_url']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+                print ("glance::import_image deleting uploaded remote file %s" % download_file)
+
+                command = "sudo rm -f " + download_file
+
+                print "rm command: %s" % command
+
+                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                std_out, std_err = subproc.communicate()
+
+                if subproc.returncode != 0:
+                    print "Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode)
+                    print "Error message: %s" % std_err
                 return "OK"
             else:
+                print ("Uploaded image data via glance - bad status: %s" % rest['reason'])
                 util.http_codes(rest['response'],rest['reason'])
                 return "ERROR"
         else:
+            print ("Added image to db - bad status: %s" % rest['reason'])
             util.http_codes(rest['response'],rest['reason'])
             return "ERROR"
-       
+        return
     
     def delete_image(self, image_id):
         """

@@ -143,3 +143,6 @@ class authentication_form(forms.Form):
         self.helper.error_text_inline = False
         self.helper.add_input(Submit('submit', 'Login'))
 
+
+class import_image_form(forms.Form):
+    image = forms.FileField(label='Select an image to import')
