@@ -84,9 +84,12 @@ $(function() {
 					   $.post('/create_image/' + name.val() + '/' + sec_group_name.val() + '/nova/' + flavor_name.val() + '/' + sec_key_name.val() + '/' + image_name.val() + '/' + network_name.val() + '/' + PROJECT_ID + '/',
                                                                 function(){
                                                                                 location.reload();
-                                                                }); 
-
-						$( this ).dialog( "close" );
+                                                                });
+                                           
+                                                $( this ).dialog( "close" );
+                                                $( "#instance_progressbar" ).progressbar({
+                                                                value: false
+                                                });
 					}
 				},
 				Cancel: function() {
