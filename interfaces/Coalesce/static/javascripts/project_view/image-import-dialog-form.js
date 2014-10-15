@@ -17,33 +17,20 @@ $(function () {
     }
     var csrftoken = getCookie('csrftoken');
 
-    $(function ()
-    {
-        function csrfSafeMethod(method)
-        {
+    $(function () {
+        function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
         }
         $.ajaxSetup(
         {
             crossDomain: false, // obviates need for sameOrigin test
-            beforeSend: function (xhr, settings)
-            {
-                if (!csrfSafeMethod(settings.type))
-                {
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type)) {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
                 }
             }
         });
-
-//        var image_name = $("#import_img_name"),
-//			container_format = $("#import_img_cont"),
-//			disk_format = $("#import_img_disk"),
-//                        image_type = $("#import_img_type"),
-//                        image_location = $("#import_remote"),
-//                        visibility = $("#import_img_vis"),
-//			allFields = $([]).add(image_name).add(container_format).add(disk_format).add(image_location).add(visibility),
-//			tips = $(".validateTips");
 
         var image_name = $("#import_img_name"),
 			disk_format = $("#import_img_disk"),
@@ -84,11 +71,14 @@ $(function () {
 
         function valid_URL(url)
         {
+            alert("url = " + url.val());
             var urlregex = new RegExp("^(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))*$");
-            if (urlregex.test(url))
+            if (urlregex.test(url.val()))
             {
+                alert("valid url");
                 return (true);
             }
+            alert("invalid url " + url.val());
             url.addClass("ui-state-error");
             updateTips("Invalid remote URL.");
             return (false);
@@ -110,7 +100,7 @@ $(function () {
         $("#image-import-dialog-form").dialog(
         {
             autoOpen: false,
-            height: 400,
+            height: 500,
             width: 350,
             modal: true,
             buttons:
@@ -121,41 +111,41 @@ $(function () {
 
                     // Make sure the image name is of the proper size 3 to 16 characters.
                     // This is the name of the image to be shown in the UI; not the one being uploaded.
-                    if (!checkLength (image_name, "image_name", 3, 16))
+                    if (!checkLength(image_name, "image_name", 3, 16))
                         return;
 
                     if (image_type.val() == "image_url")
                     {
                         // The user wants to upload a remote image via the supplied URL.
-                        alert ("image is remote");
-
-                        if (!check_URL(import_remote))
+                        if (!valid_URL(import_remote))
                             return;
 
                         // All the data is good so post the data to the server.
                         image_location = import_remote;
 
-                        alert("image_location = " + image_location.val());
                         loc = image_location.val();
                         image_location = convert_URL(image_location);
                         loc = loc.replace(/\//g, '&47');
-                        alert("loc = " + loc);
-                        alert("image_location = " + image_location.val());
 
-                        alert("posting form");
-                        $.post('/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/',
-                                function ()
-                                {
-                                    location.reload();
-                                });
+                        $.post('/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/')
+                              .success(function (data)
+                              {
+                                  console.log('success: image_id:' + data.image_id);
+                                  $('#image_list')
+                                          .append('<tr><td>' + image_name.val() + '</td><td><a href="/delete_image/' + data.image_id + '/">delete</a></td></tr>');
+                                  alert("New remote image " + data.image_name + " uploaded.");
+                              })
+                              .error(function ()
+                              {
+                                  console.log('Error:' + data);
+                                  location.reload();
+                              });
                         $(this).dialog("close");
                     }
 
                     else
                     {
                         // The user wants to upload a local image from this computer/laptop.
-                        alert ("image is local");
-
                         if (import_local.val().length == 0)
                         {
                             import_local.addClass("ui-state-error");
@@ -167,11 +157,8 @@ $(function () {
                         // to keep from having to convert /'s to %47.
                         loc = "na"
 
-                        alert("image_location = " + import_local.val());
-
                         // Build the url that we will use to send the form data. The file contents are handled seperately.
                         var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/';
-                        alert ("local url: " + url);
 
                         // Send the form data via the ajax call.
                         var form_data = new FormData($('#image-upload-form')[0]);
@@ -184,26 +171,27 @@ $(function () {
                             cache: false,
                             processData: false,
                             async: false,
-                            success: function(data)
+                            success: function (data)
                             {
-                                //location.reload();
-                                console.log('success: image_id:' + data.image_id);
+                                var ret_data = JSON.parse(data);
+                                console.log('success: image_id:' + ret_data.image_id);
                                 $('#image_list')
-                                .append('<tr><td>'+image_name.val()+'</td><td><a href="/delete_image/'+data.image_id+'/">Delete</a></td></tr>');
+                                .append('<tr><td>' + image_name.val() + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
+                                alert("New local image " + ret_data.image_name + " uploaded.");
                             },
-                            error: function(data)
+                            error: function (data)
                             {
                                 console.log('Error:' + data);
                                 location.reload();
-                            },
+                            }
                         });
                         $(this).dialog("close");
                     }
                 },
                 Cancel: function ()
-                        {
-                            $(this).dialog("close");
-                        }
+                {
+                    $(this).dialog("close");
+                }
             },
             close: function ()
             {

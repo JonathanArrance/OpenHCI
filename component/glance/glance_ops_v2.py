@@ -103,8 +103,6 @@ class glance_ops:
         NOTE: Either image_url or image_file need to be specified if neither are specified and ERROR will be
               thrown. If you specify both a file location and a url error will be thrown
         """
-        print ("--glance_v2::import_image")
-
         if((self.status_level > 2) or (self.status_level < 0)):
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
@@ -140,26 +138,18 @@ class glance_ops:
         try:
             if(input_dict['image_type'] == 'image_file'):
                 # We have a local file that has already been uploaded so all we need to do is open it.
-                print ("glance::import_image opening local file %s" % input_dict['image_location'])
                 download_file  = input_dict['image_location']
                 file_open = open(download_file, 'rb')
 
             else:
                 # We have a remote file that we need to download and then open.
-                print ("glance::import_image getting remote file %s" % input_dict['image_location'])
-
                 download_dir   = "/var/lib/glance/images/"
                 download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
                 download_file  = download_dir + download_fname
                 command = "sudo wget -nv -t 40 -O " + download_file + " " + input_dict['image_location'] + "; dir -la " + download_dir
 
-                print "wget command: %s" % command
-
                 subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 std_out, std_err = subproc.communicate()
-
-                print "std_out: %s" % std_out
-                print "std_err: %s" % std_err
 
                 # For some strange reason all the output ends up in std_err
                 std_out = std_err
@@ -168,10 +158,8 @@ class glance_ops:
                     print "Error message: %s" % std_err
                     util.http_codes(subproc.returncode, "Unable to download remote file %s" %(input_dict['image_location']))
                     return "ERROR"
-                print "upload complete: %d" % subproc.returncode
                 time.sleep(5)
                 file_open = open(download_file, 'rb')
-                print "file opened"
         except Exception as e:
             print ("Could not upload or open image file: %s" % (e))
             logger.sys_error("Could not upload or open image data, %s" %(e))
@@ -190,16 +178,16 @@ class glance_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
             rest = api.call_rest(rest_dict)
-            print ("Added image to db")
         except Exception as e:
             logger.sys_error("Could not reserve image, %s" %(e))
             raise e
 
         if((rest['response'] == 201)):
-            print ("Added image to db - good status")
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             image_id = load['id']
+
+            ret_dict = {'image_id':image_id, 'image_name':input_dict['image_name']}
 
             try:
                 body = file_open
@@ -210,21 +198,15 @@ class glance_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
                 rest = api.call_rest(rest_dict)
-                print ("Uploaded image data via glance")
             except Exception as e:
                 logger.sys_error("Could not upload image data via glance, %s" %(e))
                 raise e
     
             if((rest['response'] == 201 or rest['response'] == 204)):
-                print ("Uploaded image data via glance - good status")
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 file_open.close()
 
-                print ("glance::import_image deleting uploaded remote file %s" % download_file)
-
                 command = "sudo rm -f " + download_file
-
-                print "rm command: %s" % command
 
                 subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 std_out, std_err = subproc.communicate()
@@ -232,7 +214,8 @@ class glance_ops:
                 if subproc.returncode != 0:
                     print "Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode)
                     print "Error message: %s" % std_err
-                return "OK"
+
+                return ret_dict
             else:
                 print ("Uploaded image data via glance - bad status: %s" % rest['reason'])
                 util.http_codes(rest['response'],rest['reason'])

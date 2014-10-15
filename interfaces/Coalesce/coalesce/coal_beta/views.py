@@ -812,18 +812,15 @@ def create_keypair(request, key_name, project_id):
 def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility):
     from coalesce.coal_beta.models import ImportLocal
     print "---import_local"
-    auth = request.session['auth']
-    go = glance_ops(auth)
+
+    #import pdb; pdb.set_trace()
 
     try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+
         # Handle file upload.
         form = import_image_form (request.POST, request.FILES)
-        #if form.is_valid():
-        #    print "import_local: form is valid"
-        #    newdoc = ImportLocal (image_local = request.FILES['import_local'])
-        #    newdoc.save()
-        #else:
-        #    print "import_local: form is not valid"
 
         download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
@@ -837,29 +834,24 @@ def import_local (request, image_name, container_format, disk_format, image_type
             print ("Uploaded local file done")
         except Exception as e:
             print ("Error uploading local file: %s" % e)
+
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
+
+        import_dict['image_location'] = download_file
+        out = go.import_image(import_dict)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        ###return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except Exception as e:
         print ("import_local exception: %s" % e)
         messages.warning(request, "Unable to upload local image.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-    #import pdb; pdb.set_trace()
+    messages.warning(request, 'Local image %s was uploaded.' % (out['image_name']))
+    return HttpResponse(simplejson.dumps(out))
 
-    import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
-
-    import_dict['image_location'] = download_file
-    out = go.import_image(import_dict)
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility):
-    print ("---import_image params")
-    print ("image_name: " + image_name)
-    print ("container_format: " + container_format)
-    print ("disk_format: " + disk_format)
-    print ("image_type: " + image_type)
-    print ("image_location: " + image_location)
-    print ("visibility: " + visibility)
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
@@ -873,11 +865,14 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         out = go.import_image(import_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        ###return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except Exception as e:
         print ("image_location exception: %s" % e)
         messages.warning(request, "Unable to upload image.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    messages.warning(request, 'Remote image %s was uploaded.' % (out['image_name']))
+    return HttpResponse(simplejson.dumps(out))
 
 def delete_image(request, image_id):
     try:
