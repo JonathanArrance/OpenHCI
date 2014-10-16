@@ -5,9 +5,9 @@
              Volume Storage
 
 		<a href="#" id="create-volume" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> New Volume</a>
-	      {% if volumes %}
+	  {% if volumes %}
 		<a href="#" id="attach-volume" class="btn btn-mini" style="float:right">Attach</a>
-	      {% endif %}
+	  {% endif %}
           </div>
 
 	    <div id="volume-dialog-form" title="Create new volume">
@@ -55,9 +55,9 @@
                 </form>
             </div>
 
-	  {% if volumes %}
             <table class="paleblue" id="volume_list">
                 <tr> <th>Volume</th> <th>Attached To</th> <th>Actions</th></tr>
+				{% if volumes %}
                     {% for k,v in volume_info.items %}
 		      <tr> <td><a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/">{{v.volume_name}}</a></td>
 		  <td>
@@ -82,7 +82,8 @@
 		    {% endfor %}
 	    </table>
 	  {% else %}
-	    <p><i>This project has no volumes</i></p>
+		</table>
+	    <!-- <p><i>This project has no volumes</i></p>-->
 	  {% endif %}
 	  <div id="vol_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
         </div>

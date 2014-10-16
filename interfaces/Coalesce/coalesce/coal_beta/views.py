@@ -42,6 +42,7 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 import transcirrus.common.util as util
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
+import transcirrus.operations.resize_server as rs_server
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -838,7 +839,6 @@ def delete_image(request, image_id):
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-
 def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
     try:
         auth = request.session['auth']
@@ -847,11 +847,29 @@ def create_volume(request, volume_name, volume_size, description, volume_type, p
         out = vo.create_volume(create_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'New volume %s created.'%(out['volume_name']))
         return HttpResponse(simplejson.dumps(out))
     except Exception, e:
         messages.warning(request, "%s"%(e))
         return HttpResponse(request.META.get('HTTP_REFERER'))
+
+def delete_volume(request, volume_id, project_id):
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        delete_vol = {'volume_id': volume_id, 'project_id': project_id}
+        print delete_vol
+        name = vo.get_volume_info(delete_vol)
+        out = vo.delete_volume(delete_vol)
+        print out
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        messages.warning(request, 'The volume %s of type %s has been deleted.'%(name['volume_name'],name['volume_type']))
+        return HttpResponseRedirect(redirect_to)
+        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    except Exception as e:
+        print e
+        messages.warning(request, "%s"%(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def attach_volume(request, project_id, instance_id, volume_id):
     try:
@@ -864,9 +882,26 @@ def attach_volume(request, project_id, instance_id, volume_id):
         out = vo.get_volume_info(get_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'The volume %s has been attached'%(out['volume_name']))
+        messages.warning(request, 'The volume %s has been attached to %s'%(out['volume_name'],out['volume_instance_name']))
         #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-        return HttpResponse(redirect_to)
+        return HttpResponse(out)
+    except Exception as e:
+        messages.warning(request, "%s"%(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def detach_volume(request, project_id, volume_id):
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        sso = server_storage_ops(auth)
+        v_dict = {'volume_id': volume_id, 'project_id': project_id}
+        v_info = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': v_info['volume_instance'], 'volume_id': volume_id}
+        out = sso.detach_vol_from_server(detach_vol)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+        messages.warning(request, 'Volume %s has been detached from .'%(v_info['volume_name'],v_info['volume_instance_name']))
+        return HttpResponseRedirect(redirect_to)
     except Exception as e:
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -885,7 +920,6 @@ def create_snapshot(request, project_id, name, volume_id, desc):
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-
 def delete_snapshot(request, project_id, snapshot_id):
     try:
         auth = request.session['auth']
@@ -899,40 +933,6 @@ def delete_snapshot(request, project_id, snapshot_id):
     except Exception as e:
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-
-def detach_volume(request, project_id, volume_id):
-    try:
-        auth = request.session['auth']
-        vo = volume_ops(auth)
-        sso = server_storage_ops(auth)
-        v_dict = {'volume_id': volume_id, 'project_id': project_id}
-        v_info = vo.get_volume_info(v_dict)
-        detach_vol = {'project_id': project_id, 'instance_id': v_info['volume_instance'], 'volume_id': volume_id}
-        out = sso.detach_vol_from_server(detach_vol)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'Volume id %s has been detached.'%(volume_id))
-        return HttpResponseRedirect(redirect_to)
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-def delete_volume(request, volume_id, project_id):
-    try:
-        auth = request.session['auth']
-        vo = volume_ops(auth)
-        delete_vol = {'volume_id': volume_id, 'project_id': project_id}
-        out = vo.delete_volume(delete_vol)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'The volume with id %s has been deleted.'%(volume_id))
-        return HttpResponseRedirect(redirect_to)
-        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
 
 def create_router(request, router_name, priv_net, default_public, project_id):
     try:
@@ -1130,9 +1130,10 @@ def resize_server(request, project_id, instance_id, flavor_id):
     redirect_to = urlsplit(referer, 'http', False)[2]
     try:
         auth = request.session['auth']
-        sa = server_actions(auth)
-        #import pdb; pdb.set_trace()
-        sa.resize_server(input_dict)
+        rs = rs_server.resize_and_confirm(auth, input_dict)
+        print "   ---   resize_and_confirm   ---"
+        print rs
+        print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)

@@ -32,17 +32,11 @@ $(function() {
 				}
 			}
 		});
-		
-		
-		
-		var 	sec_group_name = $( "#sec_group_name" ),
-			sec_key_name = $( "#sec_key_name" ),
-			image_name = $( "#image_name" ),
-			name= $( "#name" ),
-			network_name = $( "#network_name" ),
-                        flavor_name = $( "#flavor_name"),
 
-			allFields = $( [] ).add( sec_group_name ).add(sec_key_name).add(image_name).add(name).add(network_name),
+		var     instance = $( "#att_instance" ),
+                        volume = $( "#att_volume" ),
+
+			allFields = $( [] ).add( instance ).add( volume ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -65,31 +59,27 @@ $(function() {
 			}
 		}
 
-	
-
-		$( "#instance-dialog-form" ).dialog({
+		$( "#volume-attach-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 450,
+			height: 400,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Create an instance": function() {
+				"Attach volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
 
-					bValid = bValid && checkLength( name, "image_name", 3, 16 );
-
 					if ( bValid ) {
-					  
-					   $.post('/create_image/' + name.val() + '/' + sec_group_name.val() + '/nova/' + flavor_name.val() + '/' + sec_key_name.val() + '/' + image_name.val() + '/' + network_name.val() + '/' + PROJECT_ID + '/',
+                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/',
                                                                 function(){
                                                                                 location.reload();
                                                                 });
-                                           
-                                                $( this ).dialog( "close" );
-                                                $( "#instance_progressbar" ).progressbar({
+
+						$( this ).dialog( "close" );
+                                                $( "#vol_progressbar" ).progressbar({
                                                                 value: false
                                                 });
+
 					}
 				},
 				Cancel: function() {
@@ -101,11 +91,9 @@ $(function() {
 			}
 		});
 
-		$( "#create-instance" )
+		$( "#attach-volume" )
 			.click(function() {
-				$( "#instance-dialog-form" ).dialog( "open" );
+				$( "#volume-attach-dialog-form" ).dialog( "open" );
 			});
-			
-			
 	});
 	});
