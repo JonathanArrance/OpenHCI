@@ -32,14 +32,11 @@ $(function() {
 				}
 			}
 		});
-		
-		
-		
-		var 	instance = $( "#att_instance" ),
-                        mount_point = $("#att_mount_point"),
-                        
 
-			allFields = $( [] ).add( instance ).add( mount_point ),
+		var     instance = $( "#att_instance" ),
+                        volume = $( "#att_volume" ),
+
+			allFields = $( [] ).add( instance ).add( volume ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
@@ -62,9 +59,7 @@ $(function() {
 			}
 		}
 
-	
-
-		$( "#volume-view-attach-dialog-form" ).dialog({
+		$( "#volume-attach-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 400,
 			width: 350,
@@ -73,18 +68,18 @@ $(function() {
 				"Attach volume": function() {
 					var bValid = true;
 					allFields.removeClass( "ui-state-error" );
-                                        var mount = "";
-                                        mount = mount_point.val();
-                                        mount = mount.replace(/\//g, '&47');
+
 					if ( bValid ) {
-					   alert('bablha')
-					   $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + VOL_ID + '/' + mount + '/'
-                                                                ).success(function(data){
-                                                                                 console.log('stuff',data);
-                                                                                //location.reload();
+                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/',
+                                                                function(){
+                                                                                location.reload();
                                                                 });
 
 						$( this ).dialog( "close" );
+                                                $( "#vol_progressbar" ).progressbar({
+                                                                value: false
+                                                });
+
 					}
 				},
 				Cancel: function() {
@@ -96,11 +91,9 @@ $(function() {
 			}
 		});
 
-		$( "#view-attach-volume" )
+		$( "#attach-volume" )
 			.click(function() {
-				$( "#volume-view-attach-dialog-form" ).dialog( "open" );
+				$( "#volume-attach-dialog-form" ).dialog( "open" );
 			});
-			
-			
 	});
 	});

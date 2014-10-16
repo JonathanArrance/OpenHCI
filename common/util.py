@@ -23,14 +23,15 @@ dhcp_retry=5
 #INPUT: code - https error code
 #       reason - message from REST API
 #OUTPUT: void
+#This needs to go away and be replaced with actual HTTP error codes method
 def http_codes(code,reason=None,data=None):
     out = json.loads(data)
     if(code):
-        output_dict = {'response':'%s'%(code),'reason':'%s'%(reason),'data':'%s'%(out)}
+        output_dict = {"response":"%s"%(code),"reason":"%s"%(reason)}
         logger.sys_error("%s" %(output_dict))
         raise Exception("%s" %(output_dict))
     else:
-        output_dict = {'response':'555','reason':'%s'%(reason),'data':'%s'%(out)}
+        output_dict = {"response":"%s"%(code),"reason":"%s"%(reason)}
         logger.sys_error("%s" %(output_dict))
         raise Exception("%s" %(output_dict))
 
@@ -42,7 +43,7 @@ def db_connect():
         logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
     except Exception as e:
         logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
-        raise
+        raise e
 
     return db
 

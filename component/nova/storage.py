@@ -7,6 +7,7 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
 from transcirrus.common.auth import get_token
+import transcirrus.component.nova.error as ec
 
 from transcirrus.common.api_caller import caller
 
@@ -199,7 +200,8 @@ class server_storage_ops:
                     self.db.pg_update(update_vol)
                     self.db.pg_transaction_commit()
                 else:
-                    util.http_codes(rest['response'],rest['reason'],rest['data'])
+                    #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                    ec.error_codes(rest)
             except Exception as e:
                 self.db.pg_transaction_rollback()
                 raise e
@@ -289,7 +291,8 @@ class server_storage_ops:
                 self.db.pg_update(update_vol)
                 self.db.pg_transaction_commit()
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         except Exception as e:
             self.db.pg_transaction_rollback()
             raise e

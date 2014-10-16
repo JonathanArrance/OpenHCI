@@ -24,17 +24,21 @@ voltype = vol.create_volume_type("ssd")
 print voltype
 voltype2 = vol.create_volume_type("spindle")
 print voltype2
-
+"""
 get = {'volume_id':'8d4204fd-4d9e-4d83-8949-e33c963650a0','project_id':'84d3e074012a42ce919771c503993f4e'}
 yo = vol.get_volume_info(get)
 print yo
 
 """
+input = {'volume_id':'0e09893a-3608-4f63-abe9-90d7a9ab9a2a','project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1'}
+stuff = vol.get_volume(input)
+print stuff
+
 print "createing a new volume"
-create = {'volume_name':'kevenduerr','volume_size':'1','project_id':"03617193e49c450a8e234f3655b36afa",'volume_type':'spindle'}
+create = {'volume_name':'kevenduerr11','volume_size':'100','project_id':"a4bff7fc3ff34a5787a711bdfec5fbc1",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
-"""
+
 print "------------------------------------------"
 print "sleeping for 15 seconds"
 time.sleep(15)

@@ -9,6 +9,7 @@ import time
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
+import transcirrus.component.cinder.error as ec
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -164,10 +165,10 @@ class snapshot_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
                 r_dict = ""
-            except:
+            except Exception as e:
                 logger.sys_error("Volume snapshot %s may or may not have been created." %(create_snap['snapshot_name']))
                 #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise
+                raise e
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -191,7 +192,8 @@ class snapshot_ops:
                     r_dict = {"snapshot_name": create_snap['snapshot_name'],"snapshot_id": load['snapshot']['id'], "volume_id": load['snapshot']['volume_id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")
 
@@ -286,8 +288,7 @@ class snapshot_ops:
                 rest = api.call_rest(rest_dict)
                 r_dict = ""
             except Exception as e:
-                print "%s" %(e)
-                raise
+                raise e
 
             if(rest['response'] == 202):
                 #remove snap info from the transcirrus db
@@ -305,7 +306,8 @@ class snapshot_ops:
                     self.db.pg_close_connection()
                     return "OK"
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("The snapshot: %s does not exist." %(snap_info['snapshot_id']))
             raise Exception("The snapshot: %s does not exist." %(snap_info['snapshot_id']))
@@ -449,8 +451,7 @@ class snapshot_ops:
                 rest = api.call_rest(rest_dict)
                 r_dict = ""
             except Exception as e:
-                print "%s" %(e)
-                raise
+                raise e
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -459,7 +460,8 @@ class snapshot_ops:
                 r_dict = {"snapshot_id": str(load['snapshot']['id']), "snapshot_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at']), "snapshot_name": str(load['snapshot']['display_name'])}
                 return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error('Could not get detailed information on the snapshot.')
             raise Exception('Could not get detailed information on the snapshot.')

@@ -7,6 +7,7 @@ import time
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
+import transcirrus.component.nova.error as ec
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -161,7 +162,7 @@ class server_ops:
             instances = self.db.pg_select(get_inst)
         except Exception as e:
             logger.sql_error("%s"%(e))
-            raise
+            raise e
 
         #build the array of r_dict
         inst_array = []
@@ -342,8 +343,8 @@ class server_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-        except:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+        except Exception as e:
+            raise e
 
         if(rest['response'] == 202):
             self.load = json.loads(rest['data'])
@@ -359,11 +360,7 @@ class server_ops:
                     time.sleep(10)
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
-                    #break
-                    rest['response'] = '501'
-                    rest['reason'] = 'Could not launch instance'
-                    #return rest
-                    util.http_codes(rest['response'],rest['reason'],rest['data'])
+                    raise Exception("Could not create a new server. ERROR: 555")
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
@@ -385,7 +382,7 @@ class server_ops:
                           'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id'],'response':'202'}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
     def get_server(self,input_dict):
         """
@@ -465,10 +462,10 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not remove the project %s" %(e))
-            raise Exception("Could not connec to the REST api caller in create_server operation. %s"%(e))
+            raise e
 
+        load = json.loads(rest['data'])
         if(rest['response'] == 200):
-            load = json.loads(rest['data'])
             #If the field is empty just return
             if(not server):
                 #if no DB entry return the status from Nova - Kind of a hack for the polling in create server
@@ -482,7 +479,10 @@ class server_ops:
                       'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'novnc_console':novnc}
             return r_dict
         elif(rest['response'] == 409):
-            logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
+            #logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
+            logger.sys_error("%s ERROR: 404"%(str(load['itemNotFound']['message'])))
+        #else:
+        #    ec.error_codes(rest)
 
     def detach_all_servers_from_network(self,input_dict):
         """
@@ -594,7 +594,6 @@ class server_ops:
                 get_rest_dict = {"body": get_body, "header": get_header, "function":get_function, "api_path":get_api_path, "token": g_token, "sec": get_sec, "port":'8774'}
                 get_rest = api.call_rest(get_rest_dict)
             except Exception as e:
-                logger.sys_error("Could not remove the project %s" %(e))
                 raise e
 
             #portID
@@ -613,8 +612,8 @@ class server_ops:
                     rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                     rest = api.call_rest(rest_dict)
                 except Exception as e:
-                    logger.sys_error("Could not remove the project %s" %(e))
                     raise e
+
                 if(rest['response'] == 202):
                     #NOTE: need to add in a polling mechanism to report back status of the creation
                     try:
@@ -631,9 +630,9 @@ class server_ops:
                         self.db.pg_transaction_commit()
                         return 'OK'
                 else:
-                    util.http_codes(rest['response'],rest['reason'],rest['data'])
+                    ec.error_codes(rest)
             else:
-                util.http_codes(get_rest['response'],get_rest['reason'],rest['data'])
+                ec.error_codes(get_rest)
 
     def attach_server_to_network(self,input_dict):
         """
@@ -738,7 +737,8 @@ class server_ops:
                             }
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
 
     def update_server(self,update_dict):
         """
@@ -833,7 +833,8 @@ class server_ops:
                 return r_dict
         else:
             self.db.pg_transaction_rollback()
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
     def delete_server(self,delete_dict):
         """
@@ -916,7 +917,8 @@ class server_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
 #######Nova security#######
     def create_sec_group(self,create_sec):

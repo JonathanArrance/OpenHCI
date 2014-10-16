@@ -127,7 +127,7 @@ def InstallRPM (RPMFile, Host, Handle):
         RPMCommand = "rpm -Uvh --force " + RemoteRPMFile
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (RPMCommand, Host, Handle)
         if ExitStatus != 0:
-            print "Error installing rpm package %s on remote host, exit status:  %d" % (ExractFilename(RPMFile), ExitStatus)
+            print "Error installing rpm package %s on remote host, exit status:  %d" % (ExtractFilename(RPMFile), ExitStatus)
             print "stdout text: %s" % STDout
             print "stderr text: %s" % STDerr
             raise Exception ("InstallRPM error")

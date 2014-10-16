@@ -65,7 +65,7 @@ print act
 
 '''
 print "Createing a new virtual instance"
-server = {'sec_group_name':'project1','avail_zone':'nova','sec_key_name':'project1','network_name':'project1','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'thevm2','project_id':'75313798ff7f41df82b0037d9fbeab30'}
+server = {'sec_group_name':'project1','avail_zone':'nova','sec_key_name':'project1','network_name':'project1','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.large','name':'blah','project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1'}
 yo = nova.create_server(server)
 print yo
 '''

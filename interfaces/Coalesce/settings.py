@@ -112,6 +112,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap'
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
@@ -121,7 +122,6 @@ INSTALLED_APPS = (
     'django_filters',
     'crispy_forms',
     'coalesce.coal_beta',
-    'django.contrib.messages',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
