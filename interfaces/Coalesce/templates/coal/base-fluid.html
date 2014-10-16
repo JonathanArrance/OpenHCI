@@ -29,6 +29,11 @@
         <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/jquery-1.9.1.js"></script>
         <script src="{{ STATIC_URL }}javascripts/bootswatch.js"></script>
         <script src="{{ STATIC_URL }}javascripts/bootstrap.min.js"/></script>
+	<script>
+	function clearMessage() {
+            document.getElementById("warning-messages").remove();
+	}
+	</script>
         {% block javascripts %}{% endblock %}
     </head>
 
@@ -86,9 +91,9 @@
 
 	    {% if messages %}
 		<p></p>
-	        <ul class="messages">
+	        <ul class="messages" id="warning-messages" onclick="clearMessage()">
 	            {% for message in messages %}
-	                 <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+	                 <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}          (click to hide message)</li>
 	            {% endfor %}
 	        </ul>
 	    {% endif %}

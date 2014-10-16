@@ -42,6 +42,7 @@ from transcirrus.operations.change_adminuser_password import change_admin_passwo
 import transcirrus.common.util as util
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
+import transcirrus.operations.resize_server as rs_server
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -1177,9 +1178,10 @@ def resize_server(request, project_id, instance_id, flavor_id):
     redirect_to = urlsplit(referer, 'http', False)[2]
     try:
         auth = request.session['auth']
-        sa = server_actions(auth)
-        #import pdb; pdb.set_trace()
-        sa.resize_server(input_dict)
+        rs = rs_server.resize_and_confirm(auth, input_dict)
+        print "   ---   resize_and_confirm   ---"
+        print rs
+        print
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(redirect_to)
