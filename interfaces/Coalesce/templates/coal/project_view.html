@@ -3,6 +3,7 @@
 {% block title %}Project View{% endblock %}
 {% block javascripts %}
     <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
       
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
       
@@ -34,6 +35,8 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/image-import-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/container-dialog-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/object-upload-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"/></script>
     <script>
       var PROJECT = "{{ project.project_name }}";
     </script>

@@ -78,6 +78,7 @@ class quota_ops:
         DESC: Get the quotas that are set on a project
         INPUT: project_id - op
         OUTPUT: r_dict - id
+                       - project_name
                        - cores
                        - fixed_ips
                        - floating_ips
@@ -89,6 +90,7 @@ class quota_ops:
                        - metadata_items
                        - ram(in megabytes)
                        - security_group_rules
+                       - security_groups
                        - storage(in gigabytes)
                        - snapshots
                        - volumes
@@ -102,9 +104,17 @@ class quota_ops:
             logger.sys_error("Status level not sufficient to list quotas.")
             raise Exception("Status level not sufficient to list quotas.")
 
-        if('project_id' == "" or project_id == None):
+        if('project_id' == "" or project_id is None):
             logger.sys_error("Project id not passed using, default user project %s"%(self.project_id))
             project_id = self.project_id
+
+        #get the name of the project based on the id
+        try:
+            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(project_id)}
+            proj_name = self.db.pg_select(select)
+        except:
+            logger.sql_error("Could not get the project name from Transcirrus DB.")
+            raise Exception("Could not get the project name from Transcirrus DB.")
 
         #connect to the rest api caller
         try:
@@ -118,6 +128,8 @@ class quota_ops:
 
         ports = ['8774','8776']
         self.r_dict = {}
+        self.r_dict['project_name'] = proj_name[0][0]
+
         apiver = 'v1'
         for port in ports:
             if(port == '8774'):
@@ -127,7 +139,7 @@ class quota_ops:
                 body = ''
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'GET'
-                api_path = '/%s/%s/os-quota-sets/%s' %(apiver,self.project_id,project_id)
+                api_path = '/%s/%s/os-quota-sets/%s' %(apiver,project_id,project_id)
                 token = self.token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":port}
@@ -260,6 +272,7 @@ class quota_ops:
               not given then the users project id  and user id will be used.
         """
         logger.sys_info('\n**Updateing nova and cinder quotas. Component: Nova Def: update_project_quotas**\n')
+        print input_dict
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list quotas.")
             raise Exception("Status level not sufficient to list quotas.")
@@ -279,78 +292,78 @@ class quota_ops:
             current = self.get_project_quotas(input_dict['project_id'])
 
             #cinder updates
-            if('storage' in input_dict):
+            if(('storage' in input_dict) and (input_dict['storage'] is not None)):
                 self.gigabytes = int(input_dict['storage'])
             else:
                 self.gigabytes = int(current['gigabytes'])
 
-            if('snapshots' in input_dict):
+            if(('snapshots' in input_dict) and (input_dict['snapshots'] is not None)):
                 self.snapshots = int(input_dict['snapshots'])
             else:
                 self.snapshots = int(current['snapshots'])
 
-            if('volumes' in input_dict):
+            if(('volumes' in input_dict) and (input_dict['volumes'] is not None)):
                 self.volumes = int(input_dict['volumes'])
             else:
                 self.volumes = int(current['volumes'])
 
             #Nova updates
-            if('cores' in input_dict):
+            if(('cores' in input_dict) and (input_dict['cores'] is not None)):
                 self.cores = int(input_dict['cores'])
             else:
                 self.cores = int(current['cores'])
 
-            if('fixed_ips' in input_dict):
+            if(('fixed_ips' in input_dict) and (input_dict['fixed_ips'] is not None)):
                 self.fixed_ips = int(input_dict['fixed_ips'])
             else:
                 self.fixed_ips = int(current['fixed_ips'])
 
-            if('floating_ips' in input_dict):
+            if(('floating_ips' in input_dict) and (input_dict['floating_ips'] is not None)):
                 self.floating_ips = int(input_dict['floating_ips'])
             else:
                 self.floating_ips = int(current['floating_ips'])
 
-            if('injected_file_content_bytes' in input_dict):
+            if(('injected_file_content_bytes' in input_dict) and (input_dict['injected_file_content_bytes'] is not None)):
                 self.injected_file_content_bytes = int(input_dict['injected_file_content_bytes'])
             else:
                 self.injected_file_content_bytes = int(current['injected_file_content_bytes'])
 
-            if('injected_file_path_bytes' in input_dict):
+            if(('injected_file_path_bytes' in input_dict) and (input_dict['injected_file_path_bytes'] is not None)):
                 self.injected_file_path_bytes = int(input_dict['injected_file_path_bytes'])
             else:
                 self.injected_file_path_bytes = int(current['injected_file_path_bytes'])
 
-            if('injected_files' in input_dict):
+            if(('injected_files' in input_dict) and (input_dict['injected_files'] is not None)):
                 self.injected_files = int(input_dict['injected_files'])
             else:
                 self.injected_files = int(current['injected_files'])
 
-            if('instances' in input_dict):
+            if(('instances' in input_dict) and (input_dict['instances'] is not None)):
                 self.instances = int(input_dict['instances'])
             else:
                 self.instances = int(current['instances'])
 
-            if('key_pairs' in input_dict):
+            if(('key_pairs' in input_dict) and (input_dict['key_pairs'] is not None)):
                 self.key_pairs = int(input_dict['key_pairs'])
             else:
                 self.key_pairs = int(current['key_pairs'])
 
-            if('metadata_items' in input_dict):
+            if(('metadata_items' in input_dict) and (input_dict['metadata_items'] is not None)):
                 self.metadata_items = int(input_dict['metadata_items'])
             else:
                 self.metadata_items = int(current['metadata_items'])
 
-            if('ram' in input_dict):
+            if(('ram' in input_dict) and (input_dict['ram'] is not None)):
                 self.ram = int(input_dict['ram'])
             else:
                 self.ram = int(current['ram'])
 
-            if('security_group_rules' in input_dict):
+            if(('security_group_rules' in input_dict) and (input_dict['security_group_rules'] is not None)):
                 self.security_group_rules = int(input_dict['security_group_rules'])
             else:
                 self.security_group_rules = int(current['security_group_rules'])
 
-            if('security_groups' in input_dict):
+            if(('security_groups' in input_dict) and (input_dict['security_groups'] is not None)):
                 self.security_groups = int(input_dict['security_groups'])
             else:
                 self.security_groups = int(current['security_groups'])
@@ -372,26 +385,25 @@ class quota_ops:
                 if(port == '8774'):
                     apiver = 'v2'
 
-                try:
-                    self.body = {}
-                    if(port == '8776'):
-                        self.body = '{"quota_set": {"gigabytes": %d, "tenant_id": "%s", "snapshots": %d, "volumes": %d}}'%(self.gigabytes,input_dict['project_id'],self.snapshots,self.volumes)
-                    elif(port == '8774'):
-                        self.body = '{"quota_set": {"metadata_items": %d, "injected_files": %d, "ram": %d, "key_pairs": %d, "instances": %d, "security_group_rules": %d, "fixed_ips": %d, "security_groups": %d, \
-                        "injected_file_content_bytes": %d, "tenant_id": "%s", "floating_ips": %d, "cores": %d, "injected_file_path_bytes": %d}}'%(self.metadata_items,self.injected_files,self.ram,self.key_pairs,self.instances,
-                         self.security_group_rules,self.fixed_ips,self.security_groups,self.injected_file_content_bytes,input_dict['project_id'],self.floating_ips,self.cores,self.injected_file_path_bytes)
-                    header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                    function = 'PUT'
-                    api_path = '/%s/%s/os-quota-sets/%s' %(apiver,self.project_id,input_dict['project_id'])
-                    token = self.token
-                    sec = self.sec
-                    rest_dict = {"body": self.body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":port}
-                    rest = api.call_rest(rest_dict)
-                except Exception as e:
-                    raise e
+                #try:
+                self.body = {}
+                if(port == '8776'):
+                    self.body = '{"quota_set": {"gigabytes": %d, "tenant_id": "%s", "snapshots": %d, "volumes": %d}}'%(self.gigabytes,input_dict['project_id'],self.snapshots,self.volumes)
+                elif(port == '8774'):
+                    self.body = '{"quota_set": {"metadata_items": %d, "injected_files": %d, "ram": %d, "key_pairs": %d, "instances": %d, "security_group_rules": %d, "fixed_ips": %d, "security_groups": %d, "injected_file_content_bytes": %d, "tenant_id": "%s", "floating_ips": %d, "cores": %d, "injected_file_path_bytes": %d}}'%(self.metadata_items,self.injected_files,self.ram,self.key_pairs,self.instances,
+                     self.security_group_rules,self.fixed_ips,self.security_groups,self.injected_file_content_bytes,input_dict['project_id'],self.floating_ips,self.cores,self.injected_file_path_bytes)
+                print self.body
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'PUT'
+                api_path = '/%s/%s/os-quota-sets/%s' %(apiver,input_dict['project_id'],input_dict['project_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": self.body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":port}
+                rest = api.call_rest(rest_dict)
+                #except Exception as e:
+                #    raise e
         
                 load = json.loads(rest['data'])
-                print load
                 if(rest['response'] == 200):
                     for k, v in load['quota_set'].iteritems():
                         self.r_dict[k] = v

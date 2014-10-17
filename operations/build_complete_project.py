@@ -6,6 +6,8 @@ from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.common.gluster import gluster_ops
+from transcirrus.component.nova.quota import quota_ops
+from transcirrus.component.neutron.admin_actions import admin_ops
 
 def build_project(auth_dict, project_dict):
     """
@@ -25,6 +27,7 @@ def build_project(auth_dict, project_dict):
                                       - project_id - leave NULL
                      - sec_keys_name - req
                      - router_name - req
+                     - advanced_ops - quota - op
     OUTPUT:
     ACCESS:
     NOTES:
@@ -91,7 +94,7 @@ def build_project(auth_dict, project_dict):
         logger.sys_error("Couldn't create a subnet, %s" %(str(e)))
 
     try:
-        ports = ['22','80','443']
+        ports = ['22','80','443','3389']
         project_dict['sec_group_dict']['project_id'] = proj
         project_dict['sec_group_dict']['ports'] = ports
         sec_group = nova.create_sec_group(project_dict['sec_group_dict'])
@@ -132,5 +135,18 @@ def build_project(auth_dict, project_dict):
         logger.sys_info("Created router gateway")
     except Exception as e:
         logger.sys_error("Couldn't create a router gateway, %s" %(str(e)))
+
+    #advanced options
+    if(('advanced_ops' in project_dict) and (project_dict['advanced_ops'] is not None)):
+        qo = quota_ops(auth_dict)
+        print qo
+        ao = admin_ops(auth_dict)
+        print ao
+
+        try:
+            proj_out = qo.update_project_quotas(project_dict['advanced_ops']['quota'])
+            net_out = ao.update_net_quota(project_dict['advanced_ops']['quota'])
+        except Exception as e:
+            logger.sys_error("Could not add quotas to the bew project, %s" %(str(e)))
 
     return proj
