@@ -50,7 +50,20 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 
-	url(r'^projects/(?P<project_id>\w+)/pu_project_view/$',
+        #quotas
+        url(r'^projects/(?P<project_id>\w+)/get_project_quota/$',
+            'coalesce.coal_beta.views.get_project_quota',
+            name='project_quota'),
+
+        url(r'^projects/(?P<project_id>\w+)/set_project_quota/$',
+            'coalesce.coal_beta.views.set_project_quota',
+            name='project_quota'),
+
+        url(r'^projects/(?P<project_id>\w+)/view/$',
+            'coalesce.coal_beta.views.project_view',
+            name='project_view'),
+
+        url(r'^projects/(?P<project_id>\w+)/pu_project_view/$',
             'coalesce.coal_beta.views.pu_project_view',
             name='pu_project_view'),
 
@@ -65,9 +78,8 @@ urlpatterns = patterns('',
         url(r'^projects/manage/$',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
-	
-	# --- Instances ----
 
+	# --- Instances ----
         url(r'^create_image/(?P<name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_name>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_name>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_image',
             name='create_image'),

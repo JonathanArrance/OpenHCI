@@ -35,6 +35,8 @@ from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.swift.container_services import container_service_ops
 from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
+from transcirrus.component.nova.quota import quota_ops
+from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 import transcirrus.operations.delete_server as ds
@@ -185,6 +187,39 @@ def manage_nodes(request):
         messages.warning(request, "Unable to manage nodes.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
+
+def set_project_quota(request,quota_settings):
+    """
+    quota_settings - dictionary conating all of the settings to be updated.
+    """
+    auth = request.session['auth']
+    ao = admin_ops(auth)
+    qo = quota_ops(auth)
+    proj = qo.get_project_quotas(quota_settings['project_id'])
+    try:
+        proj_out = qo.update_project_quotas(quota_settings)
+        net_out = ao.update_net_quota(quota_settings)
+        out = dict(proj_out.items() + net_out.items())
+        out['status'] = 'success'
+        out['message'] = "Quotas updated for %s."%(proj['project_name'])
+    except Exception, e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def get_project_quota(request,project_id):
+    auth = request.session['auth']
+    ao = admin_ops(auth)
+    qo = quota_ops(auth)
+    try:
+        proj_out = qo.get_project_quotas(project_id)
+        net_out = ao.list_net_quota(project_id)
+        out = dict(proj_out.items() + net_out.items())
+        #may not have to return this in toastmessages
+        out['status'] = 'success'
+        out['message'] = "Quotas for %s."%(out['project_name'])
+    except Exception, e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def manage_projects(request):
     auth = request.session['auth']
@@ -839,36 +874,31 @@ def delete_image(request, image_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
+    out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
         create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'volume_type': volume_type, 'project_id': project_id}
         out = vo.create_volume(create_vol)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponse(simplejson.dumps(out))
+        out['status'] = 'success'
+        out['message'] = "Volume %s was created."%(volume_name)
     except Exception, e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponse(request.META.get('HTTP_REFERER'))
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def delete_volume(request, volume_id, project_id):
+    #needs to have ajax delete call finished.
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
-        print delete_vol
         name = vo.get_volume_info(delete_vol)
         out = vo.delete_volume(delete_vol)
-        print out
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'The volume %s of type %s has been deleted.'%(name['volume_name'],name['volume_type']))
-        return HttpResponseRedirect(redirect_to)
-        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out['status'] = 'success'
+        out['message'] = "Volume %s was deleted."%(name['volume_name'])
     except Exception as e:
-        print e
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def attach_volume(request, project_id, instance_id, volume_id):
     try:
@@ -899,8 +929,9 @@ def detach_volume(request, project_id, volume_id):
         out = sso.detach_vol_from_server(detach_vol)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'Volume %s has been detached from .'%(v_info['volume_name'],v_info['volume_instance_name']))
-        return HttpResponseRedirect(redirect_to)
+        #messages.warning(request, 'Volume %s has been detached from .'%(v_info['volume_name'],v_info['volume_instance_name']))
+        #return HttpResponseRedirect(redirect_to)
+        return HttpResponse(simplejson.dumps(out))
     except Exception as e:
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -1183,6 +1214,12 @@ def power_cycle(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to power cycle server.")
         return HttpResponseRedirect(redirect_to)
+
+def power_off(request):
+    pass
+
+def power_on(request):
+    pass
 
 def live_migrate_server(request, project_id, instance_id, host_name):
     input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
@@ -1545,6 +1582,9 @@ def build_project(request):
             sec_keys_name   = form.cleaned_data['sec_keys_name']
             router_name     = form.cleaned_data['router_name']
 
+            #get the advanced props flag
+            advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
+
             auth = request.session['auth']
             project_var_array = {'project_name': proj_name,
                                  'user_dict': { 'username': username,
@@ -1563,6 +1603,50 @@ def build_project(request):
                                  'sec_keys_name': sec_keys_name,
                                  'router_name': router_name
                             }
+
+            #add in the advanced quota options
+            if(advanced):
+                cores           = form.cleaned_data['core']
+                fixed_ips       = form.cleaned_data['fixed_ips']
+                floating_ips    = form.cleaned_data['floating_ips']
+                injected_file_content_bytes = form.cleaned_data['injected_file_content_bytes']
+                injected_file_path_bytes = form.cleaned_data['injected_file_path_bytes']
+                injected_files  = form.cleaned_data['injected_files']
+                instances       = form.cleaned_data['instances']
+                key_pairs       = form.cleaned_data['key_pairs']
+                metadata_items  = form.cleaned_data['metadata_items']
+                ram             = form.cleaned_data['ram']
+                security_group_rules = form.cleaned_data['security_group_rules']
+                security_groups = form.cleaned_data['security_groups']
+                storage         = form.cleaned_data['storage']
+                snapshots       = form.cleaned_data['snapshots']
+                volumes         = form.cleaned_data['volumes']
+                subnet_quota    = form.cleaned_data['subnet_quota']
+                router_quota    = form.cleaned_data['router_quota']
+                network_quota   = form.cleaned_data['network_quota']
+                floatingip_quota = form.cleaned_data['floatingip_quota']
+                port_quota      = form.cleaned_data['port_quota']
+
+                quota = {
+                        'cores':cores,
+                        'fixed_ips':fixed_ips,
+                        'floating_ips':floating_ips,
+                        'injected_file_content_bytes':injected_file_content_bytes,
+                        'injected_file_path_bytes':injected_file_path_bytes,
+                        'injected_files':injected_files,
+                        'instances':instances,
+                        'key_pairs':key_pairs,
+                        'metadata_items':metadata_items,
+                        'ram':ram,
+                        'security_group_rules':security_group_rules,
+                        'security_groups':security_groups,
+                        'storage':storage,
+                        'snapshots':snapshots,
+                        'volumes':volumes
+                }
+
+                project_var_array['advanced_ops']['quota'] = quota
+
             pid = bcp.build_project(auth, project_var_array)
 
             redirect_to = "/projects/%s/view/" % (pid)
