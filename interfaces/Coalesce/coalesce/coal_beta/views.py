@@ -1633,7 +1633,8 @@ def build_project(request):
             router_name     = form.cleaned_data['router_name']
 
             #get the advanced props flag
-            advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
+            #advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
+            advanced = None
 
             auth = request.session['auth']
             project_var_array = {'project_name': proj_name,
