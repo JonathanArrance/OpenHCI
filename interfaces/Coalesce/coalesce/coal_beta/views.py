@@ -1110,6 +1110,14 @@ def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
         messages.warning(request, "Unable to take snapshots.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def create_vm_spec(request):
+    auth = request.session['auth']
+    fo = flavor_ops(auth)
+
+def delete_vm_spec(request):
+    auth = request.session['auth']
+    fo = flavor_ops(auth)
+
 def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
     try:
         auth = request.session['auth']
