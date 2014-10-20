@@ -54,7 +54,15 @@
                     </select>
                 </fieldset>
                 </form>
-            </div>
+                <div class="progress" id="local_progress">
+                    <div class="bar" id="local_bar"></div >
+                    <div class="percent" id="local_percent"><center>0%</center></div >
+                </div>
+                <div class="progress" id="remote_progress">
+                    <div class="bar" id="remote_bar"></div >
+                    <div class="percent" id="remote_percent"><center>0%</center></div >
+                </div>
+        </div>
 	  
           {% if images %}
 	    <table class="paleblue" id="image_list">

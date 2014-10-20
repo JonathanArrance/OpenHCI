@@ -14,6 +14,7 @@ from django.db import connection
 from django.views.decorators.cache import never_cache
 from django.core import serializers
 from django.utils import simplejson
+from django.core.cache import cache
 import time
 
 
@@ -810,7 +811,7 @@ def create_keypair(request, key_name, project_id):
         messages.warning(request, "Unable to create keypair.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility):
+def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
     from coalesce.coal_beta.models import ImportLocal
     print "---import_local"
 
@@ -835,6 +836,9 @@ def import_local (request, image_name, container_format, disk_format, image_type
             print ("Uploaded local file done")
         except Exception as e:
             print ("Error uploading local file: %s" % e)
+            messages.warning(request, "Unable to import local image.")
+            ##return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+            return HttpResponse(simplejson.dumps(None))
 
         import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
 
@@ -852,7 +856,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
     return HttpResponse(simplejson.dumps(out))
 
 
-def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility):
+def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
@@ -874,6 +878,24 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
 
     messages.warning(request, 'Remote image %s was uploaded.' % (out['image_name']))
     return HttpResponse(simplejson.dumps(out))
+
+
+def get_upload_progress (request, progress_id):
+    print "--get_upload_progress:progress_id:: %s" % progress_id
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
+        out = cache.get(cache_key)
+        referer = request.META.get('HTTP_REFERER', None)
+        redirect_to = urlsplit(referer, 'http', False)[2]
+    except Exception as e:
+        print ("error getting upload progress: %s" % e)
+        messages.warning(request, "error getting upload progress.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    print "out: %s" % out
+    return HttpResponse(simplejson.dumps(out))
+
 
 def delete_image(request, image_id):
     try:
