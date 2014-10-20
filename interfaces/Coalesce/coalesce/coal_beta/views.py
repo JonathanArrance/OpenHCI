@@ -1110,13 +1110,38 @@ def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
         messages.warning(request, "Unable to take snapshots.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-def create_vm_spec(request):
-    auth = request.session['auth']
-    fo = flavor_ops(auth)
+def create_vm_spec(request,name,ram,boot_disk,cpus,swap=None,ephemeral=None,public=None,description=None):
+    try:
+        auth = request.session['auth']
+        fo = flavor_ops(auth)
+        input_dict = {'name':name,'ram':ram,'boot_disk':boot_disk,'cpus':cpus}
+        if(swap):
+            input_dict['swap'] = swap
+        if(ephemeral):
+            input_dict['ephemeral'] = ephemeral
+        if(public):
+            input_dict['public'] = public
+        if(description):
+            input_dict['description'] = description
+        out = fo.create_flavor(input_dict)
+        out['status'] = 'success'
+        out['message'] = "New vm spec %s created."%(name)
+    except Exception, e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+        
 
-def delete_vm_spec(request):
-    auth = request.session['auth']
-    fo = flavor_ops(auth)
+def delete_vm_spec(request,flavor_id):
+    try:
+        auth = request.session['auth']
+        fo = flavor_ops(auth)
+        spec = fo.get_flavor(flavor_id)
+        out = fo.delete_flavor(flavor_id)
+        out['status'] = 'success'
+        out['message'] = "Vm spec %s deleted."%(spec['flavor_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
     try:

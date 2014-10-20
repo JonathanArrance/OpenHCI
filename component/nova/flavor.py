@@ -110,7 +110,7 @@ class flavor_ops:
                        - swap(GB)
                        - cpus
                        - flav_link
-                       - description
+                       - metadata - dict
         """
         #connec to the rest api caller.
         try:
@@ -138,9 +138,8 @@ class flavor_ops:
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             #get description
-            input_dict = {'flavor_id':str(load['flavor']['id']),'metadata_key':'description'}
-            meta = self.get_flavor_metadata(input_dict)
-            r_dict = {"flavor_name": str(load['flavor']['name']), "flav_id": str(load['flavor']['id']), "memory(MB)": str(load['flavor']['ram']), "disk_space(GB)": str(load['flavor']['disk']), "ephemeral(GB)": str(load['flavor']['OS-FLV-EXT-DATA:ephemeral']), "swap(GB)": str(load['flavor']['swap']), "cpus": str(load['flavor']['vcpus']), "link": str(load['flavor']['links'][1]['href']), "description":str(meta['description'])}
+            meta = self.get_flavor_metadata(str(load['flavor']['id']))
+            r_dict = {"flavor_name": str(load['flavor']['name']), "flav_id": str(load['flavor']['id']), "memory(MB)": str(load['flavor']['ram']), "disk_space(GB)": str(load['flavor']['disk']), "ephemeral(GB)": str(load['flavor']['OS-FLV-EXT-DATA:ephemeral']), "swap(GB)": str(load['flavor']['swap']), "cpus": str(load['flavor']['vcpus']), "link": str(load['flavor']['links'][1]['href']), "metadata":str(meta)}
             return r_dict
         else:
             #util.http_codes(rest['response'],rest['reason'])
@@ -159,19 +158,21 @@ class flavor_ops:
                         - swap - op - default 0 (MB)
                         - ephemeral - op - default 0 (GB)
                         - public - op - default false (true/false)
-                        - description
+                        - description - op
         OUTPUT: r_dict - status - ok (may change after proto)
                          flav_name
                          flav_id
         """
         #connect to the rest api caller.
         if(self.is_admin == 1):
-            try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                api = caller(api_dict)
-            except:
-                logger.sys_error("Could not connect to the API caller")
-                raise Exception("Could not connect to the API caller")
+            if(('name' not in flav_dict) or (flav_dict['name'] == "")):
+                raise Exception("VM flavor name not given.")
+            if(('boot_disk' not in flav_dict) or (flav_dict['boot_disk'] == "") or (flav_dict['boot_disk'] == "0")):
+                raise Exception("Boot disk size, in GB, not given.")
+            if(('ram' not in flav_dict) or (flav_dict['ram'] == "") or (flav_dict['ram'] == "0")):
+                raise Exception("RAM, in MB, not given.")
+            if(('cpus' not in flav_dict) or (flav_dict['cpus'] == "") or (flav_dict['cpus'] == "0")):
+                raise Exception("Number of CPUs not specified.")
 
             #determin if flavor is public
             self.public = "TRUE"
@@ -192,6 +193,13 @@ class flavor_ops:
             #generate a random ID for the flavor
             random.seed()
             flav_id = random.randrange(0,100000)
+
+            try:
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API caller")
+                raise Exception("Could not connect to the API caller")
 
             try:
                 #body = '{"flavor": {"vcpus": 2, "disk": 40, "name": "jontest5", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 5, "ram": 256, "id": 205, "swap": 5}}'
@@ -314,54 +322,51 @@ class flavor_ops:
             logger.sys_error("Only admin can add flavor flavor metadata, user: %s" %(self.username))
             raise Exception("Only admin can add flavor flavor metadata, user: %s" %(self.username))
 
-    def get_flavor_metadata(self,input_dict):
+    def get_flavor_metadata(self,flavor_id=None):
         """
         DESC: Get the metadata attached to a flavor
-        INPUT: input_dict - flavor_id - req
-                          - metadat_key - req
-        OUTPUT: metadata
+        INPUT: flavor_id
+        OUTPUT: r_dict of specs
         NOTE: The output is the rest API output extra_specs:{key:value}
         ACCESS: Admin can get metadata for any flavor
                 PU can get metadata for flavor in their project.
                 User can get metadata for flavor in their project.
         """
-        if(('flavor_id' not in input_dict) or (input_dict['flavor_id'] == "")):
-            logger.sys_error("Requiered parameter not specified.")
-            raise Exception("Requiered parameter not specified.")
-        if(('metadata_key' not in input_dict) or (input_dict['metadata_key'] == "")):
-            logger.sys_error("Requiered parameter not specified.")
-            raise Exception("Requiered parameter not specified.")
+        if(flavor_id):
 
-        #connec to the rest api caller.
-        try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            api = caller(api_dict)
-        except:
-            logger.sys_error("Could not connect to the API caller")
-            raise Exception("Could not connect to the API caller")
-
-        try:
-            body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'GET'
-            api_path = '/v2/%s/flavors/%s/os-extra_specs/%s' %(self.project_id,input_dict['flavor_id'],input_dict['metadata_key'])
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-            rest = api.call_rest(rest_dict)
-        except Exception as e:
-            logger.sys_error("%s" %(e))
-            raise e
-
-        #check the response and make sure it is a 200 or 202
-        if(rest['response'] == 200):
-            #build up the return dictionary and return it if everythig is good to go
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            load = json.loads(rest['data'])
-            return load
+            #connec to the rest api caller.
+            try:
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_error("Could not connect to the API caller")
+                raise Exception("Could not connect to the API caller")
+    
+            try:
+                body = ''
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'GET'
+                api_path = '/v2/%s/flavors/%s/os-extra_specs' %(self.project_id,flavor_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error("%s" %(e))
+                raise e
+    
+            #check the response and make sure it is a 200 or 202
+            if(rest['response'] == 200):
+                #build up the return dictionary and return it if everythig is good to go
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                load = json.loads(rest['data'])
+                return load['extra_specs']
+            else:
+                #util.http_codes(rest['response'],rest['reason'])
+                nova_ec.error_codes(rest)
         else:
-            #util.http_codes(rest['response'],rest['reason'])
-            nova_ec.error_codes(rest)
+            logger.sys_error('Flavor ID not specified')
+            raise Exception('Flavor ID not specified')
 
     def delete_flavor_metadata(self,input_dict):
         """
