@@ -33,8 +33,8 @@ $(function() {
 			}
 		});
 
-		var     instance = $( "#att_instance" ),
-                        volume = $( "#att_volume" ),
+		var     instance = $( "#det_instance" ),
+                        volume = $( "#det_volume" ),
 
 			allFields = $( [] ).add( instance ).add( volume ),
 			tips = $( ".validateTips" );
@@ -59,41 +59,53 @@ $(function() {
 			}
 		}
 
-		$( "#volume-attach-dialog-form" ).dialog({
-			autoOpen: false,
-			height: 400,
-			width: 350,
-			modal: true,
-			buttons: {
-				"Attach volume": function() {
-					var bValid = true;
-					allFields.removeClass( "ui-state-error" );
+		//$( "#volume-detach-dialog-form" ).dialog({
+		//	autoOpen: false,
+		//	height: 400,
+		//	width: 350,
+		//	modal: true,
+		//	buttons: {
+		//		"Detach volume": function() {
+		//			var bValid = true;
+		//			allFields.removeClass( "ui-state-error" );
 
-					if ( bValid ) {
-                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/',
-                                                                function(){
-                                                                                location.reload();
-                                                                });
+		//			if ( bValid ) {
+         //                       $.getJSON('/detach_volume/' + PROJECT_ID + '/' + volume.val() + '/'
+        //                                                        ).success(function(data){
+        //                                                                        $('#volume_list')
+        //                                                                       .append('<tr><td><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/">'+data.volume_name+'</a></td><td>None</td><td><a href="/delete_volume/'+data.volume_id+'/'+PROJECT_ID+'/">delete</a></td></tr>');
+        //                                                                        alert("Volume " + data.volume_name + " detached from "+instance.val()+".");
+        //                                                        }).error(function(){
+        //                                                        location.reload();
+        //                                        });;
 
-						$( this ).dialog( "close" );
-                                                $( "#vol_progressbar" ).progressbar({
-                                                                value: false
-                                                });
+		//				$( this ).dialog( "close" );
+                                                //$( "#vol_progressbar" ).progressbar({
+                                                //                value: false
+                                                //});
 
-					}
-				},
-				Cancel: function() {
-					$( this ).dialog( "close" );
-				}
-			},
-			close: function() {
-				allFields.val( "" ).removeClass( "ui-state-error" );
-			}
-		});
+					//}
+				//},
+				//Cancel: function() {
+				//	$( this ).dialog( "close" );
+				//}
+			//},
+			//close: function() {
+			//	allFields.val( "" ).removeClass( "ui-state-error" );
+			//}
+		//});
 
-		$( "#attach-volume" )
+		$( "#detach-volume" )
 			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
+				//$( "#volume-detach-dialog-form" ).dialog( "open" );
+                $.getJSON('/detach_volume/' + PROJECT_ID + '/' + volume.val() + '/'
+                                                                ).success(function(data){
+                                                                                $('#volume_list')
+                                                                                .append('<tr><td><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/">'+data.volume_name+'</a></td><td>None</td><td><a href="/delete_volume/'+data.volume_id+'/'+PROJECT_ID+'/">delete</a></td></tr>');
+                                                                                alert("Volume " + data.volume_name + " detached from "+instance.val()+".");
+                                                                }).error(function(){
+                                                                location.reload();
+                                                });;
 			});
 	});
 	});

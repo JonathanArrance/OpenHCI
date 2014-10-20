@@ -1,4 +1,6 @@
-$(function() {  
+$(function() {
+                var message = new message_handle();
+               
 		// must obtain csrf cookie for AJAX call
 		function getCookie(name) {
 			var cookieValue = null;
@@ -74,12 +76,17 @@ $(function() {
 					if ( bValid ) {
 					   $.getJSON('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + volume_type.val() + '/' + PROJECT_ID + '/'
                                                                 ).success(function(data){
-                                                                                $('#volume_list')
-                                                                                .append('<tr><td><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/">'+data.volume_name+'</a></td><td>None</td><td><a href="/delete_volume/'+data.volume_id+'/'+PROJECT_ID+'/">delete</a></td></tr>');
-                                                                                alert("New volume " + data.volume_name + " created.");
+                                                                                if(data.status == 'error'){message.showMessage('error', data.message);}
+                                                                                if(data.status == 'success'){
+                                                                                                $('#volume_list')
+                                                                                                .append('<tr><td><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/">'+data.volume_name+'</a></td><td>None</td><td><a href="/delete_volume/'+data.volume_id+'/'+PROJECT_ID+'/">delete</a></td></tr>');
+                                                                                                $('#att_volume')
+                                                                                                .append('<option value="'+data.volume_id+'">'+data.volume_name+'</option>');
+                                                                                                message.showMessage('success', data.message);
+                                                                                }
                                                                 }).error(function(){
-                                                                location.reload();
-                                                });;
+                                                                                message.showMessage('error', 'Server Fault');
+                                                                });
 					   $( this ).dialog( "close" );
 					}
 				},
