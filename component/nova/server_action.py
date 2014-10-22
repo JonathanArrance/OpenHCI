@@ -8,6 +8,7 @@
 import sys
 import json
 import socket
+import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -17,7 +18,8 @@ from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
-from flavor import flavor_ops
+import transcirrus.component.nova.error as nova_ec
+#from flavor import flavor_ops
 
 
 class server_actions:
@@ -64,12 +66,8 @@ class server_actions:
             else:
                 self.sec = 'FALSE'
 
-            #Retrieve all default values from the DB????
-            #Screw a config file????
-            #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
-            #self.db = user_dict['db']
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -100,6 +98,163 @@ class server_actions:
     def destructor(self):
         #close any open db connections
         self.db.close_connection()
+
+    def server_power_control(self,input_dict):
+        """
+        DESC: Power off a virtual server
+        INPUT: input_dict - server_id - req
+                          - project_id - req
+                          - power_state on/off - req
+        OUTPUT: This operation does not return a response body.
+        ACCESS: Admins can do power operations on any instance
+                power users can do power operations on instances in their project
+                user can do power operations on instances they own.
+        NOTE: none
+        """
+
+        if ((input_dict['server_id'] == '') or ('server_id' not in input_dict)):
+            logger.sys_error("No server id was provided.")
+            raise Exception("No server id was provided.")
+        if ((input_dict['project_id'] == '') or ('project_id' not in input_dict)):
+            logger.sys_error("No project id was provided.")
+            raise Exception("No project id was provided.")
+        if ((input_dict['power_state'] == '') or ('power_state' not in input_dict)):
+            logger.sys_error("No power state was provided.")
+            raise Exception("No power state was provided.")
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        state = input_dict['power_state'].lower()
+        flag = None
+        if(state == 'on'):
+            flag = 1
+        elif(state == 'off'):
+            flag = 0
+        else:
+            logger.sys_error('Invalid power state given.')
+            raise Exception('Invalid power state given.')
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only power on/off virtual serves in their project.")
+                raise Exception("Users can only power on/off virtual serves in their project.")
+
+        #check to make sure non admins can perofrm the task
+        if(self.is_admin == 0):
+            self.get_server = None
+            if(self.user_level == 1):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(input_dict['project_id'])}
+            elif(self.user_level == 2):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(input_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
+            server = self.db.pg_select(self.get_server)
+            if(server[0][0] == ''):
+                logger.sys_error('The current user can not perform server power control operation.')
+                raise Exception('The current user can not perform server power control operation.')
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            if(flag == 0):
+                self.body='{"os-stop": null}'
+                self.state = 'SHUTOFF'
+            elif(flag == 1):
+                self.body='{"os-start": null}'
+                self.state = 'ACTIVE'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['server_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": self.body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            raise e
+
+        if(rest['response'] == 202):
+            while(True):
+                status = self._check_status(input_dict['project_id'],input_dict['server_id'])
+                if(status['server_status'] == '%s'%(self.state)):
+                    logger.sys_info('Active server with ID %s.'%(input_dict['server_id']))
+                    break
+                elif(status['server_status'] == 'ERROR'):
+                    logger.sys_info('Server with ID %s failed to power cycle.'%(input_dict['server_id']))
+                    raise Exception("Could not create a new server. ERROR: 555")
+                time.sleep(2)
+        else:
+            nova_ec.error_codes(rest)
+
+        return 'OK'
+
+    def power_on_server(self,input_dict):
+        """
+        DESC: Power on a virtual server
+        INPUT: input_dict - server_id - req
+                          - project_id - req
+        OUTPUT: OK - success
+                error - fail
+        ACCESS: Admins can do power operations on any instance
+                power users can do power operations on instances in their project
+                user can do power operations on instances they own.
+        NOTE: none
+        """
+        input_dict['power_state'] = 'on'
+        out = self.server_power_control(input_dict)
+        return out
+
+    def power_off_server(self,input_dict):
+        """
+        DESC: Power off a virtual server
+        INPUT: input_dict - server_id - req
+                          - project_id - req
+        OUTPUT: This operation does not return a response body.
+        ACCESS: Admins can do power operations on any instance
+                power users can do power operations on instances in their project
+                user can do power operations on instances they own.
+        NOTE: none
+        """
+        input_dict['power_state'] = 'off'
+        out = self.server_power_control(input_dict)
+        return out
+
+    def power_cycle_server(self,input_dict):
+        """
+        DESC: Power off a virtual server
+        INPUT: input_dict - server_id - req
+                          - project_id - req
+        OUTPUT: This operation does not return a response body.
+        ACCESS: Admins can do power operations on any instance
+                power users can do power operations on instances in their project
+                user can do power operations on instances they own.
+        NOTE: none
+        """
+        status = self._check_status(input_dict['project_id'],input_dict['server_id'])
+        if(status['server_status'] == 'ACTIVE'):
+            input_dict['power_state'] = 'off'
+            self.server_power_control(input_dict)
+            input_dict['power_state'] = 'on'
+            out = self.server_power_control(input_dict)
+            return out
+        elif(status['server_status'] == 'SHUTOFF'):
+            input_dict['power_state'] = 'on'
+            out = self.server_power_control(input_dict)
+            return out
 
     def reboot_server(self, input_dict):
         """
@@ -548,6 +703,34 @@ class server_actions:
         #get quota for project
         
         #check if attributes are under granted quota
+
+    #Internal methodes
+    #this is a hack to overcome a system limitation
+    def _check_status(self,project_id=None,server_id=None):
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            if(project_id != self.project_id):
+                    self.token = get_token(self.username,self.password,project_id)
+            api = caller(api_dict)
+        except Exception as e:
+            raise e
         
-        
-        
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/%s'%(project_id,server_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not remove the project %s" %(e))
+            raise e
+    
+        load = json.loads(rest['data'])
+        if(rest['response'] == 200):
+            r_dict = {'server_status':load['server']['status']}
+            return r_dict
+        else:
+            nova_ec.error_codes(rest)

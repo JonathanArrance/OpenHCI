@@ -447,10 +447,9 @@ class server_ops:
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
-            logger.sys_error("Could not connec to the REST api caller in create_server operation.")
-            raise Exception("Could not connec to the REST api caller in create_server operation.")
+            logger.sys_error("Could not connect to the REST API.")
+            raise Exception("Could not connect to the REST API.")
 
-        #build the server
         try:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}

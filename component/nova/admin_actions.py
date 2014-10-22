@@ -126,27 +126,27 @@ class server_admin_actions:
 
         # Create an API connection with the Admin
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
-            if(input_dict['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
 
-        #try:
-        body=''
-        header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-        function = 'GET'
-        api_path = '/v2/%s/servers/%s/diagnostics' %(input_dict['project_id'],input_dict['instance_id'])
-        print api_path
-        token = self.token
-        sec = self.sec
-        rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-        rest = api.call_rest(rest_dict)
-        #except:
-        #    logger.sys_error("Error in server status/diag request.")
-        #    raise Exception("Error in server status/diag request")
+        try:
+            body=''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/%s/diagnostics' %(input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Error in server status/diag request.")
+            raise Exception("Error in server status/diag request")
 
         if(rest['response'] == 200):
                 # this method does not return any response body

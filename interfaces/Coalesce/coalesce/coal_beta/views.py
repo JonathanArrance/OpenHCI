@@ -1126,7 +1126,7 @@ def create_vm_spec(request,name,ram,boot_disk,cpus,swap=None,ephemeral=None,publ
         out = fo.create_flavor(input_dict)
         out['status'] = 'success'
         out['message'] = "New vm spec %s created."%(name)
-    except Exception, e:
+    except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
         
@@ -1284,6 +1284,7 @@ def reboot(request, project_id, instance_id):
         return HttpResponseRedirect(redirect_to)
 
 def power_cycle(request, project_id, instance_id):
+    #this needs to be changed to the new power cycle method
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"HARD"}
     referer = request.META.get('HTTP_REFERER', None)
     redirect_to = urlsplit(referer, 'http', False)[2]
@@ -1298,11 +1299,35 @@ def power_cycle(request, project_id, instance_id):
         messages.warning(request, "Unable to power cycle server.")
         return HttpResponseRedirect(redirect_to)
 
-def power_off(request):
-    pass
+def power_off(request,project_id,server_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        input_dict = {'project_id':project_id, 'server_id':instance_id}
+        sa = server_actions(auth)
+        so = server_ops(auth)
+        get = so.get_server(input_dict)
+        out = sa.power_off_server(input_dict)
+        out['status'] = 'success'
+        out['message'] = "Instance %s powered off."%(get['server_name'])
+    except Exception, e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
-def power_on(request):
-    pass
+def power_on(request,project_id,server_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        input_dict = {'project_id':project_id, 'server_id':instance_id}
+        sa = server_actions(auth)
+        so = server_ops(auth)
+        get = so.get_server(input_dict)
+        out = sa.power_on_server(input_dict)
+        out['status'] = 'success'
+        out['message'] = "Instance %s powered on."%(get['server_name'])
+    except Exception, e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def live_migrate_server(request, project_id, instance_id, host_name):
     input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
