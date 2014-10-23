@@ -22,14 +22,17 @@ d = a.get_auth()
 
 #instantiate a flavor_ops object
 flav = flavor_ops(d)
-
-#add a new flavor
 """
+#add a new flavor
 input_dict = {'flavor_id':'11739','key':'description','value':'this is a test'}
 x = flav.add_flavor_metadata(input_dict)
 print x
 
-flav_dict = {"name":'test29',"ram":'256',"boot_disk":'10',"cpus":'4',"swap":'2',"public":"FALSE"}
+input_dict2 = {'flavor_id':'11739','key':'description2','value':'this is a test2'}
+x = flav.add_flavor_metadata(input_dict2)
+print x
+
+flav_dict = {"name":'test30',"ram":'128',"boot_disk":'10',"cpus":'4',"swap":'2',"public":"FALSE"}
 new_flav1 = flav.create_flavor(flav_dict)
 print new_flav1
 print "-------------------------------------------"
@@ -45,16 +48,17 @@ flav_get = flav.get_flavor("11739")
 print flav_get
 print "-------------------------------------------"
 time.sleep(2)
-
-flav_del = flav.delete_flavor(new_flav1['flav_id'])
+"""
+flav_del = flav.delete_flavor("11739")
 print flav_del
 print "-------------------------------------------"
 time.sleep(2)
-
-input_dict = {'flavor_id':'11739','metadata_key':'description'}
-x = flav.get_flavor_metadata(input_dict)
-print x
 """
+input_dict = {'flavor_id':'11739','metadata_key':'description'}
+x = flav.get_flavor_metadata('11739')
+print x
+
 input_dict = {'flavor_id':'11739','metadata_key':'description'}
 x = flav.delete_flavor_metadata(input_dict)
 print x
+"""
