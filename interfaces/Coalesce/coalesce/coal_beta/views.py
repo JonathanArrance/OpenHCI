@@ -17,7 +17,6 @@ from django.utils import simplejson
 from django.core.cache import cache
 import time
 
-
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
 import transcirrus.common.node_stats as node_stats
@@ -43,6 +42,7 @@ import transcirrus.operations.build_complete_project as bcp
 import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.common.util as util
+import transcirrus.common.wget as wget
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
@@ -69,6 +69,8 @@ from urlparse import urlsplit
 # Custom imports
 #from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
+
+cache_key = None
 
 def welcome(request):
     try:
@@ -890,8 +892,20 @@ def import_local (request, image_name, container_format, disk_format, image_type
     messages.warning(request, 'Local image %s was uploaded.' % (out['image_name']))
     return HttpResponse(simplejson.dumps(out))
 
+def download_progress (current_size, total_size, width):
+    global cache_key
+    print "download_progress - current_size: %d  total_size: %d  percent-done: %d" % (current_size, total_size, (100*current_size/total_size))
+    if cache_key:
+        data = cache.get(cache_key)
+        data['uploaded'] = current_size
+        data['length'] = total_size
+        print "data: %s" % data
+        cache.set(cache_key, data)
+    return (False)
+
 
 def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
+    global cache_key
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
@@ -901,12 +915,31 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
 
         print ("image_location with slashes: " + image_location)
 
-        import_dict['image_location'] = image_location
+        # Setup our cache to track the progress.
+        cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
+        cache.set (cache_key, {'length': 0, 'uploaded' : 0})
+
+        # Use wget to download the file.
+        download_dir   = "/var/lib/glance/images/"
+        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+        download_file  = download_dir + download_fname
+
+        filename = wget.download (image_location, download_file, download_progress)
+        print "import_remote: %s downloaded" % filename
+
+        # Delete our cached progress.
+        cache.delete(cache_key)
+        cache_key = None
+
+        import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         ###return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except Exception as e:
+        # Delete our cached progress.
+        cache.delete(cache_key)
+        cache_key = None
         print ("image_location exception: %s" % e)
         messages.warning(request, "Unable to upload image.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

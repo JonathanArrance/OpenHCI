@@ -136,33 +136,13 @@ class glance_ops:
             raise Exception("Could not connect to the API caller")
 
         try:
-            if(input_dict['image_type'] == 'image_file'):
-                # We have a local file that has already been uploaded so all we need to do is open it.
-                download_file  = input_dict['image_location']
-                file_open = open(download_file, 'rb')
-
-            else:
-                # We have a remote file that we need to download and then open.
-                download_dir   = "/var/lib/glance/images/"
-                download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-                download_file  = download_dir + download_fname
-                command = "sudo wget -nv -t 40 -O " + download_file + " " + input_dict['image_location'] + "; dir -la " + download_dir
-
-                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                std_out, std_err = subproc.communicate()
-
-                # For some strange reason all the output ends up in std_err
-                std_out = std_err
-                if subproc.returncode != 0:
-                    print "Error downloading remote file from %s, exit status: %d" % (input_dict['image_location'], subproc.returncode)
-                    print "Error message: %s" % std_err
-                    util.http_codes(subproc.returncode, "Unable to download remote file %s" %(input_dict['image_location']))
-                    return "ERROR"
-                time.sleep(5)
-                file_open = open(download_file, 'rb')
+            # Open the downloaded file.
+            download_file  = input_dict['image_location']
+            file_open = open(download_file, 'rb')
+            print ("Opened image file: %s" % download_file)
         except Exception as e:
-            print ("Could not upload or open image file: %s" % (e))
-            logger.sys_error("Could not upload or open image data, %s" %(e))
+            print ("Could not open image file: %s" % (e))
+            logger.sys_error("Could not open image data, %s" %(e))
             raise e
                 
         if('visibility' in input_dict):

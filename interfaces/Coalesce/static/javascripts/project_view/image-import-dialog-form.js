@@ -143,11 +143,17 @@ $(function ()
 
                     progress_id = guid();
 
+                    // Save the image name for later use.
+                    display_name = image_name.val();
+
                     if (image_type.val() == "image_url")
                     {
                         // The user wants to upload a remote image via the supplied URL.
                         if (!valid_URL(import_remote))
                             return;
+
+                        // Start the progress bar function so it can start querying the server for status.
+                        startProgressBarUpdate(progress_id);
 
                         // All the data is good so post the data to the server.
                         image_location = import_remote;
@@ -156,20 +162,35 @@ $(function ()
                         image_location = convert_URL(image_location);
                         loc = loc.replace(/\//g, '&47');
 
-                        $.post('/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/')
-                              .success(function (data)
-                              {
-                                  console.log('success: image_id:' + data.image_id);
-                                  $('#image_list')
-                                          .append('<tr><td>' + image_name.val() + '</td><td><a href="/delete_image/' + data.image_id + '/">delete</a></td></tr>');
-                                  alert("New remote image " + data.image_name + " uploaded.");
-                              })
-                              .error(function ()
-                              {
-                                  console.log('Error:' + data);
-                                  location.reload();
-                              });
-                        $(this).dialog("close");
+                        url = '/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/';
+
+                        // Send the form data via the ajax call.
+                        var form_data = new FormData($('#image-upload-form')[0]);
+                        $.ajax(
+                        {
+                            type: 'POST',
+                            url: url,
+                            data: form_data,
+                            contentType: false,
+                            cache: false,
+                            processData: false,
+                            async: true,                    // must be true to get updated with the progress of the upload
+                            success: function (data)
+                            {
+                                // This function is called after the successful upload of the file.
+                                var ret_data = JSON.parse(data);
+                                console.log('success: image_id:' + ret_data.image_id);
+                                $('#image_list')
+                                .append('<tr><td>' + display_name + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
+                                $("#image-import-dialog-form").dialog("close");
+                                alert("New remote image " + display_name + " uploaded.");
+                            },
+                            error: function (data)
+                            {
+                                console.log('Error:' + data);
+                                location.reload();
+                            }
+                        });
                     }
 
                     else
@@ -182,19 +203,14 @@ $(function ()
                             return;
                         }
 
-                        startProgressBarUpdate(progress_id);
-
                         // We don't care what the local filename or path is for local files so we just use na
                         // to keep from having to convert /'s to %47.
                         loc = "na"
 
-                        // Save the image name for later use.
-                        display_name = image_name.val();
-
                         // Build the url that we will use to send the form data. The file contents are handled seperately.
                         var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/';
 
-                        // Send the form data via the ajax call.
+                        // Send the form data via the ajax call and setup the function that will update the progress bar.
                         var form_data = new FormData($('#image-upload-form')[0]);
                         $.ajax(
                         {
@@ -204,13 +220,12 @@ $(function ()
                             contentType: false,
                             cache: false,
                             processData: false,
-                            async: true,
+                            async: true,                    // must be true to get updated with the progress of the upload
                             xhr: function ()
                             {
-                                //var bar = $('.bar');
-                                //var percent = $('.percent');
-                                var bar = $('#image-import-dialog-form').find('#local_bar');
-                                var percent = $('#image-import-dialog-form').find('#local_percent');
+                                // This function will be called during the upload to update the progress of the upload.
+                                var bar = $('#image-import-dialog-form').find('#upload_bar');
+                                var percent = $('#image-import-dialog-form').find('#upload_percent');
 
                                 var xhr = $.ajaxSettings.xhr();
                                 xhr.upload.onprogress = function (e)
@@ -227,7 +242,7 @@ $(function ()
                             },
                             success: function (data)
                             {
-                                console.log("Success");
+                                // This function is called after the successful upload of the file.
                                 var ret_data = JSON.parse(data);
                                 console.log('success: image_id:' + ret_data.image_id);
                                 $('#image_list')
@@ -237,11 +252,9 @@ $(function ()
                             },
                             error: function (data)
                             {
-                                console.log('Error:' + data);
                                 location.reload();
                             }
                         });
-                        //$(this).dialog("close");
                     }
                 },
                 Cancel: function ()
@@ -263,54 +276,41 @@ $(function ()
     });
 });
 
+// This function will update the progress bar every second with the progress of the remote upload.
+// The progress is determined by querying the server for the current progress.
 var g_progress_intv = 0;
 function startProgressBarUpdate(upload_id)
 {
-    console.log("In startProgressBarUpdate, upload_id: " + upload_id);
-
-    var bar = $('#image-import-dialog-form').find('#remote_bar');
-    var percent = $('#image-import-dialog-form').find('#remote_percent');
-
-    percentage = "10%";
-    bar.width(percentage)
-    percent.html("<center>" + percentage + "</center>");
+    var bar = $('#image-import-dialog-form').find('#upload_bar');
+    var percent = $('#image-import-dialog-form').find('#upload_percent');
 
     if (g_progress_intv != 0)
         clearInterval(g_progress_intv);
 
-    var i = 2;
     g_progress_intv = setInterval(function ()
     {
-        if (i == 10)
+        $.getJSON("/get_upload_progress/" + upload_id, function (data)
         {
-            percentage = "100%";
+            if (data == null)
+            {
+                console.log("uploaded: no more data");
+                percentage = "100%";
+                bar.width(percentage)
+                percent.html("<center>" + percentage + "</center>");
+                clearInterval(g_progress_intv);
+                g_progress_intv = 0;
+                return;
+            }
+            console.log("uploaded: " + data.uploaded + "  length: " + data.length);
+            length = parseInt(data.length);
+            if (length != 0)
+                var percentage = Math.floor(100 * parseInt(data.uploaded) / length);
+            else
+                var percentage = 0;
+            percentage = percentage + "%";
             bar.width(percentage)
             percent.html("<center>" + percentage + "</center>");
-
-            clearInterval(g_progress_intv);
-            g_progress_intv = 0;
-            return;
-        }
-
-        var percentage = 10 * i;
-        i = i + 1;
-        percentage = percentage + "%";
-        bar.width(percentage)
-        percent.html("<center>" + percentage + "</center>");
-
-        //        $.getJSON("/get_upload_progress/" + upload_id, function (data)
-        //        {
-        //            if (data == null)
-        //            {
-        //              $("#uploadprogressbar").progressbar("value", 100);
-        //              clearInterval(g_progress_intv);
-        //              g_progress_intv = 0;
-        //              return;
-        //            }
-        //            var percentage = Math.floor(100 * parseInt(data.uploaded) / parseInt(data.length));
-        //            $("#uploadprogressbar").progressbar("value", percentage);
-        //        });
+        });
     }, 1000);
-
     return;
 }
