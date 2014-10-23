@@ -848,11 +848,11 @@ def create_keypair(request, key_name, project_id):
         messages.warning(request, "Unable to create keypair.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+
+# Import a local (user's laptop) image and add it to glance & database. The image has already been uploaded via the broswer
+# to memory or a temp file so we just need to transfer the contents to a file we control.
 def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
     from coalesce.coal_beta.models import ImportLocal
-    print "---import_local"
-
-    #import pdb; pdb.set_trace()
 
     try:
         auth = request.session['auth']
@@ -860,50 +860,47 @@ def import_local (request, image_name, container_format, disk_format, image_type
 
         # Handle file upload.
         form = import_image_form (request.POST, request.FILES)
-
+ 
+        # Create a temp file to hold the image contents until we give it to glance.
         download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
         download_file  = download_dir + download_fname
 
-        print "Uploading local file to %s: " % download_file
+        # Transfer the content from the temp location to our own file.
         try:
             with open(download_file, 'wb+') as destination:
                 for chunk in request.FILES['import_local'].chunks():
                     destination.write(chunk)
-            print ("Uploaded local file done")
         except Exception as e:
-            print ("Error uploading local file: %s" % e)
-            messages.warning(request, "Unable to import local image.")
-            ##return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-            return HttpResponse(simplejson.dumps(None))
+            out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
+            return HttpResponse(simplejson.dumps(out))
 
+        # Add the image to glance and the database.
         import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
-
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        ###return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    except Exception as e:
-        print ("import_local exception: %s" % e)
-        messages.warning(request, "Unable to upload local image.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    messages.warning(request, 'Local image %s was uploaded.' % (out['image_name']))
+        out['status'] = "success"
+        out['message'] = "Local image %s was uploaded." % image_name
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error uploading local file: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+
+# Callback function used to track the progress of a remote upload. The current amount uploaded and total size of the file is
+# placed in a cache record so it can be retrieved later. The width param is not used and False must be returned.
+# TODO: A global cache_key is used and should be replaced with something else.
 def download_progress (current_size, total_size, width):
     global cache_key
-    print "download_progress - current_size: %d  total_size: %d  percent-done: %d" % (current_size, total_size, (100*current_size/total_size))
     if cache_key:
         data = cache.get(cache_key)
         data['uploaded'] = current_size
         data['length'] = total_size
-        print "data: %s" % data
         cache.set(cache_key, data)
     return (False)
 
 
+# Import a remote image and add it to glance & database. The image is retrieved via a wget like interface.
+# TODO: A global cache_key is used and should be replaced with something else.
 def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
     global cache_key
     try:
@@ -911,9 +908,8 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         go = glance_ops(auth)
         import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
 
+        # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
-
-        print ("image_location with slashes: " + image_location)
 
         # Setup our cache to track the progress.
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
@@ -924,58 +920,60 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
         download_file  = download_dir + download_fname
 
+        # Download the file via a wget like interface to the file called download_file and
+        # log the progress via the callback function download_progress.
         filename = wget.download (image_location, download_file, download_progress)
-        print "import_remote: %s downloaded" % filename
 
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
 
+        # Add the image to glance and the database.
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        ###return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    except Exception as e:
-        # Delete our cached progress.
+        out['status'] = "success"
+        out['message'] = "Remote image %s was uploaded." % image_name
+    except Exception, e:
         cache.delete(cache_key)
         cache_key = None
-        print ("image_location exception: %s" % e)
-        messages.warning(request, "Unable to upload image.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    messages.warning(request, 'Remote image %s was uploaded.' % (out['image_name']))
+        out = {'status' : "error", 'message' : "Error uploading remote file: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
+# Return the progress of an operation (most likely an image upload) via its progress id.
 def get_upload_progress (request, progress_id):
-    print "--get_upload_progress:progress_id:: %s" % progress_id
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
         out = cache.get(cache_key)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
+        if out == None:
+            # No cache entry so the upload is done so we need to indicate that by setting uploaded & length to -1.
+            out = {'uploaded' : -1, 'length' : -1}
+        out['status'] = "success"
     except Exception as e:
-        print ("error getting upload progress: %s" % e)
-        messages.warning(request, "error getting upload progress.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    print "out: %s" % out
+        out = {'status' : "error", 'message' : "Error getting upload progress: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
-def delete_image(request, image_id):
+# Delete an image by it's image id.
+def delete_image (request, image_id):
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
         out = go.delete_image(image_id)
+
         referer = request.META.get('HTTP_REFERER', None)
         redirect_to = urlsplit(referer, 'http', False)[2]
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except:
         messages.warning(request, "Unable to create volume.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        ##out['status'] = "success"
+        ##out['message'] = "Image was deleted."
+    ##except Exception, e:
+        ##out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
+    ##return HttpResponse(simplejson.dumps(out))
 
 def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
     out = {}

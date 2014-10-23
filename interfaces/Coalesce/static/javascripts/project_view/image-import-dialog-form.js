@@ -1,5 +1,7 @@
 $(function ()
 {
+    var message = new message_handle();
+
     // must obtain csrf cookie for AJAX call
     function getCookie(name)
     {
@@ -41,8 +43,6 @@ $(function ()
             }
         });
 
-        //$("#X-Progress-ID").val(guid());
-
         var image_name = $("#import_img_name"),
 			disk_format = $("#import_img_disk"),
 			container_format = $("#import_img_cont"),
@@ -50,7 +50,6 @@ $(function ()
             import_local = $("#import_local"),
             import_remote = $("#import_remote"),
             visibility = $("#import_img_vis");
-        //progress_id = $("#X-Progress-ID");
         var tips = $(".validateTips");
         var image_location = "";
 
@@ -90,7 +89,6 @@ $(function ()
             {
                 return (true);
             }
-            alert("invalid url " + url.val());
             url.addClass("ui-state-error");
             updateTips("Invalid remote URL.");
             return (false);
@@ -177,18 +175,30 @@ $(function ()
                             async: true,                    // must be true to get updated with the progress of the upload
                             success: function (data)
                             {
-                                // This function is called after the successful upload of the file.
+                                // This function is called if the post was successful to the server (not the upload).
+                                // Convert the data into something we can use.
                                 var ret_data = JSON.parse(data);
+
+                                if (ret_data.status == "error")
+                                {
+                                    // There was an error on the server uploading the file so display the error message.
+                                    message.showMessage("error", ret_data.message);
+                                    return;
+                                }
+
+                                // The upload was successful so add the table entry, display a message to the user and close the dialog box.
+                                //var ret_data = JSON.parse(data);
                                 console.log('success: image_id:' + ret_data.image_id);
                                 $('#image_list')
                                 .append('<tr><td>' + display_name + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
+                                message.showMessage("success", ret_data.message);
                                 $("#image-import-dialog-form").dialog("close");
-                                alert("New remote image " + display_name + " uploaded.");
                             },
                             error: function (data)
                             {
-                                console.log('Error:' + data);
-                                location.reload();
+                                // This function is called if there was an issue posting the data to the server.
+                                message.showMessage("error", "Server Fault");
+                                $("#image-import-dialog-form").dialog("close");
                             }
                         });
                     }
@@ -235,24 +245,36 @@ $(function ()
                                         var percentage = Math.floor(100 * parseInt(e.loaded) / parseInt(e.total));
                                         percentage = percentage + "%";
                                         bar.width(percentage)
-                                        percent.html("<center>" + percentage + "</center>");
+                                        percent.html(percentage);
                                     }
                                 };
                                 return xhr;
                             },
                             success: function (data)
                             {
-                                // This function is called after the successful upload of the file.
+                                // This function is called if the post was successful to the server (not the upload).
+                                // Convert the data into something we can use.
                                 var ret_data = JSON.parse(data);
+
+                                if (ret_data.status == "error")
+                                {
+                                    // There was an error on the server uploading the file so display the error message.
+                                    message.showMessage("error", ret_data.message);
+                                    return;
+                                }
+
+                                // The upload was successful so add the table entry, display a message to the user and close the dialog box.
                                 console.log('success: image_id:' + ret_data.image_id);
                                 $('#image_list')
                                 .append('<tr><td>' + display_name + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
+                                message.showMessage("success", ret_data.message);
                                 $("#image-import-dialog-form").dialog("close");
-                                alert("New local image " + display_name + " uploaded.");
                             },
                             error: function (data)
                             {
-                                location.reload();
+                                // This function is called if there was an issue posting the data to the server.
+                                message.showMessage("error", "Server Fault");
+                                $("#image-import-dialog-form").dialog("close");
                             }
                         });
                     }
@@ -291,25 +313,33 @@ function startProgressBarUpdate(upload_id)
     {
         $.getJSON("/get_upload_progress/" + upload_id, function (data)
         {
-            if (data == null)
+            if (data.status == "error")
             {
-                console.log("uploaded: no more data");
-                percentage = "100%";
-                bar.width(percentage)
-                percent.html("<center>" + percentage + "</center>");
+                // We got an error back so display the message and stop updating the progress bar.
+                var message = new message_handle();
+                message.showMessage("error", data.message);
                 clearInterval(g_progress_intv);
                 g_progress_intv = 0;
                 return;
             }
-            console.log("uploaded: " + data.uploaded + "  length: " + data.length);
+
+            if (data.length == -1)
+            {
+                percentage = "100%";
+                bar.width(percentage)
+                percent.html(percentage);
+                clearInterval(g_progress_intv);
+                g_progress_intv = 0;
+                return;
+            }
             length = parseInt(data.length);
-            if (length != 0)
+            if (length > 0)
                 var percentage = Math.floor(100 * parseInt(data.uploaded) / length);
             else
                 var percentage = 0;
             percentage = percentage + "%";
             bar.width(percentage)
-            percent.html("<center>" + percentage + "</center>");
+            percent.html(percentage);
         });
     }, 1000);
     return;

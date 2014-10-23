@@ -289,42 +289,42 @@ def download(url, out=None, bar=bar_adaptive):
     :param out: output filename or directory
     :return:    filename where URL is downloaded to
     """
-    names = dict()
-    names["out"] = out or ''
-    names["url"] = filename_from_url(url)
-    # get filename for temp file in current directory
-    prefix = (names["url"] or names["out"] or ".") + "."
-    (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=prefix, dir=".")
-    os.close(fd)
-    os.unlink(tmpfile)
+    try:
+        names = dict()
+        names["out"] = out or ''
+        names["url"] = filename_from_url(url)
+        # get filename for temp file in current directory
+        prefix = (names["url"] or names["out"] or ".") + "."
+        (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=prefix, dir=".")
+        os.close(fd)
+        os.unlink(tmpfile)
 
-    # set progress monitoring callback
-    def callback_charged(blocks, block_size, total_size):
-        # 'closure' to set bar drawing function in callback
-        callback_progress(blocks, block_size, total_size, bar_function=bar)
-    if bar:
-        callback = callback_charged
-    else:
-        callback = None
+        # set progress monitoring callback
+        def callback_charged(blocks, block_size, total_size):
+            # 'closure' to set bar drawing function in callback
+            callback_progress(blocks, block_size, total_size, bar_function=bar)
+        if bar:
+            callback = callback_charged
+        else:
+            callback = None
 
-    # Replacing the orginial call to urlretrieve to our own URL opener so we can catch HTTP errors.
-    ##(tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback)
-    (tmpfile, headers) = MyURLopener().retrieve (url, filename=tmpfile, reporthook=callback)
+        # Replacing the orginial call to urlretrieve to our own URL opener so we can catch HTTP errors.
+        ##(tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback)
+        (tmpfile, headers) = MyURLopener().retrieve (url, filename=tmpfile, reporthook=callback)
 
-    names["header"] = filename_from_headers(headers)
-    if os.path.isdir(names["out"]):
-        filename = names["header"] or names["url"]
-        filename = names["out"] + "/" + filename
-    else:
-        filename = names["out"] or names["header"] or names["url"]
-    # add numeric ' (x)' suffix if filename already exists
-    if os.path.exists(filename):
-        filename = filename_fix_existing(filename)
-    shutil.move(tmpfile, filename)
-
-    #print headers
-    return filename
-
+        names["header"] = filename_from_headers(headers)
+        if os.path.isdir(names["out"]):
+            filename = names["header"] or names["url"]
+            filename = names["out"] + "/" + filename
+        else:
+            filename = names["out"] or names["header"] or names["url"]
+        # add numeric ' (x)' suffix if filename already exists
+        if os.path.exists(filename):
+            filename = filename_fix_existing(filename)
+        shutil.move(tmpfile, filename)
+        return filename
+    except Exception as e:
+        raise Exception ("Could not wget image: %s" % e)
 
 usage = """\
 usage: wget.py [options] URL

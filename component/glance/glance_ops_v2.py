@@ -139,11 +139,9 @@ class glance_ops:
             # Open the downloaded file.
             download_file  = input_dict['image_location']
             file_open = open(download_file, 'rb')
-            print ("Opened image file: %s" % download_file)
         except Exception as e:
-            print ("Could not open image file: %s" % (e))
-            logger.sys_error("Could not open image data, %s" %(e))
-            raise e
+            logger.sys_error("Could not open image file: %s" % e)
+            raise Exception("Could not open image file: %s" % e)
                 
         if('visibility' in input_dict):
             body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility']})
@@ -159,8 +157,8 @@ class glance_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            logger.sys_error("Could not reserve image, %s" %(e))
-            raise e
+            logger.sys_error("Could not reserve image: %s" % e)
+            raise Exception("Could not reserve image: %s" % e)
 
         if((rest['response'] == 201)):
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -179,8 +177,8 @@ class glance_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error("Could not upload image data via glance, %s" %(e))
-                raise e
+                logger.sys_error("Could not upload image file to glance: %s" % e)
+                raise Exception("Could not upload image file to glance: %s" % e)
     
             if((rest['response'] == 201 or rest['response'] == 204)):
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -191,19 +189,18 @@ class glance_ops:
                 subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 std_out, std_err = subproc.communicate()
 
+                # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
                 if subproc.returncode != 0:
-                    print "Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode)
-                    print "Error message: %s" % std_err
+                    logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
+                    logger.sys_error("Error message: %s" % std_err)
 
                 return ret_dict
             else:
-                print ("Uploaded image data via glance - bad status: %s" % rest['reason'])
-                util.http_codes(rest['response'],rest['reason'])
-                return "ERROR"
+                logger.sys_error("Uploaded image data via glance - bad status: %s" % rest['reason'])
+                raise Exception("Uploaded image data via glance - bad status: %s" % rest['reason'])
         else:
-            print ("Added image to db - bad status: %s" % rest['reason'])
-            util.http_codes(rest['response'],rest['reason'])
-            return "ERROR"
+            logger.sys_error("Added image to db - bad status: %s" % rest['reason'])
+            raise Exception("Added image to db - bad status: %s" % rest['reason'])
         return
     
     def delete_image(self, image_id):
@@ -237,16 +234,15 @@ class glance_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            logger.sys_error("Could not delete image %s" %(e))
-            raise e
+            logger.sys_error("Could not delete image: %s" % e)
+            raise Exception("Could not delete image: %s" % e)
 
         if((rest['response'] == 204)):
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
-            return "ERROR"
-        
+            logger.sys_error("Delete image from db - bad status: %s" % rest['reason'])
+            raise Exception("Delete image from db - bad status: %s" % rest['reason'])
+        return        
         
     def list_images(self):
         """
