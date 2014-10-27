@@ -19,26 +19,25 @@ d = a.get_auth()
 print "instantiating a volume abject."
 vol = volume_ops(d)
 
-"""
+'''
 voltype = vol.create_volume_type("ssd")
 print voltype
 voltype2 = vol.create_volume_type("spindle")
 print voltype2
-
-get = {'volume_id':'8d4204fd-4d9e-4d83-8949-e33c963650a0','project_id':'84d3e074012a42ce919771c503993f4e'}
+'''
+get = {'volume_id':'16c881e5-85a1-4542-af0b-07110cd08fec','project_id':'13d92fe4b2de4051abc5de0654277af0'}
 yo = vol.get_volume_info(get)
 print yo
 
 
-input = {'volume_id':'0e09893a-3608-4f63-abe9-90d7a9ab9a2a','project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1'}
-stuff = vol.get_volume(input)
+stuff = vol.get_volume(get)
 print stuff
 """
 print "createing a new volume"
 create = {'volume_name':'kevenduerr11','volume_size':'4000','project_id':"13d92fe4b2de4051abc5de0654277af0",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
-"""
+
 print "------------------------------------------"
 print "sleeping for 15 seconds"
 time.sleep(15)

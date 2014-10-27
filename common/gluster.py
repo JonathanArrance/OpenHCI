@@ -138,6 +138,7 @@ class gluster_ops:
         """
         DESC: Create a new gluster volume
         INPUT input_dict - volume_name - req
+                         - volume_type - op spindle/ssd
                          - bricks[] - op
                          - mount_node - op 
         OUTPUT: OK - SUCCESS
@@ -150,17 +151,28 @@ class gluster_ops:
               bricks[172.38.24.11:/data/gluster/'volume_name']
               This may need to be expaned on as we add in a spindle based node.
               Mount Node is optional the gluster vol will be mounted on 172.38.24.10 by default unless a differnt node specified.
+              volume_type will default to ssd if nothing is specified.
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
         self.state = 'OK'
+        self.gluster = 'gluster'
+        if('volume_type' in input_dict):
+            self.type = str(input_dict['volume_type']).lower()
+            if(self.type == 'ssd'):
+                self.gluster = 'gluster'
+            elif(self.type == 'spindle'):
+                self.gluster = 'gluster-spindle'
+            else:
+                logger.sys_error('Invalid volume type %s given.'%(self.type))
+                raise Exception('Invalid volume type %s given.'%(self.type))
         if(self.is_admin == 1):
             command = None
             if('bricks' in input_dict and len(input_dict['bricks']) >= 1):
                 brick = ' '.join(input_dict['bricks'])
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
             else:
-                input_dict['bricks'] = ["172.38.24.10:/data/gluster/%s"%(input_dict['volume_name'])]
-                command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/gluster/%s'%(input_dict['volume_name'],input_dict['volume_name'])
+                input_dict['bricks'] = ["172.38.24.10:/data/%s/%s"%(self.gluster,input_dict['volume_name'])]
+                command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/%s/%s'%(input_dict['volume_name'],self.gluster,input_dict['volume_name'])
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             vol = out.stdout.readlines()
@@ -315,13 +327,42 @@ class gluster_ops:
         vol_id = None
         vol_id = self.db.pg_select(get_vol)
         if(vol_id):
-            return 'OK'
+            self.status = {'status':'OK','vol_id':'%s'}%(vol_id)
         else:
-            return 'ERROR'
+            self.status = {'status':'ERROR','vol_id':'None'}
+        return self.status
 
-    def get_gluster_vol_info(self):
+    def get_gluster_vol_info(self,volume_name=None):
         pass
-    
+        """
+        DESC: Get the detailed information for a gluster volume
+        INPUT: volume_name
+        OUTPUT: 
+        ACCESS: Admin - Can get the info for any volume
+                PU - can get volume info for volumes in their project
+                User - van get volume info for volumes they own
+        NOTE: This is not the same as geting the info from cinder for a cinder volume.
+        
+        logger.sys_info('\n**Getting Gluster volume detailed info. Common Def: get_gluster_vol_info**\n')
+        if(volume_name):
+            out = check_gluster_volume(volume_name)
+            if(out['status'] == 'ERROR'):
+                logger.sys_error('Volume %s does not exist')%(volume_name)
+                raise Exception('Volume %s does not exist')%(volume_name)
+
+            if(self.user_level == 0):
+                command = 'gluster volume status %s detail'%(volume_name)
+                os.system('%s')%(command)
+            elif(self.user_level == 1):
+                input_dict = {'project_id':'%s','volume_id':'%s'}%(self.project_id,out['vol_id'])
+                cinder.get_volume(input_dict)
+            elif(self.user_level == 2):
+                pass
+        else:
+            logger.sys_error('No volume name given, can not get volume info.')
+            raise Exception('No volume name given, can not get volume info.')
+        """
+
     def add_gluster_brick(self,input_dict):
         """
         DESC: Add a brick to a volume 

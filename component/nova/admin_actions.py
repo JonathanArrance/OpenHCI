@@ -13,6 +13,7 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
 
+import transcirrus.component.nova.error as ec
 from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -154,7 +155,8 @@ class server_admin_actions:
                 load = json.loads(rest['data'])
                 return load
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
     def pause_server(self,input_dict):
         """
@@ -206,7 +208,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
         return 'OK'
 
@@ -260,7 +263,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
         return 'OK'
 
@@ -314,7 +318,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            #util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
         return 'OK'
 
@@ -368,7 +373,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            #util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
         return 'OK'
 
@@ -422,7 +428,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            #util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
         return 'OK'
     
@@ -478,7 +485,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason'],rest['data']))
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
         return 'OK'
 
@@ -533,7 +541,8 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason'],rest['data']))
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
         return 'OK'
 
@@ -604,7 +613,8 @@ class server_admin_actions:
                     load = json.loads(rest['data'])
                     return load['hosts']
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
 
     def list_storage_hosts(self,input_dict):
         """
@@ -618,6 +628,34 @@ class server_admin_actions:
         ACCESS: ONLY the admin can list out the storgae nodes
         NOTES: This is not the same as the transcirrus node ids. These are uuids assigend
                 by Nova, Compute host zone is set to nova by default.
+        
+        logger.sys_info('\n**Listing physical storage hosts. Component: Nova Def: list_storage_hosts**\n')
+        for key,value in input_dict.items():
+            if(key == 'zone'):
+                continue
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+
+        if(self.is_admin == 1):
+            if('zone' not in input_dict):
+                input_dict['zone'] = 'nova'
+            else:
+                #check if the zone given exists
+                try:
+                    select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(input_dict['zone'])}
+                    get_zone = self.db.pg_select(select_zone)
+                except:
+                    logger.sql_error('The specifed zone is not defined.')
+                    raise Exception('The specifed zone is not defined.')
+
+            command = 'cinder manage host list'
+            out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+            vol = out.stdout.readlines()
+            print vol
         """
 
     def get_os_host(self,input_dict):
@@ -630,7 +668,7 @@ class server_admin_actions:
         NOTES:
         """
         logger.sys_info('\n**Getting physical host. Component: Nova Def: get_os_hosts**\n')
-        for key,value in input_dict.items():
+        for key,value in input_dictt.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
@@ -670,4 +708,5 @@ class server_admin_actions:
                     load = json.loads(rest['data'])
                     return load['host']
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)

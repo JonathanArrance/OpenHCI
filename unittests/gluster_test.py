@@ -14,15 +14,31 @@ a = authorization("admin","password")
 input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
 glust = gluster_ops(input_dict)
 
-#brick = ['172.38.24.10:/data/gluster/jonarrance2','172.38.24.12:/data/gluster/jonarrance2']
-#input_dict = {'volume_name':'jonarrance2','bricks': brick}
 #input_dict = {'volume_name':'testvol7'}
 #print input_dict
+
 #create = glust.create_gluster_volume(input_dict)
 #print create
 
-yo = glust.create_gluster_swift_ring()
-print yo
+input_dict2 = {'volume_name':'testvol8','volume_type':'ssd'}
+print input_dict2
+
+create2 = glust.create_gluster_volume(input_dict2)
+print create2
+
+input_dict3 = {'volume_name':'testvol9','volume_type':'spindle'}
+print input_dict3
+
+create3 = glust.create_gluster_volume(input_dict3)
+print create3
+
+#brick = ['172.38.24.10:/data/gluster/jonarrance2','172.38.24.12:/data/gluster/jonarrance2']
+#input_dict4 = {'volume_name':'jonarrance2','bricks': brick}
+#create4 = glust.create_gluster_volume(input_dict4)
+#print create4
+
+#yo = glust.create_gluster_swift_ring()
+#print yo
 
 #yo = glust.list_gluster_volumes()
 #print yo

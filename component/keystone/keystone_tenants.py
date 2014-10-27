@@ -157,7 +157,7 @@ class tenant_ops:
                 #simple cleanup of failed project create
                 raise e
             else:
-                gluster_vol_input = {'volume_name':str(project_id)}
+                gluster_vol_input = {'volume_name':str(project_id),'volume_type':'spindle'}
                 self.gluster.create_gluster_volume(gluster_vol_input)
 
                 # Create a process to handle running the create_gluster_swift_ring function because it can take some
