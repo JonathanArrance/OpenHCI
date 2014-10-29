@@ -150,7 +150,7 @@ class gluster_ops:
               creates volumes using the gluster commands,
               bricks[172.38.24.11:/data/gluster/'volume_name']
               This may need to be expaned on as we add in a spindle based node.
-              Mount Node is optional the gluster vol will be mounted on 172.38.24.10 by default unless a differnt node specified.
+              Mount Node is optional the gluster vol will be mounted on 172.12.24.10 by default unless a differnt node specified.
               volume_type will default to ssd if nothing is specified.
         """
         logger.sys_info('\n**Creating gluster volume. Common Def: create_gluster_volume**\n')
@@ -171,8 +171,8 @@ class gluster_ops:
                 brick = ' '.join(input_dict['bricks'])
                 command = 'sudo gluster volume create %s transport tcp %s'%(input_dict['volume_name'],brick)
             else:
-                input_dict['bricks'] = ["172.38.24.10:/data/%s/%s"%(self.gluster,input_dict['volume_name'])]
-                command = 'sudo gluster volume create %s transport tcp 172.38.24.10:/data/%s/%s'%(input_dict['volume_name'],self.gluster,input_dict['volume_name'])
+                input_dict['bricks'] = ["172.12.24.10:/data/%s/%s"%(self.gluster,input_dict['volume_name'])]
+                command = 'sudo gluster volume create %s transport tcp 172.12.24.10:/data/%s/%s'%(input_dict['volume_name'],self.gluster,input_dict['volume_name'])
             #make a new directory for the gluster volume
             out = subprocess.Popen('%s'%(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
             vol = out.stdout.readlines()
@@ -195,9 +195,9 @@ class gluster_ops:
                 logger.sys_error('Could not create the GlusterFS mount point.')
                 self.state = 'ERROR'
 
-            #If mount node not specified use 172.38.24.10
+            #If mount node not specified use 172.12.24.10
             if('mount_node' not in input_dict):
-                input_dict['mount_node'] = '172.38.24.10'
+                input_dict['mount_node'] = '172.12.24.10'
 
             out4 = subprocess.Popen('sudo mount.glusterfs %s:/%s /mnt/gluster-vols/%s'%(input_dict['mount_node'],input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             mount = out4.stdout.readlines()
@@ -207,7 +207,7 @@ class gluster_ops:
                 self.state = 'ERROR'
 
             #add the new drive to a mount file so it can be remouted if the system is rebooted.
-            out = os.system('echo sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s >> /transcirrus/gluster-mounts'%(input_dict['volume_name'],input_dict['volume_name']))
+            out = os.system('echo sudo mount.glusterfs 172.12.24.10:/%s /mnt/gluster-vols/%s >> /transcirrus/gluster-mounts'%(input_dict['volume_name'],input_dict['volume_name']))
             if(out != 0):
                 logger.sys_warn('Could not add object Gluster mount entry. Check /transcirrus/gluster-object-mount')
 
@@ -254,7 +254,7 @@ class gluster_ops:
             else:
                 #remove the entry from gluster-mounts
                 #note this will have to change when we start mounting volumes on other storage nodes.
-                vol_entry = 'sudo mount.glusterfs 172.38.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
+                vol_entry = 'sudo mount.glusterfs 172.12.24.10:/%s /mnt/gluster-vols/%s'%(volume_name,volume_name)
                 gluster_mounts = open("/transcirrus/gluster-mounts","r")
                 vol_lines = gluster_mounts.readlines()
                 gluster_mounts.close()

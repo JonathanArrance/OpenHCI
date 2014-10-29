@@ -71,7 +71,7 @@ def get_node(node_id):
 def update_nova_node():
     
     
-    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -178,7 +178,7 @@ def insert_node(input_dict):
         #do the cinder config for now.
         #HACK need to add in a supersecret db password
         try:
-            insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.38.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.12.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             #insert_shares = {'parameter':"cinder-vol",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             cinder_array = [insert_cinder_conf,insert_cinderavail_zone]
@@ -202,7 +202,7 @@ def insert_node(input_dict):
 
     if((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
         try:
-            insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_mgmt_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -220,10 +220,10 @@ def insert_node(input_dict):
             logger.sql_error("Could not insert node specific nova config into Transcirrus db. %s"%(e))
             return 'ERROR'
         try:
-            #insert_neutron_sql = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.38.24.10/quantum",'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            #insert_neutron_sql = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/quantum",'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_qpid = {"parameter":"qpid_hostname","param_value":'172.38.24.10','file_name':"quantum.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_qpid = {"parameter":"qpid_hostname","param_value":'172.12.24.10','file_name':"quantum.conf",'node':"%s" %(input_dict['node_id'])}
             neutron_array = [insert_neutron_region,insert_neutron_localip]
             for neutron in neutron_array:
                 db.pg_transaction_begin()

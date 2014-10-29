@@ -159,7 +159,7 @@ def run_setup(new_system_variables,auth_dict):
                       'node_name':node_name,
                       'node_type':'cc',
                       'node_mgmt_ip':sys_vars['MGMT_IP'],
-                      'node_data_ip':'172.38.24.10',
+                      'node_data_ip':'172.12.24.10',
                       'node_controller':sys_vars['CLOUD_CONTROLLER'],
                       'node_cloud_name':sys_vars['CLOUD_NAME'],
                       'avail_zone':'nova',
