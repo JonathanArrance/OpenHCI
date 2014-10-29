@@ -1,13 +1,20 @@
-$(function () {
+$(function ()
+{
+    var message = new message_handle();
+
     // must obtain csrf cookie for AJAX call
-    function getCookie(name) {
+    function getCookie(name)
+    {
         var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
+        if (document.cookie && document.cookie != '')
+        {
             var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
+            for (var i = 0; i < cookies.length; i++)
+            {
                 var cookie = jQuery.trim(cookies[i]);
                 // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                if (cookie.substring(0, name.length + 1) == (name + '='))
+                {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
                 }
@@ -17,16 +24,20 @@ $(function () {
     }
     var csrftoken = getCookie('csrftoken');
 
-    $(function () {
-        function csrfSafeMethod(method) {
+    $(function ()
+    {
+        function csrfSafeMethod(method)
+        {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
         }
         $.ajaxSetup(
         {
             crossDomain: false, // obviates need for sameOrigin test
-            beforeSend: function (xhr, settings) {
-                if (!csrfSafeMethod(settings.type)) {
+            beforeSend: function (xhr, settings)
+            {
+                if (!csrfSafeMethod(settings.type))
+                {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
                 }
             }
@@ -57,6 +68,7 @@ $(function () {
 
         function checkLength(o, n, min, max)
         {
+            // Validate the length of the image name.
             if (o.val().length > max || o.val().length < min)
             {
                 o.addClass("ui-state-error");
@@ -71,14 +83,12 @@ $(function () {
 
         function valid_URL(url)
         {
-            alert("url = " + url.val());
+            // Validate a given URL is correct.
             var urlregex = new RegExp("^(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))*$");
             if (urlregex.test(url.val()))
             {
-                alert("valid url");
                 return (true);
             }
-            alert("invalid url " + url.val());
             url.addClass("ui-state-error");
             updateTips("Invalid remote URL.");
             return (false);
@@ -86,6 +96,7 @@ $(function () {
 
         function convert_URL(url)
         {
+            // Convert a URL from having /s to %47.
             for (var i = 0; i < url.length; i++)
             {
                 if (url[i] == '/')
@@ -97,10 +108,23 @@ $(function () {
             return url;
         }
 
+
+        function S4()
+        {
+            // Generate a random number string for use in a guid.
+            return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+        }
+
+        function guid()
+        {
+            // Generate a guid without the dashes.
+            return (S4() + S4() + S4() + "4" + S4().substr(0, 3) + S4() + S4() + S4() + S4()).toLowerCase();
+        }
+
         $("#image-import-dialog-form").dialog(
         {
             autoOpen: false,
-            height: 500,
+            height: 600,
             width: 350,
             modal: true,
             buttons:
@@ -109,16 +133,25 @@ $(function () {
                 {
                     allFields.removeClass("ui-state-error");
 
-                    // Make sure the image name is of the proper size 3 to 16 characters.
+                    // Make sure the image name is of the proper size of 3 to 20 characters.
+                    // TODO: Need to see why there is a 3 - 20 size limit!!!
                     // This is the name of the image to be shown in the UI; not the one being uploaded.
-                    if (!checkLength(image_name, "image_name", 3, 16))
+                    if (!checkLength(image_name, "image_name", 3, 20))
                         return;
+
+                    progress_id = guid();
+
+                    // Save the image name for later use.
+                    display_name = image_name.val();
 
                     if (image_type.val() == "image_url")
                     {
                         // The user wants to upload a remote image via the supplied URL.
                         if (!valid_URL(import_remote))
                             return;
+
+                        // Start the progress bar function so it can start querying the server for status.
+                        startProgressBarUpdate(progress_id);
 
                         // All the data is good so post the data to the server.
                         image_location = import_remote;
@@ -127,20 +160,47 @@ $(function () {
                         image_location = convert_URL(image_location);
                         loc = loc.replace(/\//g, '&47');
 
-                        $.post('/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/')
-                              .success(function (data)
-                              {
-                                  console.log('success: image_id:' + data.image_id);
-                                  $('#image_list')
-                                          .append('<tr><td>' + image_name.val() + '</td><td><a href="/delete_image/' + data.image_id + '/">delete</a></td></tr>');
-                                  alert("New remote image " + data.image_name + " uploaded.");
-                              })
-                              .error(function ()
-                              {
-                                  console.log('Error:' + data);
-                                  location.reload();
-                              });
-                        $(this).dialog("close");
+                        url = '/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/';
+
+                        // Send the form data via the ajax call.
+                        var form_data = new FormData($('#image-upload-form')[0]);
+                        $.ajax(
+                        {
+                            type: 'POST',
+                            url: url,
+                            data: form_data,
+                            contentType: false,
+                            cache: false,
+                            processData: false,
+                            async: true,                    // must be true to get updated with the progress of the upload
+                            success: function (data)
+                            {
+                                // This function is called if the post was successful to the server (not the upload).
+                                // Convert the data into something we can use.
+                                var ret_data = JSON.parse(data);
+
+                                if (ret_data.status == "error")
+                                {
+                                    // There was an error on the server uploading the file so display the error message.
+                                    message.showMessage("error", ret_data.message);
+                                    return;
+                                }
+
+                                // The upload was successful so add the table entry, display a message to the user and close the dialog box.
+                                //var ret_data = JSON.parse(data);
+                                console.log('success: image_id:' + ret_data.image_id);
+                                $('#image_list')
+                                .append('<tr><td>' + display_name + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
+                                message.showMessage("success", ret_data.message);
+                                $("#image-import-dialog-form").dialog("close");
+                            },
+                            error: function (data)
+                            {
+                                // This function is called if there was an issue posting the data to the server.
+                                message.showMessage("error", "Server Fault");
+                                $("#image-import-dialog-form").dialog("close");
+                            }
+                        });
                     }
 
                     else
@@ -158,9 +218,9 @@ $(function () {
                         loc = "na"
 
                         // Build the url that we will use to send the form data. The file contents are handled seperately.
-                        var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/';
+                        var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/';
 
-                        // Send the form data via the ajax call.
+                        // Send the form data via the ajax call and setup the function that will update the progress bar.
                         var form_data = new FormData($('#image-upload-form')[0]);
                         $.ajax(
                         {
@@ -170,22 +230,53 @@ $(function () {
                             contentType: false,
                             cache: false,
                             processData: false,
-                            async: false,
+                            async: true,                    // must be true to get updated with the progress of the upload
+                            xhr: function ()
+                            {
+                                // This function will be called during the upload to update the progress of the upload.
+                                var bar = $('#image-import-dialog-form').find('#upload_bar');
+                                var percent = $('#image-import-dialog-form').find('#upload_percent');
+
+                                var xhr = $.ajaxSettings.xhr();
+                                xhr.upload.onprogress = function (e)
+                                {
+                                    if (e.lengthComputable)
+                                    {
+                                        var percentage = Math.floor(100 * parseInt(e.loaded) / parseInt(e.total));
+                                        percentage = percentage + "%";
+                                        bar.width(percentage)
+                                        percent.html(percentage);
+                                    }
+                                };
+                                return xhr;
+                            },
                             success: function (data)
                             {
+                                // This function is called if the post was successful to the server (not the upload).
+                                // Convert the data into something we can use.
                                 var ret_data = JSON.parse(data);
+
+                                if (ret_data.status == "error")
+                                {
+                                    // There was an error on the server uploading the file so display the error message.
+                                    message.showMessage("error", ret_data.message);
+                                    return;
+                                }
+
+                                // The upload was successful so add the table entry, display a message to the user and close the dialog box.
                                 console.log('success: image_id:' + ret_data.image_id);
                                 $('#image_list')
-                                .append('<tr><td>' + image_name.val() + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
-                                alert("New local image " + ret_data.image_name + " uploaded.");
+                                .append('<tr><td>' + display_name + '</td><td><a href="/delete_image/' + ret_data.image_id + '/">delete</a></td></tr>');
+                                message.showMessage("success", ret_data.message);
+                                $("#image-import-dialog-form").dialog("close");
                             },
                             error: function (data)
                             {
-                                console.log('Error:' + data);
-                                location.reload();
+                                // This function is called if there was an issue posting the data to the server.
+                                message.showMessage("error", "Server Fault");
+                                $("#image-import-dialog-form").dialog("close");
                             }
                         });
-                        $(this).dialog("close");
                     }
                 },
                 Cancel: function ()
@@ -201,8 +292,55 @@ $(function () {
 
         $("#import-image")
 			.click(function ()
-            {
+			{
 			    $("#image-import-dialog-form").dialog("open");
 			});
     });
 });
+
+// This function will update the progress bar every second with the progress of the remote upload.
+// The progress is determined by querying the server for the current progress.
+var g_progress_intv = 0;
+function startProgressBarUpdate(upload_id)
+{
+    var bar = $('#image-import-dialog-form').find('#upload_bar');
+    var percent = $('#image-import-dialog-form').find('#upload_percent');
+
+    if (g_progress_intv != 0)
+        clearInterval(g_progress_intv);
+
+    g_progress_intv = setInterval(function ()
+    {
+        $.getJSON("/get_upload_progress/" + upload_id, function (data)
+        {
+            if (data.status == "error")
+            {
+                // We got an error back so display the message and stop updating the progress bar.
+                var message = new message_handle();
+                message.showMessage("error", data.message);
+                clearInterval(g_progress_intv);
+                g_progress_intv = 0;
+                return;
+            }
+
+            if (data.length == -1)
+            {
+                percentage = "100%";
+                bar.width(percentage)
+                percent.html(percentage);
+                clearInterval(g_progress_intv);
+                g_progress_intv = 0;
+                return;
+            }
+            length = parseInt(data.length);
+            if (length > 0)
+                var percentage = Math.floor(100 * parseInt(data.uploaded) / length);
+            else
+                var percentage = 0;
+            percentage = percentage + "%";
+            bar.width(percentage)
+            percent.html(percentage);
+        });
+    }, 1000);
+    return;
+}

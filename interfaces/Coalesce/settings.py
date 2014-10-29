@@ -137,9 +137,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 FILE_UPLOAD_HANDLERS = (
-    "django.core.files.uploadhandler.MemoryFileUploadHandler",
-    "django.core.files.uploadhandler.TemporaryFileUploadHandler",)
+    "coalesce.coal_beta.UploadProgressCachedHandler.UploadProgressCachedHandler",   # we must have our handler listed first because
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",                      # the handlers are called in order of being listed;
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",)                  # otherwise not all of our functions will be called.
 
 LOGIN_REDIRECT_URL = '/'
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
