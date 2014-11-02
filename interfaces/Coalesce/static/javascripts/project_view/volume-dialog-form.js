@@ -69,6 +69,7 @@ $(function() {
 			buttons: {
 				"Create a volume": function() {
 					var bValid = true;
+                    message.showMessage('notice', 'Createing new volume '+volume_name.val());
 					allFields.removeClass( "ui-state-error" );
 
 					bValid = bValid && checkLength( volume_name, "volume_name", 3, 16 );

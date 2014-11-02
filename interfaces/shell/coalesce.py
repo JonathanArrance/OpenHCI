@@ -13,6 +13,7 @@ from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.interfaces.shell.dashboard as dashboard
+from transcirrus.operations.restart_all_services import restart_services
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -353,7 +354,8 @@ def setup(d):
         if(flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
         clear_screen(d)
-        util.reboot_system()
+        #util.reboot_system()
+        restart_services()
 
     else:
         rollback_msg(d, timeout)
