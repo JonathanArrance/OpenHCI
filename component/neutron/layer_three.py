@@ -906,13 +906,17 @@ class layer_three_ops:
 
         get_floating = None
         r_dict = None
-        if(self.is_admin == 1):
-            get_floating = {'select':"proj_id,inst_id,inst_name,inst_floating_ip,floating_ip_id,inst_int_net_id,inst_int_net_name",'from':"trans_instances",'where':"floating_ip_id='%s'"%(floating_ip_id)}
-        else:
-            get_floating = {'select':"proj_id,inst_id,inst_name,inst_floating_ip,floating_ip_id,inst_int_net_id,inst_int_net_name",'from':"trans_instances",'where':"proj_id='%s'"
-                            %(self.project_id),'and':"floating_ip_id='%s'"%(floating_ip_id)
-                            }
-        floating = self.db.pg_select(get_floating)
+        try:
+            if(self.is_admin == 1):
+                get_floating = {'select':"proj_id,inst_id,inst_name,inst_floating_ip,floating_ip_id,inst_int_net_id,inst_int_net_name",'from':"trans_instances",'where':"floating_ip_id='%s'"%(floating_ip_id)}
+            else:
+                get_floating = {'select':"proj_id,inst_id,inst_name,inst_floating_ip,floating_ip_id,inst_int_net_id,inst_int_net_name",'from':"trans_instances",'where':"proj_id='%s'"
+                                %(self.project_id),'and':"floating_ip_id='%s'"%(floating_ip_id)
+                                }
+            floating = self.db.pg_select(get_floating)
+        except Exception as e:
+            logger.sql_error('%s'%(e))
+            raise e
 
         if(len(floating) == 0):
             #need to build a join function if db lib
