@@ -119,7 +119,7 @@
 	{% endif %}
 	
 	  {% if instances %}
-	    <table class="paleblue">
+	    <table class="paleblue" id="instance_list">
                 <tr> <th>Name</th>  <th>Status</th><th>OS / flavor</th><th>Actions</th> </tr>
                 
                  {% for k,v in instance_info.items %}

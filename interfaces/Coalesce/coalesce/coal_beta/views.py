@@ -881,7 +881,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
         out = go.import_image(import_dict)
         out['status'] = "success"
         out['message'] = "Local image %s was uploaded." % image_name
-    except Exception, e:
+    except Exception as e:
         out = {'status' : "error", 'message' : "Error uploading local file: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
@@ -933,7 +933,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         out = go.import_image(import_dict)
         out['status'] = "success"
         out['message'] = "Remote image %s was uploaded." % image_name
-    except Exception, e:
+    except Exception as e:
         cache.delete(cache_key)
         cache_key = None
         out = {'status' : "error", 'message' : "Error uploading remote file: %s" % e}
@@ -984,20 +984,34 @@ def create_volume(request, volume_name, volume_size, description, volume_type, p
         out = vo.create_volume(create_vol)
         out['status'] = 'success'
         out['message'] = "Volume %s was created."%(volume_name)
-    except Exception, e:
+    except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
 def delete_volume(request, volume_id, project_id):
     #needs to have ajax delete call finished.
+    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
         delete_vol = {'volume_id': volume_id, 'project_id': project_id}
         name = vo.get_volume_info(delete_vol)
         out = vo.delete_volume(delete_vol)
+        if(out == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "Volume %s was deleted."%(name['volume_name'])
+    except Exception as e:
+        output = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(output))
+
+def list_volumes(request,project_id):
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        #List vols is an array
+        out = vo.list_volumes(project_id)
         out['status'] = 'success'
-        out['message'] = "Volume %s was deleted."%(name['volume_name'])
+        out['message'] = "Volume list returned for %s."%(project_id)
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1150,6 +1164,18 @@ def deallocate_floating_ip(request, project_id, floating_ip):
         messages.warning(request, "Unable to deallocate floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def list_floating_ip(request,project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        #array of dictionary
+        out = l3o.list_floating_ips(project_id)
+        out['status'] = 'success'
+        out['message'] = "Floating ips %s returned."%(project_id)
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def take_snapshot(request, snapshot_name, snapshot_desc, volume_id, project_id):
     try:
         auth = request.session['auth']
@@ -1185,17 +1211,19 @@ def create_vm_spec(request,name,ram,boot_disk,cpus,swap=None,ephemeral=None,publ
         
 
 def delete_vm_spec(request,flavor_id):
+    output = {}
     try:
         auth = request.session['auth']
         fo = flavor_ops(auth)
         spec = fo.get_flavor(flavor_id)
         out = fo.delete_flavor(flavor_id)
-        out['status'] = 'success'
-        out['message'] = "Vm spec %s deleted."%(spec['flavor_name'])
+        if(out == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "Vm spec %s deleted."%(spec['flavor_name'])
     except Exception as e:
-        out = {"status":"error","message":"%s"%(e)}
-    return HttpResponse(simplejson.dumps(out))
-
+        output = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(output))
+"""
 def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
     try:
         auth = request.session['auth']
@@ -1216,7 +1244,54 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
     except Exception as e:
         messages.error(request, "%s. %s"%(e['reason'],e['data']['overLimit']['message']))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+"""
+def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
+    #this is used to create new instance. Not sure why it is called create image
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        no = neutron_net_ops(auth)
+        instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
+                        'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
+                        'network_name': network_name,'image_name': image_name,
+                        'flavor_name':flavor_name, 'name':name}
+        out = so.create_server(instance)
+        priv_net_list = no.list_internal_networks(project_id)
+        default_priv = priv_net_list[0]['net_id']
+        input_dict = {'server_id':out['vm_id'], 'net_id': default_priv, 'project_id': project_id}
+        net_info = so.attach_server_to_network(input_dict)
+        out['server_info']= so.get_server(input_dict)
+        out['status'] = 'success'
+        out['message'] = "New server %s was created."%(out['vm_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
+#def get_server(request, project_id, instance_id):
+#    try:
+#        auth = request.session['auth']
+#        so = server_ops(auth)
+#        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+#        out = so.get_server(input_dict)
+#        out['status'] = 'success'
+#        out['message'] = 'Successfully retrieved instance %s info.'%(serv_info['server_name'])
+#    except Exception as e:
+#        out = {"status":"error","message":"%s"%(e)}
+#    return HttpResponse(simplejson.dumps(out))
+
+def list_servers(request,project_id):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        #array of dictionaries
+        out = so.list_servers(project_id)
+        out['status'] = 'success'
+        out['message'] = "Server list returned for %s."%(project_id)
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+'''
 def pause_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1231,7 +1306,25 @@ def pause_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to pause server.")
         return HttpResponseRedirect(redirect_to)
+'''
 
+def pause_server(request, project_id, instance_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        serv_info = so.get_server(input_dict)
+        pause = saa.pause_server(input_dict)
+        if(pause == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully paused instance %s.'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+'''
 def unpause_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1246,7 +1339,24 @@ def unpause_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to unpause server.")
         return HttpResponseRedirect(redirect_to)
+'''
+def unpause_server(request, project_id, instance_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        serv_info = so.get_server(input_dict)
+        unpause = saa.unpause_server(input_dict)
+        if(unpause == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully unpaused instance %s.'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
+'''
 def suspend_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1261,7 +1371,25 @@ def suspend_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to suspend server.")
         return HttpResponseRedirect(redirect_to)
+'''
 
+def suspend_server(request, project_id, instance_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        suspend = saa.suspend_server(input_dict)
+        serv_info = so.get_server(input_dict)
+        if(suspend == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully suspended instance %s.'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+'''
 def resume_server(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1276,7 +1404,25 @@ def resume_server(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to resume server.")
         return HttpResponseRedirect(redirect_to)
+'''
 
+def resume_server(request, project_id, instance_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        saa = server_admin_actions(auth)
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        resume = saa.resume_server(input_dict)
+        serv_info = so.get_server(input_dict)
+        if(resume == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully resumed instance %s.'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+"""
 def delete_server(request, project_id, server_id):
     input_dict = {'project_id':project_id, 'server_id':server_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1288,7 +1434,22 @@ def delete_server(request, project_id, server_id):
     except Exception as e:
         messages.warning(request, "Unable to delete instance.")
         return HttpResponseRedirect(redirect_to)
-
+"""
+def delete_server(request, project_id, server_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'server_id':server_id}
+        serv_info = so.get_server(input_dict)
+        del_serv = ds.delete_server(auth, input_dict)
+        if(del_serv == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+'''
 def resize_server(request, project_id, instance_id, flavor_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1305,6 +1466,7 @@ def resize_server(request, project_id, instance_id, flavor_id):
     except:
         messages.warning(request, "Unable to resize server.")
         return HttpResponseRedirect(redirect_to)
+'''
 
 def confirm_resize(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
@@ -1321,6 +1483,22 @@ def confirm_resize(request, project_id, instance_id):
         messages.warning(request, "Unable to confirm resize.")
         return HttpResponseRedirect(redirect_to)
 
+
+def resize_server(request, project_id, instance_id, flavor_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
+        so = server_ops(auth)
+        serv_info = so.get_server(input_dict)
+        rs = rs_server.resize_and_confirm(auth, input_dict)
+        if(rs == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully resized instance %s'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+'''
 def reboot(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"SOFT"}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1335,7 +1513,24 @@ def reboot(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to reboot server.")
         return HttpResponseRedirect(redirect_to)
+'''
 
+def reboot(request, project_id, instance_id):
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"SOFT"}
+        serv_info = so.get_server(input_dict)
+        reboot = sa.reboot_server(input_dict)
+        if(reboot == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully rebooted instance %s'%(serv_info['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+'''
 def power_cycle(request, project_id, instance_id):
     #this needs to be changed to the new power cycle method
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"HARD"}
@@ -1351,23 +1546,26 @@ def power_cycle(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to power cycle server.")
         return HttpResponseRedirect(redirect_to)
+'''
 
-def power_off(request,project_id,server_id):
+def power_cycle(request, project_id, instance_id):
     out = {}
     try:
         auth = request.session['auth']
-        input_dict = {'project_id':project_id, 'server_id':instance_id}
         sa = server_actions(auth)
         so = server_ops(auth)
-        get = so.get_server(input_dict)
-        out = sa.power_off_server(input_dict)
-        out['status'] = 'success'
-        out['message'] = "Instance %s powered off."%(get['server_name'])
-    except Exception, e:
+        input_dict = {'project_id':project_id, 'server_id':instance_id}
+        serv_info = so.get_server(input_dict)
+        ps = sa.power_cycle_server(input_dict)
+        if(ps == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
+    except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def power_on(request,project_id,server_id):
+
+def power_off_server(request,project_id,server_id):
     out = {}
     try:
         auth = request.session['auth']
@@ -1375,10 +1573,27 @@ def power_on(request,project_id,server_id):
         sa = server_actions(auth)
         so = server_ops(auth)
         get = so.get_server(input_dict)
-        out = sa.power_on_server(input_dict)
-        out['status'] = 'success'
-        out['message'] = "Instance %s powered on."%(get['server_name'])
-    except Exception, e:
+        po = sa.power_off_server(input_dict)
+        if(po == 'OK'):
+            out['status'] = 'success'
+            out['message'] = "Instance %s powered off."%(get['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def power_on_server(request,project_id,server_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        input_dict = {'project_id':project_id, 'server_id':instance_id}
+        sa = server_actions(auth)
+        so = server_ops(auth)
+        get = so.get_server(input_dict)
+        po = sa.power_on_server(input_dict)
+        if(po == 'OK'):
+            out['status'] = 'success'
+            out['message'] = "Instance %s powered on."%(get['server_name'])
+    except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 

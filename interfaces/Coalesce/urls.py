@@ -86,6 +86,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_image',
             name='create_image'),
 
+    # url(r'^get_server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/$',
+    #     'coalesce.coal_beta.views.get_server',
+    #         name='get_server'),
+
 	url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
 	    'coalesce.coal_beta.views.instance_view',
             name='instance_view'),
