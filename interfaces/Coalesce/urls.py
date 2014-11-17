@@ -220,16 +220,38 @@ urlpatterns = patterns('',
             name='container_view'),
 
         url(r'^create_container/(?P<name>[^/]+)/(?P<project_id>[^/]+)/$',
-        'coalesce.coal_beta.views.create_container',
+            'coalesce.coal_beta.views.create_container',
             name='create_container'),
 
+        url(r'^list_containers/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.list_containers',
+            name='list_containers'),
+
         url(r'^delete_container/(?P<name>[^/]+)/(?P<project_id>[^/]+)/$',
-        'coalesce.coal_beta.views.delete_container',
+            'coalesce.coal_beta.views.delete_container',
             name='delete_container'),
 
-        url(r'^upload_object/(?P<container>[^/]+)/(?P<filename>[^/]+)/(?P<project_id>[^/]+)/(?P<project_name>[^/]+)/$',
-        'coalesce.coal_beta.views.upload_object',
-            name='upload_object'),
+	# --- Container Objects ----
+
+        url(r'^upload_local_object/(?P<container>[^/]+)/(?P<filename>[^/]+)/(?P<project_id>[^/]+)/(?P<project_name>[^/]+)/(?P<dummy1>[^/]+)/(?P<dummy2>[^/]+)/(?P<progress_id>[^/]+)/$',
+        'coalesce.coal_beta.views.upload_local_object',
+            name='upload_local_object'),
+
+        url(r'^upload_remote_object/(?P<container>[^/]+)/(?P<url>[^/]+)/(?P<project_id>[^/]+)/(?P<project_name>[^/]+)/(?P<progress_id>[^/]+)/$',
+        'coalesce.coal_beta.views.upload_remote_object',
+            name='upload_remote_object'),
+
+        url(r'^get_object/(?P<container>[^/]+)/(?P<filename>[^/]+)/(?P<project_id>[^/]+)/$',
+        'coalesce.coal_beta.views.get_object',
+            name='get_object'),
+
+        url(r'^list_objects/(?P<container>[^/]+)/(?P<project_id>[^/]+)/$',
+        'coalesce.coal_beta.views.list_objects',
+            name='list_objects'),
+
+        url(r'^delete_object/(?P<container>[^/]+)/(?P<filename>[^/]+)/(?P<project_id>[^/]+)/(?P<project_name>[^/]+)/$',
+        'coalesce.coal_beta.views.delete_object',
+            name='delete_object'),
 
 	# --- Networks ----
 
@@ -321,6 +343,15 @@ urlpatterns = patterns('',
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',
             name='setup'),
+
+        # --- Maintenance stuff ----
+        url(r'^phonehome/$',
+            'coalesce.coal_beta.views.phonehome',
+            name='phonehome'),
+
+        url(r'^upgrade/(?P<version>[^/]+)/$',
+            'coalesce.coal_beta.views.upgrade',
+            name='upgrade'),
 
         # user account views
         url(r'^coal/login_page/$',

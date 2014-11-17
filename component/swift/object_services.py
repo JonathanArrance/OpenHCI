@@ -136,8 +136,8 @@ class object_service_ops:
                 PU - can create an object in any container in their project
                 User - can creae a new object in a container they own.
         NOTE:
-        curl -i http://192.168.10.34:8080/v1/AUTH_634911ba0d794a4dadefdf872e0d8abe/container1/home/transuser/alpo_rhel/unittests/auth_test.py -X PUT -H "X-Auth-Token: 
         """
+        print "--create_object:: starting"
         logger.sys_info('\n**Create a new object. Component: Swift Def: create_object**\n')
         #check if the continer can be accesed by the user.
         try:
@@ -165,12 +165,23 @@ class object_service_ops:
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
-        
 
-        out = subprocess.Popen('cd /home/transuser; swift --auth-version 2 -A http://%s:5000/v2.0 -U %s:%s -K %s upload %s test.txt'%(util.get_uplink_ip(),input_dict['project_name'],self.username,self.password,input_dict['container_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        print "--create_object:: calling subprocess.Popen"
+
+        command = "cd /home/transuser; swift --auth-version 2 -A http://%s:5000/v2.0 -U %s:%s -K %s upload %s test.txt" % (util.get_uplink_ip(), input_dict['project_name'], self.username, self.password, input_dict['container_name'])
+
+        subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        std_out, std_err = subproc.communicate()
+
+        if subproc.returncode != 0:
+            print "Error calling swift to upload object, exit status: %d" % subproc.returncode
+            print "Error message: %s" % std_err
+            logger.sys_error("Error calling swift to upload object, exit status: %d" % subproc.returncode)
+            logger.sys_error("Error message: %s" % std_err)
+            raise Exception("Error calling swift to upload object, exit status: %d" % subproc.returncode)
+        
         print "   ---   object_services: create_object   ---"
-        print out
-        """
+        
         try:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Length": "0", "X-Detect-Content-Type": "true"}
@@ -188,11 +199,16 @@ class object_service_ops:
         #check the response and make sure it is a 200
         if(rest['response'] == 200 or rest['response'] == 201):
             #read the json that is returned
+            load = json.loads(rest['data'])
+            print "load data: %s" % load
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-            return 'OK'
+            return
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
-        """
+            print "Upload file/object data via swift - bad status: %s - %s" % (rest['response'], rest['reason'])
+            logger.sys_error("Upload file/object data via swift - bad status: %s - %s" % (rest['response'], rest['reason']))
+            raise Exception("Upload file/object data via swift - bad status: %s - %s" % (rest['response'], rest['reason']))
+
+
     def update_object(self):
         pass
         #most likey we can use create_object

@@ -12,6 +12,8 @@ class UploadProgressCachedHandler(FileUploadHandler):
         self.progress_id = None
         self.cache_key = None
 
+    # This routine is called first so we setup the cache key. The progress id is the 8th parameter in the URL string.
+    # We really need to change this so the progress id can be anywhere in the URL string.
     def handle_raw_input(self, input_data, META, content_length, boundary, encoding=None):
         self.content_length = content_length
         self.progress_id = self.request.META['PATH_INFO'].split('/')[8]
