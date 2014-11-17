@@ -86,9 +86,9 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.create_image',
             name='create_image'),
 
-    # url(r'^get_server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/$',
-    #     'coalesce.coal_beta.views.get_server',
-    #         name='get_server'),
+    url(r'^(?P<project_id>[^/]+)/list_servers/$',
+        'coalesce.coal_beta.views.list_servers',
+            name='list_servers'),
 
 	url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
 	    'coalesce.coal_beta.views.instance_view',
@@ -98,7 +98,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.pause_server',
             name='pause_server'),
 
-        url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
+    url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
 	
@@ -113,6 +113,10 @@ urlpatterns = patterns('',
 	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/delete_server/$',
 	    'coalesce.coal_beta.views.delete_server',
             name='delete_server'),
+
+    # url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/get_server/$',
+    #     'coalesce.coal_beta.views.get_server',
+    #         name='get_server'),
 
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<flavor_id>[^/]+)/resize_server/$',
 	    'coalesce.coal_beta.views.resize_server',

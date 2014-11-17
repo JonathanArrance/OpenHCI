@@ -1223,30 +1223,11 @@ def delete_vm_spec(request,flavor_id):
     except Exception as e:
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
-"""
-def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        no = neutron_net_ops(auth)
-        instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
-                        'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
-                        'network_name': network_name,'image_name': image_name,
-                        'flavor_name':flavor_name, 'name':name}
-        server = so.create_server(instance)
-        priv_net_list = no.list_internal_networks(project_id)
-        default_priv = priv_net_list[0]['net_id']
-        input_dict = {'server_id':server.server_id, 'net_id': default_priv, 'project_id': project_id}
-        net_info = so.attach_server_to_network(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except Exception as e:
-        messages.error(request, "%s. %s"%(e['reason'],e['data']['overLimit']['message']))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-"""
+
 def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
     #this is used to create new instance. Not sure why it is called create image
+    #if(amount is None):
+    #    amount = '1'
     try:
         auth = request.session['auth']
         so = server_ops(auth)
@@ -1267,7 +1248,8 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-#def get_server(request, project_id, instance_id):
+
+# def get_server(request, project_id, instance_id):
 #    try:
 #        auth = request.session['auth']
 #        so = server_ops(auth)
@@ -1277,7 +1259,7 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
 #        out['message'] = 'Successfully retrieved instance %s info.'%(serv_info['server_name'])
 #    except Exception as e:
 #        out = {"status":"error","message":"%s"%(e)}
-#    return HttpResponse(simplejson.dumps(out))
+#        return HttpResponse(simplejson.dumps(out))
 
 def list_servers(request,project_id):
     try:
@@ -1314,7 +1296,7 @@ def pause_server(request, project_id, instance_id):
         auth = request.session['auth']
         saa = server_admin_actions(auth)
         so = server_ops(auth)
-        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
         serv_info = so.get_server(input_dict)
         pause = saa.pause_server(input_dict)
         if(pause == 'OK'):
@@ -1346,7 +1328,8 @@ def unpause_server(request, project_id, instance_id):
         auth = request.session['auth']
         saa = server_admin_actions(auth)
         so = server_ops(auth)
-        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        #input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
         serv_info = so.get_server(input_dict)
         unpause = saa.unpause_server(input_dict)
         if(unpause == 'OK'):
@@ -1379,7 +1362,7 @@ def suspend_server(request, project_id, instance_id):
         auth = request.session['auth']
         saa = server_admin_actions(auth)
         so = server_ops(auth)
-        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
         suspend = saa.suspend_server(input_dict)
         serv_info = so.get_server(input_dict)
         if(suspend == 'OK'):
@@ -1412,7 +1395,7 @@ def resume_server(request, project_id, instance_id):
         auth = request.session['auth']
         saa = server_admin_actions(auth)
         so = server_ops(auth)
-        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
         resume = saa.resume_server(input_dict)
         serv_info = so.get_server(input_dict)
         if(resume == 'OK'):
