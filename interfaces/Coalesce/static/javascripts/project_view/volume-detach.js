@@ -1,5 +1,4 @@
 $(function() {  
-		// must obtain csrf cookie for AJAX call
 		function getCookie(name) {
 			var cookieValue = null;
 			if (document.cookie && document.cookie != '') {

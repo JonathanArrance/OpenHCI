@@ -33,6 +33,20 @@ else:
 __version__ = "2.2"
 
 
+def content_type_from_headers(headers):
+    '''Detect content_type from Content_Type in headers
+    :param: headers as dict, list or string
+    :return: filename from content-disposition header or None
+    '''
+    if type(headers) == str:
+        headers = headers.splitlines()
+    if type(headers) == list:
+        headers = dict([x.split(':', 1) for x in headers])
+    ctype = headers.get("Content-Type")
+    if not ctype:
+        return None
+    return ctype
+
 def filename_from_url(url):
     """:return: detected filename or None"""
     fname = os.path.basename(urlparse.urlparse(url).path)
@@ -322,7 +336,8 @@ def download(url, out=None, bar=bar_adaptive):
         if os.path.exists(filename):
             filename = filename_fix_existing(filename)
         shutil.move(tmpfile, filename)
-        return filename
+        content_type = content_type_from_headers(headers)
+        return (filename, content_type)
     except Exception as e:
         raise Exception ("Could not wget image: %s" % e)
 
