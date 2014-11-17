@@ -1,8 +1,11 @@
 #!/usr/local/bin/python2.7
 #######standard impots#######
 import sys
+import os
 import json
 import time
+#import thread
+#from multiprocessing.pool import ThreadPool
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -22,6 +25,7 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 #from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.server_action import server_actions
+from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.nova.storage import server_storage_ops
 
 #######Special imports#######
@@ -82,6 +86,7 @@ class server_ops:
 
         #build flavor object
         self.flav = flavor_ops(user_dict)
+        self.qo = quota_ops(user_dict)
 
         #build the nova image object
         self.image = nova_image_ops(user_dict)
@@ -177,6 +182,7 @@ class server_ops:
     def delete_server_snapshot():
         pass
 
+    '''
     def create_server(self,create_dict):
         """
         DESC: Build a new virtual instance.
@@ -188,6 +194,71 @@ class server_ops:
                              network_name - default project net used if none specified
                              image_name - default system image used if none specified
                              flavor_name - default system flavor used if none specifed
+                             amount - op - how many vms should be provisioned
+                             name - req - name of the server
+        OUTPUT: r_dict of dictionaries  - vm_name - vm name
+                                        - vm_id - vm id
+                                        - sec_key_name - security key name
+                                        - sec_group_name - security group name
+                                        - created_by - name of creater
+                                        - project_id - id of project
+        ACCESS: Users can only build servers in the projects that they are members of includeing admin users.
+        NOTE: If no zone is specified then the zone defaults to zone.
+        """
+        if('amount' not in create_dict):
+            create_dict['amount'] = 1
+        else:
+            #check the quota
+            quota = self.qo.get_project_quotas(create_dict['project_id'])
+            #see how many vms in project
+            try:
+                instances = {'table':'trans_instances','where':"proj_id='%s'"%(create_dict['project_id'])}
+                self.num_instances = self.db.count_elements(instances)
+            except:
+                raise Exception('Could not get instance count for project %s'%(create_dict['project_id']))
+
+            logger.sys_info("HACK: this is projectID %s"%(self.num_instances))
+            if(int(self.num_instances) >= int(quota['instances'])):
+                raise Exception('Could not create Instance, quota Exceded.')
+
+            if(int(create_dict['amount']) >= int(quota['instances'])):
+                raise Exception('Could not create Instance, quota Exceded.')
+
+        #WE ARE GETTING DB ERRORS WHEN WE FORK. WE HAVE TO DO IT GHETTO AND NOT PARALLELIZE IT.
+        #THIS NEDS TO BE FIXED.
+
+        #total freaking HACK this needs to be multi-threaded
+        #children = []
+        #for i in range(int(create_dict['amount'])):
+        #    newpid = os.fork()
+        #    logger.sys_info("HACK: new PID %d"%(newpid))
+        #    if newpid:
+        #        logger.sys_info("HACK: create %s"%(create_dict))
+        #        self._create_server_sub(create_dict)
+        #        children.append(newpid)
+
+        #for child in children:
+        #    logger.sys_info("HACK: new PID2 %d"%(child))
+        #    os.waitpid(child,0)
+        r_dict = {}
+        for i in range(int(create_dict['amount'])):
+            out = self._create_server_sub(create_dict)
+            rdict[i] = out
+        return r_dict
+    '''
+
+    def create_server(self,create_dict):
+        """
+        DESC: Build a new virtual instance.
+        INPUT: create_dict - config_script - op
+                             project_id - req
+                             sec_group_name - default project security group if none specified
+                             sec_key_name - default project security key if none specified.
+                             avail_zone - default availability zone - nova
+                             network_name - default project net used if none specified
+                             image_name - default system image used if none specified
+                             flavor_name - default system flavor used if none specifed
+                             amount - op - how many vms should be provisioned
                              name - req - name of the server
         OUTPUT: r_dict - vm_name - vm name
                        - vm_id - vm id
@@ -213,10 +284,28 @@ class server_ops:
             logger.sys_error("Status level not sufficient to create virtual servers.")
             raise Exception("Status level not sufficient to create virtual servers.")
 
+        if('amount' not in create_dict):
+            create_dict['amount'] = 1
+        else:
+            #check the quota
+            quota = self.qo.get_project_quotas(create_dict['project_id'])
+            #see how many vms in project
+            try:
+                instances = {'table':'trans_instances','where':"proj_id='%s'"%(create_dict['project_id'])}
+                self.num_instances = self.db.count_elements(instances)
+            except:
+                raise Exception('Could not get instance count for project %s'%(create_dict['project_id']))
+
+            if(int(self.num_instances) >= int(quota['instances'])):
+                raise Exception('Could not create Instance, quota Exceded.')
+
+            if(int(create_dict['amount']) >= int(quota['instances'])):
+                raise Exception('Could not create Instance, quota Exceded.')
+
         #get the name of the project based on the id
         try:
-            select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(create_dict['project_id'])}
-            proj_name = self.db.pg_select(select)
+           select = {"select":"proj_name","from":"projects","where":"proj_id='%s'" %(create_dict['project_id'])}
+           proj_name = self.db.pg_select(select)
         except:
             logger.sql_error("Could not get the project name from Transcirrus DB.")
             raise Exception("Could not get the project name from Transcirrus DB.")
@@ -309,7 +398,6 @@ class server_ops:
             raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
 
         #verify the image requested exsists
-        #image_list = self.image.nova_list_images(create_dict['project_id'])
         image_list = self.glance.list_images()
         img_flag = 0
         for image in image_list:
@@ -333,7 +421,6 @@ class server_ops:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
             raise Esception("Could not connec to the REST api caller in create_server operation.")
 
-        #build the server
         try:
             body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
@@ -348,6 +435,7 @@ class server_ops:
 
         if(rest['response'] == 202):
             self.load = json.loads(rest['data'])
+            logger.sys_info('HACK: json load %s'%(self.load))
             #poll the status, if the status is ACTIVE
             server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
             while(True):

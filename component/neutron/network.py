@@ -869,25 +869,30 @@ class neutron_net_ops:
                 #HACK hate this
                 logger.sys_error("Invalid value given for enable_dhcp.")
                 raise Exception("Invalid value given for enable_dhcp.")
-    
-            self.dns_string = []
+
             if('subnet_dns' in subnet_dict):
-                """
-                Ned to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
-                counter = 3
-                for dns in subnet_dict['subnet_dns']:
-                    while(counter <= 3):
-                        try:
-                            socket.inet_aton(dns)
-                        except socket.error:
-                            logger.sys_error("Public subnet dns server address is not a valid format.")
-                            raise Exception("Public subnet dns server address is not a valid format.")
-                        yo = '"'+dns+'"'
-                        #self.dns_string.append(yo)
-                        counter = counter+1
-                        raw = yo+ ','
-                """
-                self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+                the_array = []
+                the_array = subnet_dict['subnet_dns']
+                #Need to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
+                if(len(the_array) > 3):
+                    the_array.pop()
+                counter = 0
+                self.dns_string = '['
+                while(True):
+                    if(counter > 2):
+                        break
+                    try:
+                        socket.inet_aton(the_array[counter])
+                    except socket.error:
+                        logger.sys_error("Public subnet dns server address is not a valid format.")
+                        raise Exception("Public subnet dns server address is not a valid format.")
+
+                    self.dns_string += '"'+the_array[counter]+'"'
+                    if(counter < 2):
+                        self.dns_string += ', '
+                    counter = counter+1
+                self.dns_string += ']'
+                self.dns_string = str(self.dns_string)
             else:
                 self.dns_string = '["8.8.8.8", "8.8.4.4"]'
     
@@ -1011,17 +1016,29 @@ class neutron_net_ops:
 
         self.dns_string = '["8.8.8.8", "8.8.4.4"]'
         if('subnet_dns' in subnet_dict):
-            """
-            for sub in subnet_dict['subnet_dns']:
+            the_array = []
+            the_array = subnet_dict['subnet_dns']
+            #Need to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
+            if(len(the_array) > 3):
+                the_array.pop()
+            counter = 0
+            self.dns_string = '['
+            while(True):
+                if(counter > 2):
+                    break
                 try:
-                    socket.inet_aton(sub)
-                    self.dns + sub
+                    socket.inet_aton(the_array[counter])
                 except socket.error:
-                    logger.sys_error("The dns ip address %s was not valid." %(sub))
-                    raise Exception("The dns ip address %s was not valid." %(sub))
-            """
-            #HACK this needs to be fixed
-            logger.sys_warning("Need to be able to add more dns servers.")
+                    logger.sys_error("Public subnet dns server address is not a valid format.")
+                    raise Exception("Public subnet dns server address is not a valid format.")
+                self.dns_string += '"'+the_array[counter]+'"'
+                if(counter < 2):
+                    self.dns_string += ', '
+                counter = counter+1
+            self.dns_string += ']'
+            self.dns_string = str(self.dns_string)
+        else:
+            self.dns_string = '["8.8.8.8", "8.8.4.4"]'
 
         #get the network info
         net = self.get_network(subnet_dict['net_id'])

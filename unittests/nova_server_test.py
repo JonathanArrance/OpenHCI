@@ -60,11 +60,11 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        'mount_point': '/dev/vdc'
        }
 yo = store.attach_vol_to_server(inp)
-'''
+
 input_dict = {'project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1','zone':'nova'}
 yo = action.list_compute_hosts(input_dict)
 print yo
-'''
+
 
 input_dict = {'server_id':'4866b3c7-201d-4b31-ab33-762b5ae25628','project_id':'13d92fe4b2de4051abc5de0654277af0'}
 on = sa.power_cycle_server(input_dict)
@@ -75,12 +75,12 @@ input_dict = {'project_id':'13d92fe4b2de4051abc5de0654277af0','instance_id':'486
 act = action.check_instance_status(input_dict)
 print act
 
-
+'''
 print "Createing a new virtual instance"
-server = {'sec_group_name':'project1','avail_zone':'nova','sec_key_name':'project1','network_name':'project1','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.large','name':'blah','project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1'}
+server = {'sec_group_name':'project1','avail_zone':'nova','amount':'2','sec_key_name':'project1','network_name':'project1','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'blah','project_id':'3053cf0ea28e4a6785029709cfe3e98e'}
 yo = nova.create_server(server)
 print yo
-
+'''
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list

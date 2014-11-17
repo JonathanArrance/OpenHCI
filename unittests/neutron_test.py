@@ -4,27 +4,27 @@ from transcirrus.component.neutron.network import neutron_net_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("dude","password")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
-'''
+
 print"----------------------------------------"
 print "createin a new external network"
-create = {'net_name':"pubtest",'admin_state':"true", 'shared':"false"}
+create = {'net_name':"pubtest13",'admin_state':"true", 'shared':"false"}
 newpubnet = net.add_public_network(create)
 print newpubnet
 time.sleep(1)
 
 print"-----------------------------------------"
 print "Setting a subnet on new network"
-dns = ["192.168.190.20"]
-input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.177.10','subnet_end_range':'192.168.177.40','public_ip':'192.168.177.2','public_gateway':'192.168.177.1','public_subnet_mask':'255.255.255.0'}
+dns = ["192.168.190.20",'8.8.8.8',"192.168.10.3"]
+input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.178.10','subnet_end_range':'192.168.178.40','public_ip':'192.168.178.2','public_gateway':'192.168.178.1','public_subnet_mask':'255.255.255.0'}
 getsubnet = net.add_public_subnet(input_dict)
 print getsubnet
-
+'''
 
 print "----------------------------------------"
 print "deleteing subnet"
@@ -41,13 +41,13 @@ print "----------------------------------------"
 print "listing the networks"
 newnet = net.list_internal_networks("9fad7cee35024b858795097f6e7d62da")
 print newnet
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "listing the networks"
 newnet2 = net.list_external_networks()
 print newnet2
-'''
+
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new."
