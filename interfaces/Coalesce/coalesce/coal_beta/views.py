@@ -1,3 +1,4 @@
+
 # Django imports
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
@@ -15,7 +16,10 @@ from django.views.decorators.cache import never_cache
 from django.core import serializers
 from django.utils import simplejson
 from django.core.cache import cache
+
 import time
+import os
+import sys
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
@@ -46,6 +50,7 @@ import transcirrus.common.wget as wget
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
+import transcirrus.common.logger as logger
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -63,8 +68,14 @@ from datetime import datetime
 from collections import defaultdict
 import csv
 import json
-import sys
 from urlparse import urlsplit
+
+from transcirrus.component.swift.containerconnection import Args
+from transcirrus.component.swift.containerconnection import ContainerConnection
+from transcirrus.component.swift.swiftconnection import SwiftConnection
+import transcirrus.operations.support_create as support_create
+import transcirrus.operations.upgrade as upgrade
+sys.path.append("/usr/lib/python2.6/site-packages/")
 
 # Custom imports
 #from coalesce.coal_beta.models import *
@@ -858,9 +869,6 @@ def import_local (request, image_name, container_format, disk_format, image_type
         auth = request.session['auth']
         go = glance_ops(auth)
 
-        # Handle file upload.
-        form = import_image_form (request.POST, request.FILES)
- 
         # Create a temp file to hold the image contents until we give it to glance.
         download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
@@ -922,7 +930,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
 
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
-        filename = wget.download (image_location, download_file, download_progress)
+        filename, content_type = wget.download (image_location, download_file, download_progress)
 
         # Delete our cached progress.
         cache.delete(cache_key)
@@ -1817,59 +1825,285 @@ def container_view(request, project_id, container_name):
                                                         'container_objects': container_objects,
                                                         }))
 
-def create_container(request, name, project_id):
+
+# Create an OpenStack container with the given name for the given project ID.
+def create_container (request, name, project_id):
     try:
         auth = request.session['auth']
-        cso = container_service_ops(auth)
-        create_dict = {"container_name": name, "project_id": project_id}
-        out = cso.create_container(create_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, name)
 
-    except:
-        messages.warning(request, "Unable to add private network.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        container_con = ContainerConnection (args)
+        if container_con.exists (name):
+            out = {'status' : "error", 'message' : "Container %s already exists for this project" % name}
+            return HttpResponse(simplejson.dumps(out))
+        container_con.create (name)
+        out = {'status' : "success", 'message' : "Container %s was created." % name}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error creating container: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
 
-def delete_container(request, name, project_id):
+
+# List all OpenStack containers for the given project ID.
+def list_containers (request, project_id):
     try:
         auth = request.session['auth']
-        cso = container_service_ops(auth)
-        create_dict = {"container_name": name, "project_id": project_id}
-        out = cso.delete_container(create_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
+        auth['project_id'] = project_id
+        args = Args (auth, "")
 
-    except:
-        messages.warning(request, "Unable to add private network.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        container_con = ContainerConnection (args)
+        container_list = container_con.list()
+        out = {'status' : "success", 'containers' : container_list}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting list of containers: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
 
-def upload_object(request, container, filename, project_id, project_name):
+
+# Delete an OpenStack container with the given name for the given project ID.
+def delete_container (request, name, project_id):
     try:
         auth = request.session['auth']
-        print filename
-        with open('home/transuser/times.txt', 'wb+') as destination:
-            for chunk in filename.chunks():
-                destination.write(chunk)
-        """
-        oso = object_service_ops(auth)
-        print location
-        location = location.replace("&47", "/")
-        print location
-        create_dict = {"container_name": container, "object_path": location, "project_id": project_id, "project_name": project_name}
-        out = oso.create_object(create_dict)
-        print "   ---   upload_object   ---"
-        print out
-        """
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-        
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, name)
 
-    except:
-        messages.warning(request, "Unable to add private network.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        container_con = ContainerConnection (args)
+        if not container_con.exists (name):
+            out = {'status' : "error", 'message' : "Container %s does not exist for this project" % name}
+            return HttpResponse(simplejson.dumps(out))
+        container_con.delete (name)
+        out = {'status' : "success", 'message' : "Container %s was deleted." % name}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting container: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+# Upload a local file (object) to the given container.
+def upload_local_object (request, container, filename, project_id, project_name, dummy1, dummy2, progress_id):
+    from coalesce.coal_beta.models import ImportLocal
+
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, container)
+
+        container_con = ContainerConnection (args)
+        if not container_con.exists (container):
+            out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            return HttpResponse(simplejson.dumps(out))
+
+        object_con = SwiftConnection (args)
+
+        print "content filename: %s" % request.FILES['import_local'].name
+        print "sent filename: %s" % filename
+        content_type = request.FILES['import_local'].content_type
+        if request.FILES['import_local'].size >= 5 * 1024 ** 3:     # is the file >= 5GB
+            large_file = True
+        else:
+            large_file = False
+
+        object_con.put (filename, request.FILES['import_local'], content_type, large=large_file)
+        out = {'status' : "success", 'message' : "Local file/object %s was uploaded." % filename,
+               'object_id' : container + "/" + filename}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error uploading local file/object: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Upload a remote file (object) to the given container.
+def upload_remote_object (request, container, url, project_id, project_name, progress_id):
+    global cache_key
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, container)
+
+        container_con = ContainerConnection (args)
+        if not container_con.exists (container):
+            out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            return HttpResponse(simplejson.dumps(out))
+
+        # Replace any '%47' with a slash '/'
+        url = url.replace("&47", "/")
+
+        # Setup our cache to track the progress.
+        cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
+        cache.set (cache_key, {'length': 0, 'uploaded' : 0})
+
+        # Use wget to download the file.
+        download_dir   = "/tmp/"
+        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+        download_file  = download_dir + download_fname
+
+        # Download the file via a wget like interface to the file called download_file and
+        # log the progress via the callback function download_progress.
+        filename, content_type = wget.download (url, download_file, download_progress)
+
+        # Delete our cached progress.
+        cache.delete(cache_key)
+        cache_key = None
+
+        # Add the object to swift.
+        object_con = SwiftConnection (args)
+
+        if content_type == None:
+            content_type = "application/octet-stream"
+
+        filesize = os.stat(download_file).st_size
+
+        if filesize >= 5 * 1024 ** 3:     # is the file >= 5GB
+            large_file = True
+        else:
+            large_file = False
+
+        stream = io.open (download_file, mode='r+b')
+        object_con.put (filename, stream, content_type, large=large_file)
+        stream.close()
+
+        # Delete the temp file and only log any errors since the file was successfully added to the container.
+        try:
+            os.remove (download_file)
+        except Exception as e:
+            logger.sys_error ("Unable to delete temp remote object file %s, msg: %s" % (download_file, e))
+
+        out = {'status' : "success", 'message' : "Remote file/object %s was uploaded." % filename,
+               'object_id' : container + "/" + filename}
+    except Exception as e:
+        cache.delete(cache_key)
+        cache_key = None
+        out = {'status' : "error", 'message' : "Error uploading remote file/object: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get an object from the given container.
+def get_object (request, container, filename, project_id):
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, container)
+
+        container_con = ContainerConnection (args)
+        if not container_con.exists (container):
+            out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            return HttpResponse(simplejson.dumps(out))
+
+        object_con = SwiftConnection (args)
+        if not object_con.exists (filename):
+            out = {'status' : "error", 'message' : "File/object %s does not exist in the containter %s" % (filename, container)}
+            return HttpResponse(simplejson.dumps(out))
+
+        content = object_con.get (filename)
+
+        if content is None:
+            out = {'status' : "error", 'message' : "Error retrieving file/object %s from the containter %s" % (filename, container)}
+            return HttpResponse(simplejson.dumps(out))
+
+        response = HttpResponse (content, content_type="")
+        response['Content-Length'] = ""
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        return response
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting file/object: %s" % e}
+        return HttpResponse(simplejson.dumps(out))
+
+
+# List all objects for the given container.
+def list_objects (request, container, project_id):
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, container)
+
+        container_con = ContainerConnection (args)
+        if not container_con.exists (container):
+            out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            return HttpResponse(simplejson.dumps(out))
+
+        object_con = SwiftConnection (args)
+        object_list = object_con.list (exclude_segments=True)
+        out = {'status' : "success", 'objects' : object_list}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting list of objects in the container: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete an object from the given container.
+def delete_object (request, container, filename, project_id, project_name):
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] > 0:
+            if auth['project_id'] != project_id:
+                logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
+                out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                return HttpResponse(simplejson.dumps(out))
+        auth['project_id'] = project_id
+        args = Args (auth, container)
+
+        container_con = ContainerConnection (args)
+        if not container_con.exists (container):
+            out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            return HttpResponse(simplejson.dumps(out))
+
+        object_con = SwiftConnection (args)
+        if not object_con.exists (filename):
+            out = {'status' : "error", 'message' : "File/object %s does not exist in the containter %s" % (filename, container)}
+            return HttpResponse(simplejson.dumps(out))
+
+        object_con.delete (filename)
+        out = {'status' : "success", 'message' : "File/object %s was deleted." % filename}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting file/object: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Call the routine that will collect all the data from all nodes and send it back to us.
+def phonehome (request):
+    try:
+        support_create.DoCreate()
+        out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error collecting/sending support data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Call the routine that will upgrade all nodes to the given version of software.
+def upgrade (request, version="stable"):
+    try:
+        upgrade.ReleaseToDownload = version
+        upgrade.DoUpgrade()
+        out = {'status' : "success", 'message' : "Nodes have been upgraded."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
 
 def setup(request):
     if request.method == 'POST':

@@ -201,7 +201,7 @@ class glance_ops:
         else:
             logger.sys_error("Added image to db - bad status: %s" % rest['reason'])
             raise Exception("Added image to db - bad status: %s" % rest['reason'])
-        return
+
     
     def delete_image(self, image_id):
         """

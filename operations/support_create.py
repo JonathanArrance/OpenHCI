@@ -228,8 +228,11 @@ def DoCreate():
 
     # Make sure the script file exists before we try to use it.
     if not os.path.exists (ScriptFile):
-        print "Script file not found: %s" % ScriptFile
-        sys.exit(2)
+        if CmdLine:
+            print "Script file not found: %s" % ScriptFile
+            sys.exit(2)
+        else:
+            raise Exception ("Script file not found: %s" % ScriptFile)
 
     TimeStamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
 
