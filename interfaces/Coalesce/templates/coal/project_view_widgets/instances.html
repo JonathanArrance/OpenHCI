@@ -1,151 +1,191 @@
 <!-- Begin instance widget-->
-      <div class="span4">
-        <div class="well">
-          <div class="legend">
-             Instances <a href="#"  id="create-instance" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> New Instance</a>
-	     {% if user_level == 0 and instances %}
-	       <!--<a href="#"  id="evacuate-instance" class="btn btn-mini" style="float:right">Evacuate</a>
-	       <a href="#"  id="live-migrate-instance" class="btn btn-mini" style="float:right">Live Migrate</a>
-	       <a href="#"  id="migrate-instance" class="btn btn-mini" style="float:right">Migrate</a>-->
-	     {% endif %}
-          </div>
-	
-	
- 	  <div id="instance-dialog-form" title="Create new instance">
-                <form>
-                {% csrf_token %}
-                <fieldset>
+<div class="span4">
+	<div class="well">
+		<div class="legend">
+		  Instances
+			<div style="float:right">
+				<a href="#" id="delete-instance" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-minus"></i> Delete</a>
+				<a href="#" id="create-instance" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> Add</a>
+			</div>
 
-                    <label for="name">Instance Name</label>
-                    <input type="text" name="name" id="name"  class="text ui-widget-content ui-corner-all" />
+			{% if user_level == 0 and instances %}
+				<!--<a href="#"  id="evacuate-instance" class="btn btn-mini" style="float:right">Evacuate</a>
+				<a href="#"  id="live-migrate-instance" class="btn btn-mini" style="float:right">Live Migrate</a>
+				<a href="#"  id="migrate-instance" class="btn btn-mini" style="float:right">Migrate</a>-->
+			{% endif %}
+		</div>
 
-		    <label for="sec_group_name">Security Group</label>
-                    <select name="sec_group_name" id="sec_group_name">
-			{% for sg in sec_groups %}
-		   	    <option value="{{sg.sec_group_name}}">{{sg.sec_group_name}}</option>
-			{% endfor %}
-                    </select>
+		<div id="instance-dialog-form" title="Create Instance">
+			<form>
+			{% csrf_token %}
+				<fieldset>
+					<label for="name">Instance Name</label>
+					<input type="text" name="name" id="name"  class="text ui-widget-content ui-corner-all" />
 
-		    <label for="sec_key_name">Security Key</label>
-                    <select name="sec_key_name" id="sec_key_name">
-			{% for sk in sec_keys %}
-		   	    <option value="{{sk.key_name}}">{{sk.key_name}}</option>
-			{% endfor %}
-                    </select>
+					<label for="sec_group_name">Security Group</label>
+					<select name="sec_group_name" id="sec_group_name">
+						{% for sg in sec_groups %}
+		   	   				<option value="{{sg.sec_group_name}}">{{sg.sec_group_name}}</option>
+						{% endfor %}
+                	</select>
 
-		    <label for="network_name">Private Network</label>
-                    <select name="network_name" id="network_name">
-			{% for net in priv_net_list %}
-		   	    <option value="{{net.net_name}}">{{net.net_name}}</option>
-			{% endfor %}
-                    </select>
+		    		<label for="sec_key_name">Security Key</label>
+		    		<select name="sec_key_name" id="sec_key_name">
+		    			{% for sk in sec_keys %}
+		    				<option value="{{sk.key_name}}">{{sk.key_name}}</option>
+		    			{% endfor %}
+		    		</select>
 
-		   <label for="image_name">Image</label>
-                    <select name="image_name" id="image_name">
-			{% for image in images %}
-		   	    <option value="{{image.image_name}}">{{image.image_name}}</option>
-			{% endfor %}
-                    </select>
-		    
-		    <label for="flavor_name">Flavor</label>
-                    <select name="flavor_name" id="flavor_name">
-			{% for flavor in flavors %}
-		   	    <option value="{{flavor.flavor_name}}">{{flavor.flavor_name}}</option>
-			{% endfor %}
-                    </select>
+		    		<label for="network_name">Private Network</label>
+		    		<select name="network_name" id="network_name">
+		    			{% for net in priv_net_list %}
+		    				<option value="{{net.net_name}}">{{net.net_name}}</option>
+		    			{% endfor %}
+		    		</select>
 
-                </fieldset>
-                </form>
-           </div>
-	{% if user_level == 0 %}
-	  <div id="instance-live-migrate-form" title="Migrate live instance">
-		<p class="validateTips">Migrate a live instance to another host.  </p>
-                <form>
-                {% csrf_token %}
-                <fieldset>
-		    <label for="live_instance">Instance</label>
-                    <select name="live_instance" id="live_instance">
-			{% for i in instances %}
-		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
-			{% endfor %}
-                    </select>
-		    <label for="live_host_name">Host</label>
-                    <select name="live_host_name" id="live_host_name">
-			{% for h in hosts %}
-		   	    <option value="{{h.host_name}}">{{h.host_name}}</option>
-			{% endfor %}
-                    </select>
+		    		<label for="image_name">Image</label>
+		    		<select name="image_name" id="image_name">
+		    			{% for image in images %}
+		    				<option value="{{image.image_name}}">{{image.image_name}}</option>
+		    			{% endfor %}
+		    		</select>
 
-                </fieldset>
-                </form>
-           </div>
-
-	  <div id="instance-migrate-form" title="Migrate instance">
-		<p class="validateTips">Migrate an instance to another host automatically.</p>
-                <form>
-                {% csrf_token %}
-                <fieldset>
-		    <label for="mig_instance">Instance</label>
-                    <select name="mig_instance" id="mig_instance">
-			{% for i in instances %}
-		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
-			{% endfor %}
-                    </select>
-                </fieldset>
-                </form>
-           </div> 
-
-	  <div id="instance-evacuate-form" title="Evacuate instance">
-                <p class="validateTips">Evacuate an instance from a failed host to a new host.  </p>
-		<form>
-                {% csrf_token %}
-                <fieldset>
-		    <label for="instance">Instance</label>
-                    <select name="instance" id="instance">
-			{% for i in instance_info.items %}
-		   	    <option value="{{i.server_id}}">{{i.server_name}}</option>
-			{% endfor %}
-                    </select>
-		    <label for="host_name">Host</label>
-                    <select name="host_name" id="host_name">
-			{% for h in hosts %}
-		   	    <option value="{{h.host_name}}">{{h.host_name}}</option>
-			{% endfor %}
-                    </select>
-
-                </fieldset>
-                </form>
-           </div>
-	{% endif %}
-	
-	  {% if instances %}
-	    <table class="paleblue">
-                <tr> <th>Name</th>  <th>Status</th><th>OS / flavor</th><th>Actions</th> </tr>
-                
-                 {% for k,v in instance_info.items %}
-			<tr>
-			    <td><a href="/{{project.project_id}}/{{v.server_id}}/instance_view/">{{v.server_name}}</td>
-			    <td>{{v.server_status}}</td>
-			    <td>{{v.server_os}} / {{v.server_flavor}}</td>
-			    <td>
-			       {% if v.server_status == "ACTIVE" %}
-				 <a href="{{v.novnc_console}}" target="_blank">console</a>
-				 | <a href="/server/{{project.project_id}}/{{v.server_id}}/pause_server">pause</a>
-			         | <a href="/server/{{project.project_id}}/{{v.server_id}}/suspend_server">suspend</a>
-			       {% endif%}
-                               {% if v.server_status == "PAUSED" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/unpause_server">unpause</a> {% endif%}
-			       {% if v.server_status == "SUSPENDED" %}| <a href="/server/{{project.project_id}}/{{v.server_id}}/resume_server">resume</a> {% endif%}
-			       {% if user_level == 0 and v.server_status == "ACTIVE" %}| {% endif %}
-			       {% if user_level == 0 %}<a href="/server/{{project.project_id}}/{{v.server_id}}/delete_server/">delete</a>
-			       {% endif %}
-			    </td>
-			 </tr>
-                {% endfor %}  
-                
-	    </table>
-	  {% else %}	
-	   <p><i>This project has no instances</i></p>
-	  {% endif %}
-	  <div id="instance_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
+		    		<label for="flavor_name">Flavor</label>
+		    		<select name="flavor_name" id="flavor_name">
+		    			{% for flavor in flavors %}
+		    				<option value="{{flavor.flavor_name}}">{{flavor.flavor_name}}</option>
+		    			{% endfor %}
+		    		</select>
+		    	</fieldset>
+            </form>
         </div>
-      </div>
+
+        <div id="instance-pause-confirm-form" title="Pause Instance">
+        	<p style="text-align:center;">Pause <span class="instance-name"></span>?</p>
+        </div>
+
+        <div id="instance-suspend-confirm-form" title="Suspend Instance">
+        	<p style="text-align:center;">Suspend <span class="instance-name"></span>?</p>
+        </div>
+
+        <div id="instance-unpause-confirm-form" title="Unpause Instance">
+        	<p style="text-align:center;">Unpause <span class="instance-name"></span>?</p>
+        </div>
+
+        <div id="instance-resume-confirm-form" title="Resume Instance">
+        	<p style="text-align:center;">Resume <span class="instance-name"></span>?</p>
+        </div>
+
+        {% if user_level == 0 %}
+        	<div id="instance-delete-dialog-form" title="Delete Instance">
+        		<p class="validateTips">Select an instance to delete.</p>
+        		<form>
+                {% csrf_token %}
+                	<fieldset>
+                		<label for="instance">Instance</label>
+                		<select name="instance" id="instance">
+                			{% for i in instances %}
+                				<option value="{{i.server_id}}">{{i.server_name}}</option>
+                			{% endfor %}
+                		</select>
+                	</fieldset>
+                </form>
+            </div>
+
+            <div id="instance-live-migrate-form" title="Migrate Live Instance">
+            	<p class="validateTips">Migrate a live instance to another host.</p>
+                <form>
+                {% csrf_token %}
+                	<fieldset>
+                		<label for="live_instance">Instance</label>
+                		<select name="live_instance" id="live_instance">
+                			{% for i in instances %}
+                				<option value="{{i.server_id}}">{{i.server_name}}</option>
+                			{% endfor %}
+                		</select>
+
+                		<label for="live_host_name">Host</label>
+                		<select name="live_host_name" id="live_host_name">
+                			{% for h in hosts %}
+                				<option value="{{h.host_name}}">{{h.host_name}}</option>
+                			{% endfor %}
+                		</select>
+                	</fieldset>
+                </form>
+            </div>
+
+            <div id="instance-migrate-form" title="Migrate Instance">
+            	<p class="validateTips">Migrate an instance to another host automatically.</p>
+            	<form>
+                {% csrf_token %}
+                	<fieldset>
+                		<label for="mig_instance">Instance</label>
+                		<select name="mig_instance" id="mig_instance">
+                			{% for i in instances %}
+                				<option value="{{i.server_id}}">{{i.server_name}}</option>
+                			{% endfor %}
+                		</select>
+                	</fieldset>
+                </form>
+            </div> 
+
+            <div id="instance-evacuate-form" title="Evacuate Instance">
+            	<p class="validateTips">Evacuate an instance from a failed host to a new host.</p>
+            	<form>
+            	{% csrf_token %}
+            		<fieldset>
+            			<label for="instance">Instance</label>
+            			<select name="instance" id="instance">
+            				{% for i in instance_info.items %}
+            					<option value="{{i.server_id}}">{{i.server_name}}</option>
+            				{% endfor %}
+            			</select>
+
+            			<label for="host_name">Host</label>
+            			<select name="host_name" id="host_name">
+            				{% for h in hosts %}
+            					<option value="{{h.host_name}}">{{h.host_name}}</option>
+            				{% endfor %}
+            			</select>
+            		</fieldset>
+            	</form>
+            </div>        
+		{% endif %}
+
+		{% if instances %}
+			<table class="paleblue" id="instance_list">
+				<tr><th>Name</th><th>Status</th><th>OS / flavor</th><th>Actions</th></tr>
+				{% for k,v in instance_info.items %}
+					<tr id="{{v.server_id}}">
+						<td id="{{v.server_id}}-name-cell">
+							<a href="/{{project.project_id}}/{{v.server_id}}/instance_view/" target="_blank"><span id="{{v.server_id}}-name-text">{{v.server_name}}</span></a>		
+						</td>
+			    		<td id="{{v.server_id}}-status-cell">{{v.server_status}}</td>
+			    		<td id="{{v.server_id}}-os-cell">{{v.server_os}} / {{v.server_flavor}}</td>
+			    		<td id="{{v.server_id}}-actions-cell">
+			    			{% if v.server_status == "ACTIVE" %}
+			    				<a href="{{v.novnc_console}}" target="_blank">console</a>
+			    				<span class="instance-actions-pipe"> | </span>
+			    				<a href="#" class="pause-instance">pause</a>
+			    				<span class="instance-actions-pipe"> | </span>
+			    				<a href="#" class="suspend-instance">suspend</a>
+			    			{% endif %}
+			    			{% if v.server_status == "PAUSED" %}
+			    				<a href="#" class="unpause-instance">unpause</a>
+			    			{% endif %}
+			    			{% if v.server_status == "SUSPENDED" %}
+			    				<a href="#" class="resume-instance">resume</a>
+			    			{% endif %}
+			    		</td>
+			    	</tr>
+			    {% endfor %}
+			</table>
+	  	{% else %}	
+	  		<table class="paleblue" id="instance_list">
+            	<tr> <th>Name</th>  <th>Status</th><th>OS / flavor</th><th>Actions</th> </tr>
+	   			<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>
+	  		</table>
+	  	{% endif %}
+	  	<div id="instance_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
+    </div>
+</div>

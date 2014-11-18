@@ -198,9 +198,7 @@ def get_token(username,password,project_id):
         #       api_path - ex /v2.0/tenants
         #       token - auth or admin token
         #       sec - TRUE/FALSE, use https = True
-        logger.sys_info("Tenant id was passwed in %s." %(username))
         body = '{"auth":{"passwordCredentials":{"username": "%s", "password":"%s"}, "tenantId":"%s"}}' %(username,password,project_id)
-        logger.sys_info("%s"%(body))
         header = {"Content-Type": "application/json"}
         function = 'POST'
         api_path = '/v2.0/tokens'
