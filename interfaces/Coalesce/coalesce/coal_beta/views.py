@@ -1888,6 +1888,7 @@ def delete_object (request, container, filename, project_id, project_name):
 
 # Call the routine that will collect all the data from all nodes and send it back to us.
 def phonehome (request):
+    import transcirrus.operations.support_create as support_create
     try:
         support_create.DoCreate()
         out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
@@ -1898,12 +1899,16 @@ def phonehome (request):
 
 # Call the routine that will upgrade all nodes to the given version of software.
 def upgrade (request, version="stable"):
+    import transcirrus.operations.upgrade as upgrade
     try:
+        upgrade.EnableSim()         ### DEBUG ONLY! REMOVE!!
         upgrade.ReleaseToDownload = version
+        upgrade.EnableCaching()
         upgrade.DoUpgrade()
-        out = {'status' : "success", 'message' : "Nodes have been upgraded."}
+        upgrade.DisableCaching()
+        out = {'status' : "success", 'message' : "Software upgrade has completed successfully."}
     except Exception, e:
-        out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
+        out = {'status' : "error", 'message' : "Error upgrading software: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 

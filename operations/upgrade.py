@@ -8,6 +8,8 @@ import subprocess
 import paramiko
 import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
+import transcirrus.common.logger as logger
+import transcirrus.common.memcache as cache
 
 # Global constants.
 Username = "root"                                       # Default user to login in with, must be root to rpm install
@@ -25,6 +27,55 @@ RPMFileToInstall = ""               # File name for rpm file to be installed
 Force = False                       # Should be for the install even if the version is older
 CmdLine = False                     # We are being run from the command line
 ReleaseToDownload = "stable"        # The default release to download from the website
+EnableCache = False                 # Enable sending log messages to memcached
+Cache = None                        # Handle to memcached
+CacheKey = "TransCirrusUpgrade"     # Cache key to reference our messages
+
+# Enable parameters for running on the internal TransCirrus network that can't reach transcirrus.com.
+def EnableSim (release="transcirrus-0.5-2.noarch.rpm"):
+    WgetURL = "http://transuser:transcirrus1@192.168.10.5/download/repo/"
+    ReleaseToDownload = release
+    return
+
+# Handle logging of print messages (console, logfile and memcached).
+def printmsg (msg):
+    global EnableCache
+    global Cache
+    global CacheKey
+
+    if CmdLine:
+        print msg
+
+    logger.sys_info ("Upgrade script: " + msg)
+
+    if EnableCache and Cache != None:
+        Data = Cache.get(CacheKey)
+        NumMessages = int(Data['num_messages'])
+        Data['num_messages'] = NumMessages + 1
+        Data['msg%s' % NumMessages] = msg
+    return
+
+# Turn on caching of messages to memcached.
+def EnableCaching():
+    global EnableCache
+    global Cache
+    global CacheKey
+
+    EnableCache = True
+    Cache = cache.Client(['127.0.0.1:11211'], debug=0)
+    Cache.set (CacheKey, {'num_messages': 0})
+    return
+
+# Turn off caching of messages to memcached.
+def DisableCaching():
+    global EnableCache
+    global Cache
+    global CacheKey
+
+    EnableCache = False
+    Cache.delete(CacheKey)
+    Cache = None
+    return
 
 # Return the version string extracted from the given filename.
 # The version string is in the format of xx.xx-xx
@@ -83,15 +134,15 @@ def GetRemoteVersion (Host, Handle):
     try:
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand ("rpm -qa transcirrus", Host, Handle)
         if ExitStatus != 0:
-            print "Error retrieving current version on remote node, exit status:  %d" % ExitStatus
-            print "stdout text: %s" % STDout
-            print "stderr text: %s" % STDerr
+            printmsg ("Error retrieving current version on remote node, exit status:  %d" % ExitStatus)
+            printmsg ("stdout text: %s" % STDout)
+            printmsg ("stderr text: %s" % STDerr)
             raise Exception ("GetRemoteVersion error")
         if STDout == "":
             return ("0.0-0")                    # No version installed so we default to this.
         return (ExtractVersion (STDout))
     except Exception, e:
-        print "Error retrieving current version on remote node, exception: %s" % e
+        printmsg ("Error retrieving current version on remote node, exception: %s" % e)
         raise
 
 # Copies the given rpm to the remote host.
@@ -101,7 +152,7 @@ def CopyRPM (RPMFile, Host, Handle):
     try:
         ssh_utils.PutFile (RPMFile, RemoteRPMFile, Host, Handle)
     except Exception, e:
-        print "Error copying rpm file to remote node, exception: %s" % e
+        printmsg ("Error copying rpm file to remote node, exception: %s" % e)
         raise
     return (RemoteRPMFile)
 
@@ -111,13 +162,13 @@ def BackupFiles (Version, Host, Handle):
         TarCommand = "tar czf " + RemoteInstallPath + "/transcirrus-" + Version + ".bck.tar.gz -C " + RemoteInstallPath + " transcirrus"
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (TarCommand, Host, Handle)
         if ExitStatus != 0:
-            print "Error backing up remote transcirrus directory, exit status:  %d" % ExitStatus
-            print "stdout text: %s" % STDout
-            print "stderr text: %s" % STDerr
+            printmsg ("Error backing up remote transcirrus directory, exit status:  %d" % ExitStatus)
+            printmsg ("stdout text: %s" % STDout)
+            printmsg ("stderr text: %s" % STDerr)
             raise Exception ("BackupFiles error")
         return
     except Exception, e:
-        print "Error retrieving current version on remote node, exception: %s" % e
+        printmsg ("Error retrieving current version on remote node, exception: %s" % e)
         raise
 
 # Installs the rpm that was placed on the remote host.
@@ -127,13 +178,13 @@ def InstallRPM (RPMFile, Host, Handle):
         RPMCommand = "rpm -Uvh --force " + RemoteRPMFile
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (RPMCommand, Host, Handle)
         if ExitStatus != 0:
-            print "Error installing rpm package %s on remote host, exit status:  %d" % (ExtractFilename(RPMFile), ExitStatus)
-            print "stdout text: %s" % STDout
-            print "stderr text: %s" % STDerr
+            printmsg ("Error installing rpm package %s on remote host, exit status:  %d" % (ExtractFilename(RPMFile), ExitStatus))
+            printmsg ("stdout text: %s" % STDout)
+            printmsg ("stderr text: %s" % STDerr)
             raise Exception ("InstallRPM error")
         return
     except Exception, e:
-        print "Error installing rpm package on remote host, exception: %s" % e
+        printmsg ("Error installing rpm package on remote host, exception: %s" % e)
         raise
 
 # Goes through the database and returns a dict of all nodes with the node's name and data IP address.
@@ -141,8 +192,8 @@ def FindNodesToUpgrade (Nodename=None):
     try:
         handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
     except Exception as e:
-        print "Could not connect to db with error: %s" % (e)
-        raise Exception ("Could not connect to db with error: %s" %(e))
+        printmsg ("Could not connect to db with error: %s" % e)
+        raise Exception ("Could not connect to db with error: %s" % e)
 
     if Nodename == None:
         select_nodes = {'select':'node_name,node_data_ip','from':'trans_nodes'}
@@ -152,9 +203,9 @@ def FindNodesToUpgrade (Nodename=None):
     if len(nodes) == 0:
         handle.pg_close_connection()
         if Nodename == None:
-            print "No other nodes where found in the database"
+            printmsg ("No other nodes where found in the database")
         else:
-            print "Could not find a node in the database with a name of %s" % Nodename
+            printmsg ("Could not find a node in the database with a name of %s" % Nodename)
         Nodes = []
         return (Nodes)
 
@@ -179,8 +230,8 @@ def WgetFile (File):
         # For some strange reason all the output ends up in StdErr
         StdOut = StdErr
         if Subproc.returncode != 0:
-            print "Error downloading rpm file from www.transcirrus.com, exit status: %d" % Subproc.returncode
-            print "Error message: %s" % StdErr
+            printmsg ("Error downloading rpm file from www.transcirrus.com, exit status: %d" % Subproc.returncode)
+            printmsg ("Error message: %s" % StdErr)
             return (Filename)
 
         # Extract the path from the output. The output looks like:
@@ -190,7 +241,7 @@ def WgetFile (File):
         Filename = StdOut[i:x]
 
     except Exception, e:
-        print "Error downloading rpm file from www.transcirrus.com, exception: %s" % e
+        printmsg ("Error downloading rpm file from www.transcirrus.com, exception: %s" % e)
 
     return (Filename)
 
@@ -211,22 +262,27 @@ def DoUpgrade():
             # We have a name so go lookup the the IP address in the database.
             NodesToUpgrade = FindNodesToUpgrade (Node)
 
-
     if RPMFileToInstall != "":
         # The user gave us a path to a local rpm file to use so make sure it exists.
         if not os.path.exists (RPMFileToInstall):
-            print "File not found: %s" % RPMFileToInstall
-            sys.exit(2)
+            if CmdLine:
+                printmsg ("File not found: %s" % RPMFileToInstall)
+                sys.exit(2)
+            else:
+                raise Exception ("File not found: %s" % RPMFileToInstall)
     else:
         # Go get the rpm file that the user wants from the website. We need to delete it if already exists since
         # wget will rename the new one that we download.
         File = WgetDownloadToDir + "/" + ReleaseToDownload
         if os.path.exists (File):
             os.remove (File)
-        print "Downloading %s from %s" % (ReleaseToDownload, WgetURL)
+        printmsg ("Downloading %s from %s" % (ReleaseToDownload, WgetURL))
         RPMFileToInstall = WgetFile (ReleaseToDownload)
         if RPMFileToInstall == "":
-            sys.exit(2)
+            if CmdLine:
+                sys.exit(2)
+            else:
+                raise Exception ("Error downloading RPM file")
 
     # Get the version are we installing.
     NewVersion = ExtractVersion (RPMFileToInstall)
@@ -236,28 +292,28 @@ def DoUpgrade():
         Hostname = Host['node_name']
         HostIP   = Host['node_data_ip']
         print ""
-        print "Attempting to upgrade node %s (%s) to transcirrus version %s" % (Hostname, HostIP, NewVersion)
+        printmsg ("Attempting to upgrade node %s (%s) to transcirrus version %s" % (Hostname, HostIP, NewVersion))
 
         try:
-            print "--Connecting to remote host"
+            printmsg ("--Connecting to remote host")
             Handle = None
             Handle = ssh_utils.SSHConnect (HostIP, Username=Username, Password=Password)
-            print "--Determining remote version"
+            printmsg ("--Determining remote version")
             RemoteVersion = GetRemoteVersion (Hostname, Handle)
             if Force or CompareVersions (RemoteVersion, NewVersion) < 0:
-                print "--Copying rpm file to remote host"
+                printmsg ("--Copying rpm file to remote host")
                 RemoteRPMFile = CopyRPM (RPMFileToInstall, Hostname, Handle)
-                print "--Saving off previous version"
+                printmsg ("--Saving off previous version")
                 BackupFiles (RemoteVersion, Hostname, Handle)
-                print "--Installing rpm file on remote host"
+                printmsg ("--Installing rpm file on remote host")
                 InstallRPM (RemoteRPMFile, Hostname, Handle)
-                print "--Node %s has been upgraded to version %s" % (Hostname, NewVersion)
+                printmsg ("--Node %s has been upgraded to version %s" % (Hostname, NewVersion))
             else:
-                print "Node %s is already at version %s and will not be upgraded" % (Hostname, RemoteVersion)
+                printmsg ("Node %s is already at version %s and will not be upgraded" % (Hostname, RemoteVersion))
                 print "Use the -o option to override version checking and force the install"
         except Exception, e:
-            print "Exception msg: %s" % e
-            print "Node %s was not upgraded due to the above error" % Hostname
+            printmsg ("Exception msg: %s" % e)
+            printmsg ("Node %s was not upgraded due to the above error" % Hostname)
         finally:
             if Handle != None:
                 ssh_utils.SSHDisconnect (Handle)
@@ -308,8 +364,8 @@ def ValidReleaseArg (Name):
     if ValidRPMFilename (Name):
         return (True)
 
-    print "Error: invalid release parameter -r %s" % Name
-    print "Valid values are: stable or latest or a valid rpm file name"
+    printmsg ("Error: invalid release parameter -r %s" % Name)
+    printmsg ("Valid values are: stable or latest or a valid rpm file name")
     return False
 
 # Process the command line args and determine what the user wants.
