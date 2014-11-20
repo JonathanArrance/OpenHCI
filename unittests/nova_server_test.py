@@ -15,6 +15,7 @@ from transcirrus.component.nova.server_action import server_actions
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
 auth = authorization("admin","password")
+
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
@@ -75,12 +76,12 @@ input_dict = {'project_id':'13d92fe4b2de4051abc5de0654277af0','instance_id':'486
 act = action.check_instance_status(input_dict)
 print act
 
-'''
+
 print "Createing a new virtual instance"
 server = {'sec_group_name':'project1','avail_zone':'nova','amount':'2','sec_key_name':'project1','network_name':'project1','image_name':'Cirros-x86_64-0-3-1','flavor_name':'m1.tiny','name':'blah','project_id':'3053cf0ea28e4a6785029709cfe3e98e'}
 yo = nova.create_server(server)
 print yo
-'''
+
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
@@ -158,18 +159,19 @@ print serv_list
 print "---------------------------------------"
 time.sleep(2)
 
-input_dict = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': '3e8e74fa-cd4d-41d6-9e34-73614418b3db','volume_id': '15ecae50-0975-408c-b69a-b54e6530bf4b','mount_point': '/dev/vdc'}
+input_dict = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': 'ab25fbe7-945c-473e-94a7-3edf30958b1f','volume_id': '2f10ea39-0b36-4155-8424-6795911044ac','mount_point': '/dev/vdc'}
+print input_dict
 attach = store.attach_vol_to_server(input_dict)
 
 print attach
-
+'''
 time.sleep(10)
 
-input_dict2 = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': '3e8e74fa-cd4d-41d6-9e34-73614418b3db','volume_id': '15ecae50-0975-408c-b69a-b54e6530bf4b'}
+input_dict2 = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': 'ab25fbe7-945c-473e-94a7-3edf30958b1f','volume_id': '2f10ea39-0b36-4155-8424-6795911044ac'}
 detach = store.detach_vol_from_server(input_dict2)
 
 print detach
-
+'''
 nova = server_ops(perms)
 print "Createing a new virtual instance"
 server = {'sec_group_name':'testgroup','avail_zone':'nova','sec_key_name':'testkey','network_name':'testnet','image_name':'cirros-64','flavor_name':'m1.tiny','name':'testvm'}

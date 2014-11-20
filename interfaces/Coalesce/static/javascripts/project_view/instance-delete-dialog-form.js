@@ -50,8 +50,6 @@ $(function() {
 			setTimeout(function() { tips.removeClass( "ui-state-highlight", 1500 ); }, 500 );
 		}
 
-
-
 		$( "#instance-delete-dialog-form" ).dialog({
 			autoOpen: false,
 			height: 250,

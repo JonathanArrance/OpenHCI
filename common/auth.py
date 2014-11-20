@@ -207,7 +207,7 @@ def get_token(username,password,project_id):
         rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
         rest = api.call_rest(rest_dict)
     except Exception as e:
-        util.http_codes(rest['response'],rest['reason'],rest['data']['error'])
+        #util.http_codes(rest['response'],rest['reason'],rest['data']['error'])
         logger.sys_error("%s" %(e))
         raise e
 

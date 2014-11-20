@@ -1144,6 +1144,7 @@ def destroy_project(request, project_id, project_name):
         messages.warning(request, "Unable to destroy project.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+'''
 def allocate_floating_ip(request, project_id, ext_net_id):
     referer = request.META.get('HTTP_REFERER', None)
     redirect_to = urlsplit(referer, 'http', False)[2]
@@ -1171,6 +1172,29 @@ def deallocate_floating_ip(request, project_id, floating_ip):
     except:
         messages.warning(request, "Unable to deallocate floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
+
+def allocate_floating_ip(request, project_id, ext_net_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        input_dict = {'ext_net_id': ext_net_id, 'project_id': project_id}
+        l3o.allocate_floating_ip(input_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was allocated." % ext_net_id}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error allocating Floating IP %s address, error: %s" % (ext_net_id, e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def deallocate_floating_ip(request, project_id, floating_ip):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        input_dict = {'floating_ip': floating_ip, 'project_id': project_id}
+        l3o.deallocate_floating_ip(input_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was deallocated." % floating_ip}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deallocating Floating IP %s address, error: %s" % (floating_ip, e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def list_floating_ip(request,project_id):
     try:
@@ -1627,6 +1651,7 @@ def evacuate_server(request, project_id, instance_id, host_name):
         messages.warning(request, "Unable to evacuate server.")
         return HttpResponseRedirect(redirect_to)
 
+'''
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
     try:
         auth = request.session['auth']
@@ -1658,6 +1683,31 @@ def unassign_floating_ip(request, floating_ip_id):
     except:
         messages.warning(request, "Unable to assign floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
+
+def assign_floating_ip(request, floating_ip, instance_id, project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
+        out = l3o.update_floating_ip(update_dict)
+        out['status'] = 'success'
+        out['message'] = "Floating IP address %s was assigned to project %s." % (floating_ip, proj['project_name'])
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error assigning Floating IP address %s, error: %s" % (floating_ip, e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def unassign_floating_ip(request, floating_ip_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        ip = l3o.get_floating_ip(floating_ip_id)
+        update_dict = {'floating_ip':ip['floating_ip'], 'instance_id':ip['instance_id'], 'project_id':ip['project_id'], 'action': 'remove'}
+        l3o.update_floating_ip(update_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was unassigned." % ip['floating_ip']}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error unassigning Floating IP %s address, error: %s" % (ip['floating_ip'], e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def toggle_user(request, username, toggle):
     try:
