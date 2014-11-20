@@ -73,9 +73,9 @@ from urlparse import urlsplit
 from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
-import transcirrus.operations.support_create as support_create
-import transcirrus.operations.upgrade as upgrade
-sys.path.append("/usr/lib/python2.6/site-packages/")
+#import transcirrus.operations.support_create as support_create
+#import transcirrus.operations.upgrade as upgrade
+#sys.path.append("/usr/lib/python2.6/site-packages/")
 
 # Custom imports
 #from coalesce.coal_beta.models import *

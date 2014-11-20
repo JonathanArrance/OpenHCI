@@ -60,7 +60,8 @@ $(function() {
 
 					message.showMessage('notice', 'Deleting Instance');	// Flag notice
 
-					$('#delete-instance').attr("disabled", true);		// Disable delete-instance button
+					$('#delete-instance').attr("disabled", true);		// Disable delete-instance button					
+					$('#create-instance').attr("disabled", true);		// Disable delete-instance button
 
 					// Initialize progressbar and make it visible if hidden
 					$('#instance_progressbar').progressbar({value: false});
@@ -95,6 +96,7 @@ $(function() {
                         		if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
                         		$('#delete-instance').attr("disabled", false);	// Enable delete-instance button
+                        		$('#create-instance').attr("disabled", false);	// Enable create-instance button
                         	};
                         })
 						.error(function(){
@@ -105,6 +107,7 @@ $(function() {
 							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
 							$('#delete-instance').attr("disabled", false);	// Enable delete-instance button
+							$('#create-instance').attr("disabled", false);	// Enable create-instance button
 						});
 
 					$( this ).dialog( "close" );	// Close modal form	

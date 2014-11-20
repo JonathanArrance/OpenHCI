@@ -87,37 +87,65 @@ $(function() {
 					// --- END Create Loader
 
 					$.getJSON('/attach_volume/' + PROJECT_ID + '/' + confirmedInstance + '/' + volumeId)
-					.success(function(data){ 
+					//.success(function(data){ 
 
-							// Check if instance was successfully paused
-                        	if(data.status == 'error'){ 
-                        		message.showMessage('error', data.message);									// Flag error message
+							// // Check if instance was successfully paused
+       //                  	if(data.status == 'error'){ 
+       //                  		message.showMessage('error', data.message);							// Flag error message
 
-                        		// Recall clicked action link on error
-                        		$(confirmedActionSelector).empty().fadeOut();							
-                        		$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
-                        	}
+       //                  		// Recall clicked action link on error
+       //                  		$(confirmedActionSelector).empty().fadeOut();							
+       //                  		$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
+       //                  	}
 
-                       		 if(data.status == 'success'){ 													// Update interface
+       //                 		 if(data.status == 'success'){ 											// Update interface
 
-                        		message.showMessage('success', data.message);							// Flag success message
+       //                  		message.showMessage('success', data.message);							// Flag success message
+
+       //                  		var actionsSelector = '#'+confirmedId+'-actions-cell';					// Target instance-actions-cell
+
+       //                  		var detachAction = '<a href="#" class="detach-instance">detach</a>';	// New actions html string
+
+       //                  		// Update action cell							
+       //                  		$(actionsSelector).fadeOut().empty();
+       //                  		$(actionsSelector).append(detachAction).fadeIn();
+       //                  	}
+                       // })
+                        .error(function(data){
+
+                        	// // Check if instance was successfully paused
+                        	// if(data.status == 'error'){ 
+                        	// 	message.showMessage('error', data.message);							// Flag error message
+
+                        	// 	// Recall clicked action link on error
+                        	// 	$(confirmedActionSelector).empty().fadeOut();							
+                        	// 	$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
+                        	// }
+
+                       		//  if(data.status == 'success'){ 											// Update interface
+
+                        		message.showMessage('success', 'Attached volume '+confirmedName+' to '+selectedName);							// Flag success message
 
                         		var actionsSelector = '#'+confirmedId+'-actions-cell';					// Target instance-actions-cell
 
                         		var detachAction = '<a href="#" class="detach-instance">detach</a>';	// New actions html string
 
+   								var attachedSelector = '#'+confirmedId+'-attached-cell';
+   								var attachedName = ''+selectedName;
+
+   								$(attachedSelector).fadeOut().empty();
+   								$(attachedSelector).append(attachedName).fadeIn();
+
                         		// Update action cell							
                         		$(actionsSelector).fadeOut().empty();
                         		$(actionsSelector).append(detachAction).fadeIn();
-                        	}
-                        })
-                        .error(function(){
+                        	//}
 
-							message.showMessage('error', 'Server Fault'); 									// Flag server fault message
+							// message.showMessage('error', 'Server Fault'); 									// Flag server fault message
 
-							// Recall clicked action link on server fault
-							$(confirmedActionSelector).empty().fadeOut();
-							$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
+							// // Recall clicked action link on server fault
+							// $(confirmedActionSelector).empty().fadeOut();
+							// $(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
 
 					});
 
