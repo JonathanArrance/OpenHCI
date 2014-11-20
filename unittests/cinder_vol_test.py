@@ -12,9 +12,10 @@ from transcirrus.common.auth import authorization
 #sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from transcirrus.component.cinder.cinder_volume import volume_ops
 
-a = authorization("admin","password")
+a = authorization("jon","password")
 #get the user dict
 d = a.get_auth()
+
 
 print "instantiating a volume abject."
 vol = volume_ops(d)
@@ -24,7 +25,7 @@ voltype = vol.create_volume_type("ssd")
 print voltype
 voltype2 = vol.create_volume_type("spindle")
 print voltype2
-'''
+
 get = {'volume_id':'16c881e5-85a1-4542-af0b-07110cd08fec','project_id':'13d92fe4b2de4051abc5de0654277af0'}
 yo = vol.get_volume_info(get)
 print yo
@@ -32,12 +33,12 @@ print yo
 
 stuff = vol.get_volume(get)
 print stuff
-"""
+'''
 print "createing a new volume"
-create = {'volume_name':'kevenduerr11','volume_size':'4000','project_id':"13d92fe4b2de4051abc5de0654277af0",'volume_type':'ssd'}
+create = {'volume_name':'test11','volume_size':'4000','project_id':"0591dbde27ce4904b50cdd0d598e1d7e",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
-
+'''
 print "------------------------------------------"
 print "sleeping for 15 seconds"
 time.sleep(15)
@@ -114,4 +115,4 @@ print "sleeping for 10 seconds"
 
 listit3 = vol3.list_volumes()
 print listit3
-"""
+'''

@@ -62,7 +62,6 @@ from django.template.response import TemplateResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib import messages
 
-
 # Python imports
 from datetime import datetime
 from collections import defaultdict
@@ -1137,6 +1136,7 @@ def destroy_project(request, project_id, project_name):
         messages.warning(request, "Unable to destroy project.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+'''
 def allocate_floating_ip(request, project_id, ext_net_id):
     referer = request.META.get('HTTP_REFERER', None)
     redirect_to = urlsplit(referer, 'http', False)[2]
@@ -1164,6 +1164,29 @@ def deallocate_floating_ip(request, project_id, floating_ip):
     except:
         messages.warning(request, "Unable to deallocate floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
+
+def allocate_floating_ip(request, project_id, ext_net_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        input_dict = {'ext_net_id': ext_net_id, 'project_id': project_id}
+        l3o.allocate_floating_ip(input_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was allocated." % ext_net_id}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error allocating Floating IP %s address, error: %s" % (ext_net_id, e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def deallocate_floating_ip(request, project_id, floating_ip):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        input_dict = {'floating_ip': floating_ip, 'project_id': project_id}
+        l3o.deallocate_floating_ip(input_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was deallocated." % floating_ip}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deallocating Floating IP %s address, error: %s" % (floating_ip, e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def list_floating_ip(request,project_id):
     try:
@@ -1620,6 +1643,7 @@ def evacuate_server(request, project_id, instance_id, host_name):
         messages.warning(request, "Unable to evacuate server.")
         return HttpResponseRedirect(redirect_to)
 
+'''
 def assign_floating_ip(request, floating_ip, instance_id, project_id):
     try:
         auth = request.session['auth']
@@ -1651,6 +1675,31 @@ def unassign_floating_ip(request, floating_ip_id):
     except:
         messages.warning(request, "Unable to assign floating ip.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
+
+def assign_floating_ip(request, floating_ip, instance_id, project_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
+        out = l3o.update_floating_ip(update_dict)
+        out['status'] = 'success'
+        out['message'] = "Floating IP address %s was assigned to project %s." % (floating_ip, proj['project_name'])
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error assigning Floating IP address %s, error: %s" % (floating_ip, e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def unassign_floating_ip(request, floating_ip_id):
+    try:
+        auth = request.session['auth']
+        l3o = layer_three_ops(auth)
+        ip = l3o.get_floating_ip(floating_ip_id)
+        update_dict = {'floating_ip':ip['floating_ip'], 'instance_id':ip['instance_id'], 'project_id':ip['project_id'], 'action': 'remove'}
+        l3o.update_floating_ip(update_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was unassigned." % ip['floating_ip']}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error unassigning Floating IP %s address, error: %s" % (ip['floating_ip'], e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def toggle_user(request, username, toggle):
     try:
@@ -2292,91 +2341,4 @@ def build_project(request):
 
     else:
         form = BuildProjectForm()
-    return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
-
-
-# --- Media ---
-def logo(request):
-    image_data = open(r'%s\static\\transcirrus_weblogo.png' % settings.PROJECT_PATH, 'rb').read()
-
-    return HttpResponse(image_data, mimetype="image/gif")
-
-# --- Javascript ---
-def jq(request):
-    file = open(r'%s\javascripts\\jquery-latest.pack.js' % settings.PROJECT_PATH, 'rb').read()
-    return HttpResponse(file, mimetype="text/javascript")
-
-# ---- Authentication ---
-@never_cache
-def login_page(request, template_name):
-
-    if request.method == "POST":
-        form = authentication_form(request.POST)
-        if form.is_valid():
-            try:
-                user = form.cleaned_data['username']
-                pw = form.cleaned_data['password']
-                a = authorization(user, pw)
-                auth = a.get_auth()
-                if auth['token'] == None:
-                    form = authentication_form()
-                    messages.warning(request, 'Login failed.  Please verify your username and password.')
-                    return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-                request.session['auth'] = auth
-                return render_to_response('coal/welcome.html', RequestContext(request, {  }))
-            except:
-                form = authentication_form()
-                messages.warning(request, 'Login failed.  Please verify your username and password.')
-                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-        else:
-                form = authentication_form()
-                messages.warning(request, 'Login failed.  Please verify your username and password.')
-                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-    else:
-        form = authentication_form()
-        return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-
-@never_cache
-def logout(request, next_page=None,
-           template_name='coal/logged_out.html',
-           redirect_field_name=REDIRECT_FIELD_NAME,
-           current_app=None, extra_context=None):
-    """
-    Logs out the user and displays 'You are logged out' message.
-    """
-    auth_logout(request)
-
-    if redirect_field_name in request.REQUEST:
-        next_page = request.REQUEST[redirect_field_name]
-        # Security check -- don't allow redirection to a different host.
-        if not is_safe_url(url=next_page, host=request.get_host()):
-            next_page = request.path
-
-    if next_page:
-        # Redirect to this page until the session has been cleared.
-        return HttpResponseRedirect(next_page)
-
-    current_site = get_current_site(request)
-    context = {
-        'site': current_site,
-        'site_name': current_site.name,
-        'title': ('Logged out')
-    }
-    if extra_context is not None:
-        context.update(extra_context)
-    return TemplateResponse(request, template_name, context,
-        current_app=current_app)
-
-
-def handle_uploaded_file(f):
-    print ("Uploading local file: " + f)
-    with open('/tmp/upload.img', 'wb+') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
-    print ("Uploaded local file done")
-    return
-
-@never_cache
-def password_change(request):
-    return render_to_response('coal/change-password.html', RequestContext(request, {  }))
-
+    return render_to_response('coal/build_project.html', RequestContext(request, { 'for

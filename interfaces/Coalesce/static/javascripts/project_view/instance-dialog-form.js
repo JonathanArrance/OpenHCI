@@ -80,6 +80,7 @@ $(function() {
 						message.showMessage('notice', 'Creating New Instance ' + name.val());	// Flag notice
 
 						$('#create-instance').attr("disabled", true);							// Disable create-instance button
+						$('#delete-instance').attr("disabled", true);							// Disable delete-instance button
 						
 						// Initialize progressbar and make it visible if hidden
 						$('#instance_progressbar').progressbar({value: false});
@@ -131,16 +132,23 @@ $(function() {
 								// Append new row to instance-list
 								$('#instance_list').append(newRow).fadeIn();	
 
-								// Append new option to delete-instance select menu 
-								var targetSelect = 'div#instance-delete-dialog-form > form > fieldset > select#instance';
+								// Create a new option for the new instance								
 								var newOption = '<option value='+data.server_info.server_id+'>'+data.server_info.server_name+'</option>';
-								$(targetSelect).append(newOption);
+
+								// Append new option to delete-instance select menu 
+								var deleteSelect = 'div#instance-delete-dialog-form > form > fieldset > select#instance';
+								$(deleteSelect).append(newOption);
+
+								// Append new option to attach-volume select menu
+								var attachSelect = 'div#volume-attach-dialog-form > form  > fieldset > select#instance';
+								$(attachSelect).append(newOption);
 							};
 
 							// Hide progressbar on completion
 							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
 							$('#create-instance').attr("disabled", false);	// Enable create-instance button upon completion
+							$('#delete-instance').attr("disabled", false);	// Enable delete-instance button upon completion
 						})
 						.error(function(){
 
@@ -150,6 +158,7 @@ $(function() {
 							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
 							$('#create-instance').attr("disabled", false);	// Enable create-instance button upon error
+							$('#create-delete').attr("disabled", false);	// Enable create-delete button upon completion
 						});
 
 					$( this ).dialog( "close" );	// Close modal form	

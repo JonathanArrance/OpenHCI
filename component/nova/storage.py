@@ -108,6 +108,7 @@ class server_storage_ops:
         NOTE: All veriables are rquiered. Admins can attach a volume to any instance. Power users can attach volumes to any instance in their project.
               Users can  only attach volumes they own to instances they own.
         """
+        print input_dict
         for key, val in input_dict.items():
             #skip over these
             if(val == ""):
@@ -157,7 +158,7 @@ class server_storage_ops:
                 #build an api connection
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(input_dict['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+                        self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
             except:
                 logger.sys_error("Could not connect to the api caller.")
