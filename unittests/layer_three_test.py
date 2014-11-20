@@ -8,11 +8,11 @@ auth = authorization('admin','password')
 a = auth.get_auth()
 router = layer_three_ops(a)
 
+'''
 ip_list = router.list_floating_ips("13d92fe4b2de4051abc5de0654277af0")
 print "fip list"
 print ip_list
 
-'''
 get_ip = router.get_floating_ip("2476890a-ab03-4c16-b99c-b5fddd92d8e4");
 print "get ip"
 print get_ip

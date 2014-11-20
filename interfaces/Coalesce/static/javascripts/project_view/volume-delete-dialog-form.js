@@ -1,29 +1,38 @@
-$(function() {  
-		// must obtain csrf cookie for AJAX call
-		function getCookie(name) {
-			var cookieValue = null;
-			if (document.cookie && document.cookie != '') {
-				var cookies = document.cookie.split(';');
-				for (var i = 0; i < cookies.length; i++) {
-					var cookie = jQuery.trim(cookies[i]);
-					// Does this cookie string begin with the name we want?
-					if (cookie.substring(0, name.length + 1) == (name + '=')) {
-						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-						break;
-					}
+$(function() {
+
+	var message = new message_handle();	// Initializes message handling
+
+	// Hide delete-volume button when page initializes with no instances
+	if($('#volume-placeholder').length) {
+		if ($('#delete-volume').is(':visible')) { $('#delete-volume').toggle(); }
+	}
+
+	// must obtain csrf cookie for AJAX call
+	function getCookie(name) {
+		var cookieValue = null;
+		if (document.cookie && document.cookie != '') {
+			var cookies = document.cookie.split(';');
+			for (var i = 0; i < cookies.length; i++) {
+				var cookie = jQuery.trim(cookies[i]);
+				// Does this cookie string begin with the name we want?
+				if (cookie.substring(0, name.length + 1) == (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
 				}
 			}
-			return cookieValue;
 		}
-		var csrftoken = getCookie('csrftoken');
-		
-		$(function() {
+		return cookieValue;
+	}
 
-		
+	var csrftoken = getCookie('csrftoken');
+
+	$(function() {
+
 		function csrfSafeMethod(method) {
-		// these HTTP methods do not require CSRF protection
-		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+			// these HTTP methods do not require CSRF protection
+			return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 		}
+
 		$.ajaxSetup({
 			crossDomain: false, // obviates need for sameOrigin test
 			beforeSend: function(xhr, settings) {
@@ -33,67 +42,88 @@ $(function() {
 			}
 		});
 
-		var     instance = $( "#att_instance" ),
-                        volume = $( "#att_volume" ),
-
-			allFields = $( [] ).add( instance ).add( volume ),
+		var volume = $( "#volume" ),
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
-			tips
-				.text( t )
-				.addClass( "ui-state-highlight" );
-			setTimeout(function() {
-				tips.removeClass( "ui-state-highlight", 1500 );
-			}, 500 );
+			tips.text( t ).addClass( "ui-state-highlight" );
+			setTimeout(function() { tips.removeClass( "ui-state-highlight", 1500 ); }, 500 );
 		}
 
-		function checkLength( o, n, min, max ) {
-			if ( o.val().length > max || o.val().length < min ) {
-				o.addClass( "ui-state-error" );
-				updateTips( "Length of " + n + " must be between " +
-					min + " and " + max + "." );
-				return false;
-			} else {
-				return true;
-			}
-		}
-
-		$( "#volume-attach-dialog-form" ).dialog({
+		$( "#volume-delete-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 400,
+			height: 250,
 			width: 350,
 			modal: true,
 			buttons: {
-				"Attach volume": function() {
-					var bValid = true;
-					allFields.removeClass( "ui-state-error" );
+				"Confirm": function() {
 
-					if ( bValid ) {
-                                                $.post('/attach_volume/' + PROJECT_ID + '/' + instance.val() + '/' + volume.val() + '/',
-                                                                function(){
-                                                                                location.reload();
-                                                                });
+					message.showMessage('notice', 'Deleting Volume');	// Flag notice
 
-						$( this ).dialog( "close" );
-                                                $( "#vol_progressbar" ).progressbar({
-                                                                value: false
-                                                });
+					$('#delete-volume').attr("disabled", true);		// Disable delete-volume button
 
-					}
+					// Initialize progressbar and make it visible if hidden
+					$('#vol_progressbar').progressbar({value: false});
+					if ($('#vol_progressbar').is(':hidden')) { $('#vol_progressbar').toggle(); };
+
+					$.getJSON('/delete_volume/' + volume.val() + '/' + PROJECT_ID + '/')
+					.success(function(data){
+
+						// Check if instance was successfully deleted
+						if(data.status == 'error'){ 						// Flag error message 
+
+							message.showMessage('error', data.message); 
+
+							// Hide progressbar on completion
+                        	if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
+
+                        	$('#delete-volume').attr("disabled", false);	// Enable delete-instance button
+						}; 	
+						
+						if(data.status == 'success'){ 						// Update interface
+
+							message.showMessage('success', data.message);	// Flag success message
+
+							// Remove volume row from volume_list
+							var targetRow = '#' + volume.val();
+							$('#volume_list').find(targetRow).fadeOut().remove();
+
+							// Remove volume from delete-volume select menu
+                        	var targetOption = 'select#volume option[value='+volume.val()+']';
+                        	$(targetOption).remove();
+
+                        	// Check to see if this is the last volume, if so add a placeholder row and hide delete-volume button
+                        	var rowCount = $('#volume_list tr').length;
+                        	if (rowCount < 2) {
+                        		var placeholder = '<tr id="volume-placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td>/tr>';
+                        		$('#volume_list').append(placeholder).fadeIn();
+                        		if ($('#delete-volume').is(':visible')) {	$('#delete-volume').toggle();	};
+                        	};
+
+                        	// Hide progressbar on completion
+                        	if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
+
+                        	$('#delete-volume').attr("disabled", false);	// Enable delete-instance button
+                        };
+                    })
+					.error(function(){
+
+						message.showMessage('error', 'Server Fault');	// Flag server fault message
+
+						// Hide progressbar on error
+						if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
+						$('#delete-volume').attr("disabled", false);	// Enable delete-volume button
+					});
+
+					$( this ).dialog( "close" );	// Close modal form	
 				},
 				Cancel: function() {
 					$( this ).dialog( "close" );
 				}
 			},
-			close: function() {
-				allFields.val( "" ).removeClass( "ui-state-error" );
-			}
-		});
+			close: function() { }
+		})
 
-		$( "#attach-volume" )
-			.click(function() {
-				$( "#volume-attach-dialog-form" ).dialog( "open" );
-			});
+		$( "#delete-volume" ).click(function() { $( "#volume-delete-dialog-form" ).dialog( "open" ); });
 	});
-	});
+});

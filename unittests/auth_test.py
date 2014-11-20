@@ -30,7 +30,7 @@ print change
 """
 
 print "Instantiating authorization object for an default admin"
-c= authorization("jimmy","password")
+c= authorization("admin","password")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()

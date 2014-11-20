@@ -53,7 +53,7 @@ $(function() {
 					var confirmedActionSelector = '#'+confirmedId+'-actions-cell > .pause-instance';	// Target clicked action link
 					var confirmedActionHtml = '<a href="#" class="pause-instance">pause</a>';			// Copy the html that link
 					var loaderId = confirmedId+'-loader';												// Target new loader ID
-					var loaderHtml = '<div class="ajax-loader" id="'+loaderId+'"></div>';				// New laoder html
+					var loaderHtml = '<div class="ajax-loader" id="'+loaderId+'"></div>';				// New loader html
 
 					// Clear clicked action link and replace with loader
 					$(confirmedActionSelector).empty().fadeOut();
