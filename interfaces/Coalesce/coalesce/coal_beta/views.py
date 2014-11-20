@@ -1958,6 +1958,7 @@ def upload_local_object (request, container, filename, project_id, project_name,
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -1965,6 +1966,7 @@ def upload_local_object (request, container, filename, project_id, project_name,
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
@@ -1982,6 +1984,7 @@ def upload_local_object (request, container, filename, project_id, project_name,
                'object_id' : container + "/" + filename}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error uploading local file/object: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -1999,6 +2002,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2006,6 +2010,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         # Replace any '%47' with a slash '/'
@@ -2057,6 +2062,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
         cache.delete(cache_key)
         cache_key = None
         out = {'status' : "error", 'message' : "Error uploading remote file/object: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -2073,6 +2079,7 @@ def get_object (request, container, filename, project_id):
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2080,25 +2087,30 @@ def get_object (request, container, filename, project_id):
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
         if not object_con.exists (filename):
             out = {'status' : "error", 'message' : "File/object %s does not exist in the containter %s" % (filename, container)}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         content = object_con.get (filename)
 
         if content is None:
             out = {'status' : "error", 'message' : "Error retrieving file/object %s from the containter %s" % (filename, container)}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         response = HttpResponse (content, content_type="")
         response['Content-Length'] = ""
         response['Content-Disposition'] = "attachment; filename=%s" % filename
+        sys.path.remove("/usr/lib/python2.6/site-packages/")
         return response
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting file/object: %s" % e}
+        sys.path.remove("/usr/lib/python2.6/site-packages/")
         return HttpResponse(simplejson.dumps(out))
 
 
@@ -2115,6 +2127,7 @@ def list_objects (request, container, project_id):
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2122,6 +2135,7 @@ def list_objects (request, container, project_id):
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
@@ -2129,6 +2143,7 @@ def list_objects (request, container, project_id):
         out = {'status' : "success", 'objects' : object_list}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting list of objects in the container: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -2145,6 +2160,7 @@ def delete_object (request, container, filename, project_id, project_name):
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2152,17 +2168,20 @@ def delete_object (request, container, filename, project_id, project_name):
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
         if not object_con.exists (filename):
             out = {'status' : "error", 'message' : "File/object %s does not exist in the containter %s" % (filename, container)}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con.delete (filename)
         out = {'status' : "success", 'message' : "File/object %s was deleted." % filename}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting file/object: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -2341,4 +2360,91 @@ def build_project(request):
 
     else:
         form = BuildProjectForm()
-    return render_to_response('coal/build_project.html', RequestContext(request, { 'for
+    return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
+
+
+# --- Media ---
+def logo(request):
+    image_data = open(r'%s\static\\transcirrus_weblogo.png' % settings.PROJECT_PATH, 'rb').read()
+
+    return HttpResponse(image_data, mimetype="image/gif")
+
+# --- Javascript ---
+def jq(request):
+    file = open(r'%s\javascripts\\jquery-latest.pack.js' % settings.PROJECT_PATH, 'rb').read()
+    return HttpResponse(file, mimetype="text/javascript")
+
+# ---- Authentication ---
+@never_cache
+def login_page(request, template_name):
+
+    if request.method == "POST":
+        form = authentication_form(request.POST)
+        if form.is_valid():
+            try:
+                user = form.cleaned_data['username']
+                pw = form.cleaned_data['password']
+                a = authorization(user, pw)
+                auth = a.get_auth()
+                if auth['token'] == None:
+                    form = authentication_form()
+                    messages.warning(request, 'Login failed.  Please verify your username and password.')
+                    return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
+                request.session['auth'] = auth
+                return render_to_response('coal/welcome.html', RequestContext(request, {  }))
+            except:
+                form = authentication_form()
+                messages.warning(request, 'Login failed.  Please verify your username and password.')
+                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
+        else:
+                form = authentication_form()
+                messages.warning(request, 'Login failed.  Please verify your username and password.')
+                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
+    else:
+        form = authentication_form()
+        return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
+
+@never_cache
+def logout(request, next_page=None,
+           template_name='coal/logged_out.html',
+           redirect_field_name=REDIRECT_FIELD_NAME,
+           current_app=None, extra_context=None):
+    """
+    Logs out the user and displays 'You are logged out' message.
+    """
+    auth_logout(request)
+
+    if redirect_field_name in request.REQUEST:
+        next_page = request.REQUEST[redirect_field_name]
+        # Security check -- don't allow redirection to a different host.
+        if not is_safe_url(url=next_page, host=request.get_host()):
+            next_page = request.path
+
+    if next_page:
+        # Redirect to this page until the session has been cleared.
+        return HttpResponseRedirect(next_page)
+
+    current_site = get_current_site(request)
+    context = {
+        'site': current_site,
+        'site_name': current_site.name,
+        'title': ('Logged out')
+    }
+    if extra_context is not None:
+        context.update(extra_context)
+    return TemplateResponse(request, template_name, context,
+        current_app=current_app)
+
+
+def handle_uploaded_file(f):
+    print ("Uploading local file: " + f)
+    with open('/tmp/upload.img', 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+    print ("Uploaded local file done")
+    return
+
+@never_cache
+def password_change(request):
+    return render_to_response('coal/change-password.html', RequestContext(request, {  }))
+
