@@ -70,13 +70,6 @@ import csv
 import json
 from urlparse import urlsplit
 
-from transcirrus.component.swift.containerconnection import Args
-from transcirrus.component.swift.containerconnection import ContainerConnection
-from transcirrus.component.swift.swiftconnection import SwiftConnection
-import transcirrus.operations.support_create as support_create
-import transcirrus.operations.upgrade as upgrade
-sys.path.append("/usr/lib/python2.6/site-packages/")
-
 # Custom imports
 #from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
@@ -1828,6 +1821,10 @@ def container_view(request, project_id, container_name):
 
 # Create an OpenStack container with the given name for the given project ID.
 def create_container (request, name, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -1846,11 +1843,16 @@ def create_container (request, name, project_id):
         out = {'status' : "success", 'message' : "Container %s was created." % name}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error creating container: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # List all OpenStack containers for the given project ID.
 def list_containers (request, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         auth['project_id'] = project_id
@@ -1861,11 +1863,16 @@ def list_containers (request, project_id):
         out = {'status' : "success", 'containers' : container_list}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting list of containers: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # Delete an OpenStack container with the given name for the given project ID.
 def delete_container (request, name, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -1884,11 +1891,17 @@ def delete_container (request, name, project_id):
         out = {'status' : "success", 'message' : "Container %s was deleted." % name}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting container: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 # Upload a local file (object) to the given container.
 def upload_local_object (request, container, filename, project_id, project_name, dummy1, dummy2, progress_id):
     from coalesce.coal_beta.models import ImportLocal
+
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
 
     try:
         auth = request.session['auth']
@@ -1925,6 +1938,11 @@ def upload_local_object (request, container, filename, project_id, project_name,
 
 # Upload a remote file (object) to the given container.
 def upload_remote_object (request, container, url, project_id, project_name, progress_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     global cache_key
     try:
         auth = request.session['auth']
@@ -1995,6 +2013,11 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
 
 # Get an object from the given container.
 def get_object (request, container, filename, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -2032,6 +2055,11 @@ def get_object (request, container, filename, project_id):
 
 # List all objects for the given container.
 def list_objects (request, container, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -2057,6 +2085,11 @@ def list_objects (request, container, project_id):
 
 # Delete an object from the given container.
 def delete_object (request, container, filename, project_id, project_name):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -2088,7 +2121,10 @@ def delete_object (request, container, filename, project_id, project_name):
 def phonehome (request):
     import transcirrus.operations.support_create as support_create
     try:
+        support_create.EnableSim()         ### DEBUG ONLY! REMOVE!!
+        support_create.EnableCaching()
         support_create.DoCreate()
+        support_create.DisableCaching()
         out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error collecting/sending support data: %s" % e}

@@ -17,7 +17,7 @@ Password = config.TRAN_DB_PASS                          # Default password to lo
 RemoteRPMPath = "/tmp"                                  # Location on the remote host to put the rpm file
 RemoteInstallPath = "/usr/local/lib/python2.7"          # Location to install the software in
 RemoteInstallDir = RemoteInstallPath + "/transcirrus"   # Full path to transcirrus softare
-WgetDownloadToDir = "/home/transuser"                   # Location to put retrieved rpm files
+WgetDownloadToDir = "/tmp"                              # Location to put retrieved rpm files
 WgetURL = "http://transuser:transcirrus1@www.transcirrus.com/download/repo/" # URL for retrieving rpm files
 
 # Global vars that are used throughout the module and in unit testing.
@@ -31,18 +31,17 @@ EnableCache = False                 # Enable sending log messages to memcached
 Cache = None                        # Handle to memcached
 CacheKey = "TransCirrusUpgrade"     # Cache key to reference our messages
 
+
 # Enable parameters for running on the internal TransCirrus network that can't reach transcirrus.com.
 def EnableSim (release="transcirrus-0.5-2.noarch.rpm"):
+    global WgetURL
+    global ReleaseToDownload
     WgetURL = "http://transuser:transcirrus1@192.168.10.5/download/repo/"
     ReleaseToDownload = release
     return
 
 # Handle logging of print messages (console, logfile and memcached).
 def printmsg (msg):
-    global EnableCache
-    global Cache
-    global CacheKey
-
     if CmdLine:
         print msg
 
@@ -59,7 +58,6 @@ def printmsg (msg):
 def EnableCaching():
     global EnableCache
     global Cache
-    global CacheKey
 
     EnableCache = True
     Cache = cache.Client(['127.0.0.1:11211'], debug=0)
@@ -70,7 +68,6 @@ def EnableCaching():
 def DisableCaching():
     global EnableCache
     global Cache
-    global CacheKey
 
     EnableCache = False
     Cache.delete(CacheKey)
