@@ -502,7 +502,7 @@ def run_setup(new_system_variables,auth_dict):
     #restart all of the services and return the statuses
     #checkpoint = restart_services()
     checkpoint['status'] = 'OK'
-    #logger.sys_info("Service status: %s"%(checkpoint))
+    logger.sys_info("Service status: %s"%(checkpoint))
 
     return checkpoint
 
