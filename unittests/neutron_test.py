@@ -13,7 +13,7 @@ net = neutron_net_ops(d)
 
 print"----------------------------------------"
 print "createin a new external network"
-create = {'net_name':"pubtest13",'admin_state':"true", 'shared':"false"}
+create = {'net_name':"pubtest14",'admin_state':"true", 'shared':"false"}
 newpubnet = net.add_public_network(create)
 print newpubnet
 time.sleep(1)
