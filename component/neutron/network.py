@@ -1031,7 +1031,7 @@ class neutron_net_ops:
                     logger.sys_error("Public subnet dns server address is not a valid format.")
                     raise Exception("Public subnet dns server address is not a valid format.")
                 self.dns_string += '"'+the_array[counter]+'"'
-                if(counter < 1):
+                if(counter < counter - 1):
                     self.dns_string += ', '
                 counter = counter+1
             self.dns_string += ']'

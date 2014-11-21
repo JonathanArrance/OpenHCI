@@ -13,19 +13,19 @@ a = authorization("admin","password")
 d = a.get_auth()
 
 
-project_dict = {'project_name':"keven18", 
-             'user_dict': {'username': "keven18", 
-                           'password': "keven18", 
+project_dict = {'project_name':"keven", 
+             'user_dict': {'username': "keven", 
+                           'password': "keven", 
                            'user_role': "pu", 
-                           'email': "keven18@transcirrus.com",
+                           'email': "keven@transcirrus.com",
                            'project_id': None},
-             'net_name': "keven18",
+             'net_name': "keven",
              'subnet_dns': ['8.8.8.8','192.168.168.79'],
-             'sec_group_dict': {'group_name': "keven18",
-                                'group_desc': "keven18",
+             'sec_group_dict': {'group_name': "keven",
+                                'group_desc': "keven",
                                 'project_id': None},
-             'sec_keys_name': "keven18",
-             'router_name': "keven18",
+             'sec_keys_name': "keven",
+             'router_name': "keven",
              'advanced_ops': {'quota': None
                               }
              }
