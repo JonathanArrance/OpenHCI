@@ -62,20 +62,12 @@ from django.template.response import TemplateResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib import messages
 
-
 # Python imports
 from datetime import datetime
 from collections import defaultdict
 import csv
 import json
 from urlparse import urlsplit
-
-from transcirrus.component.swift.containerconnection import Args
-from transcirrus.component.swift.containerconnection import ContainerConnection
-from transcirrus.component.swift.swiftconnection import SwiftConnection
-#import transcirrus.operations.support_create as support_create
-#import transcirrus.operations.upgrade as upgrade
-#sys.path.append("/usr/lib/python2.6/site-packages/")
 
 # Custom imports
 #from coalesce.coal_beta.models import *
@@ -1878,6 +1870,10 @@ def container_view(request, project_id, container_name):
 
 # Create an OpenStack container with the given name for the given project ID.
 def create_container (request, name, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -1896,11 +1892,16 @@ def create_container (request, name, project_id):
         out = {'status' : "success", 'message' : "Container %s was created." % name}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error creating container: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # List all OpenStack containers for the given project ID.
 def list_containers (request, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         auth['project_id'] = project_id
@@ -1911,11 +1912,16 @@ def list_containers (request, project_id):
         out = {'status' : "success", 'containers' : container_list}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting list of containers: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # Delete an OpenStack container with the given name for the given project ID.
 def delete_container (request, name, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
@@ -1934,11 +1940,17 @@ def delete_container (request, name, project_id):
         out = {'status' : "success", 'message' : "Container %s was deleted." % name}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting container: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 # Upload a local file (object) to the given container.
 def upload_local_object (request, container, filename, project_id, project_name, dummy1, dummy2, progress_id):
     from coalesce.coal_beta.models import ImportLocal
+
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
 
     try:
         auth = request.session['auth']
@@ -1946,6 +1958,7 @@ def upload_local_object (request, container, filename, project_id, project_name,
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -1953,6 +1966,7 @@ def upload_local_object (request, container, filename, project_id, project_name,
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
@@ -1970,11 +1984,17 @@ def upload_local_object (request, container, filename, project_id, project_name,
                'object_id' : container + "/" + filename}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error uploading local file/object: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # Upload a remote file (object) to the given container.
 def upload_remote_object (request, container, url, project_id, project_name, progress_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     global cache_key
     try:
         auth = request.session['auth']
@@ -1982,6 +2002,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -1989,6 +2010,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         # Replace any '%47' with a slash '/'
@@ -2040,17 +2062,24 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
         cache.delete(cache_key)
         cache_key = None
         out = {'status' : "error", 'message' : "Error uploading remote file/object: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # Get an object from the given container.
 def get_object (request, container, filename, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2058,36 +2087,47 @@ def get_object (request, container, filename, project_id):
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
         if not object_con.exists (filename):
             out = {'status' : "error", 'message' : "File/object %s does not exist in the containter %s" % (filename, container)}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         content = object_con.get (filename)
 
         if content is None:
             out = {'status' : "error", 'message' : "Error retrieving file/object %s from the containter %s" % (filename, container)}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         response = HttpResponse (content, content_type="")
         response['Content-Length'] = ""
         response['Content-Disposition'] = "attachment; filename=%s" % filename
+        sys.path.remove("/usr/lib/python2.6/site-packages/")
         return response
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting file/object: %s" % e}
+        sys.path.remove("/usr/lib/python2.6/site-packages/")
         return HttpResponse(simplejson.dumps(out))
 
 
 # List all objects for the given container.
 def list_objects (request, container, project_id):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2095,6 +2135,7 @@ def list_objects (request, container, project_id):
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
@@ -2102,17 +2143,24 @@ def list_objects (request, container, project_id):
         out = {'status' : "success", 'objects' : object_list}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting list of objects in the container: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # Delete an object from the given container.
 def delete_object (request, container, filename, project_id, project_name):
+    from transcirrus.component.swift.containerconnection import Args
+    from transcirrus.component.swift.containerconnection import ContainerConnection
+    from transcirrus.component.swift.swiftconnection import SwiftConnection
+    sys.path.append("/usr/lib/python2.6/site-packages/")
+
     try:
         auth = request.session['auth']
         if auth['user_level'] > 0:
             if auth['project_id'] != project_id:
                 logger.sys_error("Project IDs do not match %s - %s" % (args.project_id, project_id))
                 out = {'status' : "error", 'message' : "Project IDs do not match %s - %s" % (auth['project_id'], project_id)}
+                sys.path.remove("/usr/lib/python2.6/site-packages/")
                 return HttpResponse(simplejson.dumps(out))
         auth['project_id'] = project_id
         args = Args (auth, container)
@@ -2120,24 +2168,31 @@ def delete_object (request, container, filename, project_id, project_name):
         container_con = ContainerConnection (args)
         if not container_con.exists (container):
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con = SwiftConnection (args)
         if not object_con.exists (filename):
             out = {'status' : "error", 'message' : "File/object %s does not exist in the containter %s" % (filename, container)}
+            sys.path.remove("/usr/lib/python2.6/site-packages/")
             return HttpResponse(simplejson.dumps(out))
 
         object_con.delete (filename)
         out = {'status' : "success", 'message' : "File/object %s was deleted." % filename}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting file/object: %s" % e}
+    sys.path.remove("/usr/lib/python2.6/site-packages/")
     return HttpResponse(simplejson.dumps(out))
 
 
 # Call the routine that will collect all the data from all nodes and send it back to us.
 def phonehome (request):
+    import transcirrus.operations.support_create as support_create
     try:
+        support_create.EnableSim()         ### DEBUG ONLY! REMOVE!!
+        support_create.EnableCaching()
         support_create.DoCreate()
+        support_create.DisableCaching()
         out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error collecting/sending support data: %s" % e}
@@ -2146,12 +2201,16 @@ def phonehome (request):
 
 # Call the routine that will upgrade all nodes to the given version of software.
 def upgrade (request, version="stable"):
+    import transcirrus.operations.upgrade as upgrade
     try:
+        upgrade.EnableSim()         ### DEBUG ONLY! REMOVE!!
         upgrade.ReleaseToDownload = version
+        upgrade.EnableCaching()
         upgrade.DoUpgrade()
-        out = {'status' : "success", 'message' : "Nodes have been upgraded."}
+        upgrade.DisableCaching()
+        out = {'status' : "success", 'message' : "Software upgrade has completed successfully."}
     except Exception, e:
-        out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
+        out = {'status' : "error", 'message' : "Error upgrading software: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
