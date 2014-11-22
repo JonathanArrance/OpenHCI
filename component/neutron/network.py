@@ -870,6 +870,7 @@ class neutron_net_ops:
                 logger.sys_error("Invalid value given for enable_dhcp.")
                 raise Exception("Invalid value given for enable_dhcp.")
 
+            #sort of a HACK it can be a little better, API call is stupid.
             if('subnet_dns' in subnet_dict):
                 the_array = []
                 the_array = subnet_dict['subnet_dns']
@@ -887,9 +888,9 @@ class neutron_net_ops:
                         logger.sys_error("Public subnet dns server address is not a valid format.")
                         raise Exception("Public subnet dns server address is not a valid format.")
                     self.dns_string += '"'+the_array[counter]+'"'
-                    if(counter < 2):
-                        self.dns_string += ', '
+                    self.dns_string += ', '
                     counter = counter+1
+                self.dns_string = self.dns_string[:-2]
                 self.dns_string += ']'
                 self.dns_string = str(self.dns_string)
             else:
@@ -931,20 +932,22 @@ class neutron_net_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            try:
+            #try:
             #body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%('4',subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],self.project_id,cidr,self.dns_string)
-                body = '{"subnet": {"ip_version": 4, "allocation_pools": [{"start": "%s", "end": "%s"}], "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(subnet_dict['subnet_start_range'],subnet_dict['subnet_end_range'],subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],net['project_id'],cidr,self.dns_string)
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'POST'
-                api_path = '/v2.0/subnets'
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-                rest = api.call_rest(rest_dict)
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not add a new public subnet to Neutron.")
-                raise Exception("Could not add a new public subnet to Neutron.")
+            body = '{"subnet": {"ip_version": 4, "allocation_pools": [{"start": "%s", "end": "%s"}], "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(subnet_dict['subnet_start_range'],subnet_dict['subnet_end_range'],subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],net['project_id'],cidr,self.dns_string)
+            print body
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2.0/subnets'
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+            print rest
+            #except:
+            #    self.db.pg_transaction_rollback()
+            #    logger.sql_error("Could not add a new public subnet to Neutron.")
+            #    raise Exception("Could not add a new public subnet to Neutron.")
 
             #check the response and make sure it is a 201
             if(rest['response'] == 201):
@@ -1013,7 +1016,7 @@ class neutron_net_ops:
             logger.sys_error("Invalid value given for enable_dhcp.")
             raise Exception("Invalid value given for enable_dhcp.")
 
-        #self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+        #sort of a HACK it can be a little better, API call is stupid.
         if('subnet_dns' in subnet_dict):
             the_array = []
             the_array = subnet_dict['subnet_dns']
@@ -1031,9 +1034,9 @@ class neutron_net_ops:
                     logger.sys_error("Public subnet dns server address is not a valid format.")
                     raise Exception("Public subnet dns server address is not a valid format.")
                 self.dns_string += '"'+the_array[counter]+'"'
-                if(counter < counter - 1):
-                    self.dns_string += ', '
+                self.dns_string += ', '
                 counter = counter+1
+            self.dns_string = self.dns_string[:-2]
             self.dns_string += ']'
             self.dns_string = str(self.dns_string)
         else:
@@ -1064,21 +1067,19 @@ class neutron_net_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(sub[0][3],sub[0][6],sub[0][13],self.enable_dhcp,net['net_id'],net['project_id'],sub[0][4],self.dns_string)
-            print body
-            logger.sys_info("%s"%(body))
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/subnets'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            print rest
-            #except:
-            #    logger.sql_error("Could not add a new subnet to Neutron.")
-            #    raise Exception("Could not add a new subnet to Neutron.")
+            try:
+                body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(sub[0][3],sub[0][6],sub[0][13],self.enable_dhcp,net['net_id'],net['project_id'],sub[0][4],self.dns_string)
+                logger.sys_info("%s"%(body))
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/subnets'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not add a new subnet to Neutron.")
+                raise Exception("Could not add a new subnet to Neutron.")
 
             #check the response and make sure it is a 201
             if(rest['response'] == 201):

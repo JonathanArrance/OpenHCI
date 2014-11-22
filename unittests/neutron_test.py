@@ -11,36 +11,48 @@ d = a.get_auth()
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
 
+'''
 print"----------------------------------------"
 print "createin a new external network"
-create = {'net_name':"pubtest14",'admin_state':"true", 'shared':"false"}
+create = {'net_name':"pubtest19",'admin_state':"true", 'shared':"false"}
 newpubnet = net.add_public_network(create)
 print newpubnet
 time.sleep(1)
 
 print"-----------------------------------------"
 print "Setting a subnet on new network"
-dns = ["192.168.190.20",'8.8.8.8',"192.168.10.3"]
-input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.178.10','subnet_end_range':'192.168.178.40','public_ip':'192.168.178.2','public_gateway':'192.168.178.1','public_subnet_mask':'255.255.255.0'}
+dns = ["192.168.190.20"]
+input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.170.10','subnet_end_range':'192.168.170.40','public_ip':'192.168.170.2','public_gateway':'192.168.170.1','public_subnet_mask':'255.255.255.0'}
 getsubnet = net.add_public_subnet(input_dict)
 print getsubnet
-'''
+
+
 
 print "----------------------------------------"
 print "deleteing subnet"
 shit = net.remove_net_pub_subnet(getsubnet['subnet_id'])
 print shit
 
+'''
+
 print "creating a new network"
-create = {'net_name':"internaltest",'admin_state':"true", 'shared':"false",'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+create = {'net_name':"internaltest2",'admin_state':"true", 'shared':"false",'project_id':"1c52c0fdf145438d9a8b3b114cbc608a"}
 newnet = net.add_private_network(create)
 print newnet
+
+print "Setting a subnet on new network"
+dns = ["192.168.190.20"]
+input_dict2 = {'net_id':newnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns}
+getsubnet2 = net.add_net_subnet(input_dict2)
+print getsubnet2
 
 time.sleep(1)
 print "----------------------------------------"
 print "listing the networks"
-newnet = net.list_internal_networks("9fad7cee35024b858795097f6e7d62da")
+newnet = net.list_internal_networks("1c52c0fdf145438d9a8b3b114cbc608a")
 print newnet
+
+'''
 
 time.sleep(1)
 print "----------------------------------------"
