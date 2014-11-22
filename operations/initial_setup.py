@@ -333,9 +333,9 @@ def run_setup(new_system_variables,auth_dict):
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
     logger.sys_info("Setting up iptables entries.")
-    os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.38.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
+    os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.12.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
     os.system("sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
-    os.system("sudo iptables -A POSTROUTING -s 172.38.24.0/24 -t nat -j MASQUERADE")
+    os.system("sudo iptables -A POSTROUTING -s 172.12.24.0/24 -t nat -j MASQUERADE")
     os.system("sudo iptables -t mangle -A POSTROUTING -o br-ex -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill")
 
     logger.sys_info("Saving the iptables entries.")
