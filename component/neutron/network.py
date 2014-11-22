@@ -932,22 +932,20 @@ class neutron_net_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
+            try:
             #body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%('4',subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],self.project_id,cidr,self.dns_string)
-            body = '{"subnet": {"ip_version": 4, "allocation_pools": [{"start": "%s", "end": "%s"}], "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(subnet_dict['subnet_start_range'],subnet_dict['subnet_end_range'],subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],net['project_id'],cidr,self.dns_string)
-            print body
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/subnets'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            print rest
-            #except:
-            #    self.db.pg_transaction_rollback()
-            #    logger.sql_error("Could not add a new public subnet to Neutron.")
-            #    raise Exception("Could not add a new public subnet to Neutron.")
+                body = '{"subnet": {"ip_version": 4, "allocation_pools": [{"start": "%s", "end": "%s"}], "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(subnet_dict['subnet_start_range'],subnet_dict['subnet_end_range'],subnet_dict['public_gateway'],name,self.enable_dhcp,net['net_id'],net['project_id'],cidr,self.dns_string)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/subnets'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                self.db.pg_transaction_rollback()
+                logger.sql_error("Could not add a new public subnet to Neutron.")
+                raise Exception("Could not add a new public subnet to Neutron.")
 
             #check the response and make sure it is a 201
             if(rest['response'] == 201):
