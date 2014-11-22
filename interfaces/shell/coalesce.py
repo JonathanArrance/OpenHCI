@@ -344,17 +344,18 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
     ran = run_setup(new_system_variables, user_dict)
+    print ran
     change_admin_password(user_dict, pwd)
     timeout = 20
     #ran = "OK"
 
     if(ran['status'] == "OK"):
         success_msg(d, timeout)
-        flag_set = node_util.set_first_time_boot('UNSET')
-        if(flag_set['first_time_boot'] != 'OK'):
-            d.msgbox("An error has occured in setting the first time boot flag.")
+        #flag_set = node_util.set_first_time_boot('UNSET')
+        #if(flag_set['first_time_boot'] != 'OK'):
+        #    d.msgbox("An error has occured in setting the first time boot flag.")
         clear_screen(d)
-        util.reboot_system()
+        #util.reboot_system()
         #restart_services()
 
     else:

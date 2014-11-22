@@ -432,7 +432,7 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info("Restarting the uplink network adapter.")
     card_restart = util.restart_network_card("br-ex")
     if(card_restart == 'OK'):
-        logge.sys_info("Uplink has been restarted.")
+        logger.sys_info("Uplink has been restarted.")
 
     #add the spindle and SSD vol types
     volumes = volume_ops(auth_dict)
@@ -448,14 +448,14 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_error("Could not assign the backing to the ssd volume type.")
         return 'ERROR'
     else:
-        logge.sys_info("Volume type SSD added to the backings")
+        logger.sys_info("Volume type SSD added to the backings")
 
     spindle_back = volumes.assign_volume_type_to_backend(spindle_input)
     if(spindle_back == 'ERROR'):
         logger.sys_error("Could not assign the backing to the spindle volume type.")
         return 'ERROR'
     else:
-        logge.sys_info("Volume type spindle added to the backings")
+        logger.sys_info("Volume type spindle added to the backings")
 
     #setup the pre-installed images
     logger.sys_info('Importing Default images.')
@@ -473,7 +473,7 @@ def run_setup(new_system_variables,auth_dict):
     if(import_cirros != 'OK'):
         logger.sys_warning('Could not import the default cirros image.')
     else:
-        logge.sys_info("Added the cirros image.")
+        logger.sys_info("Added the cirros image.")
 
     logger.sys_info('Importing Ubuntu 12.04 image.')
     ubuntu_input = {
@@ -488,7 +488,7 @@ def run_setup(new_system_variables,auth_dict):
     if(import_ubuntu != 'OK'):
         logger.sys_warning('Could not import the default Ubuntu Precise image.')
     else:
-        logge.sys_info("Added the ubuntu image.")
+        logger.sys_info("Added the ubuntu image.")
 
     logger.sys_info('Importing CentOS 6.5 image.')
     fedora_input = {
@@ -503,20 +503,21 @@ def run_setup(new_system_variables,auth_dict):
     if(import_fedora != 'OK'):
         logger.sys_warning('Could not import the default Fedora image.')
     else:
-        logge.sys_info("Added the CentOS 6.5 image.")
+        logger.sys_info("Added the CentOS 6.5 image.")
 
     #set the first time boot flag
     first_boot = node_util.set_first_time_boot('UNSET')
     if(first_boot == 'ERROR'):
         logger.sys_error("Could not set the first time boot flag to the UNSET status.")
     else:
-        logge.sys_info("First time boot flag unset.")
+        logger.sys_info("First time boot flag unset.")
 
     #logger.sys_info("Restarting all services")
 
     #restart all of the services and return the statuses
-    #checkpoint = restart_services()
+    checkpoint = restart_services()
     checkpoint['status'] = 'OK'
+    print checkpoint
     logger.sys_info("Service status: %s"%(checkpoint))
 
     return checkpoint
