@@ -506,21 +506,21 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_info("Added the CentOS 6.5 image.")
 
     #set the first time boot flag
-    first_boot = node_util.set_first_time_boot('UNSET')
-    if(first_boot == 'ERROR'):
-        logger.sys_error("Could not set the first time boot flag to the UNSET status.")
-    else:
-        logger.sys_info("First time boot flag unset.")
+    #first_boot = node_util.set_first_time_boot('UNSET')
+    #if(first_boot == 'ERROR'):
+    #    logger.sys_error("Could not set the first time boot flag to the UNSET status.")
+    #else:
+    #    logger.sys_info("First time boot flag unset.")
 
     #logger.sys_info("Restarting all services")
 
     #restart all of the services and return the statuses
-    checkpoint = restart_services()
-    checkpoint['status'] = 'OK'
-    print checkpoint
-    logger.sys_info("Service status: %s"%(checkpoint))
+    #checkpoint = restart_services()
+    #checkpoint['status'] = 'OK'
+    #print checkpoint
+    #logger.sys_info("Service status: %s"%(checkpoint))
 
-    return checkpoint
+    return 'OK'
 
 def check_setup():
     pass
