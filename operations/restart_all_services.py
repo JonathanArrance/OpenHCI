@@ -36,7 +36,9 @@ def restart_services():
 
     br = util.restart_network_card('br-ex')
     if(br == 'OK'):
+        logger.sys_info('br-ex restarted.')
         os.system('source /transcirrus/promisc')
+        logger.sys_info('Re-added the uplink port.')
 
     #restart OpenVswitch
     #try:
@@ -58,6 +60,7 @@ def restart_services():
     #sc.gluster('restart')
     try:
         sc.keystone('restart')
+        logger.sys_info('Keystone restarted.')
         success['keystone'] = 'True'
     except Exception as e:
         logger.sys_error('Could not restart keystone %s.'%(e))
@@ -65,6 +68,7 @@ def restart_services():
 
     try:
         sc.gluster_swift('restart')
+        logger.sys_info('Gluster-Swift restarted.')
         success['gluster_swift'] = 'True'
     except Exception as e:
         logger.sys_error('Could not restart gluster swift %s.'%(e))
@@ -72,6 +76,7 @@ def restart_services():
 
     try:
         sc.nova('restart')
+        logger.sys_info('Nova restarted.')
         success['nova'] = 'True'
     except Exception as e:
         logger.sys_error('Could not restart nova %s.'%(e))
@@ -79,6 +84,7 @@ def restart_services():
 
     try:
         sc.cinder('restart')
+        logger.sys_info('Cinder restarted.')
         success['cinder'] = 'True'
     except Exception as e:
         logger.sys_error('Could not restart cinder %s.'%(e))
@@ -86,6 +92,7 @@ def restart_services():
 
     try:
         sc.neutron('restart')
+        logger.sys_info('Neutron restarted.')
         success['neutron'] = 'True'
     except Exception as e:
         logger.sys_error('Could not restart neutron %s.'%(e))
@@ -93,6 +100,7 @@ def restart_services():
 
     try:
         sc.glance('restart')
+        logger.sys_info('Glance restarted.')
         success['glance'] = 'True'
     except Exception as e:
         logger.sys_error('Could not restart glance %s.'%(e))
