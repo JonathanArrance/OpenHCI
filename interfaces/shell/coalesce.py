@@ -357,6 +357,9 @@ def setup(d):
     #ran = "OK"
 
     if(ran == "OK"):
+        br = util.restart_network_card('br-ex')
+        if(br == 'OK'):
+            os.system('sudo ovs-vsctl add-port br-ex eth6')
         success_msg(d, timeout)
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
