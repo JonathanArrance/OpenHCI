@@ -354,12 +354,8 @@ def setup(d):
     ran = run_setup(new_system_variables, user_dict)
     change_admin_password(user_dict, pwd)
     timeout = 40
-    #ran = "OK"
 
     if(ran == "OK"):
-        #br = util.restart_network_card('br-ex')
-        #if(br == 'OK'):
-            #os.system('sudo ovs-vsctl add-port br-ex eth6')
         newpid = os.fork()
         if(newpid == 0):
             restart_services()
@@ -375,9 +371,6 @@ def setup(d):
         clear_screen(d)
         rollback(user_dict)
         util.reboot_system()
-
-    #except Exception as e:
-        #d.msgbox("Error when updating database: " + str(e))
 """
     node = util.get_node_id()
     system_variables = util.get_system_variables(node)

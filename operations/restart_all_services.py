@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os
 import time
 
 import transcirrus.common.logger as logger
@@ -35,7 +36,7 @@ def restart_services():
 
     br = util.restart_network_card('br-ex')
     if(br == 'OK'):
-        os.system('sudo ovs-vsctl add-port br-ex eth6')
+        os.system('source /transcirrus/promisc')
 
     #restart OpenVswitch
     #try:
