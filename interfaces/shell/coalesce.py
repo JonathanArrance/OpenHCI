@@ -353,21 +353,23 @@ def setup(d):
 
     ran = run_setup(new_system_variables, user_dict)
     change_admin_password(user_dict, pwd)
-    timeout = 20
+    timeout = 40
     #ran = "OK"
 
     if(ran == "OK"):
-        br = util.restart_network_card('br-ex')
-        if(br == 'OK'):
-            os.system('sudo ovs-vsctl add-port br-ex eth6')
+        #br = util.restart_network_card('br-ex')
+        #if(br == 'OK'):
+            #os.system('sudo ovs-vsctl add-port br-ex eth6')
+        newpid = os.fork()
+        if(newpid == 0):
+            restart_services()
+            os._exit(0)
         success_msg(d, timeout)
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
         clear_screen(d)
         #util.reboot_system()
-        #restart_services()
-
     else:
         rollback_msg(d, timeout)
         clear_screen(d)

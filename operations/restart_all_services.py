@@ -26,28 +26,32 @@ def restart_services():
     sc.monit('stop')
 
     #restart network cards
-    try:
-        util.restart_network_card('all')
-        success['network'] = 'True'
-    except Exception as e:
-        logger.sys_error('Could not restart network after setup completed: %s.'%(e))
-        success['network'] = 'False'
+    #try:
+    #    util.restart_network_card('all')
+    #    success['network'] = 'True'
+    #except Exception as e:
+    #    logger.sys_error('Could not restart network after setup completed: %s.'%(e))
+    #    success['network'] = 'False'
+
+    br = util.restart_network_card('br-ex')
+    if(br == 'OK'):
+        os.system('sudo ovs-vsctl add-port br-ex eth6')
 
     #restart OpenVswitch
-    try:
-        sc.openvswitch('restart')
-        success['vnet'] = 'True'
-    except Exception as e:
-        logger.sys_error('Could not restart the virtual networking layer: %s.'%(e))
-        success['vnet'] = 'False'
+    #try:
+    #    sc.openvswitch('restart')
+    #    success['vnet'] = 'True'
+    #except Exception as e:
+    #    logger.sys_error('Could not restart the virtual networking layer: %s.'%(e))
+    #    success['vnet'] = 'False'
 
     #restart Qpid/rabbit
-    try:
-        sc.qpid('restart')
-        success['queue'] = 'True'
-    except Exception as e:
-        logger.sys_error('Could not restart the queue mechanism %s.'%(e))
-        success['queue'] = 'False'
+    #try:
+    #    sc.qpid('restart')
+    #    success['queue'] = 'True'
+    #except Exception as e:
+    #    logger.sys_error('Could not restart the queue mechanism %s.'%(e))
+    #    success['queue'] = 'False'
 
     #restart Gluster
     #sc.gluster('restart')
@@ -96,12 +100,12 @@ def restart_services():
     #sc.ceilometer('restart')
 
     #restart Qpid/rabbit
-    try:
-        sc.apache('restart')
-        success['apache'] = 'True'
-    except Exception as e:
-        logger.sys_error('Could not restart the apache server %s.'%(e))
-        success['apache'] = 'False'
+    #try:
+    #    sc.apache('restart')
+    #    success['apache'] = 'True'
+    #except Exception as e:
+    #    logger.sys_error('Could not restart the apache server %s.'%(e))
+    #    success['apache'] = 'False'
 
     #start the monit service back up again
     sc.monit('start')
