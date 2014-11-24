@@ -286,7 +286,7 @@ class endpoint_ops:
             #Get pre populated values from the transcirrus db. Needed to build service catalog and endpoints in OpenStack
             get_serv_info = {'select':"service_id,service_endpoint_id",'from':"trans_service_settings",'where':"service_name='%s'" %(service_name)}
             self.get_service = self.db.pg_select(get_serv_info)
-            print self.get_service
+            #print self.get_service
             if(not self.get_service):
                 #if the service name is bogus it will fail
                 logger.sys_error("Could not find the service %s." %(service_name))
