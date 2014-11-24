@@ -24,7 +24,7 @@ def restart_services():
     success = {}
 
     #stop the monit service
-    sc.monit('stop')
+    #sc.monit('stop')
 
     #restart network cards
     #try:
@@ -37,8 +37,10 @@ def restart_services():
     br = util.restart_network_card('br-ex')
     if(br == 'OK'):
         logger.sys_info('br-ex restarted.')
-        os.system('/transcirrus/promisc')
+        out = os.system('sudo /transcirrus/promisc')
+        print out
         logger.sys_info('Re-added the uplink port.')
+        success['Uplink'] = 'True'
 
     #restart OpenVswitch
     #try:
@@ -106,8 +108,8 @@ def restart_services():
     except Exception as e:
         logger.sys_error('Could not restart glance %s.'%(e))
         success['glance'] = 'False'
-
     '''
+
     #sc.ceilometer('restart')
 
     #restart Qpid/rabbit
@@ -119,7 +121,7 @@ def restart_services():
     #    success['apache'] = 'False'
 
     #start the monit service back up again
-    sc.monit('start')
+    #sc.monit('start')
 
     #always return the services successfully restarted
     return success
