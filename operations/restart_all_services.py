@@ -37,7 +37,7 @@ def restart_services():
     br = util.restart_network_card('br-ex')
     if(br == 'OK'):
         logger.sys_info('br-ex restarted.')
-        os.system('source /transcirrus/promisc')
+        os.system('/transcirrus/promisc')
         logger.sys_info('Re-added the uplink port.')
 
     #restart OpenVswitch
@@ -58,6 +58,7 @@ def restart_services():
 
     #restart Gluster
     #sc.gluster('restart')
+    '''
     try:
         sc.keystone('restart')
         logger.sys_info('Keystone restarted.')
@@ -106,6 +107,7 @@ def restart_services():
         logger.sys_error('Could not restart glance %s.'%(e))
         success['glance'] = 'False'
 
+    '''
     #sc.ceilometer('restart')
 
     #restart Qpid/rabbit
