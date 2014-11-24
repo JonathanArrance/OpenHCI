@@ -353,14 +353,14 @@ def setup(d):
 
     ran = run_setup(new_system_variables, user_dict)
     change_admin_password(user_dict, pwd)
-    timeout = 40
+    timeout = 10
 
     if(ran == "OK"):
         restart_services()
-        success_msg(d, timeout)
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
+        success_msg(d, timeout)
         clear_screen(d)
         #util.reboot_system()
     else:

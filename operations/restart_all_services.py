@@ -37,8 +37,7 @@ def restart_services():
     br = util.restart_network_card('br-ex')
     if(br == 'OK'):
         logger.sys_info('br-ex restarted.')
-        out = os.system('sudo /transcirrus/promisc')
-        print out
+        os.system('sudo /transcirrus/promisc')
         logger.sys_info('Re-added the uplink port.')
         success['Uplink'] = 'True'
 
