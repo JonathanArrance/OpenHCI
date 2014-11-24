@@ -356,10 +356,7 @@ def setup(d):
     timeout = 40
 
     if(ran == "OK"):
-        newpid = os.fork()
-        if(newpid == 0):
-            restart_services()
-            os._exit(0)
+        restart_services()
         success_msg(d, timeout)
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
