@@ -1,9 +1,9 @@
 <!-- Begin Key Pairs widget-->
       <div class="span4">
-        <div class="well">
-          <div class="legend">
+        <div class="well widget">
+          <div class="widget-legend">
              Key Pairs
-             <a href="#"  id="create-keypair" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> New Key Pair</a>
+             <a href="#" id="create-keypair" class="btn btn-widget" style="float:right">New Key Pair</a>
  		
           </div>
 
@@ -18,7 +18,7 @@
                 </form>
             </div>
 
-          <table class="paleblue">
+          <table class="paleblue widget-table">
 	    {% if sec_keys %}
                 <tr> <th>Key Name</th> <th>Owner</th> <th>Actions</th></tr>
                     {% for key in sec_keys %}

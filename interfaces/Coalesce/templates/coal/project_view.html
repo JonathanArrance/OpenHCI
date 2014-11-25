@@ -36,6 +36,9 @@
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-suspend-confirm-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-resume-confirm-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/fip-assign-dialog-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/fip-allocate.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/fip-deallocate-confirm-form.js"/></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/fip-unassign-confirm-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-live-migrate-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-migrate-form.js"/></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-evacuate-form.js"/></script>
@@ -78,34 +81,34 @@ $(document).ready(function() {
 
 {% block content %}
 
-    <div class="span12 well legend-header">
+    <div class="span12 well legend-header" style="border:1px solid silver;">
         {{ project.project_name}}
     </div>
 
 
-    <h4>Instance Management</h4>
-    <div class="row-fluid">
+    <h4 class="widget-section-header">Instance Management</h4>
+    <div class="row-fluid widget-section">
       {% include "coal/project_view_widgets/instances.html" %}
       {% include "coal/project_view_widgets/images.html" %}
       {% include "coal/project_view_widgets/floating_ips.html" %}
     </div>
 
-    <h4>Storage</h4>
-    <div class="row-fluid">
+    <h4 class="widget-section-header">Storage</h4>
+    <div class="row-fluid widget-section">
       {% include "coal/project_view_widgets/volumes.html" %}
       {% include "coal/project_view_widgets/snapshots.html" %}
       {% include "coal/project_view_widgets/object_containers.html" %}
     </div>
 
-    <h4>Software Defined Networking </h4>
-    <div class="row-fluid">
+    <h4 class="widget-section-header">Software Defined Networking </h4>
+    <div class="row-fluid widget-section">
       {% include "coal/project_view_widgets/external_networks.html" %}
       {% include "coal/project_view_widgets/routers.html" %}
       {% include "coal/project_view_widgets/internal_networks.html" %}
     </div>
     
-    <h4>Users/Security</h4>
-    <div class="row-fluid">
+    <h4 class="widget-section-header">Users/Security</h4>
+    <div class="row-fluid widget-section">
       {% include "coal/project_view_widgets/users.html" %}
       {% include "coal/project_view_widgets/security_groups.html" %}
       {% include "coal/project_view_widgets/key_pairs.html" %}

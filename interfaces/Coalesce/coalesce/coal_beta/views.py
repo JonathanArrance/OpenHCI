@@ -1033,14 +1033,11 @@ def attach_volume(request, project_id, instance_id, volume_id):
         att = sso.attach_vol_to_server(attach_vol)
         get_vol = {'project_id': project_id, 'volume_id': volume_id}
         out = vo.get_volume_info(get_vol)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'The volume %s has been attached to %s'%(out['volume_name'],out['volume_instance_name']))
-        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-        return HttpResponse(out)
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out['status'] = 'success'
+        out['message'] = "Volume %s attached to %s."%(out['volume_name'],out['volume_instance_name'])
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Could not attach the volume."}
+    return HttpResponse(simplejson.dumps(out))
 
 def detach_volume(request, project_id, volume_id):
     try:
@@ -1048,17 +1045,14 @@ def detach_volume(request, project_id, volume_id):
         vo = volume_ops(auth)
         sso = server_storage_ops(auth)
         v_dict = {'volume_id': volume_id, 'project_id': project_id}
-        v_info = vo.get_volume_info(v_dict)
-        detach_vol = {'project_id': project_id, 'instance_id': v_info['volume_instance'], 'volume_id': volume_id}
-        out = sso.detach_vol_from_server(detach_vol)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        #messages.warning(request, 'Volume %s has been detached from .'%(v_info['volume_name'],v_info['volume_instance_name']))
-        #return HttpResponseRedirect(redirect_to)
-        return HttpResponse(simplejson.dumps(out))
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': out['volume_instance'], 'volume_id': volume_id}
+        detach = sso.detach_vol_from_server(detach_vol)
+        out['status'] = 'success'
+        out['message'] = "Volume %s detached from %s."%(out['volume_name'],out['volume_instance_name'])
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Could not detach the volume."}
+    return HttpResponse(simplejson.dumps(out))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
@@ -1145,19 +1139,16 @@ def destroy_project(request, project_id, project_name):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def allocate_floating_ip(request, project_id, ext_net_id):
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
     try:
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         input_dict = {'ext_net_id': ext_net_id, 'project_id': project_id}
-        l3o.allocate_floating_ip(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to allocate IP.  The IP range may be used up.")
-        return HttpResponseRedirect(redirect_to)
+        floater = l3o.allocate_floating_ip(input_dict)
+        out = {'status' : "success", 'message' : "Floating IP address %s was allocated." % ext_net_id}
+        out['ip_info'] = floater
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error allocating Floating IP %s address, error: %s" % (ext_net_id, e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def deallocate_floating_ip(request, project_id, floating_ip):
     try:
@@ -1165,12 +1156,10 @@ def deallocate_floating_ip(request, project_id, floating_ip):
         l3o = layer_three_ops(auth)
         input_dict = {'floating_ip': floating_ip, 'project_id': project_id}
         l3o.deallocate_floating_ip(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to deallocate floating ip.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out = {'status' : "success", 'message' : "Floating IP address %s was deallocated." % floating_ip}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deallocating Floating IP %s address, error: %s" % (floating_ip, e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def list_floating_ip(request,project_id):
     try:
@@ -1248,7 +1237,7 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
         input_dict = {'server_id':out['vm_id'], 'net_id': default_priv, 'project_id': project_id}
-        net_info = so.attach_server_to_network(input_dict)
+        #net_info = so.attach_server_to_network(input_dict)
         out['server_info']= so.get_server(input_dict)
         out['status'] = 'success'
         out['message'] = "New server %s was created."%(out['vm_name'])
@@ -1281,23 +1270,6 @@ def list_servers(request,project_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def pause_server(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        saa = server_admin_actions(auth)
-        saa.pause_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to pause server.")
-        return HttpResponseRedirect(redirect_to)
-'''
-
 def pause_server(request, project_id, instance_id):
     out = {}
     try:
@@ -1314,22 +1286,6 @@ def pause_server(request, project_id, instance_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def unpause_server(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        saa = server_admin_actions(auth)
-        saa.unpause_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to unpause server.")
-        return HttpResponseRedirect(redirect_to)
-'''
 def unpause_server(request, project_id, instance_id):
     out = {}
     try:
@@ -1347,23 +1303,6 @@ def unpause_server(request, project_id, instance_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def suspend_server(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        saa = server_admin_actions(auth)
-        saa.suspend_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to suspend server.")
-        return HttpResponseRedirect(redirect_to)
-'''
-
 def suspend_server(request, project_id, instance_id):
     out = {}
     try:
@@ -1379,23 +1318,6 @@ def suspend_server(request, project_id, instance_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def resume_server(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        saa = server_admin_actions(auth)
-        saa.resume_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to resume server.")
-        return HttpResponseRedirect(redirect_to)
-'''
 
 def resume_server(request, project_id, instance_id):
     out = {}
@@ -1413,19 +1335,6 @@ def resume_server(request, project_id, instance_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-"""
-def delete_server(request, project_id, server_id):
-    input_dict = {'project_id':project_id, 'server_id':server_id}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        del_serv = ds.delete_server(auth, input_dict)
-        return HttpResponseRedirect(redirect_to)
-    except Exception as e:
-        messages.warning(request, "Unable to delete instance.")
-        return HttpResponseRedirect(redirect_to)
-"""
 def delete_server(request, project_id, server_id):
     out = {}
     try:
@@ -1434,13 +1343,17 @@ def delete_server(request, project_id, server_id):
         input_dict = {'project_id':project_id, 'server_id':server_id}
         serv_info = so.get_server(input_dict)
         del_serv = ds.delete_server(auth, input_dict)
-        if(del_serv == 'OK'):
+        if(del_serv['delete'] == 'OK'):
+            out['vols'] = del_serv['vols']
+            out['floating_ip_id'] = del_serv['floating_ip_id']
+            out['floating_ip'] = del_serv['floating_ip']
             out['status'] = 'success'
             out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-'''
+
+
 def resize_server(request, project_id, instance_id, flavor_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1457,7 +1370,6 @@ def resize_server(request, project_id, instance_id, flavor_id):
     except:
         messages.warning(request, "Unable to resize server.")
         return HttpResponseRedirect(redirect_to)
-'''
 
 def confirm_resize(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
@@ -1474,7 +1386,7 @@ def confirm_resize(request, project_id, instance_id):
         messages.warning(request, "Unable to confirm resize.")
         return HttpResponseRedirect(redirect_to)
 
-
+'''
 def resize_server(request, project_id, instance_id, flavor_id):
     out = {}
     try:
@@ -1490,6 +1402,7 @@ def resize_server(request, project_id, instance_id, flavor_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 '''
+
 def reboot(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"SOFT"}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1504,9 +1417,10 @@ def reboot(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to reboot server.")
         return HttpResponseRedirect(redirect_to)
-'''
 
+'''
 def reboot(request, project_id, instance_id):
+    out = {}
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
@@ -1520,8 +1434,8 @@ def reboot(request, project_id, instance_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
 '''
+
 def power_cycle(request, project_id, instance_id):
     #this needs to be changed to the new power cycle method
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"HARD"}
@@ -1537,8 +1451,8 @@ def power_cycle(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to power cycle server.")
         return HttpResponseRedirect(redirect_to)
-'''
 
+'''
 def power_cycle(request, project_id, instance_id):
     out = {}
     try:
@@ -1554,7 +1468,7 @@ def power_cycle(request, project_id, instance_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
+'''
 
 def power_off_server(request,project_id,server_id):
     out = {}
@@ -1632,18 +1546,12 @@ def assign_floating_ip(request, floating_ip, instance_id, project_id):
         auth = request.session['auth']
         l3o = layer_three_ops(auth)
         update_dict = {'floating_ip':floating_ip, 'instance_id':instance_id, 'project_id':project_id, 'action': 'add'}
-        try:
-            out = l3o.update_floating_ip(update_dict)
-        except Exception as e:
-            referer = request.META.get('HTTP_REFERER', None)
-            redirect_to = urlsplit(referer, 'http', False)[2]
-            return HttpResponseRedirect(redirect_to)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to assign floating ip.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER')) 
+        out = l3o.update_floating_ip(update_dict)
+        out['status'] = 'success'
+        out['message'] = "Floating IP address %s was assigned to instance %s." % (floating_ip, out['instance_name'])
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error assigning Floating IP address %s, error: %s" % (floating_ip, e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def unassign_floating_ip(request, floating_ip_id):
     try:
@@ -1651,13 +1559,12 @@ def unassign_floating_ip(request, floating_ip_id):
         l3o = layer_three_ops(auth)
         ip = l3o.get_floating_ip(floating_ip_id)
         update_dict = {'floating_ip':ip['floating_ip'], 'instance_id':ip['instance_id'], 'project_id':ip['project_id'], 'action': 'remove'}
-        l3o.update_floating_ip(update_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to assign floating ip.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        out = l3o.update_floating_ip(update_dict)
+        out['status'] = "success"
+        out['message'] = "Floating IP address %s was unassigned from %s." %(ip['floating_ip'],out['instance_name'])
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error unassigning Floating IP %s address, error: %s" % (ip['floating_ip'], e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def toggle_user(request, username, toggle):
     try:
@@ -2181,6 +2088,8 @@ def build_project(request):
             dns = []
             dns.append(subnet_dns)
 
+            dns = []
+            dns.append(subnet_dns)
             auth = request.session['auth']
             project_var_array = {'project_name': proj_name,
                                  'user_dict': { 'username': username,

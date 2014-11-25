@@ -1,11 +1,11 @@
 <!-- Begin volume widget-->
 <div class="span4">
-	<div class="well">
-		<div class="legend">
+	<div class="well widget">
+		<div class="widget-legend">
 			Volume Storage
 			<div style="float:right">
-				<a href="#" id="delete-volume" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-minus"></i> Delete</a>
-				<a href="#" id="create-volume" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> Add</a>
+				<a href="#" id="delete-volume" class="btn btn-widget" style="float:right">Delete</a>
+				<a href="#" id="create-volume" class="btn btn-widget" style="float:right">Add</a>
 			</div>
 		</div>
 
@@ -69,7 +69,7 @@
 		</div>
 
 		{% if volumes %}
-			<table class="paleblue" id="volume_list">
+			<table class="paleblue widget-table" id="volume_list">
 				<tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
 				{% for k,v in volume_info.items %}
 			  		<tr id="{{v.volume_id}}">
@@ -78,7 +78,7 @@
 			  			</td>
 		  				<td id="{{v.volume_id}}-attached-cell">
 		   					{% if v.volume_attached == 'false' %}
-			 					<span id="{{v.volume_id}}-attached-placeholder">No Attached Instances</span>
+			 					<span id="{{v.volume_id}}-attached-placeholder">No Attached Instance</span>
 		   					{% else %}
 			 					{% for server in instances %}
 			   						{% if server.server_id == v.volume_instance %}
