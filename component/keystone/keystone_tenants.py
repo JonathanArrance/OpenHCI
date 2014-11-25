@@ -250,8 +250,6 @@ class tenant_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
                 api_path = '/v2.0/tenants/%s' %(project_id)
-                print "API Path is:"
-                print api_path
                 token = self.adm_token
                 sec = 'FALSE'
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}

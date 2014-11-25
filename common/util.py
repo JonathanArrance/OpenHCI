@@ -391,7 +391,6 @@ def update_cloud_controller_name(update_dict):
     conf = {}
     for key,val in system_vars.items():
         row = key.upper()+"="+'"%s"'%(val)
-        print row
         config_array.append(row)
     conf['op'] = 'new'
     conf['file_owner'] = 'transuser'
@@ -1188,12 +1187,10 @@ def restart_network_card(net_adapter):
         os.system('sudo service network restart')
     else:
         down = os.system('sudo ifdown %s' %(net_adapter))
-        print down
         if(down == '256'):
             return 'ERROR'
         time.sleep(2)
         up = os.system('sudo ifup %s' %(net_adapter))
-        print up
         if(up != 0):
             return 'ERROR'
 
