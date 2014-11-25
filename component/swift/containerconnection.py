@@ -4,9 +4,9 @@ import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 
 import sys
-sys.path.append("/usr/lib/python2.6/site-packages/")
-from swiftclient import client as swiftclient
-sys.path.remove("/usr/lib/python2.6/site-packages/")
+#sys.path.append("/usr/lib/python2.6/site-packages/")
+from transcirrus.component.swift.swiftclient import client as swiftclient
+#sys.path.remove("/usr/lib/python2.6/site-packages/")
 
 class Args:
     def __init__(self, user_dict, container):

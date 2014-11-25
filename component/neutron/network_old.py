@@ -869,29 +869,23 @@ class neutron_net_ops:
                 #HACK hate this
                 logger.sys_error("Invalid value given for enable_dhcp.")
                 raise Exception("Invalid value given for enable_dhcp.")
-
+    
+            self.dns_string = []
             if('subnet_dns' in subnet_dict):
-                the_array = []
-                the_array = subnet_dict['subnet_dns']
-                #Need to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
-                if(len(the_array) > 3):
-                    the_array.pop()
-                counter = 0
-                self.dns_string = '['
-                while(counter < len(the_array)):
-                    if(counter > 2):
-                        break
-                    try:
-                        socket.inet_aton(the_array[counter])
-                    except socket.error:
-                        logger.sys_error("Public subnet dns server address is not a valid format.")
-                        raise Exception("Public subnet dns server address is not a valid format.")
-                    self.dns_string += '"'+the_array[counter]+'"'
-                    if(counter < 2):
-                        self.dns_string += ', '
-                    counter = counter+1
-                self.dns_string += ']'
-                self.dns_string = str(self.dns_string)
+                #Ned to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
+                counter = 3
+                for dns in subnet_dict['subnet_dns']:
+                    while(counter <= 3):
+                        try:
+                            socket.inet_aton(dns)
+                        except socket.error:
+                            logger.sys_error("Public subnet dns server address is not a valid format.")
+                            raise Exception("Public subnet dns server address is not a valid format.")
+                        yo = '"'+dns+'"'
+                        #self.dns_string.append(yo)
+                        counter = counter+1
+                        raw = yo+ ','
+                #self.dns_string = '["8.8.8.8", "8.8.4.4"]'
             else:
                 self.dns_string = '["8.8.8.8", "8.8.4.4"]'
     
@@ -1013,31 +1007,19 @@ class neutron_net_ops:
             logger.sys_error("Invalid value given for enable_dhcp.")
             raise Exception("Invalid value given for enable_dhcp.")
 
-        #self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+        self.dns_string = '["8.8.8.8", "8.8.4.4"]'
         if('subnet_dns' in subnet_dict):
-            the_array = []
-            the_array = str(subnet_dict['subnet_dns'])
-            #Need to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
-            if(len(the_array) > 3):
-                the_array.pop()
-            counter = 0
-            self.dns_string = '['
-            while(counter < len(the_array)):
-                if(counter > 2):
-                    break
+            """
+            for sub in subnet_dict['subnet_dns']:
                 try:
-                    socket.inet_aton(the_array[counter])
+                    socket.inet_aton(sub)
+                    self.dns + sub
                 except socket.error:
-                    logger.sys_error("Public subnet dns server address is not a valid format.")
-                    raise Exception("Public subnet dns server address is not a valid format.")
-                self.dns_string += '"'+the_array[counter]+'"'
-                if(counter < counter - 1):
-                    self.dns_string += ', '
-                counter = counter+1
-            self.dns_string += ']'
-            self.dns_string = str(self.dns_string)
-        else:
-            self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+                    logger.sys_error("The dns ip address %s was not valid." %(sub))
+                    raise Exception("The dns ip address %s was not valid." %(sub))
+            """
+            #HACK this needs to be fixed
+            logger.sys_warning("Need to be able to add more dns servers.")
 
         #get the network info
         net = self.get_network(subnet_dict['net_id'])
@@ -1056,6 +1038,11 @@ class neutron_net_ops:
         if(self.user_level <= 1):
             #Create an API connection with the admin
             try:
+                #api_dict = None
+                #if(self.is_admin == 1):
+                    #build an api connection for the admin user
+                #    api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                #else:
                 api_dict = {"username":self.username, "password":self.password, "project_id":net['project_id']}
                 if(net['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,net['project_id'])
@@ -1064,21 +1051,19 @@ class neutron_net_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            #try:
-            body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(sub[0][3],sub[0][6],sub[0][13],self.enable_dhcp,net['net_id'],net['project_id'],sub[0][4],self.dns_string)
-            print body
-            logger.sys_info("%s"%(body))
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2.0/subnets'
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-            rest = api.call_rest(rest_dict)
-            print rest
-            #except:
-            #    logger.sql_error("Could not add a new subnet to Neutron.")
-            #    raise Exception("Could not add a new subnet to Neutron.")
+            try:
+                body = '{"subnet": {"ip_version": %s, "gateway_ip": "%s", "name": "%s", "enable_dhcp": %s, "network_id": "%s", "tenant_id": "%s", "cidr": "%s", "dns_nameservers": %s}}'%(sub[0][3],sub[0][6],sub[0][13],self.enable_dhcp,net['net_id'],net['project_id'],sub[0][4],self.dns_string)
+                logger.sys_info("%s"%(body))
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/subnets'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sql_error("Could not add a new subnet to Neutron.")
+                raise Exception("Could not add a new subnet to Neutron.")
 
             #check the response and make sure it is a 201
             if(rest['response'] == 201):

@@ -2085,6 +2085,8 @@ def build_project(request):
             #get the advanced props flag
             #advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
             advanced = None
+            dns = []
+            dns.append(subnet_dns)
 
             dns = []
             dns.append(subnet_dns)

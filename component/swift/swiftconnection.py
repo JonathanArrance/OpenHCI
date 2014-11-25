@@ -25,9 +25,8 @@ from uuid import uuid1
 
 import sys
 sys.path.append("/usr/lib/python2.6/site-packages/")
-from swiftclient import client as swiftclient
+from transcirrus.component.swift.swiftclient import client as swiftclient
 sys.path.remove("/usr/lib/python2.6/site-packages/")
-
 
 class DumbFile(object):
     """Wrap a file-like object just enough for Swift to work around lp:1216981

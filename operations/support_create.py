@@ -10,6 +10,8 @@ import time
 import paramiko
 import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
+import transcirrus.common.logger as logger
+import transcirrus.common.memcache as cache
 
 # Global constants.
 Username = "root"                                                                       # Default user to login in with, must be root to collect support data
@@ -28,7 +30,50 @@ Node = ""                           # Single node to be updated
 Force = False                       # Should be for the install even if the version is older
 ScriptFile = ""                     # Script file to run on the remote host
 CmdLine = False                     # We are being run from the command line
+EnableCache = False                 # Enable sending log messages to memcached
+Cache = None                        # Handle to memcached
+CacheKey = "TransCirrusPhoneHome"   # Cache key to reference our messages
 
+
+# Enable parameters for running on the internal TransCirrus network that can't reach transcirrus.com.
+def EnableSim ():
+    global WputURL
+    WputURL = "http://192.168.10.5/cgi-bin/upload.cgi"
+    return
+
+# Handle logging of print messages (console, logfile and memcached).
+def printmsg (msg):
+    if CmdLine:
+        print msg
+
+    logger.sys_info ("PhoneHome script: " + msg)
+
+    if EnableCache and Cache != None:
+        Data = Cache.get(CacheKey)
+        NumMessages = int(Data['num_messages'])
+        Data['num_messages'] = NumMessages + 1
+        Data['msg%s' % NumMessages] = msg
+    return
+
+# Turn on caching of messages to memcached.
+def EnableCaching():
+    global EnableCache
+    global Cache
+
+    EnableCache = True
+    Cache = cache.Client(['127.0.0.1:11211'], debug=0)
+    Cache.set (CacheKey, {'num_messages': 0})
+    return
+
+# Turn off caching of messages to memcached.
+def DisableCaching():
+    global EnableCache
+    global Cache
+
+    EnableCache = False
+    Cache.delete(CacheKey)
+    Cache = None
+    return
 
 # Returns just a filename given a fully qualified path.
 def ExtractFilename (Name):
@@ -42,7 +87,7 @@ def PutRemoteFile (File, Host, Handle):
     try:
         ssh_utils.PutFile (File, RemoteFile, Host, Handle)
     except Exception, e:
-        print "Error copying file to remote node, exception: %s" % e
+        printmsg ("Error copying file to remote node, exception: %s" % e)
         raise
     return
 
@@ -53,7 +98,7 @@ def GetRemoteFile (File, Host, Handle):
     try:
         ssh_utils.GetFile (RemoteFile, LocalFile, Host, Handle)
     except Exception, e:
-        print "Error copying file from remote node, exception: %s" % e
+        printmsg ("Error copying file from remote node, exception: %s" % e)
         raise
     return
 
@@ -82,7 +127,7 @@ def HostAlreadyCollecting (Host, Handle):
                 # The proc file time is within the time limit so there must be a collection already happening on the host.
                 return (True)
     except Exception, e:
-        print "Error detecting support process on remote host, exception: %s" % e
+        printmsg ("Error detecting support process on remote host, exception: %s" % e)
         raise
 
 # Get the nodeid of the remote node.
@@ -97,7 +142,7 @@ def GetRemoteNodeID (Host, Handle):
             NodeID = STDout.split('\n')[0]
             return (NodeID)
     except Exception, e:
-        print "Error getting nodeid on remote host, exception: %s" % e
+        printmsg ("Error getting nodeid on remote host, exception: %s" % e)
         raise
 
 # Run the support collect script on the remote host.
@@ -108,13 +153,13 @@ def StartCollecting (Script, TimeStamp, Host, Handle):
         Command = Command + " >>" + RemotePath + "/ph_" + TimeStamp + ".log 2>&1"
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (Command, Host, Handle)
         if ExitStatus != 0:
-            print "Error collecting support data on remote host, exit status:  %d" % (ExitStatus)
-            print "stdout: %s" % STDout
-            print "stderr: %s" % STDerr
+            printmsg ("Error collecting support data on remote host, exit status:  %d" % ExitStatus)
+            printmsg ("stdout: %s" % STDout)
+            printmsg ("stderr: %s" % STDerr)
             raise Exception ("CollectSupport error")
         return
     except Exception, e:
-        print "Error collecting support data on remote host, exception: %s" % e
+        printmsg ("Error collecting support data on remote host, exception: %s" % e)
         raise
 
 # Goes through the database and returns a dict of all nodes with the node's name and data IP address.
@@ -122,8 +167,8 @@ def FindNodes (Nodename=None):
     try:
         handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
     except Exception as e:
-        print "Could not connect to db with error: %s" % (e)
-        raise Exception ("Could not connect to db with error: %s" %(e))
+        printmsg ("Could not connect to db with error: %s" % e)
+        raise Exception ("Could not connect to db with error: %s" % e)
 
     # Get all nodes or get the data just for the given node.
     if Nodename == None:
@@ -134,9 +179,9 @@ def FindNodes (Nodename=None):
     if len(nodes) == 0:
         handle.pg_close_connection()
         if Nodename == None:
-            print "No other nodes where found in the database"
+            printmsg ("No other nodes where found in the database")
         else:
-            print "Could not find a node in the database with a name of %s" % Nodename
+            printmsg ("Could not find a node in the database with a name of %s" % Nodename)
         Nodes = []
         return (Nodes)
 
@@ -161,11 +206,11 @@ def TarSupportFiles (TimeStamp):
         StdOut, StdErr = Subproc.communicate()
 
         if Subproc.returncode != 0:
-            print "Error tarring support files, exit status: %d" % Subproc.returncode
-            print "Error message: %s" % StdErr
+            printmsg ("Error tarring support files, exit status: %d" % Subproc.returncode)
+            printmsg ("Error message: %s" % StdErr)
             raise Exception ("Tar error")
     except Exception, e:
-        print "Error tarring support files, exception: %s" % e
+        printmsg ("Error tarring support files, exception: %s" % e)
         raise Exception ("Tar error")
     return (TarFile)
 
@@ -177,8 +222,8 @@ def WputFile (File):
         StdOut, StdErr = Subproc.communicate()
 
         if Subproc.returncode != 0:
-            print "Error uploading support file to %s, exit status: %d" % (WputURL, Subproc.returncode)
-            print "Error message: %s" % StdErr
+            printmsg ("Error uploading support file to %s, exit status: %d" % (WputURL, Subproc.returncode))
+            printmsg ("Error message: %s" % StdErr)
             raise Exception ("Upload error")
         else:
             # Even though we got a successful return status, there could have been an
@@ -187,11 +232,11 @@ def WputFile (File):
             Pos = StdOut.find("Error:")
             if Pos != -1:
                 MsgEnd = StdOut.find("^", Pos)
-                print "Error uploading support file to %s" % WputURL
-                print "Error message: %s" % StdOut[Pos:MsgEnd]
+                printmsg ("Error uploading support file to %s" % WputURL)
+                printmsg ("Error message: %s" % StdOut[Pos:MsgEnd])
                 raise Exception ("Upload error")
     except Exception, e:
-        print "Error uploading support file to %s, exception: %s" % (WputURL, e)
+        printmsg ("Error uploading support file to %s, exception: %s" % (WputURL, e))
         raise Exception ("Upload error")
     return
 
@@ -229,7 +274,7 @@ def DoCreate():
     # Make sure the script file exists before we try to use it.
     if not os.path.exists (ScriptFile):
         if CmdLine:
-            print "Script file not found: %s" % ScriptFile
+            printmsg ("Script file not found: %s" % ScriptFile)
             sys.exit(2)
         else:
             raise Exception ("Script file not found: %s" % ScriptFile)
@@ -245,7 +290,7 @@ def DoCreate():
     for Host in Nodes:
         Hostname = Host['node_name']
         HostIP   = Host['node_data_ip']
-        print "Attempting to collect support data from node %s (%s)" % (Hostname, HostIP)
+        printmsg ("Attempting to collect support data from node %s (%s)" % (Hostname, HostIP))
 
         ChildPid = os.fork()
         if ChildPid == 0:
@@ -266,13 +311,13 @@ def DoCreate():
                 else:
                     ExitStatus = -2
                     ExitMsg = "Node %s is already collecting support data" % (Hostname)
-                    print ExitMsg
+                    printmsg (ExitMsg)
                     print "Use the -o option to override checking"
             except Exception, e:
                 ExitStatus = -3
                 ExitMsg = "Exception msg: %s" % e
-                print ExitMsg
-                print "Support data was not collected on node %s due to the above error" % Hostname
+                printmsg (ExitMsg)
+                printmsg ("Support data was not collected on node %s due to the above error" % Hostname)
             finally:
                 if Handle != None:
                     ssh_utils.SSHDisconnect (Handle)
@@ -311,7 +356,7 @@ def DoCreate():
             IndidateNoDataFromNode (TimeStamp, Child['node_name'], ExitStatus, ExitMsg)
             NodesStatus.append ({'node_name':Child['node_name'], 'node_data_ip':"0.0.0.0", 'exit_status':ExitStatus})
             os.kill (Child['pid'], signal.SIGQUIT)
-            print "Support data was not collected on node %s because it exceeded the maximum collection time" % Child['node_name']
+            printmsg ("Support data was not collected on node %s because it exceeded the maximum collection time" % Child['node_name'])
 
     # Retrieve the support tar.gz files from each host that we successfully got data for.
     # We have to skip the host this script is running on so it doesn't try to overwrite the file with
@@ -327,7 +372,7 @@ def DoCreate():
         if os.uname()[1] == Hostname:           # Skip this host because it is the host we're running on.
             continue
 
-        print "Retrieving support file from node %s (%s)" % (Hostname, HostIP)
+        printmsg ("Retrieving support file from node %s (%s)" % (Hostname, HostIP))
 
         try:
             Handle = None
@@ -337,8 +382,8 @@ def DoCreate():
             GetRemoteFile (RemoteName, Hostname, Handle)
         except Exception, e:
             IndidateNoDataFromNode (Hostname, -5, "Exception msg: %s" % e)
-            print "Exception msg: %s" % e
-            print "Could not retrieve remote support data from node %s due to the above error" % Hostname
+            printmsg ("Exception msg: %s" % e)
+            printmsg ("Could not retrieve remote support data from node %s due to the above error" % Hostname)
         finally:
             if Handle != None:
                 ssh_utils.SSHDisconnect (Handle)
@@ -347,10 +392,12 @@ def DoCreate():
     try:
         TarFile = TarSupportFiles (TimeStamp)
         WputFile (TarFile)
-        print "Support data was successfully uploaded"
+        printmsg ("Support data was successfully uploaded")
     except:
-        print "Support data was not uploaded to support site"
-
+        if CmdLine:
+            printmsg ("Support data was not uploaded to support site")
+        else:
+            raise Exception ("Support data was not uploaded to support site")
     return
 
 # Output how to use this script.
