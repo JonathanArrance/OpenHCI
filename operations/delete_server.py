@@ -52,6 +52,10 @@ def delete_server(auth_dict, delete_dict):
         layer_three.update_floating_ip(float_dict)
 
     #finally remove the server(Instance)
-    remove_server = nova.delete_server(delete_dict)
+    remove_server = {}
+    remove_server['delete'] = nova.delete_server(delete_dict)
+    remove_server['vols'] = vols
+    remove_server['floating_ip_id'] = floater
+    remove_server['floating_ip'] = floatip
 
     return remove_server

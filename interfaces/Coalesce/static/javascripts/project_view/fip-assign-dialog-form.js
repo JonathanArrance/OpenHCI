@@ -1,106 +1,136 @@
-$(function() {  
-		// must obtain csrf cookie for AJAX call
-		function getCookie(name) {
-			var cookieValue = null;
-			if (document.cookie && document.cookie != '') {
-				var cookies = document.cookie.split(';');
-				for (var i = 0; i < cookies.length; i++) {
-					var cookie = jQuery.trim(cookies[i]);
-					// Does this cookie string begin with the name we want?
-					if (cookie.substring(0, name.length + 1) == (name + '=')) {
-						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-						break;
-					}
+$(function() { 
+
+	var message = new message_handle();	// Initialize message handling
+
+	// must obtain csrf cookie for AJAX call
+	function getCookie(name) {
+		var cookieValue = null;
+		if (document.cookie && document.cookie != '') {
+			var cookies = document.cookie.split(';');
+			for (var i = 0; i < cookies.length; i++) {
+				var cookie = jQuery.trim(cookies[i]);
+				// Does this cookie string begin with the name we want?
+				if (cookie.substring(0, name.length + 1) == (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
 				}
 			}
-			return cookieValue;
 		}
-		var csrftoken = getCookie('csrftoken');
+		return cookieValue;
+	}
+	var csrftoken = getCookie('csrftoken');
+	
+	$(function() {
 		
-		$(function() {
-
-		
-		function csrfSafeMethod(method) {
+	function csrfSafeMethod(method) {
 		// these HTTP methods do not require CSRF protection
 		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-		}
-		$.ajaxSetup({
-			crossDomain: false, // obviates need for sameOrigin test
-			beforeSend: function(xhr, settings) {
-				if (!csrfSafeMethod(settings.type)) {
-					xhr.setRequestHeader("X-CSRFToken", csrftoken);
-				}
-			}
-		});
-		
-		
-		
-		var 	floating_ip = $( "#assign_floating_ip" ),
-			instance = $( "#assign_instance" ),
+	}
 
-			allFields = $( [] ).add( floating_ip ).add( instance ),
-			tips = $( ".validateTips" );
-
-		function updateTips( t ) {
-			tips
-				.text( t )
-				.addClass( "ui-state-highlight" );
-			setTimeout(function() {
-				tips.removeClass( "ui-state-highlight", 1500 );
-			}, 500 );
-		}
-
-		function checkLength( o, n, min, max ) {
-			if ( o.val().length > max || o.val().length < min ) {
-				o.addClass( "ui-state-error" );
-				updateTips( "Length of " + n + " must be between " +
-					min + " and " + max + "." );
-				return false;
-			} else {
-				return true;
+	$.ajaxSetup({
+		crossDomain: false, // obviates need for sameOrigin test
+		beforeSend: function(xhr, settings) {
+			if (!csrfSafeMethod(settings.type)) {
+				xhr.setRequestHeader("X-CSRFToken", csrftoken);
 			}
 		}
-
+	});			
 	
+	var floating_ip = $( "#assign_floating_ip" ),
+		instance = $( "#assign_instance" ),
+		allFields = $( [] ).add( floating_ip ).add( instance ),
+		tips = $( ".validateTips" );
 
-		$( "#fip-assign-dialog-form" ).dialog({
-			autoOpen: false,
-			height: 400,
-			width: 350,
-			modal: true,
-			buttons: {
-				"Assign": function() {
-					var bValid = true;
-					allFields.removeClass( "ui-state-error" );
+	function updateTips( t ) {
+		tips.text( t ).addClass( "ui-state-highlight" );
+		setTimeout(function() {
+			tips.removeClass( "ui-state-highlight", 1500 ); }, 500 );
+	}
 
+	function checkLength( o, n, min, max ) {
+		if ( o.val().length > max || o.val().length < min ) {
+			o.addClass( "ui-state-error" );
+			updateTips( "Length of " + n + " must be between " +
+				min + " and " + max + "." );
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	$( "#fip-assign-dialog-form" ).dialog({
+		autoOpen: false,
+		height: 300,
+		width: 350,
+		modal: true,
+		buttons: {
+			"Assign": function() {
 
-					if ( bValid ) {
-					  
-					   $.post('/assign_floating_ip/' + floating_ip.val() + '/' + instance.val() + '/' + PROJECT_ID + '/',
-                                                                function(){
-                                                                                location.reload();
-                                                                }); 
+				var bValid = true;
+				allFields.removeClass( "ui-state-error" );
 
-						$( this ).dialog( "close" );
-                                                $( "#fip_progressbar" ).progressbar({
-                                                                value: false
-                                                });
-					}
-				},
-				Cancel: function() {
-					$( this ).dialog( "close" );
+				if ( bValid ) {
+
+					$('#fip_progressbar').progressbar({value: false});
+				   	if ($('#fip_progressbar').is(':hidden')) {
+						$('#fip_progressbar').toggle();
+					};
+
+					$('#assign_ip').attr("disabled", true);
+					$('.allocate_ip').attr("disabled", true);
+
+				   	$.getJSON('/assign_floating_ip/' + floating_ip.val() + '/' + instance.val() + '/' + PROJECT_ID + '/')
+				   	.success(function(data) {
+
+				   		if (data.status == 'error') { 
+				   			message.showMessage('error', data.message); 
+				   		};
+
+				   		if (data.status == 'success') {
+
+				   			message.showMessage('success', data.message);
+
+				   			var targetSpan = document.getElementById(data.floating_ip+"-instance-name");
+				   			var targetCell = document.getElementById(data.floating_ip+"-instance-cell");
+				   			var targetActions = document.getElementById(data.floating_ip+"-actions-cell");
+				   			var newName = '<span id="'+data.floating_ip+'-instance-name">'+data.instance_name+'</span>';
+				   			var newActions = '<a href="#" id="'+data.floating_ip+'" class="unassign_ip">unassign</a>';
+
+				   			$(targetSpan).fadeOut().remove();
+				   			$(targetActions).empty().fadeOut();
+
+				   			$(targetCell).append(newName).fadeIn();
+				   			$(targetActions).append(newActions).fadeIn();
+
+				   			var targetOption = 'select#assign_floating_ip option[value="'+data.floating_ip+'"]';
+				   			$(targetOption).remove();
+				   		}
+
+				   		$('#assign_ip').attr("disabled", false);
+						$('.allocate_ip').attr("disabled", false);
+				   	})
+				   	.error(function() { 
+
+				   		message.showMessage('error', 'Server Fault'); 
+
+				   		$('#assign_ip').attr("disabled", false);
+						$('.allocate_ip').attr("disabled", false);
+				   	});
+
+				   	if ($('#fip_progressbar').is(':visible')) {
+						$('#fip_progressbar').toggle();
+					};
+
+				    $( this ).dialog( "close" );
 				}
 			},
-			close: function() {
-				allFields.val( "" ).removeClass( "ui-state-error" );
-			}
+			Cancel: function() { $( this ).dialog( "close" ); }
+			},
+			close: function() { allFields.val( "" ).removeClass( "ui-state-error" ); }
 		});
 
-		$( "#assign_ip" )
-			.click(function() {
-				$( "#fip-assign-dialog-form" ).dialog( "open" );
-			});
-			
-			
+		$( "#assign_ip" ).click(function() {
+			$( "#fip-assign-dialog-form" ).dialog( "open" );
+		});
 	});
-	});
+});

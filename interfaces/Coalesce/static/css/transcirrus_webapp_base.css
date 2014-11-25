@@ -29,10 +29,6 @@ a:hover {
     background: rgb(230, 230, 230);
 }
 
-a:visited {
-    color: #D9740F;
-}
-
 a:active {
     color: #D9740F;
 }
@@ -2862,15 +2858,15 @@ table [class*=span],
 }
 
 .legend-header {
-    background-color: rgb(128, 128, 128);
+    background-color: rgba(28, 60, 119, 1);
     color: white;
     font-size: 110%;
     font-weight: bold;
     margin-bottom: .5em;
     padding: .5em .5em .5em 1.5em;
-    border-radius: 4px 4px 0px 0px;
-    -moz-border-radius: 4px 4px 0px 0px;
-    -webkit-border-radius: 4px 4px 0px 0px;
+    border-radius: 4px 4px 4px 4px;
+    -moz-border-radius: 4px 4px 4px 4px;
+    -webkit-border-radius: 4px 4px 4px 4px;
     -webkit-box-shadow: outset 0 1px 1px rgba(0, 0, 0, 0.05);
     -moz-box-shadow: outset 0 1px 1px rgba(0, 0, 0, 0.05);
     box-shadow: outset 0 1px 1px rgba(0, 0, 0, 0.05);
@@ -4877,7 +4873,6 @@ hr {
     border: 0;
     border-top: 1px solid gray;
     border-bottom: 1px solid silver;
-. wrapper
 }
 
 div.layer-diagram {
@@ -5046,4 +5041,69 @@ th > small {
 
 .dialog-container{
     display:none;
+}
+
+.widget-section-header{
+    font-size: 16px;
+    line-height: 20px;
+    margin: 10px 0 0 20px;
+    background-color: rgba(47, 78, 145, 0.2);
+    display: inline-block;
+    padding: 0 10px;
+}
+
+.widget-section{
+    background-color: rgba(47, 78, 145, 0.2);
+    margin: 0;
+    padding: 10px 0;
+}
+
+.widget{
+    margin: 0 10px;
+    padding: 1em;
+    background-color: #FFFFFF;
+    border: 1px solid #696969;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.btn-widget{
+    background-color: #FFFFFF;
+    border: 1px solid #696969;
+    border-color: #696969;
+    margin-top: -4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    line-height: 17px;
+    display: inline-block;
+    cursor: pointer;
+    color: #696969;
+    text-decoration: none;
+    font-weight: bold;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.btn-widget:hover{
+    background-color: rgba(192, 192, 192, 1);
+}
+
+.widget-table{
+    border-collapse: collapse;
+    border: 2px solid #696969;
+    width: 100%;
+}
+
+.widget-legend{
+    background-color: rgba(28, 60, 119, 1);
+    color: #FFFFFF;
+    font-weight: bold;
+    font-size: 12px;
+    margin: -1.22em -1.22em 1em -1.22em;
+    padding: 0.5em 0.5em 0.5em 1.5em;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
 }

@@ -1,12 +1,12 @@
  <!-- Begin Security Groups widget-->
       <div class="span4">
-        <div class="well">
-          <div class="legend">
+        <div class="well widget">
+          <div class="widget-legend">
              Security Groups
 	         <a href="#"  
 	            id="create-security-group" 
-	            class="btn btn-mini btn-inverse" 
-	            style="float:right"><i class="icon-plus"></i> New Security Group</a>
+	            class="btn btn-widget"
+	            style="float:right">New Security Group</a>
           </div>
 
 	    <div id="sec-group-dialog-form" title="Create new security group">
@@ -25,7 +25,7 @@
             </div>
 
 
-	    <table class="paleblue">
+	    <table class="paleblue widget-table">
 		{% if sec_groups %}
 		  <tr> <th>Security Group</th>  <th>Owner</th> <th>Actions</th>  </tr>
 		    {% for sg in sec_groups %}

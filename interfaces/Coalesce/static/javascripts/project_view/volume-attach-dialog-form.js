@@ -49,104 +49,74 @@ $(function() {
 
 		$( "#volume-attach-dialog-form" ).dialog({
 			autoOpen: false,
-			height: 400,
+			height: 250,
 			width: 350,
 			modal: true,
 			buttons: {
 				"Attach Volume": function() {
 
-					var confirmedId = volumeId;														// Initialize string to hold ID of confirmed instance
+					var confirmedVolumeId = volumeId;
+					var confirmedVolumeName = document.getElementById(confirmedVolumeId+"-name-text");
+					confirmedVolumeName = $(confirmedVolumeName).text();
+					var confirmedInstanceId = instance.val();
+					var confirmedInstanceName = document.getElementById(confirmedInstanceId+"-name-text");
+					confirmedInstanceName = $(confirmedInstanceName).text();
+					var noticeMessage = 'Attaching '+confirmedVolumeName+' to '+confirmedInstanceName+'.';
 
-					var confirmedNameSelector = '#'+confirmedId+'-name-text';						// Create string to target confirmed volume name-cell
-					var confirmedName = $('#volume_list').find(confirmedNameSelector).text();		// Find confirmed volume name
-
-					// Get Id of selected instance
-					var confirmedInstance = $('div#volume-attach-dialog-form > form  > fieldset > select#instance option:selected').val();
-
-					var selectedNameSelector = '#'+confirmedInstance+'-name-text';					// Create string to target selected instance
-					var selectedName = $('#instance_list').find(selectedNameSelector).text();		// Find selected instance name
-
-					var noticeMessage = 'Attaching volume '+confirmedName+' to '+selectedName;		// Create notice message
-					console.log(noticeMessage);	// DEBUG
-					message.showMessage('notice', noticeMessage);									// Flag notice message
+					message.showMessage('notice', noticeMessage);
 
 					// --- BEGIN Create loader
+
 					// Target clicked action link
-					var confirmedActionSelector = '#'+confirmedId+'-actions-cell > .attach-instance';
+					var targetActions = document.getElementById(confirmedVolumeId+"-actions-cell");
 
-					console.log(confirmedActionSelector);
+					// Copy the html that link
+					var confirmedActionHtml = '<a href="#" class="attach-instance">attach</a>';
 
-					var confirmedActionHtml = '<a href="#" class="attach-instance">attach</a>';		// Copy the html that link
-					var loaderId = confirmedId+'-loader';											// Target new loader ID
-					var loaderHtml = '<div class="ajax-loader" id="'+loaderId+'"></div>';			// New loader html
+					// Target new loader ID
+					var loaderId = confirmedVolumeId+'-loader';		
+
+					// New loader html
+					var loaderHtml = '<div class="ajax-loader" id="'+loaderId+'"></div>';
 
 					// Clear clicked action link and replace with loader
-					$(confirmedActionSelector).empty().fadeOut();
-					$(confirmedActionSelector).append(loaderHtml).fadeIn();
-					loaderId = '#'+loaderId;														// Update loader ID
+					$(targetActions).empty().fadeOut();
+					$(targetActions).append(loaderHtml).fadeIn();
+
+					// Update loader ID
+					loaderId = '#'+loaderId;
+
 					// --- END Create Loader
 
-					$.getJSON('/attach_volume/' + PROJECT_ID + '/' + confirmedInstance + '/' + volumeId)
-					//.success(function(data){ 
+					$.getJSON('/attach_volume/' + PROJECT_ID + '/' + confirmedInstanceId + '/' + confirmedVolumeId)
+					.success(function(data){
+						if (data.status == 'error') {
 
-							// // Check if instance was successfully paused
-       //                  	if(data.status == 'error'){ 
-       //                  		message.showMessage('error', data.message);							// Flag error message
+							message.showMessage('error', data.message);
 
-       //                  		// Recall clicked action link on error
-       //                  		$(confirmedActionSelector).empty().fadeOut();							
-       //                  		$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
-       //                  	}
+							$(targetActions).empty().fadeOut();
+							$(targetActions).append(confirmedActionHtml).fadeIn();
+						};
 
-       //                 		 if(data.status == 'success'){ 											// Update interface
+						if (data.status == 'success') {
 
-       //                  		message.showMessage('success', data.message);							// Flag success message
+							message.showMessage('success', data.message);
 
-       //                  		var actionsSelector = '#'+confirmedId+'-actions-cell';					// Target instance-actions-cell
+							var newAction = '<a href="#" class="detach-instance">detach</a>';
+							$(targetActions).empty().fadeOut();
+							$(targetActions).append(newAction).fadeIn();
 
-       //                  		var detachAction = '<a href="#" class="detach-instance">detach</a>';	// New actions html string
+							var targetAttached = document.getElementById(confirmedVolumeId+"-attached-cell");
+							$(targetAttached).empty().fadeOut();
+							$(targetAttached).append(confirmedInstanceName).fadeIn();
+						};
+					})
+                    .error(function(){
 
-       //                  		// Update action cell							
-       //                  		$(actionsSelector).fadeOut().empty();
-       //                  		$(actionsSelector).append(detachAction).fadeIn();
-       //                  	}
-                       // })
-                        .error(function(data){
+                    	message.showMessage('error', "Server Fault");
 
-                        	// // Check if instance was successfully paused
-                        	// if(data.status == 'error'){ 
-                        	// 	message.showMessage('error', data.message);							// Flag error message
-
-                        	// 	// Recall clicked action link on error
-                        	// 	$(confirmedActionSelector).empty().fadeOut();							
-                        	// 	$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
-                        	// }
-
-                       		//  if(data.status == 'success'){ 											// Update interface
-
-                        		message.showMessage('success', 'Attached volume '+confirmedName+' to '+selectedName);							// Flag success message
-
-                        		var actionsSelector = '#'+confirmedId+'-actions-cell';					// Target instance-actions-cell
-
-                        		var detachAction = '<a href="#" class="detach-instance">detach</a>';	// New actions html string
-
-   								var attachedSelector = '#'+confirmedId+'-attached-cell';
-   								var attachedName = ''+selectedName;
-
-   								$(attachedSelector).fadeOut().empty();
-   								$(attachedSelector).append(attachedName).fadeIn();
-
-                        		// Update action cell							
-                        		$(actionsSelector).fadeOut().empty();
-                        		$(actionsSelector).append(detachAction).fadeIn();
-                        	//}
-
-							// message.showMessage('error', 'Server Fault'); 									// Flag server fault message
-
-							// // Recall clicked action link on server fault
-							// $(confirmedActionSelector).empty().fadeOut();
-							// $(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
-
+                    	$(targetActions).empty().fadeOut();
+						$(targetActions).append(confirmedActionHtml);
 					});
 
 					$( this ).dialog( "close" );					// Close Modal Form

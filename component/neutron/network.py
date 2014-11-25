@@ -878,7 +878,7 @@ class neutron_net_ops:
                     the_array.pop()
                 counter = 0
                 self.dns_string = '['
-                while(True):
+                while(counter < len(the_array)):
                     if(counter > 2):
                         break
                     try:
@@ -1014,16 +1014,16 @@ class neutron_net_ops:
             logger.sys_error("Invalid value given for enable_dhcp.")
             raise Exception("Invalid value given for enable_dhcp.")
 
-        self.dns_string = '["8.8.8.8", "8.8.4.4"]'
+        #self.dns_string = '["8.8.8.8", "8.8.4.4"]'
         if('subnet_dns' in subnet_dict):
             the_array = []
-            the_array = subnet_dict['subnet_dns']
+            the_array = str(subnet_dict['subnet_dns'])
             #Need to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
             if(len(the_array) > 3):
                 the_array.pop()
             counter = 0
             self.dns_string = '['
-            while(True):
+            while(counter < len(the_array)):
                 if(counter > 2):
                     break
                 try:

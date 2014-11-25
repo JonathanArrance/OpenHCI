@@ -1,71 +1,99 @@
 <!-- Begin Floating IP widget-->
-      <div class="span4">
-        <div class="well">
-          <div class="legend">
-             Floating IP's
-		<a href="/allocate_floating_ip/{{ project.project_id }}/{{default_public}}/" class="btn btn-mini btn-inverse" style="float:right"><i class="icon-plus"></i> Allocate IP</a>
-	      {% if floating_ips %}
-		<a href="#"  id="assign_ip" class="btn btn-mini btn-inverse" style="float:right">Assign</a>
-	      {% endif %}
-          </div>
+<div class="span4">
+	<div class="well widget">
+		<div class="widget-legend">
+			Floating IP's
+			<a href="#" id="{{default_public}}" class="allocate_ip btn btn-widget" style="float:right">
+				Allocate IP
+			</a>
+			{% if floating_ips %}
+				<a href="#"  id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
+			{% endif %}
+		</div>
 
-	   <div id="fip-assign-dialog-form" title="Assign floating IP to instance">
-                <p class="validateTips">Assign a floating IP to an instance.  </p>
-		<form>
-                {% csrf_token %}
-                <fieldset>
+		<div id="fip-assign-dialog-form" title="Assign floating IP to instance">
+			<p class="validateTips">Assign a floating IP to an instance.</p>
+			<form>
+				{% csrf_token %}
+				<fieldset>
 
-		    <label for="assign_floating_ip">Floating IP</label>
-                    <select name="assign_floating_ip" id="assign_floating_ip">
-			{% for fip in floating_ips %}
+					<label for="assign_floating_ip">Floating IP</label>
+					<select name="assign_floating_ip" id="assign_floating_ip">
+						{% for fip in floating_ips %}
                            {% if fip.floating_in_use == 'false' %}
-		               <option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
-                           {% endif %}
-			{% endfor %}
-                    </select>
+								<option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
 
-		    <label for="assign_instance">Instance</label>
-                    <select name="assign_instance" id="assign_instance">
-			{% for server in instances %}
-		   	    <option value="{{server.server_id}}">{{server.server_name}}</option>
-			{% endfor %}
-                    </select>
+					<label for="assign_instance">Instance</label>
+					<select name="assign_instance" id="assign_instance">
+						{% for server in instances %}
+							<option value="{{server.server_id}}">{{server.server_name}}</option>
+						{% endfor %}
+					</select>
 
-                </fieldset>
-                </form>
-           </div>
+				</fieldset>
+			</form>
+		</div>
 
-	  {% if floating_ips %}
-	    <table class="paleblue">
+		<div id="fip-deallocate-confirm-form" title="Deallocate Floating IP">
+			<p style="text-align:center;">
+				Deallocate
+				<span class="ip-address"></span>
+				?
+			</p>
+		</div>
 
-                <tr> <th>Floating IP</th> <th>Assigned To</th> <th>Actions</th></tr>
+		<div id="fip-unassign-confirm-form" title="Unassign Floating IP">
+			<p style="text-align:center;">
+				Unassign
+				<span class="ip-address"></span>
+				?
+			</p>
+		</div>
 
-                {% for fip in floating_ips %}
-
-		    <tr> 
-			<td><a href="/floating_ip/{{ fip.floating_ip_id }}/view/">{{fip.floating_ip}}</a></td>  
-			<td>
-			  {% if fip.instance_name == "" %}
-			    None
-			  {% else %}
-			    {{fip.instance_name}}
-			  {% endif %}
-			</td>
-			<td> 
-			    {% if fip.floating_in_use == 'true' %}
-			      <a href="/unassign_floating_ip/{{fip.floating_ip_id}}/">unassign</a>
-			    {% else %}
-			      <a href="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/"> deallocate
-			    {% endif %}
-                            </a> 
-                        </td>
-                    </tr>
-
-		{% endfor %}
-	    </table>
-	  {% else %}	
-	   <p><i>This project has no floating IPs</i></p>
-	  {% endif %}
-          <div id="fip_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
-        </div>
-      </div>
+		<table id="fip_list" class="paleblue widget-table">
+			<tr>
+				<th>Floating IP</th>
+				<th>Assigned To</th>
+				<th>Actions</th>
+			</tr>
+			{% if floating_ips %}
+	    		{% for fip in floating_ips %}
+					<tr id="{{fip.floating_ip}}" class="{{fip.floating_ip_id}}">
+						<td id="{{fip.floating_ip}}-ip-cell">
+							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" target="_blank">
+								<span id="{{fip.floating_ip}}-id-address">{{fip.floating_ip}}</span>
+							</a>
+						</td>
+						<td id="{{fip.floating_ip}}-instance-cell">
+							{% if fip.instance_name == "" %}
+								<span id="{{fip.floating_ip}}-instance-name">None</span>
+							{% else %}
+								<span id="{{fip.floating_ip}}-instance-name" class="">{{fip.instance_name}}</span>
+							{% endif %}
+						</td>
+						<td id="{{fip.floating_ip}}-actions-cell">
+							{% if fip.floating_in_use == 'true' %}
+								<a id="{{fip.floating_ip}}" class="unassign_ip" href="#">unassign</a>
+							{% else %}
+								<a id="{{fip.floating_ip}}" class="deallocate_ip" href="#">deallocate</a>
+			    			{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+	  		{% else %}
+			<tr id="fip_placeholder">
+				<td>
+					<p><i>This project has no floating IPs</i>
+					</p>
+				</td>
+				<td></td>
+				<td></td>
+			</tr>
+			{% endif %}
+		</table>
+		<div id="fip_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
+	</div>
+</div>
