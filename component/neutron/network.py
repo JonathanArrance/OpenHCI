@@ -1017,7 +1017,7 @@ class neutron_net_ops:
         #sort of a HACK it can be a little better, API call is stupid.
         if('subnet_dns' in subnet_dict):
             the_array = []
-            the_array = str(subnet_dict['subnet_dns'])
+            the_array = subnet_dict['subnet_dns']
             #Need to be able to add up to 3 dns servers and format like this ["8.8.8.8", "8.8.4.4", "204.85.3.3"]
             if(len(the_array) > 3):
                 the_array.pop()
