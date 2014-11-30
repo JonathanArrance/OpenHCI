@@ -1064,6 +1064,17 @@ class server_ops:
                 logger.sys_error("Users can only create security groups in their project.")
                 raise Exception("Users can only create security groups in their project.")
 
+        #determin if pings should be enabled.
+        if(('enable_ping' not in create_sec) or (create_sec['enable_ping'] == 'false')):
+            create_sec['enable_ping'] = 'false'
+        else:
+            ping = create_sec['enable_ping']
+            ping = ping.lower()
+            if(ping == 'true'):
+                create_sec['enable_ping'] = 'true'
+            else:
+                create_sec['enable_ping'] = 'false'
+
         #account for optional params
         ports = []
         if('ports' not in create_sec):
