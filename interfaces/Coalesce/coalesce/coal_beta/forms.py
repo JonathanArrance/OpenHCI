@@ -79,7 +79,7 @@ class BuildProjectForm(forms.Form):
     password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password Confirm')
     email = forms.EmailField( label='Power User email')
     net_name = forms.SlugField(min_length = 1, max_length = 64, label='Network Name')
-    subnet_dns = forms.IPAddressField(label = 'Subnet DNS')
+    subnet_dns = forms.IPAddressField(label = 'Subnet DNS IP Address')
     #ports[] - op
     group_name = forms.SlugField(min_length = 1, max_length = 64, label='Security Group Name')
     group_desc = forms.CharField(min_length = 1, max_length = 64, label='Security Group Description')

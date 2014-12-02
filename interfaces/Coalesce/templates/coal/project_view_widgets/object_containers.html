@@ -1,59 +1,66 @@
 <!-- Begin Containers widget-->
-      <div class="span4">
-        <div class="well widget">
-          <div class="widget-legend">
-             Containers (experimental)
-             
-             <a href="#" id="create-container" class="btn btn-widget" style="float:right">New Container</a>
-	     {% if containers %}
-		<a href="#" id="upload-object" class="btn btn-widget" style="float:right">Upload Object</a>
-	      {% endif %}
-          </div>
+<div class="span4">
+    <div class="well widget-disabled">
+        <div class="widget-legend">
+            Containers (not supported)
+            <a href="#" id="create-container-disabled" class="btn btn-widget" style="float:right" disabled="disabled">New
+                Container</a>
+            {% if containers %}
+            <a href="#" id="upload-object-disabled" class="btn btn-widget" style="float:right" disabled="disabled">Upload
+                Object</a>
+            {% endif %}
+        </div>
 
         <div id="container-dialog-form" title="Create new container">
-	  <p class="validateTips">All fields are required.  </p>
-                <form>
+            <p class="validateTips">All fields are required. </p>
+
+            <form>
                 {% csrf_token %}
                 <fieldset>
                     <label for="create_cont_name">Container Name</label>
-                    <input type="text" name="create_cont_name" id="create_cont_name"  class="text ui-widget-content ui-corner-all" />
+                    <input type="text" name="create_cont_name" id="create_cont_name"
+                           class="text ui-widget-content ui-corner-all"/>
                 </fieldset>
-                </form>
+            </form>
         </div>
-	<div id="object-upload-dialog-form" title="Upload object to container">
-	      <p class="validateTips">All fields are required.  </p>
-	      <form id='object-upload-form' action="#" method="post" enctype="multipart/form-data">
-	      {% csrf_token %}
-	      <fieldset>
-		  <label for="upload_obj_cont">Container</label>
-		  <select name="upload_obj_cont" id="upload_obj_cont">
-		    {% for c in containers %}
-		      <option value="{{c}}">{{c}}</option>
-		    {% endfor %}
-		  </select>
-		  <label for="import_local">Object</label>
-		  <input type="file" name="import_local" id="import_local"  class="text ui-widget-content ui-corner-all" />
-	      </fieldset>
-	      </form>
-	  </div>
+        <div id="object-upload-dialog-form" title="Upload object to container">
+            <p class="validateTips">All fields are required. </p>
 
-          <table class="paleblue widget-table">
-        {% if containers %}
-              <tr> <th>Container</th> <th>Actions</th> </tr>
-                {% for c in containers %}
-          <tr>
-	    <td>
-	      <a href="/projects/{{project.project_id}}/containers/{{c}}/view/">{{c}}</a>
-	    </td>
-	    <td>
-	      <a href="/delete_container/{{c}}/{{ project.project_id}}/">delete</a>
-	    </td>
-	  </tr>
-        {% endfor %}
-        {% else %}
-          <p><i>This project has no containers</i></p>
-        {% endif %}
-          </table>
-
+            <form id='object-upload-form' action="#" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset>
+                    <label for="upload_obj_cont">Container</label>
+                    <select name="upload_obj_cont" id="upload_obj_cont">
+                        {% for c in containers %}
+                        <option value="{{c}}">{{c}}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="import_local">Object</label>
+                    <input type="file" name="import_local" id="import_local"
+                           class="text ui-widget-content ui-corner-all"/>
+                </fieldset>
+            </form>
         </div>
-      </div>
+
+        <table class="paleblue widget-table">
+            {% if containers %}
+            <tr>
+                <th>Container</th>
+                <th>Actions</th>
+            </tr>
+            {% for c in containers %}
+            <tr>
+                <td>
+                    <a href="/projects/{{project.project_id}}/containers/{{c}}/view/">{{c}}</a>
+                </td>
+                <td>
+                    <a href="/delete_container/{{c}}/{{ project.project_id}}/">delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <p><i>This project has no containers</i></p>
+            {% endif %}
+        </table>
+    </div>
+</div>

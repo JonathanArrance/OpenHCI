@@ -73,7 +73,7 @@ $(function() {
 							var placeholder = ''
 							var rowCount = $('#fip_list tr').length;
 							if (rowCount < 2) {
-								var placeholder = '<tr id="fip_placeholder"><td><p><i>This project has no floating IPs</i></p></td><td></td><td><td></tr>';
+								var placeholder = '<tr id="fip_placeholder"><td><p><i>This project has no floating IPs</i></p></td><td></td><td></td></tr>';
 								$('#fip_list').append(placeholder).fadeIn();
 								if ($('#assign_ip').is(':visible')) { 
 									$('#assign_ip').toggle(); 

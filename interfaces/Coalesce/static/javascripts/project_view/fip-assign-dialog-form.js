@@ -69,21 +69,22 @@ $(function() {
 				var bValid = true;
 				allFields.removeClass( "ui-state-error" );
 
-				if ( bValid ) {
+                var confirmedFipId = floating_ip.val();
+                var confirmedInstanceId = instance.val();
 
-					$('#fip_progressbar').progressbar({value: false});
-				   	if ($('#fip_progressbar').is(':hidden')) {
-						$('#fip_progressbar').toggle();
-					};
+				if ( bValid ) {
 
 					$('#assign_ip').attr("disabled", true);
 					$('.allocate_ip').attr("disabled", true);
+                    $('.disable-action').bind('click', false);
+                    var origActionColor = $('.disable-action').css('color');
+                    $('.disable-action').css('color', '#696969');
 
-				   	$.getJSON('/assign_floating_ip/' + floating_ip.val() + '/' + instance.val() + '/' + PROJECT_ID + '/')
+				   	$.getJSON('/assign_floating_ip/' + confirmedFipId + '/' + confirmedInstanceId + '/' + PROJECT_ID + '/')
 				   	.success(function(data) {
 
 				   		if (data.status == 'error') { 
-				   			message.showMessage('error', data.message); 
+				   			message.showMessage('error', data.message);
 				   		};
 
 				   		if (data.status == 'success') {
@@ -102,24 +103,27 @@ $(function() {
 				   			$(targetCell).append(newName).fadeIn();
 				   			$(targetActions).append(newActions).fadeIn();
 
-				   			var targetOption = 'select#assign_floating_ip option[value="'+data.floating_ip+'"]';
-				   			$(targetOption).remove();
+				   			var ipOption = 'select#assign_floating_ip option[value="'+data.floating_ip+'"]';
+				   			$(ipOption).remove();
+
+                            var instanceOption = 'select#assign_instance option[value="'+confirmedInstanceId+'"]';
+                            $(instanceOption).remove();
 				   		}
 
 				   		$('#assign_ip').attr("disabled", false);
 						$('.allocate_ip').attr("disabled", false);
+                        $('.disable-action').unbind('click', false);
+                        $('.disable-action').css('color', origActionColor);
 				   	})
 				   	.error(function() { 
 
-				   		message.showMessage('error', 'Server Fault'); 
+				   		message.showMessage('error', 'Server Fault');
 
 				   		$('#assign_ip').attr("disabled", false);
 						$('.allocate_ip').attr("disabled", false);
+                        $('.disable-action').unbind('click', false);
+                        $('.disable-action').css('color', origActionColor);
 				   	});
-
-				   	if ($('#fip_progressbar').is(':visible')) {
-						$('#fip_progressbar').toggle();
-					};
 
 				    $( this ).dialog( "close" );
 				}

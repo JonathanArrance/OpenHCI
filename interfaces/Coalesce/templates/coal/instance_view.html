@@ -1,27 +1,34 @@
 {% extends "coal/base-fluid.html" %}
 
 {% block javascripts %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/resize_server.js"/></script>
-    <script>
-      var PROJECT_ID = "{{current_project_id}}";
-    </script>
-    <script>
-      var SERVER_ID = "{{server.server_id}}";
-    </script>
-    <script>
-      var DEFAULT_PUBLIC = "{{ default_public }}";
-    </script>
+<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-resize-dialog-form.js"></script>
+<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-reboot-confirm-form.js"></script>
+<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-cycle-confirm-form.js"></script>
+<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-power-confirm-form.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+<script>
+    var PROJECT_ID = "{{current_project_id}}";
+</script>
+<script>
+    var SERVER_ID = "{{server.server_id}}";
+</script>
+<script>
+    var DEFAULT_PUBLIC = "{{ default_public }}";
+</script>
 
 {% endblock %}
 
@@ -29,77 +36,129 @@
 
 {% block content %}
 
-    <div class="row-fluid">
-      <div class="span4">
-      	<div class="row-fluid">
-      	
-	  <div id="dialog-form-resize-server" title="Resize Server">
-		<form>
-		{% csrf_token %}
-		<fieldset>
-		    <label for="flavor">Select new flavor</label>
-                    <select name="flavor" id="flavor">
-			{% for flav in flavors %}
-		   	    <option value="{{flav.flav_id}}">{{flav.flavor_name}}</option>
-			{% endfor %}
-                    </select>
-		</fieldset>
-		</form>
-	  </div>
-	  <div class="well">
-	    <div class="legend">
-	      Actions
-	      {% if user_level == 0 %}
-		<a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-	      {% elif user_level == 1 %}
-		<a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-	      {% else %}
-		<a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-	      {% endif %}
-	    </div>
-	    <div>
-	      <a href="#" id="resize-server" class="btn">Resize Instance</a>
-	      <a href="/server/{{current_project_id}}/{{server.server_id}}/reboot" class="btn">Reboot</a>
-	      <a href="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" class="btn">Power Cycle</a>
-	    </div>
-	  </div>
-
-	</div><!-- end inner row -->
+<div class="row-fluid">
+    <div class="span4">
         <div class="row-fluid">
-	  <div class="well">
-	    <div class="legend">
-	      Instance Details
-	    </div>
-	    <table class="paleblue">
-		<tr><th>Name</th><td>{{server.server_name}}</td></tr>
-		<tr><th>Id</th><td>{{server.server_id}}</td></tr>
-		<tr><th>Status</th><td>{{server.server_status}}</td></tr>
-		<tr><th>OS</th><td>{{server.server_os}}</td></tr>
-		<tr><th>Flavor</th><td>{{server.server_flavor}}</td></tr>
-		<tr><th>Key Name</th><td>{{server.server_key_name}}</td></tr>
-		<tr><th>Group Name</th><td>{{server.server_group_name}}</td></tr>
-		<tr><th>Public IPs</th><td>{{server.server_public_ips}}</td></tr>
-		<!--<tr><th>Node</th><td>{{server.server_node}}</td></tr>-->
-		<tr><th>Network Id</th><td>{{server.server_net_id}}</td></tr>
-		<tr><th>Internal Network</th>
-		  {% for k,v in server.server_int_net.items %}
-		    <td>{{k}}:
-		    {% for i in v %}
-		      {{i.addr}}</td>
-		    {% endfor %}
-		  {% endfor %}
-		</tr>
-	    </table>    
-	  </div>
-	</div><!-- end inner row -->
-      </div><!-- end span4 -->
-                                     
+            <div class="well">
 
-      <div class="span8">
+                <div class="widget-legend" style="margin-top: -13px;">
+                    Actions
+                    {% if user_level == 0 %}
+                    <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn-widget"
+                       style="float: right;">return to project</a>
+                    {% elif user_level == 1 %}
+                    <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/" class="btn-widget"
+                       style="float: right;">return to project</a>
+                    {% else %}
+                    <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/"
+                       class="btn-widget" style="float: right;">return to project</a>
+                    {% endif %}
+                </div>
+
+                <div id="instance-view-resize-dialog-form" title="Resize server?">
+                    <form id="instance-resize-form" action="">
+                        {% csrf_token %}
+                        <fieldset>
+                            <label for="flavor">Select new flavor</label>
+                            <select name="flavor" id="flavor">
+                                {% for flav in flavors %}
+                                <option value="{{flav.flav_id}}">{{flav.flavor_name}}</option>
+                                {% endfor %}
+                            </select>
+                        </fieldset>
+                    </form>
+                </div>
+
+                <div id="instance-view-reboot-confirm-form" title="Reboot server?">
+                    <form id="instance-reboot-form"
+                          action="/server/{{current_project_id}}/{{server.server_id}}/reboot" method="get"></form>
+                </div>
+
+                <div id="instance-view-cycle-confirm-form" title="Power cycle server?">
+                    <form id="instance-cycle-form"
+                          action="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" method="get"></form>
+                </div>
+
+                <div id="instance-view-power-confirm-form" title="Power server On/Off?">
+                    Power server <span class="power-server-label">Off</span>
+                </div>
+
+                <div class="center-buttons">
+                    <a href="#" id="resize-server" class="btn-widget">Resize Instance</a>
+                    <a href="#" id="reboot-server" class="btn-widget">Reboot</a>
+                    <a href="#" id="cycle-server" class="btn-widget">Power Cycle</a>
+                    <a href="#" id="power-server" class="btn-widget">Power <span class="power-server-label">Off</span></a>
+                </div>
+
+            </div>
+        </div>
+        <!-- end inner row -->
+        <div class="row-fluid">
+            <div class="well">
+                <div class="widget-legend">
+                    Instance Details
+                </div>
+                <table class="paleblue widget-table">
+                    <tr>
+                        <th>Name</th>
+                        <td><p id="instance-name">{{server.server_name}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>Id</th>
+                        <td><p id="instance-id">{{server.server_id}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td><p id="instance-status">{{server.server_status}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>OS</th>
+                        <td><p id="instance-os">{{server.server_os}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>Flavor</th>
+                        <td><p id="instance-flavor">{{server.server_flavor}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>Key Name</th>
+                        <td><p id="instance-key">{{server.server_key_name}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>Group Name</th>
+                        <td><p id="instance-group">{{server.server_group_name}}</p></td>
+                    </tr>
+                    <tr>
+                        <th>Public IPs</th>
+                        <td><p id="instance-ip">{{server.server_public_ips}}</p></td>
+                    </tr>
+                    <!--<tr><th>Node</th><td>{{server.server_node}}</td></tr>-->
+                    <tr>
+                        <th>Network Id</th>
+                        <td>{{server.server_net_id}}</td>
+                    </tr>
+                    <tr>
+                        <th>Internal Network</th>
+                        {% for k,v in server.server_int_net.items %}
+                        <td>{{k}}:
+                            {% for i in v %}
+                            {{i.addr}}
+                        </td>
+                        {% endfor %}
+                        {% endfor %}
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!-- end inner row -->
+    </div>
+    <!-- end span4 -->
+
+
+    <div class="span8">
         <iframe name="noVNCconsole" src="{{server.novnc_console}}" width="800" height="480"></iframe>
-      </div>
+    </div>
 
-   </div><!-- end row-fluid-->
+</div><!-- end row-fluid-->
 
 
 {% endblock %}

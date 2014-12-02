@@ -1,49 +1,55 @@
-      <!-- Begin snapshots widget-->
-      <div class="span4">
-        <div class="well widget">
-          <div class="widget-legend">
-             Snapshots (not supported)
-	     {% if volumes %}
-	     <a href="#" id="create-snapshot-disabled" class="btn btn-widget" style="float:right">New Snapshot</a>
-	     {% endif %}
-          </div>
-	  
-	    <div id="snapshot-dialog-form" title="Snapshot a volume">
-                <p class="validateTips">All fields are required.  </p>
-		<form>
+<!-- Begin snapshots widget-->
+<div class="span4">
+    <div class="well widget-disabled">
+        <div class="widget-legend">
+            Snapshots (not supported)
+            {% if volumes %}
+            <a href="#" id="create-snapshot-disabled" class="btn btn-widget" style="float:right" disabled="disabled">New
+                Snapshot</a>
+            {% endif %}
+        </div>
+
+        <div id="snapshot-dialog-form" title="Snapshot a volume">
+            <p class="validateTips">All fields are required. </p>
+
+            <form>
                 {% csrf_token %}
                 <fieldset>
-		    <label for="snap_name">Snapshot Name</label>
-                    <input type="text" name="snap_name" id="snap_name"  class="text ui-widget-content ui-corner-all" />
-		    <label for="snap_volume">Volume</label>
+                    <label for="snap_name">Snapshot Name</label>
+                    <input type="text" name="snap_name" id="snap_name" class="text ui-widget-content ui-corner-all"/>
+                    <label for="snap_volume">Volume</label>
                     <select name="snap_volume" id="snap_volume">
-			{% for k,v in volume_info.items %}
-			  {% if v.volume_attached == 'false' %}
-			    <option value="{{v.volume_id}}">{{v.volume_name}}</option>
-			  {% endif %}
-			{% endfor %}
+                        {% for k,v in volume_info.items %}
+                        {% if v.volume_attached == 'false' %}
+                        <option value="{{v.volume_id}}">{{v.volume_name}}</option>
+                        {% endif %}
+                        {% endfor %}
                     </select>
-		    <label for="snap_desc">Description</label>
-                    <input type="text" name="snap_desc" id="snap_desc"  class="text ui-widget-content ui-corner-all" />
+                    <label for="snap_desc">Description</label>
+                    <input type="text" name="snap_desc" id="snap_desc" class="text ui-widget-content ui-corner-all"/>
                 </fieldset>
-                </form>
-           </div>
-	  
-          <table class="paleblue widget-table">
-	    {% if snapshots %}
-                <tr> <th>Snapshot</th> <th>Volume</th> <th>Actions</th></tr>
-                    {% for snapshot in snapshots %}
-		      <tr>
-			<td>{{snapshot.snapshot_name}}</td>
-			<td>{{snapshot.volume_name}}</td>
-			<td>
-			  <a href="/delete_snapshot/{{snapshot.snapshot_id}}/{{ project.project_id}}/">delete</a>
-			</td>
-		      </tr>
-		    {% endfor %}
-		{% else %}
-		  <p><i>This project has no snapshots</i></p>
-		{% endif %}
-          </table>
+            </form>
         </div>
-      </div>
+
+        <table class="paleblue widget-table">
+            {% if snapshots %}
+            <tr>
+                <th>Snapshot</th>
+                <th>Volume</th>
+                <th>Actions</th>
+            </tr>
+            {% for snapshot in snapshots %}
+            <tr>
+                <td>{{snapshot.snapshot_name}}</td>
+                <td>{{snapshot.volume_name}}</td>
+                <td>
+                    <a href="/delete_snapshot/{{snapshot.snapshot_id}}/{{ project.project_id}}/">delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <p><i>This project has no snapshots</i></p>
+            {% endif %}
+        </table>
+    </div>
+</div>
