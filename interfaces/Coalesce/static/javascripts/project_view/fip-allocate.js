@@ -49,8 +49,9 @@ $(function() {
 
 		$(".allocate_ip").click(function() {
 
-            $('.allocate_ip').attr('disabled', true);
-            $('#assign_ip').attr('disabled', true);
+            if ($('.allocate_ip').is(':visible')){ $('.allocate_ip').toggle(); }
+            if ($('#assign_ip').is(':visible')){ $('#assign_ip').toggle(); }
+
             $('.disable-action').bind('click', false);
             var origActionColor = $('.disable-action').css('color');
             $('.disable-action').css('color', '#696969');
@@ -78,14 +79,12 @@ $(function() {
 					newRow += '</tr>';
 					// --- END html string generation
 
-					// Check to see if this is the first fip to be generated, if so remove placeholder and reveal assign_ip button
-					var rowCount = $('#fip_list').find('tr').length;
-					if (rowCount <= 2) {
-						$('#fip_placeholder').remove().fadeOut();
-						if ($('#assign_ip').is(':hidden')) { 
-							$('#assign_ip').toggle(); 
-						}
-					}
+                    // Check to see if this is the first fip to be generated, if so remove placeholder and reveal assign_ip button
+                    var rowCount = $('#fip_list tr').length;
+                    if (rowCount <= 2) {
+                        $('#fip_placeholder').remove().fadeOut();
+                        if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+                    }
 
 					// Append new row to instance-list
 					$('#fip_list').append(newRow).fadeIn();
@@ -94,19 +93,27 @@ $(function() {
 				   	$('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(newOption);
 				}
 
-                $('.allocate_ip').attr('disabled', false);
-                $('#assign_ip').attr('disabled', false);
+                if ($('.allocate_ip').is(':hidden')){ $('.allocate_ip').toggle(); }
+                if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+
                 $('.disable-action').unbind('click', false);
                 $('.disable-action').css('color', origActionColor);
 
 			})
 			.error(function(){
 				message.showMessage('error', 'Server Fault');
-                $('.allocate_ip').attr('disabled', false);
-                $('#assign_ip').attr('disabled', false);
+
+                if ($('.allocate_ip').is(':hidden')){ $('.allocate_ip').toggle(); }
+                if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+
                 $('.disable-action').unbind('click', false);
                 $('.disable-action').css('color', origActionColor);
 			});
 		});
 	});
+});
+
+$(document).ready(function() {
+    var rowCount = $('#fip_list tr').length;
+    if (rowCount <= 2) { if ($('#assign_ip').is(':visible')){ $('#assign_ip').toggle(); }}
 });

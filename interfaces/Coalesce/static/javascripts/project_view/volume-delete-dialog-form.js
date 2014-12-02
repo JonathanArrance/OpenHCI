@@ -54,8 +54,8 @@ $(function() {
 
 					message.showMessage('notice', 'Deleting Volume');	// Flag notice
 
-                    if ($('#create-volume').is(':visible')){ $('#delete-instance').toggle(); }
-                    if ($('#delete-volume').is(':visible')){ $('#create-instance').toggle(); }
+                    if ($('#create-volume').is(':visible')){ $('#create-volume').toggle(); }
+                    if ($('#delete-volume').is(':visible')){ $('#delete-volume').toggle(); }
 
 					// Initialize progressbar and make it visible if hidden
 					$('#vol_progressbar').progressbar({value: false});
@@ -90,8 +90,8 @@ $(function() {
                         	// Hide progressbar on completion
                         	if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); }
 
-                            if ($('#create-volume').is(':hidden')){ $('#delete-instance').toggle(); }
-                            if ($('#delete-volume').is(':hidden')){ $('#create-instance').toggle(); }
+                            if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                            if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 
                             // Check to see if this is the last volume, if so add a placeholder row and hide delete-volume button
                             var rowCount = $('#volume_list tr').length;
@@ -108,8 +108,8 @@ $(function() {
 
 						// Hide progressbar on error
 						if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); }
-                        if ($('#create-volume').is(':hidden')){ $('#delete-instance').toggle(); }
-                        if ($('#delete-volume').is(':hidden')){ $('#create-instance').toggle(); }
+                        if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                        if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 					});
 
 					$( this ).dialog( "close" );	// Close modal form	

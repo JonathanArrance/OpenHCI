@@ -74,8 +74,9 @@ $(function() {
 
 				if ( bValid ) {
 
-					$('#assign_ip').attr("disabled", true);
-					$('.allocate_ip').attr("disabled", true);
+                    if ($('.allocate_ip').is(':visible')){ $('.allocate_ip').toggle(); }
+                    if ($('#assign_ip').is(':visible')){ $('#assign_ip').toggle(); }
+
                     $('.disable-action').bind('click', false);
                     var origActionColor = $('.disable-action').css('color');
                     $('.disable-action').css('color', '#696969');
@@ -110,8 +111,8 @@ $(function() {
                             $(instanceOption).remove();
 				   		}
 
-				   		$('#assign_ip').attr("disabled", false);
-						$('.allocate_ip').attr("disabled", false);
+                        if ($('.allocate_ip').is(':hidden')){ $('.allocate_ip').toggle(); }
+                        if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
                         $('.disable-action').unbind('click', false);
                         $('.disable-action').css('color', origActionColor);
 				   	})
@@ -119,8 +120,9 @@ $(function() {
 
 				   		message.showMessage('error', 'Server Fault');
 
-				   		$('#assign_ip').attr("disabled", false);
-						$('.allocate_ip').attr("disabled", false);
+                        if ($('.allocate_ip').is(':hidden')){ $('.allocate_ip').toggle(); }
+                        if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+
                         $('.disable-action').unbind('click', false);
                         $('.disable-action').css('color', origActionColor);
 				   	});

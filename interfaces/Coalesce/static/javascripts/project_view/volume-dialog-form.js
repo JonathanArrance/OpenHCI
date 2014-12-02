@@ -77,8 +77,8 @@ $(function() {
 
 						message.showMessage('notice', 'Creating new volume '+volume_name.val());	// Flag notice
 
-						if ($('#create-volume').is(':visible')){ $('#delete-instance').toggle(); }
-                        if ($('#delete-volume').is(':visible')){ $('#create-instance').toggle(); }
+						if ($('#create-volume').is(':visible')){ $('#create-volume').toggle(); }
+                        if ($('#delete-volume').is(':visible')){ $('#delete-volume').toggle(); }
 
 						// Initialize progressbar and make it visible if hidden
 						$('#vol_progressbar').progressbar({value: false});
@@ -107,6 +107,13 @@ $(function() {
 					   			newRow += '</tr>';
 					   			// --- END html string generation
 
+                                // Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-volume button
+                                var rowCount = $('#volume_list tr').length;
+                                if (rowCount <= 2) {
+                                    $('#volume-placeholder').remove().fadeOut();
+                                    if ($('#delete-volume').is(':hidden')) { $('#delete-volume').toggle(); }
+                                }
+
 					   			// Append new row to volume-list
 					   			$('#volume_list').append(newRow).fadeIn();
 
@@ -119,15 +126,8 @@ $(function() {
 					   		// Hide progressbar on completion
 							if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
 
-                            if ($('#create-volume').is(':hidden')){ $('#delete-instance').toggle(); }
-                            if ($('#delete-volume').is(':hidden')){ $('#create-instance').toggle(); }
-
-                            // Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-instance button
-                            var rowCount = $('#volume_list tr').length;
-                            if (rowCount <= 2) {
-                                $('#volume-placeholder').remove().fadeOut();
-                                if ($('#delete-volume').is(':hidden')) { $('#delete-volume').toggle(); }
-                            }
+                            if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                            if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 					   	})
 					   .error(function(){
 
@@ -136,8 +136,8 @@ $(function() {
 					   		// Hide progressbar on completion
 							if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
 
-                               if ($('#create-volume').is(':hidden')){ $('#delete-instance').toggle(); }
-                               if ($('#delete-volume').is(':hidden')){ $('#create-instance').toggle(); }
+                               if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                               if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 					   	});
 
 					   $( this ).dialog( "close" );
