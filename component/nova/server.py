@@ -1254,7 +1254,7 @@ class server_ops:
                 raise Exception("Users can only create security groups in their project.")
 
         get_key = {'select':'sec_key_name','from':'trans_security_keys','where':"sec_key_name='%s'"%(key_dict['key_name'])}
-        key = self.db.pg_select(get_proj)
+        key = self.db.pg_select(get_key)
         if(key):
             #raise Exception("Security group already exists in the cloud, please choose a new name.")
             key_dict['key_name'] = str(key_dict['key_name']) + '_%s'%(self.rannum)
