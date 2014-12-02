@@ -60,6 +60,10 @@ $(function() {
 					$(confirmedActionSelector).append(loaderHtml).fadeIn();
 					loaderId = '#'+loaderId;															// Update loader ID
 
+                    $('.disable-action').bind('click', false);
+                    var origActionColor = $('.disable-action').css('color');
+                    $('.disable-action').css('color', '#696969');
+
 					$.getJSON('/server/' + PROJECT_ID + '/' + confirmedId + '/pause_server/')
 						.success(function(data){
 
@@ -87,6 +91,9 @@ $(function() {
                         		$(actionsSelector).fadeOut().empty();
                         		$(statusSelector).append("PAUSED").fadeIn();
                         		$(actionsSelector).append(unpauseAction).fadeIn();
+
+                                $('.disable-action').unbind('click', false);
+                                $('.disable-action').css('color', origActionColor);
                         	}
                         })
 						.error(function(){ 
@@ -95,7 +102,10 @@ $(function() {
 							// Recall clicked action link on server fault
 							$(confirmedActionSelector).empty().fadeOut();
 							$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
-					});			
+
+                            $('.disable-action').unbind('click', false);
+                            $('.disable-action').css('color', origActionColor.val());
+					});
 
 					$( this ).dialog( "close" );						// Close modal form	
 				},

@@ -1127,16 +1127,16 @@ def delete_router(request, project_id, router_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def destroy_project(request, project_id, project_name):
+    out = {}
     try:
         auth = request.session['auth']
         proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': False}
-        des_proj = destroy.destroy_project(auth, proj_dict)
-        print des_proj
-        return HttpResponseRedirect('/')
-
-    except:
-        messages.warning(request, "Unable to destroy project.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        des = destroy.destroy_project(auth, proj_dict)
+        if(des == 'OK'):
+            out = {'status' : "success", 'message' : "Project %s has been deleted." %(proj_dict['project_name'])}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleteing project %s with error %s" % (proj_dict['project_name'], e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def allocate_floating_ip(request, project_id, ext_net_id):
     try:
@@ -1353,7 +1353,7 @@ def delete_server(request, project_id, server_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-
+'''
 def resize_server(request, project_id, instance_id, flavor_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1370,7 +1370,7 @@ def resize_server(request, project_id, instance_id, flavor_id):
     except:
         messages.warning(request, "Unable to resize server.")
         return HttpResponseRedirect(redirect_to)
-
+'''
 def confirm_resize(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1386,7 +1386,6 @@ def confirm_resize(request, project_id, instance_id):
         messages.warning(request, "Unable to confirm resize.")
         return HttpResponseRedirect(redirect_to)
 
-'''
 def resize_server(request, project_id, instance_id, flavor_id):
     out = {}
     try:
@@ -1401,8 +1400,8 @@ def resize_server(request, project_id, instance_id, flavor_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-'''
 
+'''
 def reboot(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"SOFT"}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1417,8 +1416,8 @@ def reboot(request, project_id, instance_id):
     except:
         messages.warning(request, "Unable to reboot server.")
         return HttpResponseRedirect(redirect_to)
-
 '''
+
 def reboot(request, project_id, instance_id):
     out = {}
     try:
@@ -1434,7 +1433,7 @@ def reboot(request, project_id, instance_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-'''
+
 
 def power_cycle(request, project_id, instance_id):
     #this needs to be changed to the new power cycle method

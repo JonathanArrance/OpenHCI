@@ -115,8 +115,11 @@ $(function() {
 				   			$(targetCell).append(newName).fadeIn();
 				   			$(targetActions).append(newActions).fadeIn();
 
-				   			var newOption = '<option value="'+data.floating_ip+'">'+data.floating_ip+'</option>';
-				   			$('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(newOption);
+				   			var ipOption = '<option value="'+data.floating_ip+'">'+data.floating_ip+'</option>';
+				   			$('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(ipOption);
+
+                            var instanceOption = '<option value="'+instanceId+'">'+instanceName+'</option>';
+                            $('div#fip-assign-dialog-form > form > fieldset > select#assign_instance').append(instanceOption);
 				   		}
 
 				   		$('#assign_ip').attr("disabled", false);

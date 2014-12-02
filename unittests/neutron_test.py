@@ -10,7 +10,7 @@ d = a.get_auth()
 
 print "Instantiating neutron_net_ops object."
 net = neutron_net_ops(d)
-
+'''
 print"----------------------------------------"
 print "createin a new external network"
 create = {'net_name':"pubtest13",'admin_state':"true", 'shared':"false"}
@@ -24,7 +24,7 @@ dns = ["192.168.190.20",'8.8.8.8',"192.168.10.3"]
 input_dict = {'net_id':newpubnet['net_id'],'subnet_dhcp_enable':'true','subnet_dns':dns,'subnet_start_range':'192.168.178.10','subnet_end_range':'192.168.178.40','public_ip':'192.168.178.2','public_gateway':'192.168.178.1','public_subnet_mask':'255.255.255.0'}
 getsubnet = net.add_public_subnet(input_dict)
 print getsubnet
-'''
+
 
 print "----------------------------------------"
 print "deleteing subnet"
@@ -53,15 +53,15 @@ print "----------------------------------------"
 print "getting the new."
 getnet = net.get_network("20400a44-7abc-4468-abfb-b2f45e74b6cb")
 print getnet
-
+'''
 time.sleep(1)
 print"-----------------------------------------"
 print "Setting a subnet on new network"
 dns = ["192.168.190.20"]
-input_dict2 = {'net_id':"4ea066c7-f376-484b-ae96-773e35f1b99c",'subnet_dhcp_enable':'true'}
+input_dict2 = {'net_id':"3ed9dd26-a8d8-4ebf-a563-315b76a43e25",'subnet_dhcp_enable':'true'}
 getsubnet2 = net.add_net_subnet(input_dict2)
 print getsubnet2
-
+'''
 time.sleep(1)
 print "----------------------------------------"
 print "getting the new network8 after subnet added"

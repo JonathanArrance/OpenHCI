@@ -29,7 +29,9 @@
 					<label for="assign_instance">Instance</label>
 					<select name="assign_instance" id="assign_instance">
 						{% for server in instances %}
-							<option value="{{server.server_id}}">{{server.server_name}}</option>
+                            {% if server.server_public_ips == "None" %}
+							    <option value="{{server.server_id}}">{{server.server_name}}</option>
+                            {% endif %}
 						{% endfor %}
 					</select>
 
@@ -63,7 +65,7 @@
 	    		{% for fip in floating_ips %}
 					<tr id="{{fip.floating_ip}}" class="{{fip.floating_ip_id}}">
 						<td id="{{fip.floating_ip}}-ip-cell">
-							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" target="_blank">
+							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-action">
 								<span id="{{fip.floating_ip}}-id-address">{{fip.floating_ip}}</span>
 							</a>
 						</td>
@@ -94,6 +96,5 @@
 			</tr>
 			{% endif %}
 		</table>
-		<div id="fip_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
 	</div>
 </div>
