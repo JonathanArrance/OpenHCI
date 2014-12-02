@@ -4,6 +4,7 @@ import sys
 import os
 import json
 import time
+import random
 #import thread
 #from multiprocessing.pool import ThreadPool
 
@@ -95,6 +96,9 @@ class server_ops:
         self.glance = glance_ops(user_dict)
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
+
+        #random number used if sec group or key name taken
+        self.rannum = random.randrange(1000,9000)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -1046,10 +1050,11 @@ class server_ops:
                 get_group_name = {'select':'sec_group_id','from':'trans_security_group',"where":"sec_group_name='%s'"%(create_sec['group_name'])}
                 group = self.db.pg_select(get_group_name)
                 if(group):
-                    logger.sys_error("Security group already exists in the cloud, please choose a new name.")
-                    raise Exception("Security group already exists in the cloud, please choose a new name.")
+                    #raise Exception("Security group already exists in the cloud, please choose a new name.")
+                    create_sec['group_name'] = str(create_sec['group_name']) + '_%s'%(self.rannum)
+                    logger.sys_error("Security group already exists in the cloud, assigning new name %s."%(create_sec['group_name']))
             except:
-                logger.sys_error("Failed while checking security group.")
+                logger.sql_error("Failed while checking security group.")
                 raise Exception("Failed while checking security group.")
 
         try:
@@ -1247,6 +1252,13 @@ class server_ops:
             if(self.project_id != key_dict['project_id']):
                 logger.sys_error("Users can only create security groups in their project.")
                 raise Exception("Users can only create security groups in their project.")
+
+        get_key = {'select':'sec_key_name','from':'trans_security_keys','where':"sec_key_name='%s'"%(key_dict['key_name'])}
+        key = self.db.pg_select(get_proj)
+        if(key):
+            #raise Exception("Security group already exists in the cloud, please choose a new name.")
+            key_dict['key_name'] = str(key_dict['key_name']) + '_%s'%(self.rannum)
+            logger.sys_error("Security group already exists in the cloud, assigning new name %s."%(key_dict['key_name']))
 
         #connect to the rest api caller.
         try:
