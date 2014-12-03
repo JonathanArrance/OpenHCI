@@ -17,7 +17,7 @@
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-resize-dialog-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-reboot-confirm-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-cycle-confirm-form.js"></script>
-<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-power-confirm-form.js"></script>
+<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweroff-confirm-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
 <script>
@@ -79,15 +79,13 @@
                           action="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" method="get"></form>
                 </div>
 
-                <div id="instance-view-power-confirm-form" title="Power server On/Off?">
-                    Power server <span class="power-server-label">Off</span>
-                </div>
+                <div id="instance-view-poweroff-confirm-form" title="Power server Off?"></div>
 
                 <div class="center-buttons">
                     <a href="#" id="resize-server" class="btn-widget">Resize Instance</a>
                     <a href="#" id="reboot-server" class="btn-widget">Reboot</a>
                     <a href="#" id="cycle-server" class="btn-widget">Power Cycle</a>
-                    <a href="#" id="power-server" class="btn-widget">Power <span class="power-server-label">Off</span></a>
+                    <a href="#" id="poweroff-server" class="btn-widget">Power Off</a>
                 </div>
 
             </div>

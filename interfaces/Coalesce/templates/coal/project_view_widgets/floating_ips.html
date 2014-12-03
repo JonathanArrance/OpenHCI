@@ -3,8 +3,11 @@
 	<div class="well widget">
 		<div class="widget-legend">
 			Floating IP's
+
+            {% if user_level <= 1 %}
 			<a href="#" id="{{default_public}}" class="allocate_ip btn btn-widget" style="float:right">Allocate</a>
 			<a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
+            {% endif %}
 		</div>
 
 		<div id="fip-assign-dialog-form" title="Assign floating IP to instance">

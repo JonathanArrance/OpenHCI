@@ -60,9 +60,11 @@ $(function() {
 					$(confirmedActionSelector).append(loaderHtml).fadeIn();
 					loaderId = '#'+loaderId;															// Update loader ID
 
-                    $('.disable-action').bind('click', false);
-                    var origActionColor = $('.disable-action').css('color');
-                    $('.disable-action').css('color', '#696969');
+//                    $('.disable-action').bind('click', false);
+//                    var origActionColor = $('.disable-action').css('color');
+//                    $('.disable-action').css('color', '#696969');
+
+                    disableActions(true);
 
 					$.getJSON('/server/' + PROJECT_ID + '/' + confirmedId + '/pause_server/')
 						.success(function(data){
@@ -92,8 +94,10 @@ $(function() {
                         		$(statusSelector).append("PAUSED").fadeIn();
                         		$(actionsSelector).append(unpauseAction).fadeIn();
 
-                                $('.disable-action').unbind('click', false);
-                                $('.disable-action').css('color', origActionColor);
+//                                $('.disable-action').unbind('click', false);
+//                                $('.disable-action').css('color', origActionColor);
+                                disableActions(false);
+
                         	}
                         })
 						.error(function(){ 
@@ -103,8 +107,10 @@ $(function() {
 							$(confirmedActionSelector).empty().fadeOut();
 							$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
 
-                            $('.disable-action').unbind('click', false);
-                            $('.disable-action').css('color', origActionColor.val());
+//                            $('.disable-action').unbind('click', false);
+//                            $('.disable-action').css('color', origActionColor.val());
+
+                            disableActions(false);
 					});
 
 					$( this ).dialog( "close" );						// Close modal form	

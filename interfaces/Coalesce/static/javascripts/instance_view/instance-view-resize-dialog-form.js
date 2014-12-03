@@ -80,15 +80,27 @@ $(function () {
                     var bValid = true;
                     allFields.removeClass("ui-state-error");
 
+                    var confirmedFlavor = $(flavor).find("option:selected");
+
                     //bValid = bValid && (password1 == password2);
 
                     if (bValid) {
-                        var action = '/server/' + PROJECT_ID + '/' + SERVER_ID + '/' + flavor.val() + '/resize_server/';
-                        $('#instance-resize-form').attr('action', action);
-                        $('#instance-resize-form').submit();
-                        $('.ui-button').attr('disabled', true);
-                        $('.ui-button').css('cursor', 'inherit');
+                        $.getJSON('/server/'+PROJECT_ID+'/'+SERVER_ID+'/'+confirmedFlavor.val()+'/resize_server/')
+                            .success(function(data){
+                                console.log(data);
+                            })
+                            .error(function(){
+                                console.log("error");
+                            });
+
+//                        var action = '/server/' + PROJECT_ID + '/' + SERVER_ID + '/' + flavor.val() + '/resize_server/';
+//                        $('#instance-resize-form').attr('action', action);
+//                        $('#instance-resize-form').submit();
+//                        $('.ui-button').attr('disabled', true);
+//                        $('.ui-button').css('cursor', 'inherit');
                     }
+
+                    $(this).dialog("close");
                 },
                 Cancel: function () {
                     $(this).dialog("close");
