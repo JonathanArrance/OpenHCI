@@ -62,7 +62,7 @@
 	    		{% for fip in floating_ips %}
 					<tr id="{{fip.floating_ip}}" class="{{fip.floating_ip_id}}">
 						<td id="{{fip.floating_ip}}-ip-cell">
-							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-action">
+							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-link">
 								<span id="{{fip.floating_ip}}-id-address">{{fip.floating_ip}}</span>
 							</a>
 						</td>
@@ -93,5 +93,6 @@
 			</tr>
 			{% endif %}
 		</table>
+        <div id="fip_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
 	</div>
 </div>
