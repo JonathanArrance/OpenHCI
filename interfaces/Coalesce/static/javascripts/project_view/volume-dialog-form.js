@@ -29,7 +29,12 @@ $(function () {
                 var bValid = true;
                 allFields.removeClass("ui-state-error");
                 $('.error').fadeOut().remove();
-                bValid = bValid && checkLength(tips, volume_name, "Volume Name", 3, 16);
+                bValid =
+                    bValid &&
+                    checkLength(tips, volume_name, "Volume Name", 3, 16) &&
+                    checkLength(tips, description, "Description", 1, 16);
+
+                console.log(description + ' ' + description.text() + ' ' + description.val());
 
                 if (bValid) {
 

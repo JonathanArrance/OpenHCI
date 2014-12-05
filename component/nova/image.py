@@ -186,7 +186,7 @@ class nova_image_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error("Could not remove the project %s" %(e))
+                logger.sys_error("%s" %(e))
 
             if(rest['response'] == 200):
                 #build up the return dictionary and return it if everythig is good to go

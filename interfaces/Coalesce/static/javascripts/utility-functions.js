@@ -2,6 +2,13 @@
 
 var message = new message_handle();
 
+// --- CONSOLE ACTIONS
+
+$(document).on('click', '#refresh-console', function() {
+    $('.widget-console').attr( 'src', function ( i, val ) { return val; });
+    console.log("refreshing console");
+});
+
 // --- UI VALIDATION
 
 function updateTips(tips, t) {
@@ -74,13 +81,30 @@ function disableActions(id, bool) {
 function setVisible(selector, bool){
     if (bool){
         if ($(selector).is(":hidden")) {
-            $(selector).fadeIn();
+            $(selector).fadeIn('fast');
         }
     } else {
         if ($(selector).is(":visible")) {
-            $(selector).fadeOut();
+            $(selector).fadeOut('fast');
         }
     }
+}
+
+function emptyAndAppend(selector, newContent) {
+    fadeOutAndEmpty(selector);
+    setTimeout(function () {
+        appendAndFadeIn(selector, newContent);
+    }, 500);
+}
+
+function fadeOutAndEmpty(selector) {
+    setVisible(selector, false);
+    $(selector).empty();
+}
+
+function appendAndFadeIn(selector, newContent) {
+    $(selector).append(newContent);
+    setVisible(selector, true);
 }
 
 // --- CSRF

@@ -43,9 +43,11 @@
             <!-- Masthead ================================================== -->
                 <header id="overview">
                     <div class="row-fluid" >
-                        <div class="span3"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png"
-                                        alt="TransCirrus" width="205px" height="110px!important"></div>
-                        <div class="span6"><h1 style="position:absolute; top:50%; height:32px; margin-top:-16px">{% block title %}OVERRIDE THIS{% endblock %}</h1></div>
+                        <div class="span4">
+                            <img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png" alt="TransCirrus"
+                                 width="205px" height="110px!important">
+                            <h1 class="page-header">{% block title %}OVERRIDE THIS{% endblock %}</h1>
+                        </div>
                     </div>
                 </header>
 

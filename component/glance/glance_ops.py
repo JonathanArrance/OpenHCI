@@ -237,7 +237,7 @@ class glance_ops:
             else:
                 return 'ERROR'
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not create the image %s" %(e))
             raise e
 
     def delete_image(self,image_id):

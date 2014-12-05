@@ -98,7 +98,7 @@ class net_security_ops:
                 else:
                     _http_codes(rest['response'],rest['reason'])
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not create the security group rule %s" %(e))
 
         #return dictionary
         r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}

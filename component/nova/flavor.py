@@ -254,7 +254,7 @@ class flavor_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error("Could not remove the project %s" %(e))
+                logger.sys_error("Could not remove the flavor %s" %(e))
                 raise e
 
             #check the response and make sure it is a 200 or 202

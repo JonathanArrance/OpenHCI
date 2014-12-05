@@ -145,10 +145,12 @@ class account_service_ops:
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'GET'
             api_path = '/v1/AUTH_%s' %(project_id)
+            logger.sys_error(api_path)
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8080'}
             rest = api.call_rest(rest_dict)
+            logger.sys_error(rest)
         except:
             logger.sql_error("Could not get the Swift account containers.")
             raise Exception("Could not get the Swift account containers.")
