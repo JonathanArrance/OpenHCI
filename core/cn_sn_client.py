@@ -971,7 +971,9 @@ while True:
     data_ip = util.get_node_data_ip()
     #Make sure we are on the 172 network(data).
     net = str(data_ip).split('.')
-    if(data_ip and (net == '172')):
+    if(data_ip and (net[0] == '172')):
+        logger.sys_info("Zero Connect recieved data ip %s"%(data_ip))
+        print "Zero Connect recieved data ip %s"%(data_ip)
         # start of client process
         # create socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -991,8 +993,8 @@ while True:
         sock.setblocking(0)
         break
     else:
-        logger.sys_info("Could not get data network IP. Sleeping 5 seconds.")
-        print "Could not get data network IP. Sleeping 5 seconds."
+        logger.sys_info("Zero Connect could not get data network IP. Sleeping 5 seconds.")
+        print "Zero Connect could not get data network IP. Sleeping 5 seconds."
         sleep(5)
 
 try:
