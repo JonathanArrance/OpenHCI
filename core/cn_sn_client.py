@@ -995,6 +995,9 @@ while True:
     if(sock):
         sock.setblocking(0)
         break
+    else:
+        print "Could not connect to the core node. Sleeping 10 seconds."
+        sleep(10)
 
 try:
     # send connect
