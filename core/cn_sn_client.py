@@ -984,19 +984,21 @@ logger.sys_info("ciac_ip: %s" % ciac_ip)
 #data_ip = "172.38.24.11"
 
 # Bind it to data network interface
-sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
+bind = sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
 #sock.bind((data_ip,0))                             # bind's it an IP address 
 
+
+# Connect to the server socket
+server_address = (ciac_ip, 6161)
+print "connecting to %s port %s " % server_address
 while True:
-    # Connect to the server socket
-    server_address = (ciac_ip, 6161)
-    print "connecting to %s port %s " % server_address
-    sock.connect(server_address)
-    if(sock):
+    connect = sock.connect(server_address)
+    if(connect):
+        print "Connected to core node."
         sock.setblocking(0)
         break
     else:
-        print "Could not connect to the core node. Sleeping 10 seconds."
+        print "Could not connect to core nodes, sleeping 10 seconds."
         sleep(10)
 
 try:
