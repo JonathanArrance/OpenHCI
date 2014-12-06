@@ -987,11 +987,14 @@ logger.sys_info("ciac_ip: %s" % ciac_ip)
 sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
 #sock.bind((data_ip,0))                             # bind's it an IP address 
 
-# Connect to the server socket
-server_address = (ciac_ip, 6161)
-print "connecting to %s port %s " % server_address
-sock.connect(server_address)
-sock.setblocking(0)
+while True:
+    # Connect to the server socket
+    server_address = (ciac_ip, 6161)
+    print "connecting to %s port %s " % server_address
+    sock.connect(server_address)
+    if(sock):
+        sock.setblocking(0)
+        break
 
 try:
     # send connect

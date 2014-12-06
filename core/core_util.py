@@ -88,7 +88,6 @@ def send_data(msg, sock):
     while True:
         #print "sending ... %s" %(msg) #TEST
         try:
-            
             sent = sock.sendall(msg)
             if sent == 0:
                 '''
