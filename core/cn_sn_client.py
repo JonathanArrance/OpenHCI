@@ -939,7 +939,6 @@ def keep_alive(sock):
     while True:
         data = core_util.recv_data_alive(sock)
         if data:
-
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 logger.sys_info("***%s***" % (data['Value']))
@@ -967,39 +966,34 @@ def keep_alive(sock):
                 print "client waiting for keep alive messages"
 
 
-# start of client process
-# create socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Get ciac ip address
-ciac_ip = util.getDhcpServer()
-
-# TEST
-#print ciac_ip
-#sys.exit()
-# TEST
-logger.sys_info("ciac_ip: %s" % ciac_ip)
-
-# data network ip
-#data_ip = "172.38.24.11"
-
-# Bind it to data network interface
-bind = sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
-#sock.bind((data_ip,0))                             # bind's it an IP address 
-
-
-# Connect to the server socket
-server_address = (ciac_ip, 6161)
-print "connecting to %s port %s " % server_address
 while True:
-    connect = sock.connect(server_address)
-    if(connect):
-        print "Connected to core node."
+    # data network ip
+    data_ip = util.get_node_data_ip()
+    #Make sure we are on the 172 network(data).
+    net = str(data_ip).split('.')
+    if(data_ip and (net == '172')):
+        # start of client process
+        # create socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # Get ciac ip address
+        ciac_ip = util.getDhcpServer()
+        logger.sys_info("ciac_ip: %s" % ciac_ip)
+
+        # Bind it to data network interface
+        #sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
+        sock.bind((data_ip,0))                             # bind's it an IP address 
+
+        # Connect to the server socket
+        server_address = (ciac_ip, 6161)
+        print "connecting to %s port %s " % server_address
+        sock.connect(server_address)
         sock.setblocking(0)
         break
     else:
-        print "Could not connect to core nodes, sleeping 10 seconds."
-        sleep(10)
+        logger.sys_info("Could not get data network IP. Sleeping 5 seconds.")
+        print "Could not get data network IP. Sleeping 5 seconds."
+        sleep(5)
 
 try:
     # send connect
