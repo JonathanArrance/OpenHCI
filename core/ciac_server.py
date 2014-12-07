@@ -498,7 +498,9 @@ def client_thread(conn, client_addr):
 
                             # check for updation
                             update = 'NA'
-                            update = check_node_update(data)
+                            #This s a bandaid to make it so that the node reconnects after reboot, we need to do some research
+                            #we need to uncomment this at some point.
+                            #update = check_node_update(data)
 
                             if update == 'OK':
                                 logger.sys_info("node_id: %s conflicts with default DB" %(node_id))
