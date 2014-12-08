@@ -26,10 +26,11 @@ $(function () {
 
                 setVisible('#create-volume', false);
                 setVisible('#delete-volume', false);
+                disableLinks(true);
 
                 // Initialize progressbar and make it visible if hidden
                 $('#vol_progressbar').progressbar({value: false});
-                setVisible('#vol_progressbar', true)
+                setVisible('#vol_progressbar', true);
 
                 $.getJSON('/delete_volume/' + volume.val() + '/' + PROJECT_ID + '/')
                     .success(function (data) {
@@ -60,6 +61,8 @@ $(function () {
                         } else {
                             setVisible('#delete-volume', true);
                         }
+
+                        disableLinks(false);
                     })
                     .error(function () {
 
@@ -68,6 +71,7 @@ $(function () {
                         setVisible('#vol_progressbar', false);
                         setVisible('#create-volume', true);
                         setVisible('#delete-volume', true);
+                        disableLinks(false);
                     });
 
                 $(this).dialog("close");

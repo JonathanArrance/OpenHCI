@@ -61,7 +61,7 @@ $(function () {
                                 newRow += '<tr id="' + data.server_info.server_id + '">';
                                 // Create name-cell
                                 newRow += '<td id="' + data.server_info.server_id + '-name-cell">';
-                                newRow += '<a href="/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/" class="disable-link" onclick="false" style="color:#696969;">';
+                                newRow += '<a href="/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/" class="disable-link disabled-link" style="color:#696969;">';
                                 newRow += '<span id="' + data.server_info.server_id + '-name-text">' + data.server_info.server_name + '</span></a></td>';
                                 // Create status-cell
                                 newRow += '<td id="' + data.server_info.server_id + '-status-cell">' + data.server_info.server_status + '</td>';

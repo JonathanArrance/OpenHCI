@@ -6,7 +6,6 @@ var message = new message_handle();
 
 $(document).on('click', '#refresh-console', function() {
     $('.widget-console').attr( 'src', function ( i, val ) { return val; });
-    console.log("refreshing console");
 });
 
 // --- UI VALIDATION
@@ -48,18 +47,36 @@ function disableLinks(bool){
     var activeColor = '#AD682B';
     var disabledColor = '#696969';
 
+
     if (bool) {
-        $(links).bind('click', false);
-        $(links).css('color', disabledColor);
+        if (disabledLinks <= 0){
+            $(links).addClass('disabled-link');
+            $(links).css('color', disabledColor);
+        }
+
         disabledLinks++;
     } else {
         disabledLinks--;
 
-        if (disabledLinks <=0) {
-            $(links).unbind('click', false);
+        if (disabledLinks <= 0) {
+            $(links).removeClass('disabled-link');
             $(links).css('color', activeColor);
             disabledLinks = 0;
         }
+    }
+}
+
+function disableLink(id, bool){
+
+    var activeColor = '#AD682B';
+    var disabledColor = '#696969';
+
+    if (bool) {
+            $(id).addClass('disabled-link');
+            $(id).css('color', disabledColor);
+    } else {
+            $(id).removeClass('disabled-link');
+            $(id).css('color', activeColor);
     }
 }
 
@@ -75,6 +92,16 @@ function disableActions(id, bool) {
     } else {
         $(actions).unbind('click', false);
         $(actions).css('color', activeColor);
+    }
+}
+
+function disableUiButtons(id, bool){
+    if (bool){
+        $(id).attr('disabled', true);
+        $(id).css('cursor', 'inherit');
+    } else {
+        $(id).attr('disabled', false);
+        $(id).css('cursor', 'pointer');
     }
 }
 
@@ -128,3 +155,4 @@ function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
+

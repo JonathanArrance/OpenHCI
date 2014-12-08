@@ -36,17 +36,22 @@ $(function () {
 
                 $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/' + confirmedFlavor.val() + '/resize_server/')
                     .done(function (data) {
+
                         if (data.status == "error") {
+
                             message.showMessage('error', data.message);
                             emptyAndAppend(status, "ACTIVE");
                         }
+
                         if (data.status == "success") {
+
                             message.showMessage('success', data.message);
                             emptyAndAppend(status, "ACTIVE");
                             emptyAndAppend('#instance-flavor', confirmedFlavor);
                         }
                     })
                     .fail(function () {
+
                         message.showMessage('error', "Server Fault");
                         emptyAndAppend(status, "ERROR");
                     })

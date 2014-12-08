@@ -32,22 +32,15 @@ $(function () {
                 if (data.status == 'success') {
                     message.showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
 
-                    // --- BEGIN html string generation
-                    // Initialize empty string for new instance row
-                    var newRow = '';
-                    // Start row
-                    newRow += '<tr id="' + data.ip_info.floating_ip + '">';
-                    // Create ip-cell
-                    newRow += '<td id="' + data.ip_info.floating_ip + '-ip-cell">';
-                    newRow += '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link" onclick="false" style="color:#696969;">';
-                    newRow += '<span id="' + data.ip_info.floating_ip + '-ip-address">' + data.ip_info.floating_ip + '</span></a></td>';
-                    // Create instance-cell
-                    newRow += '<td id="' + data.ip_info.floating_ip + '-instance-cell"><span id="' + data.ip_info.floating_ip + '-instance-name">None</span></td>';
-                    // Create actions-cell
-                    newRow += '<td id="' + data.ip_info.floating_ip + '-actions-cell"><a id="' + data.ip_info.floating_ip + '" class="deallocate_ip" href="#">deallocate</a></td>';
-                    // End row
-                    newRow += '</tr>';
-                    // --- END html string generation
+                    var newRow = '';    // Initialize empty string for new instance row
+                        newRow +=
+                            '<tr id="' + data.ip_info.floating_ip + '">' +
+                                '<td id="' + data.ip_info.floating_ip + '-ip-cell">' +
+                                    '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                    '<span id="' + data.ip_info.floating_ip + '-ip-address">' + data.ip_info.floating_ip + '</span></a></td>' +
+                                '<td id="' + data.ip_info.floating_ip + '-instance-cell"><span id="' + data.ip_info.floating_ip + '-instance-name">None</span></td>' +
+                                '<td id="' + data.ip_info.floating_ip + '-actions-cell"><a id="' + data.ip_info.floating_ip + '" class="deallocate_ip" href="#">deallocate</a></td>' +
+                            '</tr>';
 
                     // If first fip, remove placeholder
                     var rowCount = $('#fip_list tr').length;

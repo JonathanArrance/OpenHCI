@@ -20,25 +20,25 @@ glust = gluster_ops(input_dict)
 #create = glust.create_gluster_volume(input_dict)
 #print create
 
-input_dict2 = {'volume_name':'testvol8','volume_type':'ssd'}
-print input_dict2
+#input_dict2 = {'volume_name':'testvol8','volume_type':'ssd'}
+#print input_dict2
 
-create2 = glust.create_gluster_volume(input_dict2)
-print create2
+#create2 = glust.create_gluster_volume(input_dict2)
+#print create2
 
-input_dict3 = {'volume_name':'testvol9','volume_type':'spindle'}
-print input_dict3
+#input_dict3 = {'volume_name':'testvol9','volume_type':'spindle'}
+#print input_dict3
 
-create3 = glust.create_gluster_volume(input_dict3)
-print create3
+#create3 = glust.create_gluster_volume(input_dict3)
+#print create3
 
 #brick = ['172.12.24.10:/data/gluster/jonarrance2','172.12.24.12:/data/gluster/jonarrance2']
 #input_dict4 = {'volume_name':'jonarrance2','bricks': brick}
 #create4 = glust.create_gluster_volume(input_dict4)
 #print create4
 
-#yo = glust.create_gluster_swift_ring()
-#print yo
+yo = glust.create_gluster_swift_ring()
+print yo
 
 #yo = glust.list_gluster_volumes()
 #print yo

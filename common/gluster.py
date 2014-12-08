@@ -111,7 +111,6 @@ class gluster_ops:
             #get a list of projects
             get_projects = {'select':"proj_id",'from':"projects"}
             projects = self.db.pg_select(get_projects)
-    
             #call the gluster-swift create ring
             #projects is an array of arrays
             string = ''

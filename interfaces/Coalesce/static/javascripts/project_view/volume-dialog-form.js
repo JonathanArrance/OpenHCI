@@ -34,8 +34,6 @@ $(function () {
                     checkLength(tips, volume_name, "Volume Name", 3, 16) &&
                     checkLength(tips, description, "Description", 1, 16);
 
-                console.log(description + ' ' + description.text() + ' ' + description.val());
-
                 if (bValid) {
 
                     message.showMessage('notice', 'Creating new volume ' + volume_name.val());
@@ -58,20 +56,17 @@ $(function () {
 
                                 message.showMessage('success', data.message);
 
-                                // --- BEGIN html string generation
                                 // Initialize empty string for new volume row
                                 var newRow = '';
-                                // Start row
-                                newRow += '<tr id="' + data.volume_id + '">';
-                                // Create name-cell
-                                newRow += '<td id="' + data.volume_id + '-name-cell"><a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link" onclick="false" style="color:#696969;"><span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span></a></td>';
-                                // Create attached-cell
-                                newRow += '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instances</span></td>';
-                                // Create actions-cell
-                                newRow += '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-instance">attach</a></td>';
-                                // End Row
-                                newRow += '</tr>';
-                                // --- END html string generation
+                                    newRow +=
+                                        '<tr id="' + data.volume_id + '">' +
+                                            '<td id="' + data.volume_id + '-name-cell">' +
+                                                '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                                    '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' +
+                                                '</a></td>' +
+                                            '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instances</span></td>' +
+                                            '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-instance">attach</a></td>' +
+                                        '</tr>';
 
                                 // Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-volume button
                                 var rowCount = $('#volume_list tr').length;

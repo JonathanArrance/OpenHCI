@@ -5053,10 +5053,10 @@ th > small {
     padding: 0 10px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    /*border-top: 1px solid rgba(47, 78, 145, 1);*/
-    /*border-left: 1px solid rgba(47, 78, 145, 1);*/
-    /*border-right: 1px solid rgba(47, 78, 145, 1);*/
     box-shadow: -1px -1px 1px 0 rgba(47, 78, 145, 1);
+}
+.widget-section-header:hover{
+    background-color: rgba(28, 60, 119, 0.4);
 }
 
 .widget-section{
@@ -5127,22 +5127,27 @@ th > small {
 }
 
 .widget-console {
-    width: 800px;
-    height: 600px;
+    width: 720px;
+    height: 434px;
 }
 
 .widget-console-well {
-    width: 800px;
-    height: 625px;
+    width: 720px;
+    height: 461px;
 }
 
 .page-header {
     font-family: 'Ubuntu', Tahoma, sans-serif;
     font-size: 180%;
     font-weight: bold;
-    margin-bottom: 10px;
     margin-left: 160px;
     display: inline-block;
     min-height: 16px;
     vertical-align: bottom;
+}
+
+.disabled-link {
+    pointer-events: none;
+    cursor: default;
+    color: #696969;
 }

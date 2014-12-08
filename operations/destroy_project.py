@@ -40,7 +40,7 @@ def destroy_project(auth_dict, project_dict):
     for server in server_list:
         input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
         remove_server = ds.delete_server(auth_dict, input_dict)
-        if(remove_server == "OK"):
+        if(remove_server['delete'] == "OK"):
             logger.sys_info("Destroy project: Server %s removed." % server['server_id'])
         else:
             logger.sys_error("Destroy project: Server %s not removed." % server['server_id'])
