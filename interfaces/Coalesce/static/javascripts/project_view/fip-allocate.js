@@ -48,6 +48,14 @@ $(function() {
 		var extNet = $('.allocate_ip').attr("id");
 
 		$(".allocate_ip").click(function() {
+
+            if ($('.allocate_ip').is(':visible')){ $('.allocate_ip').toggle(); }
+            if ($('#assign_ip').is(':visible')){ $('#assign_ip').toggle(); }
+
+            $('.disable-action').bind('click', false);
+            var origActionColor = $('.disable-action').css('color');
+            $('.disable-action').css('color', '#696969');
+
 			$.getJSON('/allocate_floating_ip/' + PROJECT_ID + '/' + extNet + '/')
 			.success(function(data) {
 
@@ -62,7 +70,7 @@ $(function() {
 					// Start row
 					newRow += '<tr id="'+data.ip_info.floating_ip+'">';
 					// Create ip-cell
-					newRow += '<td id="'+data.ip_info.floating_ip+'-ip-cell"><a href="#"><span id="'+data.ip_info.floating_ip+'-ip-address">'+data.ip_info.floating_ip+'</span></a></td>';
+					newRow += '<td id="'+data.ip_info.floating_ip+'-ip-cell"><a href="/floating_ip/'+data.ip_info.floating_ip_id+'/view/" class="disable-action"><span id="'+data.ip_info.floating_ip+'-ip-address">'+data.ip_info.floating_ip+'</span></a></td>';
 					// Create instance-cell
 					newRow += '<td id="'+data.ip_info.floating_ip+'-instance-cell"><span id="'+data.ip_info.floating_ip+'-instance-name">None</span></td>';
 					// Create actions-cell
@@ -71,14 +79,12 @@ $(function() {
 					newRow += '</tr>';
 					// --- END html string generation
 
-					// Check to see if this is the first fip to be generated, if so remove placeholder and reveal assign_ip button
-					var rowCount = $('#fip_list tr').length;
-					if (rowCount <= 2) {
-						$('#fip_placeholder').remove().fadeOut();
-						if ($('#assign_ip').is(':hidden')) { 
-							$('#assign_ip').toggle(); 
-						};
-					};
+                    // Check to see if this is the first fip to be generated, if so remove placeholder and reveal assign_ip button
+                    var rowCount = $('#fip_list tr').length;
+                    if (rowCount <= 2) {
+                        $('#fip_placeholder').remove().fadeOut();
+                        if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+                    }
 
 					// Append new row to instance-list
 					$('#fip_list').append(newRow).fadeIn();
@@ -87,10 +93,27 @@ $(function() {
 				   	$('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(newOption);
 				}
 
+                if ($('.allocate_ip').is(':hidden')){ $('.allocate_ip').toggle(); }
+                if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+
+                $('.disable-action').unbind('click', false);
+                $('.disable-action').css('color', origActionColor);
+
 			})
 			.error(function(){
 				message.showMessage('error', 'Server Fault');
+
+                if ($('.allocate_ip').is(':hidden')){ $('.allocate_ip').toggle(); }
+                if ($('#assign_ip').is(':hidden')){ $('#assign_ip').toggle(); }
+
+                $('.disable-action').unbind('click', false);
+                $('.disable-action').css('color', origActionColor);
 			});
 		});
 	});
+});
+
+$(document).ready(function() {
+    var rowCount = $('#fip_list tr').length;
+    if (rowCount <= 2) { if ($('#assign_ip').is(':visible')){ $('#assign_ip').toggle(); }}
 });

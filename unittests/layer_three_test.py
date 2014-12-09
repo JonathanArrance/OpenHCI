@@ -88,12 +88,12 @@ for y in yo2:
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
     
-
+'''
 print "attaching floating ip to instance"
-update_dict = {'floating_ip':'192.168.10.75','instance_id':"6c21d791-33a4-45dc-9d20-f00a1164cd3f",'project_id':"4ecbada824e14d80b444200c8ab96b44",'action':"add"}
+update_dict = {'floating_ip':'192.168.10.71','instance_id':"ac65509e-da9d-4d2a-b82f-ad269287367d",'project_id':"1c52c0fdf145438d9a8b3b114cbc608a",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
-
+'''
 print "Listing floating ips"
 yo5 = router.list_floating_ips()
 print yo5

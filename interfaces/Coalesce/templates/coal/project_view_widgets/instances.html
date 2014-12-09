@@ -60,23 +60,24 @@
             </form>
         </div>
 
-        <div id="instance-pause-confirm-form" title="Pause Instance">
-        	<p style="text-align:center;">Pause <span class="instance-name"></span>?</p>
-        </div>
-
-        <div id="instance-suspend-confirm-form" title="Suspend Instance">
-        	<p style="text-align:center;">Suspend <span class="instance-name"></span>?</p>
-        </div>
-
-        <div id="instance-unpause-confirm-form" title="Unpause Instance">
-        	<p style="text-align:center;">Unpause <span class="instance-name"></span>?</p>
-        </div>
-
-        <div id="instance-resume-confirm-form" title="Resume Instance">
-        	<p style="text-align:center;">Resume <span class="instance-name"></span>?</p>
-        </div>
-
         {% if user_level == 0 %}
+
+            <div id="instance-pause-confirm-form" title="Pause Instance">
+                <p style="text-align:center;">Pause <span class="instance-name"></span>?</p>
+            </div>
+
+            <div id="instance-suspend-confirm-form" title="Suspend Instance">
+                <p style="text-align:center;">Suspend <span class="instance-name"></span>?</p>
+            </div>
+
+            <div id="instance-unpause-confirm-form" title="Unpause Instance">
+                <p style="text-align:center;">Unpause <span class="instance-name"></span>?</p>
+            </div>
+
+            <div id="instance-resume-confirm-form" title="Resume Instance">
+                <p style="text-align:center;">Resume <span class="instance-name"></span>?</p>
+            </div>
+
         	<div id="instance-delete-dialog-form" title="Delete Instance">
         		<p class="validateTips">Select an instance to delete.</p>
         		<form>
@@ -158,7 +159,7 @@
 				{% for k,v in instance_info.items %}
 					<tr id="{{v.server_id}}">
 						<td id="{{v.server_id}}-name-cell">
-							<a href="/{{project.project_id}}/{{v.server_id}}/instance_view/" target="_blank"><span id="{{v.server_id}}-name-text">{{v.server_name}}</span></a>		
+							<a href="/{{project.project_id}}/{{v.server_id}}/instance_view/" class="disable-action"><span id="{{v.server_id}}-name-text">{{v.server_name}}</span></a>
 						</td>
 			    		<td id="{{v.server_id}}-status-cell">{{v.server_status}}</td>
 			    		<td id="{{v.server_id}}-os-cell">{{v.server_os}} / {{v.server_flavor}}</td>
@@ -186,6 +187,6 @@
 	   			<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>
 	  		</table>
 	  	{% endif %}
-	  	<div id="instance_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
+	  	<div id="instance_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
     </div>
 </div>

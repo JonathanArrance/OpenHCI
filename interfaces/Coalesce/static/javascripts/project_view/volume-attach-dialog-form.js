@@ -58,7 +58,8 @@ $(function() {
 					var confirmedVolumeId = volumeId;
 					var confirmedVolumeName = document.getElementById(confirmedVolumeId+"-name-text");
 					confirmedVolumeName = $(confirmedVolumeName).text();
-					var confirmedInstanceId = instance.val();
+                    var confirmedInstance = $("#instance").find(":selected");
+					var confirmedInstanceId = confirmedInstance.val();
 					var confirmedInstanceName = document.getElementById(confirmedInstanceId+"-name-text");
 					confirmedInstanceName = $(confirmedInstanceName).text();
 					var noticeMessage = 'Attaching '+confirmedVolumeName+' to '+confirmedInstanceName+'.';

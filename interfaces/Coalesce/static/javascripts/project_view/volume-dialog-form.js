@@ -44,7 +44,7 @@ $(function() {
 			tips = $( ".validateTips" );
 
 		function updateTips( t ) {
-			tips.text( t ).addClass( "ui-state-highlight" );
+			tips.append( '<div class="error">'+t+'</div>' ).addClass( "ui-state-highlight" );
 			setTimeout(function() { tips.removeClass( "ui-state-highlight", 1500 ); }, 500 );
 		}
 
@@ -77,7 +77,8 @@ $(function() {
 
 						message.showMessage('notice', 'Creating new volume '+volume_name.val());	// Flag notice
 
-						$('#create-volume').attr("disabled", true);									// Disable create-volume button
+						if ($('#create-volume').is(':visible')){ $('#create-volume').toggle(); }
+                        if ($('#delete-volume').is(':visible')){ $('#delete-volume').toggle(); }
 
 						// Initialize progressbar and make it visible if hidden
 						$('#vol_progressbar').progressbar({value: false});
@@ -97,7 +98,7 @@ $(function() {
 					   			// Start row
 					   			newRow += '<tr id="'+data.volume_id+'">';
 					   			// Create name-cell
-					   			newRow += '<td id="'+data.volume_id+'-name-cell"><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/" target="_blank"><span id="'+data.volume_id+'-name-text">'+data.volume_name+'</span></a></td>';
+					   			newRow += '<td id="'+data.volume_id+'-name-cell"><a href="/projects/'+PROJECT_ID+'/volumes/'+data.volume_id+'/view/" class="disable-action"><span id="'+data.volume_id+'-name-text">'+data.volume_name+'</span></a></td>';
 					   			// Create attached-cell
 					   			newRow += '<td id="'+data.volume_id+'-attached-cell"><span id="'+data.volume_id+'-attached-placeholder">No Attached Instances</span></td>';
 					   			// Create actions-cell
@@ -106,12 +107,12 @@ $(function() {
 					   			newRow += '</tr>';
 					   			// --- END html string generation
 
-					   			// Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-instance button
-					   			var rowCount = $('#volume_list tr').length;
-					   			if (rowCount <= 2) {
-					   				$('#volume-placeholder').remove().fadeOut();
-					   				if ($('#delete-volume').is(':hidden')) { $('#delete-volume').toggle(); };
-					   			};
+                                // Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-volume button
+                                var rowCount = $('#volume_list tr').length;
+                                if (rowCount <= 2) {
+                                    $('#volume-placeholder').remove().fadeOut();
+                                    if ($('#delete-volume').is(':hidden')) { $('#delete-volume').toggle(); }
+                                }
 
 					   			// Append new row to volume-list
 					   			$('#volume_list').append(newRow).fadeIn();
@@ -125,7 +126,8 @@ $(function() {
 					   		// Hide progressbar on completion
 							if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
 
-							$('#create-volume').attr("disabled", false);	// Enable create-volume button upon completion
+                            if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                            if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 					   	})
 					   .error(function(){
 
@@ -134,17 +136,23 @@ $(function() {
 					   		// Hide progressbar on completion
 							if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
 
-							$('#create-volume').attr("disabled", false);	// Enable create-volume button upon completion
+                               if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                               if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 					   	});
 
 					   $( this ).dialog( "close" );
+                       allFields.val( "" ).removeClass( "ui-state-error" );
+                       $('.error').remove();
 					}
 				},
 				Cancel: function() {
 					$( this ).dialog( "close" );
 				}
 			},
-			close: function() {	allFields.val( "" ).removeClass( "ui-state-error" ); } // Remove ui validations
+			close: function() {
+                allFields.val( "" ).removeClass( "ui-state-error" );
+                $('.error').remove();
+            }
 		})
 
 		// Open modal form when create-volume button is clicked

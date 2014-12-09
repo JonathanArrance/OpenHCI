@@ -3,12 +3,11 @@
 	<div class="well widget">
 		<div class="widget-legend">
 			Floating IP's
-			<a href="#" id="{{default_public}}" class="allocate_ip btn btn-widget" style="float:right">
-				Allocate IP
-			</a>
-			{% if floating_ips %}
-				<a href="#"  id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
-			{% endif %}
+
+            {% if user_level <= 1 %}
+			<a href="#" id="{{default_public}}" class="allocate_ip btn btn-widget" style="float:right">Allocate</a>
+			<a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
+            {% endif %}
 		</div>
 
 		<div id="fip-assign-dialog-form" title="Assign floating IP to instance">
@@ -63,7 +62,7 @@
 	    		{% for fip in floating_ips %}
 					<tr id="{{fip.floating_ip}}" class="{{fip.floating_ip_id}}">
 						<td id="{{fip.floating_ip}}-ip-cell">
-							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" target="_blank">
+							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-action">
 								<span id="{{fip.floating_ip}}-id-address">{{fip.floating_ip}}</span>
 							</a>
 						</td>
@@ -94,6 +93,5 @@
 			</tr>
 			{% endif %}
 		</table>
-		<div id="fip_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
 	</div>
 </div>

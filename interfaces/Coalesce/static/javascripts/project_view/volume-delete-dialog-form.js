@@ -42,13 +42,7 @@ $(function() {
 			}
 		});
 
-		var volume = $( "#volume" ),
-			tips = $( ".validateTips" );
-
-		function updateTips( t ) {
-			tips.text( t ).addClass( "ui-state-highlight" );
-			setTimeout(function() { tips.removeClass( "ui-state-highlight", 1500 ); }, 500 );
-		}
+		var volume = $( "#volume" );
 
 		$( "#volume-delete-dialog-form" ).dialog({
 			autoOpen: false,
@@ -60,7 +54,8 @@ $(function() {
 
 					message.showMessage('notice', 'Deleting Volume');	// Flag notice
 
-					$('#delete-volume').attr("disabled", true);		// Disable delete-volume button
+                    if ($('#create-volume').is(':visible')){ $('#create-volume').toggle(); }
+                    if ($('#delete-volume').is(':visible')){ $('#delete-volume').toggle(); }
 
 					// Initialize progressbar and make it visible if hidden
 					$('#vol_progressbar').progressbar({value: false});
@@ -78,7 +73,7 @@ $(function() {
                         	if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
 
                         	$('#delete-volume').attr("disabled", false);	// Enable delete-instance button
-						}; 	
+						}
 						
 						if(data.status == 'success'){ 						// Update interface
 
@@ -92,27 +87,29 @@ $(function() {
                         	var targetOption = 'select#volume option[value='+volume.val()+']';
                         	$(targetOption).remove();
 
-                        	// Check to see if this is the last volume, if so add a placeholder row and hide delete-volume button
-                        	var rowCount = $('#volume_list tr').length;
-                        	if (rowCount < 2) {
-                        		var placeholder = '<tr id="volume-placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td>/tr>';
-                        		$('#volume_list').append(placeholder).fadeIn();
-                        		if ($('#delete-volume').is(':visible')) {	$('#delete-volume').toggle();	};
-                        	};
-
                         	// Hide progressbar on completion
-                        	if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
+                        	if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); }
 
-                        	$('#delete-volume').attr("disabled", false);	// Enable delete-instance button
-                        };
+                            if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                            if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
+
+                            // Check to see if this is the last volume, if so add a placeholder row and hide delete-volume button
+                            var rowCount = $('#volume_list tr').length;
+                            if (rowCount < 2) {
+                                var placeholder = '<tr id="volume-placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td>/tr>';
+                                $('#volume_list').append(placeholder).fadeIn();
+                                if ($('#delete-volume').is(':visible')) {	$('#delete-volume').toggle();	}
+                            }
+                        }
                     })
 					.error(function(){
 
 						message.showMessage('error', 'Server Fault');	// Flag server fault message
 
 						// Hide progressbar on error
-						if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); };
-						$('#delete-volume').attr("disabled", false);	// Enable delete-volume button
+						if ($('#vol_progressbar').is(':visible')) { $('#vol_progressbar').toggle(); }
+                        if ($('#create-volume').is(':hidden')){ $('#create-volume').toggle(); }
+                        if ($('#delete-volume').is(':hidden')){ $('#delete-volume').toggle(); }
 					});
 
 					$( this ).dialog( "close" );	// Close modal form	

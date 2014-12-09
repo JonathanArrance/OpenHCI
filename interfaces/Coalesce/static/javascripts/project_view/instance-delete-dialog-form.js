@@ -60,14 +60,21 @@ $(function() {
 
 					message.showMessage('notice', 'Deleting Instance');	// Flag notice
 
-					$('#delete-instance').attr("disabled", true);		// Disable delete-instance button					
-					$('#create-instance').attr("disabled", true);		// Disable delete-instance button
+                    if ($('#delete-instance').is(':visible')) { $('#delete-instance').toggle(); }
+                    if ($('#create-instance').is(':visible')) { $('#create-instance').toggle(); }
+
+                    $('.disable-action').bind('click', false);
+                    var origActionColor = $('.disable-action').css('color');
+                    $('.disable-action').css('color', '#696969');
+
+                    var confirmedInstance = instance.val();
+                    var confirmedInstanceName = instance;
 
 					// Initialize progressbar and make it visible if hidden
 					$('#instance_progressbar').progressbar({value: false});
 					if ($('#instance_progressbar').is(':hidden')) {	$('#instance_progressbar').toggle(); };
 
-					$.getJSON('/server/' + PROJECT_ID + '/' + instance.val() + '/delete_server/')
+					$.getJSON('/server/' + PROJECT_ID + '/' + confirmedInstance + '/delete_server/')
 						.success(function(data){
 
 							// Check if instance was successfully deleted
@@ -77,27 +84,61 @@ $(function() {
                         		message.showMessage('success', data.message);	// Flag success message
 
                         		// Remove instance row from instance_list
-                        		var targetRow = '#' + instance.val();
+                        		var targetRow = '#' + confirmedInstance;
                         		$('#instance_list').find(targetRow).fadeOut().remove();
 
                         		// Remove instance from delete-instance select menu
-                        		var targetOption = 'select#instance option[value='+instance.val()+']';
-                        		$(targetOption).remove();
+                        		var deleteSelect = 'div#instance-delete-dialog-form > form > fieldset > select#instance option[value='+confirmedInstance+']';
+                        		$(deleteSelect).remove();
 
-                        		// Check to see if this is the last instance, if so add a placeholder row and hide delete-instance button
-                        		var rowCount = $('#instance_list tr').length;
-                        		if (rowCount < 2) {
-                        			var placeholder = '<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>';
-                        			$('#instance_list').append(placeholder).fadeIn();
-                        			if ($('#delete-instance').is(':visible')) {	$('#delete-instance').toggle();	};
-                        		};
+                                // Remove instance from attach-volume select menu
+                                var attachSelect = 'div#volume-attach-dialog-form > form  > fieldset > select#instance option[value='+confirmedInstance+']';
+                                $(attachSelect).remove();
+
+                                // Remove instance from assign-fip select menu
+                                var assignSelect = 'div#fip-assign-dialog-form > form > fieldset > select#assign_instance option[value='+confirmedInstance+']';
+                                $(assignSelect).remove();
+
+                                for(var i=0; i < data.vols.length; i++) {
+                                    var volAttachedCell = document.getElementById(data.vols[i]+'-attached-cell');
+                                    $(volAttachedCell).empty().fadeOut();
+                                    var newAttached = '<span id="'+data.vols[i]+'-attached-placeholder">No Attached Instance</span>';
+                                    $(volAttachedCell).append(newAttached).fadeIn();
+
+                                    var volActionsCell = document.getElementById(data.vols[i]+'-actions-cell');
+                                    $(volActionsCell).empty().fadeOut();
+                                    var newVolAction = '<a href="#" class="attach-instance">attach</a>';
+                                    $(volActionsCell).append(newVolAction).fadeIn();
+                                }
+
+                                for(var j=0; j < data.floating_ip.length; j++) {
+                                    var ipInstanceCell = document.getElementById(data.floating_ip[j]+'-instance-cell');
+                                    $(ipInstanceCell).empty().fadeOut();
+                                    var newInstance = '<span id="'+data.floating_ip[j]+'-instance-name">None</span>';
+                                    $(ipInstanceCell).append(newInstance).fadeIn();
+
+                                    var ipActionsCell = document.getElementById(data.floating_ip[j]+'-actions-cell');
+                                    $(ipActionsCell).empty().fadeOut();
+                                    var newIpAction = '<a id="'+data.floating_ip[j]+'" class="deallocate_ip" href="#">deallocate</a>';
+                                    $(ipActionsCell).append(newIpAction).fadeIn();
+                                }
 
                         		// Hide progressbar on completion
                         		if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
-                        		$('#delete-instance').attr("disabled", false);	// Enable delete-instance button
-                        		$('#create-instance').attr("disabled", false);	// Enable create-instance button
-                        	};
+                                if ($('#delete-instance').is(':hidden')) { $('#delete-instance').toggle(); }
+                                if ($('#create-instance').is(':hidden')) { $('#create-instance').toggle(); }
+                                $('.disable-action').unbind('click', false);
+                                $('.disable-action').css('color', origActionColor);
+
+                                // Check to see if this is the last instance, if so add a placeholder row and hide delete-instance button
+                                var rowCount = $('#instance_list tr').length;
+                                if (rowCount < 2) {
+                                    var placeholder = '<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>';
+                                    $('#instance_list').append(placeholder).fadeIn();
+                                    if ($('#delete-instance').is(':visible')) {	$('#delete-instance').toggle();	};
+                                }
+                            }
                         })
 						.error(function(){
 
@@ -106,9 +147,11 @@ $(function() {
 							// Hide progressbar on error
 							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
-							$('#delete-instance').attr("disabled", false);	// Enable delete-instance button
-							$('#create-instance').attr("disabled", false);	// Enable create-instance button
-						});
+                            if ($('#delete-instance').is(':hidden')) { $('#delete-instance').toggle(); }
+                            if ($('#create-instance').is(':hidden')) { $('#create-instance').toggle(); }
+                            $('.disable-action').unbind('click', false);
+                            $('.disable-action').css('color', origActionColor);
+                        });
 
 					$( this ).dialog( "close" );	// Close modal form	
 				},

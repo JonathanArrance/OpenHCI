@@ -68,41 +68,41 @@
             </form>
 		</div>
 
-		{% if volumes %}
-			<table class="paleblue widget-table" id="volume_list">
-				<tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
-				{% for k,v in volume_info.items %}
-			  		<tr id="{{v.volume_id}}">
-			  			<td id="{{v.volume_id}}-name-cell">
-			  			 	<a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/" target="_blank"><span id="{{v.volume_id}}-name-text">{{v.volume_name}}</span></a>
-			  			</td>
-		  				<td id="{{v.volume_id}}-attached-cell">
-		   					{% if v.volume_attached == 'false' %}
-			 					<span id="{{v.volume_id}}-attached-placeholder">No Attached Instance</span>
-		   					{% else %}
-			 					{% for server in instances %}
-			   						{% if server.server_id == v.volume_instance %}
-			 							<span id="{{v.volume_id}}-attached-{{server.server_name}}">{{server.server_name}}</span>
-			   						{% endif %}
-			 					{% endfor %}
-		   					{% endif %}
-		  				</td>
-		  				<td id="{{v.volume_id}}-actions-cell">
-							{% if v.volume_attached == 'true' %}
-			   					<a href="#" class="detach-instance">detach</a>
-							{% else %}
-								<a href="#" class="attach-instance">attach</a>
-							{% endif %}
-		  				</td>
-					</tr>
-				{% endfor %}
-			</table>
-	  	{% else %}
-			<table class="paleblue" id="volume_list">
-            	<tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
-	   			<tr id="volume-placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td><td></td></tr>
-	  		</table>
-	  	{% endif %}
-	  	<div id="vol_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em;"></div>
+		<table class="paleblue widget-table" id="volume_list">
+            {% if volumes %}
+			    <tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
+			    {% for k,v in volume_info.items %}
+		  		    <tr id="{{v.volume_id}}">
+		  			    <td id="{{v.volume_id}}-name-cell">
+		  			 	    <a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/" class="disable-action"><span id="{{v.volume_id}}-name-text">
+                                {{v.volume_name}}</span>
+                            </a>
+		  			    </td>
+		  			    <td id="{{v.volume_id}}-attached-cell">
+		   				    {% if v.volume_attached == 'false' %}
+		 					    <span id="{{v.volume_id}}-attached-placeholder">No Attached Instance</span>
+		   				    {% else %}
+		 					    {% for server in instances %}
+		   						    {% if server.server_id == v.volume_instance %}
+		 							    <span id="{{v.volume_id}}-attached-{{server.server_name}}">{{server.server_name}}</span>
+		   						    {% endif %}
+		 					    {% endfor %}
+		   				    {% endif %}
+		  			    </td>
+		  			    <td id="{{v.volume_id}}-actions-cell">
+					    	{% if v.volume_attached == 'true' %}
+		   			    		<a href="#" class="detach-instance">detach</a>
+					    	{% else %}
+					    		<a href="#" class="attach-instance">attach</a>
+					    	{% endif %}
+		  			    </td>
+				    </tr>
+			    {% endfor %}
+            {% else %}
+                <tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
+                <tr id="volume-placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td></tr>
+            {% endif %}
+		</table>
+	    <div id="vol_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display:none;"></div>
 	</div>
 </div>

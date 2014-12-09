@@ -73,8 +73,9 @@ $(function() {
 
 				if ( bValid ) {
 
-					$('#assign_ip').attr("disabled", true);
-					$('.allocate_ip').attr("disabled", true);
+                    $('.disable-action').bind('click', false);
+                    var origActionColor = $('.disable-action').css('color');
+                    $('.disable-action').css('color', '#696969');
 
 					// --- BEGIN Create loader
 					// Target clicked action link
@@ -115,12 +116,15 @@ $(function() {
 				   			$(targetCell).append(newName).fadeIn();
 				   			$(targetActions).append(newActions).fadeIn();
 
-				   			var newOption = '<option value="'+data.floating_ip+'">'+data.floating_ip+'</option>';
-				   			$('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(newOption);
+				   			var ipOption = '<option value="'+data.floating_ip+'">'+data.floating_ip+'</option>';
+				   			$('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(ipOption);
+
+                            var instanceOption = '<option value="'+instanceId+'">'+instanceName+'</option>';
+                            $('div#fip-assign-dialog-form > form > fieldset > select#assign_instance').append(instanceOption);
 				   		}
 
-				   		$('#assign_ip').attr("disabled", false);
-						$('.allocate_ip').attr("disabled", false);
+                        $('.disable-action').unbind('click', false);
+                        $('.disable-action').css('color', origActionColor);
 				   	})
 				   	.error(function() { 
 
@@ -129,8 +133,8 @@ $(function() {
 				   		$(targetActions).empty().fadeOut();
 				   		$(targetActions).append(confirmedActionHtml);
 
-				   		$('#assign_ip').attr("disabled", false);
-						$('.allocate_ip').attr("disabled", false);
+                        $('.disable-action').unbind('click', false);
+                        $('.disable-action').css('color', origActionColor);
 				   	});
 
 				    $( this ).dialog( "close" );

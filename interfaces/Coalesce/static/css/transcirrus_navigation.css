@@ -1082,3 +1082,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff8e1e', end
 			border-radius: 0 0 4px 4px; }
             
 .navpush { height: 30px; }
+
+.center-buttons {
+    text-align: center;
+}

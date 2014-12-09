@@ -79,8 +79,12 @@ $(function() {
 
 						message.showMessage('notice', 'Creating New Instance ' + name.val());	// Flag notice
 
-						$('#create-instance').attr("disabled", true);							// Disable create-instance button
-						$('#delete-instance').attr("disabled", true);							// Disable delete-instance button
+                        if ($('#delete-instance').is(':visible')) { $('#delete-instance').toggle(); }
+                        if ($('#create-instance').is(':visible')) { $('#create-instance').toggle(); }
+
+                        $('.disable-action').bind('click', false);
+                        var origActionColor = $('.disable-action').css('color');
+                        $('.disable-action').css('color', '#696969');
 						
 						// Initialize progressbar and make it visible if hidden
 						$('#instance_progressbar').progressbar({value: false});
@@ -101,7 +105,7 @@ $(function() {
 								// Start row
 								newRow += '<tr id="'+data.server_info.server_id+'">';
 								// Create name-cell
-								newRow += '<td id="'+data.server_info.server_id+'-name-cell"><a href="/'+PROJECT_ID+'/'+data.server_info.server_id+'/instance_view/" target="_blank"><span id="'+data.server_info.server_id+'-name-text">'+data.server_info.server_name+'</span></a></td>';
+								newRow += '<td id="'+data.server_info.server_id+'-name-cell"><a href="/'+PROJECT_ID+'/'+data.server_info.server_id+'/instance_view/" class="disable-instance-action"><span id="'+data.server_info.server_id+'-name-text">'+data.server_info.server_name+'</span></a></td>';
 								// Create status-cell
 								newRow += '<td id="'+data.server_info.server_id+'-status-cell">'+data.server_info.server_status+'</td>';
 								// Create os-cell
@@ -110,13 +114,13 @@ $(function() {
 								newRow += '<td id="'+data.server_info.server_id+'-actions-cell">';
 								// Populate actions-cell
 								if(data.server_info.server_status == "ACTIVE"){
-									newRow += '<a href="'+data.server_info.novnc_console+'" target="_blank">console</a> | <a href="/server/'+PROJECT_ID+'/'+data.server_info.server_id+'/pause_server">pause</a> | <a href="/server/'+PROJECT_ID+'/'+data.server_info.server_id+'/suspend_server">suspend</a>';
+									newRow += '<a href="'+data.server_info.novnc_console+'" target="_blank">console</a><span class="instance-actions-pipe"> | </span><a href="#" class="pause-instance">pause</a><span class="instance-actions-pipe"> | </span><a href="#" class="suspend-instance">suspend</a>';
 								};
 								if(data.server_info.server_status == "PAUSED"){
-									newRow += ' | <a href="/server/'+PROJECT_ID+'/'+data.server_info.server_id+'/unpause_server">unpause</a>';
+									newRow += '<a href="#" class="unpause-instance">unpause</a>';
 								};
 								if(data.server_info.server_status == "SUSPENDED"){
-									newRow += ' | <a href="/server/'+PROJECT_ID+'/'+data.server_info.server_id+'/resume_server">resume</a>';
+									newRow += '<a href="#" class="resume-instance">resume</a>';
 								};
 								// End actions-cell and row
 								newRow += '</td></tr>';
@@ -142,24 +146,33 @@ $(function() {
 								// Append new option to attach-volume select menu
 								var attachSelect = 'div#volume-attach-dialog-form > form  > fieldset > select#instance';
 								$(attachSelect).append(newOption);
+
+                                //
+                                var assignSelect = 'div#fip-assign-dialog-form > form > fieldset > select#assign_instance';
+                                $(assignSelect).append(newOption);
 							};
 
 							// Hide progressbar on completion
 							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
 
-							$('#create-instance').attr("disabled", false);	// Enable create-instance button upon completion
-							$('#delete-instance').attr("disabled", false);	// Enable delete-instance button upon completion
-						})
+                            if ($('#delete-instance').is(':hidden')) { $('#delete-instance').toggle(); }
+                            if ($('#create-instance').is(':hidden')) { $('#create-instance').toggle(); }
+                            $('.disable-action').unbind('click', false);
+                            $('.disable-action').css('color', origActionColor);
+
+                        })
 						.error(function(){
 
 							message.showMessage('error', 'Server Fault');	// Flage server fault message
 
 							// Hide progressbar on error		
-							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); };
+							if ($('#instance_progressbar').is(':visible')) { $('#instance_progressbar').toggle(); }
 
-							$('#create-instance').attr("disabled", false);	// Enable create-instance button upon error
-							$('#create-delete').attr("disabled", false);	// Enable create-delete button upon completion
-						});
+                            if ($('#delete-instance').is(':hidden')) { $('#delete-instance').toggle(); }
+                            if ($('#create-instance').is(':hidden')) { $('#create-instance').toggle(); }
+                            $('.disable-action').unbind('click', false);
+                            $('.disable-action').css('color', origActionColor);
+                        });
 
 					$( this ).dialog( "close" );	// Close modal form	
 					}
