@@ -295,7 +295,7 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
 
     #we will have to implement threading here to background the brick add procedure this could take a while
     for vol in glust_vols:
-        if(vol == 'cinder-volume-ssd' or vol == 'instances'):
+        if((vol == 'cinder-volume-ssd' or vol == 'instances') and disk_type == 'ssd'):
             logger.sys_info('Adding ssd storage to gluster volume %s'%(vol))
             brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
             expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
@@ -306,7 +306,7 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
             else:
                 print "Error: Brick %s not added to volumes %s"%(brick,vol)
                 logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
-        else:
+        elif(disk_type == 'spindle'):
             logger.sys_info('Adding spindle storage to gluster volume %s'%(vol))
             brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
             expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
