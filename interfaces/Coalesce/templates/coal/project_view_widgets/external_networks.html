@@ -10,7 +10,7 @@
                 <tr> <th>Network</th>  <th>Network info</th>  <th>Actions</th></tr>
 
                 {% for key,value in public_networks.items %}
-		    <tr> <td><a href="/network/{{value.net_id}}/view/">{{key}}</a></td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}}</td>  <td></td></tr>
+		    <tr> <td><a href="/network/{{value.net_id}}/view/" class="disable-link">{{key}}</a></td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}}</td>  <td></td></tr>
 		{% endfor %}
 	    </table>
 	  {% else %}	

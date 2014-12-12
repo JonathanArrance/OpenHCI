@@ -51,7 +51,7 @@
             {% for c in containers %}
             <tr>
                 <td>
-                    <a href="/projects/{{project.project_id}}/containers/{{c}}/view/">{{c}}</a>
+                    <a href="/projects/{{project.project_id}}/containers/{{c}}/view/" class="disable-link">{{c}}</a>
                 </td>
                 <td>
                     <a href="/delete_container/{{c}}/{{ project.project_id}}/">delete</a>
