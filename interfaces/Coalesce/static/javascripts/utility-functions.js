@@ -1,20 +1,32 @@
-// --- MESSAGE HANDLING
+// ---------------- //
+// MESSAGE HANDLING
+// ---------------- //
 
 var message = new message_handle();
 
-// --- CONSOLE ACTIONS
 
-$(document).on('click', '#refresh-console', function() {
-    $('.widget-console').attr( 'src', function ( i, val ) { return val; });
+
+// ---------------- //
+// CONSOLE ACTIONS
+// ---------------- //
+
+$(document).on('click', '#refresh-console', function () {
+    $('.widget-console').attr('src', function (i, val) {
+        return val;
+    });
 });
 
-// --- UI VALIDATION
+
+
+// ---------------- //
+// UI VALIDATION
+// ---------------- //
 
 function updateTips(tips, t) {
     tips.append('<div class="error">' + t + '</div>').addClass("ui-state-highlight").fadeIn();
     setTimeout(function () {
         tips.removeClass("ui-state-highlight", 1500);
-    }, 500).fadeOut();
+    }, 500);
 }
 
 function checkLength(tips, o, n, min, max) {
@@ -37,11 +49,27 @@ function checkRegexp(tips, o, regexp, n) {
     }
 }
 
-// --- DOM MANIPULATION
+function checkStorage(tips, o) {
+    if (o.val() > availableStorage) {
+        o.addClass("ui-state-error");
+        updateTips(tips, "There is only " + availableStorage + "gbs of available storage.");
+        return false;
+    } else {
+        return true;
+    }
+}
+
+
+
+// ---------------- //
+// DOM MANIPULATION
+// ---------------- //
+
+// --- GENERAL
 
 var disabledLinks = 0;
 
-function disableLinks(bool){
+function disableLinks(bool) {
 
     var links = '.disable-link';
     var activeColor = '#AD682B';
@@ -49,7 +77,7 @@ function disableLinks(bool){
 
 
     if (bool) {
-        if (disabledLinks <= 0){
+        if (disabledLinks <= 0) {
             $(links).addClass('disabled-link');
             $(links).css('color', disabledColor);
         }
@@ -66,23 +94,23 @@ function disableLinks(bool){
     }
 }
 
-function disableLink(id, bool){
+function disableLink(id, bool) {
 
     var activeColor = '#AD682B';
     var disabledColor = '#696969';
 
     if (bool) {
-            $(id).addClass('disabled-link');
-            $(id).css('color', disabledColor);
+        $(id).addClass('disabled-link');
+        $(id).css('color', disabledColor);
     } else {
-            $(id).removeClass('disabled-link');
-            $(id).css('color', activeColor);
+        $(id).removeClass('disabled-link');
+        $(id).css('color', activeColor);
     }
 }
 
 function disableActions(id, bool) {
 
-    var actions = '.'+id+'-disable-action';
+    var actions = '.' + id + '-disable-action';
     var activeColor = '#AD682B';
     var disabledColor = '#696969';
 
@@ -95,8 +123,8 @@ function disableActions(id, bool) {
     }
 }
 
-function disableUiButtons(id, bool){
-    if (bool){
+function disableUiButtons(id, bool) {
+    if (bool) {
         $(id).attr('disabled', true);
         $(id).css('cursor', 'inherit');
     } else {
@@ -105,8 +133,8 @@ function disableUiButtons(id, bool){
     }
 }
 
-function setVisible(selector, bool){
-    if (bool){
+function setVisible(selector, bool) {
+    if (bool) {
         if ($(selector).is(":hidden")) {
             $(selector).fadeIn('fast');
         }
@@ -134,7 +162,59 @@ function appendAndFadeIn(selector, newContent) {
     setVisible(selector, true);
 }
 
-// --- CSRF
+// --- VOLUME STORAGE
+
+var totalStorage = 0;
+var usedStorage = 0;
+var availableStorage = 0;
+
+function getUsedStorage(rows) {
+
+    usedStorage = 0;
+
+    $(rows).each(function () {
+
+        if (isNaN(parseInt($(this).attr("class")))) {
+        } else {
+            usedStorage += parseInt($(this).attr("class"));
+        }
+    });
+
+    availableStorage = totalStorage - usedStorage;
+    console.log(totalStorage + ' - ' + usedStorage + ' = ' + availableStorage);
+}
+
+// --- FLOATING IPs
+
+// --- BUG FIXER: Add <div id="delete-check></div> before TEXT NODES needing to be deleted on page load
+function deleteCheck(containerId) {
+    $(document).ready(function () {
+        var textNodes = $(containerId).contents()
+            .filter(function () {
+                return this.nodeType === 3;
+            });
+
+        textNodes.each(function () {
+            if (this.previousSibling == document.getElementById("delete-check")) {
+                $(this).remove();
+            }
+        });
+    });
+}
+
+
+
+// ---------------- //
+// AUTHENTICATION
+// ---------------- //
+
+var tokenExpireTime = '';
+
+
+
+// ---------------- //
+// CSRF
+// ---------------- //
 
 function getCookie(name) {
     var cookieValue = null;

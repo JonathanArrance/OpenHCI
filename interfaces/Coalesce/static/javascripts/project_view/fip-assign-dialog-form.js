@@ -16,15 +16,28 @@ $(function () {
 
     $("#fip-assign-dialog-form").dialog({
         autoOpen: false,
-        height: 300,
-        width: 350,
+        height: 265,
+        width: 235,
         modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
         buttons: {
             "Assign": function () {
 
                 var bValid = true;
                 var confirmedId = floating_ip.val();
                 var confirmedInstanceId = instance.val();
+
+                // Initialize progressbar and make it visible if hidden
+                $('#fip_progressbar').progressbar({value: false});
+                setVisible('#fip_progressbar', true);
 
                 if (bValid) {
 
@@ -79,9 +92,6 @@ $(function () {
 
                     $(this).dialog("close");
                 }
-            },
-            Cancel: function () {
-                $(this).dialog("close");
             }
         },
         close: function () {

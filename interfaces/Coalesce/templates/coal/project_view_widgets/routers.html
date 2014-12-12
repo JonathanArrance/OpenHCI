@@ -1,54 +1,73 @@
 <!-- Begin Routers widget-->
-      <div class="span4">
-        <div class="well widget">
-          <div class="widget-legend">
-	    
-             Routers
-	    {% if private_networks %}
-	     <a href="#"  id="create-router" class="btn btn-widget" style="float:right">New Router</a>
-	    {% endif %}
-          </div>
+<div class="span4">
+    <div class="well">
+        <div class="legend">
 
-	   <div id="router-dialog-form" title="Create new router">
-                <form>
+            Routers
+            {% if private_networks %}
+            <a href="#" id="create-router" class="btn" style="float:right">New Router</a>
+            {% endif %}
+        </div>
+
+        <div id="router-dialog-form" title="Create new router">
+            <form>
                 {% csrf_token %}
                 <fieldset>
                     <label for="router_name">Router Name</label>
-                    <input type="text" name="router_name" id="router_name"  class="text ui-widget-content ui-corner-all" />
-		    <label for="priv_net">Private Network</label>
+                    <input type="text" name="router_name" id="router_name"
+                           class="text ui-widget-content ui-corner-all"/>
+                    <label for="priv_net">Private Network</label>
                     <select name="priv_net" id="priv_net">
-			{% for net in priv_net_list %}
-                            {% if net.in_use == 'false' %}
-		   		<option value="{{net.net_id}}">{{net.net_name}}</option>
-			    {% endif %}
-			{% endfor %}
+                        {% for net in priv_net_list %}
+                        {% if net.in_use == 'false' %}
+                        <option value="{{net.net_id}}">{{net.net_name}}</option>
+                        {% endif %}
+                        {% endfor %}
                     </select>
                 </fieldset>
-                </form>
-           </div>
+            </form>
+        </div>
 
-	    
-	  {% if routers %}
-	    <table class="paleblue widget-table">
+        <div id="router-delete-confirm-form" title="Delete Router">
+            <p style="text-align:center;">Delete <span class="router-name"></span>?</p>
+        </div>
 
-                <tr> <th>Router</th>  <th>Router Status</th>  <th>Actions</th></tr>
+        <table class="paleblue widget-table" id="router_list">
 
-                {% for router in routers %}
+            <tr>
+                <th>Router</th>
+                <th>Router Status</th>
+                <th>Actions</th>
+            </tr>
 
-		    <tr> 
-			<td><a href="/router/{{ router.router_id }}/view/">{{router.router_name}}</a></td>  
-			<td>{{router.router_status}}</td>  
-			<td> 
-			    <a href="/delete_router/{{ project.project_id }}/{{ router.router_id }}/"> delete
-                            </a>
-			</td>
-		    </tr>
 
-		{% endfor %}
-	    </table>
-	  {% else %}	
-	   <p><i>This project has no routers</i></p>
-	  {% endif %}
+            {% if routers %}
+            {% for router in routers %}
 
-         </div>
-      </div>
+            <tr id="{{ router.router_id }}">
+                <td id="{{ router.router_id }}-name-cell">
+                    <a href="/router/{{ router.router_id }}/view/" class="disable-link">
+                        <span id="{{ router.router_id}}-name-text">{{router.router_name}}</span>
+                    </a>
+                </td>
+                <td id="{{ router.router_id }}-status-cell">
+                    <span id="{{ router.router_id }}-status-text">{{router.router_status}}</span>
+                </td>
+                <td id="{{ router.router_id }}-actions-cell">
+                    <a href="#" class="delete-router">delete</a>
+                </td>
+            </tr>
+
+            {% endfor %}
+            {% else %}
+            <tr id="router_placeholder">
+                <td><p><i>This project has no routers</i></p></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endif %}
+        </table>
+        <div id="router_progressbar" class="ui-progressbar"
+             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
+    </div>
+</div>

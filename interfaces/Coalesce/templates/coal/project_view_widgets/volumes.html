@@ -1,30 +1,31 @@
 <!-- Begin volume widget-->
 <div class="span4">
-	<div class="well widget">
-		<div class="widget-legend">
+	<div class="well">
+		<div class="legend">
 			Volume Storage
 			<div style="float:right">
-				<a href="#" id="delete-volume" class="btn btn-widget" style="float:right">Delete</a>
-				<a href="#" id="create-volume" class="btn btn-widget" style="float:right">Add</a>
+				<a href="#" id="delete-volume" class="btn" style="float:right">Delete</a>
+				<a href="#" id="create-volume" class="btn" style="float:right">Add</a>
 			</div>
 		</div>
 
-		<div id="volume-dialog-form" title="Create new volume">
+		<div id="volume-dialog-form" title="Create Volume">
 			<p class="validateTips">All fields are required.  </p>
 			<form>
 			{% csrf_token %}
 				<fieldset>
 					<label for="volume_name">Volume Name</label>
-					<input type="text" name="volume_name" id="volume_name"  class="text ui-widget-content ui-corner-all" />
+					<input type="text" name="volume_name" id="volume_name"  class="text ui-widget-content ui-corner-all volume-text-field" />
 
 					<label for="volume_size">Volume Size (GB)</label>
-					<input type="text" name="volume_size" id="volume_size"  class="text ui-widget-content ui-corner-all" />
+					<input type="text" name="volume_size" id="volume_size"  class="text ui-widget-content ui-corner-all volume-text-field" />
+                    <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
 
 					<label for="description">Description</label>
-					<input type="text" name="description" id="description"  class="text ui-widget-content ui-corner-all" />
+					<input type="text" name="description" id="description"  class="text ui-widget-content ui-corner-all volume-text-field" />
 
 					<label for="volume_type">Volume Type</label>
-					<select name="volume_type" id="volume_type">
+					<select name="volume_type" id="volume_type" class="volume-select">
 			  			<option value="ssd">ssd</option>
 			  			<option value="spindle">spindle</option>
 					</select>
@@ -69,10 +70,11 @@
 		</div>
 
 		<table class="paleblue widget-table" id="volume_list">
+
+            <tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
             {% if volumes %}
-			    <tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
 			    {% for k,v in volume_info.items %}
-		  		    <tr id="{{v.volume_id}}">
+		  		    <tr id="{{v.volume_id}}" class="{{v.volume_size}}">
 		  			    <td id="{{v.volume_id}}-name-cell">
 		  			 	    <a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/" class="disable-link"><span id="{{v.volume_id}}-name-text">
                                 {{v.volume_name}}</span>
@@ -99,10 +101,9 @@
 				    </tr>
 			    {% endfor %}
             {% else %}
-                <tr> <th>Name</th> <th>Attached To</th> <th>Actions</th></tr>
                 <tr id="volume_placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td></tr>
             {% endif %}
 		</table>
-	    <div id="vol_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display:none;"></div>
+	    <div id="vol_progressbar" class="ui-progressbar" style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
 	</div>
 </div>

@@ -21,11 +21,20 @@ $(function () {
 
     $("#instance-dialog-form").dialog({
         autoOpen: false,
-        height: 600,
-        width: 350,
+        height: 530,
+        width: 175,
         modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
         buttons: {
-            "Create an instance": function () {
+            "Create Instance": function () {
 
                 var bValid = true;
                 allFields.removeClass("ui-state-error"); 	// Remove UI validation flags
@@ -55,27 +64,20 @@ $(function () {
                                 message.showMessage('success', data.message);
 
                                 var newRow = '';    // Initialize empty string for new instance row
-
-                                // --- BEGIN html string generation
-                                // Start row
-                                newRow += '<tr id="' + data.server_info.server_id + '">';
-                                // Create name-cell
-                                newRow += '<td id="' + data.server_info.server_id + '-name-cell">';
-                                newRow += '<a href="/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/" class="disable-link disabled-link" style="color:#696969;">';
-                                newRow += '<span id="' + data.server_info.server_id + '-name-text">' + data.server_info.server_name + '</span></a></td>';
-                                // Create status-cell
-                                newRow += '<td id="' + data.server_info.server_id + '-status-cell">' + data.server_info.server_status + '</td>';
-                                // Create os-cell
-                                newRow += '<td id="' + data.server_info.server_id + '-os-cell">' + data.server_info.server_os + ' / ' + data.server_info.server_flavor + '</td>';
-                                // Start actions-cell
-                                newRow += '<td id="' + data.server_info.server_id + '-actions-cell">';
+                                newRow +=
+                                    '<tr id="' + data.server_info.server_id + '">' +
+                                        '<td id="' + data.server_info.server_id + '-name-cell">' +
+                                            '<a href="/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                            '<span id="' + data.server_info.server_id + '-name-text">' + data.server_info.server_name + '</span></a></td>' +
+                                        '<td id="' + data.server_info.server_id + '-status-cell">' + data.server_info.server_status + '</td>' +
+                                        '<td id="' + data.server_info.server_id + '-os-cell">' + data.server_info.server_os + ' / ' + data.server_info.server_flavor + '</td>' +
+                                        '<td id="' + data.server_info.server_id + '-actions-cell">';
                                 // Populate actions-cell
                                 if (data.server_info.server_status == "ACTIVE") {
-                                    newRow += '<a href="' + data.server_info.novnc_console + '" target="_blank">console</a>';
-                                    newRow += '<span class="instance-actions-pipe"> | </span>';
-                                    newRow += '<a href="#" class="pause-instance '+data.server_info.server_id+'-disable-action">pause</a>';
-                                    newRow += '<span class="instance-actions-pipe"> | </span>';
-                                    newRow += '<a href="#" class="suspend-instance '+data.server_info.server_id+'-disable-action">suspend</a>';
+                                    newRow +=
+                                        '<a href="' + data.server_info.novnc_console + '" target="_blank">console</a><span class="instance-actions-pipe"> | </span>' +
+                                        '<a href="#" class="pause-instance '+data.server_info.server_id+'-disable-action">pause</a><span class="instance-actions-pipe"> | </span>' +
+                                        '<a href="#" class="suspend-instance '+data.server_info.server_id+'-disable-action">suspend</a>';
                                 }
                                 if (data.server_info.server_status == "PAUSED") {
                                     newRow += '<a href="#" class="unpause-instance '+data.server_info.server_id+'-disable-action">unpause</a>';
@@ -85,7 +87,6 @@ $(function () {
                                 }
                                 // End actions-cell and row
                                 newRow += '</td></tr>';
-                                // --- END html string generation
 
                                 // If first instance, remove placeholder
                                 var rowCount = $('#instance_list tr').length;
@@ -132,12 +133,12 @@ $(function () {
                     allFields.val("").removeClass("ui-state-error");
                     $('.error').fadeOut().remove();
                 }
-            },
-            Cancel: function () {
-                $(this).dialog("close");
             }
         },
         close: function () {
+
+            $(this).dialog("close");
+
             allFields.val("").removeClass("ui-state-error");
             $('.error').fadeOut().remove();
         }

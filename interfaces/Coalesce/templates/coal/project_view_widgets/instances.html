@@ -1,11 +1,11 @@
 <!-- Begin instance widget-->
 <div class="span4">
-	<div class="well widget">
-		<div class="widget-legend">
+	<div class="well">
+		<div class="legend">
 		  Instances
 			<div style="float:right">
-				<a href="#" id="delete-instance" class="btn btn-widget" style="float:right">Delete</a>
-				<a href="#" id="create-instance" class="btn btn-widget" style="float:right">Add</a>
+				<a href="#" id="delete-instance" class="btn" style="float:right">Delete</a>
+				<a href="#" id="create-instance" class="btn" style="float:right">Add</a>
 			</div>
 
 			{% if user_level == 0 and instances %}
@@ -21,7 +21,7 @@
 			{% csrf_token %}
 				<fieldset>
 					<label for="name">Instance Name</label>
-					<input type="text" name="name" id="name"  class="text ui-widget-content ui-corner-all" />
+					<input type="text" name="name" id="name"  class="text ui-widget-content ui-corner-all instance-text-field" />
 
 					<label for="sec_group_name">Security Group</label>
 					<select name="sec_group_name" id="sec_group_name">
@@ -188,6 +188,6 @@
 	   			<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>
 	  		</table>
 	  	{% endif %}
-	  	<div id="instance_progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
+	  	<div id="instance_progressbar" class="ui-progressbar" style="height: 1em; margin: 10px 0 0 0; padding: .2em; display: none;"></div>
     </div>
 </div>

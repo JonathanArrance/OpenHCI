@@ -15,17 +15,17 @@ from transcirrus.component.neutron.admin_actions import admin_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("admin","test")
+auth = authorization("admin","password")
 #get the user dict
 perms = auth.get_auth()
 admin = admin_ops(perms)
 
-yo = admin.list_net_quota('30b63ffa0d95440b83d204a2456f16ef')
+yo = admin.list_net_quota('f2eeb95139f048529589c4ad99a1abb6')
 print yo
 
-show = admin.get_net_quota('30b63ffa0d95440b83d204a2456f16ef')
-print show
+#show = admin.get_net_quota('30b63ffa0d95440b83d204a2456f16ef')
+#print show
 
-input_dict = {'project_id':'30b63ffa0d95440b83d204a2456f16ef' ,'subnet_quota': '15','router_quota':'20','network_quota':'17','floatingip_quota':'4','port_quota':'9'}
-yo1 = admin.update_net_quota(input_dict)
-print yo1
+#input_dict = {'project_id':'30b63ffa0d95440b83d204a2456f16ef' ,'subnet_quota': '15','router_quota':'20','network_quota':'17','floatingip_quota':'4','port_quota':'9'}
+#yo1 = admin.update_net_quota(input_dict)
+#print yo1

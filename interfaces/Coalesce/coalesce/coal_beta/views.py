@@ -228,7 +228,7 @@ def get_project_quota(request,project_id):
     try:
         proj_out = qo.get_project_quotas(project_id)
         net_out = ao.list_net_quota(project_id)
-        out = dict(proj_out.items() + net_out.items())
+        out = dict(proj_out.items() + net_out[0].items())
         #may not have to return this in toastmessages
         out['status'] = 'success'
         out['message'] = "Quotas for %s."%(out['project_name'])

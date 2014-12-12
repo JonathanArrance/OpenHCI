@@ -18,9 +18,18 @@ $(function () {
 
     $("#fip-unassign-confirm-form").dialog({
         autoOpen: false,
-        height: 150,
-        width: 350,
+        height: 125,
+        width: 185,
         modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: window
+        },
         buttons: {
             "Confirm": function () {
 
@@ -30,7 +39,6 @@ $(function () {
 
                 if (bValid) {
 
-                    setVisible('.allocate_ip', false);
                     setVisible('#assign_ip', false);
                     disableLinks(true);
 
@@ -77,7 +85,6 @@ $(function () {
                                 $('div#fip-assign-dialog-form > form > fieldset > select#assign_instance').append(instanceOption);
                             }
 
-                            setVisible('.allocate_ip', true);
                             setVisible('#assign_ip', true);
                             disableLinks(false);
                         })
@@ -88,23 +95,22 @@ $(function () {
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(unassignHtml);
 
-                            setVisible('.allocate_ip', true);
                             setVisible('#assign_ip', true);
                             disableLinks(false);
                         });
 
                     $(this).dialog("close");
                 }
-            },
-            Cancel: function () {
-                $(this).dialog("close");
             }
         },
+
         close: function () {
         }
     });
 
     $(document).on('click', '.unassign_ip', function () {
+
+        event.preventDefault();
 
         targetRow = $(this).parent().parent();
         fip = $(this).attr("id");

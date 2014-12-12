@@ -92,6 +92,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'middleware.SessionIdleTimeout'
 )
 
 ROOT_URLCONF = 'urls'
