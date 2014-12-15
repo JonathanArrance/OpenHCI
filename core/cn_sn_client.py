@@ -939,7 +939,6 @@ def keep_alive(sock):
     while True:
         data = core_util.recv_data_alive(sock)
         if data:
-
             data = pickle.loads(data)
             if data['Type'] == 'status' and data['Value'] == 'alive':
                 logger.sys_info("***%s***" % (data['Value']))
@@ -967,31 +966,36 @@ def keep_alive(sock):
                 print "client waiting for keep alive messages"
 
 
-# start of client process
-# create socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+while True:
+    # data network ip
+    data_ip = util.get_node_data_ip()
+    #Make sure we are on the 172 network(data).
+    net = str(data_ip).split('.')
+    if(data_ip and (net[0] == '172')):
+        logger.sys_info("Zero Connect recieved data ip %s"%(data_ip))
+        print "Zero Connect recieved data ip %s"%(data_ip)
+        # start of client process
+        # create socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Get ciac ip address
-ciac_ip = util.getDhcpServer()
+        # Get ciac ip address
+        ciac_ip = util.getDhcpServer()
+        logger.sys_info("ciac_ip: %s" % ciac_ip)
 
-# TEST
-#print ciac_ip
-#sys.exit()
-# TEST
-logger.sys_info("ciac_ip: %s" % ciac_ip)
+        # Bind it to data network interface
+        #sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
+        sock.bind((data_ip,0))                             # bind's it an IP address 
 
-# data network ip
-#data_ip = "172.38.24.11"
-
-# Bind it to data network interface
-sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
-#sock.bind((data_ip,0))                             # bind's it an IP address 
-
-# Connect to the server socket
-server_address = (ciac_ip, 6161)
-print "connecting to %s port %s " % server_address
-sock.connect(server_address)
-sock.setblocking(0)
+        # Connect to the server socket
+        server_address = (ciac_ip, 6161)
+        print "connecting to %s port %s " % server_address
+        sock.connect(server_address)
+        sock.setblocking(0)
+        break
+    else:
+        logger.sys_info("Zero Connect could not get data network IP. Sleeping 5 seconds.")
+        print "Zero Connect could not get data network IP. Sleeping 5 seconds."
+        sleep(5)
 
 try:
     # send connect

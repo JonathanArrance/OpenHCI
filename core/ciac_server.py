@@ -281,27 +281,24 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
     gluster = gluster_ops(input_dict)
     #adding brick to all the listed volumes
-    if(disk_type == 'ssd'):
-        #attach ssd sn to ssd core node
-        new = gluster.attach_gluster_peer(data_ip)
-        glust_vols = []
-        if new == "OK":
-            update_dict = {'node_id':node_id,'node_gluster_peer':'1'}
-            update_node = node_db.update_node(update_dict)
-            #get the gluster volumes on the core node
-            glust_vols = gluster.list_gluster_volumes()
-        else:
-            SNglusterOperations(node_id,data_ip,sn_name,disk_type)
+    #if(disk_type == 'ssd'):
+    #attach ssd sn to ssd core node
+    new = gluster.attach_gluster_peer(data_ip)
+    glust_vols = []
+    if new == "OK":
+        update_dict = {'node_id':node_id,'node_gluster_peer':'1'}
+        update_node = node_db.update_node(update_dict)
+        #get the gluster volumes on the core node
+        glust_vols = gluster.list_gluster_volumes()
+    else:
+        SNglusterOperations(node_id,data_ip,sn_name,disk_type)
 
-        #we will have to implement threading here to background the brick add procedure this could take a while
-        for vol in glust_vols:
-            logger.sys_info('Adding storage to gluster volume %s'%(vol))
+    #we will have to implement threading here to background the brick add procedure this could take a while
+    for vol in glust_vols:
+        if(vol == 'cinder-volume-ssd' and disk_type == 'ssd'):
+            logger.sys_info('Adding ssd storage to gluster volume %s'%(vol))
             brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
             expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
-            #childpid = os.fork()
-            #if childpid == 0:
-            # This is the child process running which will call the function that will take some time to run
-            # and then we exit.
             add_storage = gluster.add_gluster_brick(expand)
             if add_storage == "OK":
                 print "Success: Brick %s added to volume %s"%(brick,vol)
@@ -309,19 +306,28 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
             else:
                 print "Error: Brick %s not added to volumes %s"%(brick,vol)
                 logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
-            # Child process has to exit now.
-            #os._exit(0)
-    elif(disk_type == 'spindle'):
-        #check the spindle storage node bit
-        enable = util.get_spindle_node_enabled()
-        if(enable == '1'):
-            #add the spindle node to the Shares file
-            #This was chnaged to create a new shares file since the scheduler was getting confused
-            os.system('sudo echo %s:cinder-volume-spindle >> /etc/cinder/shares_two.conf'%(data_ip))
-
-            #Future
-            #check to see if there are any other spindle based nodes
-                #if so expand the spindle nodes vols to the existing spindle nodes
+        elif(vol == 'instances' and disk_type == 'ssd'):
+            logger.sys_info('Adding ssd storage to gluster volume %s'%(vol))
+            brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
+            expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
+            add_storage = gluster.add_gluster_brick(expand)
+            if add_storage == "OK":
+                print "Success: Brick %s added to volume %s"%(brick,vol)
+                logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
+            else:
+                print "Error: Brick %s not added to volumes %s"%(brick,vol)
+                logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
+        elif(disk_type == 'spindle'):
+            logger.sys_info('Adding spindle storage to gluster volume %s'%(vol))
+            brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
+            expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}
+            add_storage = gluster.add_gluster_brick(expand)
+            if add_storage == "OK":
+                print "Success: Brick %s added to volume %s"%(brick,vol)
+                logger.sys_info("Success: Brick %s added to volume %s"%(brick,vol))
+            else:
+                print "Error: Brick %s not added to volumes %s"%(brick,vol)
+                logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
 
 def handle():
 
@@ -498,7 +504,9 @@ def client_thread(conn, client_addr):
 
                             # check for updation
                             update = 'NA'
-                            update = check_node_update(data)
+                            #This s a bandaid to make it so that the node reconnects after reboot, we need to do some research
+                            #we need to uncomment this at some point.
+                            #update = check_node_update(data)
 
                             if update == 'OK':
                                 logger.sys_info("node_id: %s conflicts with default DB" %(node_id))
