@@ -10,7 +10,6 @@ $(function () {
 
     // Widget Elements
     var progressbar = $("#router_progressbar"),
-        createButton = $("#create-router"),
         table = $('#router_list');
 
     $.ajaxSetup({
@@ -49,7 +48,7 @@ $(function () {
 
                     message.showMessage('notice', 'Creating new router ' + router_name.val());
 
-                    setVisible(createButton, false);
+                    setVisible("#create-router", false);
                     disableLinks(true);
 
                     // Initialize progressbar and make it visible if hidden
@@ -57,7 +56,7 @@ $(function () {
                     setVisible(progressbar, true);
 
                     $.getJSON('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
-                        .success(function (data) {
+                        .done(function (data) {
 
                             if (data.status == 'error') {
                                 message.showMessage('error', data.message);
@@ -85,17 +84,15 @@ $(function () {
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
                             }
-
-                            setVisible(progressbar, false);
-                            setVisible(createButton, true);
-                            disableLinks(false);
                         })
-                        .error(function () {
+                        .fail(function () {
 
                             message.showMessage('error', 'Server Fault');	// Flag server fault message
+                        })
+                        .always(function() {
 
                             setVisible(progressbar, false);
-                            setVisible(createButton, true);
+                            setVisible('#create-router', true);
                             disableLinks(false);
                         });
 

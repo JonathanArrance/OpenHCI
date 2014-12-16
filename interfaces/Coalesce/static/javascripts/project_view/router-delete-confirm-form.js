@@ -37,7 +37,7 @@ $(function () {
                 var confirmedId = id;
                 var deleteHtml = '<a href="#" class="delete-router">delete</a></td>';
 
-                message.showMessage('notice', "Deleting " + router + ".");
+                message.showMessage('notice', "Deleting " + $(router).text() + ".");
 
                 setVisible('#create-router', false);
                 disableLinks(true);

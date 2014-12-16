@@ -204,13 +204,6 @@ function deleteCheck(containerId) {
 
 
 
-// ---------------- //
-// AUTHENTICATION
-// ---------------- //
-
-var tokenExpireTime = '';
-
-
 
 // ---------------- //
 // CSRF

@@ -5159,3 +5159,8 @@ select,
 .volume-select {
     width: 160px;
 }
+/* ROUTER WIDGET */
+
+#router_progressbar  > .ui-widget-header {
+    background-color: #FF8617!important;
+}
