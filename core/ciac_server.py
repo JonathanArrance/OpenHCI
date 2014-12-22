@@ -317,7 +317,7 @@ def SNglusterOperations(node_id,data_ip,sn_name,disk_type):
             else:
                 print "Error: Brick %s not added to volumes %s"%(brick,vol)
                 logger.sys_info("Error: Brick %s not added to volumes %s"%(brick,vol))
-        elif(disk_type == 'spindle'):
+        elif(disk_type == 'spindle' and (vol != 'cinder-volume-ssd' or vol != 'instances')):
             logger.sys_info('Adding spindle storage to gluster volume %s'%(vol))
             brick = "%s:/data/gluster-%s/%s"%(data_ip,sn_name,vol)
             expand = {'volume_name':"%s"%(vol),'brick':"%s"%(brick)}

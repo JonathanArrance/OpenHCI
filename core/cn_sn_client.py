@@ -1034,6 +1034,7 @@ try:
                 #if the node is spindle based we need to set up the cinder volume
                 #check to see if the node is spindle type
                 #this may have to be back grounded.
+                '''
                 if(node_info['Value']['disk_type'] == 'spindle'):
                     #create a gluster object
                     input_dict = {'username':'admin','user_level':1,'is_admin':1,'obj':1}
@@ -1049,6 +1050,7 @@ try:
                             sys.exit(1)
                         else:
                             gluster.add_default_gluster_cinder_params('cinder-volume-spindle')
+                '''
             if(node_info['Value']['node_type'] == 'cn'):
                 node_info['Value']['node_brick'] = None
                 node_info['Value']['disk_type'] = None
