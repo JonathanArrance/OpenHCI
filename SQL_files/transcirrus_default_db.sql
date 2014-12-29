@@ -2241,10 +2241,12 @@ INSERT INTO trans_service_settings VALUES ('keystone_admin      ', 35357, NULL, 
 INSERT INTO trans_service_settings VALUES ('nova                ', 8774, NULL, 'compute', '/v2/$(tenant_id)s', 'OpenStack Compute Service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('cinder              ', 8776, NULL, 'volume', '/v1/$(tenant_id)s', 'OpenStack Volume Service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('glance              ', 9292, NULL, 'image', 'NULL', 'OpenStack Image Service', 'NULL', 'NULL', 'NULL', 'NULL');
-INSERT INTO trans_service_settings VALUES ('quantum             ', 9696, NULL, 'network', 'NULL', 'OpenStack Networking service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('swift               ', 8080, NULL, 'object-store', '/v1/AUTH_$(tenant_id)s', 'OpenStack Object Store', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('swift_admin         ', 8080, NULL, 'object-store', '/v1', 'OpenStack Object Store', 'NULL', 'NULL', 'NULL', 'NULL');
-
+INSERT INTO trans_service_settings VALUES ('heat                ', 8004, NULL, 'orchestration', '/v1/$(tenant_id)s', 'Orchestration', 'NULL', 'NULL', 'NULL', 'NULL');
+INSERT INTO trans_service_settings VALUES ('heat_cfn            ', 8000, NULL, 'cloudformation', '/v1', 'Orchestration CloudFormation', 'NULL', 'NULL', 'NULL', 'NULL');
+INSERT INTO trans_service_settings VALUES ('ceilometer          ', 8777, NULL, 'metering', 'NULL', 'Telemetry', 'NULL', 'NULL', 'NULL', 'NULL');
+INSERT INTO trans_service_settings VALUES ('neutron             ', 9696, NULL, 'network', 'NULL', 'OpenStack Networking service', 'NULL', 'NULL', 'NULL', 'NULL');
 
 --
 -- TOC entry 2189 (class 0 OID 16573)
