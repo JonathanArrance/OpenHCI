@@ -607,7 +607,6 @@ class user_ops:
 
                 elif((user_role_dict['username'] != 'admin') and (user_group_id >= 1)):#may be able to remove this check, more testing needed
                     try:
-                        logger.sql_error('adding a user to the project')
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table

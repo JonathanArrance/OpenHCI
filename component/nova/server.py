@@ -130,13 +130,13 @@ class server_ops:
         try:
             if(self.user_level == 0):
                 if(project_id):
-                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone",'from':"trans_instances",'where':"proj_id='%s'" %(project_id)}
+                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip",'from':"trans_instances",'where':"proj_id='%s'" %(project_id)}
                 else:
-                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone",'from':"trans_instances"}
+                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip",'from':"trans_instances"}
             elif(self.user_level == 1):
-                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
+                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
             elif(self.user_level == 2):
-                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id), 'and':"inst_user_id='%s'" %(self.user_id)}
+                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id), 'and':"inst_user_id='%s'" %(self.user_id)}
             instances = self.db.pg_select(get_inst)
         except:
             logger.sql_error('Could not retrieve the server instances for user %s.'%(self.username))
@@ -145,7 +145,7 @@ class server_ops:
         #build the array of r_dict
         inst_array = []
         for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'zone':inst[3]}
+            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'zone':inst[3],'public_ip':inst[4]}
             inst_array.append(r_dict)
 
         return inst_array
@@ -167,7 +167,7 @@ class server_ops:
             raise Exception("Only admins can list all of the servers on the system")
 
         try:
-            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone", 'from':"trans_instances"}
+            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
             instances = self.db.pg_select(get_inst)
         except Exception as e:
             logger.sql_error("%s"%(e))
@@ -176,7 +176,7 @@ class server_ops:
         #build the array of r_dict
         inst_array = []
         for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4]}
+            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
             inst_array.append(r_dict)
         return inst_array
 

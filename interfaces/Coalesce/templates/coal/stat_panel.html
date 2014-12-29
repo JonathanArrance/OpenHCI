@@ -4,105 +4,109 @@
 
 {% block content %}
 
-    <div class="span8 offset2">
-    
-	<div class="span12 well legend-header">
-	    Admin Panel
-	</div>
+<div class="span8 offset2">
+    <div class="well no-padding">
+        <div class="legend-header">
+            Admin Panel
+        </div>
 
-	<div class="well">
-	    <div class="legend">
-		Cloud Stats   
-	    </div>
-	    <table class="paleblue">
-		<tr>
-		    <th>Nodes</th>
-		    <th>Projects</th>
-		    <th>Users</th>
-		</tr>
-		<tr>
-		    <td>{{ tot_nodes }}</td>
-		    <td>{{ tot_proj  }}</td>
-		    <td>{{ tot_users }}</td>
-		</tr>
-	    </table>
-	</div>
-	
-	<div class="well">
-	    <div class="legend">
-		Node Stats   
-	    </div>
+        <div class="well">
+            <div class="legend">
+                Cloud Stats
+            </div>
+            <table class="paleblue">
+                <tr>
+                    <th>Nodes</th>
+                    <th>Projects</th>
+                    <th>Users</th>
+                </tr>
+                <tr>
+                    <td>{{ tot_nodes }}</td>
+                    <td>{{ tot_proj }}</td>
+                    <td>{{ tot_users }}</td>
+                </tr>
+            </table>
+        </div>
 
-	    {% for node in full_stats %}
-		<table class="paleblue" style="margin-bottom: 3em">
-		    <tr>
-			<th>Node Name</th>
-			<th>Type</th>
-			<th>CPU Usage</th>
-			<th>Memory Usage</th>
-			<th>Swap Usage</th>
-		    </tr>
-		    <tr>
-			<td>{{ node.name }}</td>
-			<td>{{ node.type }}</td>
-			<td>{{ node.cpu_system }}%</td>
-			<td>{{ node.mem_used_percent }}%</td>
-			<td>{{ node.swap_used_percent }}%</td>
-		    </tr>
-		</table>
-		<div class="legend">
-		    Disk Stats for {{ node.name }}
-		</div>
-		<table class="paleblue">
-		    <tr>
-			<th>Disk Name</th>
-			<th>Total Space</th>
-			<th>Disk Usage</th>
-		    </tr>
-		    {% for disk in node.disks %}
-			<tr>
-			    <td>{{ disk.name }}</td>
-			    <td>{{ disk.total_space }}MB</td>
-			    <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
-			</tr>
-		    {% endfor %}
-		</table>
-	    {% endfor %}
-	</div><!-- end span6-->
-	
-	<div class="well">
-	    <div class="legend">
-		Project Stats   
-	    </div>
-	    <table class="paleblue">
-		<tr>
-		    <th>Project Name</th>
-		    <th>Instances</th>
-		    <th>Floating IPs</th>
-		    <th>Volumes</th>
-		    <th>Containers</th>
-		    <th>Routers</th>
-		    <th>Internal Networks</th>
-		    <th>Users</th>
-		</tr>
-	    {% for tenant in tenant_info %}
-	    {% if tenant.project_name != "trans_default"%}
-		<tr>
-		    <td>{{ tenant.project_name }}</td>
-		    <td>{{ tenant.num_servers }}</td>
-		    <td>{{ tenant.num_fips }}</td>
-		    <td>{{ tenant.num_vol }}</td>
-		    <td>{{ tenant.num_cont }}</td>
-		    <td>{{ tenant.num_rout }}</td>
-		    <td>{{ tenant.num_net }}</td>
-		    <td>{{ tenant.num_users }}</td>
-		</tr>
-	    {% endif %}
-	{% endfor %}
-	</table>
-	</div><!-- end span6-->
-	
-    </div><!-- end row-fluid-->
+        <div class="well">
+            <div class="legend">
+                Node Stats
+            </div>
+
+            {% for node in full_stats %}
+            <table class="paleblue" style="margin-bottom: 3em">
+                <tr>
+                    <th>Node Name</th>
+                    <th>Type</th>
+                    <th>CPU Usage</th>
+                    <th>Memory Usage</th>
+                    <th>Swap Usage</th>
+                </tr>
+                <tr>
+                    <td>{{ node.name }}</td>
+                    <td>{{ node.type }}</td>
+                    <td>{{ node.cpu_system }}%</td>
+                    <td>{{ node.mem_used_percent }}%</td>
+                    <td>{{ node.swap_used_percent }}%</td>
+                </tr>
+            </table>
+            <div class="legend sub-legend">
+                Disk Stats for {{ node.name }}
+            </div>
+            <table class="paleblue">
+                <tr>
+                    <th>Disk Name</th>
+                    <th>Total Space</th>
+                    <th>Disk Usage</th>
+                </tr>
+                {% for disk in node.disks %}
+                <tr>
+                    <td>{{ disk.name }}</td>
+                    <td>{{ disk.total_space }}MB</td>
+                    <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endfor %}
+        </div>
+        <!-- end span6-->
+
+        <div class="well">
+            <div class="legend">
+                Project Stats
+            </div>
+            <table class="paleblue">
+                <tr>
+                    <th>Project Name</th>
+                    <th>Instances</th>
+                    <th>Floating IPs</th>
+                    <th>Volumes</th>
+                    <th>Containers</th>
+                    <th>Routers</th>
+                    <th>Internal Networks</th>
+                    <th>Users</th>
+                </tr>
+                {% for tenant in tenant_info %}
+                {% if tenant.project_name != "trans_default"%}
+                <tr>
+                    <td>{{ tenant.project_name }}</td>
+                    <td>{{ tenant.num_servers }}</td>
+                    <td>{{ tenant.num_fips }}</td>
+                    <td>{{ tenant.num_vol }}</td>
+                    <td>{{ tenant.num_cont }}</td>
+                    <td>{{ tenant.num_rout }}</td>
+                    <td>{{ tenant.num_net }}</td>
+                    <td>{{ tenant.num_users }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <!-- end span6-->
+</div>
+
+</div><!-- end row-fluid-->
 
 
 {% endblock %}

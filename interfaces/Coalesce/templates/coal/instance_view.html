@@ -20,6 +20,7 @@
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweroff-confirm-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
 <script>
     var PROJECT_ID = "{{current_project_id}}";
 </script>
@@ -28,6 +29,10 @@
 </script>
 <script>
     var DEFAULT_PUBLIC = "{{ default_public }}";
+</script>
+<script>
+    var attachedIp = "{{server.server_public_ips}}";
+    deleteCheck("#instance-details");
 </script>
 
 {% endblock %}
@@ -38,64 +43,42 @@
 
 <div class="row-fluid">
     <div class="span4">
-        <div class="row-fluid">
-            <div class="well">
 
-                <div class="widget-legend" style="margin-top: -13px;">
+        <div class="row-fluid">
+            <div id="widget-actions" class="well top">
+                <div class="legend">
                     Actions
                     {% if user_level == 0 %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn-widget"
-                       style="float: right;">return to project</a>
+                    <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn"
+                       style="float: right;">Return To Project</a>
                     {% elif user_level == 1 %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/" class="btn-widget"
-                       style="float: right;">return to project</a>
+                    <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/"
+                       class="btn"
+                       style="float: right;">Return To Project</a>
                     {% else %}
                     <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/"
-                       class="btn-widget" style="float: right;">return to project</a>
+                       class="btn" style="float: right;">Return To Project</a>
                     {% endif %}
                 </div>
 
-                <div id="instance-view-resize-dialog-form" title="Resize server?">
-                    <form id="instance-resize-form" action="">
-                        {% csrf_token %}
-                        <fieldset>
-                            <label for="flavor">Select new flavor</label>
-                            <select name="flavor" id="flavor">
-                                {% for flav in flavors %}
-                                <option value="{{flav.flav_id}}">{{flav.flavor_name}}</option>
-                                {% endfor %}
-                            </select>
-                        </fieldset>
-                    </form>
-                </div>
-
-                <div id="instance-view-reboot-confirm-form" title="Reboot server?">
-                    <form id="instance-reboot-form"
-                          action="/server/{{current_project_id}}/{{server.server_id}}/reboot" method="get"></form>
-                </div>
-
-                <div id="instance-view-cycle-confirm-form" title="Power cycle server?">
-                    <form id="instance-cycle-form"
-                          action="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" method="get"></form>
-                </div>
-
-                <div id="instance-view-poweroff-confirm-form" title="Power server Off?"></div>
-
                 <div class="center-buttons">
-                    <a href="#" id="resize-server" class="btn-widget">Resize Instance</a>
-                    <a href="#" id="reboot-server" class="btn-widget">Reboot</a>
-                    <a href="#" id="cycle-server" class="btn-widget">Power Cycle</a>
-                    <a href="#" id="poweroff-server" class="btn-widget">Power Off</a>
+                    <a href="#" id="resize-server" class="btn">Resize Instance</a>
+                    <a href="#" id="reboot-server" class="btn">Reboot</a>
+                    <a href="#" id="cycle-server" class="btn">Power Cycle</a>
+                    <a href="#" id="poweroff-server" class="btn">Power Off</a>
                 </div>
-
             </div>
         </div>
+
+	  	<div id="instance-progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
+
         <!-- end inner row -->
         <div class="row-fluid">
-            <div class="well">
-                <div class="widget-legend">
+            <div id="instance-details" class="well">
+                <div class="legend">
                     Instance Details
                 </div>
+                <div id="delete-check"></div>
                 <table class="paleblue widget-table">
                     <tr>
                         <th>Name</th>
@@ -153,8 +136,43 @@
 
 
     <div class="span8">
-        <iframe name="noVNCconsole" src="{{server.novnc_console}}" width="800" height="480"></iframe>
+        <div class="well top widget-console-well">
+            <div class="legend">
+                Console
+                <a href="#" id="refresh-console" class="btn" style="float: right;">Refresh</a>
+            </div>
+            <iframe id="instance-console" class="widget-console" name="noVNCconsole" src="{{server.novnc_console}}"></iframe>
+        </div>
+
     </div>
+
+    <div id="instance-view-resize-dialog-form" title="Resize server?">
+        <form id="instance-resize-form" action="">
+            {% csrf_token %}
+            <fieldset>
+                <label for="flavor">Select new flavor</label>
+                <select name="flavor" id="flavor">
+                    {% for flav in flavors %}
+                    <option value="{{flav.flav_id}}">{{flav.flavor_name}}</option>
+                    {% endfor %}
+                </select>
+            </fieldset>
+        </form>
+    </div>
+
+    <div id="instance-view-reboot-confirm-form" title="Reboot server?">
+        <form id="instance-reboot-form"
+              action="/server/{{current_project_id}}/{{server.server_id}}/reboot" method="get"></form>
+    </div>
+
+    <div id="instance-view-cycle-confirm-form" title="Power cycle server?">
+        <form id="instance-cycle-form"
+              action="/server/{{current_project_id}}/{{server.server_id}}/power_cycle" method="get"></form>
+    </div>
+
+    <div id="instance-view-poweroff-confirm-form" title="Power server Off?"></div>
+
+    <div id="instance-console-refresh-confirm-form" title="Refresh console?"></div>
 
 </div><!-- end row-fluid-->
 

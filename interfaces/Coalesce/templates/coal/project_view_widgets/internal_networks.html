@@ -1,10 +1,10 @@
 <!-- Begin Private Networks widget-->
 
       <div class="span4">
-        <div class="well widget">
-          <div class="widget-legend">
+        <div class="well">
+          <div class="legend">
              Private Networks
-          <a href="#" id="create-private-network" class="btn btn-widget" style="float:right">New Private Network</a>
+          <a href="#" id="create-private-network" class="btn" style="float:right">New Private Network</a>
  		
           </div>
 
@@ -41,7 +41,7 @@
 
                 {% for key,value in private_networks.items %}
 		   <tr> 
-			<td><a href="/network/{{value.net_id}}/view/">{{key}}</a></td>  
+			<td><a href="/network/{{value.net_id}}/view/" class="disable-link">{{key}}</a></td>
 			<td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}} </td>  
 			<td>{% for subnet in value.net_subnet_id %}
 				{{subnet.subnet_name}}</br>

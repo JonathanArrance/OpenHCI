@@ -1,128 +1,107 @@
-$(function() {
+$(function () {
 
-	var message = new message_handle();	// Initialize message handling
-	var instanceId = '';				// Initialize empty string to hold ID of clicked instance
+    var csrftoken = getCookie('csrftoken');
+    var instanceId = '';
 
-	// must obtain csrf cookie for AJAX call
-	function getCookie(name) {
-		var cookieValue = null;
-		if (document.cookie && document.cookie != '') {
-			var cookies = document.cookie.split(';');
-			for (var i = 0; i < cookies.length; i++) {
-				var cookie = jQuery.trim(cookies[i]);
-				// Does this cookie string begin with the name we want?
-				if (cookie.substring(0, name.length + 1) == (name + '=')) {
-					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-					break;
-				}
-			}
-		}
-		return cookieValue;
-	}
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
 
-	var csrftoken = getCookie('csrftoken');
-	
-	$(function() {
+    $("#instance-suspend-confirm-form").dialog({
+        autoOpen: false,
+        height: 150,
+        width: 250,
+        modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
+        buttons: {
+            "Confirm": function () {
 
-		function csrfSafeMethod(method) {
-			// these HTTP methods do not require CSRF protection
-			return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-		}
+                message.showMessage('notice', 'Suspending Instance');
+                var confirmedId = instanceId;
+                var suspendHtml = '<a href="#" class="suspend-instance '+confirmedId+'-disable-action">suspend</a>';
+                var resumeHtml = '<a href="#" class="resume-instance '+confirmedId+'-disable-action">resume</a>';
 
-		$.ajaxSetup({
-			crossDomain: false, // obviates need for sameOrigin test
-			beforeSend: function(xhr, settings) {
-				if (!csrfSafeMethod(settings.type)) {
-					xhr.setRequestHeader("X-CSRFToken", csrftoken);
-				}
-			}
-		});
+                // Create loader
+                var suspendAction = '#' + confirmedId + '-actions-cell > .suspend-instance';
+                var loaderId = confirmedId + '-loader';
+                var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
-		$( "#instance-suspend-confirm-form" ).dialog({
-			autoOpen: false,
-			height: 150,
-			width: 250,
-			modal: true,
-			buttons: {
-				"Confirm": function() {
+                // Clear clicked action link and replace with loader
+                $(suspendAction).empty().fadeOut();
+                $(suspendAction).append(loaderHtml).fadeIn();
 
-					var confirmedId = instanceId;							// Initialize string to hold ID of confirmed instance
-					message.showMessage('notice', 'Suspending Instance');	// Flag notice
+                disableActions(confirmedId, true);
+                disableLinks(true);
 
-					// Create loader
-					var confirmedActionSelector = '#'+confirmedId+'-actions-cell > .suspend-instance';	// Target clicked action link
-					var confirmedActionHtml = '<a href="#" class="suspend-instance">suspend</a>';			// Copy the html that link
-					var loaderId = confirmedId+'-loader';												// Target new loader ID
-					var loaderHtml = '<div class="ajax-loader" id="'+loaderId+'"></div>';				// New laoder html
+                $.getJSON('/server/' + PROJECT_ID + '/' + confirmedId + '/suspend_server/')
+                    .success(function (data) {
 
-					// Clear clicked action link and replace with loader
-					$(confirmedActionSelector).empty().fadeOut();
-					$(confirmedActionSelector).append(loaderHtml).fadeIn();
-					loaderId = '#'+loaderId;															// Update loader ID
+                        if (data.status == 'error') {
 
-                    $('.disable-action').bind('click', false);
-                    var origActionColor = $('.disable-action').css('color');
-                    $('.disable-action').css('color', '#696969');
+                            message.showMessage('error', data.message);
 
-					$.getJSON('/server/' + PROJECT_ID + '/' + confirmedId + '/suspend_server/')
-						.success(function(data){
+                            // Recall clicked action link on error
+                            $(suspendAction).empty().fadeOut();
+                            $(suspendAction).append(suspendHtml).fadeIn();
+                        }
 
-							// Check if instance was successfully suspend
-                        	if(data.status == 'error'){ 
-                        		message.showMessage('error', data.message);								// Flag error message
+                        if (data.status == 'success') {
 
-                        		// Recall clicked action link on error
-                        		$(confirmedActionSelector).empty().fadeOut();							
-                        		$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
-                        	}
-                        	
-                        	if(data.status == 'success'){ 												// Update interface
+                            message.showMessage('success', data.message);
 
-                        		message.showMessage('success', data.message);							// Flag success message
+                            var statusCell = '#' + confirmedId + '-status-cell';
+                            var actionsCell = '#' + confirmedId + '-actions-cell';
 
-                        		var statusSelector = '#'+confirmedId+'-status-cell';					// Target instance-status-cell
-                        		var actionsSelector = '#'+confirmedId+'-actions-cell';					// Target instance-actions-cell
-                        		var resumeAction = '<a href="#" class="resume-instance">resume</a>';	// New actions html string
+                            // Update status and actions cells
+                            $(statusCell).empty().fadeOut();
+                            $(actionsCell).empty().fadeOut();
+                            $(statusCell).append("SUSPENDED").fadeIn();
+                            $(actionsCell).append(resumeHtml).fadeIn();
+                        }
 
-                        		// Update status and actions cells
-                        		$(statusSelector).empty().fadeOut();							
-                        		$(actionsSelector).empty().fadeOut();
-                        		$(statusSelector).append("SUSPENDED").fadeIn();
-                        		$(actionsSelector).append(resumeAction).fadeIn();
-                        	}
+                        disableActions(confirmedId, false);
+                        disableLinks(false);
+                    })
+                    .error(function () {
+                        message.showMessage('error', 'Server Fault');
 
-                            $('.disable-action').unbind('click', false);
-                            $('.disable-action').css('color', origActionColor);
-                        })
-						.error(function(){ 
-							message.showMessage('error', 'Server Fault'); 						// Flag server fault message
+                        // Recall clicked action link on server fault
+                        $(suspendAction).empty().fadeOut();
+                        $(suspendAction).append(suspendHtml).fadeIn();
 
-							// Recall clicked action link on server fault
-							$(confirmedActionSelector).empty().fadeOut();
-							$(confirmedActionSelector).append(confirmedActionHtml).fadeIn();
+                        disableActions(confirmedId, false);
+                        disableLinks(false);
+                    });
 
-                            $('.disable-action').unbind('click', false);
-                            $('.disable-action').css('color', origActionColor);
-					});	
+                $(this).dialog("close");
+            },
+            Cancel: function () {
+                $(this).dialog("close");
+            }
+        }
+    })
 
-					$( this ).dialog( "close" );						// Close modal form	
-				},
-				Cancel: function() { $( this ).dialog( "close" ); }		// Close modal form	
-			}
-		})
+    $(document).on('click', '.suspend-instance', function () {
 
-		// Open modal form when suspend-instance button clicked
-		$(document).on('click', '.suspend-instance', function(){
+        instanceId = $(this).parent().parent().attr('id');
 
-			instanceId = $(this).parent().parent().attr('id');		// Get the ID of the instance that the user wishes to suspend
-						
-			// Clear and add instance name to .instance-name span in confirm statement
-			var nameSelector = '#'+instanceId+'-name-text';
-			$('#instance-suspend-confirm-form > p > span.instance-name')
-				.empty()
-				.append($(nameSelector).text());
+        // Clear and add instance name to .instance-name span in confirm statement
+        var nameSelector = '#' + instanceId + '-name-text';
+        $('#instance-suspend-confirm-form > p > span.instance-name').empty().append($(nameSelector).text());
 
-			$( "#instance-suspend-confirm-form" ).dialog( "open" ); 	// Open suspend Confirm Form	
-		});
-	});
+        $("#instance-suspend-confirm-form").dialog("open");
+    });
 });

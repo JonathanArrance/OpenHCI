@@ -1,12 +1,12 @@
 <!-- Begin Containers widget-->
 <div class="span4">
     <div class="well widget-disabled">
-        <div class="widget-legend">
+        <div class="legend">
             Containers (not supported)
-            <a href="#" id="create-container-disabled" class="btn btn-widget" style="float:right" disabled="disabled">New
+            <a href="#" id="create-container-disabled" class="btn" style="float:right" disabled="disabled">New
                 Container</a>
             {% if containers %}
-            <a href="#" id="upload-object-disabled" class="btn btn-widget" style="float:right" disabled="disabled">Upload
+            <a href="#" id="upload-object-disabled" class="btn" style="float:right" disabled="disabled">Upload
                 Object</a>
             {% endif %}
         </div>
@@ -51,7 +51,7 @@
             {% for c in containers %}
             <tr>
                 <td>
-                    <a href="/projects/{{project.project_id}}/containers/{{c}}/view/">{{c}}</a>
+                    <a href="/projects/{{project.project_id}}/containers/{{c}}/view/" class="disable-link">{{c}}</a>
                 </td>
                 <td>
                     <a href="/delete_container/{{c}}/{{ project.project_id}}/">delete</a>

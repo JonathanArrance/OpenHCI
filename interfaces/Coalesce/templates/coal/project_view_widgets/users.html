@@ -1,13 +1,13 @@
 <!-- Begin user widget-->
       <div class="span4">
-        <div class="well widget">
-          <div class="widget-legend">
+        <div class="well">
+          <div class="legend">
              Users   
              {% if user_level == 0 %}
-	     <a href="#" id="create-user" class="btn btn-widget" style="float:right">New User</a>
+	     <a href="#" id="create-user" class="btn" style="float:right">New User</a>
 	     {% endif %}
              {% if ouserinfo%}
-                <a href="#" id="add-existing-user" class="btn btn-widget" style="float:right">Add Existing User</a>
+                <a href="#" id="add-existing-user" class="btn" style="float:right">Add Existing User</a>
              {% endif %}
           </div>
 
@@ -67,7 +67,7 @@
 			      <i class="icon-warning-sign"></i>
 			    {% endif %}
 			    <b>
-			      <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/">{{username}}</a>
+			      <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/" class="disable-link">{{username}}</a>
 			    </b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
 
 			  </td>

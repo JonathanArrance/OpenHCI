@@ -1,9 +1,9 @@
 <!-- Begin Key Pairs widget-->
       <div class="span4">
         <div class="well widget">
-          <div class="widget-legend">
+          <div class="legend">
              Key Pairs
-             <a href="#" id="create-keypair" class="btn btn-widget" style="float:right">New Key Pair</a>
+             <a href="#" id="create-keypair" class="btn" style="float:right">New Key Pair</a>
  		
           </div>
 
@@ -23,7 +23,7 @@
                 <tr> <th>Key Name</th> <th>Owner</th> <th>Actions</th></tr>
                     {% for key in sec_keys %}
 		      <tr>
-			<td><a href="/key_pair/{{key.key_id}}/{{project.project_id}}/view/">{{key.key_name}}</a></td>
+			<td><a href="/key_pair/{{key.key_id}}/{{project.project_id}}/view/" class="disable-link">{{key.key_name}}</a></td>
 			<td>{{key.username}}</td>
 			<td><a href="/key_pair/{{key.key_name}}/{{project.project_id}}/delete/">delete</a></td>
 		      </tr>

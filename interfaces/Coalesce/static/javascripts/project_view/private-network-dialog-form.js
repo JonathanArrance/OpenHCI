@@ -68,6 +68,15 @@ $(function() {
 			height: 350,
 			width: 350,
 			modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
 			buttons: {
 				"Add a Private Network": function() {
 					var bValid = true;

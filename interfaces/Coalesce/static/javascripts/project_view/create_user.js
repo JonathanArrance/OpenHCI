@@ -89,6 +89,15 @@ $(function() {
 			height: 475,
 			width: 350,
 			modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
 			buttons: {
 				"Create an account": function() {
 					var bValid = true;

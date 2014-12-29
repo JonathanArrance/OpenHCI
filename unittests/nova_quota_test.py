@@ -29,7 +29,7 @@ quota = quota_ops(d)
 #instantiate a flavor_ops object
 #print "project and user given"
 #input_dicty = {'user_id':'f7c4bfb8220f469d8112bae4ee8136e1', 'project_id':'54209ef0f7ba4935a2a8984cba4f27f2'}
-y = quota.get_project_quotas('13d92fe4b2de4051abc5de0654277af0')
+y = quota.get_project_quotas('f2eeb95139f048529589c4ad99a1abb6')
 print y
 
 #print "user given"

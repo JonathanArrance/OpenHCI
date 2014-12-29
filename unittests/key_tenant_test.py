@@ -19,7 +19,7 @@ print "Instantiating a new tenant ops object."
 ten = tenant_ops(d)
 time.sleep(1)
 print "----------------------------------------"
-
+'''
 print "creating test project"
 proj = ten.create_tenant("shitbrick")
 print proj
@@ -37,9 +37,9 @@ get = ten.get_tenant("shitbrick")
 print get
 print "----------------------------------------"
 time.sleep(1)
-
+'''
 print "deleting testproject"
-delproj = ten.remove_tenant("shitbrick")
+delproj = ten.remove_tenant("13bb3911ba3241bd88b0bd7a4783bf71")
 print delproj
 
 """

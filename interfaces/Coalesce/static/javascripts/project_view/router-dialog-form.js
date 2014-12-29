@@ -1,104 +1,119 @@
-$(function() {  
-		// must obtain csrf cookie for AJAX call
-		function getCookie(name) {
-			var cookieValue = null;
-			if (document.cookie && document.cookie != '') {
-				var cookies = document.cookie.split(';');
-				for (var i = 0; i < cookies.length; i++) {
-					var cookie = jQuery.trim(cookies[i]);
-					// Does this cookie string begin with the name we want?
-					if (cookie.substring(0, name.length + 1) == (name + '=')) {
-						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-						break;
-					}
-				}
-			}
-			return cookieValue;
-		}
-		var csrftoken = getCookie('csrftoken');
-		
-		$(function() {
+$(function () {
 
-		
-		function csrfSafeMethod(method) {
-		// these HTTP methods do not require CSRF protection
-		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-		}
-		$.ajaxSetup({
-			crossDomain: false, // obviates need for sameOrigin test
-			beforeSend: function(xhr, settings) {
-				if (!csrfSafeMethod(settings.type)) {
-					xhr.setRequestHeader("X-CSRFToken", csrftoken);
-				}
-			}
-		});
-		
-		
-		
-		var 	router_name = $( "#router_name" ),
-			priv_net = $( "#priv_net" ),
+    var csrftoken = getCookie('csrftoken');
 
-			allFields = $( [] ).add( router_name ).add( priv_net ),
-			tips = $( ".validateTips" );
+    // Dialog Form Elements
+    var router_name = $("#router_name"),
+        priv_net = $("#priv_net"),
+        allFields = $([]).add(router_name).add(priv_net),
+        tips = $(".validateTips");
 
-		function updateTips( t ) {
-			tips
-				.text( t )
-				.addClass( "ui-state-highlight" );
-			setTimeout(function() {
-				tips.removeClass( "ui-state-highlight", 1500 );
-			}, 500 );
-		}
+    // Widget Elements
+    var progressbar = $("#router_progressbar"),
+        createButton = $("#create-router"),
+        table = $('#router_list');
 
-		function checkLength( o, n, min, max ) {
-			if ( o.val().length > max || o.val().length < min ) {
-				o.addClass( "ui-state-error" );
-				updateTips( "Length of " + n + " must be between " +
-					min + " and " + max + "." );
-				return false;
-			} else {
-				return true;
-			}
-		}
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
 
-	
+    $("#router-dialog-form").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
+        buttons: {
+            "Create Router": function () {
+                var bValid = true;
+                allFields.removeClass("ui-state-error");
 
-		$( "#router-dialog-form" ).dialog({
-			autoOpen: false,
-			height: 400,
-			width: 350,
-			modal: true,
-			buttons: {
-				"Create a router": function() {
-					var bValid = true;
-					allFields.removeClass( "ui-state-error" );
+                bValid =
+                    bValid &&
+                    checkLength(tips, router_name, "router_name", 3, 16);
 
-					bValid = bValid && checkLength( router_name, "router_name", 3, 16 );
+                if (bValid) {
 
-					if ( bValid ) {
-					  
-					   $.post('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/',
-                                                                function(){
-                                                                                location.reload();
-                                                                }); 
+                    message.showMessage('notice', 'Creating new router ' + router_name.val());
 
-						$( this ).dialog( "close" );
-					}
-				},
-				Cancel: function() {
-					$( this ).dialog( "close" );
-				}
-			},
-			close: function() {
-				allFields.val( "" ).removeClass( "ui-state-error" );
-			}
-		});
+                    setVisible(createButton, false);
+                    disableLinks(true);
 
-		$( "#create-router" )
-			.click(function() {
-				$( "#router-dialog-form" ).dialog( "open" );
-			});
-			
-			
-	});
-	});
+                    // Initialize progressbar and make it visible if hidden
+                    $(progressbar).progressbar({value: false});
+                    setVisible(progressbar, true);
+
+                    $.getJSON('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
+                        .success(function (data) {
+
+                            if (data.status == 'error') {
+                                message.showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+
+                                message.showMessage('success', data.message);
+
+                                // Initialize empty string for new router row
+                                var newRow = '';
+                                newRow +=
+                                    '<tr id="' + data.router_id + '">' +
+                                    '<td id="' + data.router_id + '-name-cell">' +
+                                    '<a href="/router/' + data.router_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                    '<span id="' + data.router_id + '-name-text">' + data.router_name + '</span>' + '</a></td>' +
+                                    '<td id="' + data.router_id + '-status-cell"><span id="' + data.router_id + '-status-text">' + data.router_status + '</span></td>' +
+                                    '<td id="' + data.router_id + '-actions-cell"><a href="#" class="delete-router">delete</a></td>' + '</tr>';
+
+                                // Check to see if this is the first router to be generated, if so remove placeholder and reveal delete-router button
+                                var rowCount = $("#router_list tr").length;
+                                if (rowCount <= 2) {
+                                    $("#router_placeholder").remove().fadeOut();
+                                }
+
+                                // Append new row to router-list
+                                table.append(newRow).fadeIn();
+                            }
+
+                            setVisible(progressbar, false);
+                            setVisible(createButton, true);
+                            disableLinks(false);
+                        })
+                        .error(function () {
+
+                            message.showMessage('error', 'Server Fault');	// Flag server fault message
+
+                            setVisible(progressbar, false);
+                            setVisible(createButton, true);
+                            disableLinks(false);
+                        });
+
+                    $(this).dialog("close");
+
+                    allFields.val("").removeClass("ui-state-error");
+                    $(".error").fadeOut().remove();
+                }
+            }
+        },
+        close: function () {
+            allFields.val("").removeClass("ui-state-error");
+            $(".error").fadeOut().remove();
+        }
+    });
+
+    $("#create-router")
+        .click(function () {
+            $("#router-dialog-form").dialog("open");
+        });
+});
