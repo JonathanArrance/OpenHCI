@@ -2,7 +2,6 @@ $(function () {
 
     var csrftoken = getCookie('csrftoken');
     var volumeId = '';  // Initialize empty string to hold ID of clicked volume
-    var instance = $("#instance");
     var attachHtml = '<a href="#" class="attach-instance">attach</a>';
     var detachHtml = '<a href="#" class="detach-instance">detach</a>';
 
@@ -17,8 +16,8 @@ $(function () {
 
     $("#volume-attach-dialog-form").dialog({
         autoOpen: false,
-        height: 250,
-        width: 350,
+        height: 210,
+        width: 225,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -35,7 +34,7 @@ $(function () {
                 var confirmedId = volumeId;
                 var volName = document.getElementById(confirmedId + "-name-text");
                 volName = $(volName).text();
-                var confirmedInstance = $(instance).find("option:selected");
+                var confirmedInstance = $('#instance').find("option:selected");
                 var noticeMessage = 'Attaching ' + volName + ' to ' + confirmedInstance.text() + '.';
 
                 message.showMessage('notice', noticeMessage);
@@ -80,9 +79,6 @@ $(function () {
                         $(actionsCell).append(attachHtml);
                 });
 
-                $(this).dialog("close");
-            },
-            Cancel: function () {
                 $(this).dialog("close");
             }
         },

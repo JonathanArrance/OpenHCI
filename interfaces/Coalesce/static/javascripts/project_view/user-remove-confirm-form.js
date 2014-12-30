@@ -2,11 +2,12 @@ $(function () {
 
     var csrftoken = getCookie('csrftoken');
     var id = '';
-    var router = '';
+    var user = '';
     var targetRow;
 
     // Widget Elements
-    var placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#users_progressbar"),
+        placeholder = '<tr id="users_placeholder"><td><p><i>This project has no users</i></p></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -17,10 +18,10 @@ $(function () {
         }
     });
 
-    $('#router-delete-confirm-form').dialog({
+    $('#user-remove-confirm-form').dialog({
         autoOpen: false,
         height: 125,
-        width: 150,
+        width: 200,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -34,24 +35,30 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                var confirmedId = id;
-                var deleteHtml = '<a href="#" class="delete-router">delete</a></td>';
+                // Confirmed Selections
+                var confId = id,
+                    confUsername = $(user).text();
 
-                message.showMessage('notice', "Deleting " + $(router).text() + ".");
+                var actionsCell = document.getElementById(confId + "-actions-cell");
+                var actionsHtml = actionsCell.innerHTML;
 
-                setVisible('#create-router', false);
+                message.showMessage('notice', "Removing " + confUsername + " from " + PROJECT + ".");
+
                 disableLinks(true);
 
+                // Initialize progressbar and make it visible if hidden
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
+
                 // Create loader
-                var actionsCell = document.getElementById(confirmedId + "-actions-cell");
-                var loaderId = confirmedId + '-loader';
+                var loaderId = confId + '-loader';
                 var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
                 // Clear clicked action link and replace with loader
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confirmedId + '/')
+                $.getJSON('/remove_user_from_project/' + confId + '/' + PROJECT_ID + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -59,7 +66,7 @@ $(function () {
                             message.showMessage('error', data.message);
 
                             $(actionsCell).empty().fadeOut();
-                            $(actionsCell).append(deleteHtml).fadeIn();
+                            $(actionsCell).append(actionsHtml).fadeIn();
                         }
 
                         if (data.status == 'success') {
@@ -67,24 +74,34 @@ $(function () {
                             message.showMessage('success', data.message);
 
                             $(targetRow).fadeOut().remove();
-                        }
 
-                        // If last router, reveal placeholder
-                        var rowCount = $('#router_list tr').length;
-                        if (rowCount < 2) {
-                            $('#router_list').append(placeholder).fadeIn();
+                            // If last user, reveal placeholder
+                            var rowCount = $('#users_list tr').length;
+                            if (rowCount < 2) {
+                                $('#users_list').append(placeholder).fadeIn();
+                            }
+
+                            unassignedUsers++;
+                            setVisible("#add-existing-user", true);
+
+                            // Append new option to assign-fip select menu
+                            var newOption = '<option value=' + confUsername + '>' + confUsername + '</option>';
+                            var userSelect = 'div#user-add-existing-dialog-form > form > fieldset > select#username';
+                            $(userSelect).append(newOption);
                         }
 
                     })
                     .fail(function () {
+
                         message.showMessage('error', 'Server Fault');
 
                         $(actionsCell).empty().fadeOut();
-                        $(actionsCell).append(deleteHtml).fadeIn();
+                        $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
-                        setVisible('#create-router', true);
+
                         disableLinks(false);
+                        setVisible(progressbar, false);
                     });
 
                 $(this).dialog("close");
@@ -95,17 +112,17 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-router', function () {
+    $(document).on('click', '.remove-user', function () {
 
         event.preventDefault();
 
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        router = document.getElementById(id + "-name-text");
+        user = document.getElementById(id + "-name-text");
 
-        $('div#router-delete-confirm-form > p > span.router-name').empty().append($(router).text());
+        $('div#user-remove-confirm-form > p > span.user-name').empty().append($(user).text());
 
-        $('#router-delete-confirm-form').dialog("open");
+        $('#user-remove-confirm-form').dialog("open");
     });
 });
 

@@ -2,11 +2,13 @@ $(function () {
 
     var csrftoken = getCookie('csrftoken');
     var id = '';
-    var router = '';
+    var keypair = '';
     var targetRow;
 
     // Widget Elements
-    var placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#keypair_progressbar"),
+        placeholder =
+            '<tr id="#keypair_placeholder"><td><p><i>You have no keys defined</i></p></td><td></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -17,10 +19,10 @@ $(function () {
         }
     });
 
-    $('#router-delete-confirm-form').dialog({
+    $('#keypair-delete-confirm-form').dialog({
         autoOpen: false,
         height: 125,
-        width: 150,
+        width: 200,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -34,24 +36,30 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                var confirmedId = id;
-                var deleteHtml = '<a href="#" class="delete-router">delete</a></td>';
+                // Confirmed Selections
+                var confId = id,
+                    confKeypair = $(keypair).text();
 
-                message.showMessage('notice', "Deleting " + $(router).text() + ".");
+                var actionsCell = document.getElementById(confId + "-actions-cell");
+                var actionsHtml = actionsCell.innerHTML;
 
-                setVisible('#create-router', false);
+                message.showMessage('notice', "Deleting " + confKeypair + ".");
+
                 disableLinks(true);
 
+                // Initialize progressbar and make it visible if hidden
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
+
                 // Create loader
-                var actionsCell = document.getElementById(confirmedId + "-actions-cell");
-                var loaderId = confirmedId + '-loader';
+                var loaderId = confId + '-loader';
                 var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
                 // Clear clicked action link and replace with loader
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confirmedId + '/')
+                $.getJSON('/key_pair/' + confKeypair + '/' + PROJECT_ID + '/delete/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -59,7 +67,7 @@ $(function () {
                             message.showMessage('error', data.message);
 
                             $(actionsCell).empty().fadeOut();
-                            $(actionsCell).append(deleteHtml).fadeIn();
+                            $(actionsCell).append(actionsHtml).fadeIn();
                         }
 
                         if (data.status == 'success') {
@@ -69,10 +77,10 @@ $(function () {
                             $(targetRow).fadeOut().remove();
                         }
 
-                        // If last router, reveal placeholder
-                        var rowCount = $('#router_list tr').length;
+                        // If last keypair, reveal placeholder
+                        var rowCount = $('#keypair_list tr').length;
                         if (rowCount < 2) {
-                            $('#router_list').append(placeholder).fadeIn();
+                            $('#keypair_list').append(placeholder).fadeIn();
                         }
 
                     })
@@ -80,32 +88,32 @@ $(function () {
                         message.showMessage('error', 'Server Fault');
 
                         $(actionsCell).empty().fadeOut();
-                        $(actionsCell).append(deleteHtml).fadeIn();
+                        $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
-                        setVisible('#create-router', true);
+
                         disableLinks(false);
+                        setVisible(progressbar, false);
                     });
 
                 $(this).dialog("close");
             }
         },
         close: function () {
-            $(this).dialog("close");
         }
     });
 
-    $(document).on('click', '.delete-router', function () {
+    $(document).on('click', '.delete-keypair', function () {
 
         event.preventDefault();
 
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        router = document.getElementById(id + "-name-text");
+        keypair = document.getElementById(id + "-name-text");
 
-        $('div#router-delete-confirm-form > p > span.router-name').empty().append($(router).text());
+        $('div#keypair-delete-confirm-form > p > span.keypair-name').empty().append($(keypair).text());
 
-        $('#router-delete-confirm-form').dialog("open");
+        $('#keypair-delete-confirm-form').dialog("open");
     });
 });
 

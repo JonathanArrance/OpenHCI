@@ -30,8 +30,8 @@ $(function () {
 
     $("#volume-dialog-form").dialog({
         autoOpen: false,
-        height: 425,
-        width: 220,
+        height: 445,
+        width: 200,
         modal: true,
         resizable: false,
         closeOnEscape: true,

@@ -10,7 +10,6 @@ $(function () {
 
     // Widget Elements
     var progressbar = $("#router_progressbar"),
-        createButton = $("#create-router"),
         table = $('#router_list');
 
     $.ajaxSetup({
@@ -38,9 +37,11 @@ $(function () {
         },
         buttons: {
             "Create Router": function () {
-                var bValid = true;
-                allFields.removeClass("ui-state-error");
 
+                allFields.removeClass("ui-state-error");
+                $('.error').fadeOut().remove();
+
+                var bValid = true;
                 bValid =
                     bValid &&
                     checkLength(tips, router_name, "router_name", 3, 16);
@@ -49,7 +50,7 @@ $(function () {
 
                     message.showMessage('notice', 'Creating new router ' + router_name.val());
 
-                    setVisible(createButton, false);
+                    setVisible("#create-router", false);
                     disableLinks(true);
 
                     // Initialize progressbar and make it visible if hidden
@@ -57,7 +58,7 @@ $(function () {
                     setVisible(progressbar, true);
 
                     $.getJSON('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
-                        .success(function (data) {
+                        .done(function (data) {
 
                             if (data.status == 'error') {
                                 message.showMessage('error', data.message);
@@ -85,17 +86,15 @@ $(function () {
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
                             }
-
-                            setVisible(progressbar, false);
-                            setVisible(createButton, true);
-                            disableLinks(false);
                         })
-                        .error(function () {
+                        .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');	// Flag server fault message
+                            message.showMessage('error', 'Server Fault');
+                        })
+                        .always(function () {
 
                             setVisible(progressbar, false);
-                            setVisible(createButton, true);
+                            setVisible('#create-router', true);
                             disableLinks(false);
                         });
 

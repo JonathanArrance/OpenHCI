@@ -1,48 +1,61 @@
 <!-- Begin user widget-->
-      <div class="span4">
-        <div class="well">
-          <div class="legend">
-             Users   
-             {% if user_level == 0 %}
-	     <a href="#" id="create-user" class="btn" style="float:right">New User</a>
-	     {% endif %}
-             {% if ouserinfo%}
-                <a href="#" id="add-existing-user" class="btn" style="float:right">Add Existing User</a>
-             {% endif %}
-          </div>
+<div class="span4">
+    <div class="well">
+        <div class="legend">
+            Users
+
+            {% if user_level == 0 %}
+            <a href="#" id="create-user" class="btn" style="float:right">Create</a>
+            {% endif %}
+
+            <a href="#" id="add-existing-user" class="btn" style="float:right">Add Existing</a>
+
+            {% if ouserinfo %}
+            {% for o in ouserinfo %}
+            <script>unassignedUsers++;</script>
+            {% endfor %}
+            {% else %}
+            <script>setVisible("#add-existing-user", false);</script>
+            {% endif %}
+        </div>
 
 
-          <div id="dialog-form" title="Create new user">
-                <p class="validateTips">All form fields are required.</p>
-                <form>
+        <div id="user-dialog-form" title="Create new user">
+            <p class="validateTips">Create a new user and assign them a role. All form fields are required.</p>
+
+            <form>
                 {% csrf_token %}
                 <fieldset>
                     <label for="username">Name</label>
-                    <input type="text" name="username" id="username" class="text ui-widget-content ui-corner-all" />
+                    <input type="text" name="username" id="username" class="text ui-widget-content ui-corner-all users-text-field"/>
                     <label for="email">Email</label>
-                    <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
+                    <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all users-text-field"/>
                     <label for="password">Password</label>
-                    <input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
-		            <label for="confirm">Confirm Password</label>
-                    <input type="password" name="confirm" id="confirm" value="" class="text ui-widget-content ui-corner-all" />
-                    <select name="role" id="role">
+                    <input type="password" name="password" id="password" value=""
+                           class="text ui-widget-content ui-corner-all users-text-field"/>
+                    <label for="confirm">Confirm Password</label>
+                    <input type="password" name="confirm" id="confirm" value=""
+                           class="text ui-widget-content ui-corner-all users-text-field"/>
+                    <label for="role">Role</label>
+                    <select name="role" id="role" class="users-select">
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </fieldset>
-                </form>
-            </div>
+            </form>
+        </div>
 
-            <div id="dialog-form-add-existing-user" title="Add Existing user">
-                <p class="validateTips">All form fields are required.</p>
-                <form>
+        <div id="user-add-existing-dialog-form" title="Add Existing user">
+            <p class="validateTips">All form fields are required.</p>
+
+            <form>
                 {% csrf_token %}
                 <fieldset>
                     <label for="username">Name</label>
                     <select name="username" id="username">
                         {% for ouser in ouserinfo %}
-                            <option value="{{ouser}}">{{ouser}}</option>
+                        <option value="{{ouser}}">{{ouser}}</option>
                         {% endfor %}
                     </select>
                     <select name="role" id="role">
@@ -50,41 +63,71 @@
                         <option value="pu">Power User</option>
                         <option value="admin">Admin</option>
                     </select>
-                  
+
                 </fieldset>
-                </form>
-            </div>
-
-          <table class="paleblue widget-table" id="users">
-                <tr> <th>User</th>  <th>Actions</th>  </tr>
-                {% load extratags %}
-                {% for pu in users %}
-                  {% with pu.username as username %}
-		    {% with userinfo|access:username as ui %}
-			<tr id="{{username}}" {% if ui.user_enabled == "FALSE" %} class="user_disabled" {% endif %}>
-			  <td id="{{username}}_info">
-			    {% if ui.user_enabled == "FALSE" %}
-			      <i class="icon-warning-sign"></i>
-			    {% endif %}
-			    <b>
-			      <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/" class="disable-link">{{username}}</a>
-			    </b>   (<a href="mailto:{{ui.email}}">{{ui.email}}</a>) <span class="right">{{ui.user_role}}</span>
-
-			  </td>
-
-			  <td>
-			   {% if user_level == 0 %}
-			    {% include "coal/toggle_user.html" %}    |
-			    <a href="/remove_user_from_project/{{ui.user_id}}/{{ project.project_id}}/">remove</a> |
-			    <a href="/delete_user/{{pu.username}}/{{ui.user_id}}/"> delete</a>
-			   {% endif %}
-			  </td>
-			</tr>
-
-                    {% endwith %}
-                  {% endwith %}
-                {% endfor %}
-          </table>
-
+            </form>
         </div>
-      </div>
+
+        <div id="user-remove-confirm-form" title="Remove User">
+            <p style="text-align:center;">Remove <span class="user-name"></span>?</p>
+        </div>
+
+        <div id="user-delete-confirm-form" title="Delete User">
+            <p style="text-align:center;">Delete <span class="user-name"></span>?</p>
+        </div>
+
+        <div id="user-disable-confirm-form" title="Disable User">
+            <p style="text-align:center;">Disable <span class="user-name"></span>?</p>
+        </div>
+
+        <div id="user-enable-confirm-form" title="Enable User">
+            <p style="text-align:center;">Enable <span class="user-name"></span>?</p>
+        </div>
+
+        <table class="paleblue widget-table" id="users_list">
+            <tr>
+                <th>User</th>
+                <th>Actions</th>
+            </tr>
+            {% if users %}
+            {% load extratags %}
+            {% for pu in users %}
+            {% with pu.username as username %}
+            {% with userinfo|access:username as ui %}
+            <tr id="{{ ui.user_id }}"{% if ui.user_enabled == "FALSE" %} class="user_disabled"{% endif %}>
+            <td id="{{ ui.user_id }}-name-cell">
+                <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/"
+                   class="disable-link"><span id="{{ ui.user_id }}-name-text">{{username}}</span></a>
+                <a href="mailto:{{ ui.email }}"><span id="{{ ui.user_id }}-email-text">({{ ui.email }})</span></a>
+                <span id="{{ ui.user_id }}-role-text" class="right">{{ ui.user_role }}</span>
+            </td>
+            <td id="{{ ui.user_id }}-actions-cell">
+                {% if user_level == 0 %}
+                {% if ui.user_enabled == "TRUE" %}
+                <a href="#" class="disable-user">disable</a>
+                {% else %}
+                <a href="#" class="enable-user">enable</a>
+                {% endif %}
+                <span class="user-actions-pipe"> | </span>
+                <a href="#" class="remove-user">remove</a>
+                <span class="user-actions-pipe"> | </span>
+                <a href="#" class="delete-user"> delete</a>
+                {% endif %}
+            </td>
+            </tr>
+            {% endwith %}
+            {% endwith %}
+            {% endfor %}
+            {% else %}
+            <tr id="users_placeholder">
+                <td><p><i>This project has no users</i></p></td>
+                <td></td>
+            </tr>
+            {% endif %}
+        </table>
+        <div id="users_progressbar" class="ui-progressbar"
+             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
+    </div>
+</div>
+
+

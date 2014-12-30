@@ -14,13 +14,16 @@ $(function () {
 
     // Local Variables
     var id,
-        instance,
+        image,
         targetRow;
 
     // Widget Elements
-    var progressbar = $("#instance_progressbar");
+    var progressbar = $("#image_progressbar"),
+        table = $("#image_list"),
+        placeholder =
+            '<tr id="#image_placeholder"><td><p><i>This project has no image</i></p></td><td></td></tr>';
 
-    $("#instance-unpause-confirm-form").dialog({
+    $('#image-delete-confirm-form').dialog({
         autoOpen: false,
         height: 125,
         width: 235,
@@ -39,17 +42,16 @@ $(function () {
 
                 // Confirmed Selections
                 var confId = id,
-                    confInstance = $(instance).text();
+                    confImage = $(image).text();
 
-                message.showMessage('notice', "Unpausing " + confInstance + ".");
+                message.showMessage('notice', "Deleting " + confImage + ".");
 
                 // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links and instance actions
+                // Disable widget view links
                 disableLinks(true);
-                disableActions("unpause-instance", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
@@ -63,7 +65,7 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/server/' + PROJECT_ID + '/' + confId + '/unpause_server/')
+                $.getJSON('/delete_image/' + confId + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -79,29 +81,16 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            var statusCell = document.getElementById(confId + "-status-cell");
-
-                            // Update status cell
-                            $(statusCell).fadeOut().empty();
-                            $(statusCell).append("ACTIVE").fadeIn();
-
-                            // Create new actions
-                            var newActions =
-                                '<a href="/vnc_auto.html?token=' + confId + '" target="_blank">console</a>' +
-                                '<span class="instance-actions-pipe"> | </span>' +
-                                '<a href="#" class="pause-instance ' + confId + '-disable-action">pause</a>' +
-                                '<span class="instance-actions-pipe"> | </span>' +
-                                '<a href="#" class="suspend-instance ' + confId + '-disable-action">suspend</a>' +
-                                '<span class="instance-actions-pipe"> | </span>' +
-                                '<a href="#" class="delete-instance ' + confId + '-disable-action">delete</a>';
-
-                            // Update actions-cell
-                            $(actionsCell).fadeOut().empty();
-                            $(actionsCell).append(newActions).fadeIn();
-
-                            // Remove paused class
-                            $(targetRow).removeClass("instance-paused");
+                            // Remove row
+                            $(targetRow).fadeOut().remove();
                         }
+
+                        // If last image, reveal placeholder
+                        var rowCount = $('#image_list tr').length;
+                        if (rowCount < 2) {
+                            $(table).append(placeholder).fadeIn();
+                        }
+
                     })
                     .fail(function () {
 
@@ -113,9 +102,8 @@ $(function () {
                     })
                     .always(function () {
 
-                        // Hide progressbar, enabled instance actions and widget view links
+                        // Hide progressbar and enable widget view links
                         setVisible(progressbar, false);
-                        disableActions("unpause-instance", false);
                         disableLinks(false);
                     });
 
@@ -126,7 +114,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.unpause-instance', function () {
+    $(document).on('click', '.delete-image', function () {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
@@ -134,11 +122,15 @@ $(function () {
         // Get target row element, get id from that element and use that to get the instance-name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        instance = document.getElementById(id + "-name-text");
+        image = document.getElementById(id + "-name-text");
 
         // Add instance-name-text to delete-confirm-form
-        $('div#instance-unpause-confirm-form > p > span.instance-name').empty().append($(instance).text());
+        $('div#image-delete-confirm-form > p > span.image-name').empty().append($(image).text());
 
-        $("#instance-unpause-confirm-form").dialog("open");
+        $('#image-delete-confirm-form').dialog("open");
     });
 });
+
+
+
+

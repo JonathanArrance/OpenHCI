@@ -1,42 +1,59 @@
- <!-- Begin Security Groups widget-->
-      <div class="span4">
-        <div class="well">
-          <div class="legend">
-             Security Groups
-	         <a href="#" id="create-security-group" class="btn" style="float:right">New Security Group</a>
-          </div>
+<!-- Begin Security Groups widget-->
+<div class="span4">
+    <div class="well">
+        <div class="legend">
+            Security Groups
+            <a href="#" id="create-security-group" class="btn" style="float:right">Create</a>
+        </div>
 
-	    <div id="sec-group-dialog-form" title="Create new security group">
-                <p class="validateTips">Preserve port defaults of 443,80,22 unless you know what you are doing.  </p>
-                <form>
+        <div id="sec-group-dialog-form" title="Create new security group">
+            <p class="validateTips">Port defaults of 443,80,22 will be preserved if left blank (changing ports is only recommended for advanced users.)</p>
+
+            <form>
                 {% csrf_token %}
                 <fieldset>
                     <label for="groupname">Group Name</label>
-                    <input type="text" name="groupname" id="groupname" value="" class="text ui-widget-content ui-corner-all" />
+                    <input type="text" name="groupname" id="groupname" value=""
+                           class="text ui-widget-content ui-corner-all"/>
                     <label for="groupdesc">Group Description</label>
-                    <input type="text" name="groupdesc" id="groupdesc" value="" class="text ui-widget-content ui-corner-all" />
-		    <label for="name">Ports</label>
-                    <input type="text" name="ports" id="ports" value="443,80,22" class="text ui-widget-content ui-corner-all" />
+                    <input type="text" name="groupdesc" id="groupdesc" value=""
+                           class="text ui-widget-content ui-corner-all"/>
+                    <label for="name">Ports</label>
+                    <input type="text" name="ports" id="ports" value="443,80,22"
+                           class="text ui-widget-content ui-corner-all"/>
                 </fieldset>
-                </form>
-            </div>
-
-
-	    <table class="paleblue widget-table">
-		{% if sec_groups %}
-		  <tr> <th>Security Group</th>  <th>Owner</th> <th>Actions</th>  </tr>
-		    {% for sg in sec_groups %}
-		      <tr> <td>{{sg.sec_group_name}}</td>
-		      <td>{{sg.username}}</td>
-		      <td>
-			<a href="/delete_sec_group/{{sg.sec_group_id}}/{{project.project_id}}/">delete</a>
-		      </td>
-		  </tr>
-		    {% endfor %}
-		{% else %}
-		
-		<p><i>This project has no security groups</i></p>
-		{% endif %}
-	  </table>
+            </form>
         </div>
-      </div>
+
+        <div id="sec-group-delete-confirm-form" title="Delete Security Group">
+            <p style="text-align:center;">Delete <span class="secGroup-name"></span>?</p>
+        </div>
+
+        <table class="paleblue widget-table" id="secGroup_list">
+            <tr>
+                <th>Security Group</th>
+                <th>Owner</th>
+                <th>Actions</th>
+            </tr>
+            {% if sec_groups %}
+            {% for sg in sec_groups %}
+            <tr id="{{ sg.sec_group_id }}">
+                <td id="{{ sg.sec_group_id }}-name-cell"><span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span></td>
+                <td id="{{ sg.sec_group_id }}-username-cell"><span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span></td>
+                <td id="{{ sg.sec_group_id }}-actions-cell">
+                    <a href="#" class="delete-secGroup">delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr id="secGroup_placeholder">
+                <td><p><i>This project has no security groups</i></p></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endif %}
+        </table>
+        <div id="secGroup_progressbar" class="ui-progressbar"
+             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display: none;"></div>
+    </div>
+</div>

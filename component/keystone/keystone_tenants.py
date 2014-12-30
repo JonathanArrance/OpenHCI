@@ -265,7 +265,7 @@ class tenant_ops:
                         self.db.pg_transaction_begin()
                         del_dict = {"table":'projects',"where":"proj_id='%s'" %(project_id)}
                         self.db.pg_delete(del_dict)
-        
+
                         user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(project_id)}
                         self.db.pg_update(user_up_dict)
                         self.db.pg_transaction_commit()
@@ -275,11 +275,11 @@ class tenant_ops:
                         raise e
                     #close all of the db connections that are open
                     self.db.pg_close_connection()
-    
+
                     #remove the gluster volume used for object storage
                     self.gluster.delete_gluster_volume(project_id)
                     logger.sys_info('Forking process to call gluster_swift_ring for project %s' % project_id)
-    
+
                     #NOTE: We need to figure out how to fork this off, it could take a ong time to complete if we do not.
                     #re-build the gluster ring after the project vol deleted
                     #newpid = os.fork()

@@ -13,10 +13,10 @@ a = authorization("admin","password")
 d = a.get_auth()
 
 
-project_dict = {'project_name':"jontest1", 
-             'user_dict': {'username': "jontest1", 
-                           'password': "jontest1", 
-                           'user_role': "pu", 
+project_dict = {'project_name':"jontest1",
+             'user_dict': {'username': "jontest1",
+                           'password': "jontest1",
+                           'user_role': "pu",
                            'email': "jontest1@transcirrus.com",
                            'project_id': None},
              'net_name': "jontest1",

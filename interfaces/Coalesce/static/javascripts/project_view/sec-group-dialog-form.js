@@ -1,115 +1,131 @@
-$(function() {  
-		// must obtain csrf cookie for AJAX call
-		function getCookie(name) {
-			var cookieValue = null;
-			if (document.cookie && document.cookie != '') {
-				var cookies = document.cookie.split(';');
-				for (var i = 0; i < cookies.length; i++) {
-					var cookie = jQuery.trim(cookies[i]);
-					// Does this cookie string begin with the name we want?
-					if (cookie.substring(0, name.length + 1) == (name + '=')) {
-						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-						break;
-					}
-				}
-			}
-			return cookieValue;
-		}
-		var csrftoken = getCookie('csrftoken');
-		
-		$(function() {
+$(function () {
 
-		
-		function csrfSafeMethod(method) {
-		// these HTTP methods do not require CSRF protection
-		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-		}
-		$.ajaxSetup({
-			crossDomain: false, // obviates need for sameOrigin test
-			beforeSend: function(xhr, settings) {
-				if (!csrfSafeMethod(settings.type)) {
-					xhr.setRequestHeader("X-CSRFToken", csrftoken);
-				}
-			}
-		});
-		
-		
-		
-		var 	ports = $( "#ports" ),
-			groupname = $( "#groupname" ),
-			groupdesc = $( "#groupdesc" ),
-			allFields = $( [] ).add( ports ).add( groupname ).add( groupdesc ),
-			tips = $( ".validateTips" );
+    var csrftoken = getCookie('csrftoken');
 
-		function updateTips( t ) {
-			tips
-				.text( t )
-				.addClass( "ui-state-highlight" );
-			setTimeout(function() {
-				tips.removeClass( "ui-state-highlight", 1500 );
-			}, 500 );
-		}
+    // Dialog Elements
+    var ports = $("#ports"),
+        groupName = $("#groupname"),
+        groupDesc = $("#groupdesc"),
+        allFields = $([]).add(ports).add(groupName).add(groupDesc),
+        tips = $(".validateTips");
 
-		function checkLength( o, n, min, max ) {
-			if ( o.val().length > max || o.val().length < min ) {
-				o.addClass( "ui-state-error" );
-				updateTips( "Length of " + n + " must be between " +
-					min + " and " + max + "." );
-				return false;
-			} else {
-				return true;
-			}
-		}
+    // Widget Elements
+    var progressbar = $("#secGroup_progressbar"),
+        table = $("#secGroup_list");
 
-	
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
 
-		$( "#sec-group-dialog-form" ).dialog({
-			autoOpen: false,
-			height: 400,
-			width: 350,
-			modal: true,
-            resizable: false,
-            closeOnEscape: true,
-            draggable: true,
-            show: "fade",
-            position:{
-                my: "center",
-                at: "center",
-                of: $('#page-content')
-            },
-			buttons: {
-				"Create a security group": function() {
-					var bValid = true;
-					allFields.removeClass( "ui-state-error" );
+    $("#sec-group-dialog-form").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
+        buttons: {
+            "Create a security group": function () {
 
-					bValid = bValid && checkLength( groupname, "groupname", 3, 16 );
-					bValid = bValid && checkLength( groupdesc, "groupdesc", 6, 80 );
+                allFields.removeClass("ui-state-error");
+                $('.error').fadeOut().remove();
 
+                var bValid = true;
+                bValid =
+                    bValid &&
+                    checkLength(tips, groupName, "groupname", 3, 16) &&
+                    checkLength(tips, groupDesc, "groupdesc", 6, 80);
 
-					if ( bValid ) {
-					  
-						$.post('/create_security_group/' + groupname.val() + '/' + groupdesc.val() + '/' + ports.val() + '/' + PROJECT_ID + '/',
-                                                                function(){
-                                                                                location.reload();
-                                                                }); 
+                if (bValid) {
 
-						$( this ).dialog( "close" );
-					}
-				},
-				Cancel: function() {
-					$( this ).dialog( "close" );
-				}
-			},
-			close: function() {
-				allFields.val( "" ).removeClass( "ui-state-error" );
-			}
-		});
+                    var confPorts = ports.val(),
+                        confName = groupName.val(),
+                        confDesc = groupDesc.val();
 
-		$( "#create-security-group" )
-			.click(function() {
-				$( "#sec-group-dialog-form" ).dialog( "open" );
-			});
-			
-			
-	});
-	});
+                    if (confPorts == "") {
+                        confPorts = "443,80,22";
+                    }
+
+                    message.showMessage('notice', 'Creating new Key ' + confName);
+
+                    setVisible("#create-security-group", false);
+                    disableLinks(true);
+
+                    // Initialize progressbar and make it visible if hidden
+                    $(progressbar).progressbar({value: false});
+                    setVisible(progressbar, true);
+
+                    $.getJSON('/create_security_group/' + confName + '/' + confDesc + '/' + confPorts + '/' + PROJECT_ID + '/')
+                        .done(function (data) {
+
+                            if (data.status == 'error') {
+
+                                message.showMessage('error', data.message);
+                            }
+
+                            if (data.status == 'success') {
+
+                                message.showMessage('success', data.message);
+
+                                // Initialize empty string for new router row
+                                var newRow = '';
+                                newRow +=
+                                    '<tr id="' + data.sec_group_id + '"><td id="' + data.sec_group_id + '-name-cell">' +
+                                    '<span id="' + data.sec_group_id + '-name-text">' + data.sec_group_name + '</span></td>' +
+                                    '<td id="' + data.sec_group_id + '-username-cell">' +
+                                    '<span id="' + data.sec_group_id + '-username-text">' + data.username + '</span></td>' +
+                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a>' +
+                                    '</td></tr>';
+
+                                // Check to see if this is the first sec group to be generated
+                                var rowCount = $("#secGroup_list tr").length;
+                                if (rowCount <= 2) {
+                                    $("#secGroup_placeholder").remove().fadeOut();
+                                }
+
+                                // Append new row to router-list
+                                table.append(newRow).fadeIn();
+                            }
+                        })
+                        .fail(function () {
+
+                            message.showMessage('error', 'Server Fault');
+                        })
+                        .always(function () {
+
+                            setVisible(progressbar, false);
+                            setVisible('#create-security-group', true);
+                            disableLinks(false);
+                        });
+
+                    $(this).dialog("close");
+
+                    allFields.val("").removeClass("ui-state-error");
+                    $('.error').fadeOut().remove();
+                }
+            }
+        },
+        close: function () {
+
+            allFields.val("").removeClass("ui-state-error");
+            $('.error').fadeOut().remove();
+        }
+    });
+
+    $("#create-security-group")
+        .click(function () {
+            $("#sec-group-dialog-form").dialog("open");
+        });
+});

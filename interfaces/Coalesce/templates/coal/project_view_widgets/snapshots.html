@@ -4,8 +4,7 @@
         <div class="legend">
             Snapshots (not supported)
             {% if volumes %}
-            <a href="#" id="create-snapshot-disabled" class="btn" style="float:right" disabled="disabled">New
-                Snapshot</a>
+            <a href="#" id="create-snapshot-disabled" class="btn" style="float:right" disabled="disabled">Create</a>
             {% endif %}
         </div>
 
@@ -32,13 +31,13 @@
         </div>
 
         <table class="paleblue widget-table">
-            {% if snapshots %}
+            <!-- {% if snapshots %} -->
             <tr>
                 <th>Snapshot</th>
                 <th>Volume</th>
                 <th>Actions</th>
             </tr>
-            {% for snapshot in snapshots %}
+            <!-- {% for snapshot in snapshots %} -->
             <tr>
                 <td>{{snapshot.snapshot_name}}</td>
                 <td>{{snapshot.volume_name}}</td>
@@ -46,10 +45,10 @@
                     <a href="/delete_snapshot/{{snapshot.snapshot_id}}/{{ project.project_id}}/">delete</a>
                 </td>
             </tr>
-            {% endfor %}
-            {% else %}
+            <!-- {% endfor %} -->
+            <!-- {% else %} -->
             <p><i>This project has no snapshots</i></p>
-            {% endif %}
+            <!-- {% endif %} -->
         </table>
     </div>
 </div>

@@ -16,8 +16,8 @@ $(function () {
 
     $("#volume-detach-confirm-form").dialog({
         autoOpen: false,
-        height: 150,
-        width: 350,
+        height: 125,
+        width: 230,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -78,9 +78,6 @@ $(function () {
                         $(actionsCell).append(detachHtml).fadeIn();
                     });
 
-                $(this).dialog("close");
-            },
-            Cancel: function () {
                 $(this).dialog("close");
             }
         },

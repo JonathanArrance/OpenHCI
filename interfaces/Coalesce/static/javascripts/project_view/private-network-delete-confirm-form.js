@@ -2,11 +2,12 @@ $(function () {
 
     var csrftoken = getCookie('csrftoken');
     var id = '';
-    var router = '';
+    var privateNet = '';
     var targetRow;
 
     // Widget Elements
-    var placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#privateNet_progressbar"),
+        placeholder = '<tr id="privateNet_placeholder"><td><p><i>This project has no privateNets</i></p></td><td></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -17,10 +18,10 @@ $(function () {
         }
     });
 
-    $('#router-delete-confirm-form').dialog({
+    $('#private-network-delete-confirm-form').dialog({
         autoOpen: false,
         height: 125,
-        width: 150,
+        width: 200,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -35,12 +36,15 @@ $(function () {
             "Confirm": function () {
 
                 var confirmedId = id;
-                var deleteHtml = '<a href="#" class="delete-router">delete</a></td>';
+                var deleteHtml = '<a href="#" class="delete-privateNet">delete</a></td>';
 
-                message.showMessage('notice', "Deleting " + $(router).text() + ".");
+                message.showMessage('notice', "Deleting " + $(privateNet).text() + ".");
 
-                setVisible('#create-router', false);
                 disableLinks(true);
+
+                // Initialize progressbar and make it visible if hidden
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
 
                 // Create loader
                 var actionsCell = document.getElementById(confirmedId + "-actions-cell");
@@ -51,7 +55,7 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confirmedId + '/')
+                $.getJSON('/delete_private_network/' + PROJECT_ID + '/' + confirmedId + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -69,21 +73,23 @@ $(function () {
                             $(targetRow).fadeOut().remove();
                         }
 
-                        // If last router, reveal placeholder
-                        var rowCount = $('#router_list tr').length;
+                        // If last privateNet, reveal placeholder
+                        var rowCount = $('#privateNet_list tr').length;
                         if (rowCount < 2) {
-                            $('#router_list').append(placeholder).fadeIn();
+                            $('#privateNet_list').append(placeholder).fadeIn();
                         }
 
                     })
                     .fail(function () {
+
                         message.showMessage('error', 'Server Fault');
 
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(deleteHtml).fadeIn();
                     })
                     .always(function () {
-                        setVisible('#create-router', true);
+
+                        setVisible(progressbar, true);
                         disableLinks(false);
                     });
 
@@ -95,17 +101,17 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-router', function () {
+    $(document).on('click', '.delete-privateNet', function () {
 
         event.preventDefault();
 
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        router = document.getElementById(id + "-name-text");
+        privateNet = document.getElementById(id + "-name-text");
 
-        $('div#router-delete-confirm-form > p > span.router-name').empty().append($(router).text());
+        $('div#private-network-delete-confirm-form > p > span.privateNet-name').empty().append($(privateNet).text());
 
-        $('#router-delete-confirm-form').dialog("open");
+        $('#private-network-delete-confirm-form').dialog("open");
     });
 });
 
