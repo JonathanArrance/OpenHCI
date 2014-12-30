@@ -16,8 +16,8 @@ $(function () {
 
     $("#volume-delete-dialog-form").dialog({
         autoOpen: false,
-        height: 250,
-        width: 350,
+        height: 210,
+        width: 225,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -84,14 +84,11 @@ $(function () {
                     });
 
                 $(this).dialog("close");
-            },
-            Cancel: function () {
-                $(this).dialog("close");
             }
         },
         close: function () {
         }
-    })
+    });
 
     $("#delete-volume").click(function () {
         $("#volume-delete-dialog-form").dialog("open");

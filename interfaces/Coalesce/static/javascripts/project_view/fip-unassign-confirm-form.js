@@ -1,11 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var targetRow;
-    var fip = '';
-    var fipId = '';
-    var instanceName = '';
-    var instanceId = '';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -15,6 +11,16 @@ $(function () {
             }
         }
     });
+
+    // Local Variables
+    var targetRow,
+        fip,
+        fipId,
+        instanceName,
+        instanceId;
+
+    // Widget Elements
+    var progressbar = $("#fip_progressbar");
 
     $("#fip-unassign-confirm-form").dialog({
         autoOpen: false,
@@ -33,74 +39,82 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                var bValid = true;
-                var confirmedFip = fip;
-                var confirmedId = fipId;
+                // Confirmed Selections
+                var confFip = fip,
+                    confFipId = fipId,
+                    confInstanceId = instanceId,
+                    confInstanceName = instanceName;
 
-                if (bValid) {
+                message.showMessage('notice', "Unassigning " + confFip + ".");
 
-                    setVisible('#assign_ip', false);
-                    disableLinks(true);
+                var actionsCell = document.getElementById(confFipId + "-actions-cell");
+                var actionsHtml = actionsCell.innerHTML;
 
-                    // Create loader
-                    var actionsCell = document.getElementById(confirmedFip + "-actions-cell");
-                    var unassignHtml = '<a href="#" id="' + confirmedFip + '" class="unassign_ip">unassign</a>';
-                    var loaderId = confirmedFip + '-loader';
-                    var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
+                // Disable widget view links and hide assign_ip button
+                disableLinks(true);
+                setVisible('#assign_ip', false);
 
-                    // Clear clicked action link and replace with loader
-                    $(actionsCell).empty().fadeOut();
-                    $(actionsCell).append(loaderHtml).fadeIn();
+                // Initialize progressbar and make it visible
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
 
-                    $.getJSON('/unassign_floating_ip/' + confirmedId + '/')
-                        .success(function (data) {
+                // Create loader
+                var loaderId = confFipId + '-loader';
+                var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
-                            if (data.status == 'error') {
+                // Clear clicked action link and replace with loader
+                $(actionsCell).empty().fadeOut();
+                $(actionsCell).append(loaderHtml).fadeIn();
 
-                                message.showMessage('error', data.message);
+                $.getJSON('/unassign_floating_ip/' + confFipId + '/')
+                    .done(function (data) {
 
-                                $(actionsCell).empty().fadeOut();
-                                $(actionsCell).append(unassignHtml);
-                            }
+                        if (data.status == 'error') {
 
-                            if (data.status == 'success') {
-
-                                message.showMessage('success', data.message);
-
-                                var instanceName = document.getElementById(data.floating_ip + "-instance-name");
-                                var instanceCell = document.getElementById(data.floating_ip + "-instance-cell");
-                                var instanceNameHtml = '<span id="' + data.floating_ip + '-instance-name">None</span>';
-                                var deallocateHtml = '<a href="#" id="' + data.floating_ip + '" class="deallocate_ip">deallocate</a>';
-
-                                $(instanceName).fadeOut().remove();
-                                $(actionsCell).empty().fadeOut();
-
-                                $(instanceCell).append(instanceNameHtml).fadeIn();
-                                $(actionsCell).append(deallocateHtml).fadeIn();
-
-                                var ipOption = '<option value="' + data.floating_ip + '">' + data.floating_ip + '</option>';
-                                $('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(ipOption);
-
-                                var instanceOption = '<option value="' + instanceId + '">' + instanceName + '</option>';
-                                $('div#fip-assign-dialog-form > form > fieldset > select#assign_instance').append(instanceOption);
-                            }
-
-                            setVisible('#assign_ip', true);
-                            disableLinks(false);
-                        })
-                        .error(function () {
-
-                            message.showMessage('error', 'Server Fault');
+                            message.showMessage('error', data.message);
 
                             $(actionsCell).empty().fadeOut();
-                            $(actionsCell).append(unassignHtml);
+                            $(actionsCell).append(actionsHtml);
+                        }
 
-                            setVisible('#assign_ip', true);
-                            disableLinks(false);
-                        });
+                        if (data.status == 'success') {
 
-                    $(this).dialog("close");
-                }
+                            message.showMessage('success', data.message);
+
+                            var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
+                            var instanceNameHtml = '<span id="' + data.floating_ip_id + '-instance-name">None</span>';
+                            var newActions = '<a href="#" class="deallocate_ip">deallocate</a>';
+
+                            $(instanceCell).empty().fadeOut();
+                            $(actionsCell).empty().fadeOut();
+
+                            $(instanceCell).append(instanceNameHtml).fadeIn();
+                            $(actionsCell).append(newActions).fadeIn();
+
+                            var ipOption = '<option value="' + data.floating_ip_id + '">' + data.floating_ip + '</option>';
+                            $('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(ipOption);
+
+                            var instanceOption = '<option value="' + confInstanceId + '">' + confInstanceName + '</option>';
+                            $('div#fip-assign-dialog-form > form > fieldset > select#assign_instance').append(instanceOption);
+
+                            $(targetRow).removeClass("fip-assigned");
+                        }
+                    })
+                    .fail(function () {
+
+                        message.showMessage('error', 'Server Fault');
+
+                        $(actionsCell).empty().fadeOut();
+                        $(actionsCell).append(actionsHtml);
+                    })
+                    .always(function () {
+
+                        setVisible(progressbar, false);
+                        setVisible('#assign_ip', true);
+                        disableLinks(false);
+                    });
+
+                $(this).dialog("close");
             }
         },
 
@@ -113,10 +127,9 @@ $(function () {
         event.preventDefault();
 
         targetRow = $(this).parent().parent();
-        fip = $(this).attr("id");
-        fipId = $(targetRow).attr("class");
-        instanceName = document.getElementById(fip + "-instance-name");
-        instanceName = $(instanceName).text();
+        fipId = $(targetRow).attr("id");
+        fip = $(document.getElementById(fipId + "-ip-address")).text();
+        instanceName = $(document.getElementById(fipId + "-instance-name")).text();
         instanceId = $('a').filter(function () {
             return $(this).text() == instanceName;
         });

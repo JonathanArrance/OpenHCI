@@ -1,7 +1,13 @@
 $(function () {
 
-    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
+    var id = '';
+    var user = '';
+    var targetRow;
+
+    // Widget Elements
+    var progressbar = $("#users_progressbar"),
+        placeholder = '<tr id="users_placeholder"><td><p><i>This project has no users</i></p></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -12,18 +18,10 @@ $(function () {
         }
     });
 
-    // Local Variables
-    var id,
-        instance,
-        targetRow;
-
-    // Widget Elements
-    var progressbar = $("#instance_progressbar");
-
-    $("#instance-suspend-confirm-form").dialog({
+    $('#user-remove-confirm-form').dialog({
         autoOpen: false,
         height: 125,
-        width: 235,
+        width: 200,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -39,19 +37,16 @@ $(function () {
 
                 // Confirmed Selections
                 var confId = id,
-                    confInstance = $(instance).text();
+                    confUsername = $(user).text();
 
-                message.showMessage('notice', "Suspending " + confInstance + ".");
-
-                // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links and instance actions
-                disableLinks(true);
-                disableActions("suspend-instance", true);
+                message.showMessage('notice', "Removing " + confUsername + " from " + PROJECT + ".");
 
-                // Initialize progressbar and make it visible
+                disableLinks(true);
+
+                // Initialize progressbar and make it visible if hidden
                 $(progressbar).progressbar({value: false});
                 setVisible(progressbar, true);
 
@@ -63,14 +58,13 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/server/' + PROJECT_ID + '/' + confId + '/suspend_server/')
+                $.getJSON('/remove_user_from_project/' + confId + '/' + PROJECT_ID + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
-                            // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -79,63 +73,59 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            var statusCell = document.getElementById(confId + "-status-cell");
+                            $(targetRow).fadeOut().remove();
 
-                            // Update status cell
-                            $(statusCell).fadeOut().empty();
-                            $(statusCell).append("SUSPENDED").fadeIn();
+                            // If last user, reveal placeholder
+                            var rowCount = $('#users_list tr').length;
+                            if (rowCount < 2) {
+                                $('#users_list').append(placeholder).fadeIn();
+                            }
 
-                            // Create new actions
-                            var newActions =
-                                '<a href="#" class="resume-instance ' + confId + '-disable-action">resume</a>' +
-                                '<span class="instance-actions-pipe"> | </span>' +
-                                '<a href="#" class="delete-instance ' + confId + '-disable-action">delete</a>';
+                            unassignedUsers++;
+                            setVisible("#add-existing-user", true);
 
-                            // Update actions-cell
-                            $(actionsCell).fadeOut().empty();
-                            $(actionsCell).append(newActions).fadeIn();
-
-                            // Add paused class
-                            $(targetRow).addClass("instance-suspended");
+                            // Append new option to assign-fip select menu
+                            var newOption = '<option value=' + confUsername + '>' + confUsername + '</option>';
+                            var userSelect = 'div#user-add-existing-dialog-form > form > fieldset > select#username';
+                            $(userSelect).append(newOption);
                         }
+
                     })
                     .fail(function () {
 
                         message.showMessage('error', 'Server Fault');
 
-                        // Restore Actions html
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
 
-                        // Hide progressbar, enabled instance actions and widget view links
-                        setVisible(progressbar, false);
-                        disableActions("suspend-instance", false);
                         disableLinks(false);
+                        setVisible(progressbar, false);
                     });
 
                 $(this).dialog("close");
             }
         },
         close: function () {
-
+            $(this).dialog("close");
         }
     });
 
-    $(document).on('click', '.suspend-instance', function () {
+    $(document).on('click', '.remove-user', function () {
 
-        // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        // Get target row element, get id from that element and use that to get the instance-name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        instance = document.getElementById(id + "-name-text");
+        user = document.getElementById(id + "-name-text");
 
-        // Add instance-name-text to delete-confirm-form
-        $('div#instance-suspend-confirm-form > p > span.instance-name').empty().append($(instance).text());
+        $('div#user-remove-confirm-form > p > span.user-name').empty().append($(user).text());
 
-        $("#instance-suspend-confirm-form").dialog("open");
+        $('#user-remove-confirm-form').dialog("open");
     });
 });
+
+
+
+

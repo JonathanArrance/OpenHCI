@@ -1,9 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var fip = '';
-    var targetRow;
-    var placeholder = '<tr id="fip_placeholder"><td><p><i>This project has no floating IPs</i></p></td><td></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -14,10 +12,21 @@ $(function () {
         }
     });
 
+    // Local Variables
+    var id,
+        fip,
+        targetRow;
+
+    // Widget Elements
+    var progressbar = $("#fip_progressbar"),
+        table = $("#fip_list"),
+        placeholder =
+            '<tr id="fip_placeholder"><td><p><i>This project has no floating IPs</i></p></td><td></td><td></td></tr>';
+
     $('#fip-deallocate-confirm-form').dialog({
         autoOpen: false,
-        height: 150,
-        width: 350,
+        height: 125,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -31,33 +40,42 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                var confirmedFip = fip;
-                var deallocateHtml = '<a id="' + confirmedFip + '" class="deallocate_ip" href="#">deallocate</a></td>';
+                // Confirmed Selections
+                var confFip = fip,
+                    confId = id;
 
-                message.showMessage('notice', "Deallocating " + confirmedFip + ".");
+                // Store actions cell html
+                var actionsCell = document.getElementById(confId + "-actions-cell");
+                var actionsHtml = '<a class="deallocate_ip" href="#">deallocate</a></td>';
 
-                setVisible('.allocate_ip', false);
-                setVisible('#assign_ip', false);
+                message.showMessage('notice', "Deallocating " + confFip + ".");
+
+                // Disable widget view links and hide allocate and assign buttons
                 disableLinks(true);
+                setVisible('#allocate_ip', false);
+                setVisible('#assign_ip', false);
+
+                // Initialize progressbar and make it visible
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
 
                 // Create loader
-                var actionsCell = document.getElementById(confirmedFip + "-actions-cell");
-                var loaderId = confirmedFip + '-loader';
+                var loaderId = confId + '-loader';
                 var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
                 // Clear clicked action link and replace with loader
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/deallocate_floating_ip/' + PROJECT_ID + '/' + confirmedFip + '/')
-                    .success(function (data) {
+                $.getJSON('/deallocate_floating_ip/' + PROJECT_ID + '/' + confFip + '/')
+                    .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
                             $(actionsCell).empty().fadeOut();
-                            $(actionsCell).append(deallocateHtml).fadeIn();
+                            $(actionsCell).append(actionsHtml).fadeIn();
                         }
 
                         if (data.status == 'success') {
@@ -66,47 +84,47 @@ $(function () {
 
                             $(targetRow).fadeOut().remove();
 
-                            var targetOption = 'select#assign_floating_ip option[value="' + confirmedFip + '"]';
+                            var targetOption = 'select#assign_floating_ip option[value="' + confId + '"]';
                             $(targetOption).remove();
                         }
-
-                        setVisible('.allocate_ip', true);
 
                         // If last fip, reveal placeholder and hide assign_ip
                         var rowCount = $('#fip_list tr').length;
                         if (rowCount < 2) {
-                            $('#fip_list').append(placeholder).fadeIn();
+                            $(table).append(placeholder).fadeIn();
                         } else {
                             setVisible('#assign_ip', true);
                         }
-
-                        disableLinks(false);
-
                     })
-                    .error(function () {
-                        message.showMessage('error', 'Server Fault');
+                    .fail(function () {
 
-                        setVisible('.allocate_ip', true);
-                        setVisible('#assign_ip', true);
+                        message.showMessage('error', 'Server Fault');
+                    })
+                    .always(function () {
+
+                        setVisible(progressbar, false);
+                        setVisible('#allocate_ip', true);
                         disableLinks(false);
                     });
 
                 $(this).dialog("close");
-            },
-
-            Cancel: function () {
-                $(this).dialog("close");
             }
+        },
+        close: function(){
         }
     });
 
     $(document).on('click', '.deallocate_ip', function () {
 
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        // Get target row element, get id from that element and use that to get form text
         targetRow = $(this).parent().parent();
-        fip = $(this).attr("id");
+        id = $(targetRow).attr("id");
+        fip = $(document.getElementById(id + "-ip-address")).text();
 
         $('div#fip-deallocate-confirm-form > p > span.ip-address').empty().append(fip);
-
         $('#fip-deallocate-confirm-form').dialog("open");
     });
 

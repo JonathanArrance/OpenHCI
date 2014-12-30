@@ -38,6 +38,7 @@
 	height: 20px;
 }
 .ui-dialog .ui-dialog-content {
+    display: block;
 	position: relative;
 	border: 0;
 	padding: .5em 1em;

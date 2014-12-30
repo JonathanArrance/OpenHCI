@@ -440,11 +440,10 @@ class user_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
+                    r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
+                    return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
-
-                r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
-                return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
@@ -622,7 +621,7 @@ class user_ops:
                 else:
                     logger.sys_info('Added admin to project %s'%(proj[0][0]))
                 self.db.pg_close_connection()
-                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id']}
+                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id'], "user":self.get_user_info(user_dict={"username":user_role_dict['username'], "project_name":proj[0][0]})}
                 return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])

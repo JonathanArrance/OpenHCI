@@ -42,12 +42,12 @@
 {% block content %}
 
 <div class="row-fluid">
-    <div class="span4">
-
+    <div class="span5">
         <div class="row-fluid">
-            <div id="widget-actions" class="well top">
+            <div id="instance-details" class="well">
                 <div class="legend">
-                    Actions
+                    Instance Details
+
                     {% if user_level == 0 %}
                     <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn"
                        style="float: right;">Return To Project</a>
@@ -61,24 +61,8 @@
                     {% endif %}
                 </div>
 
-                <div class="center-buttons">
-                    <a href="#" id="resize-server" class="btn">Resize Instance</a>
-                    <a href="#" id="reboot-server" class="btn">Reboot</a>
-                    <a href="#" id="cycle-server" class="btn">Power Cycle</a>
-                    <a href="#" id="poweroff-server" class="btn">Power Off</a>
-                </div>
-            </div>
-        </div>
-
-	  	<div id="instance-progressbar" class="ui-progressbar" style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
-
-        <!-- end inner row -->
-        <div class="row-fluid">
-            <div id="instance-details" class="well">
-                <div class="legend">
-                    Instance Details
-                </div>
                 <div id="delete-check"></div>
+
                 <table class="paleblue widget-table">
                     <tr>
                         <th>Name</th>
@@ -129,22 +113,39 @@
                     </tr>
                 </table>
             </div>
-        </div>
-        <!-- end inner row -->
-    </div>
-    <!-- end span4 -->
+        </div> <!-- end inner row -->
+
+        <div class="row-fluid">
+            <div id="widget-actions" class="well top">
+                <div class="legend">
+                    Actions
+                </div>
+
+                <div class="center-buttons">
+                    <a href="#" id="resize-server" class="btn">Resize Instance</a>
+                    <a href="#" id="reboot-server" class="btn">Reboot</a>
+                    <a href="#" id="cycle-server" class="btn">Power Cycle</a>
+                    <a href="#" id="poweroff-server" class="btn">Power Off</a>
+                </div>
+            </div>
+        </div> <!-- end inner row -->
+
+        <div id="instance_progressbar" class="ui-progressbar"
+             style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
+
+    </div> <!-- end span5 -->
 
 
-    <div class="span8">
+    <div class="span7">
         <div class="well top widget-console-well">
             <div class="legend">
                 Console
                 <a href="#" id="refresh-console" class="btn" style="float: right;">Refresh</a>
             </div>
-            <iframe id="instance-console" class="widget-console" name="noVNCconsole" src="{{server.novnc_console}}"></iframe>
+            <iframe id="instance-console" class="widget-console" name="noVNCConsole"
+                    src="{{server.novnc_console}}"></iframe>
         </div>
-
-    </div>
+    </div> <!-- end span7 -->
 
     <div id="instance-view-resize-dialog-form" title="Resize server?">
         <form id="instance-resize-form" action="">
@@ -159,6 +160,8 @@
             </fieldset>
         </form>
     </div>
+
+    <!-- Action Forms -->
 
     <div id="instance-view-reboot-confirm-form" title="Reboot server?">
         <form id="instance-reboot-form"

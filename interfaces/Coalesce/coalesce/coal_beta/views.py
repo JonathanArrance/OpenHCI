@@ -94,7 +94,7 @@ def welcome(request):
             tot_proj = stats.get_num_project()
             full_stats = ns.node_stats()
             tot_nodes = len(full_stats)
-            
+
             #Project stats
             to = tenant_ops(auth)
             so = server_ops(auth)
@@ -108,27 +108,27 @@ def welcome(request):
             for tenant in tl:
                 servers = so.list_servers(tenant['project_id'])
                 num_servers = len(servers)
-                
+
                 fips = l3.list_floating_ips(tenant['project_id'])
                 num_fips = len(fips)
-                
+
                 volumes = vo.list_volumes(tenant['project_id'])
                 num_vol = len(volumes)
-                
+
                 #containers = ao.get_account_info(tenant['project_id'])
                 #num_cont = len(containers)
                 #print num_cont
                 num_cont = 0
-                
+
                 routers = l3.list_routers(tenant['project_id'])
                 num_rout = len(routers)
-                
+
                 networks = no.list_internal_networks(tenant['project_id'])
                 num_net = len(networks)
-                
+
                 users = to.list_tenant_users(tenant['project_id'])
                 num_users = len(users)
-                
+
                 tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
                                     'num_fips': num_fips,
@@ -137,7 +137,7 @@ def welcome(request):
                                     'num_rout': num_rout,
                                     'num_net': num_net,
                                     'num_users': num_users})
-            
+
             return render_to_response('coal/stat_panel.html', RequestContext(request, {'full_stats': full_stats,
                                                                                        'tot_users': tot_users,
                                                                                        'tot_proj': tot_proj,
@@ -145,7 +145,7 @@ def welcome(request):
                                                                                        'tenant_info': tenant_info,}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
-        
+
     except Exception as e:
         print e
         return render_to_response('coal/welcome.html', RequestContext(request,))
@@ -300,17 +300,17 @@ def project_view(request, project_id):
     instances     = so.list_servers(project_id)
     instance_info={}
     flavors       = fo.list_flavors()
-    
+
     hosts=[]
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
-    
+
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
         v_info = vo.get_volume_info(v_dict)
         vid = volume['volume_id']
         volume_info[vid] = v_info
-    
+
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
@@ -333,7 +333,7 @@ def project_view(request, project_id):
                       'server_flavor': ''}
             sname = instance['server_name']
             instance_info[sname] = i_info
-            
+
     try:
         images    = go.list_images()
     except:
@@ -438,13 +438,13 @@ def pu_project_view(request, project_id):
     instances     = so.list_servers(project_id)
     instance_info={}
     flavors       = fo.list_flavors()
-    
+
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
         v_info = vo.get_volume_info(v_dict)
         vid = volume['volume_id']
         volume_info[vid] = v_info
-    
+
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
@@ -467,7 +467,7 @@ def pu_project_view(request, project_id):
                       'server_flavor': ''}
             sname = instance['server_name']
             instance_info[sname] = i_info
-            
+
     try:
         images    = go.list_images()
     except:
@@ -546,7 +546,7 @@ def basic_project_view(request, project_id):
         v_info = vo.get_volume_info(v_dict)
         vid = volume['volume_id']
         volume_info[vid] = v_info
-    
+
     priv_net_list = no.list_internal_networks(project_id)
     private_networks={}
     for net in priv_net_list:
@@ -733,20 +733,11 @@ def key_delete(request, sec_key_name, project_id):
         so = server_ops(auth)
         key_dict = {'sec_key_name': sec_key_name, 'project_id': project_id}
         out = so.delete_sec_keys(key_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to delete key pair.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-
-    
-    return render_to_response('coal/key_view.html',
-                               RequestContext(request, {
-                                                        'key_info': key_info,
-                                                        'project_id': project_id
-                                                        }))
+        out['status'] = 'success'
+        out['message'] = 'Successfully removed security group.'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not delete key: %s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 
 
@@ -887,7 +878,7 @@ def delete_sec_group(request, sec_group_id, project_id):
         auth = request.session['auth']
         so = server_ops(auth)
         sec_dict = {'sec_group_id': sec_group_id, 'project_id':project_id}
-        delsec = so.delete_sec_group(sec_dict)
+        del_sec = so.delete_sec_group(sec_dict)
         if(del_sec == 'OK'):
             out['status'] = 'success'
             out['message'] = 'Successfully removed security group.'
@@ -1034,10 +1025,10 @@ def delete_image (request, image_id):
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        del_image = go.delete_image(image_id)
-        if(del_image == 'OK'):
-            out['status'] = "success"
-            out['message'] = "Image was deleted."
+        go.delete_image(image_id)
+        #if(del_image == 'OK'):
+        out['status'] = "success"
+        out['message'] = "Image was deleted."
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -1313,7 +1304,7 @@ def create_vm_spec(request,name,ram,boot_disk,cpus,swap=None,ephemeral=None,publ
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-        
+
 
 def delete_vm_spec(request,flavor_id):
     output = {}
@@ -1677,7 +1668,7 @@ def unassign_floating_ip(request, floating_ip_id):
 def toggle_user(request, username, toggle):
     try:
         auth = request.session['auth']
-        uo = user_ops(auth)
+        uo = user_ops(auth)fg
         user_dict = {'username': username, 'toggle':toggle}
         uo.toggle_user(user_dict)
         referer = request.META.get('HTTP_REFERER', None)
@@ -1754,9 +1745,9 @@ def remove_user_from_project(request, user_id, project_id):
         uo = user_ops(auth)
         user_dict = {'user_id': user_id, 'project_id':project_id}
         ru = uo.remove_user_from_project(user_dict)
-        if(ru == 'OK'):
-            out['status'] = 'success'
-            out['message'] = 'The user has been removed from the project, but not deleted.'
+        #if(ru == 'OK'):
+        out['status'] = 'success'
+        out['message'] = 'The user has been removed from the project, but not deleted.'
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not remove the user from the project: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1784,7 +1775,7 @@ def add_existing_user(request, username, user_role, project_id):
         user_dict = {'username': username, 'user_role':user_role, 'project_id': project_id}
         out = uo.add_user_to_project(user_dict)
         out['status'] = 'success'
-        out['message'] = 'The user %s has been added to the project %s.'%(username)
+        out['message'] = 'The user %s has been added to the project.'%(username)
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not add the user %s to the project: %s"%(username,e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1858,7 +1849,7 @@ def instance_view(request, project_id, server_id):
                                                         'flavors': flavors,
                                                         'current_project_id': project_id,
                                                         }))
-
+'''
 def add_private_network(request, net_name, admin_state, shared, project_id):
     try:
         auth = request.session['auth']
@@ -1872,7 +1863,23 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
     except:
         messages.warning(request, "Unable to add private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
 
+def add_private_network(request, net_name, admin_state, shared, project_id):
+    try:
+        auth = request.session['auth']
+        no = neutron_net_ops(auth)
+        create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
+        out = no.add_private_network(create_dict)
+        subnet_dict={"net_id": out['net_id'], "subnet_dhcp_enable": "true", "subnet_dns": ["8.8.8.8"]}
+        out['subnet'] = no.add_net_subnet(subnet_dict)
+        out['status'] = 'success'
+        out['message'] = 'The network %s has been created.'%(net_name)
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not add the private network %s to the project: %s"%(net_name,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+'''
 def remove_private_network(request, project_id, net_id):
     try:
         auth    = request.session['auth']
@@ -1902,6 +1909,35 @@ def remove_private_network(request, project_id, net_id):
     except:
         messages.warning(request, "Unable to remove private network.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
+
+def remove_private_network(request, project_id, net_id):
+    out = {}
+    try:
+        auth    = request.session['auth']
+        no      = neutron_net_ops(auth)
+        l3o     = layer_three_ops(auth)
+        network = no.get_network(net_id)
+        subnets = network['net_subnet_id']
+        for subnet in subnets:
+            subnet_id = subnet['subnet_id']
+            sub_proj_dict = {'net_id': net_id, 'subnet_id': subnet_id, 'project_id': project_id}
+            if network['router_id']:
+                remove_dict = {'router_id': network['router_id'], 'subnet_id': subnet_id, 'project_id': project_id}
+                l3o.delete_router_internal_interface(remove_dict)
+            #ports = no.list_net_ports(sub_proj_dict)
+                #for port in ports:
+                #remove_port_dict = {'subnet_id': subnet_id, 'project_id': project_id, 'port_id': port['port_id']}
+                #no.remove_net_port(remove_port_dict)
+            no.remove_net_subnet(sub_proj_dict)
+        remove_dict={'net_id': net_id, 'project_id': project_id }
+        rn = no.remove_network(remove_dict)
+        if(rn == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'The network has been removed.'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not remove the private network from the project: %s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def container_view(request, project_id, container_name):
     auth = request.session['auth']

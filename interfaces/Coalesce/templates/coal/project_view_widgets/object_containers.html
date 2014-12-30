@@ -3,8 +3,7 @@
     <div class="well widget-disabled">
         <div class="legend">
             Containers (not supported)
-            <a href="#" id="create-container-disabled" class="btn" style="float:right" disabled="disabled">New
-                Container</a>
+            <a href="#" id="create-container-disabled" class="btn" style="float:right" disabled="disabled">Create</a>
             {% if containers %}
             <a href="#" id="upload-object-disabled" class="btn" style="float:right" disabled="disabled">Upload
                 Object</a>
@@ -43,12 +42,12 @@
         </div>
 
         <table class="paleblue widget-table">
-            {% if containers %}
+            <!-- {% if containers %} -->
             <tr>
                 <th>Container</th>
                 <th>Actions</th>
             </tr>
-            {% for c in containers %}
+            <!-- {% for c in containers %}
             <tr>
                 <td>
                     <a href="/projects/{{project.project_id}}/containers/{{c}}/view/" class="disable-link">{{c}}</a>
@@ -58,9 +57,9 @@
                 </td>
             </tr>
             {% endfor %}
-            {% else %}
+            {% else %} -->
             <p><i>This project has no containers</i></p>
-            {% endif %}
+            <!-- {% endif %} -->
         </table>
     </div>
 </div>

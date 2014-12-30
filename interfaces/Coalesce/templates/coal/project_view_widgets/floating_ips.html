@@ -1,10 +1,13 @@
 <!-- Begin Floating IP widget-->
 <div class="span4">
 	<div class="well widget">
+
+        <script> var extNet = "{{default_public}}";</script>
+
 		<div class="legend">
             Floating IP's
             {% if user_level <= 1 %}
-			<a href="#" id="{{default_public}}" class="allocate_ip btn btn-widget" style="float:right">Allocate</a>
+			<a href="#" id="allocate_ip" class="btn btn-widget" style="float:right">Allocate</a>
 			<a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
             {% endif %}
 		</div>
@@ -19,7 +22,7 @@
 					<select name="assign_floating_ip" id="assign_floating_ip">
 						{% for fip in floating_ips %}
                            {% if fip.floating_in_use == 'false' %}
-								<option value="{{fip.floating_ip}}">{{fip.floating_ip}}</option>
+								<option value="{{fip.floating_ip_id}}">{{fip.floating_ip}}</option>
 							{% endif %}
 						{% endfor %}
 					</select>
@@ -27,6 +30,9 @@
 					<label for="assign_instance">Instance</label>
 					<select name="assign_instance" id="assign_instance">
 						{% for server in instances %}
+                            {% if server.public_ip == None %}
+							    <option value="{{server.server_id}}">{{server.server_name}}</option>
+                            {% endif %}
                             {% if server.public_ip == "None" %}
 							    <option value="{{server.server_id}}">{{server.server_name}}</option>
                             {% endif %}
@@ -61,24 +67,24 @@
 			</tr>
 			{% if floating_ips %}
 	    		{% for fip in floating_ips %}
-					<tr id="{{fip.floating_ip}}" class="{{fip.floating_ip_id}}">
-						<td id="{{fip.floating_ip}}-ip-cell">
+					<tr id="{{fip.floating_ip_id}}"{% if fip.instance_name != '' %} class="fip-assigned"{% endif %}>
+						<td id="{{fip.floating_ip_id}}-ip-cell">
 							<a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-link">
-								<span id="{{fip.floating_ip}}-id-address">{{fip.floating_ip}}</span>
+								<span id="{{fip.floating_ip_id}}-ip-address">{{fip.floating_ip}}</span>
 							</a>
 						</td>
-						<td id="{{fip.floating_ip}}-instance-cell">
+						<td id="{{fip.floating_ip_id}}-instance-cell">
 							{% if fip.instance_name == "" %}
-								<span id="{{fip.floating_ip}}-instance-name">None</span>
+								<span id="{{fip.floating_ip_id}}-instance-name">None</span>
 							{% else %}
-								<span id="{{fip.floating_ip}}-instance-name" class="">{{fip.instance_name}}</span>
+								<span id="{{fip.floating_ip_id}}-instance-name">{{fip.instance_name}}</span>
 							{% endif %}
 						</td>
-						<td id="{{fip.floating_ip}}-actions-cell">
+						<td id="{{fip.floating_ip_id}}-actions-cell">
 							{% if fip.floating_in_use == 'true' %}
-								<a id="{{fip.floating_ip}}" class="unassign_ip" href="#">unassign</a>
+								<a href="#" class="unassign_ip">unassign</a>
 							{% else %}
-								<a id="{{fip.floating_ip}}" class="deallocate_ip" href="#">deallocate</a>
+								<a href="#" class="deallocate_ip">deallocate</a>
 			    			{% endif %}
 						</td>
 					</tr>

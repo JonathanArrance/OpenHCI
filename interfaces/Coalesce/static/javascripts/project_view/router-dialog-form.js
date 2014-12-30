@@ -37,9 +37,11 @@ $(function () {
         },
         buttons: {
             "Create Router": function () {
-                var bValid = true;
-                allFields.removeClass("ui-state-error");
 
+                allFields.removeClass("ui-state-error");
+                $('.error').fadeOut().remove();
+
+                var bValid = true;
                 bValid =
                     bValid &&
                     checkLength(tips, router_name, "router_name", 3, 16);
@@ -87,9 +89,9 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');	// Flag server fault message
+                            message.showMessage('error', 'Server Fault');
                         })
-                        .always(function() {
+                        .always(function () {
 
                             setVisible(progressbar, false);
                             setVisible('#create-router', true);

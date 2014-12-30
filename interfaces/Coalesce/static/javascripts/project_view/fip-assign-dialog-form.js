@@ -1,5 +1,6 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
 
     $.ajaxSetup({
@@ -11,8 +12,15 @@ $(function () {
         }
     });
 
+    // Local Variables
+    var targetRow;
+
+    // Form Elements
     var floating_ip = $("#assign_floating_ip"),
         instance = $("#assign_instance");
+
+    // Widget Elements
+    var progressbar = $("#fip_progressbar");
 
     $("#fip-assign-dialog-form").dialog({
         autoOpen: false,
@@ -31,67 +39,66 @@ $(function () {
         buttons: {
             "Assign": function () {
 
-                var bValid = true;
-                var confirmedId = floating_ip.val();
-                var confirmedInstanceId = instance.val();
+                // Confirmed Selections
+                var confIpId = floating_ip.val(),
+                    confIp = $(document.getElementById(confIpId + "-ip-address")).text(),
+                    confInstanceId = instance.val(),
+                    confInstanceName = $(document.getElementById(confInstanceId + "-name-text")).text(),
+                    targetRow = document.getElementById(confIpId);
 
                 // Initialize progressbar and make it visible if hidden
-                $('#fip_progressbar').progressbar({value: false});
-                setVisible('#fip_progressbar', true);
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
 
-                if (bValid) {
+                setVisible('#allocate_ip', false);
+                setVisible('#assign_ip', false);
+                disableLinks(true);
 
-                    setVisible('.allocate_ip', false);
-                    setVisible('#assign_ip', false);
-                    disableLinks(true);
+                $.getJSON('/assign_floating_ip/' + confIp + '/' + confInstanceId + '/' + PROJECT_ID + '/')
+                    .done(function (data) {
 
-                    $.getJSON('/assign_floating_ip/' + confirmedId + '/' + confirmedInstanceId + '/' + PROJECT_ID + '/')
-                        .success(function (data) {
+                        if (data.status == 'error') {
 
-                            if (data.status == 'error') {
-                                message.showMessage('error', data.message);
-                            }
+                            message.showMessage('error', data.message);
+                        }
 
-                            if (data.status == 'success') {
+                        if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                            message.showMessage('success', data.message);
 
-                                var instanceName = document.getElementById(data.floating_ip + "-instance-name");
-                                var instanceCell = document.getElementById(data.floating_ip + "-instance-cell");
-                                var actionsCell = document.getElementById(data.floating_ip + "-actions-cell");
-                                var instanceNameHtml = '<span id="' + data.floating_ip + '-instance-name">' + data.instance_name + '</span>';
-                                var unassignHtml = '<a href="#" id="' + data.floating_ip + '" class="unassign_ip">unassign</a>';
+                            var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
+                            var actionsCell = document.getElementById(data.floating_ip_id + "-actions-cell");
+                            var instanceNameHtml = '<span id="' + data.floating_ip_id + '-instance-name">' + data.instance_name + '</span>';
+                            var newAction = '<a href="#" id="' + data.floating_ip_id + '" class="unassign_ip">unassign</a>';
 
-                                $(instanceName).fadeOut().remove();
-                                $(actionsCell).empty().fadeOut();
+                            $(instanceCell).empty().fadeOut();
+                            $(actionsCell).empty().fadeOut();
 
-                                $(instanceCell).append(instanceNameHtml).fadeIn();
-                                $(actionsCell).append(unassignHtml).fadeIn();
+                            $(instanceCell).append(instanceNameHtml).fadeIn();
+                            $(actionsCell).append(newAction).fadeIn();
 
-                                var ipOption = 'select#assign_floating_ip option[value="' + data.floating_ip + '"]';
-                                $(ipOption).remove();
+                            var ipOption = 'select#assign_floating_ip option[value="' + data.floating_ip_id + '"]';
+                            $(ipOption).remove();
 
-                                var instanceOption = 'select#assign_instance option[value="' + confirmedInstanceId + '"]';
-                                $(instanceOption).remove();
-                            }
+                            var instanceOption = 'select#assign_instance option[value="' + confInstanceId + '"]';
+                            $(instanceOption).remove();
 
-                            setVisible('#fip_progressbar', false);
-                            setVisible('.allocate_ip', true);
-                            setVisible('#assign_ip', true);
-                            disableLinks(false);
-                        })
-                        .error(function () {
+                            $(targetRow).addClass("fip-assigned");
+                        }
+                    })
+                    .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                        message.showMessage('error', 'Server Fault');
+                    })
+                    .always(function () {
 
-                            setVisible('#fip_progressbar', false);
-                            setVisible('.allocate_ip', true);
-                            setVisible('#assign_ip', true);
-                            disableLinks(false);
-                        });
+                        setVisible(progressbar, false);
+                        setVisible('#allocate_ip', true);
+                        setVisible('#assign_ip', true);
+                        disableLinks(false);
+                    });
 
-                    $(this).dialog("close");
-                }
+                $(this).dialog("close");
             }
         },
         close: function () {
