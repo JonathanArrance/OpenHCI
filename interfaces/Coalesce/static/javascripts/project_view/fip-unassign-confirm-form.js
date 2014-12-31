@@ -25,7 +25,7 @@ $(function () {
     $("#fip-unassign-confirm-form").dialog({
         autoOpen: false,
         height: 125,
-        width: 185,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -47,16 +47,18 @@ $(function () {
 
                 message.showMessage('notice', "Unassigning " + confFip + ".");
 
+                // Store action cell html
                 var actionsCell = document.getElementById(confFipId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
                 // Disable widget view links and hide assign_ip button
                 disableLinks(true);
+                disableActions("unassign_ip", true);
                 setVisible('#assign_ip', false);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "fips", false);
 
                 // Create loader
                 var loaderId = confFipId + '-loader';
@@ -73,6 +75,7 @@ $(function () {
 
                             message.showMessage('error', data.message);
 
+                            // Reset actions cell
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml);
                         }
@@ -81,6 +84,7 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
+                            // Update instance and action cells
                             var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
                             var instanceNameHtml = '<span id="' + data.floating_ip_id + '-instance-name">None</span>';
                             var newActions = '<a href="#" class="deallocate_ip">deallocate</a>';
@@ -91,12 +95,11 @@ $(function () {
                             $(instanceCell).append(instanceNameHtml).fadeIn();
                             $(actionsCell).append(newActions).fadeIn();
 
-                            var ipOption = '<option value="' + data.floating_ip_id + '">' + data.floating_ip + '</option>';
-                            $('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(ipOption);
+                            // Update assign_ip selects
+                            addToSelect(data.floating_ip_id, data.floating_ip, $("#assign_floating_ip"), assignableFips);
+                            addToSelect(confInstanceId, confInstanceName, $("#assign_instance"), assignableInstances);
 
-                            var instanceOption = '<option value="' + confInstanceId + '">' + confInstanceName + '</option>';
-                            $('div#fip-assign-dialog-form > form > fieldset > select#assign_instance').append(instanceOption);
-
+                            // Remove assigned class
                             $(targetRow).removeClass("fip-assigned");
                         }
                     })
@@ -104,13 +107,16 @@ $(function () {
 
                         message.showMessage('error', 'Server Fault');
 
+                        // Reset action cell
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(actionsHtml);
                     })
                     .always(function () {
 
-                        setVisible(progressbar, false);
+                        // Reset interface
+                        disableProgressbar(progressbar, "fips", true);
                         setVisible('#assign_ip', true);
+                        disableActions("unassign_ip", false);
                         disableLinks(false);
                     });
 
@@ -124,8 +130,10 @@ $(function () {
 
     $(document).on('click', '.unassign_ip', function () {
 
+        // Prevent scrolling to top of page on click
         event.preventDefault();
 
+        // Get target row element, get id from that element and use that to get form text
         targetRow = $(this).parent().parent();
         fipId = $(targetRow).attr("id");
         fip = $(document.getElementById(fipId + "-ip-address")).text();
@@ -135,8 +143,8 @@ $(function () {
         });
         instanceId = $(instanceId).parent().parent().attr("id");
 
+        // Add ip to form
         $('div#fip-unassign-confirm-form > p > span.ip-address').empty().append(fip);
-
         $('#fip-unassign-confirm-form').dialog("open");
     });
 });

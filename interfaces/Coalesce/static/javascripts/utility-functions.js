@@ -257,6 +257,60 @@ function resetUiValidation(fields) {
 
 // --- GENERAL
 
+function HashTable() {
+    this.length = 0;
+    this.items = [];
+
+    for (var i = 0; i < arguments.length; i += 2) {
+        if (typeof (arguments[i + 1]) != 'undefined') {
+            this.items[arguments[i]] = arguments[i + 1];
+            this.length++;
+        }
+    }
+
+    this.removeItem = function (in_key) {
+        var tmp_previous;
+        if (typeof (this.items[in_key]) != 'undefined') {
+            this.length--;
+            tmp_previous = this.items[in_key];
+            delete this.items[in_key];
+        }
+
+        return tmp_previous;
+    };
+
+    this.getItem = function (in_key) {
+        return this.items[in_key];
+    };
+
+    this.setItem = function (in_key, in_value) {
+        var tmp_previous;
+        if (typeof (in_value) != 'undefined') {
+            if (typeof (this.items[in_key]) == 'undefined') {
+                this.length++;
+            } else {
+                tmp_previous = this.items[in_key];
+            }
+
+            this.items[in_key] = in_value;
+        }
+
+        return tmp_previous;
+    };
+
+    this.hasItem = function (in_key) {
+        return typeof (this.items[in_key]) != 'undefined';
+    };
+
+    this.clear = function () {
+        for (var i in this.items) {
+            delete this.items[i];
+        }
+
+        this.length = 0;
+    }
+}
+
 var disabledLinks = 0;
 
 function disableLinks(bool) {
@@ -308,8 +362,6 @@ function disableProgressbar(id, widget, bool) {
 
         disabledProgressbars[widget]++;
     }
-
-    console.log(widget + " = " + disabledProgressbars[widget]);
 }
 
 function disableLink(id, bool) {
@@ -389,18 +441,42 @@ function appendAndFadeIn(selector, newContent) {
     setVisible(selector, true);
 }
 
+function refreshSelect(select, hashTable) {
+    $(select).empty();
+    for (var item in hashTable.items) {
+        var i = hashTable.getItem(item);
+        $(select).append(
+            '<option value="' + i.value + '">' + i.option + '</option>'
+        );
+    }
+}
+
+function removeFromSelect(value, select, hashTable) {
+    hashTable.removeItem(value);
+    refreshSelect(select, hashTable);
+}
+
+function addToSelect(value, option, select, hashTable) {
+    hashTable.setItem(value, { value: value, option: option });
+    refreshSelect(select, hashTable);
+}
+// --- INSTANCE MANAGEMENT
+
+var images = new HashTable (),
+    assignableFips = new HashTable(),
+    assignableInstances = new HashTable();
+
 // --- VOLUME STORAGE
 
-var totalStorage = 0;
-var usedStorage = 0;
-var availableStorage = 0;
+var totalStorage = 0,
+    usedStorage = 0,
+    availableStorage = 0;
 
 function getUsedStorage(rows) {
 
     usedStorage = 0;
 
     $(rows).each(function () {
-
         if (isNaN(parseInt($(this).attr("class")))) {
         } else {
             usedStorage += parseInt($(this).attr("class"));

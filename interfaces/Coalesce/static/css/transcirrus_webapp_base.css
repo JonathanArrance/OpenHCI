@@ -5150,6 +5150,10 @@ th > small {
     display: inline-block;
 }
 
+#image_progressbar  > .ui-widget-header {
+    background-color: #FF8617!important;
+}
+
 /* FIP WIDGET */
 
 #fip_progressbar  > .ui-widget-header {

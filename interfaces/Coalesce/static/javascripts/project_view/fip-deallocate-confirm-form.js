@@ -41,23 +41,26 @@ $(function () {
             "Confirm": function () {
 
                 // Confirmed Selections
-                var confFip = fip,
-                    confId = id;
+                var
+                    confId = id,
+                    confFip = fip,
+                    confRow = targetRow;
+
+                message.showMessage('notice', "Deallocating " + confFip + ".");
 
                 // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = '<a class="deallocate_ip" href="#">deallocate</a></td>';
 
-                message.showMessage('notice', "Deallocating " + confFip + ".");
-
-                // Disable widget view links and hide allocate and assign buttons
+                // Disable widget view links, disable deallocate actions and hide allocate and assign buttons
                 disableLinks(true);
+                disableActions("deallocate_ip", true);
                 setVisible('#allocate_ip', false);
                 setVisible('#assign_ip', false);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "fips", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -74,6 +77,7 @@ $(function () {
 
                             message.showMessage('error', data.message);
 
+                            // Reset actions cell
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -82,10 +86,11 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            $(targetRow).fadeOut().remove();
+                            // Remove row
+                            $(confRow).fadeOut().remove();
 
-                            var targetOption = 'select#assign_floating_ip option[value="' + confId + '"]';
-                            $(targetOption).remove();
+                            // Remove ip from assign_ip select
+                            removeFromSelect(confId, $("#assign_floating_ip"), assignableFips);
                         }
 
                         // If last fip, reveal placeholder and hide assign_ip
@@ -102,8 +107,10 @@ $(function () {
                     })
                     .always(function () {
 
-                        setVisible(progressbar, false);
+                        // Reset interface
+                        disableProgressbar(progressbar, "fips", true);
                         setVisible('#allocate_ip', true);
+                        disableActions("deallocate_ip", false);
                         disableLinks(false);
                     });
 
@@ -124,6 +131,7 @@ $(function () {
         id = $(targetRow).attr("id");
         fip = $(document.getElementById(id + "-ip-address")).text();
 
+        // Add ip to form
         $('div#fip-deallocate-confirm-form > p > span.ip-address').empty().append(fip);
         $('#fip-deallocate-confirm-form').dialog("open");
     });

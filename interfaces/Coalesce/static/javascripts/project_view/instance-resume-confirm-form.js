@@ -53,7 +53,7 @@ $(function () {
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "instances", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -114,7 +114,7 @@ $(function () {
                     .always(function () {
 
                         // Hide progressbar, enabled instance actions and widget view links
-                        setVisible(progressbar, false);
+                        disableProgressbar(progressbar, "instances", true);
                         disableActions("resume-instance", false);
                         disableLinks(false);
                     });
@@ -136,7 +136,7 @@ $(function () {
         id = $(targetRow).attr("id");
         instance = document.getElementById(id + "-name-text");
 
-        // Add instance-name-text to delete-confirm-form
+        // Add instance-name-text to confirm-form
         $('div#instance-resume-confirm-form > p > span.instance-name').empty().append($(instance).text());
 
         $("#instance-resume-confirm-form").dialog("open");
