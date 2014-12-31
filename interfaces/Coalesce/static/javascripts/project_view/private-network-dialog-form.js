@@ -43,8 +43,10 @@ $(function () {
                 $('.error').fadeOut().remove();
 
                 var bValid = true;
-                bValid = bValid &&
-                    checkLength(tips, privateNet, "net name", 3, 16);
+                bValid =
+                    bValid &&
+                    checkLength(privateNet, "net name", 3, 16) &&
+                    checkDuplicateName(privateNet, privateNetworks);
 
                 if (bValid) {
 
@@ -92,8 +94,11 @@ $(function () {
                                     $("#privateNet_placeholder").remove().fadeOut();
                                 }
 
-                                // Append new row to router-list
+                                // Append new row
                                 table.append(newRow).fadeIn();
+
+                                // Update selects
+                                addToSelect(data.net_name, data.net_name, $("#network_name"), privateNetworks);
                             }
 
                         })

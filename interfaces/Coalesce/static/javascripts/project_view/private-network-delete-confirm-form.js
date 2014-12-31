@@ -36,15 +36,16 @@ $(function () {
             "Confirm": function () {
 
                 var confirmedId = id;
+                var confPrivateNet = $(privateNet).text();
                 var deleteHtml = '<a href="#" class="delete-privateNet">delete</a></td>';
 
-                message.showMessage('notice', "Deleting " + $(privateNet).text() + ".");
+                message.showMessage('notice', "Deleting " + confPrivateNet + ".");
 
                 disableLinks(true);
 
                 // Initialize progressbar and make it visible if hidden
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "privateNets", false);
 
                 // Create loader
                 var actionsCell = document.getElementById(confirmedId + "-actions-cell");
@@ -71,6 +72,9 @@ $(function () {
                             message.showMessage('success', data.message);
 
                             $(targetRow).fadeOut().remove();
+
+                            // Update selects
+                            removeFromSelect(confPrivateNet, $("#network_name"), privateNetworks);
                         }
 
                         // If last privateNet, reveal placeholder
@@ -89,7 +93,7 @@ $(function () {
                     })
                     .always(function () {
 
-                        setVisible(progressbar, true);
+                        disableProgressbar(progressbar, "privateNets", true);
                         disableLinks(false);
                     });
 

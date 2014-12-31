@@ -18,34 +18,72 @@
             <form>
                 {% csrf_token %}
                 <fieldset>
+
+                    <script>instances.clear();</script>
+                    {% for server in instances %}
+                    <script>
+                            instances.setItem(
+                                    "{{server.server_id}}",
+                                    { value: "{{server.server_id}}", option: "{{server.server_name}}" });
+                    </script>
+                    {% endfor %}
+
                     <label for="name">Instance Name</label>
                     <input type="text" name="name" id="name"
                            class="text ui-widget-content ui-corner-all instance-text-field"/>
 
                     <label for="sec_group_name">Security Group</label>
                     <select name="sec_group_name" id="sec_group_name">
+                        <script>securityGroups.clear();</script>
                         {% for sg in sec_groups %}
-                        <option value="{{sg.sec_group_name}}">{{sg.sec_group_name}}</option>
+                        <script>
+                            securityGroups.setItem(
+                                    "{{sg.sec_group_name}}",
+                                    { value:"{{sg.sec_group_name}}", option : "{{sg.sec_group_name}}" }
+                            );
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#sec_group_name"), securityGroups);</script>
                     </select>
 
                     <label for="sec_key_name">Security Key</label>
                     <select name="sec_key_name" id="sec_key_name">
+                        <script>securityKeys.clear();</script>
                         {% for sk in sec_keys %}
-                        <option value="{{sk.key_name}}">{{sk.key_name}}</option>
+                        <script>
+                            securityKeys.setItem(
+                                    "{{sk.key_name}}",
+                                    { value: "{{sk.key_name}}", option: "{{sk.key_name}}" }
+                            );
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#sec_key_name"), securityKeys);</script>
                     </select>
 
                     <label for="network_name">Private Network</label>
                     <select name="network_name" id="network_name">
+                        <script>privateNetworks.clear();</script>
                         {% for net in priv_net_list %}
-                        <option value="{{net.net_name}}">{{net.net_name}}</option>
+                        <script>
+                            privateNetworks.setItem(
+                                    "{{net.net_name}}",
+                                    { value: "{{net.net_name}}", option: "{{net.net_name}}" }
+                            );
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#network_name"), privateNetworks);</script>
                     </select>
 
                     <label for="image_name">Image</label>
                     <select name="image_name" id="image_name">
+                        <script>images.clear();</script>
                         {% for image in images %}
+                        <script>
+                            images.setItem(
+                                    "{{image.image_name}}",
+                                    { value: "{{image.image_name}}", option: "{{image.image_name}}" }
+                            )
+                        </script>
                         <option value="{{image.image_name}}">{{image.image_name}}</option>
                         {% endfor %}
                     </select>

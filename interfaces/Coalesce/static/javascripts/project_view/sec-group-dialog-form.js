@@ -97,6 +97,9 @@ $(function () {
 
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
+
+                                // Update selects
+                                addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), securityGroups);
                             }
                         })
                         .fail(function () {

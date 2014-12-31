@@ -87,13 +87,9 @@ $(function () {
                             // Remove row
                             $(confRow).fadeOut().remove();
 
-                            // Remove instance from attach-volume select menu
-                            var attachSelect = 'div#volume-attach-dialog-form > form  > fieldset > select#instance option[value=' + confInstance + ']';
-                            $(attachSelect).remove();
-
-                            // Remove instance from assign-fip select menu
-                            var assignSelect = 'div#fip-assign-dialog-form > form > fieldset > select#assign_instance option[value=' + confInstance + ']';
-                            $(assignSelect).remove();
+                            // Update selects
+                            removeFromSelect(confId, $("#instance"), attachableInstances);
+                            removeFromSelect(confId, $("#assign_instance"), assignableInstances);
 
                             // Unattach volumes
                             for (var i = 0; i < data.vols.length; i++) {

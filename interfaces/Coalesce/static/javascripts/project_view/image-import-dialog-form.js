@@ -115,6 +115,9 @@ $(function () {
                                     console.log('success: image_id:' + ret_data.image_id);
                                     $('#image_list').append(newRow);
 
+                                    // Update selects
+                                    addToSelect(display_name, display_name, $("#image_name"), images);
+
                                     message.showMessage("success", ret_data.message);
 
                                     $("#image-import-dialog-form").dialog("close");

@@ -83,6 +83,8 @@ $(function () {
                             $('#secGroup_list').append(placeholder).fadeIn();
                         }
 
+                        // Update selects
+                        removeFromSelect(confSecGroup, $("#sec_group_name"), securityGroups);
                     })
                     .fail(function () {
 

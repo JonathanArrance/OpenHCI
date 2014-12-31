@@ -236,6 +236,24 @@ function checkFile(file) {
     }
 }
 
+function checkDuplicateName(name, hashTable) {
+    var pass = true;
+    for (item in hashTable.items) {
+        var i = hashTable.getItem(item);
+        if (name.val() == i.option) {
+            pass = false;
+        }
+    }
+
+    if (!pass) {
+        flagError(
+            name,
+            "Name is already in use.");
+    }
+
+    return pass;
+}
+
 function clearUiValidation(fields) {
     fields.removeClass("ui-state-error");
     $('.error').each(function () {
@@ -446,7 +464,7 @@ function refreshSelect(select, hashTable) {
     for (var item in hashTable.items) {
         var i = hashTable.getItem(item);
         $(select).append(
-            '<option value="' + i.value + '">' + i.option + '</option>'
+                '<option value="' + i.value + '">' + i.option + '</option>'
         );
     }
 }
@@ -462,15 +480,17 @@ function addToSelect(value, option, select, hashTable) {
 }
 // --- INSTANCE MANAGEMENT
 
-var images = new HashTable (),
+var instances = new HashTable(),
+    images = new HashTable(),
     assignableFips = new HashTable(),
     assignableInstances = new HashTable();
 
-// --- VOLUME STORAGE
+// --- STORAGE
 
 var totalStorage = 0,
     usedStorage = 0,
-    availableStorage = 0;
+    availableStorage = 0,
+    attachableInstances = new HashTable();
 
 function getUsedStorage(rows) {
 
@@ -485,6 +505,15 @@ function getUsedStorage(rows) {
 
     availableStorage = totalStorage - usedStorage;
 }
+
+// --- SOFTWARE DEFINED NETWORKS
+
+var privateNetworks = new HashTable();
+
+// --- USERS/SECURITY
+
+var securityGroups = new HashTable(),
+    securityKeys = new HashTable();
 
 // --- UNASSIGNED USERS
 

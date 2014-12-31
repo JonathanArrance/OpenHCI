@@ -65,6 +65,7 @@ $(function () {
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
+                            console.log(data);
 
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
@@ -75,6 +76,9 @@ $(function () {
                             message.showMessage('success', data.message);
 
                             $(targetRow).fadeOut().remove();
+
+                            // Update selects
+                            removeFromSelect(confKeypair, $("#sec_key_name"), securityKeys)
                         }
 
                         // If last keypair, reveal placeholder

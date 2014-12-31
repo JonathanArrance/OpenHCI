@@ -84,6 +84,9 @@ $(function () {
 
                             // Remove row
                             $(targetRow).fadeOut().remove();
+
+                            // Update selects
+                            removeFromSelect(confImage, $("#image_name"), images);
                         }
 
                         // If last image, reveal placeholder
