@@ -255,8 +255,7 @@ class tenant_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
                 #check the response and make sure it is a 200 or 201
-                #if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
-                if(rest['response'] == 204):
+                if((rest['response'] == 201) or (rest['response'] == 200) or (rest['response'] == 204)):
                     #read the json that is returned
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                     logger.sys_info("Project: %s has been removed from the Transcirrus DB." %(project_id))
@@ -272,30 +271,29 @@ class tenant_ops:
                     except Exception as e:
                         logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
                         self.db.pg_transaction_rollback()
-                        raise e
+                        raise
                     #close all of the db connections that are open
                     self.db.pg_close_connection()
 
                     #remove the gluster volume used for object storage
                     self.gluster.delete_gluster_volume(project_id)
-                    logger.sys_info('Forking process to call gluster_swift_ring for project %s' % project_id)
+                    logger.sys_info('Forking process to call gluster_swift_ring for project %s' % project_name)
 
-                    #NOTE: We need to figure out how to fork this off, it could take a ong time to complete if we do not.
                     #re-build the gluster ring after the project vol deleted
-                    #newpid = os.fork()
-                    #if newpid == 0:
+                    newpid = os.fork()
+                    if newpid == 0:
                         # This is the child process running which calls the long running function and then exits.
-                    logger.sys_info('Forked process calling gluster_swift_ring for project %s' % project_id)
-                    self.gluster.create_gluster_swift_ring()
-                    logger.sys_info('Forked process for project %s exiting' % project_id)
-                        #os._exit(0)
-                    #else:
-                        #util.http_codes(rest['response'],rest['reason'],rest['data'])
-                    #    logger.sys_error("Could not set up swift ring after project %s was removed."%(project_id))
-                    return 'OK'
+                        logger.sys_info('Forked process calling gluster_swift_ring for project %s' % project_name)
+                        self.gluster.create_gluster_swift_ring()
+                        logger.sys_info('Forked process for project %s exiting' % project_name)
+                        os._exit(0)
+
+                    #return OK if good to go
+                    return "OK"
+                else:
+                    util.http_codes(rest['response'],rest['reason'])
             except Exception as e:
                 logger.sys_error("Could not remove the project %s" %(e))
-                raise e
         else:
             logger.sys_error("Admin flag not set, could not create the new project ")
 

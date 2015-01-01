@@ -21,7 +21,7 @@ time.sleep(1)
 print "----------------------------------------"
 
 print "creating test project"
-proj = ten.create_tenant("jon1")
+proj = ten.create_tenant("yoyo1")
 print proj
 time.sleep(1)
 print "----------------------------------------"

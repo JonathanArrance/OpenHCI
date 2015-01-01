@@ -440,10 +440,11 @@ class user_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
-                    r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
-                    return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
+
+                r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
+                return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
@@ -606,6 +607,7 @@ class user_ops:
 
                 elif((user_role_dict['username'] != 'admin') and (user_group_id >= 1)):#may be able to remove this check, more testing needed
                     try:
+                        logger.sql_error('adding a user to the project')
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
@@ -621,13 +623,7 @@ class user_ops:
                 else:
                     logger.sys_info('Added admin to project %s'%(proj[0][0]))
                 self.db.pg_close_connection()
-                #jon changed this.
-                user_dict={"username":user_role_dict['username'], "project_name":proj[0][0]}
-                print user_dict
-                user_stuff = self.get_user_info(user_dict)
-                print user_stuff
-                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id'],"user": user_stuff}
-                #r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id']}
+                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id']}
                 return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
@@ -806,7 +802,6 @@ class user_ops:
             try:
                 get_user = {"select":"*","from":"trans_user_info","where":"user_name='%s'" %(user_dict['username']), "and": "user_primary_project = '%s'" %(user_dict['project_name'])}
                 user_info= self.db.pg_select(get_user)
-                print user_info
             except Exception as e:
                 logger.sql_error("Could not find user information in Transcirrus DB., %s" %(e))
                 raise

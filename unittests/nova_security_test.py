@@ -13,7 +13,7 @@ from transcirrus.component.nova.server import server_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("rob","password")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 nova = server_ops(d)
@@ -45,14 +45,14 @@ del_group3 = nova2.delete_sec_group(d3)
 print del_group3
 print "-------------------------------------------------"
 time.sleep(2)
-
+'''
 print "deleteing the security key"
-yo = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",'sec_key_name':'testkey2'}
+yo = {'project_id':"7cc5c176398d43708e9e66e5b80b4a40",'sec_key_name':'jonkey2'}
 del_key = nova.delete_sec_keys(yo)
 print del_key
 print "-------------------------------------------------"
 time.sleep(1)
-
+'''
 print "deleteing the default security key"
 yo2 = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",'sec_key_name':'testkey3'}
 del_key2 = nova2.delete_sec_keys(yo2)
