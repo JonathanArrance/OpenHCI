@@ -47,7 +47,9 @@ $(function () {
                 clearUiValidation(allFields);
 
                 // Validate form inputs
-                var isValid = checkLength(name, "Instance Name", 3, 16);
+                var isValid =
+                    checkLength(name, "Instance Name", 3, 16) &&
+                    checkDuplicateName(name, instances);
 
                 if (isValid) {
 
@@ -122,16 +124,15 @@ $(function () {
                                 // Append new row to instance-list
                                 $(table).append(newRow).fadeIn();
 
-                                // Create a new option for the new instance
-                                var newOption = '<option value=' + data.server_info.server_id + '>' + data.server_info.server_name + '</option>';
+                                // Add to instances
+                                instances.setItem(
+                                    data.server_info.server_id,
+                                    { value: data.server_info.server_id, option: data.server_info.server_name }
+                                );
 
-                                // Append new option to attach-volume select menu
-                                var attachSelect = 'div#volume-attach-dialog-form > form  > fieldset > select#instance';
-                                $(attachSelect).append(newOption);
-
-                                // Append new option to assign-fip select menu
-                                var assignSelect = 'div#fip-assign-dialog-form > form > fieldset > select#assign_instance';
-                                $(assignSelect).append(newOption);
+                                // Update selects
+                                addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
+                                addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
                             }
                         })
                         .fail(function () {
@@ -140,7 +141,7 @@ $(function () {
                         })
                         .always(function() {
 
-                            // Hide progressbar, reveal widget buttons and enable widget view links
+                            // Reset interface
                             disableProgressbar(progressbar, "instances", true);
                             setVisible('#create-instance', true);
                             disableLinks(false);
@@ -153,6 +154,7 @@ $(function () {
         },
         close: function () {
 
+            // Reset form validation
             resetUiValidation(allFields);
         }
     });

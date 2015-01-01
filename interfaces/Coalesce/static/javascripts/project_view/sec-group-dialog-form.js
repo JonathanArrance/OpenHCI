@@ -97,6 +97,9 @@ $(function () {
 
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
+
+                                // Update selects
+                                addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), secGroupInstOpts);
                             }
                         })
                         .fail(function () {
@@ -113,6 +116,7 @@ $(function () {
                     $(this).dialog("close");
 
                     allFields.val("").removeClass("ui-state-error");
+                    ports.val("443,80,22");
                     $('.error').fadeOut().remove();
                 }
             }

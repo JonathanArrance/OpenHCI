@@ -109,14 +109,14 @@ print create_pu
 add_user_dict = {"username":"shitbird5","user_role":'pu',"project_name":'ffvc'}
 add = use.add_user_to_project(add_user_dict)
 print add
-
+'''
 print "getting test power user info"
-user_info = {"username":'keven4',"project_name":'testproj'}
+user_info = {"username":'admin',"project_name":'trans_default'}
 get_p = use.get_user_info(user_info)
 print get_p
 time.sleep(2)
 print "---------------------------------------------"
-
+'''
 print "Create a new admin user."
 new_admin_dict = {"username":'testadmin',"password":"test","userrole":"admin","email":"testadmin@domain.com","project_name":"testproj"}
 create_admin = use.create_user(new_admin_dict)
@@ -128,12 +128,12 @@ get_a = use.get_user_info(user_info)
 print get_a
 time.sleep(2)
 print "---------------------------------------------"
-'''
+
 print "toggle user to disable"
 toggle = {"username":'p0pu',"toggle":'disable'}
 tog = use.toggle_user(toggle)
 print tog
-'''
+
 print "getting poweruser info"
 user_info = {"username":'keven4',"project_name":'testproj'}
 get_t = use.get_user_info(user_info)

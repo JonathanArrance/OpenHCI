@@ -1,17 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-
-    // Dialog Form Elements
-    var privateNet = $("#privateNet_name"),
-        admin_state = $("#admin_state"),
-        shared = $("#shared"),
-        allFields = $([]).add(privateNet).add(admin_state).add(shared),
-        tips = $(".validateTips");
-
-    // Widget Elements
-    var progressbar = $("#privateNet_progressbar"),
-        table =$("#privateNet_list");
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -22,10 +12,21 @@ $(function () {
         }
     });
 
+    // Dialog Form Elements
+    var privateNet = $("#privateNet_name"),
+        admin_state = $("#admin_state"),
+        shared = $("#shared"),
+        allFields = $([]).add(privateNet).add(admin_state).add(shared);
+
+    // Widget Elements
+    var progressbar = $("#privateNet_progressbar"),
+        createButton = $("create-private-network"),
+        table =$("#privateNet_list");
+
     $("#private-network-dialog-form").dialog({
         autoOpen: false,
         height: 350,
-        width: 225,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -39,29 +40,31 @@ $(function () {
         buttons: {
             "Create Private Network": function () {
 
-                allFields.removeClass("ui-state-error");
-                $('.error').fadeOut().remove();
+                // Remove UI validation flags
+                clearUiValidation(allFields);
 
-                var bValid = true;
-                bValid = bValid &&
-                    checkLength(tips, privateNet, "net name", 3, 16);
+                var isValid =
+                    checkLength(privateNet, "net name", 3, 16) &&
+                    checkDuplicateName(privateNet, privateNetworks);
 
-                if (bValid) {
+                if (isValid) {
 
                     // Confirmed Selections
-                    var confShared = shared.val(),
+                    var confPrivateNet = privateNet.val(),
+                        confShared = shared.val(),
                         confAdminState = admin_state.val();
 
-                    message.showMessage('notice', 'Creating new router ' + privateNet.val());
+                    message.showMessage('notice', 'Creating new router ' + confPrivateNet);
 
-                    setVisible("#create-private-network", false);
+                    // Disable widget view links and hide create button
                     disableLinks(true);
+                    setVisible(createButton, false);
 
                     // Initialize progressbar and make it visible if hidden
                     $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    disableProgressbar(progressbar, "privateNets", false);
 
-                    $.getJSON('/add_private_network/' + privateNet.val() + '/' + confAdminState + '/' + confShared + '/' + PROJECT_ID + '/')
+                    $.getJSON('/add_private_network/' + confPrivateNet + '/' + confAdminState + '/' + confShared + '/' + PROJECT_ID + '/')
                         .done(function(data) {
 
                             if (data.status == 'error') {
@@ -86,14 +89,25 @@ $(function () {
                                     '<td id="' + data.net_id + '-subnet-cell"><span id="' + data.subnet.subnet_id + '">' + data.subnet.subnet_name + '</span></td>' +
                                     '<td id="' + data.net_id + '-actions-cell"><a href="#" class="delete-privateNet">delete</a></td>' + '</tr>';
 
+                                // Append new row
+                                table.append(newRow).fadeIn();
+
                                 // Check to see if this is the first network to be generated, if so remove placeholder
                                 var rowCount = $("#privateNet_list tr").length;
                                 if (rowCount > 2) {
                                     $("#privateNet_placeholder").remove().fadeOut();
+                                    setVisible('#create-router', true)
                                 }
 
-                                // Append new row to router-list
-                                table.append(newRow).fadeIn();
+                                // Add to privateNetworks
+                                privateNetworks.setItem(
+                                    data.net_id,
+                                    { id: data.net_id, name: data.net_name, router: "None" }
+                                );
+
+                                // Update selects
+                                addToSelect(data.net_name, data.net_name, $("#network_name"), privNetInstOpts);
+                                addToSelect(data.net_id, data.net_name, $("#priv_net"), privNetRoutOpts);
                             }
 
                         })
@@ -103,27 +117,34 @@ $(function () {
                         })
                         .always(function() {
 
-                            setVisible(progressbar, false);
-                            setVisible('#create-private-network', true);
+                            // Reset interface
+                            disableProgressbar(progressbar, "privateNets", true);
+                            setVisible(createButton, true);
                             disableLinks(false);
+                            resetUiValidation(allFields);
                         });
 
                     $(this).dialog("close");
-
-                    allFields.val("").removeClass("ui-state-error");
-                    $(".error").fadeOut().remove();
                 }
             }
         },
         close: function () {
 
-            allFields.val("").removeClass("ui-state-error");
-            $(".error").fadeOut().remove();
+            // Reset form validation
+            resetUiValidation(allFields);
         }
     });
 
     $("#create-private-network")
         .click(function () {
+            event.preventDefault();
             $("#private-network-dialog-form").dialog("open");
         });
+
+    // If placeholder exists, hide create-router
+    $(document).ready(function () {
+        if ($('#privateNet_placeholder').length) {
+            setVisible('#create-router', false)
+        }
+    });
 });

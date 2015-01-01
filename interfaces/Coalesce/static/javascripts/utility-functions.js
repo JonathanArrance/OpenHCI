@@ -227,12 +227,53 @@ function checkUrl(url) {
 
 function checkFile(file) {
     if (file.val() == '') {
+        file.addClass("ui-state-error");
         flagError(
             file,
             "A local file must be selected.");
         return false;
     } else {
         return true;
+    }
+}
+
+function checkDuplicateName(name, hashTable) {
+    var pass = true;
+    for (item in hashTable.items) {
+        var i = hashTable.getItem(item);
+        if (name.val() == i.option) {
+            pass = false;
+        }
+    }
+
+    if (!pass) {
+        name.addClass("ui-state-error");
+        flagError(
+            name,
+            "Name is already in use.");
+    }
+
+    return pass;
+}
+
+function checkSize(o, n, min, max) {
+    var unlimited = max == 0;
+    if (unlimited) {
+        if (o.val() < min || isNaN(Number(o.val()))) {
+            o.addClass("ui-state-error");
+            flagError(o, n);
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        if (o.val() < min || o.val() > max || isNaN(Number(o.val()))) {
+            o.addClass("ui-state-error");
+            flagError(o, n);
+            return false;
+        } else {
+            return true;
+        }
     }
 }
 
@@ -256,6 +297,60 @@ function resetUiValidation(fields) {
 // ---------------- //
 
 // --- GENERAL
+
+function HashTable() {
+    this.length = 0;
+    this.items = [];
+
+    for (var i = 0; i < arguments.length; i += 2) {
+        if (typeof (arguments[i + 1]) != 'undefined') {
+            this.items[arguments[i]] = arguments[i + 1];
+            this.length++;
+        }
+    }
+
+    this.removeItem = function (in_key) {
+        var tmp_previous;
+        if (typeof (this.items[in_key]) != 'undefined') {
+            this.length--;
+            tmp_previous = this.items[in_key];
+            delete this.items[in_key];
+        }
+
+        return tmp_previous;
+    };
+
+    this.getItem = function (in_key) {
+        return this.items[in_key];
+    };
+
+    this.setItem = function (in_key, in_value) {
+        var tmp_previous;
+        if (typeof (in_value) != 'undefined') {
+            if (typeof (this.items[in_key]) == 'undefined') {
+                this.length++;
+            } else {
+                tmp_previous = this.items[in_key];
+            }
+
+            this.items[in_key] = in_value;
+        }
+
+        return tmp_previous;
+    };
+
+    this.hasItem = function (in_key) {
+        return typeof (this.items[in_key]) != 'undefined';
+    };
+
+    this.clear = function () {
+        for (var i in this.items) {
+            delete this.items[i];
+        }
+
+        this.length = 0;
+    };
+}
 
 var disabledLinks = 0;
 
@@ -308,8 +403,6 @@ function disableProgressbar(id, widget, bool) {
 
         disabledProgressbars[widget]++;
     }
-
-    console.log(widget + " = " + disabledProgressbars[widget]);
 }
 
 function disableLink(id, bool) {
@@ -326,6 +419,8 @@ function disableLink(id, bool) {
     }
 }
 
+var disabledActions = new HashTable();
+
 function disableActions(id, bool) {
 
     var actions = '.' + id;
@@ -333,11 +428,20 @@ function disableActions(id, bool) {
     var disabledColor = '#696969';
 
     if (bool) {
-        $(actions).bind('click', false);
-        $(actions).css('color', disabledColor);
+        if (disabledActions.hasItem(actions)) {
+            disabledActions.items[actions].count++;
+        } else {
+            disabledActions.setItem(actions, { count: 1 });
+            $(actions).bind('click', false);
+            $(actions).css('color', disabledColor);
+        }
     } else {
-        $(actions).unbind('click', false);
-        $(actions).css('color', activeColor);
+        disabledActions.items[actions].count--;
+        if (disabledActions.items[actions].count <= 0) {
+            $(actions).unbind('click', false);
+            $(actions).css('color', activeColor);
+            disabledActions.removeItem(actions);
+        }
     }
 }
 
@@ -389,26 +493,85 @@ function appendAndFadeIn(selector, newContent) {
     setVisible(selector, true);
 }
 
-// --- VOLUME STORAGE
+function refreshSelect(select, hashTable) {
+    $(select).empty();
+    for (var item in hashTable.items) {
+        var i = hashTable.getItem(item);
+        $(select).append(
+                '<option value="' + i.value + '">' + i.option + '</option>'
+        );
+    }
+}
 
-var totalStorage = 0;
-var usedStorage = 0;
-var availableStorage = 0;
+function removeFromSelect(value, select, hashTable) {
+    hashTable.removeItem(value);
+    refreshSelect(select, hashTable);
+}
 
-function getUsedStorage(rows) {
+function addToSelect(value, option, select, hashTable) {
+    hashTable.setItem(value, { value: value, option: option });
+    refreshSelect(select, hashTable);
+}
+// --- INSTANCE MANAGEMENT
+
+var instances = new HashTable(),
+    secGroupInstOpts = new HashTable(),
+    secKeyInstOpts = new HashTable(),
+    privNetInstOpts = new HashTable(),
+    imageInstOpts = new HashTable(),
+    assignableFips = new HashTable(),
+    assignableInstances = new HashTable();
+
+// --- STORAGE
+
+var volumes = new HashTable(),
+    totalStorage = 0,
+    usedStorage = 0,
+    availableStorage = 0,
+    attachableInstances = new HashTable();
+
+function getStorage() {
+    $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')
+        .done(function (data) {
+            totalStorage = data.gigabytes;
+            updateUsedStorage();
+            updateStorageBar()
+        })
+}
+
+function updateUsedStorage() {
 
     usedStorage = 0;
 
-    $(rows).each(function () {
-
-        if (isNaN(parseInt($(this).attr("class")))) {
-        } else {
-            usedStorage += parseInt($(this).attr("class"));
-        }
-    });
+    for (var volume in volumes.items) {
+        var size = volumes.getItem(volume).size;
+        usedStorage += Number(size);
+    }
 
     availableStorage = totalStorage - usedStorage;
 }
+
+function updateStorageBar() {
+
+    var volume_available_storage_bar = $(".volume-available-storage-bar"),
+        volume_available_storage_label = $(".volume-available-storage-label"),
+        percent = 0;
+
+        // Initialize storage bar
+        volume_available_storage_bar.progressbar({value: 0});
+        percent = (usedStorage / totalStorage) * 100;
+        volume_available_storage_bar.progressbar({value: percent});
+        volume_available_storage_label.empty();
+        volume_available_storage_label.append(usedStorage + "/" + totalStorage);
+}
+
+// --- SOFTWARE DEFINED NETWORKS
+
+var routers = new HashTable(),
+    privNetRoutOpts = new HashTable(),
+    privateNetworks = new HashTable();
+
+// --- USERS/SECURITY
 
 // --- UNASSIGNED USERS
 

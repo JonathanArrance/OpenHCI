@@ -24,7 +24,7 @@ $(function () {
     $("#router-dialog-form").dialog({
         autoOpen: false,
         height: 400,
-        width: 350,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -48,6 +48,8 @@ $(function () {
 
                 if (bValid) {
 
+                    var confPrivateNet = priv_net.val();
+
                     message.showMessage('notice', 'Creating new router ' + router_name.val());
 
                     setVisible("#create-router", false);
@@ -57,7 +59,7 @@ $(function () {
                     $(progressbar).progressbar({value: false});
                     setVisible(progressbar, true);
 
-                    $.getJSON('/create_router/' + router_name.val() + '/' + priv_net.val() + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
+                    $.getJSON('/create_router/' + router_name.val() + '/' + confPrivateNet + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {
@@ -74,7 +76,7 @@ $(function () {
                                     '<td id="' + data.router_id + '-name-cell">' +
                                     '<a href="/router/' + data.router_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
                                     '<span id="' + data.router_id + '-name-text">' + data.router_name + '</span>' + '</a></td>' +
-                                    '<td id="' + data.router_id + '-status-cell"><span id="' + data.router_id + '-status-text">' + data.router_status + '</span></td>' +
+                                    '<td id="' + data.router_id + '-status-cell"><span id="' + data.router_id + '-status-text">ACTIVE</span></td>' +
                                     '<td id="' + data.router_id + '-actions-cell"><a href="#" class="delete-router">delete</a></td>' + '</tr>';
 
                                 // Check to see if this is the first router to be generated, if so remove placeholder and reveal delete-router button
@@ -85,6 +87,18 @@ $(function () {
 
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
+
+                                // Add to routers
+                                routers.setItem(
+                                    data.router_id,
+                                    { name: data.router_name, network: confPrivateNet }
+                                );
+
+                                // Update selects
+                                removeFromSelect(confPrivateNet, $("#priv_net"), privNetRoutOpts);
+                                
+                                // Update private network
+                                privateNetworks.items[confPrivateNet].router = data.router_id;
                             }
                         })
                         .fail(function () {

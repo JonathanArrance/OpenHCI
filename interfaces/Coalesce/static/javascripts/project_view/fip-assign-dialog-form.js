@@ -12,9 +12,6 @@ $(function () {
         }
     });
 
-    // Local Variables
-    var targetRow;
-
     // Form Elements
     var floating_ip = $("#assign_floating_ip"),
         instance = $("#assign_instance");
@@ -43,16 +40,16 @@ $(function () {
                 var confIpId = floating_ip.val(),
                     confIp = $(document.getElementById(confIpId + "-ip-address")).text(),
                     confInstanceId = instance.val(),
-                    confInstanceName = $(document.getElementById(confInstanceId + "-name-text")).text(),
                     targetRow = document.getElementById(confIpId);
+
+                // Disable widget view links and hide widget buttons
+                disableLinks(true);
+                setVisible('#allocate_ip', false);
+                setVisible('#assign_ip', false);
 
                 // Initialize progressbar and make it visible if hidden
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
-
-                setVisible('#allocate_ip', false);
-                setVisible('#assign_ip', false);
-                disableLinks(true);
+                disableProgressbar(progressbar, "fips", false);
 
                 $.getJSON('/assign_floating_ip/' + confIp + '/' + confInstanceId + '/' + PROJECT_ID + '/')
                     .done(function (data) {
@@ -66,23 +63,23 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
+                            // Update instance and action cells
                             var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
                             var actionsCell = document.getElementById(data.floating_ip_id + "-actions-cell");
-                            var instanceNameHtml = '<span id="' + data.floating_ip_id + '-instance-name">' + data.instance_name + '</span>';
+                            var instanceHtml = '<span id="' + data.floating_ip_id + '-instance-name">' + data.instance_name + '</span>';
                             var newAction = '<a href="#" id="' + data.floating_ip_id + '" class="unassign_ip">unassign</a>';
 
                             $(instanceCell).empty().fadeOut();
                             $(actionsCell).empty().fadeOut();
 
-                            $(instanceCell).append(instanceNameHtml).fadeIn();
+                            $(instanceCell).append(instanceHtml).fadeIn();
                             $(actionsCell).append(newAction).fadeIn();
 
-                            var ipOption = 'select#assign_floating_ip option[value="' + data.floating_ip_id + '"]';
-                            $(ipOption).remove();
+                            // Update assign_ip selects
+                            removeFromSelect(data.floating_ip_id, floating_ip, assignableFips);
+                            removeFromSelect(confInstanceId, instance, assignableInstances);
 
-                            var instanceOption = 'select#assign_instance option[value="' + confInstanceId + '"]';
-                            $(instanceOption).remove();
-
+                            // Add assigned class
                             $(targetRow).addClass("fip-assigned");
                         }
                     })
@@ -92,7 +89,8 @@ $(function () {
                     })
                     .always(function () {
 
-                        setVisible(progressbar, false);
+                        // Reset interface
+                        disableProgressbar(progressbar, "fips", true);
                         setVisible('#allocate_ip', true);
                         setVisible('#assign_ip', true);
                         disableLinks(false);

@@ -621,7 +621,13 @@ class user_ops:
                 else:
                     logger.sys_info('Added admin to project %s'%(proj[0][0]))
                 self.db.pg_close_connection()
-                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id'], "user":self.get_user_info(user_dict={"username":user_role_dict['username'], "project_name":proj[0][0]})}
+                #jon changed this.
+                user_dict={"username":user_role_dict['username'], "project_name":proj[0][0]}
+                print user_dict
+                user_stuff = self.get_user_info(user_dict)
+                print user_stuff
+                r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id'],"user": user_stuff}
+                #r_dict = {"project_name":proj[0][0],"project_id":user_role_dict['project_id']}
                 return r_dict
             else:
                 util.http_codes(rest['response'],rest['reason'])
@@ -800,6 +806,7 @@ class user_ops:
             try:
                 get_user = {"select":"*","from":"trans_user_info","where":"user_name='%s'" %(user_dict['username']), "and": "user_primary_project = '%s'" %(user_dict['project_name'])}
                 user_info= self.db.pg_select(get_user)
+                print user_info
             except Exception as e:
                 logger.sql_error("Could not find user information in Transcirrus DB., %s" %(e))
                 raise

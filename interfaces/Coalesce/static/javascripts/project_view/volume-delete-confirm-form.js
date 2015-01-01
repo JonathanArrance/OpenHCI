@@ -14,16 +14,26 @@ $(function () {
 
     // Local Variables
     var id,
-        fip,
+        volume,
         targetRow;
 
     // Widget Elements
-    var progressbar = $("#fip_progressbar"),
-        table = $("#fip_list"),
+    var progressbar = $("#vol_progressbar"),
+        table = $("#volume_list"),
         placeholder =
-            '<tr id="fip_placeholder"><td><p><i>This project has no floating IPs</i></p></td><td></td><td></td></tr>';
+            '<tr id="volume_placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td>/tr>';
 
-    $('#fip-deallocate-confirm-form').dialog({
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+
+    $("#volume-delete-confirm-form").dialog({
         autoOpen: false,
         height: 125,
         width: 235,
@@ -32,7 +42,7 @@ $(function () {
         closeOnEscape: true,
         draggable: true,
         show: "fade",
-        position: {
+        position:{
             my: "center",
             at: "center",
             of: $('#page-content')
@@ -41,26 +51,23 @@ $(function () {
             "Confirm": function () {
 
                 // Confirmed Selections
-                var
+                var confRow = targetRow,
                     confId = id,
-                    confFip = fip,
-                    confRow = targetRow;
+                    confVol = $(volume).text();
 
-                message.showMessage('notice', "Deallocating " + confFip + ".");
+                message.showMessage('notice', "Deleting " + confVol + ".");
 
                 // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
-                var actionsHtml = '<a class="deallocate_ip" href="#">deallocate</a></td>';
+                var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links, disable deallocate actions and hide allocate and assign buttons
+                // Disable widget view links and instance actions
                 disableLinks(true);
-                disableActions("deallocate_ip", true);
-                setVisible('#allocate_ip', false);
-                setVisible('#assign_ip', false);
+                disableActions("delete-volume", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                disableProgressbar(progressbar, "fips", false);
+                disableProgressbar(progressbar, "volumes", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -70,14 +77,14 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/deallocate_floating_ip/' + PROJECT_ID + '/' + confFip + '/')
+                $.getJSON('/delete_volume/' + confId + '/' + PROJECT_ID + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
-                            // Reset actions cell
+                            // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -87,62 +94,58 @@ $(function () {
                             message.showMessage('success', data.message);
 
                             // Remove row
-                            $(confRow).fadeOut().remove();
+                            confRow.fadeOut().remove();
 
-                            // Remove ip from assign_ip select
-                            removeFromSelect(confId, $("#assign_floating_ip"), assignableFips);
-                        }
+                            // Remove volume
+                            volumes.removeItem(confId);
 
-                        // If last fip, reveal placeholder and hide assign_ip
-                        var rowCount = $('#fip_list tr').length;
-                        if (rowCount < 2) {
-                            $(table).append(placeholder).fadeIn();
-                        } else {
-                            setVisible('#assign_ip', true);
+                            // Update usedStorage
+                            updateUsedStorage();
+                            updateStorageBar();
+
+                            // If last row, append placeholder
+                            var rowCount = $('#volume_list tr').length;
+                            if (rowCount < 2) {
+                                $(table).append(placeholder).fadeIn();
+                            }
                         }
                     })
                     .fail(function () {
 
                         message.showMessage('error', 'Server Fault');
+
+                        // Restore Actions html
+                        $(actionsCell).empty().fadeOut();
+                        $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
 
-                        // Reset interface
-                        disableProgressbar(progressbar, "fips", true);
-                        setVisible('#allocate_ip', true);
-                        disableActions("deallocate_ip", false);
+                        // Hide progressbar and enable widget view links
+                        disableProgressbar(progressbar, "volumes", true);
                         disableLinks(false);
+                        disableActions("delete-volume", false);
                     });
 
                 $(this).dialog("close");
             }
         },
-        close: function(){
+        close: function () {
         }
     });
 
-    $(document).on('click', '.deallocate_ip', function () {
+    $(document).on('click', '.delete-volume', function () {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        // Get target row element, get id from that element and use that to get form text
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        fip = $(document.getElementById(id + "-ip-address")).text();
+        volume = document.getElementById(id + "-name-text");
 
-        // Add ip to form
-        $('div#fip-deallocate-confirm-form > p > span.ip-address').empty().append(fip);
-        $('#fip-deallocate-confirm-form').dialog("open");
-    });
+        // Add name-text to form
+        $('div#volume-delete-confirm-form > p > span.volume-name').empty().append($(volume).text());
 
-    $(document).ready(function () {
-        if ($('#fip_placeholder').length) {
-            setVisible('#assign_ip', false)
-        }
+        $('#volume-delete-confirm-form').dialog("open");
     });
 });
-
-
-
-

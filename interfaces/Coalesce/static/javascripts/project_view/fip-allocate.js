@@ -28,16 +28,18 @@ $(function () {
         }
     });
 
-
     $("#allocate_ip").click(function () {
 
+        message.showMessage('notice', "Allocating IP.")
+
+        // Disable links and widget buttons
+        disableLinks(true);
         setVisible('#allocate_ip', false);
         setVisible('#assign_ip', false);
-        disableLinks(true);
 
         // Initialize progressbar and make it visible if hidden
         $(progressbar).progressbar({value: false});
-        setVisible(progressbar, true);
+        disableProgressbar(progressbar, "fips", false);
 
         $.getJSON('/allocate_floating_ip/' + PROJECT_ID + '/' + extNet + '/')
             .done(function (data) {
@@ -51,8 +53,8 @@ $(function () {
 
                     message.showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
 
-                    var newRow = '';    // Initialize empty string for new instance row
-                    newRow +=
+                    // Generate new row html
+                    var newRow =
                         '<tr id="' + data.ip_info.floating_ip_id + '">' +
                         '<td id="' + data.ip_info.floating_ip_id + '-ip-cell">' +
                         '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
@@ -67,11 +69,11 @@ $(function () {
                         $('#fip_placeholder').remove().fadeOut();
                     }
 
-                    // Append new row to instance-list
+                    // Append new row
                     $(table).append(newRow).fadeIn();
 
-                    var newOption = '<option value="' + data.ip_info.floating_ip_id + '">' + data.ip_info.floating_ip + '</option>';
-                    $('div#fip-assign-dialog-form > form > fieldset > select#assign_floating_ip').append(newOption);
+                    // Add option to assign_ip select
+                    addToSelect(data.ip_info.floating_ip_id, data.ip_info.floating_ip, $("#assign_floating_ip"), assignableFips);
                 }
             })
             .fail(function () {
@@ -80,7 +82,8 @@ $(function () {
             })
             .always(function () {
 
-                setVisible(progressbar, false);
+                // Reset interface
+                disableProgressbar(progressbar, "fips", true);
                 setVisible('#allocate_ip', true);
                 setVisible('#assign_ip', true);
                 disableLinks(false);

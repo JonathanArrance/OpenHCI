@@ -40,15 +40,15 @@ $(function () {
                 allFields.removeClass("ui-state-error");
                 $('.error').fadeOut().remove();
 
-                // Confirmed Selections
-                var confKeypair = key_name.val();
-
                 var bValid = true;
                 bValid =
                     bValid &&
-                    checkLength(tips, key_name, "key name", 3, 16);
+                    checkLength(key_name, "key name", 3, 16);
 
                 if (bValid) {
+
+                    // Confirmed Selections
+                    var confKeypair = key_name.val();
 
                     message.showMessage('notice', 'Creating new Key ' + confKeypair);
 
@@ -77,7 +77,7 @@ $(function () {
                                     '<tr id="' + data.key_id + '">' +
                                     '<td id="' + data.key_id + '-name-cell">' +
                                     '<a href="/key_pair/' + data.key_id + '/' + PROJECT_ID + '/view/" class="disable-link" style="color:#696969;">' +
-                                    '<span id="' + data.key_id + '-name-text">' + confKeypair + '</span></a></td>' +
+                                    '<span id="' + data.key_id + '-name-text">' + data.key_name + '</span></a></td>' +
                                     '<td id="' + data.key_id + '-user-cell">' +
                                     '<span id="' + data.key_id + '-user-text">' + USERNAME + '</span></td>' +
                                     '<td id="' + data.key_id + '-actions-cell">' +
@@ -91,6 +91,9 @@ $(function () {
 
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
+
+                                // Update Selects
+                                addToSelect(data.key_name, data.key_name, $("#sec_key_name"), secKeyInstOpts);
                             }
                         })
                         .fail(function () {

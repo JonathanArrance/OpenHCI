@@ -50,12 +50,13 @@ $(function () {
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links
+                // Disable widget view links and delete actions
                 disableLinks(true);
+                disableActions("delete-image", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "images", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -83,6 +84,9 @@ $(function () {
 
                             // Remove row
                             $(targetRow).fadeOut().remove();
+
+                            // Update selects
+                            removeFromSelect(confImage, $("#image_name"), imageInstOpts);
                         }
 
                         // If last image, reveal placeholder
@@ -103,8 +107,9 @@ $(function () {
                     .always(function () {
 
                         // Hide progressbar and enable widget view links
-                        setVisible(progressbar, false);
+                        disableProgressbar(progressbar, "images", true);
                         disableLinks(false);
+                        disableActions("delete-image", false);
                     });
 
                 $(this).dialog("close");
@@ -119,12 +124,12 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        // Get target row element, get id from that element and use that to get the instance-name-text
+        // Get target row element, get id from that element and use that to get the image-name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
         image = document.getElementById(id + "-name-text");
 
-        // Add instance-name-text to delete-confirm-form
+        // Add image-name-text to confirm-form
         $('div#image-delete-confirm-form > p > span.image-name').empty().append($(image).text());
 
         $('#image-delete-confirm-form').dialog("open");

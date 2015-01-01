@@ -18,36 +18,65 @@
             <form>
                 {% csrf_token %}
                 <fieldset>
+
                     <label for="name">Instance Name</label>
                     <input type="text" name="name" id="name"
                            class="text ui-widget-content ui-corner-all instance-text-field"/>
 
                     <label for="sec_group_name">Security Group</label>
                     <select name="sec_group_name" id="sec_group_name">
+                        <script>secGroupInstOpts.clear();</script>
                         {% for sg in sec_groups %}
-                        <option value="{{sg.sec_group_name}}">{{sg.sec_group_name}}</option>
+                        <script>
+                            secGroupInstOpts.setItem(
+                                    "{{sg.sec_group_name}}",
+                                    { value:"{{sg.sec_group_name}}", option : "{{sg.sec_group_name}}" }
+                            );
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#sec_group_name"), secGroupInstOpts);</script>
                     </select>
 
                     <label for="sec_key_name">Security Key</label>
                     <select name="sec_key_name" id="sec_key_name">
+                        <script>secKeyInstOpts.clear();</script>
                         {% for sk in sec_keys %}
-                        <option value="{{sk.key_name}}">{{sk.key_name}}</option>
+                        <script>
+                            secKeyInstOpts.setItem(
+                                    "{{sk.key_name}}",
+                                    { value: "{{sk.key_name}}", option: "{{sk.key_name}}" }
+                            );
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#sec_key_name"), secKeyInstOpts);</script>
                     </select>
 
                     <label for="network_name">Private Network</label>
                     <select name="network_name" id="network_name">
+                        <script>privNetInstOpts.clear();</script>
                         {% for net in priv_net_list %}
-                        <option value="{{net.net_name}}">{{net.net_name}}</option>
+                        <script>
+                            privNetInstOpts.setItem(
+                                    "{{net.net_name}}",
+                                    { value: "{{net.net_name}}", option: "{{net.net_name}}" }
+                            );
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#network_name"), privNetInstOpts);</script>
                     </select>
 
                     <label for="image_name">Image</label>
                     <select name="image_name" id="image_name">
+                        <script>imageInstOpts.clear();</script>
                         {% for image in images %}
-                        <option value="{{image.image_name}}">{{image.image_name}}</option>
+                        <script>
+                            imageInstOpts.setItem(
+                                    "{{image.image_name}}",
+                                    { value: "{{image.image_name}}", option: "{{image.image_name}}" }
+                            )
+                        </script>
                         {% endfor %}
+                        <script>refreshSelect($("#image_name"), imageInstOpts);</script>
                     </select>
 
                     <label for="flavor_name">Flavor</label>
@@ -149,7 +178,6 @@
         </div>
         {% endif %}
 
-        {% if instances %}
         <table class="paleblue widget-table" id="instance_list">
             <tr>
                 <th>Name</th>
@@ -157,8 +185,15 @@
                 <th>OS / flavor</th>
                 <th>Actions</th>
             </tr>
+            <script>instances.clear();</script>
+            {% if instances %}
             {% for k,v in instance_info.items %}
-            <tr id="{{v.server_id}}"{% if v.server_status == "PAUSED" %}class="instance-paused"{% endif %}{% if v.server_status == "SUSPENDED" %}class="instance-suspended"{% endif %}>
+                    <script>
+                        instances.setItem(
+                                "{{server.server_id}}",
+                                { value: "{{server.server_id}}", option: "{{server.server_name}}" });
+                    </script>
+            <tr id="{{v.server_id}}" class="{% if v.server_status == 'PAUSED' %}instance-paused{% endif %}{% if v.server_status == 'SUSPENDED' %}instance-suspended{% endif %}">
                 <td id="{{v.server_id}}-name-cell">
                     <a href="/{{project.project_id}}/{{v.server_id}}/instance_view/" class="disable-link"><span
                             id="{{v.server_id}}-name-text">{{v.server_name}}</span></a>
@@ -170,39 +205,30 @@
 			        <a href="#" class="open-instance-console">console</a>
                     <script>instanceConsoleLinks.add("{{v.server_id}}", "{{v.novnc_console}}");</script>
                     <span class="instance-actions-pipe"> | </span>
-                    <a href="#" class="pause-instance {{v.server_id}}-disable-action">pause</a>
+                    <a href="#" class="pause-instance">pause</a>
                     <span class="instance-actions-pipe"> | </span>
-                    <a href="#" class="suspend-instance {{v.server_id}}-disable-action">suspend</a>
+                    <a href="#" class="suspend-instance">suspend</a>
                     {% endif %}
                     {% if v.server_status == "PAUSED" %}
-                    <a href="#" class="unpause-instance {{v.server_id}}-disable-action">unpause</a>
+                    <a href="#" class="unpause-instance">unpause</a>
                     {% endif %}
                     {% if v.server_status == "SUSPENDED" %}
-                    <a href="#" class="resume-instance {{v.server_id}}-disable-action">resume</a>
+                    <a href="#" class="resume-instance">resume</a>
                     {% endif %}
                     <span class="instance-actions-pipe"> | </span>
-                    <a href="#" class="delete-instance {{v.server_id}}-disable-action">delete</a>
+                    <a href="#" class="delete-instance">delete</a>
                 </td>
             </tr>
             {% endfor %}
-
-        </table>
-        {% else %}
-        <table class="paleblue widget-table" id="instance_list">
-            <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>OS / flavor</th>
-                <th>Actions</th>
-            </tr>
+            {% else %}
             <tr id="instance_placeholder">
                 <td><p><i>This project has no instances</i></p></td>
                 <td></td>
                 <td></td>
                 <td></td>
             </tr>
+            {% endif %}
         </table>
-        {% endif %}
         <div id="instance_progressbar" class="ui-progressbar"
              style="height: 1em; margin: 10px 0 0 0; padding: .2em; display: none;"></div>
     </div>
