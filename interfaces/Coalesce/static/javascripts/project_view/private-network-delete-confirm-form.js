@@ -53,6 +53,7 @@ $(function () {
                 // Disable widget view links and instance actions
                 disableLinks(true);
                 disableActions("delete-privateNet", true);
+                disableActions("delete-router", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
@@ -159,8 +160,9 @@ $(function () {
                                     })
                                     .always(function () {
 
-                                        disableLinks(false);
                                         disableProgressbar("#router_progressbar", "routers", true);
+                                        disableActions("delete-router", false);
+                                        disableLinks(false);
                                     });
                             }
                             // ---

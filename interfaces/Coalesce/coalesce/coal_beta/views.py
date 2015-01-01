@@ -727,14 +727,15 @@ def key_view(request, sec_key_id, project_id):
 
 
 def key_delete(request, sec_key_name, project_id):
-
+    out = {}
     try:
         auth = request.session['auth']
         so = server_ops(auth)
         key_dict = {'sec_key_name': sec_key_name, 'project_id': project_id}
-        out = so.delete_sec_keys(key_dict)
-        out['status'] = 'success'
-        out['message'] = 'Successfully removed security group.'
+        del_key = so.delete_sec_keys(key_dict)
+        if(del_key == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'Successfully removed key %s.'%(sec_key_name)
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not delete key: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))

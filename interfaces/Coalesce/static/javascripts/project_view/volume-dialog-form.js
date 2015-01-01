@@ -92,14 +92,14 @@ $(function () {
                                     '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
                                     '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
 
-                                // Append new row to volume-list
-                                table.append(newRow).fadeIn();
-
                                 // Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-volume button
                                 var rowCount = $("#volume_list tr").length;
                                 if (rowCount <= 2) {
                                     $("#volume_placeholder").remove().fadeOut();
                                 }
+
+                                // Append new row to volume-list
+                                table.append(newRow).fadeIn();
 
                                 // Add to volumes
                                 volumes.setItem(data.volume_id, { size: confSize });

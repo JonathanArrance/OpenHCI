@@ -20,7 +20,7 @@ $(function () {
 
     // Widget Elements
     var progressbar = $("#privateNet_progressbar"),
-        createButton = $("create-private-network"),
+        createButton = $("#create-private-network"),
         placeholder = $("#privateNet_placeholder"),
         table =$("#privateNet_list");
 
@@ -90,15 +90,15 @@ $(function () {
                                     '<td id="' + data.net_id + '-subnet-cell"><span id="' + data.subnet.subnet_id + '">' + data.subnet.subnet_name + '</span></td>' +
                                     '<td id="' + data.net_id + '-actions-cell"><a href="#" class="delete-privateNet">delete</a></td>' + '</tr>';
 
-                                // Append new row
-                                table.append(newRow).fadeIn();
-
                                 // Check to see if this is the first network to be generated, if so remove placeholder
                                 var rowCount = $("#privateNet_list tr").length;
                                 if (rowCount > 2) {
                                     placeholder.remove().fadeOut();
                                     setVisible('#create-router', true)
                                 }
+
+                                // Append new row
+                                table.append(newRow).fadeIn();
 
                                 // Add to privateNetworks
                                 privateNetworks.setItem(data.net_id, { id: data.net_id, name: data.net_name, router: "None" });

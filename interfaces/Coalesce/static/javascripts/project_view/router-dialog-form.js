@@ -45,7 +45,7 @@ $(function () {
 
                 var isValid =
                     checkLength(router_name, "Router Name", 3, 16) &&
-                    checkDuplicateName(privateNet, privateNetworks    );
+                    checkDuplicateName(router_name, routers);
 
                 if (isValid) {
 
@@ -66,6 +66,8 @@ $(function () {
                     $.getJSON('/create_router/' + confRouter + '/' + confPrivateNet + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
                         .done(function (data) {
 
+                            console.log(data);
+
                             if (data.status == 'error') {
 
                                 message.showMessage('error', data.message);
@@ -84,14 +86,14 @@ $(function () {
                                     '<td id="' + data.router_id + '-status-cell"><span id="' + data.router_id + '-status-text">ACTIVE</span></td>' +
                                     '<td id="' + data.router_id + '-actions-cell"><a href="#" class="delete-router">delete</a></td>' + '</tr>';
 
-                                // Append new row to router-list
-                                table.append(newRow).fadeIn();
-
                                 // Check to see if this is the first router to be generated, if so remove placeholder and reveal delete-router button
                                 var rowCount = $("#router_list tr").length;
                                 if (rowCount <= 2) {
                                     placeholder.remove().fadeOut();
                                 }
+
+                                // Append new row to router-list
+                                table.append(newRow).fadeIn();
 
                                 // Add to routers
                                 routers.setItem(data.router_id, { name: data.router_name, network: confPrivateNet });

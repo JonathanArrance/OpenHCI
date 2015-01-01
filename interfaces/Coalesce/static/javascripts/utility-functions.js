@@ -549,6 +549,8 @@ function updateUsedStorage() {
     }
 
     availableStorage = totalStorage - usedStorage;
+
+    console.log("Updated used storage");
 }
 
 function updateStorageBar() {
@@ -557,12 +559,14 @@ function updateStorageBar() {
         volume_available_storage_label = $(".volume-available-storage-label"),
         percent = 0;
 
-        // Initialize storage bar
-        volume_available_storage_bar.progressbar({value: 0});
-        percent = (usedStorage / totalStorage) * 100;
-        volume_available_storage_bar.progressbar({value: percent});
-        volume_available_storage_label.empty();
-        volume_available_storage_label.append(usedStorage + "/" + totalStorage);
+    // Initialize storage bar
+    volume_available_storage_bar.progressbar({value: 0});
+    percent = (usedStorage / totalStorage) * 100;
+    volume_available_storage_bar.progressbar({value: percent});
+    volume_available_storage_label.empty();
+    volume_available_storage_label.append(usedStorage + "/" + totalStorage);
+
+    console.log("Updated used storage bar");
 }
 
 // --- SOFTWARE DEFINED NETWORKS

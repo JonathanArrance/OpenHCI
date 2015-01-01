@@ -105,8 +105,8 @@ new_pu_dict = {"username":'shitbird5',"password":"test","userrole":"pu","email":
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
-
-add_user_dict = {"username":"shitbird5","user_role":'pu',"project_name":'ffvc'}
+'''
+add_user_dict = {"username":"admin","user_role":'admin',"project_name":'jon1'}
 add = use.add_user_to_project(add_user_dict)
 print add
 '''
@@ -116,7 +116,7 @@ get_p = use.get_user_info(user_info)
 print get_p
 time.sleep(2)
 print "---------------------------------------------"
-'''
+
 print "Create a new admin user."
 new_admin_dict = {"username":'testadmin',"password":"test","userrole":"admin","email":"testadmin@domain.com","project_name":"testproj"}
 create_admin = use.create_user(new_admin_dict)
