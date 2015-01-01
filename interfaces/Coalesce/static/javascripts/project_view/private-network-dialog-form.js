@@ -21,6 +21,7 @@ $(function () {
     // Widget Elements
     var progressbar = $("#privateNet_progressbar"),
         createButton = $("create-private-network"),
+        placeholder = $("#privateNet_placeholder"),
         table =$("#privateNet_list");
 
     $("#private-network-dialog-form").dialog({
@@ -44,8 +45,8 @@ $(function () {
                 clearUiValidation(allFields);
 
                 var isValid =
-                    checkLength(privateNet, "net name", 3, 16) &&
-                    checkDuplicateName(privateNet, privateNetworks);
+                    checkLength(privateNet, "Network Name", 3, 16) &&
+                    checkDuplicateName(privateNet, privateNetworks    );
 
                 if (isValid) {
 
@@ -71,13 +72,13 @@ $(function () {
 
                                 message.showMessage('error', data.message);
                             }
+
                             if (data.status == 'success') {
 
                                 message.showMessage('success', data.message);
 
                                 // Initialize empty string for new network row
-                                var newRow = '';
-                                newRow +=
+                                var newRow =
                                     '<tr id="' + data.net_id + '">' +
                                     '<td id="' + data.net_id + '-name-cell">' +
                                     '<a href="/network/' + data.net_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
@@ -95,15 +96,12 @@ $(function () {
                                 // Check to see if this is the first network to be generated, if so remove placeholder
                                 var rowCount = $("#privateNet_list tr").length;
                                 if (rowCount > 2) {
-                                    $("#privateNet_placeholder").remove().fadeOut();
+                                    placeholder.remove().fadeOut();
                                     setVisible('#create-router', true)
                                 }
 
                                 // Add to privateNetworks
-                                privateNetworks.setItem(
-                                    data.net_id,
-                                    { id: data.net_id, name: data.net_name, router: "None" }
-                                );
+                                privateNetworks.setItem(data.net_id, { id: data.net_id, name: data.net_name, router: "None" });
 
                                 // Update selects
                                 addToSelect(data.net_name, data.net_name, $("#network_name"), privNetInstOpts);
