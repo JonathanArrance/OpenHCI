@@ -90,6 +90,9 @@ $(function () {
                                 $(table).append(placeholder).fadeIn();
                             }
 
+                            // Update selects
+                            addToSelect(routers.items[confId].network, routers.items[confId].network, $("#priv_net"), privNetRoutOpts);
+
                             // Update private network
                             privateNetworks.items[routers.items[confId].network].router = "none";
 

@@ -94,6 +94,9 @@ $(function () {
                                     { name: data.router_name, network: confPrivateNet }
                                 );
 
+                                // Update selects
+                                removeFromSelect(confPrivateNet, $("#priv_net"), privNetRoutOpts);
+                                
                                 // Update private network
                                 privateNetworks.items[confPrivateNet].router = data.router_id;
                             }
