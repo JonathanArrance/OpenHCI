@@ -35,7 +35,7 @@
         </div>
 
         <div id="private-network-delete-confirm-form" title="Delete Private Network">
-            <p style="text-align:center;">Delete <span class="privateNet-name"></span>?</p>
+            <p style="text-align:center;">Delete <span class="privateNet-name"></span>? If there is a router connected, it will be deleted.</p>
         </div>
 
         <table class="paleblue widget-table" id="privateNet_list">
@@ -47,7 +47,16 @@
                 <th>Actions</th>
             </tr>
 
+            <script>privateNetworks.clear();</script>
             {% if private_networks %}
+            {% for net in priv_net_list %}
+            <script>
+                privateNetworks.setItem(
+                        "{{net.net_id}}",
+                        { id: "{{net.net_id}}", name: "{{net.net_name}}", router: "{% if net.router_id == '' %}None{% else %}{{net.router_id}}{% endif %}" }
+                );
+            </script>
+            {% endfor %}
             {% for key,value in private_networks.items %}
             <tr id="{{ value.net_id}}">
                 <td id="{{ value.net_id }}-name-cell">

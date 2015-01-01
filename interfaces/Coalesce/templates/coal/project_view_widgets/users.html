@@ -55,6 +55,9 @@
                     <label for="username">Name</label>
                     <select name="username" id="username">
                         {% for ouser in ouserinfo %}
+                        <script>
+                        console.log("{{ouser}}");
+                        </script>
                         <option value="{{ouser}}">{{ouser}}</option>
                         {% endfor %}
                     </select>

@@ -8,8 +8,7 @@ $(function () {
         password = $("#password"),
         confirm = $("#confirm"),
         role = $("#role"),
-        allFields = $([]).add(name).add(email).add(password).add(confirm).add(role),
-        tips = $(".validateTips");
+        allFields = $([]).add(name).add(email).add(password).add(confirm).add(role);
 
     // Widget Elements
     var progressbar = $("#users_progressbar"),
@@ -27,7 +26,7 @@ $(function () {
     $("#user-dialog-form").dialog({
         autoOpen: false,
         height: 475,
-        width: 200,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -41,20 +40,18 @@ $(function () {
         buttons: {
             "Create Account": function () {
 
-                var bValid = true;
                 allFields.removeClass("ui-state-error");
 
-                bValid =
-                    bValid &&
-                    checkLength(tips, name, "username", 3, 16) &&
-                    checkUsername(tips, name) &&
-                    checkLength(tips, email, "email", 6, 80) &&
-                    checkEmail(tips, email) &&
-                    checkLength(tips, password, "password", 5, 16) &&
-                    checkPassword(tips, password) &&
-                    checkPasswordMatch(tips, password, confirm);
+                var isValid =
+                    checkLength(name, "username", 3, 16) &&
+                    checkUsername(name) &&
+                    checkLength(email, "email", 6, 80) &&
+                    checkEmail(email) &&
+                    checkLength(password, "password", 5, 16) &&
+                    checkPassword(password) &&
+                    checkPasswordMatch(password, confirm);
 
-                if (bValid) {
+                if (isValid) {
 
                     // Confirmed Selections
                     var confName = name.val(),

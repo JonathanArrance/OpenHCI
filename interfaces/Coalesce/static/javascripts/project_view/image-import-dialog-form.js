@@ -116,7 +116,7 @@ $(function () {
                                     $('#image_list').append(newRow);
 
                                     // Update selects
-                                    addToSelect(display_name, display_name, $("#image_name"), images);
+                                    addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
 
                                     message.showMessage("success", ret_data.message);
 

@@ -78,7 +78,7 @@ $(function () {
                             $(targetRow).fadeOut().remove();
 
                             // Update selects
-                            removeFromSelect(confKeypair, $("#sec_key_name"), securityKeys)
+                            removeFromSelect(confKeypair, $("#sec_key_name"), secKeyInstOpts)
                         }
 
                         // If last keypair, reveal placeholder

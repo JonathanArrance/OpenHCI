@@ -14,16 +14,26 @@ $(function () {
 
     // Local Variables
     var id,
-        image,
+        volume,
         targetRow;
 
     // Widget Elements
-    var progressbar = $("#image_progressbar"),
-        table = $("#image_list"),
+    var progressbar = $("#vol_progressbar"),
+        table = $("#volume_list"),
         placeholder =
-            '<tr id="#image_placeholder"><td><p><i>This project has no image</i></p></td><td></td></tr>';
+            '<tr id="volume_placeholder"><td><p><i>This project has no volumes</i></p></td><td></td><td></td>/tr>';
 
-    $('#image-delete-confirm-form').dialog({
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+
+    $("#volume-delete-confirm-form").dialog({
         autoOpen: false,
         height: 125,
         width: 235,
@@ -32,7 +42,7 @@ $(function () {
         closeOnEscape: true,
         draggable: true,
         show: "fade",
-        position: {
+        position:{
             my: "center",
             at: "center",
             of: $('#page-content')
@@ -41,22 +51,23 @@ $(function () {
             "Confirm": function () {
 
                 // Confirmed Selections
-                var confId = id,
-                    confImage = $(image).text();
+                var confRow = targetRow,
+                    confId = id,
+                    confVol = $(volume).text();
 
-                message.showMessage('notice', "Deleting " + confImage + ".");
+                message.showMessage('notice', "Deleting " + confVol + ".");
 
                 // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links and delete actions
+                // Disable widget view links and instance actions
                 disableLinks(true);
-                disableActions("delete-image", true);
+                disableActions("delete-volume", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                disableProgressbar(progressbar, "images", false);
+                disableProgressbar(progressbar, "volumes", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -66,7 +77,7 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_image/' + confId + '/')
+                $.getJSON('/delete_volume/' + confId + '/' + PROJECT_ID + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -83,18 +94,21 @@ $(function () {
                             message.showMessage('success', data.message);
 
                             // Remove row
-                            $(targetRow).fadeOut().remove();
+                            confRow.fadeOut().remove();
 
-                            // Update selects
-                            removeFromSelect(confImage, $("#image_name"), imageInstOpts);
+                            // Remove volume
+                            volumes.removeItem(confId);
+
+                            // Update usedStorage
+                            updateUsedStorage();
+                            updateStorageBar();
+
+                            // If last row, append placeholder
+                            var rowCount = $('#volume_list tr').length;
+                            if (rowCount < 2) {
+                                $(table).append(placeholder).fadeIn();
+                            }
                         }
-
-                        // If last image, reveal placeholder
-                        var rowCount = $('#image_list tr').length;
-                        if (rowCount < 2) {
-                            $(table).append(placeholder).fadeIn();
-                        }
-
                     })
                     .fail(function () {
 
@@ -107,9 +121,9 @@ $(function () {
                     .always(function () {
 
                         // Hide progressbar and enable widget view links
-                        disableProgressbar(progressbar, "images", true);
+                        disableProgressbar(progressbar, "volumes", true);
                         disableLinks(false);
-                        disableActions("delete-image", false);
+                        disableActions("delete-volume", false);
                     });
 
                 $(this).dialog("close");
@@ -119,23 +133,19 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-image', function () {
+    $(document).on('click', '.delete-volume', function () {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        // Get target row element, get id from that element and use that to get the image-name-text
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        image = document.getElementById(id + "-name-text");
+        volume = document.getElementById(id + "-name-text");
 
-        // Add image-name-text to confirm-form
-        $('div#image-delete-confirm-form > p > span.image-name').empty().append($(image).text());
+        // Add name-text to form
+        $('div#volume-delete-confirm-form > p > span.volume-name').empty().append($(volume).text());
 
-        $('#image-delete-confirm-form').dialog("open");
+        $('#volume-delete-confirm-form').dialog("open");
     });
 });
-
-
-
-

@@ -124,6 +124,12 @@ $(function () {
                                 // Append new row to instance-list
                                 $(table).append(newRow).fadeIn();
 
+                                // Add to instances
+                                instances.setItem(
+                                    data.server_info.server_id,
+                                    { value: data.server_info.server_id, option: data.server_info.server_name }
+                                );
+
                                 // Update selects
                                 addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
                                 addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
@@ -135,7 +141,7 @@ $(function () {
                         })
                         .always(function() {
 
-                            // Hide progressbar, reveal widget buttons and enable widget view links
+                            // Reset interface
                             disableProgressbar(progressbar, "instances", true);
                             setVisible('#create-instance', true);
                             disableLinks(false);
@@ -148,6 +154,7 @@ $(function () {
         },
         close: function () {
 
+            // Reset form validation
             resetUiValidation(allFields);
         }
     });

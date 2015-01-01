@@ -1,12 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var id = '';
-    var router = '';
-    var targetRow;
-
-    // Widget Elements
-    var placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -17,10 +12,20 @@ $(function () {
         }
     });
 
+    // Local Variables
+    var id,
+        router,
+        targetRow;
+
+    // Widget Elements
+    var progressbar = $("#router_progressbar"),
+        table = $("#router_list"),
+        placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
+
     $('#router-delete-confirm-form').dialog({
         autoOpen: false,
         height: 125,
-        width: 150,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -34,75 +39,99 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                var confirmedId = id;
-                var deleteHtml = '<a href="#" class="delete-router">delete</a></td>';
+                var confId = id,
+                    confRouter = $(router).text(),
+                    confRow = targetRow;
 
-                message.showMessage('notice', "Deleting " + $(router).text() + ".");
+                message.showMessage('notice', "Deleting " + confRouter + ".");
 
-                setVisible('#create-router', false);
+                // Store actions cell html
+                var actionsCell = document.getElementById(confId + "-actions-cell");
+                var actionsHtml = actionsCell.innerHTML;
+
+                // Disable widget view links and instance actions
                 disableLinks(true);
+                disableActions("delete-router", true);
+
+                // Initialize progressbar and make it visible
+                $(progressbar).progressbar({value: false});
+                disableProgressbar(progressbar, "routers", false);
 
                 // Create loader
-                var actionsCell = document.getElementById(confirmedId + "-actions-cell");
-                var loaderId = confirmedId + '-loader';
+                var loaderId = confId + '-loader';
                 var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
                 // Clear clicked action link and replace with loader
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confirmedId + '/')
+                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confId + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
+                            // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
-                            $(actionsCell).append(deleteHtml).fadeIn();
+                            $(actionsCell).append(actionsHtml).fadeIn();
                         }
 
                         if (data.status == 'success') {
 
                             message.showMessage('success', data.message);
 
-                            $(targetRow).fadeOut().remove();
-                        }
+                            // Remove row
+                            confRow.fadeOut().remove();
 
-                        // If last router, reveal placeholder
-                        var rowCount = $('#router_list tr').length;
-                        if (rowCount < 2) {
-                            $('#router_list').append(placeholder).fadeIn();
+                            // If last router, reveal placeholder
+                            var rowCount = $('#router_list tr').length;
+                            if (rowCount < 2) {
+                                $(table).append(placeholder).fadeIn();
+                            }
+
+                            // Update private network
+                            privateNetworks.items[routers.items[confId].network].router = "none";
+
+                            // Remover from routers
+                            routers.removeItem(confId);
                         }
 
                     })
                     .fail(function () {
+
                         message.showMessage('error', 'Server Fault');
 
+                        // Restore Actions html
                         $(actionsCell).empty().fadeOut();
-                        $(actionsCell).append(deleteHtml).fadeIn();
+                        $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
-                        setVisible('#create-router', true);
+
+                        // Hide progressbar and enable widget view links
+                        disableProgressbar(progressbar, "routers", true);
                         disableLinks(false);
+                        disableActions("delete-router", false);
                     });
 
                 $(this).dialog("close");
             }
         },
         close: function () {
-            $(this).dialog("close");
         }
     });
 
     $(document).on('click', '.delete-router', function () {
 
+        // Prevent scrolling to top of page on click
         event.preventDefault();
 
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
         router = document.getElementById(id + "-name-text");
 
+        // Add name-text to form
         $('div#router-delete-confirm-form > p > span.router-name').empty().append($(router).text());
 
         $('#router-delete-confirm-form').dialog("open");

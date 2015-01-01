@@ -84,7 +84,7 @@ $(function () {
                         }
 
                         // Update selects
-                        removeFromSelect(confSecGroup, $("#sec_group_name"), securityGroups);
+                        removeFromSelect(confSecGroup, $("#sec_group_name"), secGroupInstOpts);
                     })
                     .fail(function () {
 

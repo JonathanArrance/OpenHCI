@@ -76,25 +76,25 @@
             {% if floating_ips %}
             {% for fip in floating_ips %}
             <tr id="{{fip.floating_ip_id}}" class="{% if fip.instance_name != '' %}fip-assigned{% endif %}">
-            <td id="{{fip.floating_ip_id}}-ip-cell">
-                <a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-link">
-                    <span id="{{fip.floating_ip_id}}-ip-address">{{fip.floating_ip}}</span>
-                </a>
-            </td>
-            <td id="{{fip.floating_ip_id}}-instance-cell">
-                {% if fip.instance_name == "" %}
-                <span id="{{fip.floating_ip_id}}-instance-name">None</span>
-                {% else %}
-                <span id="{{fip.floating_ip_id}}-instance-name">{{fip.instance_name}}</span>
-                {% endif %}
-            </td>
-            <td id="{{fip.floating_ip_id}}-actions-cell">
-                {% if fip.floating_in_use == 'true' %}
-                <a href="#" class="unassign_ip">unassign</a>
-                {% else %}
-                <a href="#" class="deallocate_ip">deallocate</a>
-                {% endif %}
-            </td>
+                <td id="{{fip.floating_ip_id}}-ip-cell">
+                    <a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-link">
+                        <span id="{{fip.floating_ip_id}}-ip-address">{{fip.floating_ip}}</span>
+                    </a>
+                </td>
+                <td id="{{fip.floating_ip_id}}-instance-cell">
+                    {% if fip.instance_name == "" %}
+                    <span id="{{fip.floating_ip_id}}-instance-name">None</span>
+                    {% else %}
+                    <span id="{{fip.floating_ip_id}}-instance-name">{{fip.instance_name}}</span>
+                    {% endif %}
+                </td>
+                <td id="{{fip.floating_ip_id}}-actions-cell">
+                    {% if fip.floating_in_use == 'true' %}
+                    <a href="#" class="unassign_ip">unassign</a>
+                    {% else %}
+                    <a href="#" class="deallocate_ip">deallocate</a>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
             {% else %}

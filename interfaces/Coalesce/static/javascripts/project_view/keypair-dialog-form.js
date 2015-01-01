@@ -93,7 +93,7 @@ $(function () {
                                 table.append(newRow).fadeIn();
 
                                 // Update Selects
-                                addToSelect(data.key_name, data.key_name, $("#sec_key_name"), securityKeys);
+                                addToSelect(data.key_name, data.key_name, $("#sec_key_name"), secKeyInstOpts);
                             }
                         })
                         .fail(function () {

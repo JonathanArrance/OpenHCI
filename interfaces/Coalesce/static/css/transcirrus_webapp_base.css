@@ -5171,23 +5171,33 @@ th > small {
 }
 
 .volume-available-storage-bar {
-    width: 165px!important;
+    width: 198px!important;
     height: 18px!important;
+    margin-bottom: 5px;
 }
 
 .volume-available-storage-label {
     font-weight: bold;
     color: #FFFFFF;
     text-shadow: -1px 0 #696969, 0 1px #696969, 1px 0 #696969, 0 -1px #696969;
-    left: 34%;
+    left: 35%;
+    margin-top: 2px;
     z-index: 10000;
     position: absolute;
+}
+
+.volume-attached {
+    background-color: #FFE8CC
 }
 
 /* ROUTER WIDGET */
 
 #router_progressbar  > .ui-widget-header {
     background-color: #FF8617!important;
+}
+
+.router-deleted {
+    background-color: #c5c5c5
 }
 
 /* PRIVATE NETWORKS WIDGET */

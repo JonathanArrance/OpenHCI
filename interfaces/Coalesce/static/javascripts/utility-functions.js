@@ -227,6 +227,7 @@ function checkUrl(url) {
 
 function checkFile(file) {
     if (file.val() == '') {
+        file.addClass("ui-state-error");
         flagError(
             file,
             "A local file must be selected.");
@@ -246,12 +247,34 @@ function checkDuplicateName(name, hashTable) {
     }
 
     if (!pass) {
+        name.addClass("ui-state-error");
         flagError(
             name,
             "Name is already in use.");
     }
 
     return pass;
+}
+
+function checkSize(o, n, min, max) {
+    var unlimited = max == 0;
+    if (unlimited) {
+        if (o.val() < min || isNaN(Number(o.val()))) {
+            o.addClass("ui-state-error");
+            flagError(o, n);
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        if (o.val() < min || o.val() > max || isNaN(Number(o.val()))) {
+            o.addClass("ui-state-error");
+            flagError(o, n);
+            return false;
+        } else {
+            return true;
+        }
+    }
 }
 
 function clearUiValidation(fields) {
@@ -326,7 +349,7 @@ function HashTable() {
         }
 
         this.length = 0;
-    }
+    };
 }
 
 var disabledLinks = 0;
@@ -396,6 +419,8 @@ function disableLink(id, bool) {
     }
 }
 
+var disabledActions = new HashTable();
+
 function disableActions(id, bool) {
 
     var actions = '.' + id;
@@ -403,11 +428,20 @@ function disableActions(id, bool) {
     var disabledColor = '#696969';
 
     if (bool) {
-        $(actions).bind('click', false);
-        $(actions).css('color', disabledColor);
+        if (disabledActions.hasItem(actions)) {
+            disabledActions.items[actions].count++;
+        } else {
+            disabledActions.setItem(actions, { count: 1 });
+            $(actions).bind('click', false);
+            $(actions).css('color', disabledColor);
+        }
     } else {
-        $(actions).unbind('click', false);
-        $(actions).css('color', activeColor);
+        disabledActions.items[actions].count--;
+        if (disabledActions.items[actions].count <= 0) {
+            $(actions).unbind('click', false);
+            $(actions).css('color', activeColor);
+            disabledActions.removeItem(actions);
+        }
     }
 }
 
@@ -481,39 +515,63 @@ function addToSelect(value, option, select, hashTable) {
 // --- INSTANCE MANAGEMENT
 
 var instances = new HashTable(),
-    images = new HashTable(),
+    secGroupInstOpts = new HashTable(),
+    secKeyInstOpts = new HashTable(),
+    privNetInstOpts = new HashTable(),
+    imageInstOpts = new HashTable(),
     assignableFips = new HashTable(),
     assignableInstances = new HashTable();
 
 // --- STORAGE
 
-var totalStorage = 0,
+var volumes = new HashTable(),
+    totalStorage = 0,
     usedStorage = 0,
     availableStorage = 0,
     attachableInstances = new HashTable();
 
-function getUsedStorage(rows) {
+function getStorage() {
+    $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')
+        .done(function (data) {
+            totalStorage = data.gigabytes;
+            updateUsedStorage();
+            updateStorageBar()
+        })
+}
+
+function updateUsedStorage() {
 
     usedStorage = 0;
 
-    $(rows).each(function () {
-        if (isNaN(parseInt($(this).attr("class")))) {
-        } else {
-            usedStorage += parseInt($(this).attr("class"));
-        }
-    });
+    for (var volume in volumes.items) {
+        var size = volumes.getItem(volume).size;
+        usedStorage += Number(size);
+    }
 
     availableStorage = totalStorage - usedStorage;
 }
 
+function updateStorageBar() {
+
+    var volume_available_storage_bar = $(".volume-available-storage-bar"),
+        volume_available_storage_label = $(".volume-available-storage-label"),
+        percent = 0;
+
+        // Initialize storage bar
+        volume_available_storage_bar.progressbar({value: 0});
+        percent = (usedStorage / totalStorage) * 100;
+        volume_available_storage_bar.progressbar({value: percent});
+        volume_available_storage_label.empty();
+        volume_available_storage_label.append(usedStorage + "/" + totalStorage);
+}
+
 // --- SOFTWARE DEFINED NETWORKS
 
-var privateNetworks = new HashTable();
+var routers = new HashTable(),
+    privNetRoutOpts = new HashTable(),
+    privateNetworks = new HashTable();
 
 // --- USERS/SECURITY
-
-var securityGroups = new HashTable(),
-    securityKeys = new HashTable();
 
 // --- UNASSIGNED USERS
 
