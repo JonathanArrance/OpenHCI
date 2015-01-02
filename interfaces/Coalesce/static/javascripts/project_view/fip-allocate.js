@@ -30,7 +30,10 @@ $(function () {
 
     $("#allocate_ip").click(function () {
 
-        message.showMessage('notice', "Allocating IP.")
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        message.showMessage('notice', "Allocating IP.");
 
         // Disable links and widget buttons
         disableLinks(true);
@@ -83,9 +86,9 @@ $(function () {
             .always(function () {
 
                 // Reset interface
+                checkAssignFip();
                 disableProgressbar(progressbar, "fips", true);
                 setVisible('#allocate_ip', true);
-                setVisible('#assign_ip', true);
                 disableLinks(false);
             });
     });

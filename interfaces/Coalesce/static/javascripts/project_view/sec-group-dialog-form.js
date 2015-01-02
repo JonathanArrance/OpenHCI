@@ -24,8 +24,8 @@ $(function () {
 
     $("#sec-group-dialog-form").dialog({
         autoOpen: false,
-        height: 400,
-        width: 350,
+        height: 385,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -39,16 +39,14 @@ $(function () {
         buttons: {
             "Create a security group": function () {
 
-                allFields.removeClass("ui-state-error");
-                $('.error').fadeOut().remove();
+                // Remove UI validation flags
+                clearUiValidation(allFields);
 
-                var bValid = true;
-                bValid =
-                    bValid &&
-                    checkLength(tips, groupName, "groupname", 3, 16) &&
-                    checkLength(tips, groupDesc, "groupdesc", 6, 80);
+                var isValid =
+                    checkLength(groupName, "Group Name", 3, 16) &&
+                    checkLength(groupDesc, "Group Description", 6, 80);
 
-                if (bValid) {
+                if (isValid) {
 
                     var confPorts = ports.val(),
                         confName = groupName.val(),
@@ -111,25 +109,26 @@ $(function () {
                             setVisible(progressbar, false);
                             setVisible('#create-security-group', true);
                             disableLinks(false);
+                            resetUiValidation(allFields);
+                            ports.val("443,80,22");
                         });
 
                     $(this).dialog("close");
-
-                    allFields.val("").removeClass("ui-state-error");
-                    ports.val("443,80,22");
-                    $('.error').fadeOut().remove();
                 }
             }
         },
         close: function () {
 
-            allFields.val("").removeClass("ui-state-error");
-            $('.error').fadeOut().remove();
+            resetUiValidation(allFields);
         }
     });
 
     $("#create-security-group")
         .click(function () {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
             $("#sec-group-dialog-form").dialog("open");
         });
 });

@@ -114,6 +114,7 @@ $(function () {
 
     $(document).on('click', '.remove-user', function () {
 
+        // Prevent scrolling to top of page on click
         event.preventDefault();
 
         targetRow = $(this).parent().parent();

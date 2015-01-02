@@ -22,8 +22,8 @@ $(function () {
 
     $("#keypair-dialog-form").dialog({
         autoOpen: false,
-        height: 300,
-        width: 350,
+        height: 225,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -37,15 +37,13 @@ $(function () {
         buttons: {
             "Create Key Pair": function () {
 
-                allFields.removeClass("ui-state-error");
-                $('.error').fadeOut().remove();
+                // Remove UI validation flags
+                clearUiValidation(allFields);
 
-                var bValid = true;
-                bValid =
-                    bValid &&
+                var isValid =
                     checkLength(key_name, "key name", 3, 16);
 
-                if (bValid) {
+                if (isValid) {
 
                     // Confirmed Selections
                     var confKeypair = key_name.val();
@@ -105,24 +103,25 @@ $(function () {
                             setVisible(progressbar, false);
                             setVisible('#create-keypair', true);
                             disableLinks(false);
+                            resetUiValidation(allFields);
                         });
 
                     $(this).dialog("close");
-
-                    allFields.val("").removeClass("ui-state-error");
-                    $('.error').fadeOut().remove();
                 }
             }
         },
         close: function () {
 
-            allFields.val("").removeClass("ui-state-error");
-            $('.error').fadeOut().remove();
+            resetUiValidation(allFields);
         }
     });
 
     $("#create-keypair")
         .click(function () {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
             $("#keypair-dialog-form").dialog("open");
         });
 });

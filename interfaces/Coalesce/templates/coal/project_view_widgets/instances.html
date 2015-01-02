@@ -185,13 +185,17 @@
                 <th>OS / flavor</th>
                 <th>Actions</th>
             </tr>
-            <script>instances.clear();</script>
+            <script>instanceOpts.clear();</script>
             {% if instances %}
             {% for k,v in instance_info.items %}
                     <script>
                         instances.setItem(
-                                "{{server.server_id}}",
-                                { value: "{{server.server_id}}", option: "{{server.server_name}}" });
+                                "{{v.server_id}}",
+                                { id: "{{v.server_id}}", name: "{{v.server_name}}", status: "{{v.server_status}}",
+                                  flavor: "{{v.server_flavor}}", os: "{{v.server_os}}", console: "{{v.novnc_console}}" });
+                        instanceOpts.setItem(
+                                "{{v.server_id}}",
+                                { value: "{{v.server_id}}", option: "{{v.server_name}}" });
                     </script>
             <tr id="{{v.server_id}}" class="{% if v.server_status == 'PAUSED' %}instance-paused{% endif %}{% if v.server_status == 'SUSPENDED' %}instance-suspended{% endif %}">
                 <td id="{{v.server_id}}-name-cell">

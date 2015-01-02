@@ -114,6 +114,7 @@ $(function () {
                     .always(function () {
 
                         // Reset interface
+                        checkAssignFip();
                         disableProgressbar(progressbar, "fips", true);
                         setVisible('#assign_ip', true);
                         disableActions("unassign_ip", false);

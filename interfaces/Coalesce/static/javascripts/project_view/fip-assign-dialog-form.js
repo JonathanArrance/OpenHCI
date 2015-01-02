@@ -90,9 +90,9 @@ $(function () {
                     .always(function () {
 
                         // Reset interface
+                        checkAssignFip();
                         disableProgressbar(progressbar, "fips", true);
                         setVisible('#allocate_ip', true);
-                        setVisible('#assign_ip', true);
                         disableLinks(false);
                     });
 
@@ -104,6 +104,10 @@ $(function () {
     });
 
     $("#assign_ip").click(function () {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
         $("#fip-assign-dialog-form").dialog("open");
     });
 });

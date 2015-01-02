@@ -21,7 +21,7 @@ $(function () {
     var progressbar = $("#instance_progressbar"),
         table = $("#instance_list"),
         placeholder =
-        '<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>';
+            '<tr id="instance_placeholder"><td><p><i>This project has no instances</i></p></td><td></td><td></td><td></td></tr>';
 
     $("#instance-delete-confirm-form").dialog({
         autoOpen: false,
@@ -41,8 +41,7 @@ $(function () {
             "Confirm": function () {
 
                 // Confirmed Selections
-                var
-                    confRow = targetRow,
+                var confRow = targetRow,
                     confId = id,
                     confInstance = $(instance).text();
 
@@ -91,33 +90,44 @@ $(function () {
                             removeFromSelect(confId, $("#instance"), attachableInstances);
                             removeFromSelect(confId, $("#assign_instance"), assignableInstances);
 
+                            if (assignableFips.length <= 0 || assignableInstances.length <= 0) {
+                                setVisible('#assign_ip', false);
+                            }
+
                             // Unattach volumes
                             for (var i = 0; i < data.vols.length; i++) {
 
                                 var volAttachedCell = document.getElementById(data.vols[i] + '-attached-cell');
                                 $(volAttachedCell).empty().fadeOut();
+                                $(volAttachedCell).parent().removeClass("volume-attached");
                                 var newAttached = '<span id="' + data.vols[i] + '-attached-placeholder">No Attached Instance</span>';
                                 $(volAttachedCell).append(newAttached).fadeIn();
 
                                 var volActionsCell = document.getElementById(data.vols[i] + '-actions-cell');
                                 $(volActionsCell).empty().fadeOut();
-                                var newVolAction = '<a href="#" class="attach-instance">attach</a>';
+                                var newVolAction = '<a href="#" class="attach-volume">attach</a>' +
+                                    '<span class="volume-actions-pipe"> | </span>' +
+                                    '<a href="#" class="delete-volume">delete</a>';
                                 $(volActionsCell).append(newVolAction).fadeIn();
                             }
 
                             // Unassign floating IPs
                             for (var j = 0; j < data.floating_ip.length; j++) {
 
-                                var ipInstanceCell = document.getElementById(data.floating_ip[j] + '-instance-cell');
+                                var ipInstanceCell = document.getElementById(data.floating_ip_id[j] + '-instance-cell');
                                 $(ipInstanceCell).empty().fadeOut();
+                                $(ipInstanceCell).parent().removeClass("fip-assigned");
                                 var newInstance = '<span id="' + data.floating_ip[j] + '-instance-name">None</span>';
                                 $(ipInstanceCell).append(newInstance).fadeIn();
 
-                                var ipActionsCell = document.getElementById(data.floating_ip[j] + '-actions-cell');
+                                var ipActionsCell = document.getElementById(data.floating_ip_id[j] + '-actions-cell');
                                 $(ipActionsCell).empty().fadeOut();
-                                var newIpAction = '<a id="' + data.floating_ip[j] + '" class="deallocate_ip" href="#">deallocate</a>';
+                                var newIpAction = '<a id="' + data.floating_ip_id[j] + '" class="deallocate_ip" href="#">deallocate</a>';
                                 $(ipActionsCell).append(newIpAction).fadeIn();
                             }
+
+                            instances.removeItem(confId);
+                            instanceOpts.removeItem(confId);
 
                             // If last row, append placeholder
                             var rowCount = $('#instance_list tr').length;
@@ -137,6 +147,7 @@ $(function () {
                     .always(function () {
 
                         // Hide progressbar and enable widget view links
+                        checkAssignFip();
                         disableProgressbar(progressbar, "instances", true);
                         disableLinks(false);
                         disableActions("delete-instance", false);

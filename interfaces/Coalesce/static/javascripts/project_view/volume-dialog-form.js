@@ -136,6 +136,9 @@ $(function () {
     // Open modal form when create-volume button is clicked
     $(document).on("click", "#create-volume", function () {
 
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
         $("#volume-dialog-form").dialog("open");
     });
 });

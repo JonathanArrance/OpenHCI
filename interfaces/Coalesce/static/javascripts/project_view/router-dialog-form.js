@@ -19,13 +19,13 @@ $(function () {
 
     // Widget Elements
     var progressbar = $("#router_progressbar"),
-        createButton = $("create-router"),
+        createButton = $("#create-router"),
         placeholder = $("#router_placeholder"),
         table = $('#router_list');
 
     $("#router-dialog-form").dialog({
         autoOpen: false,
-        height: 400,
+        height: 285,
         width: 235,
         modal: true,
         resizable: false,
@@ -65,8 +65,6 @@ $(function () {
 
                     $.getJSON('/create_router/' + confRouter + '/' + confPrivateNet + '/' + DEFAULT_PUBLIC + '/' + PROJECT_ID + '/')
                         .done(function (data) {
-
-                            console.log(data);
 
                             if (data.status == 'error') {
 
@@ -131,7 +129,10 @@ $(function () {
 
     $("#create-router")
         .click(function () {
+
+            // Prevent scrolling to top of page on click
             event.preventDefault();
+
             $("#router-dialog-form").dialog("open");
         });
 });

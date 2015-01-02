@@ -89,16 +89,14 @@ $(function () {
                             // Remove row
                             $(confRow).fadeOut().remove();
 
+                            // If last fip, reveal placeholder and hide assign_ip
+                            var rowCount = $('#fip_list tr').length;
+                            if (rowCount < 2) {
+                                $(table).append(placeholder).fadeIn();
+                            }
+
                             // Remove ip from assign_ip select
                             removeFromSelect(confId, $("#assign_floating_ip"), assignableFips);
-                        }
-
-                        // If last fip, reveal placeholder and hide assign_ip
-                        var rowCount = $('#fip_list tr').length;
-                        if (rowCount < 2) {
-                            $(table).append(placeholder).fadeIn();
-                        } else {
-                            setVisible('#assign_ip', true);
                         }
                     })
                     .fail(function () {
@@ -108,6 +106,7 @@ $(function () {
                     .always(function () {
 
                         // Reset interface
+                        checkAssignFip();
                         disableProgressbar(progressbar, "fips", true);
                         setVisible('#allocate_ip', true);
                         disableActions("deallocate_ip", false);
@@ -117,7 +116,7 @@ $(function () {
                 $(this).dialog("close");
             }
         },
-        close: function(){
+        close: function () {
         }
     });
 
@@ -134,12 +133,6 @@ $(function () {
         // Add ip to form
         $('div#fip-deallocate-confirm-form > p > span.ip-address').empty().append(fip);
         $('#fip-deallocate-confirm-form').dialog("open");
-    });
-
-    $(document).ready(function () {
-        if ($('#fip_placeholder').length) {
-            setVisible('#assign_ip', false)
-        }
     });
 });
 

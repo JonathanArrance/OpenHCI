@@ -40,7 +40,7 @@
                     <select name="assign_instance" id="assign_instance">
                         <script>assignableInstances.clear();</script>
                         {% for server in instances %}
-                        {% if server.public_ip == None %}
+                        {% if server.public_ip == "None" or server.public_ip == None %}
                         <script>
                             assignableInstances.setItem(
                                     "{{server.server_id}}",
@@ -55,6 +55,11 @@
 
                 </fieldset>
             </form>
+            <script>
+                if (assignableFips.length <= 0 || assignableInstances.length <= 0) {
+                    setVisible($("#assign"))
+                }
+            </script>
         </div>
 
         <div id="fip-deallocate-confirm-form" title="Deallocate Floating IP">

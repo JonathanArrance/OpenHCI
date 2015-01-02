@@ -108,6 +108,7 @@ $(function () {
 
     $(document).on('click', '.delete-secGroup', function () {
 
+        // Prevent scrolling to top of page on click
         event.preventDefault();
 
         targetRow = $(this).parent().parent();

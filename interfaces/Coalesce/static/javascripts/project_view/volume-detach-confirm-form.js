@@ -41,12 +41,11 @@ $(function () {
             "Detach Volume": function () {
 
                 // Confirmed Selections
-                var
-                    confRow = targetRow,
+                var confRow = targetRow,
                     confId = id,
                     confVol = $(volume).text(),
                     confInstance = instance.val(),
-                    confInstanceName = instances.getItem(confInstance).option;
+                    confInstanceName = instanceOpts.items[confInstance].option;
 
                 message.showMessage('notice', 'Detaching ' + confVol + ' from ' + confInstanceName + '.');
 
@@ -98,7 +97,7 @@ $(function () {
                                 '<a href="#" class="delete-volume">delete</a>';
 
                             $(actionsCell).append(newActions).fadeIn();
-                            $(targetAttached).append(confInstanceName).fadeIn();
+                            $(targetAttached).append("No Attached Instance").fadeIn();
 
                             confRow.removeClass("volume-attached");
                         }
@@ -133,7 +132,7 @@ $(function () {
 
         // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
-        id = $(targetRow).attr("id");
+        id = targetRow.attr("id");
         volume = document.getElementById(id + "-name-text");
 
         // Add name-text to form

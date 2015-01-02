@@ -65,27 +65,27 @@ $(function () {
                             }
                             newRow +=
                                 '>' +
-                                    '<td id="' + data.user.user_id + '-name-cell">' +
-                                        '<a href="/projects/' + PROJECT + '/' + PROJECT_ID + '/user/' + data.user.username + '/view/" ' +
-                                        'class="disable-link"><span id="' + data.user.user_id + '-name-text">' + data.user.username + '</span></a>' +
-                                        '<a href="mailto:' + data.user.email + '">' +
-                                            '<span id="' + data.user.user_id + '-email-text"> (' + data.user.email + ') </span></a>' +
-                                        '<span id="' + data.user.user_id + '-role-text" class="right">' + data.user.user_role + '</span>' +
-                                    '</td>' +
-                                    '<td id="' + data.user.user_id + '-actions-cell">';
+                                '<td id="' + data.user.user_id + '-name-cell">' +
+                                '<a href="/projects/' + PROJECT + '/' + PROJECT_ID + '/user/' + data.user.username + '/view/" ' +
+                                'class="disable-link"><span id="' + data.user.user_id + '-name-text">' + data.user.username + '</span></a>' +
+                                '<a href="mailto:' + data.user.email + '">' +
+                                '<span id="' + data.user.user_id + '-email-text"> (' + data.user.email + ') </span></a>' +
+                                '<span id="' + data.user.user_id + '-role-text" class="right">' + data.user.user_role + '</span>' +
+                                '</td>' +
+                                '<td id="' + data.user.user_id + '-actions-cell">';
                             if (data.user.user_enabled == "TRUE") {
                                 newRow +=
-                                        '<a href="#" class="disable-user">disable</a>'
+                                    '<a href="#" class="disable-user">disable</a>'
                             } else {
                                 newRow +=
-                                        '<a href="#" class="enable-user">enable</a>'
+                                    '<a href="#" class="enable-user">enable</a>'
                             }
                             newRow +=
-                                        '<span class="user-actions-pipe"> | </span>' +
-                                        '<a href="#" class="remove-user">remove</a>' +
-                                        '<span class="user-actions-pipe"> | </span>' +
-                                        '<a href="#" class="delete-user"> delete</a>' +
-                                    '</td>' +
+                                '<span class="user-actions-pipe"> | </span>' +
+                                '<a href="#" class="remove-user">remove</a>' +
+                                '<span class="user-actions-pipe"> | </span>' +
+                                '<a href="#" class="delete-user"> delete</a>' +
+                                '</td>' +
                                 '</tr>';
 
                             // Check to see if this is the first user to be generated, if so remove placeholder
@@ -129,6 +129,10 @@ $(function () {
 
     $("#add-existing-user")
         .click(function () {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
             $("#user-add-existing-dialog-form").dialog("open");
         });
 });

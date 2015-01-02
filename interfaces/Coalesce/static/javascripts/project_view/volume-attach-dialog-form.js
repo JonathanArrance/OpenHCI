@@ -17,15 +17,12 @@ $(function () {
         volume,
         targetRow;
 
-    // Form elements
-    var instance = $("#instance");
-
     // Widget Elements
     var progressbar = $("#vol_progressbar");
 
     $("#volume-attach-dialog-form").dialog({
         autoOpen: false,
-        height: 210,
+        height: 225,
         width: 235,
         modal: true,
         resizable: false,
@@ -40,13 +37,15 @@ $(function () {
         buttons: {
             "Attach Volume": function () {
 
+                // Form elements
+                var instance = $("#instance");
+
                 // Confirmed Selections
-                var
-                    confRow = targetRow,
+                var confRow = targetRow,
                     confId = id,
                     confVol = $(volume).text(),
-                    confInstance = instance.val(),
-                    confInstanceName = instances.getItem(confInstance).option;
+                    confInstance = instanceOpts.items[instance.val()].value,
+                    confInstanceName = instanceOpts.items[confInstance].option;
 
                 message.showMessage('notice', 'Attaching ' + confVol + ' to ' + confInstanceName + '.');
 

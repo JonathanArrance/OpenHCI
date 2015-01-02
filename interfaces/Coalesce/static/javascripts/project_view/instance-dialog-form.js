@@ -49,7 +49,7 @@ $(function () {
                 // Validate form inputs
                 var isValid =
                     checkLength(name, "Instance Name", 3, 16) &&
-                    checkDuplicateName(name, instances);
+                    checkDuplicateName(name, instanceOpts);
 
                 if (isValid) {
 
@@ -127,6 +127,11 @@ $(function () {
                                 // Add to instances
                                 instances.setItem(
                                     data.server_info.server_id,
+                                    { id: data.server_info.server_id, name: data.server_info.server_name, status: data.server_info.server_status,
+                                        flavor: data.server_info.server_flavor, os: data.server_info.server_os, console: data.server_info.novnc_console }
+                                );
+                                instanceOpts.setItem(
+                                    data.server_info.server_id,
                                     { value: data.server_info.server_id, option: data.server_info.server_name }
                                 );
 
@@ -139,9 +144,10 @@ $(function () {
 
                             message.showMessage('error', 'Server Fault');
                         })
-                        .always(function() {
+                        .always(function () {
 
                             // Reset interface
+                            checkAssignFip();
                             disableProgressbar(progressbar, "instances", true);
                             setVisible('#create-instance', true);
                             disableLinks(false);
@@ -160,6 +166,10 @@ $(function () {
     });
 
     $("#create-instance").click(function () {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
         $("#instance-dialog-form").dialog("open");
     });
 });

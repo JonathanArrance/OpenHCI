@@ -97,6 +97,9 @@ $(function () {
 
                             // Add paused class
                             $(targetRow).addClass("instance-suspended");
+
+                            // Update instance
+                            instances.items[confId].status = "SUSPENDED";
                         }
                     })
                     .fail(function () {

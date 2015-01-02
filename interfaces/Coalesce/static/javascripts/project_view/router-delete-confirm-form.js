@@ -91,10 +91,10 @@ $(function () {
                             }
 
                             // Update selects
-                            addToSelect(routers.items[confId].network, routers.items[confId].network, $("#priv_net"), privNetRoutOpts);
+                            addToSelect(routers.items[confId].network, privateNetworks.items[routers.items[confId].network].name, $("#priv_net"), privNetRoutOpts);
 
                             // Update private network
-                            privateNetworks.items[routers.items[confId].network].router = "none";
+                            privateNetworks.items[routers.items[confId].network].router = "None";
 
                             // Remover from routers
                             routers.removeItem(confId);

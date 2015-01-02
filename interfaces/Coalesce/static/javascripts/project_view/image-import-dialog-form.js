@@ -124,6 +124,7 @@ $(function () {
                                     disableFormInputs('image', [ 'text', 'select', 'file'], false);
                                     disableLinks(false);
                                     uploading = false;
+                                    resetUiValidation(allFields);
                                 },
                                 error: function () {
 
@@ -134,6 +135,7 @@ $(function () {
                                     disableFormInputs('image', [ 'text', 'select', 'file'], false);
                                     disableLinks(false);
                                     uploading = false;
+                                    resetUiValidation(allFields);
                                 }
                             });
                     }
@@ -209,6 +211,7 @@ $(function () {
                                     disableFormInputs('image', [ 'text', 'select', 'file'], false);
                                     disableLinks(false);
                                     uploading = false;
+                                    resetUiValidation(allFields);
                                 },
                                 error: function () {
 
@@ -219,6 +222,7 @@ $(function () {
                                     disableFormInputs('image', [ 'text', 'select', 'file'], false);
                                     disableLinks(false);
                                     uploading = false;
+                                    resetUiValidation(allFields);
                                 }
                             });
                     }
@@ -233,6 +237,10 @@ $(function () {
 
     $("#import-image")
         .click(function () {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
             $("#image-import-dialog-form").dialog("open");
         });
 });

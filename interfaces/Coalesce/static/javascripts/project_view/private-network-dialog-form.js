@@ -22,7 +22,7 @@ $(function () {
     var progressbar = $("#privateNet_progressbar"),
         createButton = $("#create-private-network"),
         placeholder = $("#privateNet_placeholder"),
-        table =$("#privateNet_list");
+        table = $("#privateNet_list");
 
     $("#private-network-dialog-form").dialog({
         autoOpen: false,
@@ -46,7 +46,7 @@ $(function () {
 
                 var isValid =
                     checkLength(privateNet, "Network Name", 3, 16) &&
-                    checkDuplicateName(privateNet, privateNetworks    );
+                    checkDuplicateName(privateNet, privateNetworks);
 
                 if (isValid) {
 
@@ -66,7 +66,7 @@ $(function () {
                     disableProgressbar(progressbar, "privateNets", false);
 
                     $.getJSON('/add_private_network/' + confPrivateNet + '/' + confAdminState + '/' + confShared + '/' + PROJECT_ID + '/')
-                        .done(function(data) {
+                        .done(function (data) {
 
                             if (data.status == 'error') {
 
@@ -109,11 +109,11 @@ $(function () {
                             }
 
                         })
-                        .fail(function() {
+                        .fail(function () {
 
                             message.showMessage('error', 'Server Fault');	// Flag server fault message
                         })
-                        .always(function() {
+                        .always(function () {
 
                             // Reset interface
                             disableProgressbar(progressbar, "privateNets", true);
@@ -135,7 +135,10 @@ $(function () {
 
     $("#create-private-network")
         .click(function () {
+
+            // Prevent scrolling to top of page on click
             event.preventDefault();
+
             $("#private-network-dialog-form").dialog("open");
         });
 

@@ -104,6 +104,9 @@ $(function () {
 
     $(document).on('click', '.enable-user', function () {
 
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
         userId = $(this).parent().parent().attr('id');
         row = $(this).parent().parent();
 

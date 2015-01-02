@@ -128,7 +128,9 @@ $(function () {
     $("#create-user")
         .click(function () {
 
+            // Prevent scrolling to top of page on click
             event.preventDefault();
+
             $("#user-dialog-form").dialog("open");
         });
 });

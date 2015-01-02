@@ -515,12 +515,26 @@ function addToSelect(value, option, select, hashTable) {
 // --- INSTANCE MANAGEMENT
 
 var instances = new HashTable(),
+    instanceOpts = new HashTable(),
     secGroupInstOpts = new HashTable(),
     secKeyInstOpts = new HashTable(),
     privNetInstOpts = new HashTable(),
     imageInstOpts = new HashTable(),
     assignableFips = new HashTable(),
     assignableInstances = new HashTable();
+
+function checkAssignFip() {
+
+    if (assignableFips.length > 0 && assignableInstances.length > 0) {
+        setVisible('#assign_ip', true);
+    } else {
+        setVisible('#assign_ip', false);
+    }
+}
+
+$(function() {
+    checkAssignFip();
+});
 
 // --- STORAGE
 
@@ -549,8 +563,6 @@ function updateUsedStorage() {
     }
 
     availableStorage = totalStorage - usedStorage;
-
-    console.log("Updated used storage");
 }
 
 function updateStorageBar() {
@@ -565,8 +577,6 @@ function updateStorageBar() {
     volume_available_storage_bar.progressbar({value: percent});
     volume_available_storage_label.empty();
     volume_available_storage_label.append(usedStorage + "/" + totalStorage);
-
-    console.log("Updated used storage bar");
 }
 
 // --- SOFTWARE DEFINED NETWORKS

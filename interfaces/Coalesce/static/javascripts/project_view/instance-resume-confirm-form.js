@@ -101,6 +101,9 @@ $(function () {
 
                             // Remove paused class
                             $(targetRow).removeClass("instance-suspended");
+
+                            // Update instance
+                            instances.items[confId].status = "ACTIVE";
                         }
                     })
                     .fail(function () {
