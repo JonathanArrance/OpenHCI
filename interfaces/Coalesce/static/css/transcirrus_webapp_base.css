@@ -5051,25 +5051,25 @@ th > small {
     font-size: 16px;
     line-height: 20px;
     margin: 10px 0 0 20px;
-    background-color: rgba(47, 78, 145, 0.2);
+    background-color: rgba(178, 202, 255, 0.2);
     display: inline-block;
     padding: 0 10px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    box-shadow: -1px -1px 1px 0 #2F4E91;
+    box-shadow: -1px 0 #696969, 0 0px #696969, 1px 0 #696969, 0 -1px #696969;
 }
 .widget-section-header:hover{
-    background-color: rgba(28, 60, 119, 0.4);
+    background-color: rgba(142, 182, 255, 0.4);
 }
 
 .widget-section{
-    background-color: rgba(47, 78, 145, 0.2);
+    background-color: rgba(178, 202, 255, 0.2);
     margin: 0;
     padding: 10px 0;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
-    box-shadow: 1px 1px 1px 0 #2F4E91;
+    box-shadow: -1px 0 #696969, 0 1px #696969, 1px 0 #696969, 0 0px #696969;
 }
 .widget-disabled{
     background-color: rgba(255, 255, 255, 0.75);
@@ -5079,6 +5079,12 @@ th > small {
     border-collapse: collapse;
     border: 2px solid #696969;
     width: 100%;
+}
+
+.widget-table-half {
+    border-collapse: collapse;
+    border: 2px solid #696969;
+    width: 50%;
 }
 
 .widget-console {

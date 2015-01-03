@@ -1,9 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var username = '';
-    var userId = '';
-    var row = '';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -14,10 +12,18 @@ $(function () {
         }
     });
 
+    // Local Variables
+    var id,
+        user,
+        targetRow;
+
+    // Widget Elements
+    var progressbar = $("#users_progressbar");
+
     $("#user-disable-confirm-form").dialog({
         autoOpen: false,
-        height: 150,
-        width: 250,
+        height: 125,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -31,27 +37,35 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                message.showMessage('notice', 'Disabling user');
+                // Confirmed Selections
+                var confRow = targetRow,
+                    confId = id,
+                    confUsername = $(user).text();
 
-                var confirmedUsername = $(username).text();
-                var confirmedId = userId;
-                var confirmedRow = row;
-                var actionsCell = document.getElementById(confirmedId + "-actions-cell");
+                message.showMessage('notice', "Disabling " + confUsername + ".");
+
+                // Store actions cell html
+                var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
+                // Disable widget view links and widgets actions
+                disableLinks(true);
+                disableActions("disable-user", true);
+
+                // Initialize progressbar and make it visible
+                $(progressbar).progressbar({value: false});
+                disableProgressbar(progressbar, "users", false);
+
                 // Create loader
-                var loaderId = confirmedId + '-loader';
+                var loaderId = confId + '-loader';
                 var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
                 // Clear clicked action link and replace with loader
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                disableActions("disable-user", true);
-                disableLinks(true);
-
-                $.getJSON('/toggle_user/' + confirmedUsername + '/disable/')
-                    .success(function (data) {
+                $.getJSON('/toggle_user/' + confUsername + '/disable/')
+                    .done(function (data) {
 
                         if (data.status == 'error') {
 
@@ -77,19 +91,21 @@ $(function () {
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(newActions).fadeIn();
 
-                            confirmedRow.addClass("user_disabled");
+                            confRow.addClass("user-disabled");
                         }
-
-                        disableActions("disable-user", false);
-                        disableLinks(false);
                     })
-                    .error(function () {
+                    .fail(function () {
+
                         message.showMessage('error', 'Server Fault');
 
-                        // Recall clicked action link on server fault
+                        // Restore Actions html
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(actionsHtml).fadeIn();
+                    })
+                    .always(function () {
 
+                        // Hide progressbar and enable widget view links
+                        disableProgressbar(progressbar, "users", true);
                         disableActions("disable-user", false);
                         disableLinks(false);
                     });
@@ -106,13 +122,13 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        userId = $(this).parent().parent().attr('id');
-        row = $(this).parent().parent();
+        // Get target row element, get id from that element and use that to get the name-text
+        targetRow = $(this).parent().parent();
+        id = $(targetRow).attr("id");
+        user = document.getElementById(id + "-name-text");
 
-        // Clear and add username to .username span in confirm statement
-        username = '#' + userId + '-name-text';
-        $('#user-disable-confirm-form > p > span.user-name').empty().append($(username).text());
-
+        // Add name-text to form
+        $('div#user-disable-confirm-form > p > span.user-name').empty().append($(user).text());
         $("#user-disable-confirm-form").dialog("open");
     });
 });

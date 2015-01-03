@@ -8,14 +8,11 @@
             <a href="#" id="create-user" class="btn" style="float:right">Create</a>
             {% endif %}
 
-            <a href="#" id="add-existing-user" class="btn" style="float:right">Add Existing</a>
 
             {% if ouserinfo %}
-            {% for o in ouserinfo %}
-            <script>unassignedUsers++;</script>
-            {% endfor %}
+            <a href="#" id="add-existing-user" class="btn" style="float:right">Add Existing</a>
             {% else %}
-            <script>setVisible("#add-existing-user", false);</script>
+            <a href="#" id="add-existing-user" class="btn" style="float:right; display:none;">Add Existing</a>
             {% endif %}
         </div>
 
@@ -27,9 +24,11 @@
                 {% csrf_token %}
                 <fieldset>
                     <label for="username">Name</label>
-                    <input type="text" name="username" id="username" class="text ui-widget-content ui-corner-all users-text-field"/>
+                    <input type="text" name="username" id="username"
+                           class="text ui-widget-content ui-corner-all users-text-field"/>
                     <label for="email">Email</label>
-                    <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all users-text-field"/>
+                    <input type="text" name="email" id="email" value=""
+                           class="text ui-widget-content ui-corner-all users-text-field"/>
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" value=""
                            class="text ui-widget-content ui-corner-all users-text-field"/>
@@ -54,13 +53,21 @@
                 <fieldset>
                     <label for="username">Name</label>
                     <select name="username" id="username">
+                        <script>orphanedUserOpts.clear();</script>
                         {% for ouser in ouserinfo %}
                         <script>
-                        console.log("{{ouser}}");
+                            users.setItem(
+                                    "{{ouser.username}}",
+                                    { id: "{{ ouser.keystone_user_id }}", enabled: "{{ouser.user_enabled}}", username: "{{ouser.username}}",
+                                        email: "{{ouser.email}}", role: "{{ouser.user_role}}", removed: "TRUE", value: "{{ouser.username}}",
+                                        option: "{{ouser.username}}"}
+                            );
+                            orphanedUserOpts.setItem("{{ouser.username}}", { value: "{{ouser.username}}", option: "{{ouser.username}}" });
                         </script>
-                        <option value="{{ouser}}">{{ouser}}</option>
                         {% endfor %}
+                        <script>refreshSelect($("select#username"), orphanedUserOpts);</script>
                     </select>
+                    <label for="role">Role</label>
                     <select name="role" id="role">
                         <option value="user">User</option>
                         <option value="pu">Power User</option>
@@ -97,26 +104,34 @@
             {% for pu in users %}
             {% with pu.username as username %}
             {% with userinfo|access:username as ui %}
-            <tr id="{{ ui.user_id }}"{% if ui.user_enabled == "FALSE" %} class="user_disabled"{% endif %}>
-            <td id="{{ ui.user_id }}-name-cell">
-                <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/"
-                   class="disable-link"><span id="{{ ui.user_id }}-name-text">{{username}}</span></a>
-                <a href="mailto:{{ ui.email }}"><span id="{{ ui.user_id }}-email-text">({{ ui.email }})</span></a>
-                <span id="{{ ui.user_id }}-role-text" class="right">{{ ui.user_role }}</span>
-            </td>
-            <td id="{{ ui.user_id }}-actions-cell">
-                {% if user_level == 0 %}
-                {% if ui.user_enabled == "TRUE" %}
-                <a href="#" class="disable-user">disable</a>
-                {% else %}
-                <a href="#" class="enable-user">enable</a>
-                {% endif %}
-                <span class="user-actions-pipe"> | </span>
-                <a href="#" class="remove-user">remove</a>
-                <span class="user-actions-pipe"> | </span>
-                <a href="#" class="delete-user"> delete</a>
-                {% endif %}
-            </td>
+            <script>
+                users.setItem(
+                        "{{pu.username}}",
+                        { id: "{{ ui.user_id }}", enabled: "{{ui.user_enabled}}", username: "{{pu.username}}",
+                            email: "{{ui.email}}", role: "{{ui.user_role}}", removed: "FALSE", value: "{{pu.username}}",
+                            option: "{{pu.username}}" }
+                );
+            </script>
+            <tr id="{{ ui.user_id }}" class="{% if ui.user_enabled == 'FALSE' %}user-disabled{% endif %}">
+                <td id="{{ ui.user_id }}-name-cell">
+                    <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/"
+                       class="disable-link"><span id="{{ ui.user_id }}-name-text">{{username}}</span></a>
+                    <a href="mailto:{{ ui.email }}"><span id="{{ ui.user_id }}-email-text">({{ ui.email }})</span></a>
+                    <span id="{{ ui.user_id }}-role-text" class="right">{{ ui.user_role }}</span>
+                </td>
+                <td id="{{ ui.user_id }}-actions-cell">
+                    {% if user_level == 0 %}
+                    {% if ui.user_enabled == "TRUE" %}
+                    <a href="#" class="disable-user">disable</a>
+                    {% else %}
+                    <a href="#" class="enable-user">enable</a>
+                    {% endif %}
+                    <span class="user-actions-pipe"> | </span>
+                    <a href="#" class="remove-user">remove</a>
+                    <span class="user-actions-pipe"> | </span>
+                    <a href="#" class="delete-user"> delete</a>
+                    {% endif %}
+                </td>
             </tr>
             {% endwith %}
             {% endwith %}
@@ -132,5 +147,3 @@
              style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
     </div>
 </div>
-
-

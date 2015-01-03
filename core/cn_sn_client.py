@@ -984,7 +984,7 @@ while True:
 
         # Bind it to data network interface
         #sock.setsockopt(socket.SOL_SOCKET, 25, "bond1"+'\0')     # bind's it to physical interface
-        sock.bind((data_ip,0))                             # bind's it an IP address 
+        sock.bind((data_ip,0))                             # bind's it an IP address
 
         # Connect to the server socket
         server_address = (ciac_ip, 6161)

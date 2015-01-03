@@ -1,13 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var id = '';
-    var user = '';
-    var targetRow;
-
-    // Widget Elements
-    var progressbar = $("#users_progressbar"),
-        placeholder = '<tr id="users_placeholder"><td><p><i>This project has no users</i></p></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -17,6 +11,16 @@ $(function () {
             }
         }
     });
+
+    // Local Variables
+    var id,
+        user,
+        targetRow;
+
+    // Widget Elements
+    var progressbar = $("#users_progressbar"),
+        table = $("#users_list"),
+        placeholder = '<tr id="users_placeholder"><td><p><i>This project has no images</i></p></td><td></td></tr>';
 
     $('#user-remove-confirm-form').dialog({
         autoOpen: false,
@@ -36,19 +40,23 @@ $(function () {
             "Confirm": function () {
 
                 // Confirmed Selections
-                var confId = id,
+                var confRow = targetRow,
+                    confId = id,
                     confUsername = $(user).text();
 
+                message.showMessage('notice', "Removing " + confUsername + ".");
+
+                // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                message.showMessage('notice', "Removing " + confUsername + " from " + PROJECT + ".");
-
+                // Disable widget view links and widgets actions
                 disableLinks(true);
+                disableActions("remove-user", true);
 
-                // Initialize progressbar and make it visible if hidden
+                // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "users", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -65,6 +73,7 @@ $(function () {
 
                             message.showMessage('error', data.message);
 
+                            // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -73,21 +82,20 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            $(targetRow).fadeOut().remove();
+                            // Remove row
+                            confRow.fadeOut().remove();
+
+                            // Update users
+                            users.items[confUsername].removed = "TRUE";
+
+                            // Update select
+                            addToSelect(confUsername, confUsername, $("select#username"), orphanedUserOpts);
 
                             // If last user, reveal placeholder
                             var rowCount = $('#users_list tr').length;
                             if (rowCount < 2) {
-                                $('#users_list').append(placeholder).fadeIn();
+                                table.append(placeholder).fadeIn();
                             }
-
-                            unassignedUsers++;
-                            setVisible("#add-existing-user", true);
-
-                            // Append new option to assign-fip select menu
-                            var newOption = '<option value=' + confUsername + '>' + confUsername + '</option>';
-                            var userSelect = 'div#user-add-existing-dialog-form > form > fieldset > select#username';
-                            $(userSelect).append(newOption);
                         }
 
                     })
@@ -95,20 +103,23 @@ $(function () {
 
                         message.showMessage('error', 'Server Fault');
 
+                        // Restore Actions html
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
 
+                        // Hide progressbar and enable widget view links
+                        disableProgressbar(progressbar, "users", true);
+                        disableActions("remove-user", false);
                         disableLinks(false);
-                        setVisible(progressbar, false);
+                        checkAddUser();
                     });
 
                 $(this).dialog("close");
             }
         },
         close: function () {
-            $(this).dialog("close");
         }
     });
 
@@ -117,12 +128,13 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
         user = document.getElementById(id + "-name-text");
 
+        // Add name-text to form
         $('div#user-remove-confirm-form > p > span.user-name').empty().append($(user).text());
-
         $('#user-remove-confirm-form').dialog("open");
     });
 });

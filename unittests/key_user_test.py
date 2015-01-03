@@ -22,8 +22,9 @@ print "Instantiating user_ops object."
 use = user_ops(d)
 '''
 print "listing cloud users"
-cloud = use.list_cloud_users()
+cloud = use.list_cloud_user_names()
 print cloud
+
 
 x = []
 for y in cloud:
@@ -34,6 +35,7 @@ for y in cloud:
 #    print "here"
 #else:
 #    print "not here"
+
 
 '''
 role_id = util.get_def_mem_role()
@@ -101,15 +103,15 @@ print create
 
 
 print "Create a new power user."
-new_pu_dict = {"username":'shitbird5',"password":"test","userrole":"pu","email":"testpu@domain.com"}
+new_pu_dict = {"username":'test',"password":"test","user_role":"pu","email":"testpu@domain.com","project_id":"9a2b2eae323f437eb60183d26fa76a50"}
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
-'''
+
 add_user_dict = {"username":"admin","user_role":'admin',"project_name":'jon1'}
 add = use.add_user_to_project(add_user_dict)
 print add
-'''
+
 print "getting test power user info"
 user_info = {"username":'admin',"project_name":'trans_default'}
 get_p = use.get_user_info(user_info)
@@ -155,11 +157,11 @@ time.sleep(2)
 print "----------------------------------------------"
 
 print "Removing user from project"
-
-remove_user_dict = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
+'''
+remove_user_dict = {"user_id":"19706e3221ec4c2792982f893de78339","project_id":'9a2b2eae323f437eb60183d26fa76a50'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
-
+'''
 print "Deleteing a testuser"
 delete = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
 

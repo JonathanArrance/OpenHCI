@@ -496,9 +496,8 @@ function appendAndFadeIn(selector, newContent) {
 function refreshSelect(select, hashTable) {
     $(select).empty();
     for (var item in hashTable.items) {
-        var i = hashTable.getItem(item);
         $(select).append(
-                '<option value="' + i.value + '">' + i.option + '</option>'
+                '<option value="' + hashTable.items[item].value + '">' + hashTable.items[item].option + '</option>'
         );
     }
 }
@@ -587,9 +586,17 @@ var routers = new HashTable(),
 
 // --- USERS/SECURITY
 
-// --- UNASSIGNED USERS
+var users = new HashTable(),
+    usernames = new HashTable(),
+    orphanedUserOpts = new HashTable();
 
-var unassignedUsers = 0;
+function checkAddUser() {
+    if (orphanedUserOpts.length > 0) {
+        setVisible("#add-existing-user", true);
+    } else if (orphanedUserOpts.length <= 0) {
+        setVisible("#add-existing-user", false);
+    }
+}
 
 // --- BUG FIXER: Add <div id="delete-check></div> before TEXT NODES needing to be deleted on page load
 function deleteCheck(containerId) {

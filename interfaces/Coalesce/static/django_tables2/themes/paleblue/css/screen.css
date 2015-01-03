@@ -21,12 +21,20 @@ table.paleblue a:hover {
     color: #036;
 }
 
-table.paleblue td,
+table.paleblue td {
+    padding: 5px;
+    line-height: 13px;
+    border-bottom: 1px solid silver;
+    border-left: 1px solid silver;
+    text-align: center;
+}
+
 table.paleblue th {
     padding: 5px;
     line-height: 13px;
     border-bottom: 1px solid silver;
     border-left: 1px solid silver;
+    background-color: #F2F2F2;
     text-align: left;
 }
 

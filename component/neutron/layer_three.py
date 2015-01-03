@@ -9,6 +9,8 @@ import json
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
+import transcirrus.component.neutron.error as ec
+
 from transcirrus.common.api_caller import caller
 from transcirrus.component.neutron.ports import port_ops
 from transcirrus.common.auth import get_token
@@ -228,7 +230,8 @@ class layer_three_ops:
                     r_dict = {'router_name':router_dict['router_name'],'router_id':load['router']['id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can create a new router.")
             raise Exception("Only an admin or a power user can create a new router.")
@@ -314,7 +317,8 @@ class layer_three_ops:
                     r_dict = {'router_name':self.name,'router_admin_state':self.state}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only admins and power users can update router params.")
             raise Exception("Only admins and power users can update router params.")
@@ -519,7 +523,8 @@ class layer_three_ops:
                     r_dict = {'router_id': add_dict['router_id'],'router_name':self.router[0][1],'subnet_name': self.subnet[0][0],'subnet_id': load['subnet_id'],'port_id': load['port_id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Users can not add ports to routers.")
             raise Exception("Users can not add ports to routers.")
@@ -625,7 +630,8 @@ class layer_three_ops:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
 
         else:
             logger.sys_error("Users can not remove ports to routers.")
@@ -745,7 +751,8 @@ class layer_three_ops:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'],rest['data'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Users can not add gateways to routers.")
             raise Exception("Users can not add gateways to routers.")
@@ -829,8 +836,9 @@ class layer_three_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
-            logger.sys_error("Users can not remove ports to routers.")
-            raise Exception("Users can not remove ports to routers.")
+            #logger.sys_error("Users can not remove ports to routers.")
+            #raise Exception("Users can not remove ports to routers.")
+            ec.error_codes(rest)
 
     def list_router_ports(self,input_dict):
         """
@@ -1031,7 +1039,8 @@ class layer_three_ops:
                 return r_dict
         
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'],rest['data'])
+            ec.error_codes(rest)
 
     def update_floating_ip(self,update_dict):
         """
@@ -1160,7 +1169,8 @@ class layer_three_ops:
                 r_dict = {'floating_ip':update_dict['floating_ip'],'floating_ip_id':floater[0][0],'instance_name':inst[0][0],'instance_id':inst[0][1]}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
     def deallocate_floating_ip(self,del_dict):
         """
@@ -1248,4 +1258,5 @@ class layer_three_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'],rest['data'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)

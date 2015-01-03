@@ -126,6 +126,7 @@ $(function () {
                                 $(ipActionsCell).append(newIpAction).fadeIn();
                             }
 
+                            // Remove from instances
                             instances.removeItem(confId);
                             instanceOpts.removeItem(confId);
 
@@ -149,8 +150,8 @@ $(function () {
                         // Hide progressbar and enable widget view links
                         checkAssignFip();
                         disableProgressbar(progressbar, "instances", true);
-                        disableLinks(false);
                         disableActions("delete-instance", false);
+                        disableLinks(false);
                     });
 
                 $(this).dialog("close");
@@ -165,12 +166,12 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        // Get target row element, get id from that element and use that to get the instance-name-text
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
         instance = document.getElementById(id + "-name-text");
 
-        // Add instance-name-text to delete-confirm-form
+        // Add name-text to form
         $('div#instance-delete-confirm-form > p > span.instance-name').empty().append($(instance).text());
 
         $('#instance-delete-confirm-form').dialog("open");

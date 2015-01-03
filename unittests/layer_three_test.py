@@ -73,12 +73,12 @@ print "deleteing router"
 router_dict = {'router_id':'411fb076-5f22-474b-8b8b-d05bb646b197','project_id':"84d3e074012a42ce919771c503993f4e"}
 yo = router.delete_router(router_dict)
 print yo
-
+'''
 print "Allocating a new floating ip"
-s = {'ext_net_id':"bf14df23-065b-4aaf-ab2a-8ca77fca2755",'project_id':"a38c70b7a87c404cab33d0a5959ba57a"}
+s = {'ext_net_id':"1d8bb1cd-85b6-45fa-8b43-f51eb302aa25",'project_id':"9a2b2eae323f437eb60183d26fa76a50"}
 yo = router.allocate_floating_ip(s)
 print yo
-
+'''
 print "Listing floating ips"
 yo2 = router.list_floating_ips()
 print yo2
@@ -88,12 +88,12 @@ for y in yo2:
     yo3 = router.get_floating_ip(y['floating_ip_id'])
     print yo3
     
-'''
+
 print "attaching floating ip to instance"
 update_dict = {'floating_ip':'192.168.10.71','instance_id':"ac65509e-da9d-4d2a-b82f-ad269287367d",'project_id':"1c52c0fdf145438d9a8b3b114cbc608a",'action':"add"}
 yo4 = router.update_floating_ip(update_dict)
 print yo4
-'''
+
 print "Listing floating ips"
 yo5 = router.list_floating_ips()
 print yo5

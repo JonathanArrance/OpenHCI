@@ -49,7 +49,7 @@ $(function () {
 
                 if (data.status == 'error') {
 
-                    message.showMessage('error', data.message);
+                    message.showMessage('error', "No available IPs.  If you just deallocated an IP, wait a few minutes and try again.");
                 }
 
                 if (data.status == 'success') {

@@ -264,7 +264,8 @@ def project_view(request, project_id):
     ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
-    aso = account_service_ops(auth)
+    #do not call until version2
+    #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -281,7 +282,9 @@ def project_view(request, project_id):
         ousers = uo.list_orphaned_users()
         if ousers:
             for ouser in ousers:
-                ouserinfo.append(ouser['username'])
+                ouserinfo.append({'username': ouser['username'], 'user_role': ouser['user_group'],
+                                  'user_enabled': ouser['user_enabled'], 'keystone_user_id': ouser['keystone_user_id'],
+                                  'email': ouser['user_email']})
     except:
         ousers=[]
 
@@ -291,10 +294,14 @@ def project_view(request, project_id):
     volumes       = vo.list_volumes(project_id)
     volume_info={}
     snapshots     = sno.list_snapshots(project_id)
-    try:
-        containers    = aso.get_account_containers(project_id)
-    except:
-        containers = []
+
+    #do not call until version2
+    #try:
+    #    containers    = aso.get_account_containers(project_id)
+    #except:
+    #    containers = []
+    containers = []
+
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
@@ -402,7 +409,8 @@ def pu_project_view(request, project_id):
     go = glance_ops(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
-    aso = account_service_ops(auth)
+    #do not use until version2
+    #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
     users = to.list_tenant_users(project_id)
@@ -429,10 +437,15 @@ def pu_project_view(request, project_id):
     volumes       = vo.list_volumes(project_id)
     volume_info={}
     snapshots     = sno.list_snapshots(project_id)
-    try:
-        containers    = aso.get_account_containers(project_id)
-    except:
-        containers = []
+
+    #do not use until version2
+    #try:
+    #    containers    = aso.get_account_containers(project_id)
+    #except:
+    #    containers = []
+    containers = []
+
+
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
@@ -752,7 +765,6 @@ def download_public_key(request, sec_key_id, sec_key_name, project_id):
     response.write(key_info['public_key'])
     return response
 
-
 def attach_server_to_network(request, server_id, project_id, net_id):
     auth = request.session['auth']
     so = server_ops(auth)
@@ -760,7 +772,6 @@ def attach_server_to_network(request, server_id, project_id, net_id):
     referer = request.META.get('HTTP_REFERER', None)
     redirect_to = urlsplit(referer, 'http', False)[2]
     return HttpResponseRedirect(redirect_to)
-
 
 def volume_view(request, project_id, volume_id):
     auth = request.session['auth']
@@ -914,7 +925,6 @@ def create_keypair(request, key_name, project_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not create the security key: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
 
 # Import a local (user's laptop) image and add it to glance & database. The image has already been uploaded via the broswer
 # to memory or a temp file so we just need to transfer the contents to a file we control.
@@ -1306,7 +1316,6 @@ def create_vm_spec(request,name,ram,boot_disk,cpus,swap=None,ephemeral=None,publ
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-
 def delete_vm_spec(request,flavor_id):
     output = {}
     try:
@@ -1568,7 +1577,6 @@ def power_cycle(request, project_id, instance_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
 
 def power_off_server(request,project_id,server_id):
     out = {}

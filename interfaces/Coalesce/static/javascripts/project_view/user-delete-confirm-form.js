@@ -1,13 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var id = '';
-    var user = '';
-    var targetRow;
-
-    // Widget Elements
-    var progressbar = $("#users_progressbar"),
-        placeholder = '<tr id="#users_placeholder"><td><p><i>This project has no images</i></p></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -17,6 +11,16 @@ $(function () {
             }
         }
     });
+
+    // Local Variables
+    var id,
+        user,
+        targetRow;
+
+    // Widget Elements
+    var progressbar = $("#users_progressbar"),
+        table = $("#users_list"),
+        placeholder = '<tr id="users_placeholder"><td><p><i>This project has no images</i></p></td><td></td></tr>';
 
     $('#user-delete-confirm-form').dialog({
         autoOpen: false,
@@ -36,19 +40,23 @@ $(function () {
             "Confirm": function () {
 
                 // Confirmed Selections
-                var confId = id,
+                var confRow = targetRow,
+                    confId = id,
                     confUsername = $(user).text();
-
-                var actionsCell = document.getElementById(confId + "-actions-cell");
-                var actionsHtml = actionsCell.innerHTML;
 
                 message.showMessage('notice', "Deleting " + confUsername + ".");
 
-                disableLinks(true);
+                // Store actions cell html
+                var actionsCell = document.getElementById(confId + "-actions-cell");
+                var actionsHtml = actionsCell.innerHTML;
 
-                // Initialize progressbar and make it visible if hidden
+                // Disable widget view links and widgets actions
+                disableLinks(true);
+                disableActions("delete-user", true);
+
+                // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "users", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -65,6 +73,7 @@ $(function () {
 
                             message.showMessage('error', data.message);
 
+                            // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -73,32 +82,39 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            $(targetRow).fadeOut().remove();
-                        }
+                            // Remove row
+                            confRow.fadeOut().remove();
 
-                        // If last user, reveal placeholder
-                        var rowCount = $('#users_list tr').length;
-                        if (rowCount < 2) {
-                            $('#users_list').append(placeholder).fadeIn();
-                        }
+                            // Remove from users
+                            users.removeItem(confUsername);
 
+                            // If last user, reveal placeholder
+                            var rowCount = $('#users_list tr').length;
+                            if (rowCount < 2) {
+                                $(table).append(placeholder).fadeIn();
+                            }
+                        }
                     })
                     .fail(function () {
+
                         message.showMessage('error', 'Server Fault');
 
+                        // Restore Actions html
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
+
+                        // Hide progressbar and enable widget view links
+                        disableProgressbar(progressbar, "users", true);
+                        disableActions("delete-user", false);
                         disableLinks(false);
-                        setVisible(progressbar, false);
                     });
 
                 $(this).dialog("close");
             }
         },
         close: function () {
-            $(this).dialog("close");
         }
     });
 
@@ -107,10 +123,12 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
         user = document.getElementById(id + "-name-text");
 
+        // Add name-text to form
         $('div#user-delete-confirm-form > p > span.user-name').empty().append($(user).text());
 
         $('#user-delete-confirm-form').dialog("open");

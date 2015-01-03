@@ -1,8 +1,18 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
 
-    // Dialog Form Elements
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    // Form Elements
     var name = $("#username"),
         email = $("#email"),
         password = $("#password"),
@@ -13,15 +23,6 @@ $(function () {
     // Widget Elements
     var progressbar = $("#users_progressbar"),
         table = $("#users_list");
-
-    $.ajaxSetup({
-        crossDomain: false, // obviates need for sameOrigin test
-        beforeSend: function (xhr, settings) {
-            if (!csrfSafeMethod(settings.type)) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
 
     $("#user-dialog-form").dialog({
         autoOpen: false,
@@ -40,11 +41,13 @@ $(function () {
         buttons: {
             "Create Account": function () {
 
-                allFields.removeClass("ui-state-error");
+                // Remove UI validation flags
+                clearUiValidation(allFields);
 
                 var isValid =
                     checkLength(name, "username", 3, 16) &&
                     checkUsername(name) &&
+                    checkDuplicateName(name, users) &&
                     checkLength(email, "email", 6, 80) &&
                     checkEmail(email) &&
                     checkLength(password, "password", 5, 16) &&
@@ -55,26 +58,31 @@ $(function () {
 
                     // Confirmed Selections
                     var confName = name.val(),
+                        confPassword = password.val(),
                         confEmail = email.val(),
                         confRole = role.val();
 
                     message.showMessage('notice', 'Creating new user ' + name.val());
 
+                    // Hide widget buttons and disable widget view links
                     setVisible("#create-user", false);
                     setVisible("#add-existing-user", false);
                     disableLinks(true);
 
                     // Initialize progressbar and make it visible if hidden
                     $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    disableProgressbar(progressbar, "users", false);
 
-                    $.getJSON('/create_user/' + name.val() + '/' + password.val() + '/' + role.val() + '/' + email.val() + '/' + PROJECT_ID + '/')
+                    $.getJSON('/create_user/' + confName + '/' + confPassword + '/' + confRole + '/' + confEmail + '/' + PROJECT_ID + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {
+
                                 message.showMessage('error', data.message);
                             }
+
                             if (data.status == 'success') {
+
                                 message.showMessage('success', data.message);
 
                                 // Initialize empty string for new router row
@@ -98,6 +106,12 @@ $(function () {
 
                                 // Append new row to router-list
                                 table.append(newRow).fadeIn();
+
+                                users.setItem(
+                                    data.username,
+                                    { id: data.user_id, enabled: "TRUE", username: data.username,
+                                        email: confEmail, role: confRole, removed: "FALSE" }
+                                );
                             }
                         })
                         .fail(function () {
@@ -106,22 +120,22 @@ $(function () {
                         })
                         .always(function () {
 
-                            setVisible(progressbar, false);
+                            // Reset interface
+                            disableProgressbar(progressbar, "users", true);
                             setVisible("#create-user", true);
-                            setVisible("#add-existing-user", true);
                             disableLinks(false);
+                            resetUiValidation(allFields);
+                            checkAddUser();
                         });
 
                     $(this).dialog("close");
-
-                    allFields.val("").removeClass("ui-state-error");
-                    $(".error").fadeOut().remove();
                 }
             }
         },
         close: function () {
-            allFields.val("").removeClass("ui-state-error");
-            $(".error").fadeOut().remove();
+
+            // Reset form validation
+            resetUiValidation(allFields);
         }
     });
 

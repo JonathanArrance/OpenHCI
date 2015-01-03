@@ -10,6 +10,7 @@ import re
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+import transcirrus.component.keystone.error as ec
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -80,7 +81,6 @@ class user_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
     def create_user(self,new_user_dict):
-        logger.sys_info("%s"  %(new_user_dict))
         """
         DESC: create a new user in both the transcirrus and OpenStack Keystone DB
         INPUT: new_user_dict - username - req
@@ -120,7 +120,7 @@ class user_ops:
                 logger.sys_error("User status not sufficient.")
                 raise Exception("User status not sufficient.")
 
-            #standard users can create a project
+            #standard users can create a user
             if(self.user_level >= 1):
                 logger.sys_error("Only admins can create a user.")
                 raise Exception("Only admins can create a user.")
@@ -199,11 +199,11 @@ class user_ops:
             #check the response and make sure it is a 200 or 201
             if((rest['response'] == 201) or (rest['response'] == 200)):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
                 new_user_id = load['user']['id']
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
 
             if(self.new_user_proj_id == "NULL"):
                 self.proj_name = "NULL"
@@ -217,7 +217,6 @@ class user_ops:
                 insert = self.db.pg_insert("trans_user_info",ins_dict)
             except Exception as e:
                 self.db.pg_transaction_rollback()
-                logger.sql_error("%s" %(e))
                 #back the user out if an exception is thrown
                 raise e
             else:
@@ -443,8 +442,8 @@ class user_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'])
 
-                r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
-                return r_dict
+            r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
+            return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
@@ -566,7 +565,7 @@ class user_ops:
                 new_user_id = ""
             except Exception as e:
                 logger.sys_error('%s' %(e))
-                raise
+                raise e
 
             if(rest['response'] == 200):
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
@@ -1114,6 +1113,39 @@ class user_ops:
     #however one role must be the default admin, or Member role.
     def list_user_roles():
         print "not implemented"
+
+    def list_cloud_user_names(self):
+        """
+        DESC: List all of the user names that are in the cloud sysytem.
+        INPUT: none
+        OUTPUT: array of usernames
+        ACCESS: Only admins can list all of the cloud user names.
+        NOTE:
+        """
+        if(self.is_admin == 1):
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except:
+                logger.sql_error("Could not connect to the DB.")
+                raise Exception("Could not connect to the DB.")
+
+            r_array = []
+            try:
+                get_users = {'select':'user_name', 'from':'trans_user_info'}
+                users = self.db.pg_select(get_users)
+
+                for user in users:
+                    r_array.append(user[0])
+
+                return r_array
+            except:
+                logger.sql_error('Could not get a list of users.')
+                raise Exception('Could not get a list of users.')
+        else:
+            logger.error('Only admins can get cloud user names.')
+            raise Exception('Only admins can get cloud user names.')
 
     def list_cloud_users(self):
         """
