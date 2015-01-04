@@ -1781,7 +1781,7 @@ def add_existing_user(request, username, user_role, project_id):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        user_dict = {'username': username, 'user_role':user_role, 'project_id': project_id}
+        user_dict = {'username': username, 'user_role':user_role, 'project_id': project_id, 'update_primary':True}
         out = uo.add_user_to_project(user_dict)
         out['status'] = 'success'
         out['message'] = 'The user %s has been added to the project.'%(username)
