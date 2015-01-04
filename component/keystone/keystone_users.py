@@ -467,11 +467,12 @@ class user_ops:
             raise Exception("user_role_dict not specified for add_role_to_user operation.")
         if((user_role_dict['user_role'] == 'admin') or (user_role_dict['user_role'] == 'user') or (user_role_dict['user_role'] == 'pu')):
             logger.sys_info("Valid Keystone user role passed")
-        if('update_primary' not in user_role_dict):
-            user_role_dict['update_primary'] = False
         else:
             logger.sys_info("Invalid Keystone user role passed")
             raise Exception("Invalid Keystone user role passed")
+
+        if('update_primary' not in user_role_dict):
+            user_role_dict['update_primary'] = False
 
         #check if the user creating a new account is an admin
         if(self.is_admin == 1):
@@ -593,8 +594,8 @@ class user_ops:
                         #need to update trans_usr_table
                         input_dict = {'proj_name': proj[0][0],'proj_id': user_role_dict['project_id'],'user_name': user_role_dict['username'],'user_id': user[0][0]}
                         insert = self.db.pg_insert("trans_user_projects",input_dict)
-                        if(user_role_dict['update_primary'] == True):
-                            update_dict = {'table':"trans_user_info",'set':"keystone_role='admin',user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                        if(user_role_dict['update_primary'] is True):
+                            update_dict = {'table':"trans_user_info",'set':"user_group_membership='admin',keystone_role='admin',user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
                             self.db.pg_update(update_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
@@ -606,7 +607,6 @@ class user_ops:
 
                 elif((user_role_dict['username'] != 'admin') and (user_group_id >= 1)):#may be able to remove this check, more testing needed
                     try:
-                        logger.sql_error('adding a user to the project')
                         load = json.loads(rest['data'])
                         self.db.pg_transaction_begin()
                         #need to update trans_usr_table
@@ -688,7 +688,6 @@ class user_ops:
                     param = 'admin_role_id'
                 else:
                     param = 'member_role_id'
-
                 get_key_role_id = {"select":'param_value',"from":'trans_system_settings',"where":"parameter='%s'" %(param)}
                 role_id = self.db.pg_select(get_key_role_id)
             except:
@@ -711,14 +710,13 @@ class user_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
                 api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][0],delete_dict['user_id'],role_id[0][0])
-                logger.sys_info("%s"%(api_path))
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-            #    logger.sys_error('%s' %(e))
-                raise
+                logger.sys_error('%s' %(e))
+                raise e
 
             if(rest['response'] == 204):
                 #read the json that is returned
@@ -735,9 +733,6 @@ class user_ops:
                         raise e
                     else:
                         self.db.pg_transaction_commit()
-                        self.db.pg_close_connection()
-
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 try:
                     self.db.pg_transaction_begin()
                     up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"keystone_user_uuid='%s'" %(delete_dict['user_id'])}
