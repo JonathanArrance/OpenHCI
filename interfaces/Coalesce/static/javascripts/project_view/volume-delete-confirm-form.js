@@ -133,7 +133,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-volume', function () {
+    $(document).on('click', '.delete-volume', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

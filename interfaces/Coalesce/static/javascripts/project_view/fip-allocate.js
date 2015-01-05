@@ -28,7 +28,7 @@ $(function () {
         }
     });
 
-    $("#allocate_ip").click(function () {
+    $("#allocate_ip").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

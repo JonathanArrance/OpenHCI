@@ -56,7 +56,7 @@ $(function () {
     });
 
     // Open modal form when delete-project button clicked
-    $("#delete-project").click(function () {
+    $("#delete-project").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

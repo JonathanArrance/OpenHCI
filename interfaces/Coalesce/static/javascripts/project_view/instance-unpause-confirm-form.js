@@ -39,7 +39,8 @@ $(function () {
 
                 // Confirmed Selections
                 var confId = id,
-                    confInstance = $(instance).text();
+                    confInstance = $(instance).text(),
+                    confConsoleHtml = consoleLinks.items[confId].html;
 
                 message.showMessage('notice', "Unpausing " + confInstance + ".");
 
@@ -87,7 +88,7 @@ $(function () {
 
                             // Create new actions
                             var newActions =
-                                '<a href="/vnc_auto.html?token=' + confId + '" target="_blank">console</a>' +
+                                confConsoleHtml +
                                 '<span class="instance-actions-pipe"> | </span>' +
                                 '<a href="#" class="pause-instance ' + confId + '-disable-action">pause</a>' +
                                 '<span class="instance-actions-pipe"> | </span>' +
@@ -129,7 +130,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.unpause-instance', function () {
+    $(document).on('click', '.unpause-instance', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

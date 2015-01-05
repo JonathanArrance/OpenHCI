@@ -119,7 +119,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-image', function () {
+    $(document).on('click', '.delete-image', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

@@ -2860,6 +2860,34 @@ table [class*=span],
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
+.well-wide {
+    overflow-x: scroll;
+    border: 2px solid #808080;
+}
+
+.table-wide {
+    font: 11px/14px "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table-wide td {
+    padding: 5px;
+    line-height: 13px;
+    border-bottom: 1px solid #C0C0C0;
+    border-left: 1px solid #C0C0C0;
+    text-align: center;
+}
+
+.table-wide th {
+    padding: 5px;
+    line-height: 13px;
+    border-bottom: 1px solid #C0C0C0;
+    border-left: 1px solid #C0C0C0;
+    background-color: #F2F2F2;
+    text-align: left;
+}
+
 .legend-header {
     background-color: #1C3C77;
     color: #FFFFFF;
@@ -2912,8 +2940,8 @@ table [class*=span],
 }
 
 .sub-legend {
-    background-color: #A1A7AD!important;
-border: 1px solid #696969!important;
+    background-color: #A1A7AD !important;
+    border: 1px solid #696969 !important;
 }
 
 .top {
@@ -2921,7 +2949,7 @@ border: 1px solid #696969!important;
 }
 
 .no-padding {
-    padding: 0px!important;
+    padding: 0px !important;
 }
 
 .fade {
@@ -4356,6 +4384,7 @@ a.badge:hover {
 .btn-mini .badge {
     top: 0;
 }
+
 /*
 
 @-webkit-keyframes progress-bar-stripes {
@@ -5010,26 +5039,26 @@ th > small {
     background-repeat: no-repeat;
 }
 
-.spinner{
+.spinner {
     position: absolute;
     z-index: 10000;
     width: 100%;
     height: 100%;
-    background: rgba( 1,1,1,.2);
+    background: rgba(1, 1, 1, .2);
     margin: auto;
     text-align: center;
     vertical-align: middle;
     padding-top: 25%;
 }
 
-.spinner-hidden{
+.spinner-hidden {
     z-index: 0;
     display: none;
     height: 0px;
     width: 0px;
 }
 
-.spinner-hidden i.fa{
+.spinner-hidden i.fa {
     z-index: 0;
     display: none;
     height: 0px;
@@ -5037,17 +5066,17 @@ th > small {
 
 }
 
-.spinner i.fa{
+.spinner i.fa {
     margin: auto;
     font-size: 112px;
-    color: rgba(1,1,1,0.4);
+    color: rgba(1, 1, 1, 0.4);
 }
 
-.dialog-container{
-    display:none;
+.dialog-container {
+    display: none;
 }
 
-.widget-section-header{
+.widget-section-header {
     font-size: 16px;
     line-height: 20px;
     margin: 10px 0 0 20px;
@@ -5058,11 +5087,12 @@ th > small {
     border-top-right-radius: 4px;
     box-shadow: -1px 0 #696969, 0 0px #696969, 1px 0 #696969, 0 -1px #696969;
 }
-.widget-section-header:hover{
+
+.widget-section-header:hover {
     background-color: rgba(142, 182, 255, 0.4);
 }
 
-.widget-section{
+.widget-section {
     background-color: rgba(178, 202, 255, 0.2);
     margin: 0;
     padding: 10px 0;
@@ -5071,11 +5101,12 @@ th > small {
     border-radius: 4px;
     box-shadow: -1px 0 #696969, 0 1px #696969, 1px 0 #696969, 0 0px #696969;
 }
-.widget-disabled{
+
+.widget-disabled {
     background-color: rgba(255, 255, 255, 0.75);
 }
 
-.widget-table{
+.widget-table {
     border-collapse: collapse;
     border: 2px solid #696969;
     width: 100%;
@@ -5126,8 +5157,8 @@ th > small {
 
 /* INSTANCE WIDGET */
 
-#instance_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#instance_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 .instance-paused {
@@ -5147,8 +5178,9 @@ th > small {
     text-shadow: -1px 0 #696969, 0 1px #696969, 1px 0 #696969, 0 -1px #696969;
     font-weight: bold;
 }
+
 #upload_bar {
-	background: #1C3C77;
+    background: #1C3C77;
 }
 
 #upload_progress {
@@ -5156,14 +5188,14 @@ th > small {
     display: inline-block;
 }
 
-#image_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#image_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 /* FIP WIDGET */
 
-#fip_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#fip_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 .fip-assigned {
@@ -5172,13 +5204,13 @@ th > small {
 
 /* VOLUME WIDGET */
 
-#vol_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#vol_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 .volume-available-storage-bar {
-    width: 198px!important;
-    height: 18px!important;
+    width: 198px !important;
+    height: 18px !important;
     margin-bottom: 5px;
 }
 
@@ -5198,8 +5230,8 @@ th > small {
 
 /* ROUTER WIDGET */
 
-#router_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#router_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 .router-deleted {
@@ -5208,14 +5240,14 @@ th > small {
 
 /* PRIVATE NETWORKS WIDGET */
 
-#privateNet_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#privateNet_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 /* USERS WIDGET */
 
-#users_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#users_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 .user-disabled {
@@ -5224,12 +5256,12 @@ th > small {
 
 /* SECURITY GROUP WIDGET */
 
-#secGroup_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#secGroup_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 /* KEY PAIR WIDGET */
 
-#keypair_progressbar  > .ui-widget-header {
-    background-color: #FF8617!important;
+#keypair_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }

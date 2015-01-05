@@ -21,7 +21,6 @@ $(function () {
     // Widget Elements
     var progressbar = $("#privateNet_progressbar"),
         createButton = $("#create-private-network"),
-        placeholder = $("#privateNet_placeholder"),
         table = $("#privateNet_list");
 
     $("#private-network-dialog-form").dialog({
@@ -55,7 +54,7 @@ $(function () {
                         confShared = shared.val(),
                         confAdminState = admin_state.val();
 
-                    message.showMessage('notice', 'Creating new router ' + confPrivateNet);
+                    message.showMessage('notice', 'Creating new network ' + confPrivateNet);
 
                     // Disable widget view links and hide create button
                     disableLinks(true);
@@ -90,15 +89,14 @@ $(function () {
                                     '<td id="' + data.net_id + '-subnet-cell"><span id="' + data.subnet.subnet_id + '">' + data.subnet.subnet_name + '</span></td>' +
                                     '<td id="' + data.net_id + '-actions-cell"><a href="#" class="delete-privateNet">delete</a></td>' + '</tr>';
 
+                                // Append new row
+                                table.append(newRow).fadeIn();
+
                                 // Check to see if this is the first network to be generated, if so remove placeholder
                                 var rowCount = $("#privateNet_list tr").length;
                                 if (rowCount > 2) {
-                                    placeholder.remove().fadeOut();
-                                    setVisible('#create-router', true)
+                                    $("#privateNet_placeholder").remove().fadeOut();
                                 }
-
-                                // Append new row
-                                table.append(newRow).fadeIn();
 
                                 // Add to privateNetworks
                                 privateNetworks.setItem(data.net_id, { id: data.net_id, name: data.net_name, router: "None" });
@@ -120,6 +118,7 @@ $(function () {
                             setVisible(createButton, true);
                             disableLinks(false);
                             resetUiValidation(allFields);
+                            checkCreateRouter();
                         });
 
                     $(this).dialog("close");
@@ -134,7 +133,7 @@ $(function () {
     });
 
     $("#create-private-network")
-        .click(function () {
+        .click(function (event) {
 
             // Prevent scrolling to top of page on click
             event.preventDefault();

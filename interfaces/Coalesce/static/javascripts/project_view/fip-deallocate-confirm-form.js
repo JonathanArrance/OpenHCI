@@ -120,7 +120,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.deallocate_ip', function () {
+    $(document).on('click', '.deallocate_ip', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

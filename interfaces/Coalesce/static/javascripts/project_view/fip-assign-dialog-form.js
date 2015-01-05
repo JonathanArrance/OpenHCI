@@ -103,7 +103,7 @@ $(function () {
         }
     });
 
-    $("#assign_ip").click(function () {
+    $("#assign_ip").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

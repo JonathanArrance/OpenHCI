@@ -125,7 +125,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.pause-instance', function () {
+    $(document).on('click', '.pause-instance', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

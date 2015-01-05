@@ -134,7 +134,7 @@ $(function () {
     });
 
     // Open modal form when create-volume button is clicked
-    $(document).on("click", "#create-volume", function () {
+    $(document).on("click", "#create-volume", function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

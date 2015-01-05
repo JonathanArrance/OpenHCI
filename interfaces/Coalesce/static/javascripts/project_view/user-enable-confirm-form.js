@@ -117,7 +117,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.enable-user', function () {
+    $(document).on('click', '.enable-user', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
