@@ -90,11 +90,13 @@ $(function () {
                                 $(table).append(placeholder).fadeIn();
                             }
 
-                            // Update selects
-                            addToSelect(routers.items[confId].network, privateNetworks.items[routers.items[confId].network].name, $("#priv_net"), privNetRoutOpts);
+                            if (routers.items[confId].network) {
+                                // Update selects
+                                addToSelect(routers.items[confId].network, privateNetworks.items[routers.items[confId].network].name, $("#priv_net"), privNetRoutOpts);
 
-                            // Update private network
-                            privateNetworks.items[routers.items[confId].network].router = "None";
+                                // Update private network
+                                privateNetworks.items[routers.items[confId].network].router = "None";
+                            }
 
                             // Remover from routers
                             routers.removeItem(confId);
@@ -124,7 +126,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-router', function () {
+    $(document).on('click', '.delete-router', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

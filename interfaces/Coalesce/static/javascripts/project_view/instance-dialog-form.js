@@ -95,7 +95,8 @@ $(function () {
                                 if (data.server_info.server_status == "ACTIVE") {
 
                                     newRow +=
-                                        '<a href="#" class="open-instance-console">console</a><span class="instance-actions-pipe"> | </span>' +
+                                        '<a href=\"' + data.server_info.novnc_console + '\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>' +
+                                        '<span class="instance-actions-pipe"> | </span>' +
                                         '<a href="#" class="pause-instance ' + data.server_info.server_id + '-disable-action">pause</a><span class="instance-actions-pipe"> | </span>' +
                                         '<a href="#" class="suspend-instance ' + data.server_info.server_id + '-disable-action">suspend</a>';
                                 }
@@ -134,7 +135,17 @@ $(function () {
                                     data.server_info.server_id,
                                     { value: data.server_info.server_id, option: data.server_info.server_name }
                                 );
+                                consoleLinks.setItem(
+                                    data.server_info.server_id,
+                                    {
+                                        link: data.server_info.novnc_console,
+                                        html: '<a href=\"' + data.server_info.novnc_console + '\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>'
+                                    }
+                                );
 
+                                console.log('<a href=\"' + data.server_info.novnc_console + '\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>');
+                                console.log(consoleLinks.items[data.server_info.server_id]);
+                                
                                 // Update selects
                                 addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
                                 addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
@@ -165,7 +176,7 @@ $(function () {
         }
     });
 
-    $("#create-instance").click(function () {
+    $("#create-instance").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

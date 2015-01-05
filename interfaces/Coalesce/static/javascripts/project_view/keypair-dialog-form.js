@@ -117,7 +117,7 @@ $(function () {
     });
 
     $("#create-keypair")
-        .click(function () {
+        .click(function (event) {
 
             // Prevent scrolling to top of page on click
             event.preventDefault();

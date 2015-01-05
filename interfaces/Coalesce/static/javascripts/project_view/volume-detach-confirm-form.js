@@ -125,7 +125,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.detach-volume', function () {
+    $(document).on('click', '.detach-volume', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

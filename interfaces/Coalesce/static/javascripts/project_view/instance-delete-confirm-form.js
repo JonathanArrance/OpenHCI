@@ -161,7 +161,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-instance', function () {
+    $(document).on('click', '.delete-instance', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

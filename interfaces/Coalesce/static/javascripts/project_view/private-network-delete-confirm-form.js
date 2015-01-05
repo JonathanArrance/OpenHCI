@@ -53,7 +53,6 @@ $(function () {
                 // Disable widget view links and instance actions
                 disableLinks(true);
                 disableActions("delete-privateNet", true);
-                disableActions("delete-router", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
@@ -78,9 +77,7 @@ $(function () {
                     routerRow.addClass("router-deleted");
 
                     // Disable router actions
-                    var action = routerRow.find(".delete-router");
-                    action.bind('click', false);
-                    action.css('color', '#696969');
+                    disableActions("delete-router", true);
 
                     // Initialize progressbar and make it visible
                     $("#router_progressbar").progressbar({value: false});
@@ -99,6 +96,15 @@ $(function () {
                             // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
+
+                            if (routerId != "None") {
+
+                                        checkCreateRouter();
+                                        disableProgressbar("#router_progressbar", "routers", true);
+                                        disableActions("delete-router", false);
+                                        disableLinks(false);
+                                        routerRow.removeClass("router-deleted");
+                            }
                         }
 
                         if (data.status == 'success') {
@@ -153,13 +159,10 @@ $(function () {
 
                                         // Add class to indicate router is being deleted
                                         routerRow.removeClass("router-deleted");
-
-                                        // Enable router actions
-                                        action.unbind('click', false);
-                                        action.css('color', '#AD682B');
                                     })
                                     .always(function () {
 
+                                        checkCreateRouter();
                                         disableProgressbar("#router_progressbar", "routers", true);
                                         disableActions("delete-router", false);
                                         disableLinks(false);
@@ -174,8 +177,8 @@ $(function () {
                             removeFromSelect(confPrivateNet, $("#network_name"), privNetInstOpts);
 
                             // Update selects
-                            removeFromSelect(data.net_name, $("#network_name"), privNetInstOpts);
-                            removeFromSelect(data.net_id, $("#priv_net"), privNetRoutOpts);
+                            removeFromSelect(confPrivateNet, $("#network_name"), privNetInstOpts);
+                            removeFromSelect(confId, $("#priv_net"), privNetRoutOpts);
                         }
                     })
                     .fail(function () {
@@ -191,6 +194,9 @@ $(function () {
                         // Hide progressbar and enable widget view links
                         disableProgressbar(progressbar, "privateNets", true);
                         disableActions("delete-privateNet", false);
+                        if (routerId == "None") {
+                            disableLinks(false);
+                        }
                     });
                 // ---
 
@@ -201,7 +207,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-privateNet', function () {
+    $(document).on('click', '.delete-privateNet', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

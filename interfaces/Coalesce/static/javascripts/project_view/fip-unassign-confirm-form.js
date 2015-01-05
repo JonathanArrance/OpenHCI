@@ -129,7 +129,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.unassign_ip', function () {
+    $(document).on('click', '.unassign_ip', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

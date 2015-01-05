@@ -1,16 +1,26 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
+
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
 
     // Dialog Elements
     var ports = $("#ports"),
         groupName = $("#groupname"),
         groupDesc = $("#groupdesc"),
-        allFields = $([]).add(ports).add(groupName).add(groupDesc),
-        tips = $(".validateTips");
+        allFields = $([]).add(ports).add(groupName).add(groupDesc);
 
     // Widget Elements
     var progressbar = $("#secGroup_progressbar"),
+        createButton = $("#create-security-group"),
         table = $("#secGroup_list");
 
     $.ajaxSetup({
@@ -124,7 +134,7 @@ $(function () {
     });
 
     $("#create-security-group")
-        .click(function () {
+        .click(function (event) {
 
             // Prevent scrolling to top of page on click
             event.preventDefault();

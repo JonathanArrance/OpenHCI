@@ -123,7 +123,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.attach-volume', function () {
+    $(document).on('click', '.attach-volume', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

@@ -106,7 +106,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-secGroup', function () {
+    $(document).on('click', '.delete-secGroup', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

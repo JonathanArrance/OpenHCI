@@ -2860,6 +2860,11 @@ table [class*=span],
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
+.well-wide {
+    overflow-x: scroll;
+    width: 100%;
+}
+
 .legend-header {
     background-color: #1C3C77;
     color: #FFFFFF;

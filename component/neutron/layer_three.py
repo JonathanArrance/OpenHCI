@@ -285,11 +285,9 @@ class layer_three_ops:
 
             try:
                 body = '{"router": {"external_gateway_info": {"network_id": "%s","enable_snat": true}, "name": "%s", "admin_state_up": "%s"}}' %(self.ext_gateway,self.name,self.state)
-                print body
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/v2.0/routers/%s' %(update_dict['router_id'])
-                print api_path
                 token = self.token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
@@ -1015,8 +1013,8 @@ class layer_three_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            logger.sys_error("Could not assign a floating ip to %s. %s"%(input_dict['project_id'],e))
-            raise Exception("Could not assign a floating ip to %s. %s"%(input_dict['project_id'],e))
+            logger.sys_error("Could not allocate a floating ip to %s. %s"%(input_dict['project_id'],e))
+            raise Exception("Could not allocate a floating ip to %s. %s"%(input_dict['project_id'],e))
 
         #new way to process db transaction after API call - experiment
         load = None

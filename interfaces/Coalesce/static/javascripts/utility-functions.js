@@ -9,48 +9,12 @@ var message = new message_handle();
 // CONSOLE ACTIONS
 // ---------------- //
 
-var instanceConsoleLinks = {
-    add: function (id, link) {
-        instanceConsoleLinks[id] = link;
-    },
-    get: function (id) {
-        return instanceConsoleLinks[id];
-    }
-};
+var consoleLinks = new HashTable();
 
-$(document).on('click', '.open-instance-console', function () {
+$(document).on('click', '.open-instance-console', function (event) {
 
     // Prevent scrolling to top of page on click
     event.preventDefault();
-
-    // Open dialog window to contain iFrame
-    $("#instance-console-dialog").dialog({
-        autoOpen: false,
-        height: 482,
-        width: 763,
-        modal: true,
-        resizable: false,
-        closeOnEscape: true,
-        draggable: true,
-        show: "fade",
-        position: {
-            my: "center",
-            at: "center",
-            of: $('#page-content')
-        },
-        close: function () {
-        }
-    });
-
-    // Set iFrame src to instance console link
-    $("#instance-console-frame").attr("src", instanceConsoleLinks.get($(this).parent().parent().attr("id")));
-
-    // Refresh the frame
-    $('#instance-console-frame').attr('src', function (i, val) {
-        return val;
-    });
-
-    $("#instance-console-dialog").dialog("open");
 });
 
 $(document).on('click', '#refresh-console', function () {
@@ -360,7 +324,6 @@ function disableLinks(bool) {
     var activeColor = '#AD682B';
     var disabledColor = '#696969';
 
-
     if (bool) {
         if (disabledLinks <= 0) {
             $(links).addClass('disabled-link');
@@ -531,7 +494,7 @@ function checkAssignFip() {
     }
 }
 
-$(function() {
+$(function () {
     checkAssignFip();
 });
 
@@ -584,6 +547,19 @@ var routers = new HashTable(),
     privNetRoutOpts = new HashTable(),
     privateNetworks = new HashTable();
 
+function checkCreateRouter() {
+
+    if (privNetRoutOpts.length > 0) {
+        setVisible('#create-router', true);
+    } else {
+        setVisible('#create-router', false);
+    }
+}
+
+$(function () {
+    checkCreateRouter();
+});
+
 // --- USERS/SECURITY
 
 var users = new HashTable(),
@@ -597,6 +573,10 @@ function checkAddUser() {
         setVisible("#add-existing-user", false);
     }
 }
+
+$(function () {
+    checkAddUser();
+});
 
 // --- BUG FIXER: Add <div id="delete-check></div> before TEXT NODES needing to be deleted on page load
 function deleteCheck(containerId) {

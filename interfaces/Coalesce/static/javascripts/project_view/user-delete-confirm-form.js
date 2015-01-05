@@ -118,7 +118,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-user', function () {
+    $(document).on('click', '.delete-user', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

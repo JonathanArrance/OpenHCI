@@ -123,7 +123,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.remove-user', function () {
+    $(document).on('click', '.remove-user', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();

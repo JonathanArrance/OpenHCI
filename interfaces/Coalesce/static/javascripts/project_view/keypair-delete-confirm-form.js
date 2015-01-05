@@ -107,7 +107,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-keypair', function () {
+    $(document).on('click', '.delete-keypair', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
