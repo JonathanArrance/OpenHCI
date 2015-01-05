@@ -4,67 +4,69 @@
 
 {% block content %}
 
-    <div class="row-fluid">
-      <div class="span12 well">
+<div class="row-fluid">
+    <div class="span12 well">
         <div class="legend">
-            Nodes   
-        </div>
-        <table class="paleblue widget-table">
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Data IP</th>
-                    <th>Mgmt IP</th>
-                    <th>Controller</th>
-                    <th>Cloud Name</th>
-                    <th>Zone</th>
-                    <th>Status</th>
-                </tr>
-                {% for node in node_info %}
-                    <tr>
-                        <td><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></td>
-                        <td>
-                          {% if node.node_type == "cc" %}
-                            core node
-                          {% elif node.node_type == "cn" %}
-                            compute node
-                          {% elif node.node_type == "sn" %}
-                            storage node
-                          {% endif %}
-                        </td>
-                        <td>{{node.node_data_ip}}</td>
-                        <td>{{node.node_mgmt_ip}}</td>
-                        <td>{{node.node_controller}}</td>
-                        <td>{{node.node_cloud_name}}</td>
-                        <td>{{node.node_nova_zone}}</td>
-                        <td>{{node.status}}</td>
-                    </tr>
-                {% endfor %}
-            </table> 
-       </div><!-- end span6-->
-   </div><!-- end row-fluid-->
-    <div class="row-fluid">
-      <div class="span12 well well-wide">
-        <div class="legend">
-            Projects  
-            <a href="/projects/build"  id="create-project" class="btn" style="float:right">New Project</a>
-            
+            Nodes
         </div>
         <table class="paleblue widget-table">
             <tr>
-                <th>Project Name</th>
-                <th>Project Id</th>
-                <th>Host System Name</th>
-                <th>Host System IP</th>
-                <th>Security Group Name</th>
-                <th>Security Group ID</th>
-                <th>Security Key Name</th>
-                <th>Security Key ID</th>
-                <th>Network Name</th>
-                <th>Network ID</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Data IP</th>
+                <th>Mgmt IP</th>
+                <th>Controller</th>
+                <th>Cloud Name</th>
+                <th>Zone</th>
+                <th>Status</th>
             </tr>
-            {% for proj in project_info %}
-              {% if proj.project_name != "trans_default" %}
+            {% for node in node_info %}
+            <tr>
+                <td><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></td>
+                <td>
+                    {% if node.node_type == "cc" %}
+                    core node
+                    {% elif node.node_type == "cn" %}
+                    compute node
+                    {% elif node.node_type == "sn" %}
+                    storage node
+                    {% endif %}
+                </td>
+                <td>{{node.node_data_ip}}</td>
+                <td>{{node.node_mgmt_ip}}</td>
+                <td>{{node.node_controller}}</td>
+                <td>{{node.node_cloud_name}}</td>
+                <td>{{node.node_nova_zone}}</td>
+                <td>{{node.status}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <!-- end span6-->
+</div><!-- end row-fluid-->
+<div class="row-fluid">
+    <div class="span12 well">
+        <div class="legend">
+            Projects
+            <a href="/projects/build" id="create-project" class="btn" style="float:right">New Project</a>
+
+        </div>
+        <div class="well-wide">
+            <table class="table-wide">
+                <tr>
+                    <th>Project Name</th>
+                    <th>Project Id</th>
+                    <th>Host System Name</th>
+                    <th>Host System IP</th>
+                    <th>Security Group Name</th>
+                    <th>Security Group ID</th>
+                    <th>Security Key Name</th>
+                    <th>Security Key ID</th>
+                    <th>Network Name</th>
+                    <th>Network ID</th>
+                </tr>
+                {% for proj in project_info %}
+                {% if proj.project_name != "trans_default" %}
                 <tr>
                     <td><a href="/projects/{{proj.project_id}}/view">{{proj.project_name}}</a></td>
                     <td>{{proj.project_id}}</td>
@@ -78,12 +80,14 @@
                     <td>{{proj.def_network_id}}</td>
 
                 </tr>
-              {% endif %}
-            {% endfor %}
-        </table>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
 
-      </div><!-- end span6-->
+    </div>
+    <!-- end span6-->
 
-    </div><!-- end row-fluid-->
+</div><!-- end row-fluid-->
 
 {% endblock %}

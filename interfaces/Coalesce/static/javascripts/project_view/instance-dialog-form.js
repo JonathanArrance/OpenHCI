@@ -145,7 +145,7 @@ $(function () {
 
                                 console.log('<a href=\"' + data.server_info.novnc_console + '\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>');
                                 console.log(consoleLinks.items[data.server_info.server_id]);
-                                
+
                                 // Update selects
                                 addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
                                 addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
