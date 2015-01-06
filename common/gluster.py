@@ -242,10 +242,14 @@ class gluster_ops:
         """
         logger.sys_info('\n**Deleteing a gluster volume. Common Def: delete_gluster_volume**\n')
         #do not remove system level gluster vols.
-        if(volume_name == 'instances' or volume_name == 'glance' or volume_name == 'cinder-volume'):
+        if(volume_name == 'instances' or volume_name == 'glance' or volume_name == 'cinder-volume-ssd' or volume_name == 'cinder-volume-spindle'):
             return 'ERROR'
 
         if(self.is_admin == 1):
+            #unmount the volume to be deleted
+            umount = os.system('sudo umount 172.12.24.10:/%s'%(volume_name))
+            if(out != 0):
+                logger.sys_warning('Could not unmount GlusterFS volume %s'%(volume_name))
             self.stop_gluster_volume('%s'%(volume_name))
             out = os.system('echo \''+'y'+'\n\' | sudo gluster volume delete %s'%(volume_name))
             if(out != 0):

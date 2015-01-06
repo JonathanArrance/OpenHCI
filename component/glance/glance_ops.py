@@ -208,7 +208,7 @@ class glance_ops:
             rest = api.call_rest(rest_dict)
             print rest
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not remove the image %s" %(e))
             raise e
 
         if(rest['response'] == 201):

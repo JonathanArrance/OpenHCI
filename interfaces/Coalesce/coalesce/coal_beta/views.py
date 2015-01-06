@@ -1236,16 +1236,16 @@ def delete_router(request, project_id, router_id):
     return HttpResponse(simplejson.dumps(out))
 
 
-def destroy_project(request, project_id, project_name):
+def destroy_project(request, project_id, project_name=None):
     out = {}
     try:
         auth = request.session['auth']
-        proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': False}
+        proj_dict = {'project_name': project_name, 'project_id': project_id, 'keep_users': True}
         des = destroy.destroy_project(auth, proj_dict)
         if(des == 'OK'):
             out = {'status' : "success", 'message' : "Project %s has been deleted." %(proj_dict['project_name'])}
     except Exception, e:
-        out = {'status' : "error", 'message' : "Error deleteing project %s with error %s" % (proj_dict['project_name'], e)}
+        out = {'status' : "error", 'message' : "Error deleteing project %s with error %s, des:%s" % (proj_dict['project_name'], e,des)}
     return HttpResponse(simplejson.dumps(out))
 
 def allocate_floating_ip(request, project_id, ext_net_id):
@@ -1754,9 +1754,9 @@ def remove_user_from_project(request, user_id, project_id):
         uo = user_ops(auth)
         user_dict = {'user_id': user_id, 'project_id':project_id}
         ru = uo.remove_user_from_project(user_dict)
-        #if(ru == 'OK'):
-        out['status'] = 'success'
-        out['message'] = 'The user has been removed from the project, but not deleted.'
+        if(ru == 'OK'):
+            out['status'] = 'success'
+            out['message'] = 'The user has been removed from the project, but not deleted.'
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not remove the user from the project: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))

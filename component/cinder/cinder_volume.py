@@ -510,7 +510,6 @@ class volume_ops:
                 instance_name = inst_name[0][0]
             except Exception as e:
                 logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
-                #raise Exception("Could not get the instance name for instance id %s"%(get_vol[0][8]))
 
         r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name}
         return r_dict

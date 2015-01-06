@@ -552,7 +552,7 @@ class server_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not remove the instance %s" %(e))
             raise e
 
         load = json.loads(rest['data'])
@@ -804,7 +804,7 @@ class server_ops:
                 rest = api.call_rest(rest_dict)
             except Exception as e:
                 self.db.pg_transaction_rollback()
-                logger.sys_error("Could not remove the project %s" %(e))
+                logger.sys_error("Could not attach server to network %s" %(e))
                 raise e
     
             if(rest['response'] == 200):
@@ -991,7 +991,7 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             self.db.pg_transaction_rollback()
-            logger.sys_error("Could not remove the project %s" %(e))
+            logger.sys_error("Could not delete the instance %s" %(e))
             raise e
 
         #check the response and make sure it is a 204

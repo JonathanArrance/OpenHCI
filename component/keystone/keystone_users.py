@@ -745,8 +745,9 @@ class user_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
-                    r_dict = {"response":rest['response'],"reason":rest['reason']}
-                    return r_dict
+                    #r_dict = {"response":rest['response'],"reason":rest['reason']}
+                    #return r_dict
+                    return 'OK'
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
