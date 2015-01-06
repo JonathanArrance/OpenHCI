@@ -1245,7 +1245,7 @@ def destroy_project(request, project_id, project_name=None):
         if(des == 'OK'):
             out = {'status' : "success", 'message' : "Project %s has been deleted." %(proj_dict['project_name'])}
     except Exception, e:
-        out = {'status' : "error", 'message' : "Error deleteing project %s with error %s, des:%s" % (proj_dict['project_name'], e,des)}
+        out = {'status' : "error", 'message' : "Error deleteing project %s with error %s" % (proj_dict['project_name'], e)}
     return HttpResponse(simplejson.dumps(out))
 
 def allocate_floating_ip(request, project_id, ext_net_id):
