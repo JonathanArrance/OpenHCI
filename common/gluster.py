@@ -249,7 +249,7 @@ class gluster_ops:
             #unmount the volume to be deleted
             logger.sys_info('Unmounting volume %s, preparing to delete.'%(volume_name))
             umount = os.system('sudo umount 172.12.24.10:/%s'%(volume_name))
-            if(out != 0):
+            if(umount != 0):
                 logger.sys_warning('Could not unmount GlusterFS volume %s'%(volume_name))
             self.stop_gluster_volume('%s'%(volume_name))
             logger.sys_info('Deleteing volume %s.'%(volume_name))
