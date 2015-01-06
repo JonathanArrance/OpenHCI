@@ -1,7 +1,7 @@
 $(function () {
 
+    // CSRF protection
     var csrftoken = getCookie('csrftoken');
-    var flavor = $("#flavor");
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -12,28 +12,36 @@ $(function () {
         }
     });
 
+    // Form elements
+    var flavor = $("#flavor");
+
+    // View elements
+    var status = $('#instance-status'),
+        consoleWindow = $('#instance-console'),
+        actions = $('#widget-actions'),
+        progressbar = $('#instance-progressbar');
+
     $("#instance-view-resize-dialog-form").dialog({
         autoOpen: false,
-        height: 350,
-        width: 350,
+        height: 125,
+        width: 235,
         modal: true,
         buttons: {
             "Resize Instance": function () {
 
-                var confirmedFlavor = $(flavor).find("option:selected");
-                var status = $('#instance-status'), console = $('#instance-console');
+                var confirmedFlavor = $(flavor).find("option:selected").val();
 
-                message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + confirmedFlavor.text() + "." );
+                message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + flavor.text() + "." );
 
-                $('#widget-actions').slideUp();
+                actions.slideUp();
 
                 // Initialize progressbar and make it visible if hidden
-                $('#instance-progressbar').progressbar({value: false});
-                setVisible('#instance-progressbar', true);
+                progressbar.progressbar({value: false});
+                setVisible(progressbar, true);
 
                 emptyAndAppend(status, "RESIZE");
 
-                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/' + confirmedFlavor.val() + '/resize_server/')
+                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/' + confirmedFlavor + '/resize_server/')
                     .done(function (data) {
 
                         if (data.status == "error") {
@@ -58,28 +66,28 @@ $(function () {
 
                         $('#instance-console-refresh-confirm-form').dialog({
                             resizable: false,
-                            autoOpen: false,
-                            height: 150,
+                            autoOpen: true,
+                            height: 125,
+                            width: 235,
                             modal: true,
                             buttons: {
                                 "Yes": function(){
-                                    $( console ).attr( 'src', function ( i, val ) { return val; });
+
+                                    $( consoleWindow ).attr( 'src', function ( i, val ) { return val; });
                                     $(this).dialog("close");
                                 },
                                 "No": function(){
+
                                     $(this).dialog("close");
                                 }
                             },
                             close: function() { }
                         });
 
-                        $('#widget-actions').slideDown();
-                        setVisible('#instance-progressbar', false);
+                        actions.slideDown();
+                        setVisible(progressbar, false);
                     });
 
-                $(this).dialog("close");
-            },
-            Cancel: function () {
                 $(this).dialog("close");
             }
         },

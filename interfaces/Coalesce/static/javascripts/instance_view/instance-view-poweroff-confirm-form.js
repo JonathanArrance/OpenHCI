@@ -51,6 +51,7 @@ $(function () {
                     .fail(function () {
 
                         message.showMessage('error', 'Server Fault');
+                        emptyAndAppend(status, "ERROR");
                     })
                     .always(function (data) {
 
