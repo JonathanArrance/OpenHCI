@@ -134,13 +134,13 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.power_cycle',
             name='power_cycle'),
 
-    #url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_off_server/$',
-    #	'coalesce.coal_beta.views.power_off_server',
-    #        name='power_off_server'),
-    #
-    #url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_on_server/$',
-    #    'coalesce.coal_beta.views.power_on_server',
-    #        name='power_on_server'),
+    url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_off_server/$',
+    	'coalesce.coal_beta.views.power_off_server',
+           name='power_off_server'),
+
+    url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_on_server/$',
+       'coalesce.coal_beta.views.power_on_server',
+           name='power_on_server'),
 
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/live_migrate_server/$',
 	    'coalesce.coal_beta.views.live_migrate_server',

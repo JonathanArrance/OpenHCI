@@ -14,10 +14,11 @@ $(function () {
 
     // View elements
     var status = $('#instance-status'),
+        consoleWindow = $('#instance-console'),
         actions = $('#widget-actions'),
         progressbar = $('#instance-progressbar');
 
-    $("#instance-view-poweroff-confirm-form").dialog({
+    $("#instance-view-poweron-confirm-form").dialog({
         autoOpen: false,
         height: 125,
         width: 235,
@@ -25,7 +26,7 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                message.showMessage('notice', 'Powering Off');
+                message.showMessage('notice', 'Powering On');
 
                 // Hide other actions
                 actions.slideUp();
@@ -34,7 +35,7 @@ $(function () {
                 $(progressbar).progressbar({value: false});
                 setVisible(progressbar, true);
 
-                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/power_off_server/')
+                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/power_on_server/')
                     .done(function (data) {
 
                         if (data.status == "error") {
@@ -45,7 +46,7 @@ $(function () {
                         if (data.status == "success") {
 
                             message.showMessage('success', data.message);
-                            emptyAndAppend(status, "SHUTOFF");
+                            emptyAndAppend(status, "ACTIVE");
                         }
                     })
                     .fail(function () {
@@ -54,25 +55,50 @@ $(function () {
                     })
                     .always(function (data) {
 
+                        $('#instance-console-refresh-confirm-form').dialog({
+                            resizable: false,
+                            autoOpen: true,
+                            height: 125,
+                            width: 235,
+                            modal: true,
+                            buttons: {
+                                "Yes": function () {
+                                    $(consoleWindow).attr('src', function (i, val) {
+                                        return val;
+                                    });
+                                    $(this).dialog("close");
+                                },
+                                "No": function () {
+                                    $(this).dialog("close");
+                                }
+                            },
+                            close: function () {
+                            }
+                        });
+
                         actions.slideDown();
                         setVisible(progressbar, false);
 
                         if (data.status == "success") {
-                            setVisible("#poweron-server", true);
-                            setVisible("#reboot-server", false);
-                            setVisible("#poweroff-server", false);
-                            setVisible("#cycle-server", false);
+
+                            setVisible("#poweron-server", false);
+                            setVisible("#reboot-server", true);
+                            setVisible("#poweroff-server", true);
+                            setVisible("#cycle-server", true);
                         }
                     });
 
                 $(this).dialog("close");
-            }
+            },
+            Cancel: function () {
+                $(this).dialog("close");
+            }	// Close modal form
         },
         close: function () {
         }
     });
 
-    $('#poweroff-server').click(function () {
-        $("#instance-view-poweroff-confirm-form").dialog("open");
+    $('#poweron-server').click(function () {
+        $("#instance-view-poweron-confirm-form").dialog("open");
     });
 });

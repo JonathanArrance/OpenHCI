@@ -1578,7 +1578,7 @@ def power_cycle(request, project_id, instance_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def power_off_server(request,project_id,server_id):
+def power_off_server(request,project_id,instance_id):
     out = {}
     try:
         auth = request.session['auth']
@@ -1594,7 +1594,7 @@ def power_off_server(request,project_id,server_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def power_on_server(request,project_id,server_id):
+def power_on_server(request,project_id,instance_id):
     out = {}
     try:
         auth = request.session['auth']

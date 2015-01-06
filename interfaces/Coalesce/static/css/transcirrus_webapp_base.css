@@ -5157,7 +5157,9 @@ th > small {
 
 /* INSTANCE WIDGET */
 
-#instance_progressbar > .ui-widget-header {
+#instance_progressbar > .ui-widget-header,
+#instance-progressbar > .ui-widget-header
+{
     background-color: #FF8617 !important;
 }
 

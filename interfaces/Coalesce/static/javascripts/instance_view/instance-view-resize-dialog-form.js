@@ -21,8 +21,7 @@ $(function () {
             "Resize Instance": function () {
 
                 var confirmedFlavor = $(flavor).find("option:selected");
-                var status = $('#instance-status');
-                var console = $('#instance-console');
+                var status = $('#instance-status'), console = $('#instance-console');
 
                 message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + confirmedFlavor.text() + "." );
 

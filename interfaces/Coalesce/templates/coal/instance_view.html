@@ -18,14 +18,12 @@
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-reboot-confirm-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-cycle-confirm-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweroff-confirm-form.js"></script>
+<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweron-confirm-form.js"></script>
 <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
 <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
 <script>
     var PROJECT_ID = "{{current_project_id}}";
-</script>
-<script>
-    var SERVER_ID = "{{server.server_id}}";
 </script>
 <script>
     var DEFAULT_PUBLIC = "{{ default_public }}";
@@ -72,6 +70,9 @@
                         <th>Id</th>
                         <td><p id="instance-id">{{server.server_id}}</p></td>
                     </tr>
+                    <script>
+                        var SERVER_ID = "{{server.server_id}}";
+                    </script>
                     <tr>
                         <th>Status</th>
                         <td><p id="instance-status">{{server.server_status}}</p></td>
@@ -113,7 +114,8 @@
                     </tr>
                 </table>
             </div>
-        </div> <!-- end inner row -->
+        </div>
+        <!-- end inner row -->
 
         <div class="row-fluid">
             <div id="widget-actions" class="well top">
@@ -123,17 +125,27 @@
 
                 <div class="center-buttons">
                     <a href="#" id="resize-server" class="btn">Resize Instance</a>
+                    {% if server.server_status != "SHUTOFF" %}
                     <a href="#" id="reboot-server" class="btn">Reboot</a>
                     <a href="#" id="cycle-server" class="btn">Power Cycle</a>
                     <a href="#" id="poweroff-server" class="btn">Power Off</a>
+                    <a href="#" id="poweron-server" class="btn" style="display:none">Power On</a>
+                    {% else %}
+                    <a href="#" id="reboot-server" class="btn" style="display:none">Reboot</a>
+                    <a href="#" id="cycle-server" class="btn" style="display:none">Power Cycle</a>
+                    <a href="#" id="poweroff-server" class="btn" style="display:none">Power Off</a>
+                    <a href="#" id="poweron-server" class="btn">Power On</a>
+                    {% endif %}
                 </div>
             </div>
-        </div> <!-- end inner row -->
+        </div>
+        <!-- end inner row -->
 
-        <div id="instance_progressbar" class="ui-progressbar"
+        <div id="instance-progressbar" class="ui-progressbar"
              style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
 
-    </div> <!-- end span5 -->
+    </div>
+    <!-- end span5 -->
 
 
     <div class="span7">
@@ -145,7 +157,8 @@
             <iframe id="instance-console" class="widget-console" name="noVNCConsole"
                     src="{{server.novnc_console}}"></iframe>
         </div>
-    </div> <!-- end span7 -->
+    </div>
+    <!-- end span7 -->
 
     <div id="instance-view-resize-dialog-form" title="Resize server?">
         <form id="instance-resize-form" action="">
@@ -174,6 +187,8 @@
     </div>
 
     <div id="instance-view-poweroff-confirm-form" title="Power server Off?"></div>
+
+    <div id="instance-view-poweron-confirm-form" title="Power server On?"></div>
 
     <div id="instance-console-refresh-confirm-form" title="Refresh console?"></div>
 
