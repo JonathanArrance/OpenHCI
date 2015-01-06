@@ -1,24 +1,25 @@
 {% extends "coal/base-fluid.html" %}
 
 {% block javascripts %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/volume_view/volume-view-attach-dialog-form.js"/></script>
-    <script>
-      var PROJECT_ID = "{{current_project_id}}";
-    </script>
-    <script>
-      var VOL_ID = "{{volume_info.volume_id}}";
-    </script>
+<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+<script src="{{ STATIC_URL }}javascripts/volume_view/volume-view-attach-dialog-form.js"/></script>
+<
+script >
+var PROJECT_ID = "{{current_project_id}}";
+        </script>
+<script>
+    var VOL_ID = "{{volume_info.volume_id}}";
+</script>
 
 {% endblock %}
 
@@ -26,91 +27,140 @@
 
 {% block content %}
 
-    <div class="row-fluid">
-      <div class="span8">
-        <div class="well">
-          <div class="legend">
-              Volume Details
-          </div>
-          <div class="row-fluid">
-            <div class="span7">
-	      <table class="paleblue">
-		  <tr><th>Name</th><td>{{volume_info.volume_name}}</td></tr>
-		  <tr><th>Id</th><td>{{volume_info.volume_id}}</td></tr>
-		  <tr><th>Size</th><td>{{volume_info.volume_size}}GB</td></tr>
-		  <tr><th>Type</th><td>{{volume_info.volume_type}}</td></tr>
-		  <tr><th>Attached</th><td>{{volume_info.volume_attached}}</td></tr>
-		  <tr><th>Mount Point</th><td>{{volume_info.volume_mount}}</td></tr>
-		  <tr><th>Attached To (Name: Id)</th><td>
-		    {% if volume_info.volume_attached == 'true' %}
-		      {{attached_to.server_name}}: {{attached_to.server_id}}
-		    {% else %}
-		      None
-		    {% endif %}
-		  </td></tr>
-		  <tr><th>Project Id</th><td>{{current_project_id}}</td></tr>       
-	      </table>
-	    </div>
-	    <div class="span5">
-	      <table class="paleblue">
-		  {% if snapshots %}
-		      <tr> <th>Snapshot</th> <td><b>Id</b></td> </tr>
-			  {% for snapshot in snapshots %}
-			      {% if snapshot.volume_id == volume_info.volume_id %}
-				  <tr> <td>{{snapshot.snapshot_name}}</td> <td>{{snapshot.snapshot_id}}</td> </tr>
-			      {% endif %}
-			  {% endfor %}
-		      {% else %}
-			<p><i>This volume has no snapshots</i></p>
-		  {% endif %}
-	      </table>
-	    </div>
-         </div> 
-        </div>
-      </div><!-- end span6-->
-      
-      <div class="span4">
-        <div class="well">
-	  <div class="row-fluid">
-            <div id="volume-view-attach-dialog-form" title="Attach volume to instance">
-                  <p class="validateTips">Attach {{volume_info.volume_name}} to an instance.  </p>
-                  <form>
-                  {% csrf_token %}
-                  <fieldset>
-                      <label for="att_instance">Instance</label>
-                      <select name="att_instance" id="att_instance">
-                          {% for server in instances %}
-                              <option value="{{server.server_id}}">{{server.server_name}}</option>
-                          {% endfor %}
-                      </select>
-                  </fieldset>
-		  <label for="att_mount_point">Mount Point</label>
-		  <input type="text" name="att_mount_point" id="att_mount_point" class="text ui-widget-content ui-corner-all" />
-                  </form>
+<div class="row-fluid">
+    <div class="span5">
+        <div id="volume-details" class="well">
+            <div class="legend">
+                Volume Details
+
+                {% if user_level == 0 %}
+                <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn"
+                   style="float: right;">Return To Project</a>
+                {% elif user_level == 1 %}
+                <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/"
+                   class="btn"
+                   style="float: right;">Return To Project</a>
+                {% else %}
+                <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/"
+                   class="btn" style="float: right;">Return To Project</a>
+                {% endif %}
             </div>
-	    
-	    <div class="legend">
-		Actions
-		{% if user_level == 0 %}
-		  <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-		{% elif user_level == 1 %}
-		  <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-		{% else %}
-		  <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-		{% endif %}
-	    </div>
-	    <div>
-	      {% if volume_info.volume_attached != 'true' %}
-		<a href="#" id="view-attach-volume" class="btn">Attach</a>
-	      {% else %}
-		<a href="/detach_volume/{{current_project_id}}/{{volume_info.volume_id}}/" class="btn">Detach</a>
-	      {% endif %}
-	    </div>
-	  </div><!-- end row-fluid-->
-	</div>
-      </div>
 
-    </div><!-- end row-fluid-->
+            <table class="paleblue widget-table">
+                <tr>
+                    <th>Name</th>
+                    <td id="volume-name">{{volume_info.volume_name}}</td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td id="volume-id">{{volume_info.volume_id}}</td>
+                </tr>
+                <tr>
+                    <th>Size</th>
+                    <td id="volume-size">{{volume_info.volume_size}}GB</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td id="volume-type">{{volume_info.volume_type}}</td>
+                </tr>
+                <tr>
+                    <th>Attached</th>
+                    <td id="volume-attached">{{volume_info.volume_attached}}</td>
+                </tr>
+                <tr>
+                    <th>Mount Point</th>
+                    <td id="volume-mount">{{volume_info.volume_mount}}</td>
+                </tr>
+                <tr>
+                    <th>Attached To (Name: Id)</th>
+                    <td id="volume-server">
+                        {% if volume_info.volume_attached == 'true' %}
+                        {{attached_to.server_name}}: {{attached_to.server_id}}
+                        {% else %}
+                        None
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Project Id</th>
+                    <td id="volume-project">{{current_project_id}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <!-- end span5-->
 
+    <div class="span2">
+        <div id="snapshot-details" class="well">
+            <div class="legend">
+                Snapshot Details
+            </div>
+
+            <table class="paleblue widget-table">
+                {% if snapshots %}
+                <tr>
+                    <th>Snapshot</th>
+                    <td><b>Id</b></td>
+                </tr>
+                {% for snapshot in snapshots %}
+                {% if snapshot.volume_id == volume_info.volume_id %}
+                <tr>
+                    <td>{{snapshot.snapshot_name}}</td>
+                    <td>{{snapshot.snapshot_id}}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                {% else %}
+                <p id="volume-placeholder"><i>Not supported</i></p>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+    <!-- end span5-->
+</div>
+<!-- end row-fluid-->
+
+<div class="row-fluid">
+    <div class="span5">
+        <div id="widget-actions" class="well top">
+            <div class="legend">
+                Actions
+            </div>
+
+            <div class="center-buttons">
+                {% if volume_info.volume_attached != 'true' %}
+                <a href="#" id="view-attach-volume" class="btn">Attach</a>
+                {% else %}
+                <a href="/detach_volume/{{current_project_id}}/{{volume_info.volume_id}}/" class="btn">Detach</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="volume-progressbar" class="ui-progressbar"
+         style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
+
+    <!-- end span5-->
+</div>
+<!-- end row-fluid-->
+
+<div id="volume-view-attach-dialog-form" title="Attach volume to instance">
+    <p class="validateTips">Attach {{volume_info.volume_name}} to an instance. </p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="att_instance">Instance</label>
+            <select name="att_instance" id="att_instance">
+                {% for server in instances %}
+                <option value="{{server.server_id}}">{{server.server_name}}</option>
+                {% endfor %}
+            </select>
+        </fieldset>
+        <label for="att_mount_point">Mount Point</label>
+        <input type="text" name="att_mount_point" id="att_mount_point"
+               class="text ui-widget-content ui-corner-all"/>
+    </form>
+</div>
 
 {% endblock %}
