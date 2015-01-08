@@ -42,9 +42,17 @@ $(function () {
                 if (bValid) {
 
                     $.getJSON('/update_user_password/' + USER_ID + '/' + password1.val() + '/' + PROJECT_ID + '/')
-                        .done(function() {
+                        .done(function(data) {
 
-                            message.showMessage('success', 'Updated password.')
+                            if (data.status == 'error') {
+
+                                message.showMessage('error', data.message);
+                            }
+
+                            if (data.status == 'success') {
+
+                                message.showMessage('success', data.message);
+                            }
                         })
                         .fail(function() {
 
