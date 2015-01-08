@@ -51,7 +51,6 @@ $(function () {
                             message.showMessage('error', 'Server Fault');
                         });
 
-
                     $(this).dialog("close");
                 }
             }
