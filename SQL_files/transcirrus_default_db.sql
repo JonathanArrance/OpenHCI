@@ -1876,10 +1876,6 @@ INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.
 -- Data for Name: cinder_node; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
-
-
-
-
 --
 -- TOC entry 2169 (class 0 OID 16415)
 -- Dependencies: 167
