@@ -10,6 +10,7 @@ import re
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
+import transcirrus.component.keystone.error as ec
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -80,7 +81,6 @@ class user_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
     def create_user(self,new_user_dict):
-        logger.sys_info("%s"  %(new_user_dict))
         """
         DESC: create a new user in both the transcirrus and OpenStack Keystone DB
         INPUT: new_user_dict - username - req
@@ -120,7 +120,7 @@ class user_ops:
                 logger.sys_error("User status not sufficient.")
                 raise Exception("User status not sufficient.")
 
-            #standard users can create a project
+            #standard users can create a user
             if(self.user_level >= 1):
                 logger.sys_error("Only admins can create a user.")
                 raise Exception("Only admins can create a user.")
@@ -199,11 +199,11 @@ class user_ops:
             #check the response and make sure it is a 200 or 201
             if((rest['response'] == 201) or (rest['response'] == 200)):
                 #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
                 new_user_id = load['user']['id']
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
 
             if(self.new_user_proj_id == "NULL"):
                 self.proj_name = "NULL"
@@ -217,7 +217,6 @@ class user_ops:
                 insert = self.db.pg_insert("trans_user_info",ins_dict)
             except Exception as e:
                 self.db.pg_transaction_rollback()
-                logger.sql_error("%s" %(e))
                 #back the user out if an exception is thrown
                 raise e
             else:
@@ -443,8 +442,8 @@ class user_ops:
             else:
                 util.http_codes(rest['response'],rest['reason'])
 
-                r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
-                return r_dict
+            r_dict = {"username":disable_dict['username'],"user_id":disable_dict['user_id'],"toggle":disable_dict['toggle']}
+            return r_dict
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
@@ -468,11 +467,12 @@ class user_ops:
             raise Exception("user_role_dict not specified for add_role_to_user operation.")
         if((user_role_dict['user_role'] == 'admin') or (user_role_dict['user_role'] == 'user') or (user_role_dict['user_role'] == 'pu')):
             logger.sys_info("Valid Keystone user role passed")
-        if('update_primary' not in user_role_dict):
-            user_role_dict['update_primary'] = False
         else:
             logger.sys_info("Invalid Keystone user role passed")
             raise Exception("Invalid Keystone user role passed")
+
+        if('update_primary' not in user_role_dict):
+            user_role_dict['update_primary'] = False
 
         #check if the user creating a new account is an admin
         if(self.is_admin == 1):
@@ -566,7 +566,7 @@ class user_ops:
                 new_user_id = ""
             except Exception as e:
                 logger.sys_error('%s' %(e))
-                raise
+                raise e
 
             if(rest['response'] == 200):
                 #this is to add user from one project to another with out chnaageing the primary project in the DB
@@ -594,8 +594,8 @@ class user_ops:
                         #need to update trans_usr_table
                         input_dict = {'proj_name': proj[0][0],'proj_id': user_role_dict['project_id'],'user_name': user_role_dict['username'],'user_id': user[0][0]}
                         insert = self.db.pg_insert("trans_user_projects",input_dict)
-                        if(user_role_dict['update_primary'] == True):
-                            update_dict = {'table':"trans_user_info",'set':"keystone_role='admin',user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
+                        if(user_role_dict['update_primary'] is True):
+                            update_dict = {'table':"trans_user_info",'set':"user_group_membership='admin',keystone_role='admin',user_primary_project='%s',user_project_id='%s',user_group_id='%s'" %(proj[0][0],user_role_dict['project_id'],user_group_id),'where':"keystone_user_uuid='%s'" %(user[0][0])}
                             self.db.pg_update(update_dict)
                     except Exception as e:
                         self.db.pg_transaction_rollback()
@@ -688,7 +688,6 @@ class user_ops:
                     param = 'admin_role_id'
                 else:
                     param = 'member_role_id'
-
                 get_key_role_id = {"select":'param_value',"from":'trans_system_settings',"where":"parameter='%s'" %(param)}
                 role_id = self.db.pg_select(get_key_role_id)
             except:
@@ -711,14 +710,13 @@ class user_ops:
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'DELETE'
                 api_path = '/v2.0/tenants/%s/users/%s/roles/OS-KSADM/%s' %(user_id[0][0],delete_dict['user_id'],role_id[0][0])
-                logger.sys_info("%s"%(api_path))
                 token = self.adm_token
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-            #    logger.sys_error('%s' %(e))
-                raise
+                logger.sys_error('%s' %(e))
+                raise e
 
             if(rest['response'] == 204):
                 #read the json that is returned
@@ -735,9 +733,6 @@ class user_ops:
                         raise e
                     else:
                         self.db.pg_transaction_commit()
-                        self.db.pg_close_connection()
-
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 try:
                     self.db.pg_transaction_begin()
                     up_dict = {'table':"trans_user_info",'set':"user_group_membership='user',keystone_role='Member',user_project_id='NULL',user_primary_project='NULL'",'where':"keystone_user_uuid='%s'" %(delete_dict['user_id'])}
@@ -750,8 +745,9 @@ class user_ops:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
-                    r_dict = {"response":rest['response'],"reason":rest['reason']}
-                    return r_dict
+                    #r_dict = {"response":rest['response'],"reason":rest['reason']}
+                    #return r_dict
+                    return 'OK'
             else:
                 util.http_codes(rest['response'],rest['reason'],rest['data'])
         else:
@@ -1113,6 +1109,39 @@ class user_ops:
     #however one role must be the default admin, or Member role.
     def list_user_roles():
         print "not implemented"
+
+    def list_cloud_user_names(self):
+        """
+        DESC: List all of the user names that are in the cloud sysytem.
+        INPUT: none
+        OUTPUT: array of usernames
+        ACCESS: Only admins can list all of the cloud user names.
+        NOTE:
+        """
+        if(self.is_admin == 1):
+            try:
+                #Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except:
+                logger.sql_error("Could not connect to the DB.")
+                raise Exception("Could not connect to the DB.")
+
+            r_array = []
+            try:
+                get_users = {'select':'user_name', 'from':'trans_user_info'}
+                users = self.db.pg_select(get_users)
+
+                for user in users:
+                    r_array.append(user[0])
+
+                return r_array
+            except:
+                logger.sql_error('Could not get a list of users.')
+                raise Exception('Could not get a list of users.')
+        else:
+            logger.error('Only admins can get cloud user names.')
+            raise Exception('Only admins can get cloud user names.')
 
     def list_cloud_users(self):
         """

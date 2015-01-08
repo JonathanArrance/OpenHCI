@@ -1,7 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-    var instanceId = '';    // Initialize empty string to hold ID of clicked instance
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -12,10 +12,18 @@ $(function () {
         }
     });
 
+    // Local Variables
+    var id,
+        instance,
+        targetRow;
+
+    // Widget Elements
+    var progressbar = $("#instance_progressbar");
+
     $("#instance-pause-confirm-form").dialog({
         autoOpen: false,
-        height: 150,
-        width: 250,
+        height: 125,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -29,80 +37,106 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                message.showMessage('notice', 'Pausing Instance');
+                // Confirmed Selections
+                var confId = id,
+                    confInstance = $(instance).text();
 
-                var confirmedId = instanceId;   // Initialize string to hold ID of confirmed instance
-                var pauseHtml = '<a href="#" class="pause-instance '+confirmedId+'-disable-action">pause</a>';
-                var unpauseHtml = '<a href="#" class="unpause-instance">unpause</a>';
+                message.showMessage('notice', "Pausing " + confInstance + ".");
+
+                // Store actions cell html
+                var actionsCell = document.getElementById(confId + "-actions-cell");
+                var actionsHtml = actionsCell.innerHTML;
+
+                // Disable widget view links and instance actions
+                disableLinks(true);
+                disableActions("pause-instance", true);
+
+                // Initialize progressbar and make it visible
+                $(progressbar).progressbar({value: false});
+                disableProgressbar(progressbar, "instances", false);
 
                 // Create loader
-                var pauseAction = '#' + confirmedId + '-actions-cell > .pause-instance';
-                var loaderId = confirmedId + '-loader';
+                var loaderId = confId + '-loader';
                 var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
 
                 // Clear clicked action link and replace with loader
-                $(pauseAction).empty().fadeOut();
-                $(pauseAction).append(loaderHtml).fadeIn();
+                $(actionsCell).empty().fadeOut();
+                $(actionsCell).append(loaderHtml).fadeIn();
 
-                disableActions(confirmedId, true);
-                disableLinks(true);
-
-                $.getJSON('/server/' + PROJECT_ID + '/' + confirmedId + '/pause_server/')
-                    .success(function (data) {
+                $.getJSON('/server/' + PROJECT_ID + '/' + confId + '/pause_server/')
+                    .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
-                            // Recall clicked action link on error
-                            $(pauseAction).empty().fadeOut();
-                            $(pauseAction).append(pauseHtml).fadeIn();
+                            // Restore actions cell html
+                            $(actionsCell).empty().fadeOut();
+                            $(actionsCell).append(actionsHtml).fadeIn();
                         }
 
                         if (data.status == 'success') {
 
                             message.showMessage('success', data.message);
 
-                            var statusCell = '#' + confirmedId + '-status-cell';
-                            var actionsCell = '#' + confirmedId + '-actions-cell';
+                            var statusCell = document.getElementById(confId + "-status-cell");
 
-                            // Update status and actions cells
+                            // Update status cell
                             $(statusCell).fadeOut().empty();
-                            $(actionsCell).fadeOut().empty();
                             $(statusCell).append("PAUSED").fadeIn();
-                            $(actionsCell).append(unpauseHtml).fadeIn();
 
-                            disableActions(confirmedId, false);
-                            disableLinks(false);
+                            // Create new actions
+                            var newActions =
+                                '<a href="#" class="unpause-instance ' + confId + '-disable-action">unpause</a>' +
+                                '<span class="instance-actions-pipe"> | </span>' +
+                                '<a href="#" class="delete-instance ' + confId + '-disable-action">delete</a>';
+
+                            // Update actions-cell
+                            $(actionsCell).fadeOut().empty();
+                            $(actionsCell).append(newActions).fadeIn();
+
+                            // Add paused class
+                            $(targetRow).addClass("instance-paused");
+
+                            // Update instance
+                            instances.items[confId].status = "PAUSED";
                         }
                     })
-                    .error(function () {
+                    .fail(function () {
 
                         message.showMessage('error', 'Server Fault');
 
-                        // Recall clicked action link on server fault
-                        $(pauseAction).empty().fadeOut();
-                        $(pauseAction).append(pauseHtml).fadeIn();
+                        // Restore Actions html
+                        $(actionsCell).empty().fadeOut();
+                        $(actionsCell).append(actionsHtml).fadeIn();
+                    })
+                    .always(function () {
 
-                        disableActions(confirmedId, false);
+                        // Hide progressbar, enabled instance actions and widget view links
+                        disableProgressbar(progressbar, "instances", true);
+                        disableActions("pause-instance", false);
                         disableLinks(false);
                     });
 
                 $(this).dialog("close");
-            },
-            Cancel: function () {
-                $(this).dialog("close");
             }
+        },
+        close: function () {
         }
-    })
+    });
 
-    $(document).on('click', '.pause-instance', function () {
+    $(document).on('click', '.pause-instance', function (event) {
 
-        instanceId = $(this).parent().parent().attr('id');
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
 
-        // Clear and add instance name to .instance-name span in confirm statement
-        var nameSelector = '#' + instanceId + '-name-text';
-        $('#instance-pause-confirm-form > p > span.instance-name').empty().append($(nameSelector).text());
+        // Get target row element, get id from that element and use that to get the instance-name-text
+        targetRow = $(this).parent().parent();
+        id = $(targetRow).attr("id");
+        instance = document.getElementById(id + "-name-text");
+
+        // Add instance-name-text to confirm-form
+        $('div#instance-pause-confirm-form > p > span.instance-name').empty().append($(instance).text());
 
         $("#instance-pause-confirm-form").dialog("open");
     });

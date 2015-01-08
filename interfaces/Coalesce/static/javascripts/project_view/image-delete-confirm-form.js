@@ -14,15 +14,16 @@ $(function () {
 
     // Local Variables
     var id,
-        router,
+        image,
         targetRow;
 
     // Widget Elements
-    var progressbar = $("#router_progressbar"),
-        table = $("#router_list"),
-        placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#image_progressbar"),
+        table = $("#image_list"),
+        placeholder =
+            '<tr id="#image_placeholder"><td><p><i>This project has no image</i></p></td><td></td></tr>';
 
-    $('#router-delete-confirm-form').dialog({
+    $('#image-delete-confirm-form').dialog({
         autoOpen: false,
         height: 125,
         width: 235,
@@ -39,23 +40,23 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
+                // Confirmed Selections
                 var confId = id,
-                    confRouter = $(router).text(),
-                    confRow = targetRow;
+                    confImage = $(image).text();
 
-                message.showMessage('notice', "Deleting " + confRouter + ".");
+                message.showMessage('notice', "Deleting " + confImage + ".");
 
                 // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links and instance actions
+                // Disable widget view links and delete actions
                 disableLinks(true);
-                disableActions("delete-router", true);
+                disableActions("delete-image", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                disableProgressbar(progressbar, "routers", false);
+                disableProgressbar(progressbar, "images", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -65,7 +66,7 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confId + '/')
+                $.getJSON('/delete_image/' + confId + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -82,24 +83,16 @@ $(function () {
                             message.showMessage('success', data.message);
 
                             // Remove row
-                            confRow.fadeOut().remove();
+                            $(targetRow).fadeOut().remove();
 
-                            // If last router, reveal placeholder
-                            var rowCount = $('#router_list tr').length;
-                            if (rowCount < 2) {
-                                $(table).append(placeholder).fadeIn();
-                            }
+                            // Update selects
+                            removeFromSelect(confImage, $("#image_name"), imageInstOpts);
+                        }
 
-                            if (routers.items[confId].network) {
-                                // Update selects
-                                addToSelect(routers.items[confId].network, privateNetworks.items[routers.items[confId].network].name, $("#priv_net"), privNetRoutOpts);
-
-                                // Update private network
-                                privateNetworks.items[routers.items[confId].network].router = "None";
-                            }
-
-                            // Remover from routers
-                            routers.removeItem(confId);
+                        // If last image, reveal placeholder
+                        var rowCount = $('#image_list tr').length;
+                        if (rowCount < 2) {
+                            $(table).append(placeholder).fadeIn();
                         }
 
                     })
@@ -114,9 +107,9 @@ $(function () {
                     .always(function () {
 
                         // Hide progressbar and enable widget view links
-                        disableProgressbar(progressbar, "routers", true);
+                        disableProgressbar(progressbar, "images", true);
                         disableLinks(false);
-                        disableActions("delete-router", false);
+                        disableActions("delete-image", false);
                     });
 
                 $(this).dialog("close");
@@ -126,20 +119,20 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-router', function (event) {
+    $(document).on('click', '.delete-image', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        // Get target row element, get id from that element and use that to get the name-text
+        // Get target row element, get id from that element and use that to get the image-name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        router = document.getElementById(id + "-name-text");
+        image = document.getElementById(id + "-name-text");
 
-        // Add name-text to form
-        $('div#router-delete-confirm-form > p > span.router-name').empty().append($(router).text());
+        // Add image-name-text to confirm-form
+        $('div#image-delete-confirm-form > p > span.image-name').empty().append($(image).text());
 
-        $('#router-delete-confirm-form').dialog("open");
+        $('#image-delete-confirm-form').dialog("open");
     });
 });
 

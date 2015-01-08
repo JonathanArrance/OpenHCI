@@ -4,62 +4,60 @@
 
 {% block content %}
 
-    <div class="row-fluid">
-      <div class="span6">
+<div class="row-fluid">
+    <div class="span5">
         <div class="well">
-          <div class="legend">
-              Router Details
-          </div>
-          <table class="paleblue">
-              <tr><th>Name</th><td>{{router.router_name}}</td></tr>
-              <tr><th>Id</th><td>{{router.router_id}}</td></tr>
-              <tr><th>Status</th><td>{{router.router_status}}</td></tr>
-              <tr><th>Network Id</th><td>{{router.network_id}}</td></tr>
-              <tr><th>External Gateway</th><td>{{router.external_gateway}}</td></tr>
-              <tr><th>External IP</th><td>{{router.external_ip}}</td></tr>
-              <tr><th>Admin State Up</th><td>{{router.admin_state_up}}</td></tr>
-              <tr><th>Project Id</th><td>{{router.project_id}}</td></tr>
-          </table>
-        </div>
-      </div><!-- end span6-->
+            <div class="legend">
+                Router Details
 
-      <!--<div class="span5 offset1">
-        <div class="well">
-          <div class="legend">
-              Actions for {{ user_info.username }}
-          </div>
-          <div id="dialog-form-update-password" title="Update Password">
-                <p class="validateTips">All form fields are required.</p>
-                <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="password1">Password</label>
-                    <input type="password" name="password1" id="password1" value="" class="text ui-widget-content ui-corner-all" />
-                    <label for="password2">Confirm Password</label>
-                    <input type="password" name="password2" id="password2" value="" class="text ui-widget-content ui-corner-all" />
-                </fieldset>
-                </form>
+                {% if user_level == 0 %}
+                <a href="{{ default_public }}/projects/{{router.project_id}}/view/" class="btn" style="float: right;">Return
+                    To Project</a>
+                {% elif user_level == 1 %}
+                <a href="{{ default_public }}/projects/{{router.project_id}}/pu_project_view/" class="btn"
+                   style="float: right;">Return To Project</a>
+                {% else %}
+                <a href="{{ default_public }}/projects/{{router.project_id}}/basic_project_view/" class="btn"
+                   style="float: right;">Return To Project</a>
+                {% endif %}
             </div>
-          <a href="#" id="update-user-password">update password</a>
+
+            <table class="paleblue widget-table">
+                <tr>
+                    <th>Name</th>
+                    <td>{{router.router_name}}</td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td>{{router.router_id}}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>{{router.router_status}}</td>
+                </tr>
+                <tr>
+                    <th>Network Id</th>
+                    <td>{{router.network_id}}</td>
+                </tr>
+                <tr>
+                    <th>External Gateway</th>
+                    <td>{{router.external_gateway}}</td>
+                </tr>
+                <tr>
+                    <th>External IP</th>
+                    <td>{{router.external_ip}}</td>
+                </tr>
+                <tr>
+                    <th>Admin State Up</th>
+                    <td>{{router.admin_state_up}}</td>
+                </tr>
+                <tr>
+                    <th>Project Id</th>
+                    <td>{{router.project_id}}</td>
+                </tr>
+            </table>
         </div>
-      </div><!-- end span6-->
-
-      <div class="span5 offset1">
-        <div class="well">
-          <div class="legend">
-            Actions
-            {% if user_level == 0 %}
-              <a href="{{ default_public }}/projects/{{router.project_id}}/view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-            {% elif user_level == 1 %}
-              <a href="{{ default_public }}/projects/{{router.project_id}}/pu_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-            {% else %}
-              <a href="{{ default_public }}/projects/{{router.project_id}}/basic_project_view/" class="btn btn-mini btn-inverse" style="float: right;">return to project</a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-
-    </div><!-- end row-fluid-->
-
+    </div> <!-- end span5-->
+</div><!-- end row-fluid-->
 
 {% endblock %}

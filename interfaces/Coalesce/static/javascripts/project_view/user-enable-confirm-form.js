@@ -14,15 +14,13 @@ $(function () {
 
     // Local Variables
     var id,
-        router,
+        user,
         targetRow;
 
     // Widget Elements
-    var progressbar = $("#router_progressbar"),
-        table = $("#router_list"),
-        placeholder = '<tr id="router_placeholder"><td><p><i>This project has no routers</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#users_progressbar");
 
-    $('#router-delete-confirm-form').dialog({
+    $("#user-enable-confirm-form").dialog({
         autoOpen: false,
         height: 125,
         width: 235,
@@ -39,23 +37,24 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                var confId = id,
-                    confRouter = $(router).text(),
-                    confRow = targetRow;
+                // Confirmed Selections
+                var confRow = targetRow,
+                    confId = id,
+                    confUsername = $(user).text();
 
-                message.showMessage('notice', "Deleting " + confRouter + ".");
+                message.showMessage('notice', "Enabling " + confUsername + ".");
 
                 // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                // Disable widget view links and instance actions
+                // Disable widget view links and widgets actions
                 disableLinks(true);
-                disableActions("delete-router", true);
+                disableActions("enable-user", true);
 
                 // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                disableProgressbar(progressbar, "routers", false);
+                disableProgressbar(progressbar, "users", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -65,14 +64,14 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_router/' + PROJECT_ID + '/' + confId + '/')
+                $.getJSON('/toggle_user/' + confUsername + '/enable/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
-                            // Restore actions cell html
+                            // Recall clicked action link on error
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -81,27 +80,19 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            // Remove row
-                            confRow.fadeOut().remove();
+                            // Update status and actions cells
+                            var newActions =
+                                '<a href="#" class="disable-user">disable</a>' +
+                                '<span class="user-actions-pipe"> | </span>' +
+                                '<a href="#" class="remove-user">remove</a>' +
+                                '<span class="user-actions-pipe"> | </span>' +
+                                '<a href="#" class="delete-user"> delete</a>';
 
-                            // If last router, reveal placeholder
-                            var rowCount = $('#router_list tr').length;
-                            if (rowCount < 2) {
-                                $(table).append(placeholder).fadeIn();
-                            }
+                            $(actionsCell).empty().fadeOut();
+                            $(actionsCell).append(newActions).fadeIn();
 
-                            if (routers.items[confId].network) {
-                                // Update selects
-                                addToSelect(routers.items[confId].network, privateNetworks.items[routers.items[confId].network].name, $("#priv_net"), privNetRoutOpts);
-
-                                // Update private network
-                                privateNetworks.items[routers.items[confId].network].router = "None";
-                            }
-
-                            // Remover from routers
-                            routers.removeItem(confId);
+                            confRow.removeClass("user-disabled");
                         }
-
                     })
                     .fail(function () {
 
@@ -114,19 +105,19 @@ $(function () {
                     .always(function () {
 
                         // Hide progressbar and enable widget view links
-                        disableProgressbar(progressbar, "routers", true);
+                        disableProgressbar(progressbar, "users", true);
+                        disableActions("enable-user", false);
                         disableLinks(false);
-                        disableActions("delete-router", false);
                     });
 
                 $(this).dialog("close");
+            },
+            close: function () {
             }
-        },
-        close: function () {
         }
     });
 
-    $(document).on('click', '.delete-router', function (event) {
+    $(document).on('click', '.enable-user', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
@@ -134,15 +125,10 @@ $(function () {
         // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        router = document.getElementById(id + "-name-text");
+        user = document.getElementById(id + "-name-text");
 
         // Add name-text to form
-        $('div#router-delete-confirm-form > p > span.router-name').empty().append($(router).text());
-
-        $('#router-delete-confirm-form').dialog("open");
+        $('div#user-enable-confirm-form > p > span.user-name').empty().append($(user).text());
+        $("#user-enable-confirm-form").dialog("open");
     });
 });
-
-
-
-

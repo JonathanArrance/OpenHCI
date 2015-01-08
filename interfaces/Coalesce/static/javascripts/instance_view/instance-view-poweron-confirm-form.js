@@ -12,57 +12,49 @@ $(function () {
         }
     });
 
-    // Form elements
-    var flavor = $("#flavor");
-
     // View elements
     var status = $('#instance-status'),
         consoleWindow = $('#instance-console'),
         actions = $('#widget-actions'),
         progressbar = $('#instance-progressbar');
 
-    $("#instance-view-resize-dialog-form").dialog({
+    $("#instance-view-poweron-confirm-form").dialog({
         autoOpen: false,
         height: 125,
         width: 235,
         modal: true,
         buttons: {
-            "Resize Instance": function () {
+            "Confirm": function () {
 
-                var confirmedFlavor = $(flavor).find("option:selected").val();
+                message.showMessage('notice', 'Powering On');
 
-                message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + flavor.text() + "." );
-
+                // Hide other actions
                 actions.slideUp();
 
                 // Initialize progressbar and make it visible if hidden
-                progressbar.progressbar({value: false});
+                $(progressbar).progressbar({value: false});
                 setVisible(progressbar, true);
 
-                emptyAndAppend(status, "RESIZE");
-
-                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/' + confirmedFlavor + '/resize_server/')
+                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/power_on_server/')
                     .done(function (data) {
 
                         if (data.status == "error") {
 
                             message.showMessage('error', data.message);
-                            emptyAndAppend(status, "ACTIVE");
                         }
 
                         if (data.status == "success") {
 
                             message.showMessage('success', data.message);
                             emptyAndAppend(status, "ACTIVE");
-                            emptyAndAppend('#instance-flavor', confirmedFlavor);
                         }
                     })
                     .fail(function () {
 
-                        message.showMessage('error', "Server Fault");
+                        message.showMessage('error', 'Server Fault');
                         emptyAndAppend(status, "ERROR");
                     })
-                    .always(function() {
+                    .always(function (data) {
 
                         $('#instance-console-refresh-confirm-form').dialog({
                             resizable: false,
@@ -71,31 +63,40 @@ $(function () {
                             width: 235,
                             modal: true,
                             buttons: {
-                                "Yes": function(){
-
-                                    $( consoleWindow ).attr( 'src', function ( i, val ) { return val; });
+                                "Yes": function () {
+                                    $(consoleWindow).attr('src', function (i, val) {
+                                        return val;
+                                    });
                                     $(this).dialog("close");
                                 },
-                                "No": function(){
-
+                                "No": function () {
                                     $(this).dialog("close");
                                 }
                             },
-                            close: function() { }
+                            close: function () {
+                            }
                         });
 
                         actions.slideDown();
                         setVisible(progressbar, false);
+
+                        if (data.status == "success") {
+
+                            setVisible("#poweron-server", false);
+                            setVisible("#reboot-server", true);
+                            setVisible("#poweroff-server", true);
+                            setVisible("#cycle-server", true);
+                        }
                     });
 
                 $(this).dialog("close");
             }
         },
-        close: function () {  }
+        close: function () {
+        }
     });
 
-    $("#resize-server")
-        .click(function () {
-            $("#instance-view-resize-dialog-form").dialog("open");
-        });
+    $('#poweron-server').click(function () {
+        $("#instance-view-poweron-confirm-form").dialog("open");
+    });
 });

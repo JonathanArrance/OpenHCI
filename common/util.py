@@ -25,7 +25,7 @@ dhcp_retry=5
 #OUTPUT: void
 #This needs to go away and be replaced with actual HTTP error codes method
 def http_codes(code,reason=None,data=None):
-    out = json.loads(data)
+    #out = json.loads(data)
     if(code):
         output_dict = {"response":"%s"%(code),"reason":"%s"%(reason)}
         logger.sys_error("%s" %(output_dict))

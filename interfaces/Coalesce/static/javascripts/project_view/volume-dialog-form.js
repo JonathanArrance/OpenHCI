@@ -1,23 +1,7 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
-
-    // Dialog Form Elements
-    var volume_name = $("#volume_name"),
-        volume_size = $("#volume_size"),
-        volume_available_storage_bar = $(".volume-available-storage-bar"),
-        volume_available_storage_label = $(".volume-available-storage-label"),
-        description = $("#description"),
-        volume_type = $("#volume_type"),
-        allFields = $([]).add(volume_name).add(volume_size).add(description).add(volume_type),
-        tips = $(".validateTips");
-
-    // Widget Elements
-    var progressbar = $("#vol_progressbar"),
-        createButton = $("#create-volume"),
-        deleteButton = $("#delete-volume"),
-        table = $("#volume_list");
-
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -28,10 +12,22 @@ $(function () {
         }
     });
 
+    // Form Elements
+    var volume_name = $("#volume_name"),
+        volume_size = $("#volume_size"),
+        description = $("#description"),
+        volume_type = $("#volume_type"),
+        allFields = $([]).add(volume_name).add(volume_size).add(description).add(volume_type);
+
+    // Widget Elements
+    var progressbar = $("#vol_progressbar"),
+        createButton = $("#create-volume"),
+        table = $("#volume_list");
+
     $("#volume-dialog-form").dialog({
         autoOpen: false,
-        height: 425,
-        width: 220,
+        height: 445,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -45,48 +41,56 @@ $(function () {
         buttons: {
             "Create Volume": function () {
 
-                var bValid = true;
+                // Remove UI validation flags
+                clearUiValidation(allFields);
 
-                allFields.removeClass("ui-state-error");
-                $(".error").fadeOut().remove();
+                // Validate form inputs
+                var isValid =
+                    checkLength(volume_name, "Volume Name", 3, 16) &&
+                    checkDuplicateName(volume_name, volumes) &&
+                    checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
+                    checkStorage(volume_size) &&
+                    checkLength(description, "Description", 1, 16);
 
-                bValid =
-                    bValid &&
-                    checkLength(tips, volume_name, "Volume Name", 3, 16) &&
-                    checkLength(tips, description, "Description", 1, 16) &&
-                    checkStorage(tips, volume_size);
+                if (isValid) {
 
-                if (bValid) {
+                    // Confirmed Selections
+                    var confVolume = volume_name.val(),
+                        confSize = volume_size.val(),
+                        confDesc = description.val(),
+                        confType = volume_type.val();
 
                     message.showMessage('notice', 'Creating new volume ' + volume_name.val());
 
-                    setVisible(createButton, false);
-                    setVisible(deleteButton, false);
+                    // Disable widget view links and hide create button
                     disableLinks(true);
+                    setVisible(createButton, false);
 
                     // Initialize progressbar and make it visible if hidden
                     $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    disableProgressbar(progressbar, "volumes", false);
 
-                    $.getJSON('/create_volume/' + volume_name.val() + '/' + volume_size.val() + '/' + description.val() + '/' + volume_type.val() + '/' + PROJECT_ID + '/')
+                    $.getJSON('/create_volume/' + confVolume + '/' + confSize + '/' + confDesc + '/' + confType + '/' + PROJECT_ID + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {
+
                                 message.showMessage('error', data.message);
                             }
+
                             if (data.status == 'success') {
 
                                 message.showMessage('success', data.message);
 
                                 // Initialize empty string for new volume row
-                                var newRow = '';
-                                newRow +=
+                                var newRow =
                                     '<tr id="' + data.volume_id + '" class="' + data.volume_size + '">' +
                                     '<td id="' + data.volume_id + '-name-cell">' +
                                     '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
                                     '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
                                     '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instances</span></td>' +
-                                    '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-instance">attach</a></td>' + '</tr>';
+                                    '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
 
                                 // Check to see if this is the first volume to be generated, if so remove placeholder and reveal delete-volume button
                                 var rowCount = $("#volume_list tr").length;
@@ -97,80 +101,43 @@ $(function () {
                                 // Append new row to volume-list
                                 table.append(newRow).fadeIn();
 
-                                // Append new option to delete-volume select menu
-                                var deleteSelect = 'div#volume-delete-dialog-form > form > fieldset > select#volume';
-                                var newOption = '<option value ="' + data.volume_id + '">' + data.volume_name + '</option>';
-                                $(deleteSelect).append(newOption);
+                                // Add to volumes
+                                volumes.setItem(data.volume_id, { size: confSize });
+
+                                // Update usedStorage
+                                updateUsedStorage();
+                                updateStorageBar();
                             }
                         })
                         .fail(function () {
 
                             message.showMessage('error', 'Server Fault');	// Flag server fault message
                         })
-                        .always(function() {
+                        .always(function () {
 
-                            setVisible(progressbar, false);
+                            // Reset interface
+                            disableProgressbar(progressbar, "volumes", true);
                             setVisible(createButton, true);
-                            setVisible(deleteButton, true);
                             disableLinks(false);
+                            resetUiValidation(allFields);
                         });
 
                     $(this).dialog("close");
-
-                    allFields.val("").removeClass("ui-state-error");
-                    $(".error").fadeOut().remove();
                 }
             }
         },
         close: function () {
-            allFields.val("").removeClass("ui-state-error");
-            $(".error").fadeOut().remove();
+
+            // Reset form validation
+            resetUiValidation(allFields);
         }
     });
 
     // Open modal form when create-volume button is clicked
-    $(document).on("click", "#create-volume", function () {
+    $(document).on("click", "#create-volume", function (event) {
 
-        var percent = 0;
-
-        volume_available_storage_bar.progressbar({value: 0});
-        volume_available_storage_label.empty();
-        volume_available_storage_label.append("Calculating ....");
-
-        $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')
-            .done(function (data) {
-
-                if (data.status == "error") {
-
-                    message.showMessage('error', data.message);
-                    getUsedStorage("#volume_list tr");
-                    percent = (usedStorage / totalStorage) * 100;
-
-                    volume_available_storage_bar.progressbar({value: percent});
-                    volume_available_storage_label.empty();
-                    volume_available_storage_label.append(usedStorage + "/" + totalStorage);
-                }
-                if (data.status == "success") {
-
-                    totalStorage = data.gigabytes;
-                    getUsedStorage("#volume_list tr");
-                    percent = (usedStorage / totalStorage) * 100;
-
-                    volume_available_storage_bar.progressbar({value: percent});
-                    volume_available_storage_label.empty();
-                    volume_available_storage_label.append(usedStorage + "/" + totalStorage);
-                }
-            })
-            .fail(function () {
-
-                message.showMessage('error', "Server Fault");
-                getUsedStorage("#volume_list tr");
-                percent = (usedStorage / totalStorage) * 100;
-
-                volume_available_storage_bar.progressbar({value: percent});
-                volume_available_storage_label.empty();
-                volume_available_storage_label.append(usedStorage + "/" + totalStorage);
-            });
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
 
         $("#volume-dialog-form").dialog("open");
     });

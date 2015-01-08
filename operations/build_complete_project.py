@@ -101,14 +101,14 @@ def build_project(auth_dict, project_dict):
         logger.sys_info("Created security group")
     except Exception as e:
         logger.sys_error("Couldn't create a security group, %s" %(str(e)))
-        
+
     try:
         sec_keys_dict = {'key_name': project_dict['sec_keys_name'], 'project_id': proj}
         sec_keys = nova.create_sec_keys(sec_keys_dict)
         logger.sys_info("Created security keys")
     except Exception as e:
         logger.sys_error("Couldn't create security keys, %s" %(str(e)))
-        
+
     try:
         router_dict = {'router_name': project_dict['router_name'], 'project_id': proj}
         router = neutron_router.add_router(router_dict)
@@ -122,14 +122,14 @@ def build_project(auth_dict, project_dict):
         logger.sys_info("Created router internal interface")
     except Exception as e:
         logger.sys_error("Couldn't create a router internal interface, %s" %(str(e)))
-        
+
     try:
         ext_net_dict = neutron_net.list_external_networks()
         for ext_net in ext_net_dict:
             if(ext_net['net_name'] == "DefaultPublic"):
                 ext_net_id = ext_net['net_id']
                 break
-    
+
         outside_port_dict = {'router_id': router['router_id'], 'ext_net_id': ext_net_id, 'project_id': proj}
         outside_port = neutron_router.add_router_gateway_interface(outside_port_dict)
         logger.sys_info("Created router gateway")

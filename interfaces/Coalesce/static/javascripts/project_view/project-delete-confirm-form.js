@@ -13,8 +13,8 @@ $(function () {
 
     $("#project-delete-confirm-form").dialog({
         autoOpen: false,
-        height: 120,
-        width: 350,
+        height: 125,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -56,7 +56,11 @@ $(function () {
     });
 
     // Open modal form when delete-project button clicked
-    $("#delete-project").click(function () {
+    $("#delete-project").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
         $("#project-delete-confirm-form").dialog("open");
     });
 });

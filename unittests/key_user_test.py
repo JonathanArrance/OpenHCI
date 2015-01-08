@@ -14,26 +14,28 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("danpu","password")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "Instantiating user_ops object."
 use = user_ops(d)
-
+'''
 print "listing cloud users"
-cloud = use.list_cloud_users()
+cloud = use.list_cloud_user_names()
 print cloud
+
 
 x = []
 for y in cloud:
     x.append(y['username'])
-
+'''
 #userset = set(x)
 #if('danpu' in userset):
 #    print "here"
 #else:
 #    print "not here"
+
 
 '''
 role_id = util.get_def_mem_role()
@@ -52,15 +54,13 @@ print "Create a new standard user with no project."
 new_user_dict = {"username":'keven',"password":"test","user_role":"pu","email":"keven@domain.com"}
 create = use.create_user(new_user_dict)
 print create
-'''
-'''
+
+
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
-add_user_dict = {"username":"user5","user_role":'user',"project_id":'da0379a70f5447639f892540745650d3'}
+add_user_dict = {"username":"jon","user_role":'user',"project_id":'b417934201ee454ba65723b11d418522'}
 add = use.add_user_to_project(add_user_dict)
 print add
-'''
-'''
 
 time.sleep(2)
 #print "Adding user %s to demo project" %(create['username'])
@@ -103,17 +103,17 @@ print create
 
 
 print "Create a new power user."
-new_pu_dict = {"username":'shitbird5',"password":"test","userrole":"pu","email":"testpu@domain.com"}
+new_pu_dict = {"username":'test',"password":"test","user_role":"pu","email":"testpu@domain.com","project_id":"9a2b2eae323f437eb60183d26fa76a50"}
 create_pu = use.create_user(new_pu_dict)
 print create_pu
 
 
-add_user_dict = {"username":"shitbird5","user_role":'pu',"project_name":'ffvc'}
+add_user_dict = {"username":"admin","user_role":'admin',"project_name":'jon1'}
 add = use.add_user_to_project(add_user_dict)
 print add
 
 print "getting test power user info"
-user_info = {"username":'keven4',"project_name":'testproj'}
+user_info = {"username":'admin',"project_name":'trans_default'}
 get_p = use.get_user_info(user_info)
 print get_p
 time.sleep(2)
@@ -132,7 +132,7 @@ time.sleep(2)
 print "---------------------------------------------"
 
 print "toggle user to disable"
-toggle = {"username":'keven4',"toggle":'disable'}
+toggle = {"username":'p0pu',"toggle":'disable'}
 tog = use.toggle_user(toggle)
 print tog
 
@@ -157,11 +157,11 @@ time.sleep(2)
 print "----------------------------------------------"
 
 print "Removing user from project"
-
-remove_user_dict = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
+'''
+remove_user_dict = {"user_id":"19706e3221ec4c2792982f893de78339","project_id":'9a2b2eae323f437eb60183d26fa76a50'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
-
+'''
 print "Deleteing a testuser"
 delete = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
 
@@ -170,7 +170,7 @@ remove = use.remove_user_from_project(remove_user_dict)
 print remove
 
 print "Deleteing a testuser"
-delete = {"user_id":"a8ba2d4fccf6498da8a4d2baddfb3b71","project_id":'4ecbada824e14d80b444200c8ab96b44'}
+delete = {"user_id":"232d547e1ed941ecae0da9967284a75a","username":'test'}
 blah = use.delete_user(delete)
 print blah
 time.sleep(2)

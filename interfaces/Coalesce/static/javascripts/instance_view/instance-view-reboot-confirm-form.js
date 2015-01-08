@@ -1,64 +1,97 @@
-$(function() {
+$(function () {
 
-    var message = new message_handle();	// Initialize message handling
-
-    // must obtain csrf cookie for AJAX call
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
+    // CSRF protection
     var csrftoken = getCookie('csrftoken');
 
-    $(function() {
-
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
-
-        $.ajaxSetup({
-            crossDomain: false, // obviates need for sameOrigin test
-            beforeSend: function(xhr, settings) {
-                if (!csrfSafeMethod(settings.type)) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
             }
-        });
+        }
+    });
 
-        $( "#instance-view-reboot-confirm-form" ).dialog({
-            autoOpen: false,
-            height: 120,
-            width: 350,
-            modal: true,
-            buttons: {
-                "Confirm": function() {
+    // View elements
+    var status = $('#instance-status'),
+        consoleWindow = $('#instance-console'),
+        actions = $('#widget-actions'),
+        progressbar = $('#instance-progressbar');
 
-                    message.showMessage('notice', "Rebooting instance");
+    $("#instance-view-reboot-confirm-form").dialog({
+        autoOpen: false,
+        height: 125,
+        width: 235,
+        modal: true,
+        buttons: {
+            "Confirm": function () {
 
-                    $('#instance-reboot-form').submit();
-                    $('.ui-button').attr('disabled', true);
-                    $('.ui-button').css('cursor', 'inherit');
-                },
-                Cancel: function() { $( this ).dialog( "close" ); }	// Close modal form
-            },
-            close: function() {	}
-        });
+                message.showMessage('notice', 'Rebooting');
 
-        $('#reboot-server').click(function(){
-            $( "#instance-view-reboot-confirm-form" ).dialog( "open" );
-        });
+                // Hide other actions
+                actions.slideUp();
+
+                // Initialize progressbar and make it visible if hidden
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
+
+                emptyAndAppend(status, "REBOOT");
+
+                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/reboot/')
+                    .done(function (data) {
+
+                        if (data.status == "error") {
+
+                            message.showMessage('error', data.message);
+                        }
+
+                        if (data.status == "success") {
+
+                            message.showMessage('success', data.message);
+                            emptyAndAppend(status, "ACTIVE");
+                        }
+                    })
+                    .fail(function () {
+
+                        message.showMessage('error', 'Server Fault');
+                        emptyAndAppend(status, "ERROR");
+                    })
+                    .always(function () {
+
+                        $('#instance-console-refresh-confirm-form').dialog({
+                            resizable: false,
+                            autoOpen: true,
+                            height: 125,
+                            width: 235,
+                            modal: true,
+                            buttons: {
+                                "Yes": function () {
+                                    $(consoleWindow).attr('src', function (i, val) {
+                                        return val;
+                                    });
+                                    $(this).dialog("close");
+                                },
+                                "No": function () {
+                                    $(this).dialog("close");
+                                }
+                            },
+                            close: function () {
+                            }
+                        });
+
+                        actions.slideDown();
+                        setVisible(progressbar, false);
+                    });
+
+                $(this).dialog("close");
+            }
+        },
+        close: function () {
+        }
+    });
+
+    $('#reboot-server').click(function () {
+        $("#instance-view-reboot-confirm-form").dialog("open");
     });
 });
 

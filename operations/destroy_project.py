@@ -122,7 +122,6 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Destroy project: sec_key %s removed." % sec_key_dict['sec_key_name'])
         else:
             logger.sys_error("Destroy project: sec_key %s not removed." % sec_key_dict['sec_key_name'])
-            #return "sec_key ERROR"
             raise Exception("Destroy project: Can not remove security key %s."%(sec_key['key_name']))
 
     #security groups
@@ -134,7 +133,6 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Destroy project: sec_group %s removed." % sec_group['sec_group_name'])
         else:
             logger.sys_error("Destroy project: sec_group %s not removed." % sec_group['sec_group_name'])
-            #return "sec_group ERROR"
             raise Exception("Destroy project: Can not remove security group %s."%(sec_group['sec_group_name']))
 
     #internal networks
@@ -148,27 +146,24 @@ def destroy_project(auth_dict, project_dict):
                 logger.sys_info("Destroy project: Subnet %s removed." % subnet['subnet_id'])
             else:
                 logger.sys_error("Destroy project: subnet %s not removed." % subnet['subnet_id'])
-                #return "subnet ERROR"
                 raise Exception("Destroy project: Can not remove subnet %s."%(subnet['subnet_id']))
         remove_network = neutron_net.remove_network(network)
         if(remove_network == "OK"):
                 logger.sys_info("Network %s removed." % network['net_id'])
         else:
             logger.sys_error("Destroy project: network %s not removed." % network['net_id'])
-            #return "net ERROR"
             raise Exception("Destroy project: Can not remove network %s."%(network['net_id']))
 
     #users
     user_list = tenant.list_tenant_users(project_dict['project_id'])
     for usr in user_list:
-        if(project_dict['keep_users']):
+        if(project_dict['keep_users'] is True):
             usr['project_id'] = project_dict['project_id']
             remove_user = user.remove_user_from_project(usr)
             if(remove_user == "OK"):
                 logger.sys_info("Destroy project: User %s removed." % usr['user_id'])
             else:
                 logger.sys_error("Destroy project: user %s not removed." % usr['user_id'])
-                #return "user ERROR"
                 raise Exception("Destroy project: Can not remove user %s."%(usr['username']))
         else:
             usr['userid'] = usr['user_id']
@@ -177,17 +172,14 @@ def destroy_project(auth_dict, project_dict):
                 logger.sys_info("Destroy project: User %s deleted." % usr['user_id'])
             else:
                 logger.sys_error("Destroy project: user %s not deleted." % usr['user_id'])
-                #return "user ERROR"
                 raise Exception("Destroy project: Can not delete user %s."%(usr['username']))
 
     #tenant
     remove_tenant = tenant.remove_tenant(project_dict['project_id'])
-    logger.sys_error('%s'%(remove_tenant))
     if(remove_tenant == "OK"):
         logger.sys_info("Destroy project: Project %s removed." % project_dict['project_id'])
     else:
         logger.sys_error("Destroy project: project %s not removed." % project_dict['project_id'])
-        #return "tenant ERROR"
         raise Exception("Destroy project: Can not delete tenant %s."%(project_dict['project_name']))
 
     return "OK"

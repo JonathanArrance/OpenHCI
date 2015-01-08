@@ -1,69 +1,79 @@
-$(function() {
+$(function () {
 
-    var message = new message_handle();	// Initialize message handling
-
-    // must obtain csrf cookie for AJAX call
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
+    // CSRF protection
     var csrftoken = getCookie('csrftoken');
 
-    $(function() {
-
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
-
-        $.ajaxSetup({
-            crossDomain: false, // obviates need for sameOrigin test
-            beforeSend: function(xhr, settings) {
-                if (!csrfSafeMethod(settings.type)) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
             }
-        });
+        }
+    });
 
-        $( "#instance-view-poweroff-confirm-form" ).dialog({
-            autoOpen: false,
-            height: 120,
-            width: 350,
-            modal: true,
-            buttons: {
-                "Confirm": function() {
+    // View elements
+    var status = $('#instance-status'),
+        actions = $('#widget-actions'),
+        progressbar = $('#instance-progressbar');
 
-                    message.showMessage('notice', 'Powering Off');
+    $("#instance-view-poweroff-confirm-form").dialog({
+        autoOpen: false,
+        height: 125,
+        width: 235,
+        modal: true,
+        buttons: {
+            "Confirm": function () {
 
-                    $.getJSON('/server/'+PROJECT_ID+'/'+SERVER_ID+'/power_off_server')
-                        .success(function(data){
-                            console.log(data);
-                        })
-                        .error(function(){
-                            console.log("error");
-                        });
+                message.showMessage('notice', 'Powering Off');
 
-                    $(this).dialog( "close" );
-                },
-                Cancel: function() { $( this ).dialog( "close" ); }	// Close modal form
-            },
-            close: function() {	}
-        });
+                // Hide other actions
+                actions.slideUp();
 
-        $('#poweroff-server').click(function(){
-            $( "#instance-view-poweroff-confirm-form" ).dialog( "open" );
-        });
+                // Initialize progressbar and make it visible if hidden
+                $(progressbar).progressbar({value: false});
+                setVisible(progressbar, true);
+
+                $.getJSON('/server/' + PROJECT_ID + '/' + SERVER_ID + '/power_off_server/')
+                    .done(function (data) {
+
+                        if (data.status == "error") {
+
+                            message.showMessage('error', data.message);
+                        }
+
+                        if (data.status == "success") {
+
+                            message.showMessage('success', data.message);
+                            emptyAndAppend(status, "SHUTOFF");
+                        }
+                    })
+                    .fail(function () {
+
+                        message.showMessage('error', 'Server Fault');
+                        emptyAndAppend(status, "ERROR");
+                    })
+                    .always(function (data) {
+
+                        actions.slideDown();
+                        setVisible(progressbar, false);
+
+                        if (data.status == "success") {
+                            setVisible("#poweron-server", true);
+                            setVisible("#reboot-server", false);
+                            setVisible("#poweroff-server", false);
+                            setVisible("#cycle-server", false);
+                        }
+                    });
+
+                $(this).dialog("close");
+            }
+        },
+        close: function () {
+        }
+    });
+
+    $('#poweroff-server').click(function () {
+        $("#instance-view-poweroff-confirm-form").dialog("open");
     });
 });

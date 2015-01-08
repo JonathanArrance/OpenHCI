@@ -1,60 +1,94 @@
 <!-- Begin Private Networks widget-->
 
-      <div class="span4">
-        <div class="well">
-          <div class="legend">
-             Private Networks
-          <a href="#" id="create-private-network" class="btn" style="float:right">New Private Network</a>
- 		
-          </div>
+<div class="span4">
+    <div class="well">
+        <div class="legend">
+
+            Private Networks
+
+            <a href="#" id="create-private-network" class="btn" style="float:right">Create</a>
+        </div>
 
 
-	    <div id="private-network-dialog-form" title="Create new private network">
- 		<p class="validateTips">All fields required.  </p>
-                <form>
+        <div id="private-network-dialog-form" title="Create new private network">
+            <p class="validateTips">Create a new private network. All form fields are required.</p>
+
+            <form>
                 {% csrf_token %}
                 <fieldset>
-                    <label for="name">Private Network Name</label>
-                    <input type="text" name="net_name" id="net_name"  class="text ui-widget-content ui-corner-all" />
+                    <label for="privateNet_name">Private Network Name</label>
+                    <input type="text" name="privateNet_name" id="privateNet_name"
+                           class="text ui-widget-content ui-corner-all privateNet-text-field"/>
 
-		    <label for="admin_state">Admin State?</label>
+                    <label for="admin_state">Admin State?</label>
                     <select name="admin_state" id="admin_state">
-                        <option value="---">---</option>
-                        <option value="true">true</option>
+                        <option value="true" selected="selected">true</option>
                         <option value="false">false</option>
                     </select>
-		    <label for="shared">Shared?</label>
+                    <label for="shared">Shared?</label>
                     <select name="shared" id="shared">
-                        <option value="---">---</option>
+                        <option value="false" selected="selected">false</option>
                         <option value="true">true</option>
-                        <option value="false">false</option>
                     </select>
                 </fieldset>
-                </form>
-            </div>
-          {% if private_networks %}
-	    <table class="paleblue widget-table">
-
-
-
-                <tr> <th>Network</th>  <th>Network info</th> <th>Subnets</th><th>Actions</th> </tr>
-
-                {% for key,value in private_networks.items %}
-		   <tr> 
-			<td><a href="/network/{{value.net_id}}/view/" class="disable-link">{{key}}</a></td>
-			<td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}} </td>  
-			<td>{% for subnet in value.net_subnet_id %}
-				{{subnet.subnet_name}}</br>
-			    {% endfor %}
-                        </td>
-			<td>
-			  <a href="/delete_private_network/{{ project.project_id }}/{{value.net_id}}/"> delete</a>
-	                </td>
-		   </tr>
-		{% endfor %}
-	    </table>
-	  {% else %}	
-	   <p><i>This project has no private networks</i></p>
-	  {% endif %}
+            </form>
         </div>
-      </div>
+
+        <div id="private-network-delete-confirm-form" title="Delete Private Network">
+            <p style="text-align:center;">Delete <span class="privateNet-name"></span>? If there is a router connected, it will be deleted.</p>
+        </div>
+
+        <table class="paleblue widget-table" id="privateNet_list">
+
+            <tr>
+                <th>Network</th>
+                <th>Network info</th>
+                <th>Subnets</th>
+                <th>Actions</th>
+            </tr>
+
+            <script>privateNetworks.clear();</script>
+            {% if private_networks %}
+            {% for net in priv_net_list %}
+            <script>
+                privateNetworks.setItem(
+                        "{{net.net_id}}",
+                        { id: "{{net.net_id}}", name: "{{net.net_name}}", router: "{% if net.router_id == '' %}None{% else %}{{net.router_id}}{% endif %}" }
+                );
+            </script>
+            {% endfor %}
+            {% for key,value in private_networks.items %}
+            <tr id="{{ value.net_id}}">
+                <td id="{{ value.net_id }}-name-cell">
+                    <a href="/network/{{value.net_id}}/view/" class="disable-link">
+                        <span id="{{ value.net_id }}-name-text">{{key}}</span>
+                    </a>
+                </td>
+                <td id="{{ value.net_id }}-status-cell">
+                    shared: <span id="{{ value.net_id }}-shared-text">{{value.net_shared}}</span>
+                    <span id="{{ value.net_id }}-status-pipe"> | </span>
+                    admin state: <span id="{{ value.net_id }}-admin-text">{{value.net_admin_state}}</span>
+                </td>
+                <td id="{{ value.net_id }}-subnet-cell">
+                    {% for subnet in value.net_subnet_id %}
+                    <span id="{{ subnet }}">{{subnet.subnet_name}}</span><br>
+                    {% endfor %}
+                </td>
+                <td id="{{ value.net_id }}-actions-cell">
+                    <a href="#" class="delete-privateNet">delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr id="privateNet_placeholder">
+                <td><p><i>This project has no private networks</i></p></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endif %}
+        </table>
+        <div id="privateNet_progressbar" class="ui-progressbar"
+             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
+    </div>
+</div>
