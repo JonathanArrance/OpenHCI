@@ -61,7 +61,8 @@ $(function () {
     });
 
     $("#update-user-password")
-        .click(function () {
+        .click(function (event) {
+            event.preventDefault();
             $("#dialog-form-update-password").dialog("open");
         });
 });
