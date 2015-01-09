@@ -384,6 +384,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.password_change',
             name='change-password'),
 
+        url(r'^update_admin_password/(?P<password>[^/]+)/$',
+	    'coalesce.coal_beta.views.update_admin_password',
+            name='update_admin_password'),
+
         # admin views
 
         (r'^admin/', include(admin.site.urls)),

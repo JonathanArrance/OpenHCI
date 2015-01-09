@@ -1,5 +1,27 @@
 {% extends "coal/base-fluid.html" %}
 
+{% block javascripts %}
+<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+<script src="{{ STATIC_URL }}javascripts/update-admin-password.js"></script>
+
+{% endblock %}
+
 {% block title %}  {% endblock %}
 
 {% block content %}
@@ -8,6 +30,8 @@
     <div class="well no-padding">
         <div class="legend-header">
             Admin Panel
+
+            <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
         </div>
 
         <div class="well">
@@ -105,6 +129,22 @@
     </div>
     <!-- end span6-->
 </div>
+
+    <div id="dialog-form-update-password" title="Update Password">
+        <p class="validateTips">All form fields are required.</p>
+
+        <form>
+            {% csrf_token %}
+            <fieldset>
+                <label for="password1">Password</label>
+                <input type="password" name="password1" id="password1" value=""
+                       class="text ui-widget-content ui-corner-all"/>
+                <label for="password2">Confirm Password</label>
+                <input type="password" name="password2" id="password2" value=""
+                       class="text ui-widget-content ui-corner-all"/>
+            </fieldset>
+        </form>
+    </div>
 
 </div><!-- end row-fluid-->
 

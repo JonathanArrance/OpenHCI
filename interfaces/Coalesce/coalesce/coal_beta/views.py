@@ -1820,6 +1820,21 @@ def update_user_password(request, user_id, project_id, password):
         out = {'status' : "error", 'message' : "Could not update the user password.: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
+def update_admin_password(request, password):
+    out = {}
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] == 0:
+            ap = change_admin_password (auth, password)
+            if(ap == 'OK'):
+                out['status'] = 'success'
+                out['message'] = 'The password has been successfully updated.'
+        else:
+            out = {'status' : "error", 'message' : "Only admins can update admin password"}
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not update admin password.: %s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def network_view(request, net_id):
     auth = request.session['auth']
     no = neutron_net_ops(auth)

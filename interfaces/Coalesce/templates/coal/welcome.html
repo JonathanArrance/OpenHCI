@@ -4,30 +4,40 @@
 
 {% block content %}
 
-    <div class="span8 offset2">
+<div class="span8 offset1">
+
+    <br><br>
+
+    <div class="well">
+        <div class="legend">
+            Welcome
+        </div>
 
         {% if token %}
 
+        <p>Welcome, {{ username }} to the Coalesce cloud management interface by Trans<span
+                style="color: rgb(255,111,15)">Cirrus</span>.</p>
 
-            
-            <br><br>
-            <p>Welcome, {{ username }} to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.</p>
+        <p>You can manage your account by <a href={% url 'logout' %}>logging out</a>.</p>
 
-            <p>You can manage your account by <a href={% url 'logout' %}>logging out</a> or
-            <a href={% url 'change-password' %}>changing your password</a>;</p>
+        <p> Please take the time to review the <a href="/terms-of-use">Terms of Use</a> and the <a
+                href="/privacy-policy">Privacy Policy</a>.</p>
 
-
-
-            <p> Please take the time to review the Terms of Use and the Privacy Policy.</p>
         {% else %}
-            <p>Welcome to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.</p>
-            <p>You are not currenly logged in, please
-                <a href={% url 'login_page' %} class="btn btn-primary">log in</a>.</p>
-	    <p>If you don't have or have forgotten your logon credentials, please contact your
-               Trans<span style="color: rgb(255,111,15)">Cirrus</span> Cloud Administrator to gain access to this site.</p>
+
+        <p>Welcome to the Coalesce cloud management interface by Trans<span style="color: rgb(255,111,15)">Cirrus</span>.
+        </p>
+
+        <p>You are not currenly logged in, please
+            <a href={% url 'login_page' %} class="btn btn-primary">log in</a>.</p>
+
+        <p>If you don't have or have forgotten your logon credentials, please contact your
+            Trans<span style="color: rgb(255,111,15)">Cirrus</span> Cloud Administrator to gain access to this site.</p>
+
         {% endif %}
 
     </div>
+</div>
 
 
 {% endblock %}
