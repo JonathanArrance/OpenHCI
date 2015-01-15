@@ -5,21 +5,27 @@
 {% block content %}
 
 
-<div class="container-fluid">
-    <div class="row-fluid">
-        <div class="span3 offset1 well">
-	    {% load crispy_forms_tags %}
-	    {% crispy form %}
+<div class="span8 offset1">
+    <div class="well">
+        <div class="legend">
+            Login to TransCirrus
         </div>
+        <div class="well" style="width:235px; float: left;">
+            {% load crispy_forms_tags %}
+            {% crispy form %}
+        </div>
+        <div style="width: 100%; display: inline; padding: 1em; margin: 10px;">
+            <p>
+                By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
+                    href="/terms-of-use">Terms of Use</a>.
+                If you do not agree to these terms of use, you should exit the website. By entering logon
+                information and accessing the website contents, you are stating full acceptance of the terms.
+            </p>
 
-        <div class="span6">
-            Please Login to use this site.
-            <p>By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">terms of use</a>. 
-            If you do not agree to these terms of use, you should exit the website.  By entering logon information and accessing the 
-            website contents, you are  stating full acceptance of the terms.</p>
-
-            <p>If you don't have or have forgotten your logon credentials, please contact your Trans<span style="color: rgb(255,111,15)">
-            Cirrus</span> Cloud Administrator to gain access to this site.</p>
+            <p>
+                If you don't have or have forgotten your logon credentials, please contact your Trans<span
+                    style="color: rgb(255,111,15)">Cirrus</span> Cloud Administrator to gain access to this site.
+            </p>
         </div>
     </div>
 </div>

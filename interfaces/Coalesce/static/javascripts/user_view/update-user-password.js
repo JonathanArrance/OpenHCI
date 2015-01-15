@@ -17,7 +17,7 @@ $(function () {
 
     $("#dialog-form-update-password").dialog({
         autoOpen: false,
-        height: 350,
+        height: 275,
         width: 235,
         modal: true,
         resizable: false,
@@ -25,7 +25,7 @@ $(function () {
         draggable: true,
         show: "fade",
         position: {
-            my: "center",
+            my: "top",
             at: "center",
             of: $('#page-content')
         },

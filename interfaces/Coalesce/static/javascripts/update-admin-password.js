@@ -17,7 +17,7 @@ $(function () {
 
     $("#dialog-form-update-password").dialog({
         autoOpen: false,
-        height: 350,
+        height: 275,
         width: 235,
         modal: true,
         resizable: false,
@@ -25,7 +25,7 @@ $(function () {
         draggable: true,
         show: "fade",
         position: {
-            my: "center",
+            my: "top",
             at: "center",
             of: $('#page-content')
         },
@@ -41,7 +41,7 @@ $(function () {
 
                 if (bValid) {
 
-                    $.getJSON('/update_user_password/' + USER_ID + '/' + password1.val() + '/' + PROJECT_ID + '/')
+                    $.getJSON('/update_admin_password/' + password1.val() + '/')
                         .done(function(data) {
 
                             if (data.status == 'error') {
@@ -68,7 +68,7 @@ $(function () {
         }
     });
 
-    $("#update-user-password")
+    $("#update-admin-password")
         .click(function (event) {
             event.preventDefault();
             $("#dialog-form-update-password").dialog("open");

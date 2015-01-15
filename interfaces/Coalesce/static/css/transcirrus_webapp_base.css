@@ -5196,7 +5196,8 @@ th > small {
 
 /* FIP WIDGET */
 
-#fip_progressbar > .ui-widget-header {
+#fip_progressbar > .ui-widget-header,
+#fip-progressbar > .ui-widget-header{
     background-color: #FF8617 !important;
 }
 
@@ -5206,7 +5207,8 @@ th > small {
 
 /* VOLUME WIDGET */
 
-#vol_progressbar > .ui-widget-header {
+#vol_progressbar > .ui-widget-header,
+#vol-progressbar > .ui-widget-header{
     background-color: #FF8617 !important;
 }
 
@@ -5248,7 +5250,8 @@ th > small {
 
 /* USERS WIDGET */
 
-#users_progressbar > .ui-widget-header {
+#users_progressbar > .ui-widget-header,
+#users_progressbar > .ui-widget-header{
     background-color: #FF8617 !important;
 }
 

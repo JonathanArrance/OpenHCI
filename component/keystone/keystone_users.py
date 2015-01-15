@@ -820,19 +820,27 @@ class user_ops:
         NOTE: We are going to re-engineer the openstack paradigm and let all users update the passwords. This
               function only changes the keystone password for the user. You must use the change_admin_user_password
               task in order to update the admin user password correctly.
+              WARNING: This function may be called by an admin changing the password of a user OR
+                       the user changing his own password. This effects what is in self.username
+                       and self.userid. If an admin is changing for a user then self.userid is
+                       for the admin and passwd_dict['user_id'] is for the user who is getting
+                       his password changed.
         """
-        if((passwd_dict['new_password'] == "") or ('new_password' not in passwd_dict)):
-            logger.sys_error("Can not change user password for user %s" %(self.username))
-            raise Exception("Can not change user password for user %s" %(self.username))
-        if((passwd_dict['project_id'] == "") or ('project_id' not in passwd_dict)):
-            logger.sys_error("Can not change user password for user %s" %(self.username))
-            raise Exception("Can not change user password for user %s" %(self.username))
-
         userid = None
-        if(('user_id' in passwd_dict['user_id']) and (passwd_dict['user_id'] != '')):
+        if(('user_id' in passwd_dict) and (passwd_dict['user_id'] != '')):
             userid = passwd_dict['user_id']
         else:
-            userid = self.user_id
+            #userid = self.user_id
+            logger.sys_error("Can not change user password because user_id not supplied")
+            raise Exception("Can not change user password because user_id not supplied")
+
+        if((passwd_dict['new_password'] == "") or ('new_password' not in passwd_dict)):
+            logger.sys_error("Can not change user password for user_id %s, no password supplied" %(userid))
+            raise Exception("Can not change user password for user_id %s, no password supplied" %(userid))
+
+        if((passwd_dict['project_id'] == "") or ('project_id' not in passwd_dict)):
+            logger.sys_error("Can not change user password for user_id %s, no project_id supplied" %(userid))
+            raise Exception("Can not change user password for user_id %s, no project_id supplied" %(userid))
 
         if(self.is_admin == 0):
             if(passwd_dict['project_id'] != self.project_id):
