@@ -1847,8 +1847,10 @@ ALTER TABLE ONLY trans_user_info ALTER COLUMN index SET DEFAULT nextval('trans_u
 INSERT INTO cinder_default VALUES ('auth_host', '172.12.24.10', 'api-paste.ini', 1);
 INSERT INTO cinder_default VALUES ('auth_port', '35357', 'api-paste.ini', 2);
 INSERT INTO cinder_default VALUES ('auth_protocol', 'http', 'api-paste.ini', 3);
-INSERT INTO cinder_default VALUES ('service_host', '172.12.24.10', 'api-paste.ini', 4);
-INSERT INTO cinder_default VALUES ('service_port', '5000', 'api-paste.ini', 5);
+--INSERT INTO cinder_default VALUES ('service_host', '172.12.24.10', 'api-paste.ini', 4);
+--INSERT INTO cinder_default VALUES ('service_port', '5000', 'api-paste.ini', 5);
+INSERT INTO cinder_default VALUES ('auth_uri', '172.12.24.10:5000', 'cinder.conf', 5);
+INSERT INTO cinder_default VALUES ('auth_uri', '172.12.24.10:5000', 'api-paste.ini', 5);
 INSERT INTO cinder_default VALUES ('service_protocol', 'http', 'api-paste.ini', 6);
 INSERT INTO cinder_default VALUES ('admin_tenant_name', 'service', 'api-paste.ini', 7);
 INSERT INTO cinder_default VALUES ('admin_user', 'cinder', 'api-paste.ini', 8);
@@ -1864,11 +1866,24 @@ INSERT INTO cinder_default VALUES ('state_path', '/var/lib/cinder', 'cinder.conf
 INSERT INTO cinder_default VALUES ('lock_path', '/var/lib/cinder', 'cinder.conf', 18);
 --INSERT INTO cinder_default VALUES ('qpid_username', 'guest', 'cinder.conf', 19);
 --INSERT INTO cinder_default VALUES ('qpid_password', 'guest', 'cinder.conf', 20);
-INSERT INTO cinder_default VALUES ('qpid_hostname', '172.12.24.10', 'cinder.conf', 19);
+--INSERT INTO cinder_default VALUES ('qpid_hostname', '172.12.24.10', 'cinder.conf', 19);
 INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 20);
 INSERT INTO cinder_default VALUES ('default_availability_zone', 'nova', 'cinder.conf', 21);
 INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter', 'cinder.conf', 22);
 INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.conf', 23);
+INSERT INTO cinder_default VALUES ('rpc_backend', 'rabbit', 'cinder.conf', 24);
+INSERT INTO cinder_default VALUES ('rabbit_host', '172.12.24.10', 'cinder.conf', 25);
+INSERT INTO cinder_default VALUES ('rabbit_port', '5672', 'cinder.conf', 26);
+INSERT INTO cinder_default VALUES ('rabbit_userid', 'guest', 'cinder.conf', 27);
+INSERT INTO cinder_default VALUES ('rabbit_password', 'transcirrus1', 'cinder.conf', 28);
+INSERT INTO cinder_default VALUES ('volumes_dir', '/var/lib/cinder/volumes', 'cinder.conf', 29);
+INSERT INTO cinder_default VALUES ('auth_host', '172.12.24.10', 'cinder.conf', 30);
+INSERT INTO cinder_default VALUES ('auth_protocol', 'http', 'cinder.conf', 31);
+INSERT INTO cinder_default VALUES ('auth_port', '35357', 'cinder.conf', 32);
+INSERT INTO cinder_default VALUES ('admin_user', 'cinder', 'cinder.conf', 33);
+INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'cinder.conf', 34);
+INSERT INTO cinder_default VALUES ('admin_tenant_name', 'service', 'cinder.conf', 35);
+
 
 --
 -- TOC entry 2167 (class 0 OID 16399)
@@ -1882,12 +1897,12 @@ INSERT INTO cinder_default VALUES ('storage_availability_zone', 'nova', 'cinder.
 -- Data for Name: glance_defaults; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
-INSERT INTO glance_defaults VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@localhost/glance', 'NULL', 'glance-api.conf', 1);
+INSERT INTO glance_defaults VALUES ('connection', 'postgresql://transuser:transcirrus1@localhost/glance', 'NULL', 'glance-api.conf', 1);
 INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'glance-api.conf', 2);
 INSERT INTO glance_defaults VALUES ('admin_user', 'glance', 'NULL', 'glance-api.conf', 3);
 INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-api.conf', 4);
 INSERT INTO glance_defaults VALUES ('flavor', 'keystone', 'NULL', 'glance-api.conf', 5);
-INSERT INTO glance_defaults VALUES ('sql_connection', 'postgresql://transuser:transcirrus1@localhost/glance', 'NULL', 'glance-registry.conf', 6);
+INSERT INTO glance_defaults VALUES ('connection', 'postgresql://transuser:transcirrus1@localhost/glance', 'NULL', 'glance-registry.conf', 6);
 INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'glance-registry.conf', 7);
 INSERT INTO glance_defaults VALUES ('admin_user', 'glance', 'NULL', 'glance-registry.conf', 8);
 INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-registry.conf', 9);

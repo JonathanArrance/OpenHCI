@@ -178,7 +178,7 @@ def insert_node(input_dict):
         #do the cinder config for now.
         #HACK need to add in a supersecret db password
         try:
-            insert_cinder_conf = {'parameter':"sql_connection",'param_value':"postgresql://transuser:transcirrus1@172.12.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_conf = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@172.12.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             #insert_shares = {'parameter':"cinder-vol",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             cinder_array = [insert_cinder_conf,insert_cinderavail_zone]
