@@ -144,7 +144,7 @@ def rollback(auth_dict):
         endpoint.delete_endpoint({'service_name':'nova'})
         endpoint.delete_endpoint({'service_name':'cinder'})
         endpoint.delete_endpoint({'service_name':'glance'})
-        endpoint.delete_endpoint({'service_name':'quantum'})
+        endpoint.delete_endpoint({'service_name':'neutron'})
     except:
         pass
 
@@ -158,19 +158,19 @@ def rollback(auth_dict):
     except:
         pass
 
-    #set nova,glance,cinder,quantum config files to defaults
+    #set nova,glance,cinder,neutron config files to defaults
     logger.sys_info('Removeing the OpenStack configs.')
     try:
         os.system('sudo rm -rf /etc/nova')
         os.system('sudo rm -rf /etc/cinder')
         os.system('sudo rm -rf /etc/glance')
-        os.system('sudo rm -rf /etc/quantum')
+        os.system('sudo rm -rf /etc/neutron')
         os.system('sudo tar -xvf /etc/os_configs.tar -C /etc')
         os.system('sudo chown -R nova:nova /etc/nova')
         os.system('sudo chown -R cinder:cinder /etc/cinder')
         os.system('sudo chown -R glance:glance /etc/glance')
-        os.system('sudo chown -R quantum:quantum /etc/quantum')
-        os.system('sudo chmod -R 770 /etc/nova /etc/quantum /etc/glance /etc/cinder')
+        os.system('sudo chown -R neutron:neutron /etc/neutron')
+        os.system('sudo chmod -R 770 /etc/nova /etc/neutron /etc/glance /etc/cinder')
     except:
         pass
 

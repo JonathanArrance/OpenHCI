@@ -385,7 +385,7 @@ def update_cloud_controller_name(update_dict):
     system_vars = get_system_variables(nodeid[0][0])
 
     #build a file descriptor for config.py
-    #NODE - check quantum version make path based on that.
+    #NODE - check neutron version make path based on that.
 
     config_array = []
     conf = {}

@@ -146,9 +146,9 @@ def run_setup(new_system_variables,auth_dict):
         return "Glance error."
 
     logger.sys_info('Building Quantum endpoints')
-    quantum_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'quantum'}
-    create_quantum = endpoint.create_endpoint(quantum_input_dict)
-    if(create_quantum['endpoint_id']):
+    neutron_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'neutron'}
+    create_neutron = endpoint.create_endpoint(neutron_input_dict)
+    if(create_neutron['endpoint_id']):
         logger.sys_info( "Quantum endpoint set up complete.")
     else:
         return "Quantum error."
@@ -246,8 +246,8 @@ def run_setup(new_system_variables,auth_dict):
         else:
             logger.sys_info("Neutron config file written.")
     #HACK - centOS6.5 - may not be needed in future
-    os.system('sudo ln -s /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugin.ini')
-    os.system('sudo chown -R quantum:quantum /var/lib/quantum')
+    os.system('sudo ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
+    os.system('sudo chown -R neutron:neutron /var/lib/neutron')
     #start the cinder service
     neutron_start = service.neutron('restart')
     if(neutron_start != 'OK'):
@@ -341,7 +341,7 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info("Saving the iptables entries.")
     os.system("sudo iptables-save > /transcirrus/iptables.conf")
 
-    #after quantum enabled create the default_public ip range
+    #after neutron enabled create the default_public ip range
     #check to make sure default public is the same range as the uplink ip
     logger.sys_info("Building the uplink network")
     public_dict = {'uplink_ip':sys_vars['UPLINK_IP'],'public_start':sys_vars['VM_IP_MIN'],'public_end':sys_vars['VM_IP_MAX'],'public_subnet':sys_vars['UPLINK_SUBNET']}
@@ -350,7 +350,7 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_error('The public network given does not match the uplink subnet.')
         return pub_check
 
-    #if in the same range create the default public range in quantum/neutron
+    #if in the same range create the default public range in neutron/neutron
     pg_accept = 1
     while pg_accept != 0:
         time.sleep(1)
@@ -416,10 +416,10 @@ def run_setup(new_system_variables,auth_dict):
     if(write_net_config != 'OK'):
         logger.sys_error("Could not write network setting to the config file.")
 
-    #add ext net id to quantum l3agent.conf
-    os.system('sudo chmod 664 /etc/quantum/l3_agent.ini')
+    #add ext net id to neutron l3agent.conf
+    os.system('sudo chmod 664 /etc/neutron/l3_agent.ini')
     time.sleep(1)
-    os.system('sudo echo "gateway_external_network_id = %s" >> /etc/quantum/l3_agent.ini'%(default_public['net_id']))
+    os.system('sudo echo "gateway_external_network_id = %s" >> /etc/neutron/l3_agent.ini'%(default_public['net_id']))
 
     #if the node is set as multinode, enable multinode
     #if(sys_vars['SINGLE_NODE'] == '0'):

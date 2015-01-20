@@ -69,8 +69,6 @@ def get_node(node_id):
     return r_dict
 
 def update_nova_node():
-    
-    
     insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -81,7 +79,6 @@ def update_nova_node():
         db.pg_transaction_begin()
         db.pg_insert('nova_node',nova)
         db.pg_transaction_commit()
-
 
 def insert_node(input_dict):
     #Need to add in the OVS/neutron stuff
@@ -122,7 +119,6 @@ def insert_node(input_dict):
             raise Exception ("Node info not specified")
 
     #get the db connection
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
     #static assign nova availability zone for now
     if('avail_zone' not in input_dict):
@@ -144,6 +140,8 @@ def insert_node(input_dict):
     #hack to account for physical core node
     if(util.is_node_phy() == '1'):
         input_dict['node_virt_type'] = 'kvm'
+    #elif(util.is_node_phy() == '0'):
+    #    input_dict['node_virt_type'] = 'qemu'
 
     if('node_gluster_peer' not in input_dict):
         input_dict['node_gluster_peer'] = '0'
@@ -160,7 +158,13 @@ def insert_node(input_dict):
     if(input_dict['node_gluster_disks'] == ''):
         input_dict['node_gluster_disks'] = 'None'
 
+    if(input_dict['node_type'] == 'cc'):
+        input_dict['cc_data_ip'] = 'localhost'
+    else:
+        input_dict['cc_data_ip'] = '172.12.24.10'
+
     #get the cloud controllers mgmt_ip
+    #this actually returns the uplink ip - this needs to be chnaged to return_uplink_ip
     cc_mgmt_ip = util.get_cloud_controller_mgmt_ip()
 
     #count up the number of nodes attached to controller
@@ -173,15 +177,24 @@ def insert_node(input_dict):
         logger.sys_info("Controller %s has %s nodes attached." %(input_dict['node_controller'],count))
 
     #insert node info into specific service dbs based on node_type
-    #print input_dict['node_type']
     if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
         #do the cinder config for now.
         #HACK need to add in a supersecret db password
         try:
-            insert_cinder_conf = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@172.12.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            #insert_shares = {'parameter':"cinder-vol",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            cinder_array = [insert_cinder_conf,insert_cinderavail_zone]
+            #insert_cinder_rabbit = {}
+            #insert_cinder_db = {}
+            #if(input_dict['node_type'] == 'cc'):
+            insert_cinder_db = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@%s/cinder"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_auth_host = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"api-paste.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_auth_uri = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_auth_uri_api = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"api-paste.ini",'node':"%s" %(input_dict['node_id'])}
+            #else:
+            #    insert_cinder_db = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@172.12.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            #    insert_cinder_rabbit = {'parameter':"rabbit_host",'param_value':"172.12.24.10",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            cinder_array = [insert_cinder_db,insert_cinderavail_zone,insert_cinder_rabbit,insert_cinder_auth_host,insert_cinder_auth_uri,insert_cinder_auth_uri_api,insert_cinder_auth_host_api]
             for cinder in cinder_array:
                 db.pg_transaction_begin()
                 db.pg_insert('cinder_node',cinder)
@@ -202,14 +215,23 @@ def insert_node(input_dict):
 
     if((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
         try:
-            insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_mgmt_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_node_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            nova_array = [insert_nova_conf,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt]
+            insert_nova_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_metadata = {'parameter':"metadata_listen",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_db = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@%s/nova"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_metadata_host = {'parameter':"metadata_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_host = {'parameter':"neutron_url",'param_value':"http://%s:9696"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_admin = {'parameter':"neutron_admin_auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_auth = {"parameter":"auth_host","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_memcached = {"parameter":"memcached_servers","param_value":"%s:11211"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            nova_array = [insert_nova_db,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt,insert_nova_rabbit,insert_nova_metadata,insert_metadata_host,
+                          insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -219,11 +241,19 @@ def insert_node(input_dict):
             logger.sql_error("Could not insert node specific nova config into Transcirrus db. %s"%(e))
             return 'ERROR'
         try:
-            #insert_neutron_sql = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/quantum",'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_quantum_plugin.ini",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_qpid = {"parameter":"qpid_hostname","param_value":'172.12.24.10','file_name':"quantum.conf",'node':"%s" %(input_dict['node_id'])}
-            neutron_array = [insert_neutron_region,insert_neutron_localip]
+            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_rabbit = {"parameter":"rabbit_host","param_value":'%s'%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_db = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_auth = {'parameter':"auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_meta_ip = {'parameter':"nova_metadata_ip",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_url = {'parameter':"nova_url",'param_value':"http://%s:8774/v2"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_auth_url = {'parameter':"nova_admin_auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_auth_host = {"parameter":"auth_host","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
+            neutron_array = [insert_neutron_region,insert_neutron_localip,insert_neutron_rabbit,insert_neutron_db,insert_neutron_auth,insert_meta_ip,insert_nova_url,insert_nova_auth_url,insert_neutron_auth_host,
+                             insert_neutron_auth_uri,insert_neutron_ml_ip]
             for neutron in neutron_array:
                 db.pg_transaction_begin()
                 db.pg_insert('neutron_node',neutron)
@@ -261,7 +291,6 @@ def list_nodes():
     """
     logger.sys_info('\n**List the nkdes. Component: Database Def: list_nodes**\n')
     #connect to the DB
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
     r_array = []
     try:
@@ -395,7 +424,6 @@ def update_node(update_dict):
         #if(('avail_zone' in update_dict) and update_dict['avail_zone'] != ""):
         #    update.append('avail_zone=nova')
 
-        #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
         db = util.db_connect()
         updater = ",".join(update)
         try:
@@ -432,8 +460,6 @@ def get_node_nova_config(node_id):
     #get the node type based on the node ID
     node_info = get_node(node_id)
 
-    #connect to the db
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
 
     #query the novaconf table in transcirrus db
@@ -501,33 +527,7 @@ def get_node_nova_config(node_id):
     nova_conf['file_name'] = 'nova.conf'
     nova_conf['file_content'] = nova_con
 
-    comp_con = []
-    comp_conf = {}
-    for x in compraw:
-        row = "=".join(x)
-        comp_con.append(row)
-    comp_conf['op'] = 'append'
-    comp_conf['file_owner'] = 'nova'
-    comp_conf['file_group'] = 'nova'
-    comp_conf['file_perm'] = '644'
-    comp_conf['file_path'] = '/etc/nova'
-    comp_conf['file_name'] = 'nova-compute.conf'
-    comp_conf['file_content'] = comp_con
-
-    api_con = []
-    api_conf = {}
-    for x in apiraw:
-        row = "=".join(x)
-        api_con.append(row)
-    api_conf['op'] = 'append'
-    api_conf['file_owner'] = 'nova'
-    api_conf['file_group'] = 'nova'
-    api_conf['file_perm'] = '644'
-    api_conf['file_path'] = '/etc/nova'
-    api_conf['file_name'] = 'api-paste.ini'
-    api_conf['file_content'] = api_con
-
-    r_array = [nova_conf,comp_conf,api_conf]
+    r_array = [nova_conf]
     return r_array
 
 def update_controller_config(update_dict):
@@ -554,7 +554,7 @@ def update_controller_config(update_dict):
 
 def get_node_neutron_config(node_id):
     """
-    DESC: Pull the neutron(quantum) config information out of the  config DB.
+    DESC: Pull the neutron(neutron) config information out of the  config DB.
     INPUT: node_id
     OUTPUT: Array of file descriptors containing file entries,write operations, and file name.
             raise error on failure
@@ -573,34 +573,28 @@ def get_node_neutron_config(node_id):
     node_info = get_node(node_id)
 
     #connect to the db
-    #db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
     db = util.db_connect()
 
     try:
-        get_netdef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='quantum.conf'"}
+        get_netdef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='neutron.conf'"}
         netdefraw = db.pg_select(get_netdef_dict)
-        get_netnode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='quantum.conf'",'and':"node='%s'"%(node_id)}
+        get_netnode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='neutron.conf'",'and':"node='%s'"%(node_id)}
         netnoderaw = db.pg_select(get_netnode_dict)
         netraw = netdefraw + netnoderaw
     except:
-        logger.sys_error('Could not get the quanum.conf entries from the Transcirrus nuetron db.')
-        raise Exception('Could not get the quantum.conf entries from the Transcirrus nuetron db.')
+        logger.sys_error('Could not get the neutron.conf entries from the Transcirrus nuetron db.')
+        raise Exception('Could not get the neutron.conf entries from the Transcirrus nuetron db.')
 
-    #ovsraw = None
-    #if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'cn') or (node_info['node_type'] == 'nn')):
     logger.sys_info("Node is a valid compute node or cloud in a can.")
     try:
-        get_ovsdef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='ovs_quantum_plugin.ini'"}
+        get_ovsdef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='ovs_neutron_plugin.ini'"}
         ovsdefraw = db.pg_select(get_ovsdef_dict)
-        get_ovsnode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='ovs_quantum_plugin.ini'",'and':"node='%s'"%(node_id)}
+        get_ovsnode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='ovs_neutron_plugin.ini'",'and':"node='%s'"%(node_id)}
         ovsnoderaw = db.pg_select(get_ovsnode_dict)
         ovsraw = ovsdefraw + ovsnoderaw
     except:
-        logger.sys_error('Could not get the ovs_quantum_plugin.ini entries from the Transcirrus neutron db.')
-        raise Exception('Could not get the ovs_quantum_plugin.ini entries from the Transcirrus neutron db.')
-    #else:
-    #    logger.sys_error('Could not get neutron entries, node type invalid.')
-    #    raise Exception('Could not get neutron entries, node type invalid.')
+        logger.sys_error('Could not get the ovs_neutron_plugin.ini entries from the Transcirrus neutron db.')
+        raise Exception('Could not get the ovs_neutron_plugin.ini entries from the Transcirrus neutron db.')
 
     dhcpraw = None
     metaraw = None
@@ -653,7 +647,7 @@ def get_node_neutron_config(node_id):
 
     #disconnect from db
     db.pg_close_connection()
-    #NODE - check quantum version make path based on that.
+    #NODE - check neutron version make path based on that.
     r_array = []
     net_con = []
     net_conf = {}
@@ -661,11 +655,11 @@ def get_node_neutron_config(node_id):
         row = "=".join(x)
         net_con.append(row)
     net_conf['op'] = 'append'
-    net_conf['file_owner'] = 'quantum'
-    net_conf['file_group'] = 'quantum'
+    net_conf['file_owner'] = 'neutron'
+    net_conf['file_group'] = 'neutron'
     net_conf['file_perm'] = '644'
-    net_conf['file_path'] = '/etc/quantum'
-    net_conf['file_name'] = 'quantum.conf'
+    net_conf['file_path'] = '/etc/neutron'
+    net_conf['file_name'] = 'neutron.conf'
     net_conf['file_content'] = net_con
     r_array.append(net_conf)
 
@@ -675,11 +669,11 @@ def get_node_neutron_config(node_id):
         row = "=".join(x)
         ovs_con.append(row)
     ovs_conf['op'] = 'append'
-    ovs_conf['file_owner'] = 'quantum'
-    ovs_conf['file_group'] = 'quantum'
+    ovs_conf['file_owner'] = 'neutron'
+    ovs_conf['file_group'] = 'neutron'
     ovs_conf['file_perm'] = '644'
-    ovs_conf['file_path'] = '/etc/quantum/plugins/openvswitch'
-    ovs_conf['file_name'] = 'ovs_quantum_plugin.ini'
+    ovs_conf['file_path'] = '/etc/neutron/plugins/openvswitch'
+    ovs_conf['file_name'] = 'ovs_neutron_plugin.ini'
     ovs_conf['file_content'] = ovs_con
     r_array.append(ovs_conf)
 
@@ -691,13 +685,27 @@ def get_node_neutron_config(node_id):
             row = "=".join(x)
             dhcp_con.append(row)
         dhcp_conf['op'] = 'append'
-        dhcp_conf['file_owner'] = 'quantum'
-        dhcp_conf['file_group'] = 'quantum'
+        dhcp_conf['file_owner'] = 'neutron'
+        dhcp_conf['file_group'] = 'neutron'
         dhcp_conf['file_perm'] = '644'
-        dhcp_conf['file_path'] = '/etc/quantum'
+        dhcp_conf['file_path'] = '/etc/neutron'
         dhcp_conf['file_name'] = 'dhcp_agent.ini'
         dhcp_conf['file_content'] = dhcp_con
         r_array.append(dhcp_conf)
+
+        ml_con = []
+        ml_conf = {}
+        for x in mlraw:
+            row = "=".join(x)
+            ml_con.append(row)
+        ml_conf['op'] = 'append'
+        ml_conf['file_owner'] = 'neutron'
+        ml_conf['file_group'] = 'neutron'
+        ml_conf['file_perm'] = '644'
+        ml_conf['file_path'] = '/etc/neutron/plugins/openvswitch'
+        ml_conf['file_name'] = 'ovs_neutron_plugin.ini'
+        ml_conf['file_content'] = ml_con
+        r_array.append(ml_conf)
 
         meta_con = []
         meta_conf = {}
@@ -706,38 +714,38 @@ def get_node_neutron_config(node_id):
             row = "=".join(x)
             meta_con.append(row)
         meta_conf['op'] = 'append'
-        meta_conf['file_owner'] = 'quantum'
-        meta_conf['file_group'] = 'quantum'
+        meta_conf['file_owner'] = 'neutron'
+        meta_conf['file_group'] = 'neutron'
         meta_conf['file_perm'] = '644'
-        meta_conf['file_path'] = '/etc/quantum'
+        meta_conf['file_path'] = '/etc/neutron'
         meta_conf['file_name'] = 'metadata_agent.ini'
         meta_conf['file_content'] = meta_con
         r_array.append(meta_conf)
-
+        '''
         api_con = []
         api_conf = {}
         for x in apiraw:
             row = "=".join(x)
             api_con.append(row)
         api_conf['op'] = 'append'
-        api_conf['file_owner'] = 'quantum'
-        api_conf['file_group'] = 'quantum'
+        api_conf['file_owner'] = 'neutron'
+        api_conf['file_group'] = 'neutron'
         api_conf['file_perm'] = '644'
-        api_conf['file_path'] = '/etc/quantum'
+        api_conf['file_path'] = '/etc/neutron'
         api_conf['file_name'] = 'api-paste.ini'
         api_conf['file_content'] = api_con
         r_array.append(api_conf)
-
+        '''
         l3_con = []
         l3_conf = {}
         for x in l3raw:
             row = "=".join(x)
             l3_con.append(row)
         l3_conf['op'] = 'append'
-        l3_conf['file_owner'] = 'quantum'
-        l3_conf['file_group'] = 'quantum'
+        l3_conf['file_owner'] = 'neutron'
+        l3_conf['file_group'] = 'neutron'
         l3_conf['file_perm'] = '644'
-        l3_conf['file_path'] = '/etc/quantum'
+        l3_conf['file_path'] = '/etc/neutron'
         l3_conf['file_name'] = 'l3_agent.ini'
         l3_conf['file_content'] = l3_con
         r_array.append(l3_conf)
@@ -785,7 +793,6 @@ def get_node_cinder_config(node_id):
 
     cinraw = None
     apiraw = None
-    #shareraw = None
     if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'sn')):
         logger.sys_info("Node is a valid compute node or cloud in a can.")
         #query the novaconf table in transcirrus db
@@ -805,12 +812,6 @@ def get_node_cinder_config(node_id):
         except:
             logger.sys_error('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
             raise Exception('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
-        #try:
-        #    get_shares_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='shares.conf'"}
-        #    shareraw = db.pg_select(get_shares_dict)
-        #except:
-        #    logger.sys_error('Could not get the shares entries from the Transcirrus cinder db.')
-        #    raise Exception('Could not get the shares entries from the Transcirrus cinder db.')
     else:
         logger.sys_error('Could not get cinder entries, node type invalid.')
         raise Exception('Could not get cinder entries, node type invalid.')
@@ -844,19 +845,6 @@ def get_node_cinder_config(node_id):
     api_conf['file_path'] = '/etc/cinder'
     api_conf['file_name'] = 'api-paste.ini'
     api_conf['file_content'] = api_con
-
-    #share_con = []
-    #shares_conf = {}
-    #for x in shareraw:
-    #    row = "=".join(x)
-    #    share_con.append(row)
-    #shares_conf['op'] = 'append'
-    #shares_conf['file_owner'] = 'cinder'
-    #shares_conf['file_group'] = 'cinder'
-    #shares_conf['file_perm'] = '644'
-    #shares_conf['file_path'] = '/etc/cinder'
-    #shares_conf['file_name'] = 'shares.conf'
-    #shares_conf['file_content'] = share_con
 
     r_array = [cin_conf,api_conf]
     return r_array
@@ -953,87 +941,3 @@ def get_glance_config():
     r_array.append(regp_conf)
 
     return r_array
-
-"""
-Most likely will not use
-def get_node_netsysctl_config(node_id):
-    '''
-    DESC: Pull the networking adapter config information and sysctl config out of the config DB.
-    INPUT: node_id
-    OUTPUT: Array of file descriptors containing file entries,write operations, and file name.
-            raise error on failure
-    ACCESS: wide open
-    NOTES: This will return the network interface config info from the db based on the
-           node id. util.write_new_config_file can then be used to write
-           out the new config file if desired
-           default file operation can be new(write new file) or append(append to existing)
-    '''
-    if(node_id == ""):
-        logger.sys_error("The node id was not specified")
-        raise Exception("The node id was not specified")
-
-    #connect to the db
-    db = db_connect(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-
-    logger.sys_info("Node is a valid compute node or cloud in a can.")
-    try:
-        get_netdef_dict = {'select':"parameter,param_value",'from':"network_config_default",'where':"file_name='interfaces'"}
-        netdefraw = db.pg_select(get_netdef_dict)
-        get_netnode_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='interfaces'",'and':"node='%s'"%(node_id)}
-        netnoderaw = db.pg_select(get_netnode_dict)
-        netraw = netdefraw + netnoderaw
-    except:
-        logger.sys_error('Could not get the network interface entries from the Transcirrus network db.')
-        raise Exception('Could not get the network interface entries from the Transcirrus network db.')
-    try:
-        get_sysdef_dict = {'select':"parameter,param_value",'from':"network_config",'where':"file_name='sysctl.conf'"}
-        sysdefraw = db.pg_select(get_sysdef_dict)
-        get_sysnode_dict = {'select':"parameter,param_value",'from':"network_config",'where':"file_name='sysctl.conf'",'and':"node='%s'"%(node_id)}
-        sysnoderaw = db.pg_select(get_sysnode_dict)
-        sysraw = sysdefraw + sysnoderaw
-    except:
-        logger.sys_error('Could not get the sysctl entries from the Transcirrus network db.')
-        raise Exception('Could not get the sysctl entries from the Transcirrus network db.')
-
-    #disconnect from db
-    db.pg_close_connection()
-
-    sys_con = []
-    sys_conf = {}
-    for x in sysraw:
-        row = "=".join(x)
-        sys_con.append(row)
-    sys_conf['op'] = 'append'
-    #find user/group/perms
-    sys_conf['file_owner'] = 'quantum'
-    sys_conf['file_group'] = 'quantum'
-    sys_conf['file_perm'] = '644'
-    sys_conf['file_path'] = '/etc'
-    sys_conf['file_name'] = 'sysctl.conf'
-    sys_conf['file_content'] = sys_con
-    r_array.append(sys_conf)
-
-
-def db_connect(host,port,dbname,user,password):
-    '''
-    DESC: Connect to the transcirrus db to perform node db functions.
-    INPUT: host - db server
-           port - deb port
-           dbname - name of db to connect to
-           user - username
-           password - user password
-    OUTPUT: db connection object
-    ACCESS: Open to everything
-    NOTES: This function is open to all, only the transcirrus db can be connected to. May
-           use the generic DB connect funtion found in common.util at somepoint.
-    '''
-    #make sure that only the transcirrus db is connected to
-    #NOTE!!! need to change this to transcirrus from cac_system
-    if(dbname == 'transcirrus'):
-        try:
-            db = pgsql(host,port,dbname,user,password)
-            return db
-        except:
-            logger.sql_error("Could not connect to the Transcirrus db for node operations.")
-            logger.sys_error("Could not connect to the Transcirrus db for node operations.")
-"""

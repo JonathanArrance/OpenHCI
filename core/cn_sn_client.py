@@ -205,22 +205,22 @@ def restartOvsServices(node_id):
     comments        :
     '''
     # restart ovs
-    out = os.popen("sudo service quantum-server restart")
+    out = os.popen("sudo service neutron-server restart")
     status = out.read()
 
-    #print "node_id: %s, nova quantum server restart: %s" % (node_id, status)
+    #print "node_id: %s, nova neutron server restart: %s" % (node_id, status)
 
     # check output
     out_array = status.split('\n')
 
     if out_array[1].find("start/running") != -1:
-        logger.sys_info("node_id: %s, quantum server re-started!!!" %(node_id))
+        logger.sys_info("node_id: %s, neutron server re-started!!!" %(node_id))
         if __debug__ :
-            print "node_id: %s, quantum server re-started!!!" % node_id
+            print "node_id: %s, neutron server re-started!!!" % node_id
     else:
-        logger.sys_error("node_id: %s, failure in starting quantum server!!!" %(node_id))
+        logger.sys_error("node_id: %s, failure in starting neutron server!!!" %(node_id))
         if __debug__ :
-            print "node_id: %s, failure in starting quantum server!!!" % node_id
+            print "node_id: %s, failure in starting neutron server!!!" % node_id
 
 
     # check openvswitch
@@ -341,9 +341,9 @@ def checkOpenvswitch(status):
     if status.find('start/running') != -1:
         return True
     else:
-        logger.sys_error("quantum-plugin-openvswitch-agent stopped/halted !!!")
+        logger.sys_error("neutron-plugin-openvswitch-agent stopped/halted !!!")
         if __debug__ :
-            print "quantum-plugin-openvswitch-agent stopped/halted !!!"
+            print "neutron-plugin-openvswitch-agent stopped/halted !!!"
         return False
 
 def checkOvs(node_id, status):
@@ -398,13 +398,13 @@ def checkNovaServices(node_id):
             print "node_id: %s, nova-manage services failure !!!" % node_id
         return ret
 
-    out = os.popen('service quantum-plugin-openvswitch-agent status')
+    out = os.popen('service neutron-plugin-openvswitch-agent status')
     status = out.read()
     ret = checkOpenvswitch(status)
     if ret == False:
-        logger.sys_error("node_id: %s, quantum openvswitch agent failure !!!" %(node_id))
+        logger.sys_error("node_id: %s, neutron openvswitch agent failure !!!" %(node_id))
         if __debug__ :
-            print "node_id: %s, quantum openvswitch agent failure !!!" % node_id
+            print "node_id: %s, neutron openvswitch agent failure !!!" % node_id
         return ret
 
     # export environment variables TODO
@@ -490,9 +490,9 @@ def processComputeConfig(sock, node_id):
 
         # get ovs config file
         for i in range(0,len(cn_config1)):
-            if cn_config1[i]['file_name'] == 'ovs_quantum_plugin.ini':
+            if cn_config1[i]['file_name'] == 'ovs_neutron_plugin.ini':
                 ovs_conf = cn_config1[i]
-            elif cn_config1[i]['file_name'] == 'quantum.conf':
+            elif cn_config1[i]['file_name'] == 'neutron.conf':
                 net_conf = cn_config1[i]
 
     else:

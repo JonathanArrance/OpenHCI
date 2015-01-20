@@ -164,12 +164,12 @@ def change_uplink_ip(auth_dict,input_dict):
                         else:
                             return "ERROR"
     
-                    #reset quantum endpoint
-                    quant_input = {'service_name':'quantum'}
+                    #reset neutron endpoint
+                    quant_input = {'service_name':'neutron'}
                     del_quant = endpoint.delete_endpoint(quant_input)
                     print del_quant
                     if(del_quant == 'OK'):
-                        input_dict = {'cloud_name':cloud_name,'service_name':'quantum'}
+                        input_dict = {'cloud_name':cloud_name,'service_name':'neutron'}
                         create_quant = endpoint.create_endpoint(input_dict)
                         if(create_quant['endpoint_id']):
                             print "Quantum endpoint set up complete."

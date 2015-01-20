@@ -43,9 +43,9 @@ def neutron(action):
     """
     neu_array = []
     if(config.NODE_TYPE == 'cc'):
-        neu_array = ['quantum-server','quantum-openvswitch-agent','quantum-dhcp-agent','quantum-metadata-agent','quantum-l3-agent','quantum-ovs-cleanup']
+        neu_array = ['neutron-server','neutron-openvswitch-agent','neutron-dhcp-agent','neutron-metadata-agent','neutron-l3-agent','neutron-ovs-cleanup']
     if(config.NODE_TYPE == 'cn'):
-        neu_array = ['quantum-openvswitch-agent','quantum-ovs-cleanup']
+        neu_array = ['neutron-openvswitch-agent','neutron-ovs-cleanup']
     out = _operator(neu_array,action)
     return out
 
@@ -61,7 +61,7 @@ def glance(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: These only work on the ciac node for now
     """
-    glance_array = ['openstack-glance-registry','openstack-glance-api']
+    glance_array = ['openstack-glance-registry','openstack-glance-api','openstack-glance-scrubber']
     out = _operator(glance_array,action)
     return out
 
@@ -77,7 +77,7 @@ def cinder(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: These only work on the ciac node for now
     """
-    cinder_array = ['openstack-cinder-api','openstack-cinder-scheduler','openstack-cinder-volume']
+    cinder_array = ['openstack-cinder-api','openstack-cinder-scheduler','openstack-cinder-volume','openstack-cinder-backup']
     out = _operator(cinder_array,action)
     return out
 
@@ -93,7 +93,7 @@ def cinder_sn(action):
     ACCESS: Only an admin can control the openstack services.
     NOTES: These only work on the ciac node for now
     """
-    cinder_array1 = ['openstack-cinder-api', 'openstack-cinder-scheduler']
+    cinder_array1 = ['openstack-cinder-api', 'openstack-cinder-scheduler','openstack-cinder-backup']
     out1 = _operator(cinder_array1,'stop')
     cinder_array = ['openstack-cinder-volume']
     out = _operator(cinder_array,action)
@@ -132,10 +132,37 @@ def iscsi(action):
     return out
 
 def heat(action):
-    print "not implemented"
+    """
+    DESC: Control the heat service
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: These only work on the ciac node for now
+    """
+    heat_array = ['openstack-heat-api','openstack-heat-api-cfn','openstack-heat-engine']
+    out = _operator(heat_array,action)
+    return out
 
 def ceilometer(action):
-    print "not implemented"
+    """
+    DESC: Control the ceilometer service
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: These only work on the ciac node for now
+    """
+    ceil_array = ['openstack-ceilometer-alarm-evaluator','openstack-ceilometer-alarm-notifier','openstack-ceilometer-api','openstack-ceilometer-central','openstack-ceilometer-collector',
+                  'openstack-ceilometer-compute','openstack-ceilometer-notification']
+    out = _operator(ceil_array,action)
+    return out
 
 def postgresql(action):
     """
@@ -208,7 +235,7 @@ def swift(action):
     NOTES: These only work on the ciac node for now
     """
     swift_array = ['openstack-swift-account','openstack-swift-account-auditor','openstack-swift-account-reaper','openstack-swift-account-replicator','openstack-swift-container','openstack-swift-container-auditor',
-                   'openstack-swift-container-replicator','openstack-swift-container-updater','openstack-swift-object','openstack-swift-object-auditor','openstack-swift-object-replicator',
+                   'openstack-swift-container-replicator','openstack-swift-container-updater','openstack-swift-object','openstack-swift-object-auditor','openstack-swift-object-replicator','openstack-swift-object-expirer',
                    'openstack-swift-object-updater','openstack-swift-proxy']
     out = _operator(swift_array,action)
     return out
@@ -262,20 +289,20 @@ def qpid(action):
     out = _operator(qpid_array,action)
     return out
 
-def pacemaker(action):
+def rabbit(action):
     """
-    DESC: Control the pacemaker service
+    DESC: Control the rabbitmq service
     INPUT: start
            restart
            stop
     OUTPUT: OK
             ERROR
             NA
-    ACCESS: Only an admin can control the pacemaker services.
+    ACCESS: Only an admin can control the rabbit services.
     NOTES:
     """
-    pace_array = ['pacemaker']
-    out = _operator(pace_array,action)
+    rabbit_array = ['rabbitmq-server']
+    out = _operator(rabbit_array,action)
     return out
 
 def zero_connect_server(action):
@@ -425,7 +452,7 @@ def _operator(service_array,action,silent=True):
     for service in service_array:
         process = []
         out = None
-        time.sleep(1)
+        #time.sleep(1)
         if(action.lower() == 'start' or action.lower() == 'restart'):
             if(silent is True):
                 os.system('sudo chkconfig %s on >> /dev/null'%(service))
@@ -435,7 +462,7 @@ def _operator(service_array,action,silent=True):
                 os.system('sudo chkconfig %s on'%(service))
                 os.system('sudo service %s restart'%(service))
                 out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            time.sleep(1)
+            #time.sleep(1)
         elif(action.lower() == 'stop'):
             if(silent is True):
                 os.system('sudo chkconfig %s off >> /dev/null'%(service))

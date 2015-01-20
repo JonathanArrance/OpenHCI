@@ -138,8 +138,6 @@ def disable_multi_node():
         logger.sys_error("The node does not appear to be in a single node setup conifg, make sure the system is set to single node")
         return 'ERROR'
 
-    
-
 def enable_ha():
     print "not implemented"
     
