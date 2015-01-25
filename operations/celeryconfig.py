@@ -1,5 +1,5 @@
-BROKER_URL = 'amqp://guest:transcirrus1@172.12.24.10//'
-CELERY_RESULT_BACKEND = 'amqp://guest:transcirrus1@172.12.24.10//'
+BROKER_URL = 'amqp://guest:transcirrus1@172.24.24.10//'
+CELERY_RESULT_BACKEND = 'amqp://guest:transcirrus1@172.24.24.10//'
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ('change_admin_password','reset_factory_defaults','rollback_setup','build_complete_project','destroy_project')

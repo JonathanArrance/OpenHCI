@@ -32,7 +32,7 @@ glust = gluster_ops(input_dict)
 #create3 = glust.create_gluster_volume(input_dict3)
 #print create3
 
-#brick = ['172.12.24.10:/data/gluster/jonarrance2','172.12.24.12:/data/gluster/jonarrance2']
+#brick = ['172.24.24.10:/data/gluster/jonarrance2','172.24.24.12:/data/gluster/jonarrance2']
 #input_dict4 = {'volume_name':'jonarrance2','bricks': brick}
 #create4 = glust.create_gluster_volume(input_dict4)
 #print create4

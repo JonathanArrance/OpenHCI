@@ -69,7 +69,7 @@ def get_node(node_id):
     return r_dict
 
 def update_nova_node():
-    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.12.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.24.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -161,11 +161,18 @@ def insert_node(input_dict):
     if(input_dict['node_type'] == 'cc'):
         input_dict['cc_data_ip'] = 'localhost'
     else:
-        input_dict['cc_data_ip'] = '172.12.24.10'
+        input_dict['cc_data_ip'] = '172.24.24.10'
 
     #get the cloud controllers mgmt_ip
     #this actually returns the uplink ip - this needs to be chnaged to return_uplink_ip
     cc_mgmt_ip = util.get_cloud_controller_mgmt_ip()
+
+    #get worker count - equal to the number of procs
+    #NOTE proc_info['total_cores'] = workers
+    proc_info = util.getCPUInfo()
+
+    #get the service tenant ID
+    service_tenant = util.get_service_tenant_id()
 
     #count up the number of nodes attached to controller
     elem_dict = {'table':"trans_nodes",'where':"node_controller='%s'" %(input_dict['node_controller'])}
@@ -177,23 +184,40 @@ def insert_node(input_dict):
         logger.sys_info("Controller %s has %s nodes attached." %(input_dict['node_controller'],count))
 
     #insert node info into specific service dbs based on node_type
+    try:
+        insert_ceil_db = {'parameter':"connection",'param_value':"mongodb://ceilometer:transcirrus1@%s:27017/ceilometer"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_auth_uri = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_memcached = {'parameter':"memcached_servers",'param_value':"%s:11211"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_osauth_uri = {'parameter':"os_auth_url",'param_value':"%s:5000/v2.0"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_cworkers = {'parameter':'collector_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_nworkers = {'parameter':'notification_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers]
+        for ceil in ceil_array:
+            db.pg_transaction_begin()
+            db.pg_insert('ceilometer_node',ceil)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sql_error("Could not insert node specific ceilometer config into TransCirrus db.")
+        return 'ERROR'
+
+    #if(input_dict['node_type'] == 'cc'):
+    #    #glance workers
+    #    insert_glance_workers = {'parameter':'workers'}
+
     if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
         #do the cinder config for now.
         #HACK need to add in a supersecret db password
         try:
             insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            #insert_cinder_rabbit = {}
-            #insert_cinder_db = {}
-            #if(input_dict['node_type'] == 'cc'):
             insert_cinder_db = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@%s/cinder"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_auth_host = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"api-paste.ini",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_auth_uri = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_auth_uri_api = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"api-paste.ini",'node':"%s" %(input_dict['node_id'])}
-            #else:
-            #    insert_cinder_db = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@172.12.24.10/cinder",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            #    insert_cinder_rabbit = {'parameter':"rabbit_host",'param_value':"172.12.24.10",'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             cinder_array = [insert_cinder_db,insert_cinderavail_zone,insert_cinder_rabbit,insert_cinder_auth_host,insert_cinder_auth_uri,insert_cinder_auth_uri_api,insert_cinder_auth_host_api]
             for cinder in cinder_array:
                 db.pg_transaction_begin()
@@ -203,6 +227,7 @@ def insert_node(input_dict):
             db.pg_transaction_rollback()
             logger.sql_error("Could not insert node specific cinder config into TransCirrus db.")
             return 'ERROR'
+
         #set the spindle_node flag in the system config table to 1 if new disks are spindle
         check_spindle = util.get_spindle_node_enabled()
         if((input_dict['node_gluster_disks'] == 'spindle') and (check_spindle == '0')):
@@ -216,6 +241,7 @@ def insert_node(input_dict):
     if((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
         try:
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_host = {"parameter":"host","param_value":"%s" %(input_dict['node_name']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_mgmt_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -230,8 +256,15 @@ def insert_node(input_dict):
             insert_nova_auth = {"parameter":"auth_host","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_memcached = {"parameter":"memcached_servers","param_value":"%s:11211"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_neu_ten_id = {"parameter":"neutron_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_ec2workers = {'parameter':'ec2_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_nworkers = {'parameter':'notification_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_mworkers = {'parameter':'metadata_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_workers = {'parameter':'workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+
             nova_array = [insert_nova_db,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt,insert_nova_rabbit,insert_nova_metadata,insert_metadata_host,
-                          insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached]
+                          insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached,insert_nova_neu_ten_id,insert_nova_ec2workers,insert_nova_nworkers,
+                          insert_nova_mworkers,insert_nova_workers]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -252,8 +285,9 @@ def insert_node(input_dict):
             insert_neutron_auth_host = {"parameter":"auth_host","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neu_nova_ten_id = {"parameter":"nova_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             neutron_array = [insert_neutron_region,insert_neutron_localip,insert_neutron_rabbit,insert_neutron_db,insert_neutron_auth,insert_meta_ip,insert_nova_url,insert_nova_auth_url,insert_neutron_auth_host,
-                             insert_neutron_auth_uri,insert_neutron_ml_ip]
+                             insert_neutron_auth_uri,insert_neutron_ml_ip,insert_neu_nova_ten_id]
             for neutron in neutron_array:
                 db.pg_transaction_begin()
                 db.pg_insert('neutron_node',neutron)
@@ -262,6 +296,7 @@ def insert_node(input_dict):
             db.pg_transaction_rollback()
             logger.sys_error("Could not insert node specific neutron config into Transcirrus db.")
             return 'ERROR'
+
     try:
         insert_dict = {'node_id':input_dict['node_id'],'node_name':input_dict['node_name'],'node_type':input_dict['node_type'],'node_data_ip':input_dict['node_data_ip'],'node_mgmt_ip':input_dict['node_mgmt_ip'],
                        'node_controller':input_dict['node_controller'],'node_cloud_name':input_dict['node_cloud_name'],'node_nova_zone':input_dict['avail_zone'],'node_fault_flag':'0',
@@ -851,7 +886,7 @@ def get_node_cinder_config(node_id):
 
 def get_glance_config():
     """
-    DESC: Get the glance config from the db and write the config on the controller/ciab node.
+    DESC: Get the glance config from the db and write the config on the controller/ciac node.
     INPUT: None
     OUTPUT: File descriptor used to write the glance config file on the ciac node.
     ACCESS: wide open
@@ -941,3 +976,56 @@ def get_glance_config():
     r_array.append(regp_conf)
 
     return r_array
+
+def get_node_heat_config():
+    """
+    DESC: Get the heat config from the db and write the config on the controller/ciac node.
+    INPUT: None
+    OUTPUT: File descriptor used to write the heat config file on the ciac node.
+    ACCESS: wide open
+    NOTES: As of now this function will only write the info to the controller/ciab node. In the
+           future we will add the ability to move heat to a seperate node.
+    """
+    logger.sys_info('\n**Get Heat config information. Component: Database Def: get_node_heat_config**\n')
+    db = util.db_connect()
+    logger.sys_info("Writing the Heat config file to the controller node.")
+
+    try:
+        get_dict = {'select':"parameter,param_value",'from':"heat_defaults",'where':"file_name='heat.conf'"}
+        heat = db.pg_select(get_api_dict)
+    except:
+        logger.sys_error('Could not get the Heat entries from the Transcirrus db.')
+        raise Exception('Could not get the Heat entries from the Transcirrus db.')
+
+    #disconnect from db
+    db.pg_close_connection()
+
+    r_array = []
+    heat_array = []
+    heat_conf = {}
+    for x in heat:
+        row = "=".join(x)
+        heat_array.append(row)
+    heat_conf['op'] = 'append'
+    #find user/group/perms
+    heat_conf['file_owner'] = 'heat'
+    heat_conf['file_group'] = 'heat'
+    heat_conf['file_perm'] = '644'
+    heat_conf['file_path'] = '/etc/heat'
+    heat_conf['file_name'] = 'heat.conf'
+    heat_conf['file_content'] = heat_array
+    r_array.append(heat_conf)
+
+    return r_array
+
+def get_node_ceilometer_config(node_id):
+    """
+    DESC: Get the ceilometer config from the db and write the config on the controller/ciac node.
+    INPUT: None
+    OUTPUT: File descriptor used to write the ceilometer config file on the ciac node.
+    ACCESS: wide open
+    NOTES: 
+    """
+    logger.sys_info('\n**Get Ceilometer config information. Component: Database Def: get_node_ceilometer_config**\n')
+    db = util.db_connect()
+    logger.sys_info("Writing the Ceilometer config file to node %s."%(node_id))

@@ -459,6 +459,35 @@ def get_default_pub_net_id():
 def get_default_pub_subnet_id():
     return config.DEFAULT_PUB_SUBNET_ID
 
+def get_service_tenant_id():
+    """
+    DESC: Get the service tenant_id of the cloud
+    INPUT: None
+    OUTPUT: service tenant id
+    ACCESS: Wide open
+    NOTE:
+    """
+    db = db_connect()
+    get_id = {'select':'param_value','from':'trans_system_settings','where':"parameter='service_id'"}
+    service = db.pg_select(get_id)
+    service_id = service[0][0]
+    return service_id
+
+def get_trans_default_tenant_id():
+    """
+    DESC: Get the default tenant_id of the cloud
+    INPUT: None
+    OUTPUT: default tenant id
+    ACCESS: Wide open
+    NOTE:
+    """
+    db = db_connect()
+    get_id = {'select':'param_value','from':'trans_system_settings','where':"parameter='trans_default_id'"}
+    trans = db.pg_select(get_id)
+    trans_default_id = trans[0][0]
+    return trans_default_id
+
+
 def get_cloud_controller_id():
     """
     DESC: get the system name from the config.py file.
@@ -1490,3 +1519,35 @@ def getDhcpServer():
     else:
         return dhcp_server
 
+def getCPUInfo():
+    """
+    DESC: Get the number of CPU cores in a node, so that the number of processes(workers) can be set for a service.
+    INPUT: None
+    OUTPUT: r_dict - architecture
+                   - num_cpus
+                   - theads_per_core
+                   - sockets
+                   - cores_per_socket
+                   - total_cores
+                   - cpu_family
+                   - cpu_model
+                   - cpu_stepping
+                   - cpu_speed
+    NOTE: This will return the number of physical cpu cores in a system not the number of hyperthreaded
+          cores in the system.
+    """
+    out = subprocess.Popen('lscpu',shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    raw_data = out.stdout.readlines()
+
+    #process the raw data and peal off the labels
+    proc = []
+    for data in raw_data:
+        proc_data = data.split(":")
+        proc.append(proc_data[1].strip())
+
+    total_cores = int(proc[6]) * int(proc[7])
+
+    r_dict = {'architecture':proc[0],'num_cpus':proc[3],'threads_per_core':proc[5],'sockets':proc[7],'cores_per_socket':proc[6],'total_cores':str(total_cores),'cpu_family':proc[10],
+              'cpu_model':proc[11],'cpu_stepping':proc[12],'cpu_speed':proc[13]}
+
+    return r_dict

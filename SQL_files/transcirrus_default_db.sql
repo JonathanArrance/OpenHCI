@@ -24,11 +24,11 @@ ALTER DATABASE transcirrus OWNER TO transuser;
 
 \connect transcirrus
 
-SET statement_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SET check_function_bodies = false;
-SET client_min_messages = warning;
+--SET statement_timeout = 0;
+--SET client_encoding = 'UTF8';
+--SET standard_conforming_strings = on;
+--SET check_function_bodies = false;
+--SET client_min_messages = warning;
 
 --
 -- TOC entry 213 (class 3079 OID 11677)
@@ -544,6 +544,190 @@ ALTER SEQUENCE nova_node_index_seq OWNED BY nova_node.index;
 
 SELECT pg_catalog.setval('nova_node_index_seq', 56, true);
 
+--
+-- TOC entry 209 (class 1259 OID 27521)
+-- Name: ceilometer_default; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE ceilometer_default (
+    parameter character varying,
+    param_value character varying,
+    file_name character varying,
+    index integer NOT NULL
+);
+
+
+ALTER TABLE public.ceilometer_default OWNER TO transuser;
+
+--
+-- TOC entry 208 (class 1259 OID 27519)
+-- Name: ceilometer_default_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE ceilometer_default_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ceilometer_default_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1999 (class 0 OID 0)
+-- Dependencies: 208
+-- Name: ceilometer_default_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE ceilometer_default_index_seq OWNED BY ceilometer_default.index;
+
+
+--
+-- TOC entry 2000 (class 0 OID 0)
+-- Dependencies: 208
+-- Name: ceilometer_default_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('ceilometer_default_index_seq', 1, false);
+
+
+--
+-- TOC entry 211 (class 1259 OID 27532)
+-- Name: ceilometer_node; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE ceilometer_node (
+    parameter character varying,
+    param_value character varying,
+    file_name character varying,
+    node character varying,
+    index integer NOT NULL
+);
+
+
+ALTER TABLE public.ceilometer_node OWNER TO transuser;
+
+--
+-- TOC entry 210 (class 1259 OID 27530)
+-- Name: ceilometer_node_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE ceilometer_node_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ceilometer_node_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 2001 (class 0 OID 0)
+-- Dependencies: 210
+-- Name: ceilometer_node_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE ceilometer_node_index_seq OWNED BY ceilometer_node.index;
+
+
+--
+-- TOC entry 2002 (class 0 OID 0)
+-- Dependencies: 210
+-- Name: ceilometer_node_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('ceilometer_node_index_seq', 1, false);
+
+
+--
+-- TOC entry 207 (class 1259 OID 27510)
+-- Name: heat_default; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE heat_default (
+    parameter character varying,
+    param_value character varying,
+    file_name character varying,
+    index integer NOT NULL
+);
+
+
+ALTER TABLE public.heat_default OWNER TO transuser;
+
+--
+-- TOC entry 206 (class 1259 OID 27508)
+-- Name: heat_default_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE heat_default_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.heat_default_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 2003 (class 0 OID 0)
+-- Dependencies: 206
+-- Name: heat_default_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE heat_default_index_seq OWNED BY heat_default.index;
+
+
+--
+-- TOC entry 2004 (class 0 OID 0)
+-- Dependencies: 206
+-- Name: heat_default_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('heat_default_index_seq', 1, false);
+
+
+--
+-- TOC entry 1986 (class 2604 OID 27524)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY ceilometer_default ALTER COLUMN index SET DEFAULT nextval('ceilometer_default_index_seq'::regclass);
+
+
+--
+-- TOC entry 1987 (class 2604 OID 27535)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY ceilometer_node ALTER COLUMN index SET DEFAULT nextval('ceilometer_node_index_seq'::regclass);
+
+
+--
+-- TOC entry 1985 (class 2604 OID 27513)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY heat_default ALTER COLUMN index SET DEFAULT nextval('heat_default_index_seq'::regclass);
+
+--
+-- TOC entry 1991 (class 2606 OID 27529)
+-- Name: ceilometer_default_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY ceilometer_default
+    ADD CONSTRAINT ceilometer_default_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 1989 (class 2606 OID 27518)
+-- Name: heat_default_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY heat_default
+    ADD CONSTRAINT heat_default_pkey PRIMARY KEY (index);
 
 --
 -- TOC entry 180 (class 1259 OID 16470)
@@ -1810,6 +1994,36 @@ ALTER TABLE ONLY trans_system_settings ALTER COLUMN index SET DEFAULT nextval('t
 
 ALTER TABLE ONLY trans_user_info ALTER COLUMN index SET DEFAULT nextval('trans_user_info_index_seq'::regclass);
 
+--
+-- TOC entry 2166 (class 0 OID 16391)
+-- Dependencies: 161
+-- Data for Name: heat_default; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+INSERT INTO heat_default VALUES ('verbose', 'False', 'heat.conf', 1);
+INSERT INTO heat_default VALUES ('debug', 'False', 'heat.conf', 2);
+INSERT INTO heat_default VALUES ('rabbit_userid', 'guest', 'heat.conf', 3);
+INSERT INTO heat_default VALUES ('rabbit_password', 'transcirrus1', 'heat.conf', 4);
+INSERT INTO heat_default VALUES ('admin_user', 'cinder', 'heat.conf', 5);
+INSERT INTO heat_default VALUES ('admin_password', 'transcirrus1', 'heat.conf', 6);
+
+
+--
+-- TOC entry 2166 (class 0 OID 16391)
+-- Dependencies: 161
+-- Data for Name: ceilometer_default; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+INSERT INTO ceilometer_default VALUES ('verbose', 'False', 'ceilometer.conf', 1);
+INSERT INTO ceilometer_default VALUES ('debug', 'False', 'ceilometer.conf', 2);
+INSERT INTO ceilometer_default VALUES ('rabbit_userid', 'guest', 'ceilometer.conf', 3);
+INSERT INTO ceilometer_default VALUES ('rabbit_password', 'transcirrus1', 'ceilometer.conf', 4);
+INSERT INTO ceilometer_default VALUES ('admin_user', 'ceilometer', 'ceilometer.conf', 5);
+INSERT INTO ceilometer_default VALUES ('admin_password', 'transcirrus1', 'ceilometer.conf', 6);
+INSERT INTO ceilometer_default VALUES ('os_username', 'ceilometer', 'ceilometer.conf', 7);
+INSERT INTO ceilometer_default VALUES ('os_password', 'transcirrus1', 'ceilometer.conf', 8);
+
+
 
 --
 -- TOC entry 2166 (class 0 OID 16391)
@@ -1817,10 +2031,10 @@ ALTER TABLE ONLY trans_user_info ALTER COLUMN index SET DEFAULT nextval('trans_u
 -- Data for Name: cinder_default; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
---INSERT INTO cinder_default VALUES ('auth_host', '172.12.24.10', 'api-paste.ini', 1);
+--INSERT INTO cinder_default VALUES ('auth_host', '172.24.24.10', 'api-paste.ini', 1);
 INSERT INTO cinder_default VALUES ('auth_port', '35357', 'api-paste.ini', 2);
 INSERT INTO cinder_default VALUES ('auth_protocol', 'http', 'api-paste.ini', 3);
---INSERT INTO cinder_default VALUES ('auth_uri', '172.12.24.10:5000', 'api-paste.ini', 4);
+--INSERT INTO cinder_default VALUES ('auth_uri', '172.24.24.10:5000', 'api-paste.ini', 4);
 INSERT INTO cinder_default VALUES ('service_protocol', 'http', 'api-paste.ini', 5);
 INSERT INTO cinder_default VALUES ('admin_tenant_name', 'service', 'api-paste.ini', 6);
 INSERT INTO cinder_default VALUES ('admin_user', 'cinder', 'api-paste.ini', 7);
@@ -1829,10 +2043,10 @@ INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.
 INSERT INTO cinder_default VALUES ('verbose', 'False', 'cinder.conf', 10);
 INSERT INTO cinder_default VALUES ('debug', 'False', 'cinder.conf', 11);
 INSERT INTO cinder_default VALUES ('auth_stratagy', 'keystone', 'cinder.conf', 12);
---INSERT INTO cinder_default VALUES ('auth_uri', 'http://172.12.24.10:5000', 'cinder.conf', 13);
+--INSERT INTO cinder_default VALUES ('auth_uri', 'http://172.24.24.10:5000', 'cinder.conf', 13);
 INSERT INTO cinder_default VALUES ('auth_protocol', 'http', 'cinder.conf', 14);
 INSERT INTO cinder_default VALUES ('auth_port', '35357', 'cinder.conf', 15);
---INSERT INTO cinder_default VALUES ('auth_host', '172.12.24.10', 'cinder.conf', 16);
+--INSERT INTO cinder_default VALUES ('auth_host', '172.24.24.10', 'cinder.conf', 16);
 INSERT INTO cinder_default VALUES ('admin_user', 'cinder', 'cinder.conf', 17);
 INSERT INTO cinder_default VALUES ('admin_tenant_name', 'service', 'cinder.conf', 18);
 INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'cinder.conf', 19);
@@ -1840,7 +2054,7 @@ INSERT INTO cinder_default VALUES ('state_path', '/var/lib/cinder', 'cinder.conf
 INSERT INTO cinder_default VALUES ('lock_path', '/var/lib/cinder', 'cinder.conf', 21);
 INSERT INTO cinder_default VALUES ('volumes_dir', '/var/lib/cinder/volumes', 'cinder.conf', 22);
 INSERT INTO cinder_default VALUES ('rpc_backend', 'rabbit', 'cinder.conf', 23);
---INSERT INTO cinder_default VALUES ('rabbit_host', '172.12.24.10', 'cinder.conf', 24);
+--INSERT INTO cinder_default VALUES ('rabbit_host', '172.24.24.10', 'cinder.conf', 24);
 INSERT INTO cinder_default VALUES ('rabbit_port', '5672', 'cinder.conf', 25);
 INSERT INTO cinder_default VALUES ('rabbit_userid', 'guest', 'cinder.conf', 26);
 INSERT INTO cinder_default VALUES ('rabbit_password', 'transcirrus1', 'cinder.conf', 27);
@@ -1929,12 +2143,12 @@ INSERT INTO neutron_default VALUES ('external_network_bridge', 'br-ex', 'l3_agen
 INSERT INTO neutron_default VALUES ('enable_metadata_proxy', 'True', 'l3_agent.ini', 12);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'metadata_agent.ini', 13);
 INSERT INTO neutron_default VALUES ('verbose', 'False', 'metadata_agent.ini', 14);
---INSERT INTO neutron_default VALUES ('auth_url', 'http://172.12.24.10:35357/v2.0', 'metadata_agent.ini', 15);
+--INSERT INTO neutron_default VALUES ('auth_url', 'http://172.24.24.10:35357/v2.0', 'metadata_agent.ini', 15);
 INSERT INTO neutron_default VALUES ('auth_region', 'TransCirrusCloud', 'metadata_agent.ini', 16);
 INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'metadata_agent.ini', 17);
 INSERT INTO neutron_default VALUES ('admin_user', 'neutron', 'metadata_agent.ini', 18);
 INSERT INTO neutron_default VALUES ('admin_password', 'transcirrus1', 'metadata_agent.ini', 19);
---INSERT INTO neutron_default VALUES ('nova_metadata_ip', '172.12.24.10', 'metadata_agent.ini', 20);
+--INSERT INTO neutron_default VALUES ('nova_metadata_ip', '172.24.24.10', 'metadata_agent.ini', 20);
 INSERT INTO neutron_default VALUES ('nova_metadata_port', '8775', 'metadata_agent.ini', 21);
 INSERT INTO neutron_default VALUES ('metadata_proxy_shared_secret', 'transcirrus1', 'metadata_agent.ini', 22);
 INSERT INTO neutron_default VALUES ('metadata_workers', '1', 'metadata_agent.ini', 23);
@@ -1946,7 +2160,7 @@ INSERT INTO neutron_default VALUES ('core_plugin', 'ml2', 'neutron.conf', 28);
 INSERT INTO neutron_default VALUES ('service_plugins', 'router,metering', 'neutron.conf', 29);
 INSERT INTO neutron_default VALUES ('auth_strategy', 'keystone', 'neutron.conf', 30);
 INSERT INTO neutron_default VALUES ('control_exchange', 'neutron', 'neutron.conf', 31);
---INSERT INTO neutron_default VALUES ('rabbit_host', '172.12.24.10', 'neutron.conf', 32);
+--INSERT INTO neutron_default VALUES ('rabbit_host', '172.24.24.10', 'neutron.conf', 32);
 INSERT INTO neutron_default VALUES ('rabbit_password', 'transcirrus1', 'neutron.conf', 33);
 INSERT INTO neutron_default VALUES ('rabbit_port', '5672', 'neutron.conf', 34);
 INSERT INTO neutron_default VALUES ('rabbit_userid', 'guest', 'neutron.conf', 35);
@@ -1954,26 +2168,26 @@ INSERT INTO neutron_default VALUES ('notification_driver', 'neutron.openstack.co
 INSERT INTO neutron_default VALUES ('agent_down_time', '75', 'neutron.conf', 37);
 INSERT INTO neutron_default VALUES ('notify_nova_on_port_status_changes', 'True', 'neutron.conf', 38);
 INSERT INTO neutron_default VALUES ('notify_nova_on_port_data_changes', 'True', 'neutron.conf', 39);
---INSERT INTO neutron_default VALUES ('nova_url', 'http://172.12.24.10:8774/v2', 'neutron.conf', 40);
+--INSERT INTO neutron_default VALUES ('nova_url', 'http://172.24.24.10:8774/v2', 'neutron.conf', 40);
 INSERT INTO neutron_default VALUES ('nova_admin_username', 'nova', 'neutron.conf', 41);
 INSERT INTO neutron_default VALUES ('nova_admin_password', 'transcirrus1', 'neutron.conf', 42);
---INSERT INTO neutron_default VALUES ('nova_admin_auth_url', 'http://172.12.24.10:35357/v2.0', 'neutron.conf', 43);
+--INSERT INTO neutron_default VALUES ('nova_admin_auth_url', 'http://172.24.24.10:35357/v2.0', 'neutron.conf', 43);
 INSERT INTO neutron_default VALUES ('root_helper', 'sudo neutron-rootwrap /etc/neutron/rootwrap.conf', 'neutron.conf', 44);
---INSERT INTO neutron_default VALUES ('auth_host', '172.12.24.10', 'neutron.conf', 45);
+--INSERT INTO neutron_default VALUES ('auth_host', '172.24.24.10', 'neutron.conf', 45);
 INSERT INTO neutron_default VALUES ('auth_port', '35357', 'neutron.conf', 46);
---INSERT INTO neutron_default VALUES ('auth_uri', '172.12.24.10:5000', 'neutron.conf', 47);
+--INSERT INTO neutron_default VALUES ('auth_uri', '172.24.24.10:5000', 'neutron.conf', 47);
 INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'neutron.conf', 48);
 INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'neutron.conf', 49);
 INSERT INTO neutron_default VALUES ('admin_user', 'neutron', 'neutron.conf', 50);
 INSERT INTO neutron_default VALUES ('admin_password', 'transcirrus1', 'neutron.conf', 51);
---INSERT INTO neutron_default VALUES ('connection', 'postgresql://transuser:transcirrus1@172.12.24.10/neutron', 'neutron.conf', 52);
+--INSERT INTO neutron_default VALUES ('connection', 'postgresql://transuser:transcirrus1@172.24.24.10/neutron', 'neutron.conf', 52);
 INSERT INTO neutron_default VALUES ('type_drivers', 'gre', 'ml2_conf.ini', 53);
 INSERT INTO neutron_default VALUES ('tenant_network_types', 'gre', 'ml2_conf.ini', 54);
 INSERT INTO neutron_default VALUES ('mechanism_drivers', 'openvswitch', 'ml2_conf.ini', 55);
 INSERT INTO neutron_default VALUES ('tunnel_id_ranges', '1:1000', 'ml2_conf.ini', 56);
 INSERT INTO neutron_default VALUES ('firewall_driver', 'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver', 'ml2_conf.ini', 57);
 INSERT INTO neutron_default VALUES ('tunnel_types', 'gre', 'ml2_conf.ini', 58);
---INSERT INTO neutron_default VALUES ('local_ip', '172.12.24.10', 'ml2_conf.ini', 59);
+--INSERT INTO neutron_default VALUES ('local_ip', '172.24.24.10', 'ml2_conf.ini', 59);
 INSERT INTO neutron_default VALUES ('type_drivers', 'gre', 'ovs_neutron_plugin.ini', 60);
 INSERT INTO neutron_default VALUES ('tenant_network_types', 'gre', 'ovs_neutron_plugin.ini', 61);
 INSERT INTO neutron_default VALUES ('mechanism_drivers', 'openvswitch', 'ovs_neutron_plugin.ini', 62);
@@ -1981,7 +2195,7 @@ INSERT INTO neutron_default VALUES ('tunnel_id_ranges', '1:1000', 'ovs_neutron_p
 INSERT INTO neutron_default VALUES ('enable_security_group', 'True', 'ovs_neutron_plugin.ini', 64);
 INSERT INTO neutron_default VALUES ('firewall_driver', 'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver', 'ovs_neutron_plugin.ini', 65);
 INSERT INTO neutron_default VALUES ('tunnel_types', 'gre', 'ovs_neutron_plugin.ini', 66);
---INSERT INTO neutron_default VALUES ('local_ip', '172.12.24.10', 'ovs_neutron_plugin.ini', 67);
+--INSERT INTO neutron_default VALUES ('local_ip', '172.24.24.10', 'ovs_neutron_plugin.ini', 67);
 
 --
 -- TOC entry 2173 (class 0 OID 16446)
@@ -1996,7 +2210,7 @@ INSERT INTO neutron_default VALUES ('tunnel_types', 'gre', 'ovs_neutron_plugin.i
 -- Dependencies: 176
 -- Data for Name: nova_default; Type: TABLE DATA; Schema: public; Owner: transuser
 --
---INSERT INTO nova_default VALUES ('rabbit_host', '172.12.24.10', 'nova.conf', 1);
+--INSERT INTO nova_default VALUES ('rabbit_host', '172.24.24.10', 'nova.conf', 1);
 INSERT INTO nova_default VALUES ('rabbit_port', '5672', 'nova.conf', 2);
 INSERT INTO nova_default VALUES ('rabbit_userid', 'guest', 'nova.conf', 3);
 INSERT INTO nova_default VALUES ('rabbit_password', 'transcirrus1', 'nova.conf', 4);
@@ -2012,7 +2226,7 @@ INSERT INTO nova_default VALUES ('ec2_listen_port', '8773', 'nova.conf', 13);
 INSERT INTO nova_default VALUES ('osapi_compute_listen', '0.0.0.0', 'nova.conf', 14);
 INSERT INTO nova_default VALUES ('osapi_compute_listen_port', '8774', 'nova.conf', 15);
 INSERT INTO nova_default VALUES ('metadata_listen_port', '8775', 'nova.conf', 16);
---INSERT INTO nova_default VALUES ('metadata_listen', '172.12.24.10', 'nova.conf', 17);
+--INSERT INTO nova_default VALUES ('metadata_listen', '172.24.24.10', 'nova.conf', 17);
 INSERT INTO nova_default VALUES ('service_neutron_metadata_proxy', 'True', 'nova.conf', 28);
 INSERT INTO nova_default VALUES ('neutron_metadata_proxy_shared_secret', 'transcirrus1', 'nova.conf', 29);
 INSERT INTO nova_default VALUES ('allow_instance_snapshots', 'True', 'nova.conf', 30);
@@ -2026,13 +2240,13 @@ INSERT INTO nova_default VALUES ('multi_instance_display_name_template', '%(name
 INSERT INTO nova_default VALUES ('default_flavor', 'm1.small', 'nova.conf', 38);
 INSERT INTO nova_default VALUES ('linuxnet_interface_driver', 'nova.network.linux_net.LinuxOVSInterfaceDriver', 'nova.conf', 39);
 INSERT INTO nova_default VALUES ('firewall_driver', 'nova.virt.firewall.NoopFirewallDriver', 'nova.conf', 40);
---INSERT INTO nova_default VALUES ('metadata_host', '172.12.24.10', 'nova.conf', 41);
---INSERT INTO nova_default VALUES ('neutron_url', 'http://172.12.24.10:9696', 'nova.conf', 42);
+--INSERT INTO nova_default VALUES ('metadata_host', '172.24.24.10', 'nova.conf', 41);
+--INSERT INTO nova_default VALUES ('neutron_url', 'http://172.24.24.10:9696', 'nova.conf', 42);
 INSERT INTO nova_default VALUES ('neutron_admin_username', 'neutron', 'nova.conf', 43);
 INSERT INTO nova_default VALUES ('neutron_admin_password', 'transcirrus1', 'nova.conf', 44);
 INSERT INTO nova_default VALUES ('neutron_admin_tenant_name', 'service', 'nova.conf', 45);
 INSERT INTO nova_default VALUES ('neutron_region_name', 'TransCirrusCloud', 'nova.conf', 46);
---INSERT INTO nova_default VALUES ('neutron_admin_auth_url', 'http://172.12.24.10:35357/v2.0', 'nova.conf', 47);
+--INSERT INTO nova_default VALUES ('neutron_admin_auth_url', 'http://172.24.24.10:35357/v2.0', 'nova.conf', 47);
 INSERT INTO nova_default VALUES ('neutron_auth_strategy', 'keystone', 'nova.conf', 48);
 INSERT INTO nova_default VALUES ('neutron_ovs_bridge', 'br-int', 'nova.conf', 49);
 INSERT INTO nova_default VALUES ('security_group_api', 'neutron', 'nova.conf', 50);
@@ -2047,16 +2261,16 @@ INSERT INTO nova_default VALUES ('compute_driver', 'libvirt.LibvirtDriver', 'nov
 INSERT INTO nova_default VALUES ('vnc_enabled', 'true', 'nova.conf', 59);
 INSERT INTO nova_default VALUES ('vnc_keymap', 'en-us', 'nova.conf', 60);
 INSERT INTO nova_default VALUES ('volume_api_class', 'nova.volume.cinder.API', 'nova.conf', 61);
---INSERT INTO nova_default VALUES ('connection', 'postgresql://transuser:transcirrus1@172.12.24.10/nova', 'nova.conf', 62);
---INSERT INTO nova_default VALUES ('auth_host', '172.12.24.10', 'nova.conf', 63);
+--INSERT INTO nova_default VALUES ('connection', 'postgresql://transuser:transcirrus1@172.24.24.10/nova', 'nova.conf', 62);
+--INSERT INTO nova_default VALUES ('auth_host', '172.24.24.10', 'nova.conf', 63);
 INSERT INTO nova_default VALUES ('auth_port', '35357', 'nova.conf', 64);
 INSERT INTO nova_default VALUES ('auth_protocol', 'http', 'nova.conf', 65);
---INSERT INTO nova_default VALUES ('auth_uri', '172.12.24.10:5000', 'nova.conf', 66);
+--INSERT INTO nova_default VALUES ('auth_uri', '172.24.24.10:5000', 'nova.conf', 66);
 INSERT INTO nova_default VALUES ('auth_version', 'v2.0', 'nova.conf', 67);
 INSERT INTO nova_default VALUES ('admin_user', 'nova', 'nova.conf', 68);
 INSERT INTO nova_default VALUES ('admin_password', 'transcirrus1', 'nova.conf', 69);
 INSERT INTO nova_default VALUES ('admin_tenant_name', 'service', 'nova.conf', 70);
---INSERT INTO nova_default VALUES ('memcached_servers', '172.12.24.10:11211', 'nova.conf', 70);
+--INSERT INTO nova_default VALUES ('memcached_servers', '172.24.24.10:11211', 'nova.conf', 70);
 INSERT INTO nova_default VALUES ('live_migration_uri', 'qemu+tcp://%s/system', 'nova.conf', 71);
 INSERT INTO nova_default VALUES ('live_migration_flag', 'VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE', 'nova.conf', 72);
 INSERT INTO nova_default VALUES ('block_migration_flag', 'VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_NON_SHARED_INC', 'nova.conf', 73);

@@ -117,7 +117,7 @@ class endpoint_ops:
             #this will need to be chabged if we use different ips for endpoints
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
             #HACK - we need to use the api ip - better yet use the api ips for admin, public,internal
-            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='os_db'"}#was api_ip caused error in multinde system. Needs to be locked to 172.12.24.10
+            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='os_db'"}#was api_ip caused error in multinde system. Needs to be locked to 172.24.24.10
             self.ep_ip = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
@@ -143,6 +143,17 @@ class endpoint_ops:
                 get_serv_info = {'select':"service_port,service_api_version",'from':"trans_service_settings",'where':"service_name='swift_admin'"}
                 get_service = self.db.pg_select(get_serv_info)
                 self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
+
+            if(input_dict['service_name'] == 'heat'):
+                get_serv_info = {'select':"service_port,service_api_version",'from':"trans_service_settings",'where':"service_name='heat_cfn'"}
+                get_service = self.db.pg_select(get_serv_info)
+                self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
+
+            if(input_dict['service_name'] == 'ec2'):
+                get_serv_info = {'select':"service_port,service_api_version",'from':"trans_service_settings",'where':"service_name='ec2_admin'"}
+                get_service = self.db.pg_select(get_serv_info)
+                self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
+
         except:
             logger.sql_error("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
             raise Exception("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))

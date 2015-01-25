@@ -145,13 +145,45 @@ def run_setup(new_system_variables,auth_dict):
     else:
         return "Glance error."
 
-    logger.sys_info('Building Quantum endpoints')
+    logger.sys_info('Building Neutron endpoints')
     neutron_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'neutron'}
     create_neutron = endpoint.create_endpoint(neutron_input_dict)
     if(create_neutron['endpoint_id']):
-        logger.sys_info( "Quantum endpoint set up complete.")
+        logger.sys_info( "Neutron endpoint set up complete.")
     else:
-        return "Quantum error."
+        return "Neutron error."
+
+    logger.sys_info('Building Heat endpoints')
+    heat_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'heat'}
+    create_heat = endpoint.create_endpoint(heat_input_dict)
+    if(create_heat['endpoint_id']):
+        logger.sys_info( "Heat endpoint set up complete.")
+    else:
+        return "Heat error."
+
+    logger.sys_info('Building Ceilometer endpoints')
+    ceil_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'ceilometer'}
+    create_ceil = endpoint.create_endpoint(ceil_input_dict)
+    if(create_ceil['endpoint_id']):
+        logger.sys_info( "Ceilometer endpoint set up complete.")
+    else:
+        return "Ceilometer error."
+
+    logger.sys_info('Building EC2 endpoints')
+    ec_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'ec2'}
+    create_ec = endpoint.create_endpoint(ec_input_dict)
+    if(create_ec['endpoint_id']):
+        logger.sys_info( "EC2 endpoint set up complete.")
+    else:
+        return "EC2 error."
+
+    logger.sys_info('Building S3 endpoints')
+    s3_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'s3'}
+    create_s3 = endpoint.create_endpoint(s3_input_dict)
+    if(create_s3['endpoint_id']):
+        logger.sys_info( "S3 endpoint set up complete.")
+    else:
+        return "S3 error."
 
     logger.sys_info('Adding the core node to the trans_nodes table.')
     #insert the controller info into trans_nodes db table
@@ -159,7 +191,7 @@ def run_setup(new_system_variables,auth_dict):
                       'node_name':node_name,
                       'node_type':'cc',
                       'node_mgmt_ip':sys_vars['MGMT_IP'],
-                      'node_data_ip':'172.12.24.10',
+                      'node_data_ip':'172.24.24.10',
                       'node_controller':sys_vars['CLOUD_CONTROLLER'],
                       'node_cloud_name':sys_vars['CLOUD_NAME'],
                       'avail_zone':'nova',
@@ -234,8 +266,43 @@ def run_setup(new_system_variables,auth_dict):
         os.system("sudo glance-manage db_sync")
         #load default glance images shipped on ssd.
 
+    #enable heat
+    logger.sys_info('Writing the Heat Config files.')
+    heat_configs = node_db.get_node_heat_config()
+    #take the array of cinder file decriptors and write the files
+    for config in heat_configs:
+        write_heat_config = util.write_new_config_file(config)
+        if(write_heat_config != 'OK'):
+            #Exit the setup return to factory default
+            return write_heat_config
+        else:
+            logger.sys_info("Heat config file written.")
+    heat_start = service.heat('restart')
+    if(heat_start != 'OK'):
+        return heat_start
+    else:
+        time.sleep(1)
+        logger.sys_info("Syncing the Heat DB.")
+        os.system("sudo heat-manage db_sync")
+
+    #enable ceilometer
+    logger.sys_info('Writing the Ceilometer Config files.')
+    ceil_configs = node_db.get_node_ceilometer_config(node_id)
+    #take the array of cinder file decriptors and write the files
+    for config in ceil_configs:
+        write_ceil_config = util.write_new_config_file(config)
+        if(write_ceil_config != 'OK'):
+            #Exit the setup return to factory default
+            return write_ceil_config
+        else:
+            logger.sys_info("Ceilometer config file written.")
+    ceil_start = service.ceilometer('restart')
+    if(ceil_start != 'OK'):
+        #fire off revert
+        return ceil_start
+
     #enable neutron
-    logger.sys_info('Writing the Quantum/Neutron Config files.')
+    logger.sys_info('Writing the Neutron Config files.')
     neu_configs = node_db.get_node_neutron_config(node_id)
     #take the array of cinder file decriptors and write the files
     for config in neu_configs:
@@ -332,11 +399,11 @@ def run_setup(new_system_variables,auth_dict):
     os.system("sudo ovs-vsctl add-br br-int")
 
     #add IP tables entries for new bridge - Grizzly only Havanna will do this automatically
-    logger.sys_info("Setting up iptables entries.")
-    os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.12.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
-    os.system("sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
-    os.system("sudo iptables -A POSTROUTING -s 172.12.24.0/24 -t nat -j MASQUERADE")
-    os.system("sudo iptables -t mangle -A POSTROUTING -o br-ex -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill")
+    #logger.sys_info("Setting up iptables entries.")
+    #os.system("sudo iptables -A FORWARD -i bond1 -o br-ex -s 172.12.24.0/24 -m conntrack --ctstate NEW -j ACCEPT")
+    #os.system("sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+    #os.system("sudo iptables -A POSTROUTING -s 172.12.24.0/24 -t nat -j MASQUERADE")
+    #os.system("sudo iptables -t mangle -A POSTROUTING -o br-ex -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill")
 
     logger.sys_info("Saving the iptables entries.")
     os.system("sudo iptables-save > /transcirrus/iptables.conf")
