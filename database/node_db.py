@@ -165,6 +165,9 @@ def insert_node(input_dict):
 
     #get the cloud controllers mgmt_ip
     #this actually returns the uplink ip - this needs to be chnaged to return_uplink_ip
+    cc_uplink_ip = util.get_cloud_controller_uplink_ip()
+
+    #get the controller mgmt ip, used to set up NOvnc for intrnal use, Spice and XVPNV will be used externally
     cc_mgmt_ip = util.get_cloud_controller_mgmt_ip()
 
     #get worker count - equal to the number of procs
@@ -203,9 +206,33 @@ def insert_node(input_dict):
         logger.sql_error("Could not insert node specific ceilometer config into TransCirrus db.")
         return 'ERROR'
 
-    #if(input_dict['node_type'] == 'cc'):
-    #    #glance workers
-    #    insert_glance_workers = {'parameter':'workers'}
+    if(input_dict['node_type'] == 'cc'):
+        try:
+            #glance workers
+            insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':'NULL','file_name':'glance-api.conf'}
+            glance_array = [insert_glance_workers]
+            for glance in glance_array:
+                db.pg_transaction_begin()
+                db.pg_insert('glance_defaults',glance)
+                db.pg_transaction_commit()
+        except:
+            db.pg_transaction_rollback()
+            logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
+            return 'ERROR'
+
+        try:
+            #EC2 API ips on CC
+            insert_nova_mworkers = {'parameter':'ec2_host',"param_value":"%s"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_workers = {'parameter':'ec2_dmz_host',"param_value":"172.24.24.10",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            glance_array = [insert_glance_workers]
+            for glance in glance_array:
+                db.pg_transaction_begin()
+                db.pg_insert('nova_node',glance)
+                db.pg_transaction_commit()
+        except:
+            db.pg_transaction_rollback()
+            logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
+            return 'ERROR'
 
     if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
         #do the cinder config for now.
@@ -243,13 +270,16 @@ def insert_node(input_dict):
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_host = {"parameter":"host","param_value":"%s" %(input_dict['node_name']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_mgmt_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_xvpvncproxy = {"parameter":"xvpvncproxy_base_url","param_value":"http://%s:6081/console"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_spice = {"parameter":"html5proxy_base_url","param_value":"http://%s:6082/spice_auto.html"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_spiceproxy = {"parameter":"server_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vnclisten = {"parameter":"vncserver_listen","param_value":"0.0.0.0",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_avail_zone = {'parameter':"default_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_node_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_node_virt = {'parameter':"virt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_metadata = {'parameter':"metadata_listen",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_nova_db = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@%s/nova"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/nova"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_metadata_host = {'parameter':"metadata_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_host = {'parameter':"neutron_url",'param_value':"http://%s:9696"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_admin = {'parameter':"neutron_admin_auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -258,13 +288,17 @@ def insert_node(input_dict):
             insert_nova_memcached = {"parameter":"memcached_servers","param_value":"%s:11211"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_neu_ten_id = {"parameter":"neutron_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ec2workers = {'parameter':'ec2_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_ec2_url = {'parameter':'keystone_ec2_url',"param_value":"http://%s:5000/v2.0/ec2tokens"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_s3_url = {'parameter':'s3_host',"param_value":"%s"%(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_nworkers = {'parameter':'notification_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_mworkers = {'parameter':'metadata_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_workers = {'parameter':'workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_glance = {'parameter':'glance_host',"param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_glance_api = {'parameter':'glance_api_servers',"param_value":"http://%s:9292"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
 
             nova_array = [insert_nova_db,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt,insert_nova_rabbit,insert_nova_metadata,insert_metadata_host,
                           insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached,insert_nova_neu_ten_id,insert_nova_ec2workers,insert_nova_nworkers,
-                          insert_nova_mworkers,insert_nova_workers]
+                          insert_nova_mworkers,insert_nova_workers,insert_spice,insert_spiceproxy,insert_nova_ec2_url,insert_nova_glance,insert_nova_glance_api,insert_nova_s3_url]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -277,7 +311,7 @@ def insert_node(input_dict):
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_rabbit = {"parameter":"rabbit_host","param_value":'%s'%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_db = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth = {'parameter':"auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_meta_ip = {'parameter':"nova_metadata_ip",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_nova_url = {'parameter':"nova_url",'param_value':"http://%s:8774/v2"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
@@ -286,8 +320,9 @@ def insert_node(input_dict):
             insert_neutron_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neu_nova_ten_id = {"parameter":"nova_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neu_mworkers = {'parameter':'metadata_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             neutron_array = [insert_neutron_region,insert_neutron_localip,insert_neutron_rabbit,insert_neutron_db,insert_neutron_auth,insert_meta_ip,insert_nova_url,insert_nova_auth_url,insert_neutron_auth_host,
-                             insert_neutron_auth_uri,insert_neutron_ml_ip,insert_neu_nova_ten_id]
+                             insert_neutron_auth_uri,insert_neutron_ml_ip,insert_neu_nova_ten_id,insert_neu_mworkers]
             for neutron in neutron_array:
                 db.pg_transaction_begin()
                 db.pg_insert('neutron_node',neutron)

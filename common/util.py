@@ -498,6 +498,20 @@ def get_cloud_controller_id():
     """
     return config.CLOUD_CONTROLLER_ID
 
+def get_cloud_controller_uplink_ip():
+    """
+    DESC: Get the uplink_ip of the cloud controller
+    INPUT: node_type
+    OUTPUT: controller_uplink_ip
+    ACCESS: Wide open
+    NOTE:
+    """
+    db = db_connect()
+    get_ip = {'select':'param_value','from':'trans_system_settings','where':"parameter='uplink_ip'"}
+    controller_mgmt_ip = db.pg_select(get_ip)
+    cont_uplink_ip = controller_mgmt_ip[0][0]
+    return cont_uplink_ip
+
 def get_cloud_controller_mgmt_ip():
     """
     DESC: Get the mgmt_ip of the cloud controller
@@ -507,7 +521,7 @@ def get_cloud_controller_mgmt_ip():
     NOTE:
     """
     db = db_connect()
-    get_ip = {'select':'param_value','from':'trans_system_settings','where':"parameter='uplink_ip'"}
+    get_ip = {'select':'param_value','from':'trans_system_settings','where':"parameter='mgmt_ip'"}
     controller_mgmt_ip = db.pg_select(get_ip)
     cont_mgmt_ip = controller_mgmt_ip[0][0]
     return cont_mgmt_ip
