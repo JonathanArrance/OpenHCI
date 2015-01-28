@@ -209,7 +209,7 @@ def insert_node(input_dict):
     if(input_dict['node_type'] == 'cc'):
         try:
             #glance workers
-            insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':'NULL','file_name':'glance-api.conf'}
+            insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':"%s"%(input_dict['node_id']),'file_name':'glance-api.conf','index':'48'}
             glance_array = [insert_glance_workers]
             for glance in glance_array:
                 db.pg_transaction_begin()
