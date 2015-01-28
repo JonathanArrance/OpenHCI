@@ -207,18 +207,18 @@ def insert_node(input_dict):
         return 'ERROR'
 
     if(input_dict['node_type'] == 'cc'):
-        try:
-            #glance workers
-            insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':"%s"%(input_dict['node_id']),'file_name':'glance-api.conf','index':'48'}
-            glance_array = [insert_glance_workers]
-            for glance in glance_array:
-                db.pg_transaction_begin()
-                db.pg_insert('glance_defaults',glance)
-                db.pg_transaction_commit()
-        except:
-            db.pg_transaction_rollback()
-            logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
-            return 'ERROR'
+        #try:
+        #    #glance workers
+        #    insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':"%s"%(input_dict['node_id']),'file_name':'glance-api.conf','index':'48'}
+        #    glance_array = [insert_glance_workers]
+        #    for glance in glance_array:
+        #        db.pg_transaction_begin()
+        #        db.pg_insert('glance_defaults',glance)
+        #        db.pg_transaction_commit()
+        #except:
+        #    db.pg_transaction_rollback()
+        #    logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
+        #    return 'ERROR'
 
         try:
             #EC2 API ips on CC
