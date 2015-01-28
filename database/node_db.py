@@ -222,16 +222,16 @@ def insert_node(input_dict):
 
         try:
             #EC2 API ips on CC
-            insert_nova_mworkers = {'parameter':'ec2_host',"param_value":"%s"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_nova_workers = {'parameter':'ec2_dmz_host',"param_value":"172.24.24.10",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            glance_array = [insert_glance_workers]
-            for glance in glance_array:
+            insert_nova_ec2 = {'parameter':'ec2_host',"param_value":"%s"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_ec2dmz = {'parameter':'ec2_dmz_host',"param_value":"172.24.24.10",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            ec2_array = [insert_nova_ec2,insert_nova_ec2dmz]
+            for ec in ec2_array:
                 db.pg_transaction_begin()
-                db.pg_insert('nova_node',glance)
+                db.pg_insert('nova_node',ec)
                 db.pg_transaction_commit()
         except:
             db.pg_transaction_rollback()
-            logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
+            logger.sql_error("Could not insert node specific Nova EC2 config into TransCirrus db.")
             return 'ERROR'
 
     if((input_dict['node_type'] == 'sn') or (input_dict['node_type'] == 'cc')):
