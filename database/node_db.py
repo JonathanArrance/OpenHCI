@@ -1035,10 +1035,10 @@ def get_node_ceilometer_config(node_id):
 
     try:
         get_dict = {'select':"parameter,param_value",'from':"ceilometer_default",'where':"file_name='ceilometer.conf'"}
-        ceil = db.pg_select(get_api_dict)
+        ceil = db.pg_select(get_dict)
     except:
-        logger.sys_error('Could not get the Heat entries from the Transcirrus db.')
-        raise Exception('Could not get the Heat entries from the Transcirrus db.')
+        logger.sys_error('Could not get the Ceilometer entries from the Transcirrus db.')
+        raise Exception('Could not get the Ceilometer entries from the Transcirrus db.')
 
     #disconnect from db
     db.pg_close_connection()

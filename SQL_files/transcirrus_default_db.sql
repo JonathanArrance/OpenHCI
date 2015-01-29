@@ -722,6 +722,14 @@ ALTER TABLE ONLY ceilometer_default
 
 
 --
+-- TOC entry 1991 (class 2606 OID 27529)
+-- Name: ceilometer_default_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY ceilometer_node
+    ADD CONSTRAINT ceilometer_node_pkey PRIMARY KEY (index);
+
+--
 -- TOC entry 1989 (class 2606 OID 27518)
 -- Name: heat_default_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
 --
