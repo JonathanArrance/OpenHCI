@@ -923,8 +923,8 @@ def get_glance_config():
         glance_api = db.pg_select(get_api_dict)
         get_reg_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry.conf'"}
         glance_reg = db.pg_select(get_reg_dict)
-        get_apip_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-api-paste.ini'"}
-        glance_scrub = db.pg_select(get_apip_dict)
+        get_scrub_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-scrubber.conf'"}
+        glance_scrub = db.pg_select(get_scrub_dict)
     except:
         logger.sys_error('Could not get the Glance entries from the Transcirrus db.')
         raise Exception('Could not get the Glance entries from the Transcirrus db.')
