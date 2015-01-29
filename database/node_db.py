@@ -666,6 +666,16 @@ def get_node_neutron_config(node_id):
         logger.sys_error('Could not get the ovs_neutron_plugin.ini entries from the Transcirrus neutron db.')
         raise Exception('Could not get the ovs_neutron_plugin.ini entries from the Transcirrus neutron db.')
 
+    try:
+        get_mldef_dict = {'select':"parameter,param_value",'from':"neutron_default",'where':"file_name='ml2_conf.ini'"}
+        ml2defraw = db.pg_select(get_mldef_dict)
+        get_ovsnode_dict = {'select':"parameter,param_value",'from':"neutron_node",'where':"file_name='ml2_conf.ini'",'and':"node='%s'"%(node_id)}
+        ml2noderaw = db.pg_select(get_ovsnode_dict)
+        mlraw = ml2defraw + ml2noderaw
+    except:
+        logger.sys_error('Could not get the ml2_conf.ini entries from the Transcirrus neutron db.')
+        raise Exception('Could not get the ml2_conf.ini entries from the Transcirrus neutron db.')
+
     dhcpraw = None
     metaraw = None
     apiraw = None
@@ -747,6 +757,20 @@ def get_node_neutron_config(node_id):
     ovs_conf['file_content'] = ovs_con
     r_array.append(ovs_conf)
 
+    ml_con = []
+    ml_conf = {}
+    for x in mlraw:
+        row = "=".join(x)
+        ml_con.append(row)
+    ml_conf['op'] = 'append'
+    ml_conf['file_owner'] = 'neutron'
+    ml_conf['file_group'] = 'neutron'
+    ml_conf['file_perm'] = '644'
+    ml_conf['file_path'] = '/etc/neutron/plugins/ml2'
+    ml_conf['file_name'] = 'ml2_conf.ini'
+    ml_conf['file_content'] = ml_con
+    r_array.append(ml_conf)
+
     if((node_info['node_type'] == 'cc') or (node_info['node_type'] == 'nn')):
         dhcp_con = []
         dhcp_conf = {}
@@ -762,20 +786,6 @@ def get_node_neutron_config(node_id):
         dhcp_conf['file_name'] = 'dhcp_agent.ini'
         dhcp_conf['file_content'] = dhcp_con
         r_array.append(dhcp_conf)
-
-        ml_con = []
-        ml_conf = {}
-        for x in mlraw:
-            row = "=".join(x)
-            ml_con.append(row)
-        ml_conf['op'] = 'append'
-        ml_conf['file_owner'] = 'neutron'
-        ml_conf['file_group'] = 'neutron'
-        ml_conf['file_perm'] = '644'
-        ml_conf['file_path'] = '/etc/neutron/plugins/ml2'
-        ml_conf['file_name'] = 'ml2_conf.ini'
-        ml_conf['file_content'] = ml_con
-        r_array.append(ml_conf)
 
         meta_con = []
         meta_conf = {}
