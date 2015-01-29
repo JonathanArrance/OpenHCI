@@ -772,8 +772,8 @@ def get_node_neutron_config(node_id):
         ml_conf['file_owner'] = 'neutron'
         ml_conf['file_group'] = 'neutron'
         ml_conf['file_perm'] = '644'
-        ml_conf['file_path'] = '/etc/neutron/plugins/openvswitch'
-        ml_conf['file_name'] = 'ovs_neutron_plugin.ini'
+        ml_conf['file_path'] = '/etc/neutron/plugins/ml2'
+        ml_conf['file_name'] = 'ml2_conf.ini'
         ml_conf['file_content'] = ml_con
         r_array.append(ml_conf)
 
@@ -791,21 +791,7 @@ def get_node_neutron_config(node_id):
         meta_conf['file_name'] = 'metadata_agent.ini'
         meta_conf['file_content'] = meta_con
         r_array.append(meta_conf)
-        '''
-        api_con = []
-        api_conf = {}
-        for x in apiraw:
-            row = "=".join(x)
-            api_con.append(row)
-        api_conf['op'] = 'append'
-        api_conf['file_owner'] = 'neutron'
-        api_conf['file_group'] = 'neutron'
-        api_conf['file_perm'] = '644'
-        api_conf['file_path'] = '/etc/neutron'
-        api_conf['file_name'] = 'api-paste.ini'
-        api_conf['file_content'] = api_con
-        r_array.append(api_conf)
-        '''
+
         l3_con = []
         l3_conf = {}
         for x in l3raw:
@@ -937,11 +923,8 @@ def get_glance_config():
         glance_api = db.pg_select(get_api_dict)
         get_reg_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry.conf'"}
         glance_reg = db.pg_select(get_reg_dict)
-
         get_apip_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-api-paste.ini'"}
-        glance_apip = db.pg_select(get_apip_dict)
-        get_regp_dict = {'select':"parameter,param_value",'from':"glance_defaults",'where':"file_name='glance-registry-paste.ini'"}
-        glance_regp = db.pg_select(get_regp_dict)
+        glance_scrub = db.pg_select(get_apip_dict)
     except:
         logger.sys_error('Could not get the Glance entries from the Transcirrus db.')
         raise Exception('Could not get the Glance entries from the Transcirrus db.')
@@ -980,35 +963,20 @@ def get_glance_config():
     reg_conf['file_content'] = reg
     r_array.append(reg_conf)
 
-    apip = []
-    apip_conf = {}
-    for x in glance_apip:
+    scrub = []
+    scrub_conf = {}
+    for x in glance_scrub:
         row = "=".join(x)
-        apip.append(row)
-    apip_conf['op'] = 'append'
+        scrub.append(row)
+    scrub_conf['op'] = 'append'
     #find user/group/perms
-    apip_conf['file_owner'] = 'glance'
-    apip_conf['file_group'] = 'glance'
-    apip_conf['file_perm'] = '644'
-    apip_conf['file_path'] = '/etc/glance'
-    apip_conf['file_name'] = 'glance-api-paste.ini'
-    apip_conf['file_content'] = apip
-    r_array.append(apip_conf)
-
-    regp = []
-    regp_conf = {}
-    for x in glance_regp:
-        row = "=".join(x)
-        regp.append(row)
-    regp_conf['op'] = 'append'
-    #find user/group/perms
-    regp_conf['file_owner'] = 'glance'
-    regp_conf['file_group'] = 'glance'
-    regp_conf['file_perm'] = '644'
-    regp_conf['file_path'] = '/etc/glance'
-    regp_conf['file_name'] = 'glance-registry-paste.ini'
-    regp_conf['file_content'] = regp
-    r_array.append(regp_conf)
+    scrub_conf['file_owner'] = 'glance'
+    scrub_conf['file_group'] = 'glance'
+    scrub_conf['file_perm'] = '644'
+    scrub_conf['file_path'] = '/etc/glance'
+    scrub_conf['file_name'] = 'glance-scrubber.conf'
+    scrub_conf['file_content'] = scrub
+    r_array.append(scrub_conf)
 
     return r_array
 
@@ -1064,3 +1032,31 @@ def get_node_ceilometer_config(node_id):
     logger.sys_info('\n**Get Ceilometer config information. Component: Database Def: get_node_ceilometer_config**\n')
     db = util.db_connect()
     logger.sys_info("Writing the Ceilometer config file to node %s."%(node_id))
+
+    try:
+        get_dict = {'select':"parameter,param_value",'from':"ceilometer_defaults",'where':"file_name='ceilometer.conf'"}
+        ceil = db.pg_select(get_api_dict)
+    except:
+        logger.sys_error('Could not get the Heat entries from the Transcirrus db.')
+        raise Exception('Could not get the Heat entries from the Transcirrus db.')
+
+    #disconnect from db
+    db.pg_close_connection()
+
+    r_array = []
+    ceil_array = []
+    ceil_conf = {}
+    for x in ceil:
+        row = "=".join(x)
+        ceil_array.append(row)
+    ceil_conf['op'] = 'append'
+    #find user/group/perms
+    ceil_conf['file_owner'] = 'heat'
+    ceil_conf['file_group'] = 'heat'
+    ceil_conf['file_perm'] = '644'
+    ceil_conf['file_path'] = '/etc/heat'
+    ceil_conf['file_name'] = 'heat.conf'
+    ceil_conf['file_content'] = ceil_array
+    r_array.append(ceil_conf)
+
+    return r_array
