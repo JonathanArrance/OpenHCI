@@ -994,8 +994,8 @@ def get_node_heat_config():
     logger.sys_info("Writing the Heat config file to the controller node.")
 
     try:
-        get_dict = {'select':"parameter,param_value",'from':"heat_defaults",'where':"file_name='heat.conf'"}
-        heat = db.pg_select(get_api_dict)
+        get_dict = {'select':"parameter,param_value",'from':"heat_default",'where':"file_name='heat.conf'"}
+        heat = db.pg_select(get_dict)
     except:
         logger.sys_error('Could not get the Heat entries from the Transcirrus db.')
         raise Exception('Could not get the Heat entries from the Transcirrus db.')
@@ -1034,7 +1034,7 @@ def get_node_ceilometer_config(node_id):
     logger.sys_info("Writing the Ceilometer config file to node %s."%(node_id))
 
     try:
-        get_dict = {'select':"parameter,param_value",'from':"ceilometer_defaults",'where':"file_name='ceilometer.conf'"}
+        get_dict = {'select':"parameter,param_value",'from':"ceilometer_default",'where':"file_name='ceilometer.conf'"}
         ceil = db.pg_select(get_api_dict)
     except:
         logger.sys_error('Could not get the Heat entries from the Transcirrus db.')
@@ -1051,11 +1051,11 @@ def get_node_ceilometer_config(node_id):
         ceil_array.append(row)
     ceil_conf['op'] = 'append'
     #find user/group/perms
-    ceil_conf['file_owner'] = 'heat'
-    ceil_conf['file_group'] = 'heat'
+    ceil_conf['file_owner'] = 'ceilometer'
+    ceil_conf['file_group'] = 'ceilometer'
     ceil_conf['file_perm'] = '644'
-    ceil_conf['file_path'] = '/etc/heat'
-    ceil_conf['file_name'] = 'heat.conf'
+    ceil_conf['file_path'] = '/etc/ceilometer'
+    ceil_conf['file_name'] = 'ceilometer.conf'
     ceil_conf['file_content'] = ceil_array
     r_array.append(ceil_conf)
 
