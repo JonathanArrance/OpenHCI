@@ -431,7 +431,8 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return neutron_start
     time.sleep(10)
-"""
+    return 'OK'
+    """
     logger.sys_info('Creating Neutron Connection.')
     neu_net = neutron_net_ops(auth_dict)
     p_create_dict = {'net_name':'DefaultPublic','admin_state':'true','shared':'false'}
@@ -592,9 +593,8 @@ def run_setup(new_system_variables,auth_dict):
     #checkpoint['status'] = 'OK'
     #print checkpoint
     #logger.sys_info("Service status: %s"%(checkpoint))
-"""
-
     return 'OK'
+    """
 
 def check_setup():
     pass
