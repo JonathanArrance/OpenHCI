@@ -372,6 +372,14 @@ def run_setup(new_system_variables,auth_dict):
 
 
     #restart postgres
+    logger.sys_info('Restarting rabbit.')
+    rabbit_start = service.rabbit('restart')
+    if(rabbit_start != 'OK'):
+        #fire off revert
+        return rabbit_start
+    time.sleep(10)
+
+    #restart postgres
     logger.sys_info('Restarting postgres.')
     pgsql_start = service.postgresql('restart')
     if(pgsql_start != 'OK'):
