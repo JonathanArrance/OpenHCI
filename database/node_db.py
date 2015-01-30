@@ -309,7 +309,7 @@ def insert_node(input_dict):
             return 'ERROR'
         try:
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['cc_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_rabbit = {"parameter":"rabbit_host","param_value":'%s'%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth = {'parameter':"auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
