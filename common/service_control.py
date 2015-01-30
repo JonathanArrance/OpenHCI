@@ -452,7 +452,7 @@ def _operator(service_array,action,silent=True):
     for service in service_array:
         process = []
         out = None
-        #time.sleep(1)
+        time.sleep(1)
         if(action.lower() == 'start' or action.lower() == 'restart'):
             if(silent is True):
                 os.system('sudo chkconfig %s on >> /dev/null'%(service))
@@ -462,7 +462,7 @@ def _operator(service_array,action,silent=True):
                 os.system('sudo chkconfig %s on'%(service))
                 os.system('sudo service %s restart'%(service))
                 out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #time.sleep(1)
+            time.sleep(1)
         elif(action.lower() == 'stop'):
             if(silent is True):
                 os.system('sudo chkconfig %s off >> /dev/null'%(service))
