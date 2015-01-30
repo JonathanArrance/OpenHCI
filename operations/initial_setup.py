@@ -370,15 +370,6 @@ def run_setup(new_system_variables,auth_dict):
         else:
             logger.sys_info("Net config file written.")
 
-
-    #restart postgres
-    logger.sys_info('Restarting rabbit.')
-    rabbit_start = service.rabbit('restart')
-    if(rabbit_start != 'OK'):
-        #fire off revert
-        return rabbit_start
-    time.sleep(10)
-
     #restart postgres
     logger.sys_info('Restarting postgres.')
     pgsql_start = service.postgresql('restart')
@@ -432,6 +423,13 @@ def run_setup(new_system_variables,auth_dict):
         logger.sys_info('Sleeping until postgres accepts connections.')
         pg_accept = os.system('netstat -lnp | grep 5432')
     logger.sys_info('Postgres accepting connections on port 5432.')
+    time.sleep(10)
+
+    #HACK
+    neutron_start = service.neutron('restart')
+    if(neutron_start != 'OK'):
+        #fire off revert
+        return neutron_start
     time.sleep(10)
 
     logger.sys_info('Creating Neutron Connection.')
