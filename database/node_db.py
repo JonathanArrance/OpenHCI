@@ -874,7 +874,10 @@ def get_node_cinder_config(node_id):
             raise Exception('Could not get the cinder.conf entries from the Transcirrus cinder db.')
         try:
             get_apidef_dict = {'select':"parameter,param_value",'from':"cinder_default",'where':"file_name='api-paste.ini'"}
-            apiraw = db.pg_select(get_apidef_dict)
+            apidefraw = db.pg_select(get_apidef_dict)
+            get_apinode_dict = {'select':"parameter,param_value",'from':"cinder_node",'where':"file_name='api-paste.ini'",'and':"node='%s'"%(node_id)}
+            apinoderaw = db.pg_select(get_apinode_dict)
+            apiraw = apidefraw + apinoderaw
         except:
             logger.sys_error('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
             raise Exception('Could not get the api-paste.ini entries from the Transcirrus cinder db.')
