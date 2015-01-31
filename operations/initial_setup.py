@@ -512,6 +512,7 @@ def run_setup(new_system_variables,auth_dict):
     card_restart = util.restart_network_card("br-ex")
     if(card_restart == 'OK'):
         logger.sys_info("Uplink has been restarted.")
+        os.system('sudo /transcirrus/promisc')
 
     #add the spindle and SSD vol types
     volumes = volume_ops(auth_dict)
