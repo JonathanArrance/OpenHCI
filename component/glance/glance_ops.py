@@ -319,12 +319,13 @@ class glance_ops:
         #check the response and make sure it is a 200 or 203
         if((rest['response'] == 200) or (rest['response'] == 203)):
             #build up the return dictionary and return it if everything is good to go
-            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            logger.sys_info("Glance API Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             img_array = []
             for image in load['images']:
                 line = {"image_name": str(image['name']), "image_id": str(image['id'])}
                 img_array.append(line)
+            logger.sys_info("Glance image list: %s"%(img_array))
             return img_array
         else:
             util.http_codes(rest['response'],rest['reason'])
