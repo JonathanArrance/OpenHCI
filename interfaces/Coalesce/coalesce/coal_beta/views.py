@@ -808,21 +808,6 @@ def floating_ip_view(request, floating_ip_id):
                                                         'instances': instances,
                                                  }))
 
-'''
-def create_user(request, username, password, user_role, email, project_id):
-    try:
-        auth = request.session['auth']
-        uo = user_ops(auth)
-        user_dict = {'username': username, 'password':password, 'user_role':user_role, 'email': email, 'project_id': project_id}
-        newuser= uo.create_user(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to create user.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
-
 def create_user(request, username, password, user_role, email, project_id):
     try:
         auth = request.session['auth']
@@ -834,23 +819,6 @@ def create_user(request, username, password, user_role, email, project_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def create_security_group(request, groupname, groupdesc, ports, project_id):
-    try:
-        portstrings    = ports.split(',')
-        portlist = []
-        for port in portstrings:
-            portlist.append(int(port))
-        auth = request.session['auth']
-        so = server_ops(auth)
-        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
-        newgroup= so.create_sec_group(create_sec)
-        return HttpResponseRedirect("/projects/manage")
-    except:
-        messages.warning(request, "Unable to create security group.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def create_security_group(request, groupname, groupdesc, ports, project_id):
     try:
@@ -868,22 +836,6 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
         out = {'status' : "error", 'message' : "Could not create security group %s: %s" %(groupname,e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def delete_sec_group(request, sec_group_id, project_id):
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        sec_dict = {'sec_group_id': sec_group_id, 'project_id':project_id}
-        so.delete_sec_group(sec_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-
-    except:
-        messages.warning(request, "Unable to delete security group.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
-
 def delete_sec_group(request, sec_group_id, project_id):
     out = {}
     try:
@@ -897,22 +849,6 @@ def delete_sec_group(request, sec_group_id, project_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not delete security group: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def create_keypair(request, key_name, project_id):
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        key_dict = {'key_name': key_name, 'project_id': project_id}
-        newkey= so.create_sec_keys(key_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        response = HttpResponseRedirect(redirect_to)
-        return render_to_response(response)
-    except:
-        messages.warning(request, "Unable to create keypair.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def create_keypair(request, key_name, project_id):
     try:
@@ -1143,33 +1079,6 @@ def delete_snapshot(request, project_id, snapshot_id):
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-'''
-def create_router(request, router_name, priv_net, default_public, project_id):
-    try:
-        auth = request.session['auth']
-        l3o = layer_three_ops(auth)
-        no = neutron_net_ops(auth)
-        netinfo = no.get_network(priv_net)
-        subnet = netinfo["net_subnet_id"][0]['subnet_id']
-
-        create_router = {'router_name': router_name, 'project_id': project_id}
-        router = l3o.add_router(create_router)
-
-        add_dict = {'router_id': router['router_id'], 'ext_net_id': default_public, 'project_id': project_id}
-        l3o.add_router_gateway_interface(add_dict)
-
-        internal_dict = {'router_id': router['router_id'], 'project_id': project_id, 'subnet_id': subnet}
-        l3o.add_router_internal_interface(internal_dict)
-
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
-
 def create_router(request, router_name, priv_net, default_public, project_id):
     try:
         auth = request.session['auth']
@@ -1193,27 +1102,6 @@ def create_router(request, router_name, priv_net, default_public, project_id):
     except Exception, e:
         out = {'status' : "error", 'message' : "Could not create the router %s."%(router_name)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def delete_router(request, project_id, router_id):
-    try:
-        auth = request.session['auth']
-        l3o = layer_three_ops(auth)
-        router=l3o.get_router(router_id)
-        proj_rout_dict = {'router_id': router_id, 'project_id': project_id}
-        l3o.delete_router_gateway_interface(proj_rout_dict)
-        subnet_id=router["router_int_sub_id"]
-        if subnet_id:
-            remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
-            l3o.delete_router_internal_interface(remove_dict)
-        l3o.delete_router(proj_rout_dict)
-
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    except:
-        messages.warning(request, "Unable to delete router.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def delete_router(request, project_id, router_id):
     out = {}
@@ -1354,19 +1242,6 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-
-# def get_server(request, project_id, instance_id):
-#    try:
-#        auth = request.session['auth']
-#        so = server_ops(auth)
-#        input_dict = {'project_id':project_id, 'instance_id':instance_id}
-#        out = so.get_server(input_dict)
-#        out['status'] = 'success'
-#        out['message'] = 'Successfully retrieved instance %s info.'%(serv_info['server_name'])
-#    except Exception as e:
-#        out = {"status":"error","message":"%s"%(e)}
-#        return HttpResponse(simplejson.dumps(out))
-
 def list_servers(request,project_id):
     try:
         auth = request.session['auth']
@@ -1462,25 +1337,6 @@ def delete_server(request, project_id, server_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def resize_server(request, project_id, instance_id, flavor_id):
-    input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        rs = rs_server.resize_and_confirm(auth, input_dict)
-        print "   ---   resize_and_confirm   ---"
-        print rs
-        print
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to resize server.")
-        return HttpResponseRedirect(redirect_to)
-'''
-
 def confirm_resize(request, project_id, instance_id):
     input_dict = {'project_id':project_id, 'instance_id':instance_id}
     referer = request.META.get('HTTP_REFERER', None)
@@ -1511,23 +1367,6 @@ def resize_server(request, project_id, instance_id, flavor_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def reboot(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"SOFT"}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        sa = server_actions(auth)
-        out = sa.reboot_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to reboot server.")
-        return HttpResponseRedirect(redirect_to)
-'''
-
 def reboot(request, project_id, instance_id):
     out = {}
     try:
@@ -1543,24 +1382,6 @@ def reboot(request, project_id, instance_id):
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def power_cycle(request, project_id, instance_id):
-    #this needs to be changed to the new power cycle method
-    input_dict = {'project_id':project_id, 'server_id':instance_id, 'action_type':"HARD"}
-    referer = request.META.get('HTTP_REFERER', None)
-    redirect_to = urlsplit(referer, 'http', False)[2]
-    try:
-        auth = request.session['auth']
-        sa = server_actions(auth)
-        sa.reboot_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to power cycle server.")
-        return HttpResponseRedirect(redirect_to)
-'''
 
 def power_cycle(request, project_id, instance_id):
     out = {}
@@ -1673,21 +1494,6 @@ def unassign_floating_ip(request, floating_ip_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Error unassigning Floating IP %s address, error: %s" % (ip['floating_ip'], e)}
     return HttpResponse(simplejson.dumps(out))
-'''
-def toggle_user(request, username, toggle):
-    try:
-        auth = request.session['auth']
-        uo = user_ops(auth)fg
-        user_dict = {'username': username, 'toggle':toggle}
-        uo.toggle_user(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-
-    except:
-        messages.warning(request, "Unable to toggle user.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def toggle_user(request, username, toggle):
     try:
@@ -1700,22 +1506,6 @@ def toggle_user(request, username, toggle):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not toggle the user %s to %s: %s"%(toggle,username,e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def delete_user(request, username, userid):
-    try:
-        auth = request.session['auth']
-        uo = user_ops(auth)
-        user_dict = {'username': username, 'user_id':userid}
-        out = uo.delete_user(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-
-    except:
-        messages.warning(request, "Unable to delete user.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def delete_user(request, username, userid):
     out = {}
@@ -1731,22 +1521,6 @@ def delete_user(request, username, userid):
         out = {'status' : "error", 'message' : "Could not delete the user %s: %s"%(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def remove_user_from_project(request, user_id, project_id):
-    try:
-        auth = request.session['auth']
-        uo = user_ops(auth)
-        user_dict = {'user_id': user_id, 'project_id':project_id}
-        uo.remove_user_from_project(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-
-    except:
-        messages.warning(request, "Unable to remove user from project.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
-
 def remove_user_from_project(request, user_id, project_id):
     out = {}
     try:
@@ -1761,22 +1535,6 @@ def remove_user_from_project(request, user_id, project_id):
         out = {'status' : "error", 'message' : "Could not remove the user from the project: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def add_existing_user(request, username, user_role, project_id):
-    try:
-        auth = request.session['auth']
-        uo = user_ops(auth)
-        user_dict = {'username': username, 'user_role':user_role, 'project_id': project_id}
-        uo.add_user_to_project(user_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-
-    except:
-        messages.warning(request, "Unable to add existing user.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
-
 def add_existing_user(request, username, user_role, project_id):
     try:
         auth = request.session['auth']
@@ -1788,23 +1546,6 @@ def add_existing_user(request, username, user_role, project_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not add the user %s to the project: %s"%(username,e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def update_user_password(request, user_id, project_id, password):
-    try:
-        auth = request.session['auth']
-        uo = user_ops(auth)
-        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password }
-        uo.update_user_password(passwd_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'Password updated.')
-        return HttpResponseRedirect('/')
-
-    except:
-        messages.warning(request, "Unable to update user password.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def update_user_password(request, user_id, project_id, password):
     out = {}
@@ -1873,21 +1614,6 @@ def instance_view(request, project_id, server_id):
                                                         'flavors': flavors,
                                                         'current_project_id': project_id,
                                                         }))
-'''
-def add_private_network(request, net_name, admin_state, shared, project_id):
-    try:
-        auth = request.session['auth']
-        no = neutron_net_ops(auth)
-        create_dict = {"net_name": net_name, "admin_state": admin_state, "shared": shared, "project_id": project_id}
-        network = no.add_private_network(create_dict)
-        subnet_dict={"net_id": network['net_id'], "subnet_dhcp_enable": "true", "subnet_dns": ["8.8.8.8"]}
-        subnet = no.add_net_subnet(subnet_dict)
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    except:
-        messages.warning(request, "Unable to add private network.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def add_private_network(request, net_name, admin_state, shared, project_id):
     try:
@@ -1902,38 +1628,6 @@ def add_private_network(request, net_name, admin_state, shared, project_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not add the private network %s to the project: %s"%(net_name,e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def remove_private_network(request, project_id, net_id):
-    try:
-        auth    = request.session['auth']
-        no      = neutron_net_ops(auth)
-        l3o     = layer_three_ops(auth)
-        network = no.get_network(net_id)
-        subnets = network['net_subnet_id']
-
-        for subnet in subnets:
-            subnet_id = subnet['subnet_id']
-            sub_proj_dict = {'net_id': net_id, 'subnet_id': subnet_id, 'project_id': project_id}
-            if network['router_id']:
-                remove_dict = {'router_id': network['router_id'], 'subnet_id': subnet_id, 'project_id': project_id}
-                l3o.delete_router_internal_interface(remove_dict)
-            #ports = no.list_net_ports(sub_proj_dict)
-                #for port in ports:
-                #remove_port_dict = {'subnet_id': subnet_id, 'project_id': project_id, 'port_id': port['port_id']}
-                #no.remove_net_port(remove_port_dict)
-            no.remove_net_subnet(sub_proj_dict)
-
-        remove_dict={'net_id': net_id, 'project_id': project_id }
-        no.remove_network(remove_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-
-    except:
-        messages.warning(request, "Unable to remove private network.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def remove_private_network(request, project_id, net_id):
     out = {}
