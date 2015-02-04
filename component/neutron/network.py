@@ -7,6 +7,7 @@ import sys
 import json
 import socket
 import subprocess
+import random
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -293,10 +294,14 @@ class neutron_net_ops:
             logger.sys_error("Invalid property given for shared flag.")
             raise Exception("Invalid property given for shared flag.")
 
-        #net = self.get_network(create_dict['net'])
-        #if(net['net_name']):
-        #    logger.sys_error("Network with the id %s in project %s already exists."%(create_dict['net_id'],create_dict['project_id']))
-        #    raise("Network with the id %s in project %s already exists."%(create_dict['net_id'],create_dict['project_id']))
+        nets = self.list_internal_networks(create_dict['project_id'])
+        logger.sys_info('HACK: nets %s'%(nets))
+        for net in nets:
+            logger.sys_info('HACK: net %s'%(net))
+            if(net['net_name'] == create_dict['net_name']):
+                random = random.randint(1,100)
+                create_dict['net_name'] = create_dict['net_name']+'_%s'%(str(random))
+                logger.sys_info('HACK: net %s'%(net))
 
         if(self.user_level <= 1):
             #Create an API connection with the admin
