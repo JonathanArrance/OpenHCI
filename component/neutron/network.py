@@ -299,8 +299,9 @@ class neutron_net_ops:
         for net in nets:
             logger.sys_info('HACK: net %s'%(net))
             if(net['net_name'] == create_dict['net_name']):
-                random = random.randint(1,100)
-                create_dict['net_name'] = create_dict['net_name']+'_%s'%(str(random))
+                random.seed()
+                rand_id = random.randrange(0,100000)
+                create_dict['net_name'] = create_dict['net_name']+'_%s'%(str(rand_id))
                 logger.sys_info('HACK: net %s'%(net))
 
         if(self.user_level <= 1):
