@@ -1186,6 +1186,27 @@ def list_network_variables():
     pass
 
 
+def list_domain_names():
+    """
+    DESC: Return the mgmt and uplink domain names
+    INPUT: None
+    OUTPUT: r_dict - mgmt_domain_name
+                   - uplink_domain_name
+    ACCESS: Wide open
+    NOTE: 
+    """
+    db = db_connect()
+    r_dict = {}
+    try:
+        get_domains = {'select':'param_value','from':'trans_system_settings','where':"parameter=uplink_domain_name",'and':"parameter=mgmt_domain_name"}
+        domains = db.pg_select(get_domains)
+        r_dict = {'mgmt_domain_name':domains[0][0],'uplink_domain_name':domains[0][1]}
+    except:
+        logger.sys_error('Could not get the domains')
+        raise Exception('Could not get the domains')
+
+    return r_dict
+
 #######System level calls used to run linux commands#######
 
 def ping_ip(ip):
