@@ -170,6 +170,9 @@ def insert_node(input_dict):
     #get the controller mgmt ip, used to set up NOvnc for intrnal use, Spice and XVPNV will be used externally
     cc_mgmt_ip = util.get_cloud_controller_mgmt_ip()
 
+    #get the node uplink and mgmt domains
+    domains = util.list_domain_names()
+
     #get worker count - equal to the number of procs
     #NOTE proc_info['total_cores'] = workers
     proc_info = util.getCPUInfo()
@@ -221,7 +224,6 @@ def insert_node(input_dict):
         #    return 'ERROR'
 
         try:
-            #EC2 API ips on CC
             insert_nova_ec2 = {'parameter':'ec2_host',"param_value":"%s"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_ec2dmz = {'parameter':'ec2_dmz_host',"param_value":"172.24.24.10",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             ec2_array = [insert_nova_ec2,insert_nova_ec2dmz]
@@ -295,10 +297,11 @@ def insert_node(input_dict):
             insert_nova_workers = {'parameter':'workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_glance = {'parameter':'glance_host',"param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_glance_api = {'parameter':'glance_api_servers',"param_value":"http://%s:9292"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_dhcp_domain = {'parameter':'dhcp_domain',"param_value":"%s"%(domains['uplink_domain_name']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
 
             nova_array = [insert_nova_db,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt,insert_nova_rabbit,insert_nova_metadata,insert_metadata_host,
                           insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached,insert_nova_neu_ten_id,insert_nova_ec2workers,insert_nova_nworkers,
-                          insert_nova_mworkers,insert_nova_workers,insert_spice,insert_spiceproxy,insert_nova_ec2_url,insert_nova_glance,insert_nova_glance_api,insert_nova_s3_url]
+                          insert_nova_mworkers,insert_nova_workers,insert_spice,insert_spiceproxy,insert_nova_ec2_url,insert_nova_glance,insert_nova_glance_api,insert_nova_s3_url,insert_nova_dhcp_domain]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -321,8 +324,9 @@ def insert_node(input_dict):
             insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neu_nova_ten_id = {"parameter":"nova_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neu_mworkers = {'parameter':'metadata_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neu_dhcp = {'parameter':'dhcp_domain',"param_value":"%s"%(domains['uplink_domain_name']),'file_name':"dhcp_agent.ini",'node':"%s" %(input_dict['node_id'])}
             neutron_array = [insert_neutron_region,insert_neutron_localip,insert_neutron_rabbit,insert_neutron_db,insert_neutron_auth,insert_meta_ip,insert_nova_url,insert_nova_auth_url,insert_neutron_auth_host,
-                             insert_neutron_auth_uri,insert_neutron_ml_ip,insert_neu_nova_ten_id,insert_neu_mworkers]
+                             insert_neutron_auth_uri,insert_neutron_ml_ip,insert_neu_nova_ten_id,insert_neu_mworkers,insert_neu_dhcp]
             for neutron in neutron_array:
                 db.pg_transaction_begin()
                 db.pg_insert('neutron_node',neutron)
