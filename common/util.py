@@ -1198,7 +1198,7 @@ def list_domain_names():
     db = db_connect()
     r_dict = {}
     #try:
-    get_domains = {'select':'param_value','from':'trans_system_settings','where':"parameter=uplink_domain_name",'and':"parameter=mgmt_domain_name"}
+    get_domains = {'select':'param_value','from':'trans_system_settings','where':"parameter='uplink_domain_name'",'and':"parameter='mgmt_domain_name'"}
     print get_domains
     domains = db.pg_select(get_domains)
     print domains
