@@ -2081,7 +2081,7 @@ INSERT INTO glance_defaults VALUES ('debug', 'False', 'NULL', 'glance-api.conf',
 INSERT INTO glance_defaults VALUES ('bind_host', '0.0.0.0', 'NULL', 'glance-api.conf', 3);
 INSERT INTO glance_defaults VALUES ('bind_port', '9292', 'NULL', 'glance-api.conf', 4);
 INSERT INTO glance_defaults VALUES ('enable_v1_api', 'True', 'NULL', 'glance-api.conf', 5);
-INSERT INTO glance_defaults VALUES ('enable_v2_api', 'False', 'NULL', 'glance-api.conf', 6);
+INSERT INTO glance_defaults VALUES ('enable_v2_api', 'True', 'NULL', 'glance-api.conf', 6);
 INSERT INTO glance_defaults VALUES ('show_image_direct_url', 'True', 'NULL', 'glance-api.conf', 7);
 INSERT INTO glance_defaults VALUES ('container_formats', 'ami,ari,aki,bare,ovf,ova', 'NULL', 'glance-api.conf', 8);
 INSERT INTO glance_defaults VALUES ('disk_formats', 'ami,ari,aki,vhd,vmdk,raw,qcow2,vdi,iso', 'NULL', 'glance-api.conf', 9);
@@ -2106,7 +2106,7 @@ INSERT INTO glance_defaults VALUES ('debug', 'False', 'NULL', 'glance-registry.c
 INSERT INTO glance_defaults VALUES ('bind_host', '0.0.0.0', 'NULL', 'glance-registry.conf', 28);
 INSERT INTO glance_defaults VALUES ('bind_port', '9191', 'NULL', 'glance-registry.conf', 29);
 INSERT INTO glance_defaults VALUES ('enable_v1_registry', 'True', 'NULL', 'glance-registry.conf', 30);
-INSERT INTO glance_defaults VALUES ('enable_v2_registry', 'False', 'NULL', 'glance-registry.conf', 31);
+INSERT INTO glance_defaults VALUES ('enable_v2_registry', 'True', 'NULL', 'glance-registry.conf', 31);
 INSERT INTO glance_defaults VALUES ('auth_host', 'localhost', 'NULL', 'glance-registry.conf', 32);
 INSERT INTO glance_defaults VALUES ('auth_uri', 'localhost:5000', 'NULL', 'glance-registry.conf', 33);
 INSERT INTO glance_defaults VALUES ('auth_port', '35357', 'NULL', 'glance-registry.conf', 34);

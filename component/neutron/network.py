@@ -295,14 +295,11 @@ class neutron_net_ops:
             raise Exception("Invalid property given for shared flag.")
 
         nets = self.list_internal_networks(create_dict['project_id'])
-        logger.sys_info('HACK: nets %s'%(nets))
         for net in nets:
-            logger.sys_info('HACK: net %s'%(net))
             if(net['net_name'] == create_dict['net_name']):
                 random.seed()
                 rand_id = random.randrange(0,100000)
                 create_dict['net_name'] = create_dict['net_name']+'_%s'%(str(rand_id))
-                logger.sys_info('HACK: net %s'%(net))
 
         if(self.user_level <= 1):
             #Create an API connection with the admin

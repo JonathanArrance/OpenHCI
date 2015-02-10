@@ -711,7 +711,7 @@ try:
     while True:
         logger.sys_info("ciac_server: waiting for connection...on %s of ciac server, port: %s" %("bond1", "6161"))
         if __debug__ :
-            print "ciac_server: waiting for connection...on %s of ciac server, port: %s" % ("bond2", "6161")
+            print "ciac_server: waiting for connection...on %s of ciac server, port: %s" % ("bond1", "6161")
         conn, client_addr = sock.accept()
         #logger.sys_info("connection from: ", (client_addr))
         print "ciac_server: connection from ", client_addr
