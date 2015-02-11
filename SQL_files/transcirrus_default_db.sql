@@ -2147,7 +2147,7 @@ INSERT INTO neutron_default VALUES ('dhcp_driver', 'neutron.agent.linux.dhcp.Dns
 INSERT INTO neutron_default VALUES ('verbose', 'False', 'l3_agent.ini', 7);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'l3_agent.ini', 8);
 INSERT INTO neutron_default VALUES ('interface_driver', 'neutron.agent.linux.interface.OVSInterfaceDriver', 'l3_agent.ini', 9);
-INSERT INTO neutron_default VALUES ('use_namespaces', 'False', 'l3_agent.ini', 10);
+INSERT INTO neutron_default VALUES ('use_namespaces', 'True', 'l3_agent.ini', 10);
 INSERT INTO neutron_default VALUES ('external_network_bridge', 'br-ex', 'l3_agent.ini', 11);
 INSERT INTO neutron_default VALUES ('enable_metadata_proxy', 'True', 'l3_agent.ini', 12);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'metadata_agent.ini', 13);
