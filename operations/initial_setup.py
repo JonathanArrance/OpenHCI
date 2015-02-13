@@ -17,7 +17,7 @@ from transcirrus.component.neutron.network import neutron_net_ops
 #from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
-from transcirrus.component.glance.glance_ops import glance_ops
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.operations.restart_all_services import restart_services
 
@@ -543,11 +543,11 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info('Importing Cirros image.')
     cirros_input = {
                     'image_name':"Cirros-x86_64-0-3-1",
-                    'image_disk_format':"qcow2",
-                    'image_is_public':'True',
-                    'image_is_protected':'True',
-                    'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img"
+                    'container_format':"bare",
+                    'disk_format':"qcow2",
+                    'visibility':'public',
+                    'image_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img",
+                    'os_type':"linux"
                     }
     import_cirros = glance.import_image(cirros_input)
     if(import_cirros != 'OK'):
@@ -558,11 +558,11 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info('Importing Ubuntu 12.04 image.')
     ubuntu_input = {
                     'image_name':"Ubuntu-12-04-x86_64",
-                    'image_disk_format':"qcow2",
-                    'image_is_public':'True',
-                    'image_is_protected':'True',
-                    'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img"
+                    'container_format':"bare",
+                    'disk_format':"qcow2",
+                    'visibility':'public',
+                    'image_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img",
+                    'os_type':"linux"
                     }
     import_ubuntu = glance.import_image(ubuntu_input)
     if(import_ubuntu != 'OK'):
@@ -573,11 +573,11 @@ def run_setup(new_system_variables,auth_dict):
     logger.sys_info('Importing CentOS 6.5 image.')
     fedora_input = {
                     'image_name':"CentOS-65-x86_64",
-                    'image_disk_format':"qcow2",
-                    'image_is_public':'True',
-                    'image_is_protected':'True',
-                    'project_id':auth_dict['project_id'],
-                    'file_location':"/transcirrus/centos-6.5-20140117.0.x86_64.qcow2"
+                    'container_format':"bare",
+                    'disk_format':"qcow2",
+                    'visibility':'public',
+                    'image_location':"/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
+                    'os_type':"linux"
                     }
     import_fedora = glance.import_image(fedora_input)
     if(import_fedora != 'OK'):

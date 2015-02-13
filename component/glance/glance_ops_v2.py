@@ -123,10 +123,6 @@ class glance_ops:
             logger.sys_error('Image disk format not specified')
             raise Exception('Image disk format not specified')
 
-        if(('image_type' not in input_dict) or (input_dict['image_type'] == '')):
-            logger.sys_error('Image type not specified')
-            raise Exception('Image type not specified')
-
         if(('os_type' not in input_dict) or (input_dict['os_type'] == '')):
             logger.sys_error('OS type not specified, defaulting to Other')
             input_dict['os_type'] = "other"
