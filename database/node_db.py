@@ -301,7 +301,8 @@ def insert_node(input_dict):
 
             nova_array = [insert_nova_db,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt,insert_nova_rabbit,insert_nova_metadata,insert_metadata_host,
                           insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached,insert_nova_neu_ten_id,insert_nova_ec2workers,insert_nova_nworkers,
-                          insert_nova_mworkers,insert_nova_workers,insert_spice,insert_spiceproxy,insert_nova_ec2_url,insert_nova_glance,insert_nova_glance_api,insert_nova_s3_url,insert_nova_dhcp_domain]
+                          insert_nova_mworkers,insert_nova_workers,insert_spice,insert_spiceproxy,insert_nova_ec2_url,insert_nova_glance,insert_nova_glance_api,insert_nova_s3_url,insert_nova_dhcp_domain,
+                          insert_nova_host,insert_xvpvncproxy]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)
@@ -1052,7 +1053,11 @@ def get_node_ceilometer_config(node_id):
 
     try:
         get_dict = {'select':"parameter,param_value",'from':"ceilometer_default",'where':"file_name='ceilometer.conf'"}
-        ceil = db.pg_select(get_dict)
+        ceildefraw = db.pg_select(get_dict)
+    
+        get_node_dict = {'select':"parameter,param_value",'from':"ceilometer_node",'where':"file_name='ceilometer.conf'",'and':"node='%s'"%(node_id)}
+        ceilnoderaw = db.pg_select(get_node_dict)
+        ceil = ceildefraw + ceilnoderaw
     except:
         logger.sys_error('Could not get the Ceilometer entries from the Transcirrus db.')
         raise Exception('Could not get the Ceilometer entries from the Transcirrus db.')

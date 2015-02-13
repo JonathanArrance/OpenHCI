@@ -415,6 +415,14 @@ class server_ops:
             logger.sys_error("The image: %s was not found" %(create_dict['image_name']))
             raise Exception("The image: %s was not found" %(create_dict['image_name']))
 
+        #check to see if the name is in the project
+        servers = self.list_servers(create_dict['project_id'])
+        for server in servers:
+            if(server['server_name'] == create_dict['name']):
+                random.seed()
+                rand_id = random.randrange(0,100000)
+                create_dict['name'] = create_dict['name']+'_%s'%(str(rand_id))
+        
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":create_dict['project_id']}
