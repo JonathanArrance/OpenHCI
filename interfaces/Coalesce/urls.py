@@ -155,11 +155,11 @@ urlpatterns = patterns('',
             name='evacuate_server'),
 
 	# --- Images ----
-	url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<progress_id>[^/]+)/$',
+	url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.import_local',
          name='import_local'),
 
-	url(r'^import_remote/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<progress_id>[^/]+)/$',
+	url(r'^import_remote/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.import_remote',
          name='import_remote'),
 

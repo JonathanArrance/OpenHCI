@@ -22,6 +22,7 @@ $(function () {
         image_type = $("#import_img_type"),
         import_local = $("#import_local"),
         import_remote = $("#import_remote"),
+        os_type = $("#os_type"),
         visibility = $("#import_img_vis"),
         image_location = "",
         allFields = $([]).add(image_name).add(disk_format).add(container_format).add(image_type).add(import_local).add(import_remote).add(image_location).add(visibility);
@@ -29,7 +30,7 @@ $(function () {
     $("#image-import-dialog-form").dialog(
         {
             autoOpen: false,
-            height: 550,
+            height: 575,
             width: 235,
             modal: true,
             resizable: false,
@@ -80,7 +81,9 @@ $(function () {
                         image_location = convertUrl47(image_location);
                         loc = loc.replace(/\//g, '&47');
 
-                        url = '/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/';
+                        var os = os_type.val();
+
+                        url = '/import_remote/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + os + '/' + progress_id + '/';
 
                         // Send the form data via the ajax call.
                         uploading = true;
@@ -153,8 +156,10 @@ $(function () {
                         // to keep from having to convert /'s to %47.
                         loc = "na";
 
+                        var os = os_type.val();
+
                         // Build the url that we will use to send the form data. The file contents are handled seperately.
-                        var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + progress_id + '/';
+                        var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + os + '/'  + progress_id + '/';
 
                         // Send the form data via the ajax call and setup the function that will update the progress bar.
                         uploading = true;

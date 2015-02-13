@@ -51,6 +51,13 @@
                     <input type="file" name="import_local" id="import_local"
                            class="file ui-widget-content ui-corner-all image-file" style="width: 200px;"/>
 
+                    <label for="os_type">OS Type <span title="When booting a Windows instance, OS Type must be specified. Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">(help)</span></label>
+                    <select name="os_type" id="os_type">
+                        <option value="linux" selected="selected">Linux</option>
+                        <option value="windows">Windows</option>
+                        <option value="other">Other</option>
+                    </select>
+
                     <label for="import_img_vis">Image Visibility</label>
                     <select name="import_img_vis" id="import_img_vis" class="image-select">
                         <option value="public">public</option>

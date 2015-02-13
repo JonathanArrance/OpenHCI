@@ -127,6 +127,10 @@ class glance_ops:
             logger.sys_error('Image type not specified')
             raise Exception('Image type not specified')
 
+        if(('os_type' not in input_dict) or (input_dict['os_type'] == '')):
+            logger.sys_error('OS type not specified, defaulting to Other')
+            input_dict['os_type'] = "other"
+
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -142,11 +146,14 @@ class glance_ops:
         except Exception as e:
             logger.sys_error("Could not open image file: %s" % e)
             raise Exception("Could not open image file: %s" % e)
-                
+
         if('visibility' in input_dict):
-            body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility']})
+            body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility'],
+                                    "os_type": input_dict['os_type']})
         else:
-            body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibilitiy": "public"})
+            body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": "public",
+                                    "os_type": input_dict['os_type']})
+
         try:
             body = body_json
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "User-Agent": "python/glanceclient"}
@@ -199,8 +206,8 @@ class glance_ops:
                 logger.sys_error("Uploaded image data via glance - bad status: %s" % rest['reason'])
                 raise Exception("Uploaded image data via glance - bad status: %s" % rest['reason'])
         else:
-            logger.sys_error("Added image to db - bad status: %s" % rest['reason'])
-            raise Exception("Added image to db - bad status: %s" % rest['reason'])
+            logger.sys_error("Add image to glance - bad status: %s (%s)" % (rest['response'], rest['reason']))
+            raise Exception("Add image to glance - bad status: %s (%s)" % (rest['response'], rest['reason']))
 
     
     def delete_image(self, image_id):

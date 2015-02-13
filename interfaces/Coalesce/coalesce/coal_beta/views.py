@@ -864,7 +864,7 @@ def create_keypair(request, key_name, project_id):
 
 # Import a local (user's laptop) image and add it to glance & database. The image has already been uploaded via the broswer
 # to memory or a temp file so we just need to transfer the contents to a file we control.
-def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
+def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id):
     from coalesce.coal_beta.models import ImportLocal
 
     try:
@@ -885,8 +885,8 @@ def import_local (request, image_name, container_format, disk_format, image_type
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
 
-        # Add the image to glance and the database.
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
+        # Add the image to glance.
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type}
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
         out['status'] = "success"
@@ -911,12 +911,12 @@ def download_progress (current_size, total_size, width):
 
 # Import a remote image and add it to glance & database. The image is retrieved via a wget like interface.
 # TODO: A global cache_key is used and should be replaced with something else.
-def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, progress_id):
+def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id):
     global cache_key
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': ""}
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type}
 
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
@@ -938,7 +938,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache.delete(cache_key)
         cache_key = None
 
-        # Add the image to glance and the database.
+        # Add the image to glance.
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
         out['status'] = "success"
