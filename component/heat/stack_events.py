@@ -1,4 +1,4 @@
-class stack_events:
+class stack_events_ops:
     def find_stack_events(self):
         pass;
     def list_stack_events(self):

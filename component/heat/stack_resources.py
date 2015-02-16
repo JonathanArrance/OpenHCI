@@ -1,4 +1,4 @@
-class stack_resources:
+class stack_resources_ops:
     def find_stack_resources(self):
         pass;
     def list_resources(self):

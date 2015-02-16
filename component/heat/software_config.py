@@ -1,4 +1,4 @@
-class software_config:
+class software_config_ops:
     def create_config(self):
         pass;
     def show_config(self):
