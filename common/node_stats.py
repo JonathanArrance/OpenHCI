@@ -133,6 +133,7 @@ def get_demo_stats():
 # Get the stats for each node in the node_list.
 def get_node_stats (node_list):
     stats_array = []
+    disk_array = []
 
     # Loop through the node(s) and get the stats for each.
     for node in node_list:
@@ -158,9 +159,12 @@ def get_node_stats (node_list):
         swap_used_percent = get_swap_used_percent()
 
         # Get the stats for each disk in the xml.
-        disk_array = []
         num_disks = find_disks()
         for i in range(0, num_disks):
+            # If the monitor status isn't zero then skip this disk because it's not being monitored.
+            # This happens on a storage node that doesn't have cc-gluster-vol.
+            if (get_disk_status(i) != "0"):
+                continue
             disk_name    = get_disk_name(i)
             disk_usage   = get_disk_usage(i)
             disk_percent = get_disk_percent(i)
@@ -171,6 +175,10 @@ def get_node_stats (node_list):
                                  'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
                                  'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent,
                                  'disks': disk_array})
+
+        # Empty the disk array for the next node's disks.
+        disk_array = []
+
     return (stats_array)
 
 
@@ -326,6 +334,12 @@ def find_disks():
         if service.attributes['type'].value == "0":
             disk_list.append(service)
     return (len(disk_list))
+
+# Return the disk status (monitor status) based on the index into the disk_list.
+def get_disk_status(index):
+    disk = disk_list[index]
+    status = str(disk.getElementsByTagName('status')[0].firstChild.data)
+    return (status)
 
 # Return the disk name based on the index into the disk_list.
 def get_disk_name(index):
