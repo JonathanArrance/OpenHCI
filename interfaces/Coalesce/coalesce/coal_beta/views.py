@@ -161,6 +161,14 @@ def terms_of_use(request):
 
 def node_view(request, node_id):
     node=get_node(node_id)
+    node['status'] = node_stats.node_status (node['node_mgmt_ip'], node['node_data_ip'])
+    node['mgmt_ip_issue'] = False
+    node['data_ip_issue'] = False
+    if node['status'] == "Issue":
+        if not node_stats.is_node_up (node['node_mgmt_ip']):
+            node['mgmt_ip_issue'] = True
+        else:
+            node['data_ip_issue'] = True
     return render_to_response('coal/node_view.html', RequestContext(request, {'node': node, }))
 
 def manage_cloud(request):
@@ -174,7 +182,15 @@ def manage_cloud(request):
         for node in node_list:
             nid = node['node_id']
             ni = get_node(nid)
-            ni['node_id']= nid
+            ni['node_id'] = nid
+            ni['status'] = node_stats.node_status (ni['node_mgmt_ip'], ni['node_data_ip'])
+            ni['mgmt_ip_issue'] = False
+            ni['data_ip_issue'] = False
+            if ni['status'] == "Issue":
+                if not node_stats.is_node_up (ni['node_mgmt_ip']):
+                    ni['mgmt_ip_issue'] = True
+                else:
+                    ni['data_ip_issue'] = True
             node_info.append(ni)
     except TypeError:
         pass

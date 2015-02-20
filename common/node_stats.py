@@ -36,6 +36,31 @@ def node_stats (node="all"):
     return (stats_dict)
 
 
+# This function will return True if a node is accessable via monit (http request to port 2812)
+# otherwise it will return False.
+def is_node_up (node_ip):
+    try:
+        get_and_parse_xml (node_ip)
+        return (True)
+    except:
+        return (False)
+
+
+# This function will return the status for the given node ("Up" or "Down" or "Issue").
+#   Up    -> both IP addresses are accessable via monit
+#   Down  -> neither IP address is accessable via monit
+#   Issue -> one of the IP addresses is accessable via monit
+def node_status (node_mgmt_ip, node_data_ip):
+    mgmt_ip_up = is_node_up (node_mgmt_ip)
+    data_ip_up = is_node_up (node_data_ip)
+    if mgmt_ip_up and data_ip_up:
+        return ("Up")
+    elif not mgmt_ip_up and not data_ip_up:
+        return ("Down")
+    else:
+        return ("Issue")
+
+
 # Return some random stats for 3 simulated nodes.
 def get_demo_stats():
     stats_array = []
