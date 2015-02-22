@@ -1,6 +1,7 @@
 import xml.dom.minidom
 import random
-import urllib                         
+import urllib
+import socket
 import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 
@@ -40,7 +41,8 @@ def node_stats (node="all"):
 # otherwise it will return False.
 def is_node_up (node_ip):
     try:
-        get_and_parse_xml (node_ip)
+        if (get_and_parse_xml(node_ip) != None):
+            return (False)
         return (True)
     except:
         return (False)
@@ -240,13 +242,20 @@ def get_list_of_nodes (node_name=None):
 
 
 # Get the xml via http from the given IP address.
+# We will change the default socket timeout to be 5 seconds so we don't
+# have to wait long if the interface/node is down. We reset the timeout
+# back to 20 seconds before we return. In later versions of python
+# a timeout can be specified in the urlopen.
 def get_and_parse_xml (host_ip):
     global xmldoc
+    socket.setdefaulttimeout (5)
     url = "http://admin:monit@" + host_ip + ":2812/_status?format=xml"
-    try:                                  
+    try:
         xmldoc = xml.dom.minidom.parse (urllib.urlopen(url))
+        socket.setdefaulttimeout (20)
         return None
-    except Exception, e:            
+    except Exception as e:
+        socket.setdefaulttimeout (20)
         return (e.message)
 
 # Return the hostname from the xml.
