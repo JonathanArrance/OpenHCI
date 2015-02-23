@@ -836,7 +836,7 @@ def create_user(request, username, password, user_role, email, project_id):
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_security_group(request, groupname, groupdesc, ports, project_id):
+def create_security_group(request, groupname, groupdesc, ports, transport, project_id):
     try:
         portstrings    = ports.split(',')
         portlist = []
@@ -844,7 +844,7 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
             portlist.append(int(port))
         auth = request.session['auth']
         so = server_ops(auth)
-        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
+        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'transport': transport, 'project_id': project_id}
         out = so.create_sec_group(create_sec)
         out['status'] = 'success'
         out['message'] = 'The security group %s was created'%(groupname)

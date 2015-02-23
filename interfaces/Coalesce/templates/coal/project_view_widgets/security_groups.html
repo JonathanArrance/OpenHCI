@@ -7,7 +7,8 @@
         </div>
 
         <div id="sec-group-dialog-form" title="Create new security group">
-            <p class="validateTips">Port defaults of 443,80,22 will be preserved if left blank (changing ports is only recommended for advanced users.)</p>
+            <p class="validateTips">Default transport protocol is TCP. Port defaults of 443,80,22 will be preserved if
+                left blank (changing ports is only recommended for advanced users.)</p>
 
             <form>
                 {% csrf_token %}
@@ -18,7 +19,16 @@
                     <label for="groupdesc">Group Description</label>
                     <input type="text" name="groupdesc" id="groupdesc" value=""
                            class="text ui-widget-content ui-corner-all"/>
-                    <label for="name">Ports</label>
+                    <label>Transport Protocol</label>
+                    <label>
+                        TCP:
+                        <input type="radio" name="transport" id="tcp" value='tcp' checked>
+                    </label>
+                    <label>
+                        UDP:
+                        <input type="radio" name="transport" id="udp" value='udp'>
+                    </label>
+                    <label for="ports">Ports</label>
                     <input type="text" name="ports" id="ports" value="443,80,22"
                            class="text ui-widget-content ui-corner-all"/>
                 </fieldset>
@@ -38,8 +48,10 @@
             {% if sec_groups %}
             {% for sg in sec_groups %}
             <tr id="{{ sg.sec_group_id }}">
-                <td id="{{ sg.sec_group_id }}-name-cell"><span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span></td>
-                <td id="{{ sg.sec_group_id }}-username-cell"><span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span></td>
+                <td id="{{ sg.sec_group_id }}-name-cell"><span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span>
+                </td>
+                <td id="{{ sg.sec_group_id }}-username-cell"><span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span>
+                </td>
                 <td id="{{ sg.sec_group_id }}-actions-cell">
                     <a href="#" class="delete-secGroup">delete</a>
                 </td>
