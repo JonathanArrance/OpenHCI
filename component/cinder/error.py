@@ -7,8 +7,8 @@ def error_codes(rest):
         logger.sys_error("%s ERROR: 400"%(str(load['badRequest']['message'])))
         raise Exception("%s ERROR: 400"%(str(load['badRequest']['message'])))
     elif(rest['response'] == 401):
-        logger.sys_error("%s ERROR: 401"%(str(load['unauthorized']['message'])))
-        raise Exception("%s ERROR: 401"%(str(load['unauthorized']['message'])))
+        logger.sys_error("%s ERROR: 401"%(str(load['data'])))
+        raise Exception("%s ERROR: 401"%(str(load['data'])))
     elif(rest['response'] == 403):
         logger.sys_error("%s ERROR: 403"%(str(load['forbidden']['message'])))
         raise Exception("%s ERROR: 403"%(str(load['forbidden']['message'])))

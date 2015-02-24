@@ -1976,8 +1976,8 @@ def setup(request):
             system_var_array = [
                                 {"system_name": system, "parameter": "api_ip",             "param_value": uplink_ip},
                                 {"system_name": system, "parameter": "mgmt_ip",            "param_value": management_ip},
-                                {"system_name": system, "parameter": "admin_api_ip",       "param_value": uplink_ip},
-                                {"system_name": system, "parameter": "int_api_id",         "param_value": uplink_ip},
+                                {"system_name": system, "parameter": "admin_api_ip",       "param_value": "172.24.24.10"},
+                                {"system_name": system, "parameter": "int_api_id",         "param_value": "172.24.24.10"},
                                 {"system_name": system, "parameter": "uplink_ip",          "param_value": uplink_ip},
                                 {"system_name": system, "parameter": "vm_ip_min",          "param_value": vm_ip_min},
                                 {"system_name": system, "parameter": "vm_ip_max",          "param_value": vm_ip_max},

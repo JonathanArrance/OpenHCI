@@ -154,27 +154,24 @@ class snapshot_ops:
                 raise Exception("Could not connect to the Keystone API")
 
             try:
-                #add the new user to openstack 
+            #add the new user to openstack 
                 body = '{"snapshot": {"display_name": "%s", "force": false, "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snapshot_name'],create_snap['snapshot_desc'],create_snap['volume_id'])
                 token = self.token
-                #NOTE: if token is not converted python will pass unicode and not a string - WTF not sure what was goin on here
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
                 function = 'POST'
                 api_path = '/v1/%s/snapshots' %(create_snap['project_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
+                print rest
                 r_dict = ""
             except Exception as e:
                 logger.sys_error("Volume snapshot %s may or may not have been created." %(create_snap['snapshot_name']))
-                #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise e
 
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                #NOTE: this has to work - Celery?
-                #loop until snap becomes available
                 load = json.loads(rest['data'])
                 try:
                     #insert the volume info into the DB
@@ -192,7 +189,6 @@ class snapshot_ops:
                     r_dict = {"snapshot_name": create_snap['snapshot_name'],"snapshot_id": load['snapshot']['id'], "volume_id": load['snapshot']['volume_id']}
                     return r_dict
             else:
-                #util.http_codes(rest['response'],rest['reason'])
                 ec.error_codes(rest)
         else:
             logger.sys_error("The user level is invalid, can not delete the volume.")

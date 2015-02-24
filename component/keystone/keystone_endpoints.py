@@ -117,11 +117,18 @@ class endpoint_ops:
             #this will need to be chabged if we use different ips for endpoints
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
             #HACK - we need to use the api ip - better yet use the api ips for admin, public,internal
-            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='os_db'"}#was api_ip caused error in multinde system. Needs to be locked to 172.24.24.10
+            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='int_api_ip'"}#was api_ip caused error in multinde system. Needs to be locked to 172.24.24.10
             self.ep_ip = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
             raise Exception("Could not retrieve the api ips to create endpoints with.")
+
+        try:
+            get_public_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='api_ip'"}
+            self.ep_ip = self.db.pg_select(get_public_ips)
+        except:
+            logger.sql_error("Could not retrieve the public api ip to create endpoints with.")
+            raise Exception("Could not retrieve the public api ip to create endpoints with.")
 
         #Build the endpoints for the service in question
         #get the service info from the DB

@@ -12,7 +12,7 @@ from transcirrus.database.postgres import pgsql
 from transcirrus.common.auth import authorization
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
-a = authorization("admin","newpass")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
@@ -27,20 +27,20 @@ print "sleeping for 10 seconds while volume created"
 time.sleep(10)
 print "------------------------------------------"
 '''
-
 print "creating snapshot"
-snapit = {"snapshot_name":"snapvol","snapshot_desc":"this is a test","volume_id":"db2f0ee7-e3c8-463e-99bb-91db8305ec0c","project_id":"bb85322a95db4990802b9c09b6f943fa"}
+snapit = {"snapshot_name":"snapvol","snapshot_desc":"this is a test","volume_id":"2bf22af0-9b1d-4005-8db7-b9fed877a228","project_id":"bf54175ff7594e23b8f320c74fb05d68"}
 snaps = snap.create_snapshot(snapit)
 print snaps
 print "sleeping for 10 seconds while snapshot created"
 time.sleep(10)
-
+'''
 print "------------------------------------------"
 
 
 ind = {'snapshot_id': snaps['snapshot_id'],'project_id':"bb85322a95db4990802b9c09b6f943fa"}
 dsnap = snap.delete_snapshot(ind)
 print dsnap
+'''
 """
 lis = snap.list_snapshots()
 print lis
