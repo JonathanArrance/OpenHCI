@@ -47,6 +47,9 @@ $(function () {
 
                 disableLinks(true);
 
+                // Disable router actions
+                disableActions("delete-secGroup", true);
+
                 // Initialize progressbar and make it visible if hidden
                 $(progressbar).progressbar({value: false});
                 setVisible(progressbar, true);
@@ -96,6 +99,7 @@ $(function () {
                     .always(function () {
 
                         disableLinks(false);
+                        disableActions("delete-secGroup", false);
                         setVisible(progressbar, false);
                     });
 

@@ -161,6 +161,14 @@ def terms_of_use(request):
 
 def node_view(request, node_id):
     node=get_node(node_id)
+    node['status'] = node_stats.node_status (node['node_mgmt_ip'], node['node_data_ip'])
+    node['mgmt_ip_issue'] = False
+    node['data_ip_issue'] = False
+    if node['status'] == "Issue":
+        if not node_stats.is_node_up (node['node_mgmt_ip']):
+            node['mgmt_ip_issue'] = True
+        else:
+            node['data_ip_issue'] = True
     return render_to_response('coal/node_view.html', RequestContext(request, {'node': node, }))
 
 def manage_cloud(request):
@@ -174,7 +182,15 @@ def manage_cloud(request):
         for node in node_list:
             nid = node['node_id']
             ni = get_node(nid)
-            ni['node_id']= nid
+            ni['node_id'] = nid
+            ni['status'] = node_stats.node_status (ni['node_mgmt_ip'], ni['node_data_ip'])
+            ni['mgmt_ip_issue'] = False
+            ni['data_ip_issue'] = False
+            if ni['status'] == "Issue":
+                if not node_stats.is_node_up (ni['node_mgmt_ip']):
+                    ni['mgmt_ip_issue'] = True
+                else:
+                    ni['data_ip_issue'] = True
             node_info.append(ni)
     except TypeError:
         pass
@@ -820,7 +836,7 @@ def create_user(request, username, password, user_role, email, project_id):
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_security_group(request, groupname, groupdesc, ports, project_id):
+def create_security_group(request, groupname, groupdesc, ports, transport, project_id):
     try:
         portstrings    = ports.split(',')
         portlist = []
@@ -828,7 +844,7 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
             portlist.append(int(port))
         auth = request.session['auth']
         so = server_ops(auth)
-        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
+        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'transport': transport, 'project_id': project_id}
         out = so.create_sec_group(create_sec)
         out['status'] = 'success'
         out['message'] = 'The security group %s was created'%(groupname)

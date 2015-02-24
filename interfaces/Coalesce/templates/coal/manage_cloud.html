@@ -32,12 +32,12 @@
                     storage node
                     {% endif %}
                 </td>
-                <td>{{node.node_data_ip}}</td>
-                <td>{{node.node_mgmt_ip}}</td>
+                <td {% if node.data_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_data_ip}}</td>
+                <td {% if node.mgmt_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_mgmt_ip}}</td>
                 <td>{{node.node_controller}}</td>
                 <td>{{node.node_cloud_name}}</td>
                 <td>{{node.node_nova_zone}}</td>
-                <td>{{node.status}}</td>
+                <td {% if node.status == "Down" %} bgcolor="#FF1919"  {% elif node.status == "Issue" %} bgcolor="#FFCC00" {% endif %}>{{node.status}}</td>
             </tr>
             {% endfor %}
         </table>

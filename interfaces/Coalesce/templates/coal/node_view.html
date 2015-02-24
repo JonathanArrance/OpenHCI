@@ -23,12 +23,12 @@
                                                         storage node
                                                       {% endif %}
                                                       </td></tr>
-                <tr><th>Data IP</th>                 <td>{{node.node_data_ip}}</td></tr>
-                <tr class="odd"><th>Mgmt IP</th>     <td>{{node.node_mgmt_ip}}</td></tr>
+                <tr><th>Data IP</th>                 <td {% if node.data_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_data_ip}}</td></tr>
+                <tr class="odd"><th>Mgmt IP</th>     <td {% if node.mgmt_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_mgmt_ip}}</td></tr>
                 <tr><th>Controller</th>              <td>{{node.node_controller}}</td></tr>
                 <tr class="odd"><th>Cloud Name</th>  <td>{{node.node_cloud_name}}</td></tr>
                 <tr><th>Zone</th>                    <td>{{node.node_nova_zone}}</td></tr>
-                <tr class="odd"><th>Status</th>      <td>{{node.status}}</td></tr>
+                <tr class="odd"><th>Status</th>      <td {% if node.status == "Down" %} bgcolor="#FF1919"  {% elif node.status == "Issue" %} bgcolor="#FFCC00" {% endif %}>{{node.status}}</td></tr>
 
           </table>
         </div>

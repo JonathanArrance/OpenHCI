@@ -1,6 +1,7 @@
 import xml.dom.minidom
 import random
-import urllib                         
+import urllib
+import socket
 import transcirrus.common.config as config
 from transcirrus.database.postgres import pgsql
 
@@ -34,6 +35,32 @@ def node_stats (node="all"):
         stats_dict = get_node_stats (node_list)
 
     return (stats_dict)
+
+
+# This function will return True if a node is accessable via monit (http request to port 2812)
+# otherwise it will return False.
+def is_node_up (node_ip):
+    try:
+        if (get_and_parse_xml(node_ip) != None):
+            return (False)
+        return (True)
+    except:
+        return (False)
+
+
+# This function will return the status for the given node ("Up" or "Down" or "Issue").
+#   Up    -> both IP addresses are accessable via monit
+#   Down  -> neither IP address is accessable via monit
+#   Issue -> one of the IP addresses is accessable via monit
+def node_status (node_mgmt_ip, node_data_ip):
+    mgmt_ip_up = is_node_up (node_mgmt_ip)
+    data_ip_up = is_node_up (node_data_ip)
+    if mgmt_ip_up and data_ip_up:
+        return ("Up")
+    elif not mgmt_ip_up and not data_ip_up:
+        return ("Down")
+    else:
+        return ("Issue")
 
 
 # Return some random stats for 3 simulated nodes.
@@ -133,6 +160,7 @@ def get_demo_stats():
 # Get the stats for each node in the node_list.
 def get_node_stats (node_list):
     stats_array = []
+    disk_array = []
 
     # Loop through the node(s) and get the stats for each.
     for node in node_list:
@@ -158,9 +186,12 @@ def get_node_stats (node_list):
         swap_used_percent = get_swap_used_percent()
 
         # Get the stats for each disk in the xml.
-        disk_array = []
         num_disks = find_disks()
         for i in range(0, num_disks):
+            # If the monitor status isn't zero then skip this disk because it's not being monitored.
+            # This happens on a storage node that doesn't have cc-gluster-vol.
+            if (get_disk_status(i) != "0"):
+                continue
             disk_name    = get_disk_name(i)
             disk_usage   = get_disk_usage(i)
             disk_percent = get_disk_percent(i)
@@ -171,6 +202,10 @@ def get_node_stats (node_list):
                                  'load_avg15': load_avg15, 'cpu_user': cpu_user, 'cpu_system': cpu_system,
                                  'cpu_wait': cpu_wait, 'mem_used_percent': mem_used_percent, 'swap_used_percent': swap_used_percent,
                                  'disks': disk_array})
+
+        # Empty the disk array for the next node's disks.
+        disk_array = []
+
     return (stats_array)
 
 
@@ -207,13 +242,20 @@ def get_list_of_nodes (node_name=None):
 
 
 # Get the xml via http from the given IP address.
+# We will change the default socket timeout to be 5 seconds so we don't
+# have to wait long if the interface/node is down. We reset the timeout
+# back to 20 seconds before we return. In later versions of python
+# a timeout can be specified in the urlopen.
 def get_and_parse_xml (host_ip):
     global xmldoc
+    socket.setdefaulttimeout (5)
     url = "http://admin:monit@" + host_ip + ":2812/_status?format=xml"
-    try:                                  
+    try:
         xmldoc = xml.dom.minidom.parse (urllib.urlopen(url))
+        socket.setdefaulttimeout (20)
         return None
-    except Exception, e:            
+    except Exception as e:
+        socket.setdefaulttimeout (20)
         return (e.message)
 
 # Return the hostname from the xml.
@@ -326,6 +368,12 @@ def find_disks():
         if service.attributes['type'].value == "0":
             disk_list.append(service)
     return (len(disk_list))
+
+# Return the disk status (monitor status) based on the index into the disk_list.
+def get_disk_status(index):
+    disk = disk_list[index]
+    status = str(disk.getElementsByTagName('status')[0].firstChild.data)
+    return (status)
 
 # Return the disk name based on the index into the disk_list.
 def get_disk_name(index):

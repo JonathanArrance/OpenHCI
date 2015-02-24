@@ -420,8 +420,8 @@ class server_ops:
         for server in servers:
             if(server['server_name'] == create_dict['name']):
                 random.seed()
-                rand_id = random.randrange(0,100000)
-                create_dict['name'] = create_dict['name']+'_%s'%(str(rand_id))
+                #rand_id = random.randrange(0,100000)
+                create_dict['name'] = create_dict['name']+'_%s'%(str(self.rannum))
         
         #connect to the rest api caller
         try:
@@ -1206,7 +1206,7 @@ class server_ops:
         if(create_sec['update'] == 'true'):
             return 'OK'
         else:
-            r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id}
+            r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id, "sec_group_ports": ports, "sec_group_transport": transport}
             return r_dict
 
     def update_sec_group(self,update_sec):
