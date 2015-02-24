@@ -175,9 +175,6 @@ $(function () {
 
                             // Update selects
                             removeFromSelect(confPrivateNet, $("#network_name"), privNetInstOpts);
-
-                            // Update selects
-                            removeFromSelect(confPrivateNet, $("#network_name"), privNetInstOpts);
                             removeFromSelect(confId, $("#priv_net"), privNetRoutOpts);
                         }
                     })
