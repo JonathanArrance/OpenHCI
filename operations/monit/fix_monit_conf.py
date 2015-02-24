@@ -17,59 +17,77 @@ DK_CONF = "disks.conf"
 def fix_conf_files (node_type):
     # Core node so delete the compute and storage only conf files.
     if node_type == "cc":
-        os.remove (MONIT_CONF_LOC + CN_CONF)
-        os.remove (MONIT_CONF_LOC + SN_CONF)
+        if os.path.isfile (MONIT_CONF_LOC + CN_CONF):
+            os.remove (MONIT_CONF_LOC + CN_CONF)
+        if os.path.isfile (MONIT_CONF_LOC + SN_CONF):
+            os.remove (MONIT_CONF_LOC + SN_CONF)
         return
 
     # Compute node so delete the core and storage only conf files.
     if node_type == "cn":
-        os.remove (MONIT_CONF_LOC + CC_CONF)
-        os.remove (MONIT_CONF_LOC + SN_CONF)
+        if os.path.isfile (MONIT_CONF_LOC + CC_CONF):
+            os.remove (MONIT_CONF_LOC + CC_CONF)
+        if os.path.isfile (MONIT_CONF_LOC + SN_CONF):
+            os.remove (MONIT_CONF_LOC + SN_CONF)
         return
 
     # Storage node so delete the core and compute only conf files.
     if node_type == "sn":
-        os.remove (MONIT_CONF_LOC + CC_CONF)
-        os.remove (MONIT_CONF_LOC + CN_CONF)
+        if os.path.isfile (MONIT_CONF_LOC + CC_CONF):
+            os.remove (MONIT_CONF_LOC + CC_CONF)
+        if os.path.isfile (MONIT_CONF_LOC + CN_CONF):
+            os.remove (MONIT_CONF_LOC + CN_CONF)
         return
 
 
-# This is a storage node so determine what storage is attached and fix the conf file so monit
+# Determine what storage is attached and fix the disk.conf file so monit
 # can properly monitor the storage.
 # We use the mount command to list the mount points and then look for a line with xfs since
-# the only xfs mount point will be the drive we want to monitor. Example:
-#   /dev/sdc1 on /data/gluster type xfs (rw) 
-def fix_storage_conf():
+# the only xfs mount point will be the disk(s) we want to monitor. Example:
+#   /dev/sdc1 on /data/gluster type xfs (rw)
+def add_storage_conf():
     command = "mount | grep xfs"
 
     sub_proc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     std_out, std_err = sub_proc.communicate()
 
     if sub_proc.returncode != 0:
+        if sub_proc.returncode == 1:
+            return
         print "Error getting mount points, exit status: %d" % sub_proc.returncode
         print "Error message: %s" % std_err
         return
 
-    # Extract the device name from the output. The output looks like:
-    #    /dev/sdc1 on /data/gluster type xfs (rw)
-    dev = std_out.split()[0]
+    # Loop through the output (line by line) and extract the mount point
+    # and add it to our monit disks.conf file.
+    lines = std_out.split("\n")
 
-    # Update the disks.conf file with our device.
-    handle = open (MONIT_CONF_LOC + DK_CONF, 'a')
-    handle.write ("check filesystem sn-gluster-vol with path %s\n" % dev)
-    handle.write ("  if space usage > 80% then alert\n")
-    handle.write ("  if inode usage > 80% then alert\n")
-    handle.close()
+    for line in lines:
+        # Skip blank lines
+        if len(line) < 1:
+            continue
+
+        # Extract the mount point and short name from the output. The output looks like:
+        #    /dev/sdc1 on /data/gluster type xfs (rw)
+        #  mountpoint = /data/gluster
+        #  name = gluster
+        mountpoint = line.split()[2]
+        name = mountpoint.split("/")[2]
+
+        # Update the disks.conf file with this mount point.
+        handle = open (MONIT_CONF_LOC + DK_CONF, 'a')
+        handle.write ("check filesystem %s with path %s\n" % (name, mountpoint))
+        handle.write ("  if space usage > 80% then alert\n")
+        handle.write ("  if inode usage > 80% then alert\n\n")
+        handle.close()
     return
 
 
 # Main entry point for this script.
-# Call the routine that will delete the un-needed conf files which is based on the node type which is passed in.
-# Also if this is a storage node, then call the routine that will find the gluster volume and set is in the conf
+# is passed in and call the routine that will find the gluster volume(s) to the disks.conf
 # file so monit can start monitoring it.
 if __name__ == "__main__":
     node_type = sys.argv[1]
     fix_conf_files (node_type)
-    if node_type == "sn":
-        fix_storage_conf()
+    add_storage_conf()
     sys.exit()

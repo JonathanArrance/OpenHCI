@@ -5,7 +5,7 @@
 # Start Monit in the background (run as a daemon):
 #
 set daemon 30           # check everything at 30 seconds intervals
-  with start delay 60   # delay the first check by 30 seconds
+  with start delay 120  # delay the first check by 2 minutes
 
 # Set the location for the log file.
 #
