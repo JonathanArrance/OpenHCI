@@ -1,7 +1,12 @@
 <!-- Begin user widget-->
 <div class="span4">
-    <div class="well">
+    <div class="well user-well">
         <div class="legend">
+
+            <div id="users_progressbar" class="ui-progressbar progressbar">
+                <span class="progressbar-text">Working</span>
+            </div>
+
             Users
 
             {% if user_level == 0 %}
@@ -16,134 +21,134 @@
             {% endif %}
         </div>
 
-
-        <div id="user-dialog-form" title="Create new user">
-            <p class="validateTips">Create a new user and assign them a role. All form fields are required.</p>
-
-            <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="username">Name</label>
-                    <input type="text" name="username" id="username"
-                           class="text ui-widget-content ui-corner-all users-text-field"/>
-                    <label for="email">Email</label>
-                    <input type="text" name="email" id="email" value=""
-                           class="text ui-widget-content ui-corner-all users-text-field"/>
-                    <label for="password">Password</label>
-                    <input type="password" name="password" id="password" value=""
-                           class="text ui-widget-content ui-corner-all users-text-field"/>
-                    <label for="confirm">Confirm Password</label>
-                    <input type="password" name="confirm" id="confirm" value=""
-                           class="text ui-widget-content ui-corner-all users-text-field"/>
-                    <label for="role">Role</label>
-                    <select name="role" id="role" class="users-select">
-                        <option value="user">User</option>
-                        <option value="pu">Power User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </fieldset>
-            </form>
+        <div class="well-tall user-table">
+            <table class="paleblue widget-table table-tall" id="users_list">
+                <tr>
+                    <th>User</th>
+                    <th>Actions</th>
+                </tr>
+                {% if users %}
+                {% load extratags %}
+                {% for pu in users %}
+                {% with pu.username as username %}
+                {% with userinfo|access:username as ui %}
+                <script>
+                    users.setItem(
+                            "{{pu.username}}",
+                            { id: "{{ ui.user_id }}", enabled: "{{ui.user_enabled}}", username: "{{pu.username}}",
+                                email: "{{ui.email}}", role: "{{ui.user_role}}", removed: "FALSE", value: "{{pu.username}}",
+                                option: "{{pu.username}}" }
+                    );
+                </script>
+                <tr id="{{ ui.user_id }}" class="{% if ui.user_enabled == 'FALSE' %}user-disabled{% endif %}">
+                    <td id="{{ ui.user_id }}-name-cell">
+                        <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/"
+                           class="disable-link"><span id="{{ ui.user_id }}-name-text">{{username}}</span></a>
+                        <a href="mailto:{{ ui.email }}"><span
+                                id="{{ ui.user_id }}-email-text">({{ ui.email }})</span></a>
+                        <span id="{{ ui.user_id }}-role-text" class="right">{{ ui.user_role }}</span>
+                    </td>
+                    <td id="{{ ui.user_id }}-actions-cell">
+                        {% if user_level == 0 %}
+                        {% if ui.user_enabled == "TRUE" %}
+                        <a href="#" class="disable-user">disable</a>
+                        {% else %}
+                        <a href="#" class="enable-user">enable</a>
+                        {% endif %}
+                        <span class="user-actions-pipe"> | </span>
+                        <a href="#" class="remove-user">remove</a>
+                        <span class="user-actions-pipe"> | </span>
+                        <a href="#" class="delete-user"> delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endwith %}
+                {% endfor %}
+                {% else %}
+                <tr id="users_placeholder">
+                    <td><p><i>This project has no users</i></p></td>
+                    <td></td>
+                </tr>
+                {% endif %}
+            </table>
         </div>
-
-        <div id="user-add-existing-dialog-form" title="Add Existing user">
-            <p class="validateTips">All form fields are required.</p>
-
-            <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="username">Name</label>
-                    <select name="username" id="username">
-                        <script>orphanedUserOpts.clear();</script>
-                        {% for ouser in ouserinfo %}
-                        <script>
-                            users.setItem(
-                                    "{{ouser.username}}",
-                                    { id: "{{ ouser.keystone_user_id }}", enabled: "{{ouser.user_enabled}}", username: "{{ouser.username}}",
-                                        email: "{{ouser.email}}", role: "{{ouser.user_role}}", removed: "TRUE", value: "{{ouser.username}}",
-                                        option: "{{ouser.username}}"}
-                            );
-                            orphanedUserOpts.setItem("{{ouser.username}}", { value: "{{ouser.username}}", option: "{{ouser.username}}" });
-                        </script>
-                        {% endfor %}
-                        <script>refreshSelect($("select#username"), orphanedUserOpts);</script>
-                    </select>
-                    <label for="role">Role</label>
-                    <select name="role" id="role">
-                        <option value="user">User</option>
-                        <option value="pu">Power User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-
-                </fieldset>
-            </form>
-        </div>
-
-        <div id="user-remove-confirm-form" title="Remove User">
-            <p style="text-align:center;">Remove <span class="user-name"></span>?</p>
-        </div>
-
-        <div id="user-delete-confirm-form" title="Delete User">
-            <p style="text-align:center;">Delete <span class="user-name"></span>?</p>
-        </div>
-
-        <div id="user-disable-confirm-form" title="Disable User">
-            <p style="text-align:center;">Disable <span class="user-name"></span>?</p>
-        </div>
-
-        <div id="user-enable-confirm-form" title="Enable User">
-            <p style="text-align:center;">Enable <span class="user-name"></span>?</p>
-        </div>
-
-        <table class="paleblue widget-table" id="users_list">
-            <tr>
-                <th>User</th>
-                <th>Actions</th>
-            </tr>
-            {% if users %}
-            {% load extratags %}
-            {% for pu in users %}
-            {% with pu.username as username %}
-            {% with userinfo|access:username as ui %}
-            <script>
-                users.setItem(
-                        "{{pu.username}}",
-                        { id: "{{ ui.user_id }}", enabled: "{{ui.user_enabled}}", username: "{{pu.username}}",
-                            email: "{{ui.email}}", role: "{{ui.user_role}}", removed: "FALSE", value: "{{pu.username}}",
-                            option: "{{pu.username}}" }
-                );
-            </script>
-            <tr id="{{ ui.user_id }}" class="{% if ui.user_enabled == 'FALSE' %}user-disabled{% endif %}">
-                <td id="{{ ui.user_id }}-name-cell">
-                    <a href="/projects/{{ project.project_name}}/{{ project.project_id}}/user/{{pu.username}}/view/"
-                       class="disable-link"><span id="{{ ui.user_id }}-name-text">{{username}}</span></a>
-                    <a href="mailto:{{ ui.email }}"><span id="{{ ui.user_id }}-email-text">({{ ui.email }})</span></a>
-                    <span id="{{ ui.user_id }}-role-text" class="right">{{ ui.user_role }}</span>
-                </td>
-                <td id="{{ ui.user_id }}-actions-cell">
-                    {% if user_level == 0 %}
-                    {% if ui.user_enabled == "TRUE" %}
-                    <a href="#" class="disable-user">disable</a>
-                    {% else %}
-                    <a href="#" class="enable-user">enable</a>
-                    {% endif %}
-                    <span class="user-actions-pipe"> | </span>
-                    <a href="#" class="remove-user">remove</a>
-                    <span class="user-actions-pipe"> | </span>
-                    <a href="#" class="delete-user"> delete</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endwith %}
-            {% endwith %}
-            {% endfor %}
-            {% else %}
-            <tr id="users_placeholder">
-                <td><p><i>This project has no users</i></p></td>
-                <td></td>
-            </tr>
-            {% endif %}
-        </table>
-        <div id="users_progressbar" class="ui-progressbar"
-             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
     </div>
+</div>
+
+<div id="user-dialog-form" title="Create new user">
+    <p class="validateTips">Create a new user and assign them a role. All form fields are required.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="username">Name</label>
+            <input type="text" name="username" id="username"
+                   class="text ui-widget-content ui-corner-all users-text-field"/>
+            <label for="email">Email</label>
+            <input type="text" name="email" id="email" value=""
+                   class="text ui-widget-content ui-corner-all users-text-field"/>
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" value=""
+                   class="text ui-widget-content ui-corner-all users-text-field"/>
+            <label for="confirm">Confirm Password</label>
+            <input type="password" name="confirm" id="confirm" value=""
+                   class="text ui-widget-content ui-corner-all users-text-field"/>
+            <label for="role">Role</label>
+            <select name="role" id="role" class="users-select">
+                <option value="user">User</option>
+                <option value="pu">Power User</option>
+                <option value="admin">Admin</option>
+            </select>
+        </fieldset>
+    </form>
+</div>
+
+<div id="user-add-existing-dialog-form" title="Add Existing user">
+    <p class="validateTips">All form fields are required.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="username">Name</label>
+            <select name="username" id="username">
+                <script>orphanedUserOpts.clear();</script>
+                {% for ouser in ouserinfo %}
+                <script>
+                    users.setItem(
+                            "{{ouser.username}}",
+                            { id: "{{ ouser.keystone_user_id }}", enabled: "{{ouser.user_enabled}}", username: "{{ouser.username}}",
+                                email: "{{ouser.email}}", role: "{{ouser.user_role}}", removed: "TRUE", value: "{{ouser.username}}",
+                                option: "{{ouser.username}}"}
+                    );
+                    orphanedUserOpts.setItem("{{ouser.username}}", { value: "{{ouser.username}}", option: "{{ouser.username}}" });
+                </script>
+                {% endfor %}
+                <script>refreshSelect($("select#username"), orphanedUserOpts);</script>
+            </select>
+            <label for="role">Role</label>
+            <select name="role" id="role">
+                <option value="user">User</option>
+                <option value="pu">Power User</option>
+                <option value="admin">Admin</option>
+            </select>
+
+        </fieldset>
+    </form>
+</div>
+
+<div id="user-remove-confirm-form" title="Remove User">
+    <p style="text-align:center;">Remove <span class="user-name"></span>?</p>
+</div>
+
+<div id="user-delete-confirm-form" title="Delete User">
+    <p style="text-align:center;">Delete <span class="user-name"></span>?</p>
+</div>
+
+<div id="user-disable-confirm-form" title="Disable User">
+    <p style="text-align:center;">Disable <span class="user-name"></span>?</p>
+</div>
+
+<div id="user-enable-confirm-form" title="Enable User">
+    <p style="text-align:center;">Enable <span class="user-name"></span>?</p>
 </div>

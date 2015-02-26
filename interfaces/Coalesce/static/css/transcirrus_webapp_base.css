@@ -2869,6 +2869,22 @@ table [class*=span],
     border: 2px solid #808080;
 }
 
+.well-tall {
+    overflow-y: auto;
+    max-height: 217px;
+    border-bottom: 1px solid rgb(128, 128, 128);
+    display: inline-block;
+    border-right: 1px solid rgb(128, 128, 128) !important;
+    border-top: 1px solid rgb(128, 128, 128);
+    width: 100%;
+}
+
+.well-hidden {
+    min-height: 0 !important;
+    height: 0 !important;
+    padding-bottom: 0;
+}
+
 .table-wide {
     font: 11px/14px "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
     border-collapse: collapse;
@@ -2890,6 +2906,12 @@ table [class*=span],
     border-left: 1px solid #C0C0C0;
     background-color: #F2F2F2;
     text-align: left;
+}
+
+.table-tall {
+    border-top: 1px solid rgb(128, 128, 128) !important;
+    border-bottom: 1px solid rgb(128, 128, 128) !important;
+    border-right: 1px solid rgb(128, 128, 128) !important;
 }
 
 .legend-header {
@@ -5043,6 +5065,23 @@ th > small {
     background-repeat: no-repeat;
 }
 
+.progressbar {
+    width: 64px;
+    margin: -4px 15px 0px 0px;
+    padding: 2px;
+    float: left;
+    height: 17px !important;
+    display: none;
+}
+
+.progressbar-text {
+    position: absolute;
+    display: inline;
+    margin-left: -57px;
+    text-shadow: -1px 1px #ffffff;
+    margin-top: -1px;
+}
+
 .spinner {
     position: absolute;
     z-index: 10000;
@@ -5094,6 +5133,7 @@ th > small {
 
 .widget-section-header:hover {
     background-color: rgba(142, 182, 255, 0.4);
+    cursor: pointer;
 }
 
 .widget-section {
@@ -5162,8 +5202,7 @@ th > small {
 /* INSTANCE WIDGET */
 
 #instance_progressbar > .ui-widget-header,
-#instance-progressbar > .ui-widget-header
-{
+#instance-progressbar > .ui-widget-header {
     background-color: #FF8617 !important;
 }
 
@@ -5201,7 +5240,7 @@ th > small {
 /* FIP WIDGET */
 
 #fip_progressbar > .ui-widget-header,
-#fip-progressbar > .ui-widget-header{
+#fip-progressbar > .ui-widget-header {
     background-color: #FF8617 !important;
 }
 
@@ -5212,7 +5251,7 @@ th > small {
 /* VOLUME WIDGET */
 
 #vol_progressbar > .ui-widget-header,
-#vol-progressbar > .ui-widget-header{
+#vol-progressbar > .ui-widget-header {
     background-color: #FF8617 !important;
 }
 
@@ -5261,7 +5300,7 @@ th > small {
 /* USERS WIDGET */
 
 #users_progressbar > .ui-widget-header,
-#users_progressbar > .ui-widget-header{
+#users_progressbar > .ui-widget-header {
     background-color: #FF8617 !important;
 }
 

@@ -1,21 +1,31 @@
 <!-- Begin Network widget-->
-      <div class="span4">
-        <div class="well widget">
-          <div class="legend">
-             External Networks
-          </div>
-          {% if public_networks %}
-	    <table class="paleblue widget-table">
-
-                <tr> <th>Network</th>  <th>Network info</th>  <th>Actions</th></tr>
-
-                {% for key,value in public_networks.items %}
-		    <tr> <td><a href="/network/{{value.net_id}}/view/" class="disable-link">{{key}}</a></td>  <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}}</td>  <td></td></tr>
-		{% endfor %}
-	    </table>
-	  {% else %}	
-	   <p><i>This project has no external networks</i></p>
-	  {% endif %}
-
+<div class="span4">
+    <div class="well sfd-well">
+        <div class="legend">
+            External Networks
         </div>
-      </div>
+
+        <div class="well-tall sfd-table">
+            <table class="paleblue widget-table table-tall">
+
+                <tr>
+                    <th>Network</th>
+                    <th>Network info</th>
+                    <th>Actions</th>
+                </tr>
+
+                {% if public_networks %}
+                {% for key,value in public_networks.items %}
+                <tr>
+                    <td><a href="/network/{{value.net_id}}/view/" class="disable-link">{{key}}</a></td>
+                    <td>shared: {{value.net_shared}} | admin state: {{value.net_admin_state}}</td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+                {% else %}
+            <tr><td><p><i>This project has no external networks</i></p></td><td></td><td></td></tr>
+            {% endif %}
+            </table>
+        </div>
+    </div>
+</div>

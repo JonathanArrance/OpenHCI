@@ -1,7 +1,11 @@
 <!-- Begin Routers widget-->
 <div class="span4">
-    <div class="well">
+    <div class="well sfd-well">
         <div class="legend">
+
+            <div id="router_progressbar" class="ui-progressbar progressbar">
+                <span class="progressbar-text">Working</span>
+            </div>
 
             Routers
 
@@ -12,78 +16,79 @@
             {% endif %}
         </div>
 
-        <div id="router-dialog-form" title="Create new router">
-            <p class="validateTips">Create a new router for a private network.</p>
-            <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="router_name">Router Name</label>
-                    <input type="text" name="router_name" id="router_name"
-                           class="text ui-widget-content ui-corner-all"/>
-                    <label for="priv_net">Private Network</label>
-                    <select name="priv_net" id="priv_net">
-                        <script>privNetRoutOpts.clear();</script>
-                        {% for net in priv_net_list %}
-                        {% if net.in_use == 'false' %}
-                        <script>
-                            privNetRoutOpts.setItem(
-                                    "{{net.net_id}}",
-                                    { value: "{{net.net_id}}", option: "{{net.net_name}}" }
-                            )
-                        </script>
-                        {% endif %}
-                        {% endfor %}
-                        <script>refreshSelect($("#priv_net"), privNetRoutOpts);</script>
-                    </select>
-                </fieldset>
-            </form>
+        <div class="well-tall sfd-table">
+            <table class="paleblue widget-table table-tall" id="router_list">
+
+                <tr>
+                    <th>Router</th>
+                    <th>Router Status</th>
+                    <th>Actions</th>
+                </tr>
+
+                <script>routers.clear();</script>
+                {% if routers %}
+                {% for router in routers %}
+                <script>
+                    routers.setItem(
+                            "{{ router.router_id}}",
+                            { name: "{{ router.router_name }}", network: "{{ router.network_id }}"}
+                    );
+                </script>
+                <tr id="{{ router.router_id }}">
+                    <td id="{{ router.router_id }}-name-cell">
+                        <a href="/router/{{ router.router_id }}/view/" class="disable-link">
+                            <span id="{{ router.router_id}}-name-text">{{router.router_name}}</span>
+                        </a>
+                    </td>
+                    <td id="{{ router.router_id }}-status-cell">
+                        <span id="{{ router.router_id }}-status-text">{{router.router_status}}</span>
+                    </td>
+                    <td id="{{ router.router_id }}-actions-cell">
+                        <a href="#" class="delete-router">delete</a>
+                    </td>
+                </tr>
+
+                {% endfor %}
+                {% else %}
+                <tr id="router_placeholder">
+                    <td><p><i>This project has no routers</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endif %}
+            </table>
         </div>
-
-        <div id="router-delete-confirm-form" title="Delete Router">
-            <p style="text-align:center;">Delete <span class="router-name"></span>?</p>
-        </div>
-
-        <table class="paleblue widget-table" id="router_list">
-
-            <tr>
-                <th>Router</th>
-                <th>Router Status</th>
-                <th>Actions</th>
-            </tr>
-
-            <script>routers.clear();</script>
-            {% if routers %}
-            {% for router in routers %}
-            <script>
-                routers.setItem(
-                        "{{ router.router_id}}",
-                        { name: "{{ router.router_name }}", network: "{{ router.network_id }}"}
-                );
-            </script>
-            <tr id="{{ router.router_id }}">
-                <td id="{{ router.router_id }}-name-cell">
-                    <a href="/router/{{ router.router_id }}/view/" class="disable-link">
-                        <span id="{{ router.router_id}}-name-text">{{router.router_name}}</span>
-                    </a>
-                </td>
-                <td id="{{ router.router_id }}-status-cell">
-                    <span id="{{ router.router_id }}-status-text">{{router.router_status}}</span>
-                </td>
-                <td id="{{ router.router_id }}-actions-cell">
-                    <a href="#" class="delete-router">delete</a>
-                </td>
-            </tr>
-
-            {% endfor %}
-            {% else %}
-            <tr id="router_placeholder">
-                <td><p><i>This project has no routers</i></p></td>
-                <td></td>
-                <td></td>
-            </tr>
-            {% endif %}
-        </table>
-        <div id="router_progressbar" class="ui-progressbar"
-             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
     </div>
+</div>
+
+<div id="router-dialog-form" title="Create new router">
+    <p class="validateTips">Create a new router for a private network.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="router_name">Router Name</label>
+            <input type="text" name="router_name" id="router_name"
+                   class="text ui-widget-content ui-corner-all"/>
+            <label for="priv_net">Private Network</label>
+            <select name="priv_net" id="priv_net">
+                <script>privNetRoutOpts.clear();</script>
+                {% for net in priv_net_list %}
+                {% if net.in_use == 'false' %}
+                <script>
+                    privNetRoutOpts.setItem(
+                            "{{net.net_id}}",
+                            { value: "{{net.net_id}}", option: "{{net.net_name}}" }
+                    )
+                </script>
+                {% endif %}
+                {% endfor %}
+                <script>refreshSelect($("#priv_net"), privNetRoutOpts);</script>
+            </select>
+        </fieldset>
+    </form>
+</div>
+
+<div id="router-delete-confirm-form" title="Delete Router">
+    <p style="text-align:center;">Delete <span class="router-name"></span>?</p>
 </div>
