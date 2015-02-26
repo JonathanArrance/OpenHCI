@@ -5077,13 +5077,22 @@ th > small {
 
 .learn-more > ul > li > a {
     float: left;
+    margin-right: 15px;
+}
+
+.learn-more > ul > li > a:hover {
+    background: #909090;
+    border-radius: 4px;
 }
 
 .learn-more > ul > li > a > img {
     padding: 1px;
     border-radius: 4px;
     border: 1px solid #696969;
-    margin-right: 15px;
+}
+
+.learn-more > ul > li > a > img:hover {
+    opacity: 0.8;
 }
 
 .ajax-loader {
