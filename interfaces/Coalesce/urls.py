@@ -16,6 +16,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.welcome',
             name='home'),
 
+        url(r'^welcome/$',
+            'coalesce.coal_beta.views.welcome',
+            name='welcome'),
+
         url(r'^privacy-policy/$',
             'coalesce.coal_beta.views.privacy_policy',
             name='privacy-policy'),
@@ -23,6 +27,10 @@ urlpatterns = patterns('',
         url(r'^terms-of-use/$',
             'coalesce.coal_beta.views.terms_of_use',
             name='terms-of-use'),
+
+        url(r'^config_e_series/$',
+            'coalesce.coal_beta.views.config_e_series',
+            name='config_e_series'),
 
         url(r'^disclaimer/$',
             'coalesce.coal_beta.views.disclaimer',
@@ -101,7 +109,7 @@ urlpatterns = patterns('',
     url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
 	    'coalesce.coal_beta.views.unpause_server',
             name='unpause_server'),
-	
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/suspend_server/$',
 	    'coalesce.coal_beta.views.suspend_server',
             name='suspend_server'),
@@ -145,7 +153,7 @@ urlpatterns = patterns('',
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/live_migrate_server/$',
 	    'coalesce.coal_beta.views.live_migrate_server',
             name='live_migrate_server'),
-	
+
 	url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/migrate_server/$',
 	    'coalesce.coal_beta.views.migrate_server',
             name='migrate_server'),
@@ -166,7 +174,7 @@ urlpatterns = patterns('',
 	url(r'^get_upload_progress/(?P<progress_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.get_upload_progress',
          name='get_upload_progress'),
-	
+
 	url(r'^delete_image/(?P<image_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.delete_image',
             name='delete_image'),
@@ -210,7 +218,7 @@ urlpatterns = patterns('',
         url(r'^detach_volume/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
         'coalesce.coal_beta.views.detach_volume',
             name='detach_volume'),
-	
+
 	    url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.delete_volume',
             name='delete_volume'),
