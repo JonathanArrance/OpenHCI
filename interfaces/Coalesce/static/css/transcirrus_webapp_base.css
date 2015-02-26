@@ -5055,6 +5055,37 @@ th > small {
     font-weight: normal
 }
 
+.learn-more {
+    width: 100%;
+    padding: 15px 15px 0;
+}
+
+.learn-more > ul {
+    list-style: inside;
+}
+
+.learn-more > ul > li {
+    list-style: outside none none;
+    height: 40px;
+}
+
+.learn-more > ul > li > span {
+    float: left;
+    margin-top: 6px;
+    min-width: 100px;
+}
+
+.learn-more > ul > li > a {
+    float: left;
+}
+
+.learn-more > ul > li > a > img {
+    padding: 1px;
+    border-radius: 4px;
+    border: 1px solid #696969;
+    margin-right: 15px;
+}
+
 .ajax-loader {
     display: block;
     height: 16px;
