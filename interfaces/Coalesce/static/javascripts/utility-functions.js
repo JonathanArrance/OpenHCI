@@ -504,7 +504,9 @@ var volumes = new HashTable(),
     totalStorage = 0,
     usedStorage = 0,
     availableStorage = 0,
-    attachableInstances = new HashTable();
+    attachableInstances = new HashTable(),
+    snapshots = new HashTable(),
+    snapshotVolumes = new HashTable();
 
 function getStorage() {
     $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')

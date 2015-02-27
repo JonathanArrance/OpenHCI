@@ -1,14 +1,6 @@
 $(function () {
 
     var csrftoken = getCookie('csrftoken');
-    var id = '';
-    var secGroup = '';
-    var targetRow;
-
-    // Widget Elements
-    var progressbar = $("#secGroup_progressbar"),
-        placeholder =
-            '<tr id="#secGroup_placeholder"><td><p><i>You have no keys defined</i></p></td><td></td><td></td></tr>';
 
     $.ajaxSetup({
         crossDomain: false, // obviates need for sameOrigin test
@@ -18,6 +10,16 @@ $(function () {
             }
         }
     });
+
+
+    var id = '';
+    var secGroup = '';
+    var targetRow;
+
+    // Widget Elements
+    var progressbar = $("#secGroup_progressbar"),
+        placeholder =
+            '<tr id="#secGroup_placeholder"><td><p><i>You have no keys defined</i></p></td><td></td><td></td></tr>';
 
     $('#sec-group-delete-confirm-form').dialog({
         autoOpen: false,
@@ -80,7 +82,7 @@ $(function () {
                             $(targetRow).fadeOut().remove();
                         }
 
-                        // If last keypair, reveal placeholder
+                        // If last security group, reveal placeholder
                         var rowCount = $('#secGroup_list tr').length;
                         if (rowCount < 2) {
                             $('#secGroup_list').append(placeholder).fadeIn();
