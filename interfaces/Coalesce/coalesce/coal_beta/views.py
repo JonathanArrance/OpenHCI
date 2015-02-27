@@ -820,7 +820,7 @@ def create_user(request, username, password, user_role, email, project_id):
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_security_group(request, groupname, groupdesc, ports, project_id):
+def create_security_group(request, groupname, groupdesc, ports, transport, project_id):
     try:
         portstrings    = ports.split(',')
         portlist = []
@@ -828,12 +828,28 @@ def create_security_group(request, groupname, groupdesc, ports, project_id):
             portlist.append(int(port))
         auth = request.session['auth']
         so = server_ops(auth)
-        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'project_id': project_id}
+        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'transport': transport, 'project_id': project_id}
         out = so.create_sec_group(create_sec)
         out['status'] = 'success'
         out['message'] = 'The security group %s was created'%(groupname)
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not create security group %s: %s" %(groupname,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def update_security_group(request, groupid, project_id, ports, enable_ping, transport):
+    try:
+        portstrings    = ports.split(',')
+        portlist = []
+        for port in portstrings:
+            portlist.append(int(port))
+        auth = request.session['auth']
+        so = server_ops(auth)
+        update_sec = {'group_id': groupid, 'enable_ping': enable_ping, 'ports': portlist, 'project_id': project_id, 'transport': transport, 'update':'true'}
+        out = so.update_sec_group(update_sec)
+        out['status'] = 'success'
+        out['message'] = 'The security group %s was updated'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not update security group: %s" %(e)}
     return HttpResponse(simplejson.dumps(out))
 
 def delete_sec_group(request, sec_group_id, project_id):
@@ -1051,6 +1067,7 @@ def detach_volume(request, project_id, volume_id):
         out = {'status' : "error", 'message' : "Could not detach the volume."}
     return HttpResponse(simplejson.dumps(out))
 
+'''
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
         auth = request.session['auth']
@@ -1064,7 +1081,21 @@ def create_snapshot(request, project_id, name, volume_id, desc):
     except Exception as e:
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
 
+def create_snapshot(request, project_id, name, volume_id, desc):
+    try:
+        auth = request.session['auth']
+        sno = snapshot_ops(auth)
+        create_snap = {'project_id': project_id, 'snapshot_name': name, 'volume_id': volume_id, 'snapshot_desc': desc}
+        out = sno.create_snapshot(create_snap)
+        out['status'] = 'success'
+        out['message'] = "The snapshot %s has been created for volume id %s"%(out['snapshot_name'], out['volume_id'])
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not create snapshot : %s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+'''
 def delete_snapshot(request, project_id, snapshot_id):
     try:
         auth = request.session['auth']
@@ -1078,6 +1109,30 @@ def delete_snapshot(request, project_id, snapshot_id):
     except Exception as e:
         messages.warning(request, "%s"%(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+'''
+
+def delete_snapshot(request, project_id, snapshot_id):
+    output = {}
+    try:
+        auth = request.session['auth']
+        sno = snapshot_ops(auth)
+        delete_snap = {'project_id': project_id, 'snapshot_id': snapshot_id}
+        out = sno.delete_snapshot(delete_snap)
+        if(out == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "The snapshot with id %s has been deleted."%(snapshot_id)
+    except Exception as e:
+        output = {'status' : "error", 'message' : "Could not delete snapshot: %s"%(e)}
+    return HttpResponse(simplejson.dumps(output))
+
+def snapshot_view(request, snapshot_id):
+    auth = request.session['auth']
+    sno = snapshot_ops(auth)
+    snapshot = sno.get_snapshot(snapshot_id)
+    return render_to_response('coal/snapshot_view.html',
+                               RequestContext(request, {
+                                                        'snapshot': snapshot,
+                                                        }))
 
 def create_router(request, router_name, priv_net, default_public, project_id):
     try:

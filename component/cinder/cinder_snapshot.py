@@ -453,11 +453,12 @@ class snapshot_ops:
             except Exception as e:
                 raise e
 
+
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
-                r_dict = {"snapshot_id": str(load['snapshot']['id']), "snapshot_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at']), "snapshot_name": str(load['snapshot']['display_name'])}
+                r_dict = {"snapshot_id": str(load['snapshot']['id']), "snapshot_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at']), "snapshot_name": str(load['snapshot']['display_name']), "project_id": proj_id[0][0]}
                 return r_dict
             else:
                 #util.http_codes(rest['response'],rest['reason'])
