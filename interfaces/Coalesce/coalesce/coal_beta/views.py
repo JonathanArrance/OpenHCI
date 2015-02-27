@@ -1978,7 +1978,7 @@ def setup(request):
             uplink_dns             = form.cleaned_data['uplink_dns']
             uplink_gateway         = form.cleaned_data['uplink_gateway']
             uplink_domain_name     = form.cleaned_data['uplink_domain_name']
-            uplink_subnet      = form.cleaned_data['uplink_subnet']
+            uplink_subnet          = form.cleaned_data['uplink_subnet']
             mgmt_domain_name       = form.cleaned_data['mgmt_domain_name']
             mgmt_subnet            = form.cleaned_data['mgmt_subnet']
             mgmt_dns               = form.cleaned_data['mgmt_dns']

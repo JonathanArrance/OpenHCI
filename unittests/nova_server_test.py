@@ -158,13 +158,13 @@ serv_list = nova.list_all_servers()
 print serv_list
 print "---------------------------------------"
 time.sleep(2)
-
-input_dict = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': 'ab25fbe7-945c-473e-94a7-3edf30958b1f','volume_id': '2f10ea39-0b36-4155-8424-6795911044ac','mount_point': '/dev/vdc'}
+'''
+input_dict = {'project_id': 'bf54175ff7594e23b8f320c74fb05d68' ,'instance_id': '226f545a-37b4-485d-89bd-b9893bc1e100','volume_id': '2bf22af0-9b1d-4005-8db7-b9fed877a228','mount_point': '/dev/vdc'}
 print input_dict
 attach = store.attach_vol_to_server(input_dict)
 
 print attach
-
+'''
 time.sleep(10)
 
 input_dict2 = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': 'ab25fbe7-945c-473e-94a7-3edf30958b1f','volume_id': '2f10ea39-0b36-4155-8424-6795911044ac'}
