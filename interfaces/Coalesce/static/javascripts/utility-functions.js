@@ -506,11 +506,13 @@ $(function () {
 
             $(".instance-management-table").show(0);
             $(".instance-management-well").removeClass("well-hidden");
+            $("#instance-management-icon").text("-");
             instanceManagementHidden = false;
         } else {
 
             $(".instance-management-table").hide(0);
             $(".instance-management-well").addClass("well-hidden");
+            $("#instance-management-icon").text("+");
             instanceManagementHidden = true;
         }
     });
@@ -558,11 +560,13 @@ $(function () {
 
             $(".storage-table").show(0);
             $(".storage-well").removeClass("well-hidden");
+            $("#storage-icon").text("-");
             storageHidden = false;
         } else {
 
             $(".storage-table").hide(0);
             $(".storage-well").addClass("well-hidden");
+            $("#storage-icon").text("+");
             storageHidden = true;
         }
     });
@@ -613,7 +617,7 @@ function updateStorageBar() {
 
 // --- SOFTWARE DEFINED NETWORKS
 
-var sfdHidden = false;
+var sdnHidden = false;
 
 $(function () {
     $("#software-defined-networking").click(function (event) {
@@ -621,22 +625,24 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        $(".sfd-well").each(function (input, element) {
+        $(".sdn-well").each(function (input, element) {
             if (!$(element).hasClass("well-hidden")) {
-                sfdHidden = false;
+                sdnHidden = false;
             }
         });
 
-        if (sfdHidden) {
+        if (sdnHidden) {
 
-            $(".sfd-table").show(0);
-            $(".sfd-well").removeClass("well-hidden");
-            sfdHidden = false;
+            $(".sdn-table").show(0);
+            $(".sdn-well").removeClass("well-hidden");
+            $("#sdn-icon").text("-");
+            sdnHidden = false;
         } else {
 
-            $(".sfd-table").hide(0);
-            $(".sfd-well").addClass("well-hidden");
-            sfdHidden = true;
+            $(".sdn-table").hide(0);
+            $(".sdn-well").addClass("well-hidden");
+            $("#sdn-icon").text("+");
+            sdnHidden = true;
         }
     });
 });
@@ -678,11 +684,13 @@ $(function () {
 
             $(".user-table").show(0);
             $(".user-well").removeClass("well-hidden");
+            $("#user-security-icon").text("-");
             usersSecurityHidden = false;
         } else {
 
             $(".user-table").hide(0);
             $(".user-well").addClass("well-hidden");
+            $("#user-security-icon").text("+");
             usersSecurityHidden = true;
         }
     });

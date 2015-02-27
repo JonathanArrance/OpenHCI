@@ -5161,7 +5161,7 @@ th > small {
 
 .widget-section-header {
     font-size: 16px;
-    line-height: 20px;
+    line-height: 28px;
     margin: 10px 0 0 20px;
     background-color: rgba(178, 202, 255, 0.2);
     display: inline-block;
@@ -5171,9 +5171,39 @@ th > small {
     box-shadow: -1px 0 #696969, 0 0px #696969, 1px 0 #696969, 0 -1px #696969;
 }
 
-.widget-section-header:hover {
-    background-color: rgba(142, 182, 255, 0.4);
+.widget-section-icon {
+    display: block;
+    float: left;
+    width: 20px;
+    max-width: 22px !important;
+    height: 16px;
+    max-height: 22px !important;
+    line-height: 19px;
+    margin: 4px 10px 0 0;
+    padding: 0 0 4px;
+    border: 1px solid #696969;
+    border-radius: 4px;
     cursor: pointer;
+    color: #696969;
+    background-color: #FFFFFF;
+    font-size: 17px;
+    font-weight: bold;
+    text-decoration: none;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    text-align: center;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.widget-section-icon:hover {
+    color: #333333;
+    text-decoration: none;
+    background-color: #C0C0C0;
+    *background-color: #C0C0C0;
+    background-position: 0 -15px; /* Buttons in IE7 don't get borders, so darken on hover */
+    -webkit-transition: background-position 0.1s linear;
+    -moz-transition: background-position 0.1s linear;
+    -o-transition: background-position 0.1s linear;
+    transition: background-position 0.1s linear;
 }
 
 .widget-section {

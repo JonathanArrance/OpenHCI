@@ -40,28 +40,28 @@
     {{ project.project_name}}
 </div>
 
-<h4 id="instance-management" class="widget-section-header">Instance Management</h4>
+<h4 id="instance-management" class="widget-section-header"><div id="instance-management-icon" class="widget-section-icon">-</div>Instance Management</h4>
 <div class="row-fluid widget-section">
     {% include "coal/project_view_widgets/instances.html" %}
     {% include "coal/project_view_widgets/images.html" %}
     {% include "coal/project_view_widgets/floating_ips.html" %}
 </div>
 
-<h4 id="storage" class="widget-section-header">Storage</h4>
+<h4 id="storage" class="widget-section-header"><div id="storage-icon" class="widget-section-icon">-</div>Storage</h4>
 <div class="row-fluid widget-section">
     {% include "coal/project_view_widgets/volumes.html" %}
     {% include "coal/project_view_widgets/snapshots.html" %}
     {% include "coal/project_view_widgets/object_containers.html" %}
 </div>
 
-<h4 id="software-defined-networking" class="widget-section-header">Software Defined Networking</h4>
+<h4 id="software-defined-networking" class="widget-section-header"><div id="sdn-icon" class="widget-section-icon">-</div>Software Defined Networking</h4>
 <div class="row-fluid widget-section">
     {% include "coal/project_view_widgets/external_networks.html" %}
     {% include "coal/project_view_widgets/routers.html" %}
     {% include "coal/project_view_widgets/internal_networks.html" %}
 </div>
 
-<h4 id="users-security" class="widget-section-header">Users/Security</h4>
+<h4 id="users-security" class="widget-section-header"><div id="users-security-icon" class="widget-section-icon">-</div>Users/Security</h4>
 <div class="row-fluid widget-section">
     {% include "coal/project_view_widgets/users.html" %}
     {% include "coal/project_view_widgets/security_groups.html" %}
