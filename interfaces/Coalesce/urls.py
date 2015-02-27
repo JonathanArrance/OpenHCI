@@ -229,6 +229,10 @@ urlpatterns = patterns('',
         'coalesce.coal_beta.views.delete_snapshot',
             name='delete_snapshot'),
 
+	    url(r'^snapshot/(?P<snapshot_id>[^/]+)/view/$',
+	        'coalesce.coal_beta.views.snapshot_view',
+                name='snapshot_view'),
+
 	# --- Containers ----
 
         url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',

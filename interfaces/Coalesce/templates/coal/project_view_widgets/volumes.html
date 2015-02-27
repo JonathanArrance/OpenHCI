@@ -84,7 +84,7 @@
             {% if volumes %}
             {% for k,v in volume_info.items %}
             <script>
-                volumes.setItem("{{v.volume_id}}", { size: "{{v.volume_size}}" });
+                volumes.setItem("{{v.volume_id}}", { size: "{{v.volume_size}}", name: "{{v.volume_name}}" });
                 usedStorage += Number("{{v.volume_size}}");
             </script>
 
