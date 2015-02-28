@@ -130,8 +130,6 @@ class endpoint_ops:
             logger.sql_error("Could not retrieve the public api ip to create endpoints with.")
             raise Exception("Could not retrieve the public api ip to create endpoints with.")
 
-        self.public_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
-        internal_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
         #Build the endpoints for the service in question
         #get the service info from the DB
         try:
@@ -149,7 +147,6 @@ class endpoint_ops:
                 self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
 
             if(input_dict['service_name'] == 'swift'):
-                self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
                 get_serv_info = {'select':"service_port,service_api_version",'from':"trans_service_settings",'where':"service_name='swift_admin'"}
                 get_service = self.db.pg_select(get_serv_info)
                 self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
@@ -166,7 +163,6 @@ class endpoint_ops:
 
             if(input_dict['service_name'] == 'nova'):
                 self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
-
         except:
             logger.sql_error("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
             raise Exception("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
@@ -174,6 +170,14 @@ class endpoint_ops:
         #build the endpoints
         if(self.get_service[0][1] == 'NULL'):
             self.get_service[0][1] = ""
+
+        self.public_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+        if(input_dict['service_name'] == 'swift'):
+            self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+        if(input_dict['service_name'] == 'nova'):
+            self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+
+        internal_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
 
         #HUGE HACK
         if(input_dict['service_name'] != 'keystone'):
@@ -262,7 +266,7 @@ class endpoint_ops:
                 raise
             else:
                 self.db.pg_transaction_commit()
-                r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':self.admin_api,'internal_url':internal_api,'public_url':public_api}
+                r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':self.admin_api,'internal_url':internal_api,'public_url':self.public_api}
                 return r_dict
         else:
             self.db.pg_transaction_rollback()

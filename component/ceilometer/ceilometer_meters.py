@@ -60,20 +60,6 @@ class meter_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-        try:
-            #use util.close_db when you no longer need o have the connection open.
-            #Try to connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-            logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
-        except Exception as e:
-            logger.sql_error("Could not connect to the Transcirrus DB, %s" %(e))
-            raise
-
-
-    def __del__(self):
-        self.db.pg_close_connection()
-
-
     def list_meters(self, project_id):
         
         try:
@@ -107,3 +93,12 @@ class meter_ops:
             print load
         else:
             util.http_codes(rest['response'],rest['reason'])
+            
+    def show_meter(self):
+        pass
+    
+    def create_meter(self):
+        pass
+    
+    def shaow_meter_stats(self):
+        pass
