@@ -2,6 +2,8 @@
 import os
 import sys
 import subprocess
+import socket
+import transcirrus.common.node_stats as node_stats
 
 MONIT_CONF_LOC = "/usr/local/lib/python2.7/transcirrus/operations/monit/"
 CC_CONF = "core-only.conf"
@@ -83,11 +85,25 @@ def add_storage_conf():
     return
 
 
+# Return the node type that we are running on:
+#   cc - core node
+#   cn - compute node
+#   sn - storage node
+def get_node_type():
+    node_list = node_stats.get_list_of_nodes(socket.gethostname())
+    return (node_list[0]['node_type'])
+
+
 # Main entry point for this script.
 # is passed in and call the routine that will find the gluster volume(s) to the disks.conf
 # file so monit can start monitoring it.
 if __name__ == "__main__":
-    node_type = sys.argv[1]
+    # If we aren't given a node type then go figure it out else use what we were given.
+    if len(sys.argv) == 1:
+        node_type = get_node_type()
+    else:
+        node_type = sys.argv[1]
+    print "node_type: %s" % node_type
     fix_conf_files (node_type)
     add_storage_conf()
     sys.exit()
