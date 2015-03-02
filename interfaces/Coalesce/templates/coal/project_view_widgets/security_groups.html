@@ -35,6 +35,38 @@
             </form>
         </div>
 
+        <!--<div id="sec-group-update-form" title="Update Security Group">-->
+            <!--<p class="validateTips">Default transport protocol is TCP. Port defaults are 443,80,22 (changing ports is-->
+                <!--only recommended for advanced users.) Enable Ping defaults to true.</p>-->
+
+            <!--<form>-->
+                <!--{% csrf_token %}-->
+                <!--<fieldset>-->
+                    <!--<label>Transport Protocol</label>-->
+                    <!--<label>-->
+                        <!--TCP:-->
+                        <!--<input type="radio" name="update_transport" id="update_tcp" value='tcp' checked>-->
+                    <!--</label>-->
+                    <!--<label>-->
+                        <!--UDP:-->
+                        <!--<input type="radio" name="update_transport" id="update_udp" value='udp'>-->
+                    <!--</label>-->
+                    <!--<label for="update_ports">Ports</label>-->
+                    <!--<input type="text" name="ports" id="update_ports" value="443,80,22"-->
+                           <!--class="text ui-widget-content ui-corner-all"/>-->
+                    <!--<label>Enable Ping</label>-->
+                    <!--<label>-->
+                        <!--true:-->
+                        <!--<input type="radio" name="enable_ping" id="true" value='true' checked>-->
+                    <!--</label>-->
+                    <!--<label>-->
+                        <!--false:-->
+                        <!--<input type="radio" name="enable_ping" id="false" value='false'>-->
+                    <!--</label>-->
+                <!--</fieldset>-->
+            <!--</form>-->
+        <!--</div>-->
+
         <div id="sec-group-delete-confirm-form" title="Delete Security Group">
             <p style="text-align:center;">Delete <span class="secGroup-name"></span>?</p>
         </div>
@@ -47,13 +79,24 @@
             </tr>
             {% if sec_groups %}
             {% for sg in sec_groups %}
+
+            <script>
+                securityGroups.setItem("{{ sg.sec_group_id }}",
+                        { id: "{{ sg.sec_group_id }}", name: "{{sg.sec_group_name}}" })
+            </script>
+
             <tr id="{{ sg.sec_group_id }}">
                 <td id="{{ sg.sec_group_id }}-name-cell"><span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span>
+                <td id="{{ sg.sec_group_id }}-name-cell">
+                    <a href="/security_group/{{sg.sec_group_id}}/{{sg.project_id}}/view/"><span
+                            id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span></a>
                 </td>
                 <td id="{{ sg.sec_group_id }}-username-cell"><span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span>
                 </td>
                 <td id="{{ sg.sec_group_id }}-actions-cell">
                     <a href="#" class="delete-secGroup">delete</a>
+                    <!--<span> | </span>-->
+                    <!--<a href="#" class="update-secGroup">update</a>-->
                 </td>
             </tr>
             {% endfor %}
