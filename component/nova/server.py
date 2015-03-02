@@ -431,7 +431,7 @@ class server_ops:
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connec to the REST api caller in create_server operation.")
-            raise Esception("Could not connec to the REST api caller in create_server operation.")
+            raise Exception("Could not connec to the REST api caller in create_server operation.")
 
         try:
             body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
