@@ -1078,8 +1078,8 @@ class server_ops:
                 raise Exception("Users can only create security groups in their project.")
 
         #determin if pings should be enabled.
-        if(('enable_ping' not in create_sec) or (create_sec['enable_ping'] == 'false')):
-            create_sec['enable_ping'] = 'false'
+        if(('enable_ping' not in create_sec) or (create_sec['enable_ping'] == 'true')):
+            create_sec['enable_ping'] = 'true'
         else:
             ping = create_sec['enable_ping']
             ping = ping.lower()
@@ -1534,26 +1534,29 @@ class server_ops:
         get_group_dict = None
 
         if(self.is_admin == 1):
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(project_id)}
+            proj_id = project_id
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(proj_id)}
         elif(self.user_level == 1):
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(self.project_id)}
+            proj_id = self.project_id
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(proj_id)}
         elif(self.user_level == 2):
+            proj_id = self.project_id
             #HACK: we need to make it so that only the defaults are shown for a standard user until they make their own groups.
             #get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id)}
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(proj_id)}
         else:
             logger.sys_error('Could not determin user type for sysgroup listing.')
 
         try:
             groups = self.db.pg_select(get_group_dict)
         except:
-            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(get_group_dict[0][3],self.project_id))
-            raise("Could not get the security key info for sec_key: %s in project: %s" %(get_group_dict[0][3],self.project_id))
+            logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(get_group_dict[0][3],proj_id))
+            raise("Could not get the security key info for sec_key: %s in project: %s" %(get_group_dict[0][3],proj_id))
 
         group_array = []
         #build an array of r_dict
         for group in groups:
-            r_dict = {"sec_group_name":group[5],"sec_group_id":group[4],"username":group[2]}
+            r_dict = {"sec_group_name":group[5],"sec_group_id":group[4],"username":group[2], "project_id": proj_id }
             group_array.append(r_dict)
 
         #return the array
@@ -1612,12 +1615,12 @@ class server_ops:
         NOTE: we will use a combination of the openstack and transcirrus db
         """
          #sanity
-        if((sec_dict['sec_group_id'] == '') or ('sec_group_id' not in sec_dict)):
-            logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
-            raise Exception("Security group name was either blank or not specified for delete security group operation.")
-        if((sec_dict['project_id'] == '') or ('project_id' not in sec_dict)):
-            logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
-            raise Exception("Security group name was either blank or not specified for delete security group operation.")
+        # if((sec_dict['sec_group_id'] == '') or ('sec_group_id' not in sec_dict)):
+        #     logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
+        #     raise Exception("Security group name was either blank or not specified for delete security group operation.")
+        # if((sec_dict['project_id'] == '') or ('project_id' not in sec_dict)):
+        #     logger.sys_error("Security group name was either blank or not specified for delete security group operation.")
+        #     raise Exception("Security group name was either blank or not specified for delete security group operation.")
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(sec_dict['project_id'])}
@@ -1676,7 +1679,7 @@ class server_ops:
             for rule in load['security_group']['rules']:
                 rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr']),'transport':str(rule['ip_protocol'])}
                 rule_array.append(rule_dict)
-            r_dict = {'sec_group_name':get_group[0][5], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array}
+            r_dict = {'sec_group_name':get_group[0][5], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array, 'project_id': sec_dict['project_id']}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])
