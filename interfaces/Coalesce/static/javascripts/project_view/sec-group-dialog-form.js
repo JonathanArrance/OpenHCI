@@ -97,11 +97,12 @@ $(function () {
                                 var newRow = '';
                                 newRow +=
                                     '<tr id="' + data.sec_group_id + '"><td id="' + data.sec_group_id + '-name-cell">' +
+                                    '<a href="/security_group/' + data.sec_group_id + '/' + PROJECT_ID + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
                                     '<span id="' + data.sec_group_id + '-name-text">' + data.sec_group_name + '</span></td>' +
                                     '<td id="' + data.sec_group_id + '-username-cell">' +
                                     '<span id="' + data.sec_group_id + '-username-text">' + data.username + '</span></td>' +
-                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a>' +
-                                    '</td></tr>';
+                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a> | ' +
+                                    '<a href="#" class="update-secGroup">update</a></td></tr>';
 
                                 // Check to see if this is the first sec group to be generated
                                 var rowCount = $("#secGroup_list tr").length;

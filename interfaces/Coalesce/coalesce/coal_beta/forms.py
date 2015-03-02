@@ -141,7 +141,7 @@ class authentication_form(forms.Form):
         self.helper.form_class = 'form-horizontal'
         self.helper.help_text_inline = True
         self.helper.error_text_inline = False
-        self.helper.add_input(Submit('submit', 'Login'))
+        self.helper.add_input(Submit('submit', 'Log In'))
 
 
 class import_image_form(forms.Form):

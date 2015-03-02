@@ -11,20 +11,21 @@ $(function () {
         }
     });
 
+    // Form Elements
+    var ports = $("#update_ports");
 
+    // Local Variables
     var id = '';
     var secGroup = '';
     var targetRow;
 
     // Widget Elements
-    var progressbar = $("#secGroup_progressbar"),
-        placeholder =
-            '<tr id="#secGroup_placeholder"><td><p><i>You have no keys defined</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#secGroup_progressbar");
 
-    $('#sec-group-delete-confirm-form').dialog({
+    $('#sec-group-update-form').dialog({
         autoOpen: false,
-        height: 125,
-        width: 245,
+        height: 410,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -40,17 +41,25 @@ $(function () {
 
                 // Confirmed Selections
                 var confId = id,
-                    confSecGroup = $(secGroup).text();
+                    confSecGroup = $(secGroup).text(),
+                    confPorts = ports.val(),
+                    confEnablePing = $('input[name=enable_ping]:checked').val(),
+                    confTransport = $('input[name=update_transport]:checked').val();
+
+                // Check defaults
+                if (confPorts == "") { confPorts = "443,80,22"; }
+                if (confEnablePing == undefined) { confEnablePing = 'true'; }
+                if (confTransport == undefined) { confTransport = 'tcp'; }
 
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                message.showMessage('notice', "Deleting " + confSecGroup + ".");
+                message.showMessage('notice', "Updating " + confSecGroup + ".");
 
                 disableLinks(true);
 
                 // Disable actions
-                disableActions("delete-secGroup", true);
+                disableActions("update-secGroup", true);
 
                 // Initialize progressbar and make it visible if hidden
                 $(progressbar).progressbar({value: false});
@@ -64,7 +73,7 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_sec_group/' + confId + '/' + PROJECT_ID + '/')
+                $.getJSON('/update_security_group/' + confId + '/' + PROJECT_ID + '/' + confPorts + '/' + confEnablePing + '/' + confTransport + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
@@ -79,17 +88,9 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            $(targetRow).fadeOut().remove();
+                            $(actionsCell).empty().fadeOut();
+                            $(actionsCell).append(actionsHtml).fadeIn();
                         }
-
-                        // If last security group, reveal placeholder
-                        var rowCount = $('#secGroup_list tr').length;
-                        if (rowCount < 2) {
-                            $('#secGroup_list').append(placeholder).fadeIn();
-                        }
-
-                        // Update selects
-                        removeFromSelect(confSecGroup, $("#sec_group_name"), secGroupInstOpts);
                     })
                     .fail(function () {
 
@@ -101,7 +102,7 @@ $(function () {
                     .always(function () {
 
                         disableLinks(false);
-                        disableActions("delete-secGroup", false);
+                        disableActions("update-secGroup", false);
                         setVisible(progressbar, false);
                     });
 
@@ -112,7 +113,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-secGroup', function (event) {
+    $(document).on('click', '.update-secGroup', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
@@ -121,9 +122,9 @@ $(function () {
         id = $(targetRow).attr("id");
         secGroup = document.getElementById(id + "-name-text");
 
-        $('div#sec-group-delete-confirm-form > p > span.secGroup-name').empty().append($(secGroup).text());
+        $('div#sec-group-update-form > p > span.secGroup-name').empty().append($(secGroup).text());
 
-        $('#sec-group-delete-confirm-form').dialog("open");
+        $('#sec-group-update-form').dialog("open");
     });
 });
 
