@@ -19,8 +19,8 @@ from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 #get the nova libs
-from flavor import flavor_ops
-from image import nova_image_ops
+from transcirrus.component.nova.flavor import flavor_ops
+from transcirrus.component.nova.image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 #from transcirrus.component.glance.glance_ops import glance_ops
@@ -1223,11 +1223,16 @@ class server_ops:
                 power users and users can only update security groups that they own
         """
         update_sec['update'] = 'true'
+        delete_rules = self.delete_sec_group_rules(update_sec)
+        if(delete_rules != 'OK'):
+            return 'ERROR'
+
         update_group = self.create_sec_group(update_sec)
         if(update_group == 'OK'):
             return 'OK'
         else:
             return 'ERROR'
+
 
     def create_sec_keys(self,key_dict):
         """
@@ -1420,6 +1425,140 @@ class server_ops:
                 return "OK"
         else:
             util.http_codes(rest['response'],rest['reason'])
+
+    def delete_sec_group_rules (self, rule_dict, All=False):
+        """
+        DESC: Delete security group rules for the given group.
+              Only the rules for the given transport will be deleted
+              unless All is set to True.
+        INPUT: dictionary rule_dict - ports[] - op
+                                    - transport - op - tcp/udp
+                                    - enable_ping - op - true/false
+                                    - group_id - req
+                                    - project_id - req
+        OUTPUT: OK if deleted or error
+        ACCESS: Admins can delete any security group rules, users and power users can only
+                delete security group rules in their project.
+        """
+
+        # Verify we have the data we need and that it is ok for this user to delete rules.
+        if((rule_dict['group_id'] == "") or ('group_id' not in rule_dict)):
+            logger.sys_error ("Security group id was either blank or not specified for delete security group rules operation.")
+            raise Exception ("Security group id was either blank or not specified for delete security group rules operation.")
+
+        if((rule_dict['project_id'] == "") or ('project_id' not in rule_dict)):
+            logger.sys_error ("Project ID was either blank or not specified for delete security group rules operation.")
+            raise Exception ("Project ID was either blank or not specified for delete security group rules operation.")
+
+        # Check for ports.
+        ports = []
+        if ('ports' not in rule_dict):
+            logger.sys_error ("No ports given for delete security group rules operation.")
+            raise Exception ("No ports given for delete security group rules operation.")
+        else:
+            ports = rule_dict['ports']
+
+        # Verify the transport protocol tcp or udp
+        if ('transport' not in rule_dict):
+            logger.sys_error ("No transport given for delete security group rules operation.")
+            raise Exception ("No transport given for delete security group rules operation.")
+        
+        if (rule_dict['transport'] == 'tcp' or rule_dict['transport'] == 'udp'):
+            transport = rule_dict['transport']
+        else:
+            logger.sys_error ("Invalid transport for security group rule delete %s" % (rule_dict['group_id']))
+            raise Exception ("Invalid transport for security group rule delete %s" % (rule_dict['group_id']))
+
+        try:
+            get_proj = {'select': 'proj_name', 'from':'projects', 'where':"proj_id='%s'" % (rule_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error ("Project could not be found.")
+            raise Exception ("Project could not be found.")
+
+        if (self.is_admin == 0):
+            if (self.project_id != rule_dict['project_id']):
+                logger.sys_error ("Users can only delete security groups rules in their project.")
+                raise Exception ("Users can only delete security groups rules in their project.")
+
+        print "sec_group_id: %s" % rule_dict['group_id']
+        print "project_id: %s" % rule_dict['project_id']
+
+        # Get the security group info from the db.
+        try:
+            get_group_dict = {'select':"*", 'from':"trans_security_group", 'where':"sec_group_id='%s'" % (rule_dict['group_id']), 'and':"proj_id='%s'" % (rule_dict['project_id'])}
+            get_group = self.db.pg_select (get_group_dict)
+        except:
+            logger.sql_error ("Could not get the security group info for sec_group: %s in project: %s" % (rule_dict['group_id'], rule_dict['project_id']))
+            raise Exception("Could not get the security group info for sec_group: %s in project: %s" % (rule_dict['group_id'], rule_dict['project_id']))
+
+        print "get_group: %s" % get_group
+
+        # If the group does not belong to the user raise exception.
+        if (get_group[0][2] != self.username):
+            logger.sys_error ("The security group %s does not belong to the user %s" % (get_group[0][4], self.username))
+            raise Exception ("The security group %s does not belong to the user %s" % (get_group[0][4], self.username))
+
+        # Connect to the rest api caller.
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":rule_dict['project_id']}
+            if (rule_dict['project_id'] != self.project_id):
+                self.token = get_token (self.username, self.password, rule_dict['project_id'])
+            api = caller (api_dict)
+        except:
+            logger.sys_error ("Could not connect to the API caller")
+            raise Exception ("Could not connect to the API caller")
+
+        try:
+            rule_dict['sec_group_id'] = rule_dict['group_id']
+            group_dict = self.get_sec_group (rule_dict)
+        except Exception as e:
+            logger.sys_error ("Could not get sec_group list for rule delete: %s" % e)
+            raise e
+
+        print "group_dict: %s" % group_dict
+
+        # Delete ...
+        try:
+            for i in range (len(ports)):
+                print "looking for rule for port %s, transport %s" % (ports[i], transport)
+
+                rule_id = None
+                for port in group_dict['ports']:
+                    print "in list port: %s" % port
+                    if transport == port['transport'] and port[''] == ports[i]:
+                        print "found a match"
+                        rule_id = port['rule_id']
+
+                if rule_id == None:
+                    print "No rule found to delete for port %s, trying next port" % ports[i]
+                    continue
+
+                print "deleting rule for port %s, transport %s" % (ports[i], transport)
+
+                body = ""
+                header = {'X-Auth-Token': self.token, 'Content-Type': "application/json"}
+                function = "DELETE"
+                #api_path = "/v2/%s/os-security-groups/%s" % (rule_dict['project_id'], rule_dict['group_id'])
+                api_path = "/v2.0/security-group-rules/%s" % (rule_id)
+                token = self.token
+                sec = self.sec
+                rest_dict = {'body': body, 'header': header, 'function': function, 'api_path': api_path, 'token': token, 'sec': sec, 'port': "8774"}
+                rest = api.call_rest(rest_dict)
+
+                print "delete rule response: %s - %s" % (rest['response'], rest['reason'])
+        except Exception as e:
+            logger.sys_error ("Exception delete rules for sec_group: %s" % e)
+            raise e
+
+        print "done with delete_rule"
+        #build up the return dictionary and return it if everythig is good to go
+        #logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+        #else:
+        #    util.http_codes(rest['response'],rest['reason'])
+        #    return "Error"
+        return "OK"
+
 
     def delete_sec_keys(self,delete_dict):
         """
@@ -1659,12 +1798,13 @@ class server_ops:
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'GET'
             api_path = '/v2/%s/os-security-groups/%s' %(sec_dict['project_id'],sec_dict['sec_group_id'])
+            print "api_path: %s" % api_path
             token = self.token
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
-            logger.sys_error("Could not remove the security group %s" %(sec_group_name))
+            logger.sys_error("Could not get listing for security group %s" %(sec_group_name))
             raise e
 
         #check the response and make sure it is a 200 or 201
@@ -1674,7 +1814,7 @@ class server_ops:
             load = json.loads(rest['data'])
             rule_array = []
             for rule in load['security_group']['rules']:
-                rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr']),'transport':str(rule['ip_protocol'])}
+                rule_dict = {'from_port': str(rule['from_port']), 'to_port':str(rule['to_port']), 'cidr':str(rule['ip_range']['cidr']),'transport':str(rule['ip_protocol']),'rule_id':str(rule['id'])}
                 rule_array.append(rule_dict)
             r_dict = {'sec_group_name':get_group[0][5], 'sec_group_id': sec_dict['sec_group_id'], 'sec_group_desc':get_group[0][6],'ports':rule_array}
             return r_dict
