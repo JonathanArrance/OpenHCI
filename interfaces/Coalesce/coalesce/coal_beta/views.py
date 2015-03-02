@@ -853,8 +853,9 @@ def create_security_group(request, groupname, groupdesc, ports, transport, proje
     return HttpResponse(simplejson.dumps(out))
 
 def update_security_group(request, groupid, project_id, ports, enable_ping, transport):
+    output = {}
     try:
-        portstrings    = ports.split(',')
+        portstrings = ports.split(',')
         portlist = []
         for port in portstrings:
             portlist.append(int(port))
@@ -862,11 +863,14 @@ def update_security_group(request, groupid, project_id, ports, enable_ping, tran
         so = server_ops(auth)
         update_sec = {'group_id': groupid, 'enable_ping': enable_ping, 'ports': portlist, 'project_id': project_id, 'transport': transport, 'update':'true'}
         out = so.update_sec_group(update_sec)
-        out['status'] = 'success'
-        out['message'] = 'The security group %s was updated'
+        if(out == 'OK'):
+            grp = { 'project_id': project_id, 'sec_group_id': groupid }
+            output = so.get_sec_group(grp)
+            output['status'] = 'success'
+            output['message'] = "The security group %s was updated"%(output['sec_group_name'])
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not update security group: %s" %(e)}
-    return HttpResponse(simplejson.dumps(out))
+        output = {'status' : "error", 'message' : "Could not update security group: %s" %(e)}
+    return HttpResponse(simplejson.dumps(output))
 
 def delete_sec_group(request, sec_group_id, project_id):
     out = {}
@@ -881,6 +885,16 @@ def delete_sec_group(request, sec_group_id, project_id):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not delete security group: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
+
+def security_group_view(request, groupid, project_id):
+    auth = request.session['auth']
+    so = server_ops(auth)
+    grp = { 'project_id': project_id, 'sec_group_id': groupid }
+    sec_group = so.get_sec_group(grp)
+    return render_to_response('coal/security_group_view.html',
+                               RequestContext(request, {
+                                                        'sec_group': sec_group,
+                                                        }))
 
 def create_keypair(request, key_name, project_id):
     try:

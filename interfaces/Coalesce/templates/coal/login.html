@@ -4,17 +4,21 @@
 
 {% block content %}
 
-
-<div class="span8 offset1">
-    <div class="well">
-        <div class="legend">
-            Login to TransCirrus
-        </div>
-        <div class="well" style="width:235px; float: left;">
+<div class="row-fluid offset1">
+    <div class="span3">
+        <div class="well">
+            <div class="legend">
+                Log Into TransCirrus
+            </div>
             {% load crispy_forms_tags %}
             {% crispy form %}
         </div>
-        <div style="width: 100%; display: inline; padding: 1em; margin: 10px;">
+    </div>
+    <div class="span8" style="margin-left: 0">
+        <div class="well">
+            <div class="legend">
+                Welcome
+            </div>
             <p>
                 By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
                     href="/terms-of-use">Terms of Use</a>.

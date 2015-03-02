@@ -341,6 +341,14 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.delete_sec_group',
             name='delete_sec_group'),
 
+        url(r'^update_security_group/(?P<groupid>[^/]+)/(?P<project_id>[^/]+)/(?P<ports>[^/]+)/(?P<enable_ping>[^/]+)/(?P<transport>[^/]+)/$',
+	    'coalesce.coal_beta.views.update_security_group',
+            name='update_security_group'),
+
+	    url(r'^security_group/(?P<groupid>[^/]+)/(?P<project_id>[^/]+)/view/$',
+	        'coalesce.coal_beta.views.security_group_view',
+                name='security_group_view'),
+
 	url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),
