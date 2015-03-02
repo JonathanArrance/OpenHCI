@@ -1,5 +1,5 @@
 
-class stack_action:
+class stack_actions_ops:
     
     def suspend_stack(self):
         pass;

@@ -108,7 +108,6 @@ class server_storage_ops:
         NOTE: All veriables are rquiered. Admins can attach a volume to any instance. Power users can attach volumes to any instance in their project.
               Users can  only attach volumes they own to instances they own.
         """
-        print input_dict
         for key, val in input_dict.items():
             #skip over these
             if(val == ""):
@@ -194,19 +193,20 @@ class server_storage_ops:
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
                 rest = api.call_rest(rest_dict)
-                if(rest['response'] == 200):
-                    #insert the volume info into the DB
-                    self.db.pg_transaction_begin()
-                    update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='%s',vol_attached=true,vol_mount_location='%s'"%(input_dict['instance_id'],input_dict['mount_point']),'where':"vol_id='%s'"%(input_dict['volume_id'])}
-                    self.db.pg_update(update_vol)
-                    self.db.pg_transaction_commit()
-                else:
-                    #util.http_codes(rest['response'],rest['reason'],rest['data'])
-                    ec.error_codes(rest)
             except Exception as e:
                 self.db.pg_transaction_rollback()
                 raise e
-        return "OK"
+
+            if(rest['response'] == 200):
+                #insert the volume info into the DB
+                self.db.pg_transaction_begin()
+                update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='%s',vol_attached=true,vol_mount_location='%s'"%(input_dict['instance_id'],input_dict['mount_point']),'where':"vol_id='%s'"%(input_dict['volume_id'])}
+                self.db.pg_update(update_vol)
+                self.db.pg_transaction_commit()
+                return "OK"
+            else:
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
 
     def detach_vol_from_server(self,input_dict):
         #curl -i http://192.168.10.30:8774/v2/7c9b14b98b7944e7a829a2abdab12e02/servers/1d0abaa2-e981-449b-a3b2-7e52f400cb30/os-volume_attachments/a5d6820b-140b-4a35-b5a3-57f05e3b23f6 -X DELETE -H "X-Auth-Project-Id: demo"
@@ -285,18 +285,19 @@ class server_storage_ops:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
             rest = api.call_rest(rest_dict)
-            if(rest['response'] == 202):
-                #insert the volume info into the DB
-                self.db.pg_transaction_begin()
-                update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst=NULL,vol_attached=false,vol_mount_location=NULL",'where':"vol_id='%s'"%(input_dict['volume_id'])}
-                self.db.pg_update(update_vol)
-                self.db.pg_transaction_commit()
-            else:
-                #util.http_codes(rest['response'],rest['reason'])
-                ec.error_codes(rest)
         except Exception as e:
             self.db.pg_transaction_rollback()
             raise e
+
+        if(rest['response'] == 202):
+            #insert the volume info into the DB
+            self.db.pg_transaction_begin()
+            update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst=NULL,vol_attached=false,vol_mount_location=NULL",'where':"vol_id='%s'"%(input_dict['volume_id'])}
+            self.db.pg_update(update_vol)
+            self.db.pg_transaction_commit()
+        else:
+            ec.error_codes(rest)
+
         return "OK"
 
     def find_available_mountpoint(self,used_list):

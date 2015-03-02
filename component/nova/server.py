@@ -420,8 +420,8 @@ class server_ops:
         for server in servers:
             if(server['server_name'] == create_dict['name']):
                 random.seed()
-                rand_id = random.randrange(0,100000)
-                create_dict['name'] = create_dict['name']+'_%s'%(str(rand_id))
+                #rand_id = random.randrange(0,100000)
+                create_dict['name'] = create_dict['name']+'_%s'%(str(self.rannum))
         
         #connect to the rest api caller
         try:
