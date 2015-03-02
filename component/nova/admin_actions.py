@@ -587,14 +587,15 @@ class server_admin_actions:
                 # build an API connection for the admin user
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
                 if(self.project_id != input_dict['project_id']):
+                    api_dict['project_id'] = input_dict['project_id']
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
                 api = caller(api_dict)
-            except:
+            except Exception as e:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
     
             try:
-            # construct request header and body
+                # construct request header and body
                 body=''
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'GET'
@@ -608,10 +609,10 @@ class server_admin_actions:
                 raise Exception("Error in sending list compute request")
     
             if(rest['response'] == 200):
-                    # this method does not return any response body
-                    logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
-                    load = json.loads(rest['data'])
-                    return load['hosts']
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
+                load = json.loads(rest['data'])
+                return load['hosts']
             else:
                 #util.http_codes(rest['response'],rest['reason'],rest['data'])
                 ec.error_codes(rest)
