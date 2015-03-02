@@ -12,7 +12,7 @@ from transcirrus.common.auth import authorization
 #sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from transcirrus.component.cinder.cinder_volume import volume_ops
 
-a = authorization("jon","password")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
@@ -35,7 +35,7 @@ stuff = vol.get_volume(get)
 print stuff
 '''
 print "createing a new volume"
-create = {'volume_name':'test11','volume_size':'4000','project_id':"0591dbde27ce4904b50cdd0d598e1d7e",'volume_type':'ssd'}
+create = {'volume_name':'test11','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
 '''

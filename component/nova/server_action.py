@@ -9,6 +9,7 @@ import sys
 import json
 import socket
 import time
+import datetime
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -621,14 +622,106 @@ class server_actions:
         return 'OK'
 
     
-    def create_instance_image(self):
+    def create_instance_snapshot(self):
         pass
         #alpo.1
         
-    def create_instance_backup(self):
-        pass
-        #alpo.1
-        
+    def create_instance_backup(self,backup_dict):
+        """
+        DESC: This will backup an instance, a backup is a full clone of a vm.
+        INPUT: backup_dict - server_id
+                           - project_id
+                           - backup_type (weekly/daily)
+                           - rotation - op
+                           - backup_name - op
+        OUTPUT: This operation does not return a response body.
+        ACCESS: 
+        NOTE: Rotaion refers to how many times per period to do the backup job
+                ex. 2 with weekly, would rotate backup the instance 2 times per week.
+            You may loose network connection since the vm must be paused to do a backup.
+        """
+
+        if ((backup_dict['server_id'] == '') or ('server_id' not in backup_dict)):
+            logger.sys_error("No server id was provided.")
+            raise Exception("No server id was provided.")
+        if ((backup_dict['project_id'] == '') or ('project_id' not in backup_dict)):
+            logger.sys_error("No server id was provided.")
+            raise Exception("No server id was provided.")
+
+        #default to daily
+        if ((backup_dict['backup_type'] == '') or ('backup_type' not in backup_dict)):
+            backup_dict['backup_type'] = 'daily'
+
+        #default to 1
+        if ((backup_dict['rotation'] == '') or ('rotation' not in backup_dict)):
+            backup_dict['rotation'] = '1'
+
+        #default name
+        if ((backup_dict['backup_name'] == '') or ('backup_name' not in backup_dict)):
+            backup_dict['backup_name'] = backup_dict['server_id'] + ' backup ' + datetime.date.today()
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(backup_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != backup_dict['project_id']):
+                logger.sys_error("Users can only backup virtual serves in their project.")
+                raise Exception("Users can only backup virtual serves in their project.")
+
+        #check to make sure non admins can perofrm the task
+        if(self.is_admin == 0):
+            self.get_server = None
+            if(self.user_level == 1):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(backup_dict['project_id'])}
+            elif(self.user_level == 2):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(backup_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
+            server = self.db.pg_select(self.get_server)
+            if(server[0][0] == ''):
+                logger.sys_error('The current user can not perform the backup operation.')
+                raise Exception('The current user can not perform the backup operation.')
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(backup_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,backup_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            body='{"createBackup": {"backup_type": "%s", "rotation": "%s", "name": "%s-backup-%s"}}'%(backup_dict['backup_type'],backup_dict['rotation'],backup_dict['backup_name'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (backup_dict['project_id'],backup_dict['server_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Error in sending revert resize request to server.")
+            raise Exception("Error in sending revert resize request to server.")
+
+        if(rest['response'] == 202):
+            # this method does not return any response body
+            self.db.pg_transaction_begin()
+            update_inst = {'table':'trans_instances','set':"inst_confirm_resize=0,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%('NULL','NULL'),'where':"inst_id='%s'"%(backup_dict['server_id'])}
+            self.db.pg_update(update_inst)
+            self.db.pg_transaction_commit()
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+        return 'OK'
+
     def get_instance_console(self,input_dict):
         """
         DESC: Get the novnc console associated with an instance.

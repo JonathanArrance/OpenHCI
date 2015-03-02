@@ -32,7 +32,6 @@ $(function () {
         }
     });
 
-
     $("#volume-delete-confirm-form").dialog({
         autoOpen: false,
         height: 125,
@@ -42,7 +41,7 @@ $(function () {
         closeOnEscape: true,
         draggable: true,
         show: "fade",
-        position:{
+        position: {
             my: "center",
             at: "center",
             of: $('#page-content')
@@ -98,6 +97,10 @@ $(function () {
 
                             // Remove volume
                             volumes.removeItem(confId);
+                            snapshotVolumes.removeItem(confId);
+
+                            // Update select
+                            refreshSelect($("#snap_volume"), snapshotVolumes);
 
                             // Update usedStorage
                             updateUsedStorage();
@@ -107,6 +110,7 @@ $(function () {
                             var rowCount = $('#volume_list tr').length;
                             if (rowCount < 2) {
                                 $(table).append(placeholder).fadeIn();
+                                setVisible('#create-snapshot', false);
                             }
                         }
                     })
@@ -146,6 +150,19 @@ $(function () {
         // Add name-text to form
         $('div#volume-delete-confirm-form > p > span.volume-name').empty().append($(volume).text());
 
-        $('#volume-delete-confirm-form').dialog("open");
+        // Check if volume has dependent snap shots. If so, do not allow the user to delete the volume
+        var count = 0;
+        for (var snapshot in snapshots.items) {
+            var vol = snapshots.getItem(snapshot).volumeId;
+            console.log(vol + " = " + id + " ?");
+            if (vol == id) {
+                count++;
+            }
+        }
+        if (count > 0) {
+            message.showMessage('error', "Cannot delete this volume because it has " + count + " dependent snapshots.")
+        } else {
+            $('#volume-delete-confirm-form').dialog("open");
+        }
     });
 });

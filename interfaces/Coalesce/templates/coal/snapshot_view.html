@@ -1,0 +1,52 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block title %} Details for {{snapshot.snapshot_name}}{% endblock %}
+
+{% block content %}
+
+<div class="row-fluid">
+    <div class="span5">
+        <div class="well">
+            <div class="legend">
+                Snapshot Details
+
+                {% if user_level == 0 %}
+                <a href="{{ default_public }}/projects/{{snapshot.project_id}}/view/" class="btn" style="float: right;">Return
+                    To Project</a>
+                {% elif user_level == 1 %}
+                <a href="{{ default_public }}/projects/{{snapshot.project_id}}/pu_project_view/" class="btn"
+                   style="float: right;">Return To Project</a>
+                {% else %}
+                <a href="{{ default_public }}/projects/{{snapshot.project_id}}/basic_project_view/" class="btn"
+                   style="float: right;">Return To Project</a>
+                {% endif %}
+            </div>
+
+            <table class="paleblue widget-table">
+                <tr>
+                    <th>Name</th>
+                    <td>{{snapshot.snapshot_name}}</td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td>{{snapshot.snapshot_id}}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>{{snapshot.snapshot_status}}</td>
+                </tr>
+                <tr>
+                    <th>Volume Id</th>
+                    <td>{{snapshot.volume_id}}</td>
+                </tr>
+                <tr>
+                    <th>Created</th>
+                    <td>{{snapshot.create_time}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <!-- end span5-->
+</div><!-- end row-fluid-->
+
+{% endblock %}

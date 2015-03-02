@@ -1602,8 +1602,12 @@ select:focus:required:invalid:focus {
 
 .form-actions {
     float: right;
-    border-bottom: 1px solid gray;
+    /*border-bottom: 1px solid gray;*/
     margin-bottom: 1em;
+}
+
+#submit-id-submit {
+    margin-top: 3px;
 }
 
 .form-actions:after {
@@ -5230,6 +5234,12 @@ th > small {
 
 .volume-attached {
     background-color: #FFE8CC
+}
+
+/* SNAPSHOT WIDGET */
+
+#snapshot_progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
 }
 
 /* ROUTER WIDGET */

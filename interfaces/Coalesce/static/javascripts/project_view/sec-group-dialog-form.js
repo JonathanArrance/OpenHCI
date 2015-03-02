@@ -34,7 +34,7 @@ $(function () {
 
     $("#sec-group-dialog-form").dialog({
         autoOpen: false,
-        height: 385,
+        height: 410,
         width: 235,
         modal: true,
         resizable: false,
@@ -56,14 +56,20 @@ $(function () {
                     checkLength(groupName, "Group Name", 3, 16) &&
                     checkLength(groupDesc, "Group Description", 6, 80);
 
-                if (isValid) {
+                if (!isValid) {
+                } else {
 
                     var confPorts = ports.val(),
+                        confTransport = $('input[name=transport]:checked').val(),
                         confName = groupName.val(),
                         confDesc = groupDesc.val();
 
                     if (confPorts == "") {
                         confPorts = "443,80,22";
+                    }
+
+                    if (confTransport == undefined) {
+                        confTransport = 'tcp';
                     }
 
                     message.showMessage('notice', 'Creating new Key ' + confName);
@@ -75,7 +81,7 @@ $(function () {
                     $(progressbar).progressbar({value: false});
                     setVisible(progressbar, true);
 
-                    $.getJSON('/create_security_group/' + confName + '/' + confDesc + '/' + confPorts + '/' + PROJECT_ID + '/')
+                    $.getJSON('/create_security_group/' + confName + '/' + confDesc + '/' + confPorts + '/' + confTransport + '/' + PROJECT_ID + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {
@@ -91,11 +97,12 @@ $(function () {
                                 var newRow = '';
                                 newRow +=
                                     '<tr id="' + data.sec_group_id + '"><td id="' + data.sec_group_id + '-name-cell">' +
+                                    '<a href="/security_group/' + data.sec_group_id + '/' + PROJECT_ID + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
                                     '<span id="' + data.sec_group_id + '-name-text">' + data.sec_group_name + '</span></td>' +
                                     '<td id="' + data.sec_group_id + '-username-cell">' +
                                     '<span id="' + data.sec_group_id + '-username-text">' + data.username + '</span></td>' +
-                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a>' +
-                                    '</td></tr>';
+                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a> | ' +
+                                    '<a href="#" class="update-secGroup">update</a></td></tr>';
 
                                 // Check to see if this is the first sec group to be generated
                                 var rowCount = $("#secGroup_list tr").length;
@@ -117,9 +124,10 @@ $(function () {
                         .always(function () {
 
                             setVisible(progressbar, false);
-                            setVisible('#create-security-group', true);
+                            setVisible(createButton, true);
                             disableLinks(false);
                             resetUiValidation(allFields);
+                            $("input#tcp").prop('checked', true);
                             ports.val("443,80,22");
                         });
 

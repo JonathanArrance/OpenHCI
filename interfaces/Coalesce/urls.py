@@ -229,6 +229,10 @@ urlpatterns = patterns('',
         'coalesce.coal_beta.views.delete_snapshot',
             name='delete_snapshot'),
 
+	    url(r'^snapshot/(?P<snapshot_id>[^/]+)/view/$',
+	        'coalesce.coal_beta.views.snapshot_view',
+                name='snapshot_view'),
+
 	# --- Containers ----
 
         url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',
@@ -329,13 +333,21 @@ urlpatterns = patterns('',
 
 	# --- Security Groups ----
 
-	url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<project_id>[^/]+)/$',
+	url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<transport>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_security_group',
             name='create_security_group'),
 
         url(r'^delete_sec_group/(?P<sec_group_id>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.delete_sec_group',
             name='delete_sec_group'),
+
+        url(r'^update_security_group/(?P<groupid>[^/]+)/(?P<project_id>[^/]+)/(?P<ports>[^/]+)/(?P<enable_ping>[^/]+)/(?P<transport>[^/]+)/$',
+	    'coalesce.coal_beta.views.update_security_group',
+            name='update_security_group'),
+
+	    url(r'^security_group/(?P<groupid>[^/]+)/(?P<project_id>[^/]+)/view/$',
+	        'coalesce.coal_beta.views.security_group_view',
+                name='security_group_view'),
 
 	url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_keypair',

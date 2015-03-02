@@ -1,5 +1,6 @@
 $(function () {
 
+    // CSRF Protection
     var csrftoken = getCookie('csrftoken');
 
     $.ajaxSetup({
@@ -11,20 +12,20 @@ $(function () {
         }
     });
 
-
-    var id = '';
-    var secGroup = '';
-    var targetRow;
+    // Local Variables
+    var id,
+        snapshot,
+        targetRow;
 
     // Widget Elements
-    var progressbar = $("#secGroup_progressbar"),
-        placeholder =
-            '<tr id="#secGroup_placeholder"><td><p><i>You have no keys defined</i></p></td><td></td><td></td></tr>';
+    var progressbar = $("#snapshot_progressbar"),
+        table = $("#snapshot_list"),
+        placeholder = '<tr id="snapshot_placeholder"><td><p><i>This project has no snapshots</i></p></td><td></td><td></td></tr>';
 
-    $('#sec-group-delete-confirm-form').dialog({
+    $('#snapshot-delete-confirm-form').dialog({
         autoOpen: false,
         height: 125,
-        width: 245,
+        width: 235,
         modal: true,
         resizable: false,
         closeOnEscape: true,
@@ -38,23 +39,23 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                // Confirmed Selections
                 var confId = id,
-                    confSecGroup = $(secGroup).text();
+                    confSnapshot = $(snapshot).text(),
+                    confRow = targetRow;
 
+                message.showMessage('notice', "Deleting " + confSnapshot + ".");
+
+                // Store actions cell html
                 var actionsCell = document.getElementById(confId + "-actions-cell");
                 var actionsHtml = actionsCell.innerHTML;
 
-                message.showMessage('notice', "Deleting " + confSecGroup + ".");
-
+                // Disable widget view links and instance actions
                 disableLinks(true);
+                disableActions("delete-snapshot", true);
 
-                // Disable actions
-                disableActions("delete-secGroup", true);
-
-                // Initialize progressbar and make it visible if hidden
+                // Initialize progressbar and make it visible
                 $(progressbar).progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "snapshots", false);
 
                 // Create loader
                 var loaderId = confId + '-loader';
@@ -64,13 +65,14 @@ $(function () {
                 $(actionsCell).empty().fadeOut();
                 $(actionsCell).append(loaderHtml).fadeIn();
 
-                $.getJSON('/delete_sec_group/' + confId + '/' + PROJECT_ID + '/')
+                $.getJSON('/delete_snapshot/' + PROJECT_ID + '/' + confId + '/')
                     .done(function (data) {
 
                         if (data.status == 'error') {
 
                             message.showMessage('error', data.message);
 
+                            // Restore actions cell html
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
                         }
@@ -79,30 +81,34 @@ $(function () {
 
                             message.showMessage('success', data.message);
 
-                            $(targetRow).fadeOut().remove();
+                            // Remove row
+                            confRow.fadeOut().remove();
+
+                            // If last snapshot, reveal placeholder
+                            var rowCount = $('#snapshot_list tr').length;
+                            if (rowCount < 2) {
+                                $(table).append(placeholder).fadeIn();
+                            }
+
+                            // Remove from snapshots
+                            snapshots.removeItem(confId);
                         }
 
-                        // If last security group, reveal placeholder
-                        var rowCount = $('#secGroup_list tr').length;
-                        if (rowCount < 2) {
-                            $('#secGroup_list').append(placeholder).fadeIn();
-                        }
-
-                        // Update selects
-                        removeFromSelect(confSecGroup, $("#sec_group_name"), secGroupInstOpts);
                     })
                     .fail(function () {
 
                         message.showMessage('error', 'Server Fault');
 
+                        // Restore Actions html
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(actionsHtml).fadeIn();
                     })
                     .always(function () {
 
+                        // Hide progressbar and enable widget view links
+                        disableProgressbar(progressbar, "snapshots", true);
                         disableLinks(false);
-                        disableActions("delete-secGroup", false);
-                        setVisible(progressbar, false);
+                        disableActions("delete-snapshot", false);
                     });
 
                 $(this).dialog("close");
@@ -112,18 +118,20 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete-secGroup', function (event) {
+    $(document).on('click', '.delete-snapshot', function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
+        // Get target row element, get id from that element and use that to get the name-text
         targetRow = $(this).parent().parent();
         id = $(targetRow).attr("id");
-        secGroup = document.getElementById(id + "-name-text");
+        snapshot = document.getElementById(id + "-name-text");
 
-        $('div#sec-group-delete-confirm-form > p > span.secGroup-name').empty().append($(secGroup).text());
+        // Add name-text to form
+        $('div#snapshot-delete-confirm-form > p > span.snapshot-name').empty().append($(snapshot).text());
 
-        $('#sec-group-delete-confirm-form').dialog("open");
+        $('#snapshot-delete-confirm-form').dialog("open");
     });
 });
 

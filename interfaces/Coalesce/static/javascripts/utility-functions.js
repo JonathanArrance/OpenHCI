@@ -504,7 +504,9 @@ var volumes = new HashTable(),
     totalStorage = 0,
     usedStorage = 0,
     availableStorage = 0,
-    attachableInstances = new HashTable();
+    attachableInstances = new HashTable(),
+    snapshots = new HashTable(),
+    snapshotVolumes = new HashTable();
 
 function getStorage() {
     $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')
@@ -562,9 +564,14 @@ $(function () {
 
 // --- USERS/SECURITY
 
+var tcpString = "",
+    udpString = "",
+    icmpString = "";
+
 var users = new HashTable(),
     usernames = new HashTable(),
-    orphanedUserOpts = new HashTable();
+    orphanedUserOpts = new HashTable(),
+    securityGroups = new HashTable();
 
 function checkAddUser() {
     if (orphanedUserOpts.length > 0) {
@@ -573,6 +580,70 @@ function checkAddUser() {
         setVisible("#add-existing-user", false);
     }
 }
+
+function getSecGroupPorts() {
+    var tcpCount = 0;
+    var udpCount = 0;
+    for (var portCount = 0; portCount < secGroupPorts.length; portCount++) {
+        if (secGroupPorts[portCount].transport == "tcp") {
+            tcpPorts[tcpCount] = secGroupPorts[portCount].from_port;
+            tcpCount++;
+        }
+        if (secGroupPorts[portCount].transport == "udp") {
+            udpPorts[udpCount] = secGroupPorts[portCount].from_port;
+            udpCount++;
+        }
+        if (secGroupPorts[portCount].transport == "icmp") {
+            icmp = secGroupPorts[portCount].from_port;
+        }
+    }
+}
+
+function updateSecGroupPorts(newPorts) {
+    secGroupPorts = [];
+    for (var i = 0; i < newPorts.length; i++) {
+        secGroupPorts[i] = {
+            from_port: newPorts[i].from_port,
+            to_port: newPorts[i].to_port,
+            transport: newPorts[i].transport };
+    }
+
+    getSecGroupPorts();
+}
+
+function updateTcpString() {
+    tcpString = "";
+    for (var i = 0; i < tcpPorts.length; i++) {
+        if (tcpPorts[i] > 0) {
+            tcpString += tcpPorts[i];
+            if (i + 1 < tcpPorts.length) {
+                tcpString += ",";
+            }
+        }
+    }
+}
+
+function updateUdpString() {
+    udpString = "";
+    for (var j = 0; j < udpPorts.length; j++) {
+        if (udpPorts[j] > 0) {
+            udpString += udpPorts[j];
+            if (j + 1 < udpPorts.length) {
+                udpString += ",";
+            }
+        }
+    }
+}
+
+function updateIcmpString() {
+    icmpString = "";
+    if (icmp == -1 || icmp == '-1' || icmp == "-1") {
+        icmpString = "enabled"
+    } else {
+        icmpString = "disabled"
+    }
+}
+
 
 $(function () {
     checkAddUser();
