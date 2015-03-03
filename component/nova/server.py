@@ -1206,7 +1206,7 @@ class server_ops:
         if(create_sec['update'] == 'true'):
             return 'OK'
         else:
-            r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id, "sec_group_ports": ports, "sec_group_transport": transport}
+            r_dict = {"sec_group_name": create_sec['group_name'],"sec_group_id": self.sec_group_id, "sec_group_ports": ports, "sec_group_transport": transport, "username": self.username }
             return r_dict
 
     def update_sec_group(self,update_sec):
