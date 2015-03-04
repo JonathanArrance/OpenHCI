@@ -313,7 +313,7 @@ def insert_node(input_dict):
             return 'ERROR'
         try:
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['cc_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_rabbit = {"parameter":"rabbit_host","param_value":'%s'%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth = {'parameter':"auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
@@ -322,7 +322,7 @@ def insert_node(input_dict):
             insert_nova_auth_url = {'parameter':"nova_admin_auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth_host = {"parameter":"auth_host","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['node_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neu_nova_ten_id = {"parameter":"nova_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neu_mworkers = {'parameter':'metadata_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neu_dhcp = {'parameter':'dhcp_domain',"param_value":"%s"%(domains['uplink_domain_name']),'file_name':"dhcp_agent.ini",'node':"%s" %(input_dict['node_id'])}

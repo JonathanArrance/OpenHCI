@@ -307,7 +307,7 @@ def rabbit(action):
 
 def zero_connect_server(action):
     """
-    DESC: Control the pacemaker service
+    DESC: Control the zero connect server service
     INPUT: start
            restart
            stop
@@ -323,7 +323,7 @@ def zero_connect_server(action):
 
 def zero_connect_node(action):
     """
-    DESC: Control the pacemaker service
+    DESC: Control the zero_connect node service
     INPUT: start
            restart
            stop
