@@ -508,6 +508,13 @@ def run_setup(new_system_variables,auth_dict):
     #    else:
     #        logger.sys_info("Multi-node configuration enabled.")
 
+    logger.sys_info("Restarting the Mgmt network adapter.")
+    card_restart = util.restart_network_card("bond0")
+    if(card_restart == 'OK'):
+        logger.sys_info("Mgmt adapter has been restarted.")
+    else:
+        logger.sys_warn("Mgmt adapter may not have been restarted.")
+
     logger.sys_info("Restarting the uplink network adapter.")
     card_restart = util.restart_network_card("br-ex")
     if(card_restart == 'OK'):
