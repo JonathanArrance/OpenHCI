@@ -101,8 +101,9 @@ $(function () {
                                     '<span id="' + data.sec_group_id + '-name-text">' + data.sec_group_name + '</span></td>' +
                                     '<td id="' + data.sec_group_id + '-username-cell">' +
                                     '<span id="' + data.sec_group_id + '-username-text">' + data.username + '</span></td>' +
-                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a> | ' +
-                                    '<a href="#" class="update-secGroup">update</a></td></tr>';
+                                    '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a>' +
+                                    // '<span> | </span><a href="#" class="update-secGroup">update</a></td>' +
+                                    '</tr>';
 
                                 // Check to see if this is the first sec group to be generated
                                 var rowCount = $("#secGroup_list tr").length;
