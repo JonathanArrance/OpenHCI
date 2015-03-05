@@ -564,14 +564,16 @@ $(function () {
 
 // --- USERS/SECURITY
 
-var tcpString = "",
-    udpString = "",
-    icmpString = "";
-
 var users = new HashTable(),
     usernames = new HashTable(),
     orphanedUserOpts = new HashTable(),
-    securityGroups = new HashTable();
+    securityGroups = new HashTable(),
+    secGroupPorts = [],
+    tcpPorts = [],
+    udpPorts = [],
+    tcpString = "",
+    udpString = "",
+    icmp = "";
 
 function checkAddUser() {
     if (orphanedUserOpts.length > 0) {
@@ -581,29 +583,28 @@ function checkAddUser() {
     }
 }
 
-var secGroupPorts = [],
-    tcpPorts = [],
-    udpPorts = [],
-    icmp = 0;
-
 function getSecGroupPorts() {
     var tcpCount = 0;
     var udpCount = 0;
 
     tcpPorts = [];
     udpPorts = [];
+    icmp = "disabled";
 
     for (var portCount = 0; portCount < secGroupPorts.length; portCount++) {
+
         if (secGroupPorts[portCount].transport == "tcp") {
             tcpPorts[tcpCount] = parseInt(secGroupPorts[portCount].from_port);
             tcpCount++;
         }
+
         if (secGroupPorts[portCount].transport == "udp") {
             udpPorts[udpCount] = parseInt(secGroupPorts[portCount].from_port);
             udpCount++;
         }
+
         if (secGroupPorts[portCount].transport == "icmp") {
-            icmp = secGroupPorts[portCount].from_port;
+            icmp = "enabled";
         }
     }
 
@@ -649,15 +650,6 @@ function updateUdpString() {
                 udpString += ",";
             }
         }
-    }
-}
-
-function updateIcmpString() {
-    icmpString = "";
-    if (icmp == -1 || icmp == '-1' || icmp == "-1") {
-        icmpString = "enabled"
-    } else {
-        icmpString = "disabled"
     }
 }
 

@@ -67,8 +67,7 @@ $(function () {
                                 $("#udp_ports").html(udpString);
                             }
 
-                            updateIcmpString();
-                            $("#icmp").html(icmpString);
+                            $("#icmp").html(icmp);
                         }
                     })
                     .fail(function () {
