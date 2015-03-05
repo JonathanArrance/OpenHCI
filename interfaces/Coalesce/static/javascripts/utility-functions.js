@@ -595,17 +595,25 @@ function getSecGroupPorts() {
 
     for (var portCount = 0; portCount < secGroupPorts.length; portCount++) {
         if (secGroupPorts[portCount].transport == "tcp") {
-            tcpPorts[tcpCount] = secGroupPorts[portCount].from_port;
+            tcpPorts[tcpCount] = parseInt(secGroupPorts[portCount].from_port);
             tcpCount++;
         }
         if (secGroupPorts[portCount].transport == "udp") {
-            udpPorts[udpCount] = secGroupPorts[portCount].from_port;
+            udpPorts[udpCount] = parseInt(secGroupPorts[portCount].from_port);
             udpCount++;
         }
         if (secGroupPorts[portCount].transport == "icmp") {
             icmp = secGroupPorts[portCount].from_port;
         }
     }
+
+    tcpPorts.sort(function(a, b) {
+        return a - b;
+    });
+
+    udpPorts.sort(function(a, b) {
+        return a - b;
+    });
 }
 
 function updateSecGroupPorts(newPorts) {
