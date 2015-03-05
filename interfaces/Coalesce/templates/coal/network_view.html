@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="row-fluid">
-    <div class="span5">
+    <div class="span8 offset1">
         <div class="well">
             <div class="legend">
                 Network Details
@@ -53,15 +53,26 @@
                 </tr>
             </table>
         </div>
-    </div> <!-- end span5-->
+    </div> <!-- end span8-->
 </div> <!-- end row-fluid -->
 
 <div class="row-fluid">
     {% if nw.net_name != "DefaultPublic" %}
-    <div class="span5">
+    <div class="span8 offset1">
         <div class="well">
             <div class="legend">
                 Subnet Details
+
+                {% if user_level == 0 %}
+                <a href="{{ default_public }}/projects/{{sn.project_id}}/view/" class="btn"
+                   style="float: right;">Return To Project</a>
+                {% elif user_level == 1 %}
+                <a href="{{ default_public }}/projects/{{sn.project_id}}/pu_project_view/"
+                   class="btn" style="float: right;">Return To Project</a>
+                {% else %}
+                <a href="{{ default_public }}/projects/{{sn.project_id}}/basic_project_view/"
+                   class="btn" style="float: right;">Return To Project</a>
+                {% endif %}
             </div>
             <table class="paleblue widget-table">
                 <tr>
@@ -102,7 +113,7 @@
                 </tr>
             </table>
         </div>
-    </div> <!-- end span5-->
+    </div> <!-- end span8-->
     {% endif %}
 </div> <!-- end row-fluid-->
 
