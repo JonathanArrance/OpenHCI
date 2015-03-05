@@ -1479,7 +1479,7 @@ class server_ops:
         if ('transport' not in rule_dict):
             logger.sys_error ("No transport given for delete security group rules operation.")
             raise Exception ("No transport given for delete security group rules operation.")
-        
+
         if (rule_dict['transport'] == 'tcp' or rule_dict['transport'] == 'udp'):
             transport = rule_dict['transport']
         else:
