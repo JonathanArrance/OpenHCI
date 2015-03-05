@@ -589,6 +589,10 @@ var secGroupPorts = [],
 function getSecGroupPorts() {
     var tcpCount = 0;
     var udpCount = 0;
+
+    tcpPorts = [];
+    udpPorts = [];
+
     for (var portCount = 0; portCount < secGroupPorts.length; portCount++) {
         if (secGroupPorts[portCount].transport == "tcp") {
             tcpPorts[tcpCount] = secGroupPorts[portCount].from_port;
