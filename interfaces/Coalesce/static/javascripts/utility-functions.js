@@ -581,6 +581,11 @@ function checkAddUser() {
     }
 }
 
+var secGroupPorts = [],
+    tcpPorts = [],
+    udpPorts = [],
+    icmp = 0;
+
 function getSecGroupPorts() {
     var tcpCount = 0;
     var udpCount = 0;

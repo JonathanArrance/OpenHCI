@@ -17,8 +17,8 @@
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
 <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
 <script>
-var PROJECT_ID = "{{current_project_id}}";
-        </script>
+    var PROJECT_ID = "{{current_project_id}}";
+</script>
 <script>
     var VOL_ID = "{{volume_info.volume_id}}";
 </script>
@@ -30,8 +30,8 @@ var PROJECT_ID = "{{current_project_id}}";
 {% block content %}
 
 <div class="row-fluid">
-    <div class="span5">
-        <div id="volume-details" class="well">
+    <div class="span6">
+        <div id="volume-details" class="well well-wide">
             <div class="legend">
                 Volume Details
 
@@ -48,7 +48,7 @@ var PROJECT_ID = "{{current_project_id}}";
                 {% endif %}
             </div>
 
-            <table class="paleblue widget-table">
+            <table class="paleblue widget-table table-wide">
                 <tr>
                     <th>Name</th>
                     <td id="volume-name">{{volume_info.volume_name}}</td>
@@ -92,17 +92,16 @@ var PROJECT_ID = "{{current_project_id}}";
     </div>
     <!-- end span5-->
 
-    <div class="span2">
-        <div id="snapshot-details" class="well">
+    {% if snapshots %}
+    <div class="span6">
+        <div id="snapshot-details" class="well well-wide">
             <div class="legend">
                 Snapshot Details
             </div>
-
-            <table class="paleblue widget-table">
-                {% if snapshots %}
+            <table class="paleblue widget-table table-wide">
                 <tr>
                     <th>Snapshot</th>
-                    <td><b>Id</b></td>
+                    <th><b>Id</b></th>
                 </tr>
                 {% for snapshot in snapshots %}
                 {% if snapshot.volume_id == volume_info.volume_id %}
@@ -112,18 +111,16 @@ var PROJECT_ID = "{{current_project_id}}";
                 </tr>
                 {% endif %}
                 {% endfor %}
-                {% else %}
-                <p id="volume-placeholder"><i>Not supported</i></p>
-                {% endif %}
             </table>
         </div>
     </div>
+    {% endif %}
     <!-- end span5-->
 </div>
 <!-- end row-fluid-->
 
 <div class="row-fluid">
-    <div class="span5">
+    <div class="span6">
         <div id="widget-actions" class="well top">
             <div class="legend">
                 Actions

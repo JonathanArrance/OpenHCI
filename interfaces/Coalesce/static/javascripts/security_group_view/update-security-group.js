@@ -107,10 +107,8 @@ $(function () {
         console.log("transport changed");
         var checked = $('input[name=update_transport]:checked').val();
         if (checked == 'tcp') {
-            console.log("transport tcp");
             $("#update_ports").val(tcpPorts);
         } else if (checked == 'udp') {
-            console.log("transport udp");
             $("#update_ports").val(udpPorts);
         }
     })
