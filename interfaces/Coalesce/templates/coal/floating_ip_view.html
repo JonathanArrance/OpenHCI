@@ -18,8 +18,8 @@
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
 <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
 <script>
-var PROJECT_ID = "{{fip.project_id}}";
-        </script>
+    var PROJECT_ID = "{{fip.project_id}}";
+</script>
 <script>
     var FIP = "{{fip.floating_ip}}";
 </script>
@@ -30,21 +30,21 @@ var PROJECT_ID = "{{fip.project_id}}";
 {% block content %}
 
 <div class="row-fluid">
-    <div class="span5">
+    <div class="span8 offset1">
         <div class="row-fluid">
             <div id="fip-details" class="well">
                 <div class="legend">
                     Floating IP Details
 
                     {% if user_level == 0 %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn"
+                    <a href="{{ default_public }}/projects/{{fip.project_id}}/view/" class="btn"
                        style="float: right;">Return To Project</a>
                     {% elif user_level == 1 %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/"
+                    <a href="{{ default_public }}/projects/{{fip.project_id}}/pu_project_view/"
                        class="btn"
                        style="float: right;">Return To Project</a>
                     {% else %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/"
+                    <a href="{{ default_public }}/projects/{{fip.project_id}}/basic_project_view/"
                        class="btn" style="float: right;">Return To Project</a>
                     {% endif %}
                 </div>
@@ -107,7 +107,7 @@ var PROJECT_ID = "{{fip.project_id}}";
              style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
 
     </div>
-    <!-- end span5-->
+    <!-- end span8-->
 
 </div><!-- end row-fluid-->
 

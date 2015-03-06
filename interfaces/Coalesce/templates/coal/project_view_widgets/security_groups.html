@@ -86,12 +86,13 @@
             </script>
 
             <tr id="{{ sg.sec_group_id }}">
-                <td id="{{ sg.sec_group_id }}-name-cell"><span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span>
                 <td id="{{ sg.sec_group_id }}-name-cell">
-                    <a href="/security_group/{{sg.sec_group_id}}/{{sg.project_id}}/view/"><span
-                            id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span></a>
+                    <a href="/security_group/{{sg.sec_group_id}}/{{sg.project_id}}/view/">
+                        <span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span>
+                    </a>
                 </td>
-                <td id="{{ sg.sec_group_id }}-username-cell"><span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span>
+                <td id="{{ sg.sec_group_id }}-username-cell">
+                    <span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span>
                 </td>
                 <td id="{{ sg.sec_group_id }}-actions-cell">
                     <a href="#" class="delete-secGroup">delete</a>

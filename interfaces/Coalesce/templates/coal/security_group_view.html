@@ -24,10 +24,6 @@
 <script>
     var PROJECT_ID = "{{sec_group.project_id}}";
     var GROUP_ID = "{{sec_group.sec_group_id}}";
-    var secGroupPorts = [];
-    var tcpPorts = [];
-    var udpPorts = [];
-    var icmp = 0;
 </script>
 
 <script>var portCount = 0;</script>
@@ -45,7 +41,6 @@
     updateIcmpString();
 </script>
 
-
 {% endblock %}
 
 {% block title %} Details for {{sec_group.sec_group_name}}{% endblock %}
@@ -53,7 +48,7 @@
 {% block content %}
 
 <div class="row-fluid">
-    <div class="span5">
+    <div class="span8 offset1">
         <div class="row-fluid">
             <div class="well">
                 <div class="legend">
@@ -105,7 +100,7 @@
                         <th>ICMP</th>
                         <td id="icmp">
                             <script>
-                                $("#icmp").html(icmpString);
+                                $("#icmp").html(icmp);
                             </script>
                         </td>
                     </tr>
@@ -131,7 +126,7 @@
         <div id="secGroup_progressbar" class="ui-progressbar"
              style="height: 1em; margin: 10px 0 0 0; padding: .2em; display: none;"></div>
     </div>
-    <!-- end span5-->
+    <!-- end span8-->
 
     <div id="update-security-group" title="Update Security Group">
         <p class="validateTips">Default transport protocol is TCP. Port defaults are 443,80,22 (changing ports is
