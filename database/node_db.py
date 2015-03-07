@@ -196,12 +196,13 @@ def insert_node(input_dict):
         insert_ceil_db = {'parameter':"connection",'param_value':"mongodb://ceilometer:transcirrus1@%s:27017/ceilometer"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        insert_ceil_auth_uri = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_auth_uri = {'parameter':"auth_uri",'param_value':"http://%s:5000"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_memcached = {'parameter':"memcached_servers",'param_value':"%s:11211"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        insert_ceil_osauth_uri = {'parameter':"os_auth_url",'param_value':"%s:5000/v2.0"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_osauth_uri = {'parameter':"os_auth_url",'param_value':"http://%s:5000/v2.0"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_cworkers = {'parameter':'collector_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_nworkers = {'parameter':'notification_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers]
+        insert_ceil_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers,insert_ceil_virt]
         for ceil in ceil_array:
             db.pg_transaction_begin()
             db.pg_insert('ceilometer_node',ceil)

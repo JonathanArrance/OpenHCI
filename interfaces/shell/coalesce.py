@@ -338,8 +338,8 @@ def setup(d):
     new_system_variables = [
         {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
         {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
-        {"system_name":system,"parameter":"admin_api_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"int_api_ip","param_value": uplink_ip},
+        {"system_name":system,"parameter":"admin_api_ip","param_value": '172.24.24.10'},
+        {"system_name":system,"parameter":"int_api_ip","param_value": '172.24.24.10'},
         {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
         {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
         {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
