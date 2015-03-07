@@ -1,3 +1,6 @@
+# Stop monit first
+monit quit
+
 mkdir -p /usr/local/lib/python2.7/transcirrus/
 echo 'Adding common to Transcirrus dir'
 cp -Rf common /usr/local/lib/python2.7/transcirrus/
@@ -45,3 +48,8 @@ chown -R apache:apache /opt/Coalesce
 
 #restart the apache2 service
 service httpd restart
+
+# fix the monit config files and start monit back up
+python2.7 /usr/local/lib/python2.7/transcirrus/operations/monit/fix_monit_conf.py
+monit
+
