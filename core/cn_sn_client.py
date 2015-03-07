@@ -469,10 +469,10 @@ def processComputeConfig(sock, node_id):
         for i in range(0,len(cn_config)):
             if cn_config[i]['file_name'] == 'nova.conf':
                 nova_conf = cn_config[i]
-            elif cn_config[i]['file_name'] == 'nova-compute.conf':
-                comp_conf = cn_config[i]
-            elif cn_config[i]['file_name'] == 'api-paste.ini' :
-                api_conf = cn_config[i]
+            #elif cn_config[i]['file_name'] == 'nova-compute.conf':
+            #    comp_conf = cn_config[i]
+            #elif cn_config[i]['file_name'] == 'api-paste.ini' :
+            #    api_conf = cn_config[i]
     else:
         logger.sys_error("compute node did not receive nova config file, exiting!!!")
         if __debug__ :
@@ -492,6 +492,8 @@ def processComputeConfig(sock, node_id):
         for i in range(0,len(cn_config1)):
             if cn_config1[i]['file_name'] == 'ovs_neutron_plugin.ini':
                 ovs_conf = cn_config1[i]
+            if cn_config1[i]['file_name'] == 'ml2_conf.ini':
+                ml2_conf = cn_config1[i]
             elif cn_config1[i]['file_name'] == 'neutron.conf':
                 net_conf = cn_config1[i]
 
@@ -524,30 +526,30 @@ def processComputeConfig(sock, node_id):
             print "write success, nova conf"
 
     #print "***********comp_conf************ %s" % comp_conf  # TEST
-    print "******Configureing Nova Compute******"
-    ret = util.write_new_config_file(comp_conf)
-    if ret == "ERROR" or ret == "NA":
-        logger.sys_error("error in writing comp conf, exiting!!!")
-        if __debug__ :
-            print "error in writing comp conf, exiting!!!"
-        sys.exit()
-    else:
-        logger.sys_info("write success, comp conf")
-        if __debug__ :
-            print "write success, comp conf"
+    #print "******Configureing Nova Compute******"
+    #ret = util.write_new_config_file(comp_conf)
+    #if ret == "ERROR" or ret == "NA":
+    #    logger.sys_error("error in writing comp conf, exiting!!!")
+    #    if __debug__ :
+    #        print "error in writing comp conf, exiting!!!"
+    #    sys.exit()
+    #else:
+    #    logger.sys_info("write success, comp conf")
+    #    if __debug__ :
+    #        print "write success, comp conf"
 
     #print "***********api_conf************ %s" % api_conf  # TEST
-    print "******Configureing Nova API******"
-    ret = util.write_new_config_file(api_conf)
-    if ret == "ERROR" or ret == "NA":
-        logger.sys_error("error in writing api conf, exiting!!!")
-        if __debug__ :
-            print "error in writing api conf, exiting!!!"
-        sys.exit()
-    else:
-        logger.sys_info("write success, api conf")
-        if __debug__ :
-            print "write success, api conf"
+    #print "******Configureing Nova API******"
+    #ret = util.write_new_config_file(api_conf)
+    #if ret == "ERROR" or ret == "NA":
+    #    logger.sys_error("error in writing api conf, exiting!!!")
+    #    if __debug__ :
+    #        print "error in writing api conf, exiting!!!"
+    #    sys.exit()
+    #else:
+    #    logger.sys_info("write success, api conf")
+    #    if __debug__ :
+    #        print "write success, api conf"
 
     # write compute nodes ovs config file
 
@@ -564,6 +566,19 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, ovs conf"
 
+    #print "***********ovs_conf************ %s" % ovs_conf  # TEST
+    print "******Configureing ML2******"
+    ret = util.write_new_config_file(ml2_conf)
+    if ret == "ERROR" or ret == "NA":
+        logger.sys_error("error in writing ml2 conf, exiting!!!")
+        if __debug__ :
+            print "error in writing ml2 conf, exiting!!!"
+        sys.exit()
+    else:
+        logger.sys_info("write success, ml2 conf")
+        if __debug__ :
+            print "write success, ml2 conf"
+
     #print "***********net_conf************ %s" % net_conf  # TEST
     print "******Configureing Neutron******"
     ret = util.write_new_config_file(net_conf)
@@ -579,19 +594,6 @@ def processComputeConfig(sock, node_id):
 
     post_install_status = True
 
-    # TEST
-   # sys.exit()
-    # TEST
-    # restart Nova and ovs services
-    """
-    # old code to restart services
-    restartNovaServices(node_id)
-    restartOvsServices(node_id)
-
-    nova_services = checkNovaServices(node_id)
-
-    ovs_services = checkOvsServices(node_id)
-    """
     nova_services = service_controller.nova("restart")
     ovs_services = service_controller.openvswitch("restart")
 
@@ -637,18 +639,6 @@ def processComputeConfig(sock, node_id):
 
         # loop 
         while(services_retry >= 0):
-
-            # restart services
-            """
-            # old code to restart services
-            restartNovaServices(node_id)
-            restartOvsServices(node_id)
-
-            # check services
-            nova_services = checkNovaServices(node_id)
-            ovs_services = checkOvsServices(node_id)
-            """
-
             nova_services = service_controller.nova("restart")
             ovs_services = service_controller.openvswitch("restart")
 

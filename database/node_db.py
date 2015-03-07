@@ -104,6 +104,7 @@ def insert_node(input_dict):
            This function does not add a node to the openstack cloud
     """
     logger.sys_info('\n**Insert a new node into the system. Component: Database Def: insert_node**\n')
+    logger.sys_info('HACK: This is the input from zero connect server: %s'%(input_dict))
     #make sure none of the values are empty
     for key, val in input_dict.items():
         #skip over these
@@ -189,17 +190,19 @@ def insert_node(input_dict):
     else:
         logger.sys_info("Controller %s has %s nodes attached." %(input_dict['node_controller'],count))
 
+    logger.sys_info('HACK: This is before all of the tries: %s'%(input_dict))
     #insert node info into specific service dbs based on node_type
     try:
         insert_ceil_db = {'parameter':"connection",'param_value':"mongodb://ceilometer:transcirrus1@%s:27017/ceilometer"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        insert_ceil_auth_uri = {'parameter':"auth_uri",'param_value':"%s:5000"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_auth_uri = {'parameter':"auth_uri",'param_value':"http://%s:5000"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_memcached = {'parameter':"memcached_servers",'param_value':"%s:11211"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        insert_ceil_osauth_uri = {'parameter':"os_auth_url",'param_value':"%s:5000/v2.0"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_osauth_uri = {'parameter':"os_auth_url",'param_value':"http://%s:5000/v2.0"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_cworkers = {'parameter':'collector_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_nworkers = {'parameter':'notification_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers]
+        insert_ceil_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers,insert_ceil_virt]
         for ceil in ceil_array:
             db.pg_transaction_begin()
             db.pg_insert('ceilometer_node',ceil)
@@ -268,6 +271,7 @@ def insert_node(input_dict):
                 logger.sql_error("Could not set add the spindle node to the TransCirrus cloud.")
 
     if((input_dict['node_type'] == 'cn') or (input_dict['node_type'] == 'cc')):
+        logger.sys_info('HACK: This is in the cn/cc block: %s'%(input_dict))
         try:
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_host = {"parameter":"host","param_value":"%s" %(input_dict['node_name']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -311,9 +315,10 @@ def insert_node(input_dict):
             db.pg_transaction_rollback()
             logger.sql_error("Could not insert node specific nova config into Transcirrus db. %s"%(e))
             return 'ERROR'
+        logger.sys_info('HACK: This is before neutron stuff gets added %s'%(input_dict))
         try:
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['cc_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_rabbit = {"parameter":"rabbit_host","param_value":'%s'%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth = {'parameter':"auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
@@ -322,7 +327,7 @@ def insert_node(input_dict):
             insert_nova_auth_url = {'parameter':"nova_admin_auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth_host = {"parameter":"auth_host","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth_uri = {"parameter":"auth_uri","param_value":"%s:5000"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['cc_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_ml_ip = {"parameter":"local_ip","param_value":"%s"%(input_dict['node_data_ip']),'file_name':"ml2_conf.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neu_nova_ten_id = {"parameter":"nova_admin_tenant_id","param_value":"%s"%(service_tenant),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neu_mworkers = {'parameter':'metadata_workers',"param_value":"%s"%(proc_info['total_cores']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neu_dhcp = {'parameter':'dhcp_domain',"param_value":"%s"%(domains['uplink_domain_name']),'file_name':"dhcp_agent.ini",'node':"%s" %(input_dict['node_id'])}

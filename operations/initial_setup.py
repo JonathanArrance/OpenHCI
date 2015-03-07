@@ -286,6 +286,8 @@ def run_setup(new_system_variables,auth_dict):
         os.system("sudo heat-manage db_sync")
 
     #enable ceilometer
+    logger.sys_info('Adding ceilometer to mongo DB.')
+    os.system('sudo mongo --host 172.24.24.10 ceilometer /transcirrus/mongo.js')
     logger.sys_info('Writing the Ceilometer Config files.')
     ceil_configs = node_db.get_node_ceilometer_config(node_id)
     #take the array of cinder file decriptors and write the files
@@ -507,6 +509,13 @@ def run_setup(new_system_variables,auth_dict):
     #        logger.sys_error("Could not enable multi-node. Check the interface and try again.")
     #    else:
     #        logger.sys_info("Multi-node configuration enabled.")
+
+    logger.sys_info("Restarting the Mgmt network adapter.")
+    card_restart = util.restart_network_card("bond0")
+    if(card_restart == 'OK'):
+        logger.sys_info("Mgmt adapter has been restarted.")
+    else:
+        logger.sys_warn("Mgmt adapter may not have been restarted.")
 
     logger.sys_info("Restarting the uplink network adapter.")
     card_restart = util.restart_network_card("br-ex")

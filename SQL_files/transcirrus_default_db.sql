@@ -2595,12 +2595,63 @@ ALTER TABLE ONLY trans_zones
 
 
 --
--- TOC entry 2193 (class 0 OID 16605)
--- Dependencies: 210
--- Data for Name: trans_user_info; Type: TABLE DATA; Schema: public; Owner: transuser
+-- TOC entry 213 (class 1259 OID 20987)
+-- Name: trans_inst_snaps; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
 --
 
---INSERT INTO trans_user_info VALUES (0, 'admin', 'admin', 0, 'TRUE', '0f3a79f9d4b3438c8e04988148e589b0', 'trans_default', '8740516cbfd84837bcec4d297478134c', 'admin', NULL);
+CREATE TABLE trans_inst_snaps (
+    index integer NOT NULL,
+    inst_id character varying,
+    snap_id character varying,
+    project_id character varying,
+    name character varying,
+    type character varying(10),
+    description text,
+    create_date timestamp without time zone
+);
+
+
+ALTER TABLE public.trans_inst_snaps OWNER TO transuser;
+
+--
+-- TOC entry 212 (class 1259 OID 20985)
+-- Name: trans_inst_snaps_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_inst_snaps_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_inst_snaps_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 1997 (class 0 OID 0)
+-- Dependencies: 212
+-- Name: trans_inst_snaps_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_inst_snaps_index_seq OWNED BY trans_inst_snaps.index;
+
+
+--
+-- TOC entry 1998 (class 0 OID 0)
+-- Dependencies: 212
+-- Name: trans_inst_snaps_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_inst_snaps_index_seq', 1, false);
+
+
+--
+-- TOC entry 1991 (class 2604 OID 20990)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_inst_snaps ALTER COLUMN index SET DEFAULT nextval('trans_inst_snaps_index_seq'::regclass);
 
 
 --

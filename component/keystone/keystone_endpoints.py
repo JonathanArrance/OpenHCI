@@ -125,7 +125,7 @@ class endpoint_ops:
 
         try:
             get_public_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='api_ip'"}
-            self.ep_ip = self.db.pg_select(get_public_ips)
+            self.pub_ip = self.db.pg_select(get_public_ips)
         except:
             logger.sql_error("Could not retrieve the public api ip to create endpoints with.")
             raise Exception("Could not retrieve the public api ip to create endpoints with.")
@@ -161,6 +161,8 @@ class endpoint_ops:
                 get_service = self.db.pg_select(get_serv_info)
                 self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
 
+            if(input_dict['service_name'] == 'nova'):
+                self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
         except:
             logger.sql_error("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
             raise Exception("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
@@ -168,8 +170,15 @@ class endpoint_ops:
         #build the endpoints
         if(self.get_service[0][1] == 'NULL'):
             self.get_service[0][1] = ""
-        public_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+
+        self.public_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+        if(input_dict['service_name'] == 'swift'):
+            self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+        if(input_dict['service_name'] == 'nova'):
+            self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+
         internal_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+
         #HUGE HACK
         if(input_dict['service_name'] != 'keystone'):
             if(input_dict['service_name'] != 'swift'):
@@ -210,10 +219,10 @@ class endpoint_ops:
                 update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.ep_ip[0][0]),'where':"service_name='%s'" %(input_dict['service_name'])}
                 self.db.pg_update(update)
                 if(input_dict['service_name'] == 'keystone'):
-                    update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.ep_ip[0][0]),'where':"service_name='keystone_admin'"}
+                    update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.pub_ip[0][0]),'where':"service_name='keystone_admin'"}
                     self.db.pg_update(update)
                 if(input_dict['service_name'] == 'swift'):
-                    update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.ep_ip[0][0]),'where':"service_name='swift_admin'"}
+                    update = {'table':"trans_service_settings",'set':"service_id='%s',service_admin_ip='%s',service_int_ip='%s',service_public_ip='%s'" %(self.service_id,self.ep_ip[0][0],self.ep_ip[0][0],self.pub_ip[0][0]),'where':"service_name='swift_admin'"}
                     self.db.pg_update(update)
             except Exception as e:
                 self.db.pg_transaction_rollback()
@@ -225,7 +234,7 @@ class endpoint_ops:
             util.http_codes(rest['response'],rest['reason'])
 
         try:
-            ep_body = '{"endpoint": {"adminurl": "%s", "service_id": "%s", "region": "%s", "internalurl": "%s", "publicurl": "%s"}}' %(self.admin_api,self.service_id,input_dict['cloud_name'],internal_api,public_api)
+            ep_body = '{"endpoint": {"adminurl": "%s", "service_id": "%s", "region": "%s", "internalurl": "%s", "publicurl": "%s"}}' %(self.admin_api,self.service_id,input_dict['cloud_name'],internal_api,self.public_api)
             ep_header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json"}
             ep_function = 'POST'
             ep_api_path = '/v2.0/endpoints'
@@ -257,7 +266,7 @@ class endpoint_ops:
                 raise
             else:
                 self.db.pg_transaction_commit()
-                r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':self.admin_api,'internal_url':internal_api,'public_url':public_api}
+                r_dict = {'service_name':input_dict['service_name'],'endpoint_id':ep_id,'service_id':self.service_id,'admin_url':self.admin_api,'internal_url':internal_api,'public_url':self.public_api}
                 return r_dict
         else:
             self.db.pg_transaction_rollback()

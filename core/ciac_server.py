@@ -605,6 +605,7 @@ def client_thread(conn, client_addr):
                                     'node_cloud_name':data['Value']['node_cloud_name'],
                                     'avail_zone':data['Value']['avail_zone']
                                     }
+                            logger.sys_info("HACK: Input dict in ciac_server going to node_db: %s" %(input_dict))
                             if(input_dict['node_type'] == 'sn'):
                                 #input_dict['node_gluster_peer'] = data['Value']['node_gluster_peer']
                                 input_dict['node_gluster_disks'] = data['Value']['disk_type']
