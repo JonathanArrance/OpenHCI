@@ -275,7 +275,7 @@ def insert_node(input_dict):
         try:
             insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_host = {"parameter":"host","param_value":"%s" %(input_dict['node_name']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_mgmt_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_xvpvncproxy = {"parameter":"xvpvncproxy_base_url","param_value":"http://%s:6081/console"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_spice = {"parameter":"html5proxy_base_url","param_value":"http://%s:6082/spice_auto.html"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
