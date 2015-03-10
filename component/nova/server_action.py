@@ -627,7 +627,8 @@ class server_actions:
                          - project_id - REQ
                          - snapshot_name - OP
                          - snapshot_description - OP
-        OUTPUT: This operation does not return a response body.
+        OUTPUT: r_dict - snapshot_name
+                       - snapshot_id
         ACCESS: Cloud Admin - can snashot any vm
                 PU - snapshot only vms in thei project
                 User - snapshot only the vms they own
@@ -669,6 +670,20 @@ class server_actions:
         if ((snap_dict['snapshot_name'] == '') or ('snapshot_name' not in snap_dict)):
             snap_dict['snapshot_name'] = server[0][0] + '_snapshot_' + datetime.date.today()
 
+        if ((snap_dict['snapshot_description'] == '') or ('snapshot_description' not in snap_dict)):
+            snap_dict['snapshot_description'] = 'None'
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(snap_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,snap_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
         try:
             # construct request header and body
             body='{"createImage": {"name": "%s", "metadata": {}}}'%(snap_dict['snapshot_name'])
@@ -679,20 +694,21 @@ class server_actions:
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
-            # check the response code
         except:
             logger.sys_error("Error in snapshoting instance.")
             raise Exception("Error in snapshoting instance.")
 
         if(rest['response'] == 202):
-            self.load = json.loads(rest['data'])
-            print self.load
-            """
+            snap_id = None
+            headers = rest['headers']
+            for header in headers:
+                if(header[0] == 'location'):
+                    snap_id = header[1].split('/')
             try:
                 #insert the volume info into the DB
                 self.db.pg_transaction_begin()
-                insert_snap = {"name": snap_dict['snapshot_name'],"type": 'None',"inst_id": snap_dict['server_id'],"snap_id": self.load[],"snap_desc": create_snap['snapshot_desc']}
-                self.db.pg_insert("trans_system_snapshots",insert_snap)
+                insert_snap = {"name": snap_dict['snapshot_name'],"type": 'None',"inst_id": snap_dict['server_id'],"create_date":datetime.date.today(),"snap_id": snap_id[6],"project_id": snap_dict['project_id'],'description':snap_dict['snapshot_description']}
+                self.db.pg_insert("trans_inst_snaps",insert_snap)
             except:
                 self.db.pg_transaction_rollback()
                 self.db.pg_close_connection()
@@ -700,9 +716,8 @@ class server_actions:
             else:
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
-                r_dict = {"snapshot_name": create_snap['snapshot_name'],"snapshot_id": load['snapshot']['id'], "volume_id": load['snapshot']['volume_id']}
+                r_dict = {"snapshot_name": snap_dict['snapshot_name'],"snapshot_id": snap_id[6]}
                 return r_dict
-            """
 
     def create_instance_backup(self,backup_dict):
         """

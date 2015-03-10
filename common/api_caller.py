@@ -121,6 +121,7 @@ class caller:
             raise Exception("There was an error connecting to the REST API. Check input params.")
         self.connection.request(api_dict['function'], api_dict['api_path'], api_dict['body'], api_dict['header'])
         response = self.connection.getresponse()
+        headers = response.getheaders()
         #get the response and the reason
         return_resp = response.status
         return_reason = response.reason
@@ -128,5 +129,5 @@ class caller:
         data = response.read()
         self.connection.close()
 
-        http_dict = {"response": response.status, "reason": response.reason, "data": data}
+        http_dict = {"response": response.status, "reason": response.reason, "data": data, "headers":headers}
         return http_dict
