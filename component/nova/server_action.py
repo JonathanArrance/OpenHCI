@@ -422,7 +422,6 @@ class server_actions:
                 rest = api.call_rest(rest_dict)
                 # check the response code
             except:
-                self.db.pg_transaction_rollback()
                 logger.sys_error("Error in sending resize request to server.")
                 #raise Exception("Error in sending resize request to server.")
                 return 'ERROR'
@@ -520,7 +519,6 @@ class server_actions:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except:
-            self.db.pg_transaction_rollback()
             logger.sys_error("Error in sending resize confirm request to server.")
             raise Exception("Error in sending resize confirm request to server.")
 
@@ -622,10 +620,90 @@ class server_actions:
         return 'OK'
 
     
-    def create_instance_snapshot(self):
-        pass
-        #alpo.1
-        
+    def create_instance_snapshot(self,snap_dict):
+        """
+        DESC: This will create a new instance snapshot.
+        INPUT: snap_dict - server_id - REQ
+                         - project_id - REQ
+                         - snapshot_name - OP
+                         - snapshot_description - OP
+        OUTPUT: This operation does not return a response body.
+        ACCESS: Cloud Admin - can snashot any vm
+                PU - snapshot only vms in thei project
+                User - snapshot only the vms they own
+        NOTE: Any volumes that are attached to the instance will not be snapped,
+              you will have to snapshot the environment in order to capture it.
+        """
+
+        if ((snap_dict['server_id'] == '') or ('server_id' not in snap_dict)):
+            logger.sys_error("No server id was provided.")
+            raise Exception("No server id was provided.")
+        if ((snap_dict['project_id'] == '') or ('project_id' not in snap_dict)):
+            logger.sys_error("No server id was provided.")
+            raise Exception("No server id was provided.")
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(snap_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.is_admin == 0):
+            if(self.project_id != snap_dict['project_id']):
+                logger.sys_error("Users can only backup virtual serves in their project.")
+                raise Exception("Users can only backup virtual serves in their project.")
+
+        #check to make sure non admins can perofrm the task
+        if(self.is_admin == 0):
+            self.get_server = None
+            if(self.user_level == 1):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(snap_dict['project_id'])}
+            elif(self.user_level == 2):
+                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(snap_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
+            server = self.db.pg_select(self.get_server)
+            if(server[0][0] == ''):
+                logger.sys_error('The current user can not perform the backup operation.')
+                raise Exception('The current user can not perform the backup operation.')
+
+        if ((snap_dict['snapshot_name'] == '') or ('snapshot_name' not in snap_dict)):
+            snap_dict['snapshot_name'] = server[0][0] + '_snapshot_' + datetime.date.today()
+
+        try:
+            # construct request header and body
+            body='{"createImage": {"name": "%s", "metadata": {}}}'%(snap_dict['snapshot_name'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (snap_dict['project_id'],snap_dict['server_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except:
+            logger.sys_error("Error in snapshoting instance.")
+            raise Exception("Error in snapshoting instance.")
+
+        if(rest['response'] == 202):
+            self.load = json.loads(rest['data'])
+            print self.load
+            """
+            try:
+                #insert the volume info into the DB
+                self.db.pg_transaction_begin()
+                insert_snap = {"name": snap_dict['snapshot_name'],"type": 'None',"inst_id": snap_dict['server_id'],"snap_id": self.load[],"snap_desc": create_snap['snapshot_desc']}
+                self.db.pg_insert("trans_system_snapshots",insert_snap)
+            except:
+                self.db.pg_transaction_rollback()
+                self.db.pg_close_connection()
+                nova_ec.error_codes(rest)
+            else:
+                self.db.pg_transaction_commit()
+                self.db.pg_close_connection()
+                r_dict = {"snapshot_name": create_snap['snapshot_name'],"snapshot_id": load['snapshot']['id'], "volume_id": load['snapshot']['volume_id']}
+                return r_dict
+            """
+
     def create_instance_backup(self,backup_dict):
         """
         DESC: This will backup an instance, a backup is a full clone of a vm.
@@ -711,14 +789,14 @@ class server_actions:
             logger.sys_error("Error in sending revert resize request to server.")
             raise Exception("Error in sending revert resize request to server.")
 
-        if(rest['response'] == 202):
-            # this method does not return any response body
-            self.db.pg_transaction_begin()
-            update_inst = {'table':'trans_instances','set':"inst_confirm_resize=0,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%('NULL','NULL'),'where':"inst_id='%s'"%(backup_dict['server_id'])}
-            self.db.pg_update(update_inst)
-            self.db.pg_transaction_commit()
-        else:
-            util.http_codes(rest['response'],rest['reason'])
+        #if(rest['response'] == 202):
+        #    # this method does not return any response body
+        ##    self.db.pg_transaction_begin()
+        #   update_inst = {'table':'trans_instances','set':"inst_confirm_resize=0,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%('NULL','NULL'),'where':"inst_id='%s'"%(backup_dict['server_id'])}
+        #    self.db.pg_update(update_inst)
+        #    self.db.pg_transaction_commit()
+        #else:
+        #    util.http_codes(rest['response'],rest['reason'])
 
         return 'OK'
 

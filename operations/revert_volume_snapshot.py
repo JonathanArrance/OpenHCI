@@ -1,0 +1,1 @@
+this not only create a new volume, but it also detaches the origainal volume and reattaches the snapshot vol at the same mont point

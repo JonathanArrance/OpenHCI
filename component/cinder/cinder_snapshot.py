@@ -79,6 +79,7 @@ class snapshot_ops:
                           - snapshot_desc - description - REQ
                           - project_id - project volume lives in - REQ
                           - volume_id - volume to snap - REQ
+                          - force - force snapshot of in-use vol (True/False) - op
         OUTPUT: r_dict - snapshot_name
                        - snapshot_id
                        - volume_id
@@ -92,6 +93,10 @@ class snapshot_ops:
         if(('snapshot_name' not in create_snap) or ('snapshot_desc' not in create_snap) or ('project_id' not in create_snap) or ('volume_id' not in create_snap)):
             logger.sys_error("Did not pass required params to create snapshot operation.")
             raise Exception("Did not pass required params to create snapshot operation.")
+
+        if(('force' not in create_snap) or (create_snap['force'] == '')):
+            create_snap['force'] = 'False'
+
         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to snapshot volumes.")
@@ -155,7 +160,7 @@ class snapshot_ops:
 
             try:
             #add the new user to openstack 
-                body = '{"snapshot": {"display_name": "%s", "force": false, "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snapshot_name'],create_snap['snapshot_desc'],create_snap['volume_id'])
+                body = '{"snapshot": {"display_name": "%s", "force": "%s", "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snapshot_name'],create_snap['force'],create_snap['snapshot_desc'],create_snap['volume_id'])
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
                 function = 'POST'
@@ -176,7 +181,7 @@ class snapshot_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snapshot_name'],"snap_desc": create_snap['snapshot_desc']}
+                    insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snapshot_name'],"snap_desc": create_snap['snapshot_desc'],"user_id":self.user_id}
                     self.db.pg_insert("trans_system_snapshots",insert_snap)
                 except:
                     self.db.pg_transaction_rollback()

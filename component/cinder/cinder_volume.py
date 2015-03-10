@@ -88,6 +88,7 @@ class volume_ops:
                         volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
                         description - Optional
+                        snapshot_id - Optional
         OUTPUTS: r_dict - volume_name
                         - volume_type
                         - volume_id
@@ -107,6 +108,7 @@ class volume_ops:
         if('description' not in create_vol):
             logger.sys_warning("Did not pass in a volume description setting the defaut description.")
             create_vol['description'] = "%s volume" %(create_vol['project_id'])
+
          #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to create volumes.")
@@ -284,10 +286,51 @@ class volume_ops:
 
         return load
 
+    def create_vol_from_snapshot(self,input_dict):
+        """
+        DESC: Create a new volume in a project from an exisiting snapshot in the project.
+        All user levels can spin up new volumes.
+        INPUTS: volume_name - REQ
+                volume_size - REQ
+                project_id - REQ
+                snapshot_id - REQ
+                volume_type - Optional default is ssd
+                volume_zone - Optional default is nova
+                description - Optional
+        OUTPUTS: r_dict - volume_name
+                        - volume_type
+                        - volume_id
+                        - volume_size
+        ACCESS: Admins can create a volume with any snapshot, Users can only create
+                volumes with snapshots they own.
+        NOTE: You can not create two volumes with the same name in the same project.
+        """
+        #make sure snapshot id is given.
+        if(('snapshot_id' not in input_dict) or (input_dict['snapshot_id'] == '')):
+            logger.sys_error("Snapshot ID is required.")
+            raise Exception("Snapshot ID is required.")
 
+        if(self.is_admin == 0):
+            if(self.user_level == 1):
+                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            elif(self.is_admin == 2):
+                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"user_id='%s'"%(self.user_id)}
+        else:
+            self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id'])}
 
-    def create_vol_from_snapshot(self):
-        print "not implemented"
+        #check if the snapshot exists in the project and that the user can use it
+        try:
+            get_snap = self.db.pg_select(self.select_snap)
+        except:
+            logger.sys_error("The snapshot does not exist in this project.")
+            raise Exception("The snapshot does not exist in this project.")
+
+        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],'volume_type':input_dict['volume_type'],
+                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id']}
+
+        output = self.create_volume(input_dict)
+
+        return output
 
     def delete_volume(self,delete_vol):
         """

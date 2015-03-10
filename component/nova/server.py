@@ -447,7 +447,6 @@ class server_ops:
 
         if(rest['response'] == 202):
             self.load = json.loads(rest['data'])
-            logger.sys_info('HACK: json load %s'%(self.load))
             #poll the status, if the status is ACTIVE
             server = {'server_id':self.load['server']['id'],'project_id':create_dict['project_id']}
             while(True):
