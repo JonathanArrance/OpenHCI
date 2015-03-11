@@ -254,12 +254,41 @@ def sendComputeConfig(conn, node_id):
                 if __debug__ :
                     print "node_id: %s ciac server NOT received ok ack for cn ovs conf" % (node_id)
                 sys.exit()
+                
+        # get ovs config for compute node
+        config = node_db.get_node_ceilometer_config(node_id)
+        if config:
+
+            '''
+            here we are sending the complete neutron config structure,
+            the receiving compute node should extract necessary config
+            structure
+            '''
+            core_util.send_data(pickle.dumps(config, -1), conn)
+            logger.sys_info("node_id: %s sent cn ceilometer conf" %(node_id))
+            if __debug__ :
+                print "node_id: %s sent cn ceilometer conf" % (node_id)
+
+            # listen for ok message, ack
+            data = core_util.recv_data(conn)
+            if data:
+                data = pickle.loads(data)
+                if data['Type'] == 'status' and data['Value'] == 'ok': 
+                    logger.sys_info("node_id: %s, ciac server received %s" %(node_id, data['Value']))
+                else:
+                    logger.sys_error("node_id: %s, ciac server received %s" %(node_id, data['Value']))
+                    sys.exit()
+                if __debug__ :
+                    print "node_id: %s ciac server received %s" % (node_id, data)
+            else:
+                logger.sys_error("node_id: %s ciac server NOT received ok ack for cn ceilometer conf" %(node_id))
+                if __debug__ :
+                    print "node_id: %s ciac server NOT received ok ack for ceilometer ovs conf" % (node_id)
+                sys.exit()
         else:
-            logger.sys_error("node_id: %s Error in get neutron config from DB" %(node_id))
+            logger.sys_error("node_id: %s Error in get ceilometer config from DB" %(node_id))
             if __debug__:
-                print "node_id: %s Error in get neutron config from DB" %(node_id)
-
-
+                print "node_id: %s Error in get ceilometer config from DB" %(node_id)
     else:
         logger.sys_error("node_id: %s Error in get nova config" %(node_id))
         if __debug__ :

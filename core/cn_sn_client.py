@@ -458,8 +458,6 @@ def processComputeConfig(sock, node_id):
     # receive compute node nova config file
     cn_config = core_util.recv_data(sock)
 
-    print cn_config #TEST
-
     # parse config file
     if cn_config:
         cn_config = pickle.loads(cn_config)
@@ -469,10 +467,6 @@ def processComputeConfig(sock, node_id):
         for i in range(0,len(cn_config)):
             if cn_config[i]['file_name'] == 'nova.conf':
                 nova_conf = cn_config[i]
-            #elif cn_config[i]['file_name'] == 'nova-compute.conf':
-            #    comp_conf = cn_config[i]
-            #elif cn_config[i]['file_name'] == 'api-paste.ini' :
-            #    api_conf = cn_config[i]
     else:
         logger.sys_error("compute node did not receive nova config file, exiting!!!")
         if __debug__ :
@@ -494,8 +488,21 @@ def processComputeConfig(sock, node_id):
                 ovs_conf = cn_config1[i]
             if cn_config1[i]['file_name'] == 'ml2_conf.ini':
                 ml2_conf = cn_config1[i]
-            elif cn_config1[i]['file_name'] == 'neutron.conf':
+            if cn_config1[i]['file_name'] == 'neutron.conf':
                 net_conf = cn_config1[i]
+
+    cn_config2 = core_util.recv_data(sock)
+
+    if cn_config2:
+        cn_config2 = pickle.loads(cn_config2)
+
+        # send ok, ack
+        sendOk(sock)
+
+        # get ovs config file
+        for i in range(0,len(cn_config2)):
+            if cn_config2[i]['file_name'] == 'ceilometer.conf':
+                ceilometer_conf = cn_config2[i]
 
     else:
         logger.sys_error("compute node did not receive ovs config file, exiting!!!")

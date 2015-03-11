@@ -11,16 +11,32 @@ from transcirrus.common.auth import authorization
 
 #sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from transcirrus.component.cinder.cinder_volume import volume_ops
+from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 
 a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
-
 print "instantiating a volume abject."
 vol = volume_ops(d)
+snap = snapshot_ops(d)
+
+print "createing a new volume snap"
+create = {'snapshot_name':'the_snapshot','snapshot_desc':'Yo yo','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_id':'a853e89c-a959-4e6f-82ad-3aa833fcf9b5','force':'True'}
+create_vol = snap.create_snapshot(create)
+print create_vol
+
+print "createing a new volume snap"
+create = {'snapshot_name':'the_snapshot','snapshot_desc':'Yo yo','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_id':'a853e89c-a959-4e6f-82ad-3aa833fcf9b5'}
+create_vol = snap.create_snapshot(create)
+print create_vol
 
 '''
+print "createing a new volume"
+create = {'volume_name':'test111','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd','snapshot_id':'a32d8390-1df0-445a-b560-f38697dd3d8f'}
+create_vol = vol.create_vol_from_snapshot(create)
+print create_vol
+
 voltype = vol.create_volume_type("ssd")
 print voltype
 voltype2 = vol.create_volume_type("spindle")
@@ -33,12 +49,12 @@ print yo
 
 stuff = vol.get_volume(get)
 print stuff
-'''
+
 print "createing a new volume"
 create = {'volume_name':'test11','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
-'''
+
 print "------------------------------------------"
 print "sleeping for 15 seconds"
 time.sleep(15)

@@ -102,7 +102,7 @@ class volume_ops:
         if(not create_vol):
             logger.sys_error("Did not pass in create_vol dictionary to create volume operation.")
             raise Exception("Did not pass in create_vol dictionary to create volume operation.")
-        if(('volume_name' not in create_vol) or ('volume_size' not in create_vol)):
+        if(('volume_name' not in create_vol) or (create_vol['volume_name'] == '')):
             logger.sys_error("Did not pass required params to create volume operation.")
             raise Exception("Did not pass required params to create volume operation.")
         if('description' not in create_vol):
@@ -126,7 +126,7 @@ class volume_ops:
         #default to ssd
         voltype = None
         if('volume_type' not in create_vol):
-            voltype = 'ssd'
+            voltype = 'spindle'
         elif('volume_type' in create_vol):
             voltype = create_vol['volume_type'].lower()
             print voltype
@@ -305,10 +305,21 @@ class volume_ops:
                 volumes with snapshots they own.
         NOTE: You can not create two volumes with the same name in the same project.
         """
+        #create = {'volume_name':'test111','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd','snapshot_id':'a32d8390-1df0-445a-b560-f38697dd3d8f'}
         #make sure snapshot id is given.
         if(('snapshot_id' not in input_dict) or (input_dict['snapshot_id'] == '')):
             logger.sys_error("Snapshot ID is required.")
             raise Exception("Snapshot ID is required.")
+
+        if(('volume_type' not in input_dict) or (input_dict['volume_type'] == '')):
+            input_dict['volume_type'] = 'spindle'
+
+        if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
+            input_dict['volume_zone'] = 'nova'
+
+        if('description' not in input_dict):
+            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
+            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
