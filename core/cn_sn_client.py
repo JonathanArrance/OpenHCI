@@ -532,35 +532,6 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, nova conf"
 
-    #print "***********comp_conf************ %s" % comp_conf  # TEST
-    #print "******Configureing Nova Compute******"
-    #ret = util.write_new_config_file(comp_conf)
-    #if ret == "ERROR" or ret == "NA":
-    #    logger.sys_error("error in writing comp conf, exiting!!!")
-    #    if __debug__ :
-    #        print "error in writing comp conf, exiting!!!"
-    #    sys.exit()
-    #else:
-    #    logger.sys_info("write success, comp conf")
-    #    if __debug__ :
-    #        print "write success, comp conf"
-
-    #print "***********api_conf************ %s" % api_conf  # TEST
-    #print "******Configureing Nova API******"
-    #ret = util.write_new_config_file(api_conf)
-    #if ret == "ERROR" or ret == "NA":
-    #    logger.sys_error("error in writing api conf, exiting!!!")
-    #    if __debug__ :
-    #        print "error in writing api conf, exiting!!!"
-    #    sys.exit()
-    #else:
-    #    logger.sys_info("write success, api conf")
-    #    if __debug__ :
-    #        print "write success, api conf"
-
-    # write compute nodes ovs config file
-
-    #print "***********ovs_conf************ %s" % ovs_conf  # TEST
     print "******Configureing OpenVswitch******"
     ret = util.write_new_config_file(ovs_conf)
     if ret == "ERROR" or ret == "NA":
@@ -573,7 +544,6 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, ovs conf"
 
-    #print "***********ovs_conf************ %s" % ovs_conf  # TEST
     print "******Configureing ML2******"
     ret = util.write_new_config_file(ml2_conf)
     if ret == "ERROR" or ret == "NA":
@@ -586,7 +556,6 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, ml2 conf"
 
-    #print "***********net_conf************ %s" % net_conf  # TEST
     print "******Configureing Neutron******"
     ret = util.write_new_config_file(net_conf)
     if ret == "ERROR" or ret == "NA":
@@ -599,10 +568,23 @@ def processComputeConfig(sock, node_id):
         if __debug__ :
             print "write success, net_conf"
 
+    print "******Configureing Ceilometer******"
+    ret = util.write_new_config_file(ceilometer_conf)
+    if ret == "ERROR" or ret == "NA":
+        logger.sys_error("error in writing ceilometer conf, exiting!!!")
+        if __debug__ :
+            print "error in writing net conf, exiting!!!"
+        sys.exit()
+    else:
+        logger.sys_info("write success, ceilometer_conf")
+        if __debug__ :
+            print "write success, ceilometer_conf"
+
     post_install_status = True
 
     nova_services = service_controller.nova("restart")
     ovs_services = service_controller.openvswitch("restart")
+    ceilometer_cn = service_controller.ceilometer_cn("restart")
 
     if nova_services=='OK' and ovs_services=='OK':
         logger.sys_info("All services are up and running !!!")
