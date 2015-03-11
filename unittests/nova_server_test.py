@@ -22,12 +22,15 @@ store = server_storage_ops(perms)
 nova = server_ops(perms)
 action = server_admin_actions(perms)
 sa = server_actions(perms)
-
-
-snap_image = {'server_id':'3d6a3b5a-12af-4856-acd7-1c5ab4bf8f6d','project_id':'bf54175ff7594e23b8f320c74fb05d68','snapshot_name':'snap_test1','snapshot_description':'This a test1'}
-yo = sa.create_instance_snapshot(snap_image)
+'''
+back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
+yo = sa.create_instance_backup(back_image)
 print yo
 
+'''
+snap_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','snapshot_description':'This a test1'}
+yo = sa.create_instance_snapshot(snap_image)
+print yo
 '''
 auth2 = authorization("bill","test")
 #get the user dict
