@@ -159,8 +159,8 @@ class volume_ops:
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
             create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
 
-        if('description' not in create_vol):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
+        if('description' not in create_vol) or (create_vol['description'] == 'none'):
+            logger.sys_warning("Did not pass in a volume description setting the default description.")
             if('snapshot_id' in create_vol):
                 create_vol['description'] = "%s volume from snapshot %s." %(create_vol['volume_name'],create_vol['snapshot_id'])
             elif('source_vol_id' in create_vol):
@@ -217,7 +217,7 @@ class volume_ops:
                         time.sleep(2)
                     elif(status['volume']['status'] == 'unknown'):
                         logger.sys_info('Volume with ID %s in unknown state.'%(volid))
-                        raise Exception("Could not create a new volume. Unknown error occured.")
+                        raise Exception("Could not create a new volume. Unknown error occurred.")
                     elif(status['volume']['status'] == 'error'):
                         logger.sys_info('Volume with ID %s failed to provision.'%(volid))
                         raise Exception("Could not create a new volume. ERROR: 555")
@@ -238,12 +238,12 @@ class volume_ops:
             else:
                 ec.error_codes(rest)
         else:
-            logger.sys_error("Could not create a new volume. Unknown error occured. ERROR: 555")
-            raise Exception("Could not create a new volume. Unknown error occured. ERROR: 555")
+            logger.sys_error("Could not create a new volume. Unknown error occurred. ERROR: 555")
+            raise Exception("Could not create a new volume. Unknown error occurred. ERROR: 555")
 
     def create_vol_from_snapshot(self,input_dict):
         """
-        DESC: Create a new volume in a project from an exisiting snapshot in the project.
+        DESC: Create a new volume in a project from an existing snapshot in the project.
         All user levels can spin up new volumes.
         INPUTS: volume_size - REQ
                 project_id - REQ
@@ -270,13 +270,13 @@ class volume_ops:
 
         if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
             logger.sys_error("Project ID is required.")
-            raise Exception("Poject ID is required.")
+            raise Exception("Project ID is required.")
 
-        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == '')):
+        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
             input_dict['volume_name'] = input_dict['snapshot_id'] + '_vol_from_snap_%s'%(str(self.rannum))
 
-        if('description' not in input_dict):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
+        if('description' not in input_dict) or (input_dict['description'] == 'none'):
+            logger.sys_warning("Did not pass in a volume description setting the default description.")
             input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
 
         if(self.is_admin == 0):
@@ -303,7 +303,7 @@ class volume_ops:
 
     def create_vol_clone(self,input_dict):
         """
-        DESC: Create a new volume in a project from an exisiting snapshot in the project.
+        DESC: Create a new volume in a project from an existing snapshot in the project.
         All user levels can spin up new volumes.
         INPUTS: volume_id - REQ
                 project_id - REQ
@@ -326,16 +326,16 @@ class volume_ops:
 
         if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
             logger.sys_error("Project ID is required.")
-            raise Exception("Poject ID is required.")
+            raise Exception("Project ID is required.")
 
         if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
             input_dict['volume_zone'] = 'nova'
 
-        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == '')):
+        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
             input_dict['volume_name'] = input_dict['volume_id'] + '_clone_%s'%(str(self.rannum))
 
-        if('description' not in input_dict):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
+        if('description' not in input_dict) or (input_dict['description'] == 'none'):
+            logger.sys_warning("Did not pass in a volume description setting the default description.")
             input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
 
         if(self.is_admin == 0):

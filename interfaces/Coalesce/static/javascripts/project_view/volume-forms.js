@@ -52,7 +52,7 @@ $(function () {
                         checkDuplicateName(volume_name, volumes) &&
                         checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
                         checkStorage(volume_size) &&
-                        checkLength(description, "Description", 1, 16);
+                        checkLength(description, "Description", 0, 16);
 
                     if (isValid) {
 
@@ -61,6 +61,10 @@ $(function () {
                             confSize = volume_size.val(),
                             confDesc = description.val(),
                             confType = volume_type.val();
+
+                        if (confDesc == '') {
+                            confDesc = 'none';
+                        }
 
                         message.showMessage('notice', 'Creating new volume ' + volume_name.val());
 
@@ -90,8 +94,10 @@ $(function () {
                                         '<td id="' + data.volume_id + '-name-cell">' +
                                         '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
                                         '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
-                                        '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instances</span></td>' +
+                                        '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instance</span></td>' +
                                         '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
                                         '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
 
                                     // Check to see if this is the first volume to be generated, if so remove placeholder and reveal create-snapshot buttons
@@ -167,7 +173,6 @@ $(function () {
             var count = 0;
             for (var snapshot in snapshots.items) {
                 var vol = snapshots.getItem(snapshot).volumeId;
-                console.log(vol + " = " + id + " ?");
                 if (vol == id) {
                     count++;
                 }
@@ -285,6 +290,158 @@ $(function () {
         });
     });
 
+    // --- Clone ---
+
+    $(function () {
+
+        // Form Elements
+        var volume_name = $("#clone_volume_name"),
+            description = $("#description"),
+            allFields = $([]).add(volume_name).add(description);
+
+        // Local Variables
+        var id,
+            volume,
+            targetRow;
+
+        $(document).on('click', '.clone-volume', function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
+            // Get target row element, get id from that element and use that to get the name-text
+            targetRow = $(this).parent().parent();
+            id = $(targetRow).attr("id");
+            volume = document.getElementById(id + "-name-text");
+
+            // Add name-text to form
+            $('div#volume-clone-form > p > span.volume-name').empty().append($(volume).text());
+
+            $('#volume-clone-form').dialog("open");
+        });
+
+        $("#volume-clone-form").dialog({
+            autoOpen: false,
+            height: 250,
+            width: 235,
+            modal: true,
+            resizable: false,
+            closeOnEscape: true,
+            draggable: true,
+            show: "fade",
+            position: {
+                my: "center",
+                at: "center",
+                of: $('#page-content')
+            },
+            buttons: {
+                "Confirm": function () {
+
+                    // Confirmed Selections
+                    var confId = id,
+                        confVol = volume_name.val(),
+                        confDesc = description.val();
+
+                    if (confVol == '') {
+                        confVol = 'none';
+                    }
+
+                    if (confDesc == '') {
+                        confDesc = 'none';
+                    }
+
+                    message.showMessage('notice', "Cloning " + $(volume).text() + ".");
+
+                    // Store actions cell html
+                    var actionsCell = document.getElementById(confId + "-actions-cell");
+                    var actionsHtml = actionsCell.innerHTML;
+
+                    // Disable widget view links and instance actions
+                    disableLinks(true);
+                    disableActions("clone-volume", true);
+
+                    // Initialize progressbar and make it visible
+                    $(progressbar).progressbar({value: false});
+                    disableProgressbar(progressbar, "volumes", false);
+
+                    // Create loader
+                    var loaderId = confId + '-loader';
+                    var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
+
+                    // Clear clicked action link and replace with loader
+                    $(actionsCell).empty().fadeOut();
+                    $(actionsCell).append(loaderHtml).fadeIn();
+
+                    $.getJSON('/create_vol_clone/' + PROJECT_ID + '/' + confId + '/' + confVol + '/' + confDesc + '/')
+                        .done(function (data) {
+
+                            if (data.status == 'error') {
+
+                                message.showMessage('error', data.message);
+                            }
+
+                            if (data.status == 'success') {
+
+                                message.showMessage('success', "Volume " + confVol + " cloned from volume " + $(volume).text() + ".");
+
+                                // Initialize empty string for new volume row
+                                var newRow =
+                                    '<tr id="' + data.volume_id + '"><td id="' + data.volume_id + '-name-cell">' +
+                                    '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                    '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
+                                    '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instance</span></td>' +
+                                    '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
+
+                                // Check to see if this is the first volume to be generated, if so remove placeholder and reveal create-snapshot buttons
+                                var rowCount = $("#volume_list tr").length;
+                                if (rowCount <= 2) {
+                                    $("#volume_placeholder").remove().fadeOut();
+                                    setVisible('#create-snapshot', true);
+                                }
+
+                                // Append new row to volume-list
+                                table.append(newRow).fadeIn();
+
+                                // Add to volumes
+                                volumes.setItem(data.volume_id, { size: data.volume_size, name: data.volume_name });
+                                snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+
+                                // Update select
+                                refreshSelect($("#snap_volume"), snapshotVolumes);
+
+                                // Update usedStorage
+                                updateUsedStorage();
+                                updateStorageBar();
+                            }
+                        })
+                        .fail(function () {
+
+                            message.showMessage('error', 'Server Fault');
+                        })
+                        .always(function () {
+
+                            // Restore actions cell html
+                            $(actionsCell).empty().fadeOut();
+                            $(actionsCell).append(actionsHtml).fadeIn();
+
+                            // Hide progressbar and enable widget view links
+                            disableProgressbar(progressbar, "volumes", true);
+                            disableLinks(false);
+                            disableActions("clone-volume", false);
+                            resetUiValidation(allFields);
+                        });
+
+                    $(this).dialog("close");
+                }
+            },
+            close: function () {
+            }
+        });
+    });
+
     // --- Attach ---
 
     $(function () {
@@ -382,7 +539,8 @@ $(function () {
                                 $(targetAttached).empty().fadeOut();
 
                                 var newActions =
-                                    '<a href="#" class="detach-volume">detach</a>';
+                                    '<a href="#" class="detach-volume">detach</a><span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>';
 
                                 $(actionsCell).append(newActions).fadeIn();
                                 $(targetAttached).append(confInstanceName).fadeIn();
@@ -511,8 +669,9 @@ $(function () {
                                 $(targetAttached).empty().fadeOut();
 
                                 var newActions =
-                                    '<a href="#" class="attach-volume">attach</a>' +
-                                    '<span class="volume-actions-pipe"> | </span>' +
+                                    '<a href="#" class="attach-volume">attach</a><span class="volume-actions-pipe"> | </span>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
                                     '<a href="#" class="delete-volume">delete</a>';
 
                                 $(actionsCell).append(newActions).fadeIn();
@@ -538,6 +697,181 @@ $(function () {
                         });
 
                     $(this).dialog("close");
+                }
+            },
+            close: function () {
+            }
+        });
+    });
+
+    // --- Revert From Snapshot ---
+
+    $(function () {
+
+        // Form Elements
+        var snapshot = $("#revert_snapshot_name"),
+            name = $("#revert_volume_name"),
+            allFields = $([]).add(snapshot);
+
+        // Local Variables
+        var id,
+            volume,
+            targetRow,
+            attached;
+
+        $(document).on('click', '.revert-volume', function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
+            // Get target row element, get id from that
+            // element and use that to get the name-text
+            targetRow = $(this).parent().parent();
+            attached = !!targetRow.hasClass("volume-attached");
+            id = $(targetRow).attr("id");
+            volume = document.getElementById(id + "-name-text");
+
+            // Add name-text to form
+            $('div#volume-revert-form > p > span.volume-name').empty().append($(volume).text());
+            updateRevertVolumeSnapshots(id);
+
+            $('#volume-revert-form').dialog("open");
+        });
+
+        $("#volume-revert-form").dialog({
+            autoOpen: false,
+            height: 250,
+            width: 235,
+            modal: true,
+            resizable: false,
+            closeOnEscape: true,
+            draggable: true,
+            show: "fade",
+            position: {
+                my: "center",
+                at: "center",
+                of: $('#page-content')
+            },
+            buttons: {
+                "Confirm": function () {
+
+                    // Remove UI validation flags
+                    clearUiValidation(allFields);
+
+                    // Validate form inputs
+                    var isValid =
+                        checkLength(name, "Volume Name", 3, 16) &&
+                        checkDuplicateName(name, volumes);
+
+                    if (isValid) {
+
+                        // Confirmed Selections
+                        var confId = id,
+                            confName = name.val(),
+                            confSnap = snapshot.val();
+
+                        message.showMessage('notice', "Reverting " + $(volume).text() + ".");
+
+                        // Store actions cell html
+                        var actionsCell = document.getElementById(confId + "-actions-cell");
+                        var actionsHtml = actionsCell.innerHTML;
+
+                        // Disable widget view links and instance actions
+                        disableLinks(true);
+                        disableActions("revert-volume", true);
+
+                        // Initialize progressbar and make it visible
+                        $(progressbar).progressbar({value: false});
+                        disableProgressbar(progressbar, "volumes", false);
+
+                        // Create loader
+                        var loaderId = confId + '-loader';
+                        var loaderHtml = '<div class="ajax-loader" id="' + loaderId + '"></div>';
+
+                        // Clear clicked action link and replace with loader
+                        $(actionsCell).empty().fadeOut();
+                        $(actionsCell).append(loaderHtml).fadeIn();
+
+                        $.getJSON('/revert_volume_snapshot/' + PROJECT_ID + '/' + confId + '/' + confName + '/' + confSnap + '/')
+                            .done(function (data) {
+
+                                if (data.status == 'error') {
+
+                                    message.showMessage('error', data.message);
+                                }
+
+                                if (data.status == 'success') {
+
+                                    message.showMessage('success', data.message);
+
+                                    // Initialize empty string for new volume row
+                                    var newRow =
+                                        '<tr id="' + data.volume_info.volume_id + '" class="';
+                                    if (attached) {
+                                        newRow += "volume-attached"
+                                    }
+                                    newRow +=
+                                        '"><td id="' + data.volume_info.volume_id + '-name-cell">' +
+                                        '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_info.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                        '<span id="' + data.volume_info.volume_id + '-name-text">' + data.volume_info.volume_name + '</span>' + '</a></td>' +
+                                        '<td id="' + data.volume_info.volume_id + '-attached-cell"><span id="' + data.volume_info.volume_id + '-attached-placeholder">';
+                                    if (attached) {
+                                        newRow += instances.items[data.attach_info.instance_id].name
+                                    } else {
+                                        newRow += "No Attached Instances"
+                                    }
+                                    newRow += '</span></td><td id="' + data.volume_info.volume_id + '-actions-cell">';
+                                    if (!attached) {
+                                        newRow += '<a href="#" class="attach-volume">attach</a>';
+                                    } else {
+                                        newRow += '<a href="#" class="detach-volume">detach</a>';
+                                    }
+                                    newRow +=
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
+
+                                    // Check to see if this is the first volume to be generated, if so remove placeholder and reveal create-snapshot buttons
+                                    var rowCount = $("#volume_list tr").length;
+                                    if (rowCount <= 2) {
+                                        $("#volume_placeholder").remove().fadeOut();
+                                        setVisible('#create-snapshot', true);
+                                    }
+
+                                    // Append new row to volume-list
+                                    table.append(newRow).fadeIn();
+
+                                    // Add to volumes
+                                    volumes.setItem(data.volume_id, { size: data.volume_size, name: data.volume_name });
+                                    snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+
+                                    // Update select
+                                    refreshSelect($("#snap_volume"), snapshotVolumes);
+
+                                    // Update usedStorage
+                                    updateUsedStorage();
+                                    updateStorageBar();
+                                }
+                            })
+                            .fail(function () {
+
+                                message.showMessage('error', 'Server Fault');
+                            })
+                            .always(function () {
+
+                                // Restore actions cell html
+                                $(actionsCell).empty().fadeOut();
+                                $(actionsCell).append(actionsHtml).fadeIn();
+
+                                // Hide progressbar and enable widget view links
+                                disableProgressbar(progressbar, "volumes", true);
+                                disableLinks(false);
+                                disableActions("revert-volume", false);
+                                resetUiValidation(allFields);
+                            });
+
+                        $(this).dialog("close");
+                    }
                 }
             },
             close: function () {

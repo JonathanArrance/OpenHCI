@@ -519,6 +519,7 @@ $(function () {
 });
 
 var instances = new HashTable(),
+    instanceSnaps = new HashTable(),
     instanceOpts = new HashTable(),
     secGroupInstOpts = new HashTable(),
     secKeyInstOpts = new HashTable(),
@@ -613,6 +614,20 @@ function updateStorageBar() {
     volume_available_storage_bar.progressbar({value: percent});
     volume_available_storage_label.empty();
     volume_available_storage_label.append(usedStorage + "/" + totalStorage);
+}
+
+function updateRevertVolumeSnapshots(volumeId) {
+
+    var select = $("#revert_snapshot_name");
+    select.empty();
+
+    for (var snap in snapshots.items) {
+        if (snapshots.items[snap].volumeId  == volumeId) {
+            select.append(
+                    '<option value="' + snap + '">' + snapshots.getItem(snap).name + '</option>'
+            );
+        }
+    }
 }
 
 // --- SOFTWARE DEFINED NETWORKS

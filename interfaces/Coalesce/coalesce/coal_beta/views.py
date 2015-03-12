@@ -45,6 +45,8 @@ from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
+from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
+from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
 import transcirrus.common.util as util
 import transcirrus.common.wget as wget
 from transcirrus.database.node_db import list_nodes, get_node
@@ -83,7 +85,7 @@ from coalesce.coal_beta.forms import *
 
 cache_key = None
 
-def welcome(request):
+def stats(request):
     try:
         auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
@@ -158,9 +160,6 @@ def disclaimer(request):
 
 def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
-
-def config_e_series(request):
-    return render_to_response('coal/config_e_series.html', RequestContext(request,))
 
 def welcome(request):
     return render_to_response('coal/welcome.html', RequestContext(request,))
@@ -278,6 +277,7 @@ def project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     so = server_ops(auth)
+    sa = server_actions(auth)
     no = neutron_net_ops(auth)
     l3o = layer_three_ops(auth)
     vo = volume_ops(auth)
@@ -327,6 +327,7 @@ def project_view(request, project_id):
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
+    instance_snapshots = {}
     instance_info={}
     flavors       = fo.list_flavors()
 
@@ -362,6 +363,10 @@ def project_view(request, project_id):
                       'server_flavor': ''}
             sname = instance['server_name']
             instance_info[sname] = i_info
+
+        inst_snaps = sa.list_instance_snaps(instance['server_id'])
+        iname = instance['server_name']
+        instance_snapshots[iname] = inst_snaps
 
     try:
         images    = go.list_images()
@@ -416,6 +421,7 @@ def project_view(request, project_id):
                                                         'containers': containers,
                                                         'images': images,
                                                         'instances': instances,
+                                                        'instance_snapshots': instance_snapshots,
                                                         'instance_info': instance_info,
                                                         'flavors': flavors,
                                                         }))
@@ -1032,6 +1038,47 @@ def delete_image (request, image_id):
         out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description):
+    out = {}
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        create = {'project_id': project_id, 'server_id': server_id, 'snapshot_name': snapshot_name, 'snapshot_description': snapshot_description}
+        out = sa.create_instance_snapshot(create)
+        out['status'] = 'success'
+        out['message'] = "Snapshot %s has been created."%(snapshot_name)
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
+        out = revert_inst_snap(create, auth)
+        out['server_info'] = so.get_server(out['instance']['vm_id'])
+        out['status'] = 'success'
+        out['message'] = "Instance has been reverted."
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        create = {'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name, 'snapshot_id': snapshot_id}
+        vol = revert_vol_snap(create, auth)
+        out['volume_info'] = vol['volume_info']
+        out['attach_info'] = vol['attach_info']
+        out['status'] = 'success'
+        out['message'] = "Volume has been reverted."
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
     out = {}
     try:
@@ -1060,6 +1107,33 @@ def delete_volume(request, volume_id, project_id):
     except Exception as e:
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
+
+def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volume_name, description):
+    out = {}
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        create = { 'project_id':project_id, 'snapshot_id': snapshot_id, 'volume_size': volume_size, 'volume_name': volume_name, 'description': description }
+        out = vo.create_vol_from_snapshot(create)
+        out['status'] = 'success'
+        out['message'] = "Volume %s was created from snapshot."%(volume_name)
+    except Exception as e:
+        out = {"status": "error", "message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def create_vol_clone(request, project_id, volume_id, volume_name, description):
+    out = {}
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        create = { 'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name, 'description': description}
+        out = vo.create_vol_clone(create)
+        out['status'] = 'success'
+        out['message'] = "Volume clone %s was created."%(volume_name)
+    except Exception as e:
+        out = {"status": "error", "message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 
 def list_volumes(request,project_id):
     try:
@@ -1694,15 +1768,18 @@ def router_view(request, router_id):
 def instance_view(request, project_id, server_id):
     auth = request.session['auth']
     so = server_ops(auth)
+    sa = server_actions(auth)
     fo = flavor_ops(auth)
     i_dict = {'server_id': server_id, 'project_id': project_id}
     server = so.get_server(i_dict)
     flavors = fo.list_flavors()
+    snapshots = sa.list_instance_snaps(server_id)
 
     return render_to_response('coal/instance_view.html',
                                RequestContext(request, {
                                                         'server': server,
                                                         'flavors': flavors,
+                                                        'snapshots': snapshots,
                                                         'current_project_id': project_id,
                                                         }))
 

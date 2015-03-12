@@ -31,7 +31,7 @@ def revert_vol_snap(input_dict,auth_dict):
     sso = server_storage_ops(auth_dict)
     rannum = random.randrange(1000,9000)
 
-    #this not only create a new volume, but it also detaches the origainal volume and reattaches the snapshot vol at the same mont point
+    #this not only create a new volume, but it also detaches the original volume and reattaches the snapshot vol at the same mont point
     #get all of the volume info
     get_vol = {'volume_id':input_dict['volume_id'],'project_id':input_dict['project_id']}
     vol_info = vol.get_volume_info(get_vol)
@@ -42,22 +42,23 @@ def revert_vol_snap(input_dict,auth_dict):
     #make sure the snapshot and the volume are in the same project
     if(snap_info['project_id'] != input_dict['project_id']):
         logger.sys_error('The snapshot and the project are not in the same project.')
-        raise Excepton('The snapshot and the project are not in the same project.')
+        raise Exception('The snapshot and the project are not in the same project.')
 
     #make sure the snapshot is related to the volume
     if(snap_info['volume_id'] != vol_info['volume_id']):
         logger.sys_error('The snapshot and the original volume are not related.')
-        raise Excepton('The snapshot and the original volume are not related.')
+        raise Exception('The snapshot and the original volume are not related.')
 
     #1. create a new volume from snapshot
-    if(('volume_name' not in input_dict) or (input_dict['volume_name'] == '')):
+    if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
         input_dict['volume_name'] = 'revert_vol_from_snap_'+input_dict['snapshot_id']+'_%s'%(str(rannum))
 
-    logger.sys_info('Createing a new volume from snapshot %s'%(input_dict['snapshot_id']))
+    logger.sys_info('Creating a new volume from snapshot %s'%(input_dict['snapshot_id']))
     create_from_snap = {'volume_name':input_dict['volume_name'],'volume_size':vol_info['volume_size'],'project_id':input_dict['project_id'],'snapshot_id':input_dict['snapshot_id']}
     create_vol = vol.create_vol_from_snapshot(create_from_snap)
 
     #2. Detach the old volume if needed
+    attach_dict = {}
     if(vol_info['volume_attached'] == 'true'):
         logger.sys_info('Detaching the volume %s from the instance.'%(vol_info['volume_id']))
         detach_dict = {'project_id':input_dict['project_id'],'volume_id':vol_info['volume_id'],'instance_id':vol_info['volume_instance']}
@@ -67,4 +68,5 @@ def revert_vol_snap(input_dict,auth_dict):
         attach_dict = {'project_id':input_dict['project_id'],'volume_id':create_vol['volume_id'],'instance_id':vol_info['volume_instance'],'mount_point':vol_info['volume_mount_location']}
         attach = sso.attach_vol_to_server(attach_dict)
 
-    return 'OK'
+    r_dict = {'volume_info':create_vol,'attach_info':attach_dict}
+    return r_dict

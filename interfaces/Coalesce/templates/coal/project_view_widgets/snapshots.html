@@ -7,7 +7,8 @@
                 <span class="progressbar-text">Working</span>
             </div>
 
-            Snapshots
+            Volume Snapshots
+
             <a href="#" id="create-snapshot" class="btn" style="float:right">Create</a>
         </div>
 
@@ -23,17 +24,19 @@
 
                 <script>
                     snapshots.setItem("{{snapshot.snapshot_id}}",
-                            { id: "{{snapshot.snapshot_id}}", name: "{{snapshot.snapshot_name}}", volumeId: "{{snapshot.volume_id}}", volumeName: "{{snapshot.volume_name}}" });
+                            { id: "{{snapshot.snapshot_id}}", name: "{{snapshot.snapshot_name}}", volumeId: "{{snapshot.volume_id}}", volumeName: "{{snapshot.volume_name}}", value: "{{snapshot.snapshot_id}}", option: "{{snapshot.snapshot_name}}" });
                 </script>
 
                 <tr id="{{snapshot.snapshot_id}}">
-                    <td id="{{snapshot.snapshot_id}}-name-cell"><a href="/snapshot/{{snapshot.snapshot_id}}/view/">
+                    <td id="{{snapshot.snapshot_id}}-name-cell"><a href="/snapshot/{{snapshot.snapshot_id}}/view/" class="disable-link">
                         <span id="{{snapshot.snapshot_id}}-name-text">{{snapshot.snapshot_name}}</span></a>
                     </td>
                     <td id="{{snapshot.snapshot_id}}-volume-cell"><span id="{{snapshot.snapshot_id}}-volume-text">{{snapshot.volume_name}}</span>
                     </td>
                     <td id="{{snapshot.snapshot_id}}-actions-cell">
                         <a href="#" class="delete-snapshot">delete</a>
+                        <span> | </span>
+                        <a href="#" class="create-volume-from-snapshot">create volume</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -68,6 +71,24 @@
             <textarea name="snap_desc" id="snap_desc" class="text ui-widget-content ui-corner-all"
                       maxlength="80" placeholder="enter a description for the snapshot (optional)"
                       rows="2"></textarea>
+        </fieldset>
+    </form>
+</div>
+
+<div id="create-volume-from-snapshot-form" title="Create a volume from snapshot">
+    <p class="validateTips">Clone <span class="vol-from-snap-name"></span>? Volume size required.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="vol_from_snap_size">Volume Size (GB)</label>
+            <input type="text" name="vol_from_snap_size" id="vol_from_snap_size"
+                   class="text ui-widget-content ui-corner-all"/>
+            <label for="vol_from_snap_name">Volume Name</label>
+            <input type="text" name="vol_from_snap_name" id="vol_from_snap_name"
+                   class="text ui-widget-content ui-corner-all"/>
+            <label for="vol_from_snap_desc">Description</label>
+            <input type="text" name="vol_from_snap_desc" id="vol_from_snap_desc" class="text ui-widget-content ui-corner-all"/>
         </fieldset>
     </form>
 </div>

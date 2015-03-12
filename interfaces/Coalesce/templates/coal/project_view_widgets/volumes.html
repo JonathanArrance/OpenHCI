@@ -9,6 +9,7 @@
             </div>
 
             Volume Storage
+
             <div style="float:right">
                 <a href="#" id="create-volume" class="btn" style="float:right">Create</a>
             </div>
@@ -53,9 +54,13 @@
                         <a href="#" class="detach-volume">detach</a>
                         {% else %}
                         <a href="#" class="attach-volume">attach</a>
+                        {% endif %}
+                        <span class="volume-actions-pipe"> | </span>
+                        <a href="#" class="clone-volume">clone</a>
+                        <span class="volume-actions-pipe"> | </span>
+                        <a href="#" class="revert-volume">revert</a>
                         <span class="volume-actions-pipe"> | </span>
                         <a href="#" class="delete-volume">delete</a>
-                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -72,7 +77,7 @@
 </div>
 
 <div id="volume-dialog-form" title="Create Volume">
-    <p class="validateTips">Create a new volume. All form fields are required.</p>
+    <p class="validateTips">Create a new volume. Volume name and size are required.</p>
 
     <form>
         {% csrf_token %}
@@ -96,6 +101,39 @@
                 <option value="ssd">ssd</option>
                 <option value="spindle">spindle</option>
             </select>
+        </fieldset>
+    </form>
+</div>
+
+<div id="volume-clone-form" title="Clone Volume">
+    <p class="validateTips">Clone <span class="volume-name"></span>?</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="clone_volume_name">Volume Name</label>
+            <input type="text" name="clone_volume_name" id="clone_volume_name"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+            <label for="clone_description">Description</label>
+            <input type="text" name="clone_description" id="clone_description"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+        </fieldset>
+    </form>
+</div>
+
+<div id="volume-revert-form" title="Revert Volume">
+    <p class="validateTips">Revert <span class="volume-name"></span> from snapshot.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="revert_volume_name">Volume Name</label>
+            <input type="text" name="revert_volume_name" id="revert_volume_name"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+            <label for="revert_snapshot_name">Snapshot</label>
+            <select name="revert_snapshot_name" id="revert_snapshot_name"></select>
         </fieldset>
     </form>
 </div>

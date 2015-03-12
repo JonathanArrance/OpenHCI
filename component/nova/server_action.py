@@ -636,6 +636,7 @@ class server_actions:
                          - snapshot_description - OP
         OUTPUT: r_dict - snapshot_name
                        - snapshot_id
+                       - instance_id
         ACCESS: Cloud Admin - can snashot any vm
                 PU - snapshot only vms in thei project
                 User - snapshot only the vms they own
@@ -675,7 +676,7 @@ class server_actions:
             logger.sys_error('The current user can not perform the backup operation.')
             raise Exception('The current user can not perform the backup operation.')
 
-        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == '')):
+        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == 'none')):
             snap_dict['snapshot_name'] = server[0][0] + '_snapshot'
 
         if (('snapshot_description' not in snap_dict) or (snap_dict['snapshot_description'] == '')):
@@ -715,7 +716,7 @@ class server_actions:
             try:
                 #insert the volume info into the DB
                 self.db.pg_transaction_begin()
-                insert_snap = {"name": snap_dict['snapshot_name'],"type": 'snapshot',"inst_id": snap_dict['server_id'],"create_date":datetime.date.today(),"snap_id": snap_id[6],"project_id": snap_dict['project_id'],'description':snap_dict['snapshot_description']}
+                insert_snap = {"name": snap_dict['snapshot_name'],"type": 'snapshot',"inst_id": snap_dict['server_id'],"create_date":datetime.date.today(),"snap_id": snap_id[6],"project_id": snap_dict['project_id'],'description':snap_dict['snapshot_description'],'user_id':self.user_id}
                 self.db.pg_insert("trans_inst_snaps",insert_snap)
             except:
                 self.db.pg_transaction_rollback()
@@ -723,7 +724,7 @@ class server_actions:
             else:
                 self.db.pg_transaction_commit()
                 self.db.pg_close_connection()
-                r_dict = {"snapshot_name": snap_dict['snapshot_name'],"snapshot_id": snap_id[6]}
+                r_dict = {"snapshot_name": snap_dict['snapshot_name'],"snapshot_id": snap_id[6], "instance_id": snap_dict['server_id']}
                 return r_dict
         else:
             nova_ec.error_codes(rest)
@@ -741,7 +742,53 @@ class server_actions:
               you will have to snapshot the environment in order to capture it.
         """
         delete = self.glance.delete_image(image_id)
+
+        try:
+            self.db.pg_transaction_begin()
+            del_dict = {"table":'trans_inst_snaps',"where":"snap_id='%s'" %(image_id)}
+            self.db.pg_delete(del_dict)
+        except:
+            self.db.pg_transaction_rollback()
+            logger.sql_error('Could not remove image %s from Transcirrus DB.'%(image_id))
+            raise Exception('Could not remove image %s from Transcirrus DB.'%(image_id))
+        else:
+            self.db.pg_transaction_commit()
         return delete
+
+    def list_instance_snaps(self,instance_id):
+        """
+        DESC: List the snapshots for a specific instance
+        INPUT: instance_id
+        OUTPUT: array of r_dict - snapshot_id
+                                - snapshot_name
+                                - instance_id
+                                - project_id
+        ACCESS: Admin- get all instance snapshot info
+                PU - get snapshot info for instance snaps in their project
+                user - get info for the snaps they own
+        NOTE:
+        """
+
+        if(self.user_level == 1):
+            self.get_inst_snap = {'select':'snap_id,name,project_id','from':'trans_inst_snaps','where':"inst_id='%s'"%(instance_id), 'and':"project_id='%s'"%(self.project_id)}
+        elif(self.user_level == 2):
+            self.get_inst_snap = {'select':'snap_id,name,project_id','from':'trans_inst_snaps','where':"inst_id='%s'"%(instance_id), 'and':"user_id='%s'"%(self.user_id)}
+        elif(self.user_level == 0):
+            self.get_inst_snap = {'select':'snap_id,name,project_id','from':'trans_inst_snaps','where':"inst_id='%s'"%(instance_id)}
+
+        try:
+            snapshots = self.db.pg_select(self.get_inst_snap)
+        except:
+            logger.sys_error('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
+            raise Exception('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
+
+        r_array = []
+        for snap in snapshots:
+            print snap
+            r_dict ={'snapshot_id':snap[0],'snapshot_name':snap[1], 'instance_id': instance_id, 'project_id':snap[2]}
+            r_array.append(r_dict)
+
+        return r_array
 
     def get_instance_snap_info(self,input_dict):
         """
@@ -754,6 +801,7 @@ class server_actions:
                        - snapshot_name
                        - description
                        - date_created
+                       - type
         ACCESS: Admin- get all instance snapshot info
                 PU - get snapshot info for instance snaps in their project
                 user - get info for the snaps they own
@@ -779,7 +827,7 @@ class server_actions:
             logger.sys_error('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
             raise Exception('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
 
-        r_dict = {'instance_id':inst_snapshot[0][1],'snapshot_id':inst_snapshot[0][2],'project_id':inst_snapshot[0][3],'snapshot_name':inst_snapshot[0][4],'description':inst_snapshot[0][6],'date_created':inst_snapshot[0][7]}
+        r_dict = {'instance_id':inst_snapshot[0][3],'snapshot_id':inst_snapshot[0][5],'project_id':inst_snapshot[0][6],'snapshot_name':inst_snapshot[0][1],'description':inst_snapshot[0][7],'date_created':inst_snapshot[0][4],'type':inst_snapshot[0][2]}
 
         return r_dict
 

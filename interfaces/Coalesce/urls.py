@@ -13,7 +13,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
 
         url(r'^$',
-            'coalesce.coal_beta.views.welcome',
+            'coalesce.coal_beta.views.stats',
             name='home'),
 
         url(r'^welcome/$',
@@ -27,10 +27,6 @@ urlpatterns = patterns('',
         url(r'^terms-of-use/$',
             'coalesce.coal_beta.views.terms_of_use',
             name='terms-of-use'),
-
-        url(r'^config_e_series/$',
-            'coalesce.coal_beta.views.config_e_series',
-            name='config_e_series'),
 
         url(r'^disclaimer/$',
             'coalesce.coal_beta.views.disclaimer',
@@ -179,6 +175,14 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.delete_image',
             name='delete_image'),
 
+	url(r'^create_instance_snapshot/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<snapshot_name>[^/]+)/(?P<snapshot_description>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_instance_snapshot',
+            name='create_instance_snapshot'),
+
+	url(r'^revert_instance_snapshot/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.revert_instance_snapshot',
+            name='revert_instance_snapshot'),
+
 	# --- Floating IPs ----
 
 	url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
@@ -222,6 +226,18 @@ urlpatterns = patterns('',
 	    url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.delete_volume',
             name='delete_volume'),
+
+	    url(r'^create_vol_from_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/(?P<description>[^/]+)/$',
+        'coalesce.coal_beta.views.create_vol_from_snapshot',
+            name='create_vol_from_snapshot'),
+
+	    url(r'^create_vol_clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/(?P<description>[^/]+)/$',
+        'coalesce.coal_beta.views.create_vol_clone',
+            name='create_vol_clone'),
+
+	    url(r'^revert_volume_snapshot/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.revert_volume_snapshot',
+            name='revert_volume_snapshot'),
 
 	# --- Snapshots ----
 

@@ -5103,6 +5103,7 @@ th > small {
     min-width: 16px;
     background-image: url('../images/ajax-loader.gif');
     background-repeat: no-repeat;
+    margin: 0 auto;
 }
 
 .progressbar {
@@ -5235,11 +5236,8 @@ th > small {
 .widget-console {
     width: 720px;
     height: 434px;
-}
-
-.widget-console-well {
-    width: 720px;
-    height: 461px;
+    margin: 0 auto;
+    display: block;
 }
 
 .page-header {

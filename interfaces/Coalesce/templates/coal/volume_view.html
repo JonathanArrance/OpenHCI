@@ -87,6 +87,10 @@
                     <th>Project Id</th>
                     <td id="volume-project">{{current_project_id}}</td>
                 </tr>
+                <tr>
+                    <th>Project Id</th>
+                    <td id="volume-project">{{current_project_id}}</td>
+                </tr>
             </table>
         </div>
     </div>
@@ -112,6 +116,13 @@
                 {% endif %}
                 {% endfor %}
             </table>
+            <script>
+                $(function () {
+                    if ($('#volume_list tr').length < 2) {
+                        $('#volume_list').append("<tr><td>This volume does not have any snapshots.</td><td></td></tr>").fadeIn();
+                    }
+                });
+            </script>
         </div>
     </div>
     {% endif %}

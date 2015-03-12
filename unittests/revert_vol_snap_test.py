@@ -10,7 +10,7 @@ from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
 auth = authorization("admin","password")
 b = auth.get_auth()
 
-input_dict = {'snapshot_id': '52bcdaed-b05d-4fa2-a341-500f00dcff2e','volume_id': '58201843-b421-47d7-86a8-cf76e4c42a5d','project_id':'d4b29af44660474da7d5f884ec107f76'}
+input_dict = {'snapshot_id': 'c4486248-d6e1-44f1-8378-3d4a22434a92','volume_id': '5753992f-0c6f-4201-ac3c-3b36a0501b97','project_id':'57944987bd224ac497534f6c875553f9'}
 
 yo = revert_vol_snap(input_dict,b)
 
