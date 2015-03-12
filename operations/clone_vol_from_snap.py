@@ -16,6 +16,9 @@ def clone_volume(input_dict,auth_dict):
     All user levels can spin up new volumes.
     INPUTS: input_dict - volume_id - REQ
                        - project_id - REQ
+                       - snapshot_id - REQ
+                       - clone_type - REQ (ssd/spindle)
+                       - clone_name - OP
             auth_dict - authentication dictionary
     OUTPUTS: r_dict - clone_name
                     - clone_id
@@ -31,6 +34,25 @@ def clone_volume(input_dict,auth_dict):
     if(auth_dict['status_level'] < 2):
         raise Exception("Invalid status level passed for user: %s" %(auth_dict['username']))
 
+    #connect to the DB
+    get_clone_info = {'volume_id':input_dict['volume_id'],'project_id':input_dict['project_id'],'user_id':auth_dict['user_id'],'user_level':auth_dict['user_level']}
+    clone_info = _get_clone_info(get_clone_info)
+
+    #If vol is not attached
+    volume_clone_input = {}
+    #    vol create with the source-volid flag in cinder create
+
+    # If vol is attached to vm
+    #    1. snapshot the volume if attached force
+    #    2. create a new volume with the clone vol name
+
+    #If clone from exisitng snap
+    #    vol create with the --snapshot-id flag
+
+
+    
+
+def _get_clone_info(input_dict):
     #connect to the DB
     db = util.db_connect()
 
@@ -49,6 +71,14 @@ def clone_volume(input_dict,auth_dict):
         logger.sql_error('Could not retrieve the volume info needed to create clone.')
         raise Exception('Could not retrieve the volume info needed to create clone.')
 
-    #If vol is not attached
-    volume_clone_input = {}
-    #    vol create with the source-volid flag in cinder create
+    #get the snapshot based on the snaphot_id and the volume id
+    try:
+        get_snap = {'select':'*','from':'trans_system_snapshots','where':"vol_id='%s'"%(vol_info[0][0]),'and':"proj_id='%s'"%(input_dict['project_id'])}
+        snap_info = db.pg_select(get_snap)
+    except:
+        logger.sql_error('Could not retrieve the volume snapshot info needed to create clone.')
+        raise Exception('Could not retrieve the volume snapshot info needed to create clone.')
+
+    r_dict = {'vol_info':vol_info,'snap_info':snap_info}
+
+    return r_dict
