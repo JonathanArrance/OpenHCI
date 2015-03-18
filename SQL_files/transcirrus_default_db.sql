@@ -2379,6 +2379,36 @@ INSERT INTO trans_service_settings VALUES ('neutron             ', 9696, NULL, '
 -- Data for Name: trans_subnets; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
+--
+-- TOC entry 214 (class 1259 OID 30578)
+-- Name: trans_system_clones; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE trans_system_clones (
+    clone_vol_id character varying NOT NULL,
+    source_vol_id character varying,
+    user_id character varying,
+    project_id character varying,
+    clone_name character varying,
+    clone_desc character varying
+);
+
+
+ALTER TABLE public.trans_system_clones OWNER TO transuser;
+
+--
+-- TOC entry 1997 (class 0 OID 30578)
+-- Dependencies: 214
+-- Data for Name: trans_system_clones; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+--
+-- TOC entry 1996 (class 2606 OID 30585)
+-- Name: trans_system_clones_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_system_clones
+    ADD CONSTRAINT trans_system_clones_pkey PRIMARY KEY (clone_vol_id);
 
 
 --
