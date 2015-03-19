@@ -27,11 +27,11 @@ back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'b
 yo = sa.create_instance_backup(back_image)
 print yo
 
-'''
+
 snap_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','snapshot_description':'This a test1'}
 yo = sa.create_instance_snapshot(snap_image)
 print yo
-'''
+
 auth2 = authorization("bill","test")
 #get the user dict
 perms2 = auth2.get_auth()
@@ -62,14 +62,14 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        'mount_point': '/dev/vdc'
        }
 yo = store2.attach_vol_to_server(inp)
-
-inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
-       'instance_id':"8ea76508-29f3-4d7e-957e-b2f9c90f2027",
-       'volume_id':"ed16222b-8971-445a-88c6-2aacca0e9c78",
+'''
+inp = {'project_id':"d4b29af44660474da7d5f884ec107f76",
+       'instance_id':"e2cb3662-c42f-4299-b00e-851e99a67367",
+       'volume_id':"1c01b26b-66d1-4ca2-ac34-ab24d2a9f18d",
        'mount_point': '/dev/vdc'
        }
 yo = store.attach_vol_to_server(inp)
-
+'''
 input_dict = {'project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1','zone':'nova'}
 yo = action.list_compute_hosts(input_dict)
 print yo
