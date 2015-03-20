@@ -1,58 +1,63 @@
 <!-- Begin Key Pairs widget-->
 <div class="span4">
-    <div class="well widget">
+    <div class="well user-well">
         <div class="legend">
+
+            <div id="keypair_progressbar" class="ui-progressbar progressbar">
+                <span class="progressbar-text">Working</span>
+            </div>
+
             Key Pairs
 
             <a href="#" id="create-keypair" class="btn" style="float:right">Create</a>
         </div>
 
-        <div id="keypair-dialog-form" title="Create Key Pair">
-            <p class="validateTips">Enter a name for the key pair.</p>
-
-            <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="name">Key Pair Name</label>
-                    <input type="text" name="key_name" id="key_name" class="text ui-widget-content ui-corner-all"/>
-                </fieldset>
-            </form>
+        <div class="well-tall user-table">
+            <table id="keypair_list" class="paleblue widget-table table-tall">
+                <tr>
+                    <th>Key Name</th>
+                    <th>Owner</th>
+                    <th>Actions</th>
+                </tr>
+                {% if sec_keys %}
+                {% for key in sec_keys %}
+                <tr id="{{ key.key_id }}">
+                    <td id="{{ key.key_id }}-name-cell">
+                        <a href="/key_pair/{{ key.key_id }}/{{ project.project_id }}/view/" class="disable-link">
+                            <span id="{{ key.key_id }}-name-text">{{ key.key_name }}</span></a>
+                    </td>
+                    <td id="{{ key.key_id }}-user-cell">
+                        <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
+                    </td>
+                    <td id="{{ key.key_id }}-actions-cell">
+                        <a href="#" class="delete-keypair">delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr id="keypair_placeholder">
+                    <td><p><i>You have no keys defined</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endif %}
+            </table>
         </div>
-
-        <div id="keypair-delete-confirm-form" title="Delete Keypair">
-            <p style="text-align:center;">Delete <span class="keypair-name"></span>?</p>
-        </div>
-
-        <table id="keypair_list" class="paleblue widget-table">
-            <tr>
-                <th>Key Name</th>
-                <th>Owner</th>
-                <th>Actions</th>
-            </tr>
-            {% if sec_keys %}
-            {% for key in sec_keys %}
-            <tr id="{{ key.key_id }}">
-                <td id="{{ key.key_id }}-name-cell">
-                    <a href="/key_pair/{{ key.key_id }}/{{ project.project_id }}/view/" class="disable-link">
-                        <span id="{{ key.key_id }}-name-text">{{ key.key_name }}</span></a>
-                </td>
-                <td id="{{ key.key_id }}-user-cell">
-                    <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
-                </td>
-                <td id="{{ key.key_id }}-actions-cell">
-                    <a href="#" class="delete-keypair">delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr id="keypair_placeholder">
-                <td><p><i>You have no keys defined</i></p></td>
-                <td></td>
-                <td></td>
-            </tr>
-            {% endif %}
-        </table>
-        <div id="keypair_progressbar" class="ui-progressbar"
-             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
     </div>
+</div>
+
+<div id="keypair-dialog-form" title="Create Key Pair">
+    <p class="validateTips">Enter a name for the key pair.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="name">Key Pair Name</label>
+            <input type="text" name="key_name" id="key_name" class="text ui-widget-content ui-corner-all"/>
+        </fieldset>
+    </form>
+</div>
+
+<div id="keypair-delete-confirm-form" title="Delete Keypair">
+    <p style="text-align:center;">Delete <span class="keypair-name"></span>?</p>
 </div>

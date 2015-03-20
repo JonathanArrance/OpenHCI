@@ -29,6 +29,17 @@ $(document).on('click', '#refresh-console', function () {
 // CSRF
 // ---------------- //
 
+var csrftoken = getCookie('csrftoken');
+
+$.ajaxSetup({
+    crossDomain: false, // obviates need for sameOrigin test
+    beforeSend: function (xhr, settings) {
+        if (!csrfSafeMethod(settings.type)) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
@@ -474,7 +485,38 @@ function addToSelect(value, option, select, hashTable) {
     hashTable.setItem(value, { value: value, option: option });
     refreshSelect(select, hashTable);
 }
+
 // --- INSTANCE MANAGEMENT
+
+var instanceManagementHidden = false;
+
+$(function () {
+    $("#instance-management").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        $(".instance-management-well").each(function (input, element) {
+            if (!$(element).hasClass("well-hidden")) {
+                instanceManagementHidden = false;
+            }
+        });
+
+        if (instanceManagementHidden) {
+
+            $(".instance-management-table").show(0);
+            $(".instance-management-well").removeClass("well-hidden");
+            $("#instance-management-icon").text("-");
+            instanceManagementHidden = false;
+        } else {
+
+            $(".instance-management-table").hide(0);
+            $(".instance-management-well").addClass("well-hidden");
+            $("#instance-management-icon").text("+");
+            instanceManagementHidden = true;
+        }
+    });
+});
 
 var instances = new HashTable(),
     instanceOpts = new HashTable(),
@@ -499,6 +541,36 @@ $(function () {
 });
 
 // --- STORAGE
+
+var storageHidden = false;
+
+$(function () {
+    $("#storage").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        $(".storage-well").each(function (input, element) {
+            if (!$(element).hasClass("well-hidden")) {
+                storageHidden = false;
+            }
+        });
+
+        if (storageHidden) {
+
+            $(".storage-table").show(0);
+            $(".storage-well").removeClass("well-hidden");
+            $("#storage-icon").text("-");
+            storageHidden = false;
+        } else {
+
+            $(".storage-table").hide(0);
+            $(".storage-well").addClass("well-hidden");
+            $("#storage-icon").text("+");
+            storageHidden = true;
+        }
+    });
+});
 
 var volumes = new HashTable(),
     totalStorage = 0,
@@ -545,6 +617,36 @@ function updateStorageBar() {
 
 // --- SOFTWARE DEFINED NETWORKS
 
+var sdnHidden = false;
+
+$(function () {
+    $("#software-defined-networking").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        $(".sdn-well").each(function (input, element) {
+            if (!$(element).hasClass("well-hidden")) {
+                sdnHidden = false;
+            }
+        });
+
+        if (sdnHidden) {
+
+            $(".sdn-table").show(0);
+            $(".sdn-well").removeClass("well-hidden");
+            $("#sdn-icon").text("-");
+            sdnHidden = false;
+        } else {
+
+            $(".sdn-table").hide(0);
+            $(".sdn-well").addClass("well-hidden");
+            $("#sdn-icon").text("+");
+            sdnHidden = true;
+        }
+    });
+});
+
 var routers = new HashTable(),
     privNetRoutOpts = new HashTable(),
     privateNetworks = new HashTable();
@@ -563,6 +665,36 @@ $(function () {
 });
 
 // --- USERS/SECURITY
+
+var usersSecurityHidden = false;
+
+$(function () {
+    $("#users-security").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        $(".user-well").each(function (input, element) {
+            if (!$(element).hasClass("well-hidden")) {
+                usersSecurityHidden = false;
+            }
+        });
+
+        if (usersSecurityHidden) {
+
+            $(".user-table").show(0);
+            $(".user-well").removeClass("well-hidden");
+            $("#user-security-icon").text("-");
+            usersSecurityHidden = false;
+        } else {
+
+            $(".user-table").hide(0);
+            $(".user-well").addClass("well-hidden");
+            $("#user-security-icon").text("+");
+            usersSecurityHidden = true;
+        }
+    });
+});
 
 var users = new HashTable(),
     usernames = new HashTable(),
@@ -608,11 +740,11 @@ function getSecGroupPorts() {
         }
     }
 
-    tcpPorts.sort(function(a, b) {
+    tcpPorts.sort(function (a, b) {
         return a - b;
     });
 
-    udpPorts.sort(function(a, b) {
+    udpPorts.sort(function (a, b) {
         return a - b;
     });
 }

@@ -46,8 +46,9 @@
         <!-- Masthead ================================================== -->
         <header id="overview">
             <div class="row-fluid">
-                    <img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png" alt="TransCirrus"
-                         width="205px!important" height="110px!important" style="float:left; margin-left: 20px;">
+                <a href="/welcome"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png" alt="TransCirrus"
+                     width="205px!important" height="110px!important" style="float:left; margin-left: 20px;"></a>
+
                 <div class="span5">
                     <h1 class="page-header">{% block title %}OVERRIDE THIS{% endblock %}</h1>
                 </div>
@@ -62,23 +63,24 @@
                         <li><a href={% url 'home' %}>{{username}}</a></li>
 
                         {% block navigation %}
-                            {% if project_id %}
-                                {% if user_level == 0 %}
-                                    {% if first_time == 'TRUE' %}
-                                        <li><a href="/setup">Run Setup</a></li>
-                                    {% else %}
-                                        <li><a href="/cloud/manage">Cloud Management</a></li>
-                                    {% endif %}
-                                {% elif user_level == 1 %}
-                                    <li><a href="/projects/{{project_id}}/pu_project_view">My Project</a></li>
-                                {% else %}
-                                    <li><a href="/projects/{{project_id}}/basic_project_view">My Project</a></li>
-                                {% endif %}
-                            {% endif %}
+                        {% if project_id %}
+                        {% if user_level == 0 %}
+                        {% if first_time == 'TRUE' %}
+                        <li><a href="/setup">Run Setup</a></li>
+                        {% else %}
+                        <li><a href="/cloud/manage">Cloud Management</a></li>
+                        {% endif %}
+                        <!--<li><a href="/config_e_series">Configure E Series</a></li>-->
+                        {% elif user_level == 1 %}
+                        <li><a href="/projects/{{project_id}}/pu_project_view">My Project</a></li>
+                        {% else %}
+                        <li><a href="/projects/{{project_id}}/basic_project_view">My Project</a></li>
+                        {% endif %}
+                        {% endif %}
                         {% endblock %}
 
                         {% if token %}
-                            <li><a href={% url 'logout' %}>Log Out</a></li>
+                        <li><a href={% url 'logout' %}>Log Out</a></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -93,8 +95,7 @@
     <p></p>
     <ul class="messages" id="warning-messages" onclick="clearMessage()">
         {% for message in messages %}
-        <li
-        {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide message)</li>
+        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide message)</li>
         {% endfor %}
     </ul>
     {% endif %}
