@@ -16,6 +16,7 @@ import transcirrus.common.config as config
 import transcirrus.common.util as util
 
 from transcirrus.component.nova.flavor import flavor_ops
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
@@ -93,6 +94,8 @@ class server_actions:
         #call flavor ops
         self.flavor = flavor_ops(user_dict)
         self.datetime = datetime.date.today()
+
+        self.glance = glance_ops(user_dict)
 
     #DESC: used to clean up after the server class
     #INPUT: self object
@@ -724,6 +727,61 @@ class server_actions:
                 return r_dict
         else:
             nova_ec.error_codes(rest)
+
+    def delete_instance_snapshot(self,image_id):
+        """
+        DESC: This will create a new instance snapshot.
+        INPUT: snap_dict - image_id - REQ
+        OUTPUT: OK
+                ERROR
+        ACCESS: Cloud Admin - can delete any snapshot
+                PU - can delete any snapshot in their project
+                User - can only delete snapshots they own.
+        NOTE: Any volumes that are attached to the instance will not be snapped,
+              you will have to snapshot the environment in order to capture it.
+        """
+        delete = self.glance.delete_image(image_id)
+        return delete
+
+    def get_instance_snap_info(self,input_dict):
+        """
+        DESC: Get the instance snapshot info
+        INPUT: input_dict - snapshot_id
+                          - project_id
+        OUTPUT: r_dict - instance_id
+                       - snapshot_id
+                       - project_id
+                       - snapshot_name
+                       - description
+                       - date_created
+        ACCESS: Admin- get all instance snapshot info
+                PU - get snapshot info for instance snaps in their project
+                user - get info for the snaps they own
+        NOTE:
+        """
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        if(self.user_level == 1):
+            self.get_inst_snap = {'select':'*','from':'trans_inst_snaps','where':"snap_id='%s'"%(input_dict['snapshot_id']), 'and':"project_id='%s'"%(self.project_id)}
+        elif(self.user_level == 2):
+            self.get_inst_snap = {'select':'*','from':'trans_inst_snaps','where':"snap_id='%s'"%(input_dict['snapshot_id']), 'and':"user_id='%s'"%(self.user_id)}
+        elif(self.user_level == 0):
+            self.get_inst_snap = {'select':'*','from':'trans_inst_snaps','where':"snap_id='%s'"%(input_dict['snapshot_id']), 'and':"project_id='%s'"%(input_dict['project_id'])}
+
+        try:
+            inst_snapshot = self.db.pg_select(self.get_inst_snap)
+        except:
+            logger.sys_error('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
+            raise Exception('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
+
+        r_dict = {'instance_id':inst_snapshot[0][1],'snapshot_id':inst_snapshot[0][2],'project_id':inst_snapshot[0][3],'snapshot_name':inst_snapshot[0][4],'description':inst_snapshot[0][6],'date_created':inst_snapshot[0][7]}
+
+        return r_dict
 
     def create_instance_backup(self,backup_dict):
         """

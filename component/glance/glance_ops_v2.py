@@ -288,7 +288,7 @@ class glance_ops:
             load = json.loads(rest['data'])
             img_array = []
             for image in load['images']:
-                line = {"image_name": str(image['name']), "image_id": str(image['id'])}
+                line = {"image_name": str(image['name']), "image_id": str(image['id']), "user_id": str(image['owner'])}
                 img_array.append(line)
             return img_array
         else:
@@ -301,6 +301,7 @@ class glance_ops:
         INPUT: image_id
         OUTPUT: r_dict - image_name
                        - image_id
+                       - user_id
                        - status
                        - visibility
                        - size
@@ -339,7 +340,7 @@ class glance_ops:
         if((rest['response'] == 200)):
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
+            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])

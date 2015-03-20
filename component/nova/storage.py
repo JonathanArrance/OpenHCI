@@ -300,6 +300,51 @@ class server_storage_ops:
 
         return "OK"
 
+    def list_attached_vols(self,input_dict):
+        """
+        DESC: List the volumes that are attached to the instance
+        INPUT: input_dict - instance_id
+                          - project_id
+        OUTPUT: array of r_dict - vol_id
+                                - vol_name
+                                - vol_size
+                                - vol_mount_location
+        ACCESS: Admin - List volumes attached to any instance
+                PU - List vols attahed to any instance in their project
+                User - List volumes attached to instances they own
+        NOTE: All veriables are rquiered. Admins and power users can detach a volume from any instance in their project. Users
+              can only remove volumes from instances they own.
+        """
+        for key, val in input_dict.items():
+            #skip over these
+            if(val == ""):
+                logger.sys_error("The value %s was left blank" %(val))
+                raise Exception("The value %s was left blank" %(val))
+            if(key not in input_dict):
+                logger.sys_error("Volume attached info not specified")
+                raise Exception ("Volume attached info not specified")
+
+        if(self.is_admin == 0):
+            if(self.user_level == 1):
+                self.select_att = {'select':'vol_id,vol_name,vol_size,vol_mount_location','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(input_dict['instance_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            elif(self.is_admin == 2):
+                self.select_att = {'select':'vol_id,vol_name,vol_size,vol_mount_location','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(input_dict['instance_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
+        else:
+            self.select_att = {'select':'vol_id,vol_name,vol_size,vol_mount_location','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(input_dict['instance_id'])}
+
+        #check if the snapshot exists in the project and that the user can use it
+        try:
+            get_att = self.db.pg_select(self.select_att)
+        except:
+            logger.sys_error("The snapshot does not exist in this project, or you may not have permission to use it.")
+            raise Exception("The snapshot does not exist in this project, or you may not have permission to use it.")
+
+        r_array = []
+        for att in get_att:
+            r_dict = {'vol_id':att[0],'vol_name':att[1],'vol_size':att[2],'vol_mount_location':att[3]}
+            r_array.append(r_dict)
+        return r_array
+
     def find_available_mountpoint(self,used_list):
         """
         DESC: Find the first available mount point based on the given list of used mountpoints.

@@ -23,14 +23,31 @@ nova = server_ops(perms)
 action = server_admin_actions(perms)
 sa = server_actions(perms)
 '''
+input_dict = {'instance_id':'e2cb3662-c42f-4299-b00e-851e99a67367','project_id':'d4b29af44660474da7d5f884ec107f76'}
+yo = store.list_attached_vols(input_dict)
+
+print yo
+
+print '---------------'
+
+server_input = {'server_id':input_dict['instance_id'],'project_id':input_dict['project_id']}
+inst_info = nova.get_server(server_input)
+
+print inst_info
+
 back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
 yo = sa.create_instance_backup(back_image)
 print yo
 
-
-snap_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','snapshot_description':'This a test1'}
+'''
+snap_image = {'server_id':'e7485ba5-9ef7-4653-9012-21176d6d247a','project_id':'d4b29af44660474da7d5f884ec107f76','snapshot_description':'This a test1'}
 yo = sa.create_instance_snapshot(snap_image)
 print yo
+'''
+time.sleep(30)
+
+doop = sa.delete_instance_snapshot(yo['snapshot_id'])
+print doop
 
 auth2 = authorization("bill","test")
 #get the user dict
@@ -62,14 +79,14 @@ inp = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",
        'mount_point': '/dev/vdc'
        }
 yo = store2.attach_vol_to_server(inp)
-'''
+
 inp = {'project_id':"d4b29af44660474da7d5f884ec107f76",
        'instance_id':"e2cb3662-c42f-4299-b00e-851e99a67367",
        'volume_id':"1c01b26b-66d1-4ca2-ac34-ab24d2a9f18d",
        'mount_point': '/dev/vdc'
        }
 yo = store.attach_vol_to_server(inp)
-'''
+
 input_dict = {'project_id':'a4bff7fc3ff34a5787a711bdfec5fbc1','zone':'nova'}
 yo = action.list_compute_hosts(input_dict)
 print yo
@@ -90,25 +107,28 @@ server = {'sec_group_name':'project1','avail_zone':'nova','amount':'1','sec_key_
 yo = nova.create_server(server)
 print yo
 
+
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
 print "---------------------------------------"
 time.sleep(2)
 
-print "Get the info for the virtual instances in the database."
-for serv in serv_list:
-    get_server = nova.get_server(serv['server_id'])
-    print get_server
-print "---------------------------------------"
-time.sleep(2)
+#print "Get the info for the virtual instances in the database."
+#for serv in serv_list:
+
+get_server = nova.get_server(serv['server_id'])
+print get_server
+#print "---------------------------------------"
+#time.sleep(2)
 
 print "Get the info for the virtual instances 2nd time in the database."
 for serv in serv_list:
 
-input_dict = {'server_id':'57f1ebfb-f476-49e6-9083-87ade1dca73b','project_id':'84d3e074012a42ce919771c503993f4e'}
+input_dict = {'server_id':'e2cb3662-c42f-4299-b00e-851e99a67367','project_id':'d4b29af44660474da7d5f884ec107f76'}
 get_server = nova.get_server(input_dict)
 print get_server
+
 exit
 
 print "---------------------------------------"
