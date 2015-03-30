@@ -79,6 +79,7 @@ class snapshot_ops:
                           - snapshot_desc - description - REQ
                           - project_id - project volume lives in - REQ
                           - volume_id - volume to snap - REQ
+                          - force - force snapshot of in-use vol (True/False) - op
         OUTPUT: r_dict - snapshot_name
                        - snapshot_id
                        - volume_id
@@ -92,6 +93,10 @@ class snapshot_ops:
         if(('snapshot_name' not in create_snap) or ('snapshot_desc' not in create_snap) or ('project_id' not in create_snap) or ('volume_id' not in create_snap)):
             logger.sys_error("Did not pass required params to create snapshot operation.")
             raise Exception("Did not pass required params to create snapshot operation.")
+
+        if(('force' not in create_snap) or (create_snap['force'] == '')):
+            create_snap['force'] = 'False'
+
         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to snapshot volumes.")
@@ -145,38 +150,38 @@ class snapshot_ops:
             raise Exception("Could not get the volume name from Transcirrus DB.")
 
         if(snap_status == 1):
-            #connect to the API
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":create_snap['project_id']}
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(create_snap['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,create_snap['project_id'])
                 api = caller(api_dict)
             except:
-                logger.sys_error("Could not connect to the Keystone API")
-                raise Exception("Could not connect to the Keystone API")
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
 
             try:
             #add the new user to openstack 
-                body = '{"snapshot": {"display_name": "%s", "force": false, "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snapshot_name'],create_snap['snapshot_desc'],create_snap['volume_id'])
+                body = '{"snapshot": {"display_name": "%s", "force": "%s", "display_description": "%s", "volume_id": "%s"}}' %(create_snap['snapshot_name'],create_snap['force'],create_snap['snapshot_desc'],create_snap['volume_id'])
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
                 function = 'POST'
-                api_path = '/v1/%s/snapshots' %(create_snap['project_id'])
+                api_path = '/v2/%s/snapshots' %(create_snap['project_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
-                print rest
                 r_dict = ""
             except Exception as e:
                 logger.sys_error("Volume snapshot %s may or may not have been created." %(create_snap['snapshot_name']))
                 raise e
 
-            if(rest['response'] == 200):
+            if(rest['response'] == 202):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snapshot_name'],"snap_desc": create_snap['snapshot_desc']}
+                    insert_snap = {"snap_id": load['snapshot']['id'],"vol_id": load['snapshot']['volume_id'],"proj_id": create_snap['project_id'],"snap_name": create_snap['snapshot_name'],"snap_desc": create_snap['snapshot_desc'],"user_id":self.user_id}
                     self.db.pg_insert("trans_system_snapshots",insert_snap)
                 except:
                     self.db.pg_transaction_rollback()
@@ -278,7 +283,7 @@ class snapshot_ops:
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
                 function = 'DELETE'
-                api_path = '/v1/%s/snapshots/%s' %(input_dict['project_id'],snap_info['snapshot_id'])
+                api_path = '/v2/%s/snapshots/%s' %(input_dict['project_id'],snap_info['snapshot_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -358,6 +363,57 @@ class snapshot_ops:
         self.db.pg_close_connection()
         return r_array
 
+    '''
+    def list_vol_snapshots(self,project_id=None):
+        """
+        DESC: List all of the snapshots in a project
+        INPUT: None
+        OUTPUT: array of r_dict - volume_name
+                                - volume_id
+                                - snapshot_name
+                                - snapshot_id
+        ACCESS: Admins can list snapshots in any project, users and power users can list snapshots in their
+                project only.
+        NOTE: This will only list out the snapshots that are for volume in the users project. All users
+              can list the snapshots
+        """
+        logger.sys_info('\n**List volume snapshots. Component: Cinder Def: list_snapshots**\n')
+        #connect to the transcirrus DB
+        try:
+            #connect to the transcirrus db
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sql_error("Could not connect to the Transcirrus DB ")
+            raise e
+
+        try:
+            select_snap = None
+            if(self.is_admin == 1):
+                if(project_id):
+                    select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(project_id)}
+                else:
+                    select_snap = {'select':"*",'from':"trans_system_snapshots"}
+            else:
+                select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(self.project_id)}
+            snaps = self.db.pg_select(select_snap)
+        except:
+            logger.sys_error("Could not list snapshots.")
+            raise Exception("Could not list snapshots.")
+
+        r_array = []
+        for snap in snaps:
+            try:
+                select_vol = {'select':"vol_name",'from':"trans_system_vols",'where':"vol_id='%s'"%(snap[1])}
+                vol_name = self.db.pg_select(select_vol)
+            except:
+                logger.sys_error("Could not get the volume name.")
+                raise Exception("Could not get the volume name.")
+            snap_dict = {"volume_name":vol_name[0][0],"volume_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
+            r_array.append(snap_dict)
+
+        self.db.pg_close_connection()
+        return r_array
+    '''
     def get_snapshot(self,snapshot_id):
         """
         DESC: Get the details of a specific snapshot
@@ -368,6 +424,7 @@ class snapshot_ops:
                 volume_id
                 create_time
                 snapshot_name
+                project_id
         ACCESS: Admins can get snapshots in any project, users and power users can get snapshots in their
                 project only
         NOTE: This need to be changed to incorporate project_id
@@ -441,7 +498,7 @@ class snapshot_ops:
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
                 function = 'GET'
-                api_path = '/v1/%s/snapshots/%s' %(proj_id[0][0],snapshot_id)
+                api_path = '/v2/%s/snapshots/%s' %(proj_id[0][0],snapshot_id)
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -454,7 +511,7 @@ class snapshot_ops:
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 load = json.loads(rest['data'])
-                r_dict = {"snapshot_id": str(load['snapshot']['id']), "snapshot_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at']), "snapshot_name": str(load['snapshot']['display_name']), "project_id": proj_id[0][0]}
+                r_dict = {"snapshot_id": str(load['snapshot']['id']), "snapshot_status": str(load['snapshot']['status']), "volume_id": str(load['snapshot']['volume_id']), "create_time": str(load['snapshot']['created_at']), "snapshot_name": str(load['snapshot']['name']), "project_id": proj_id[0][0]}
                 return r_dict
             else:
                 #util.http_codes(rest['response'],rest['reason'])

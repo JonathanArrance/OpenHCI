@@ -11,34 +11,100 @@ from transcirrus.common.auth import authorization
 
 #sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from transcirrus.component.cinder.cinder_volume import volume_ops
+from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 
 a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
-
 print "instantiating a volume abject."
 vol = volume_ops(d)
+snap = snapshot_ops(d)
+
+
+print "createing a new volume"
+create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_type':'ssd'}
+create_vol = vol.create_volume(create)
+print create_vol
+time.sleep(5)
+
+print "createing a new volume snap"
+create = {'snapshot_name':'trans_snap4','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
+create_snap = snap.create_snapshot(create)
+print create_snap
+time.sleep(5)
+
+print "createing a new volume from snap"
+create = {'volume_name':'trans_from_snap4','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'snapshot_id':create_snap['snapshot_id']}
+create_vol_from_snap = vol.create_volume(create)
+print create_vol_from_snap
+time.sleep(5)
+
+print "createing a new volume from snap"
+create = {'volume_name':'trans_from_snap_delta','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'snapshot_id':create_snap['snapshot_id']}
+create_vol = vol.create_vol_from_snapshot(create)
+print create_vol
+time.sleep(5)
+
+
+print "createing a new volume clone"
+create = {'volume_name':'trans_clone','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
+create_vol = vol.create_vol_clone(create)
+print create_vol
+time.sleep(5)
+
+print "createing a new volume clone2"
+create = {'project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
+create_vol = vol.create_vol_clone(create)
+print create_vol
+time.sleep(5)
 
 '''
-voltype = vol.create_volume_type("ssd")
+print "createing a new volume snap"
+create = {'snapshot_name':'the_snapshot','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':'23e06c9b-c6fa-4f59-9a0d-9b2bebcfb449'}
+create_vol = snap.create_snapshot(create)
+print create_vol
+
+
+print "createing a new volume snap"
+create = {'snapshot_name':'the_snapshot','snapshot_desc':'Yo yo','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_id':'a853e89c-a959-4e6f-82ad-3aa833fcf9b5','force':'True'}
+create_vol = snap.create_snapshot(create)
+print create_vol
+
+print "createing a new volume snap"
+create = {'snapshot_name':'the_snapshot','snapshot_desc':'Yo yo','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_id':'a853e89c-a959-4e6f-82ad-3aa833fcf9b5'}
+create_vol = snap.create_snapshot(create)
+print create_vol
+
+print "createing a new volume"
+create = {'volume_name':'test111','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd','snapshot_id':'a32d8390-1df0-445a-b560-f38697dd3d8f'}
+create_vol = vol.create_vol_from_snapshot(create)
+print create_vol
+
+
+print "createing a new volume"
+create = {'volume_name':'test111','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd','snapshot_id':'a32d8390-1df0-445a-b560-f38697dd3d8f'}
+create_vol = vol.create_vol_from_snapshot(create)
+print create_vol
+
+voltype = vol.create_volume_type("nimble")
 print voltype
-voltype2 = vol.create_volume_type("spindle")
+voltype2 = vol.create_volume_type("e-series")
 print voltype2
 
-get = {'volume_id':'16c881e5-85a1-4542-af0b-07110cd08fec','project_id':'13d92fe4b2de4051abc5de0654277af0'}
+get = {'volume_id':'23e06c9b-c6fa-4f59-9a0d-9b2bebcfb449','project_id':'d4b29af44660474da7d5f884ec107f76'}
 yo = vol.get_volume_info(get)
 print yo
 
 
 stuff = vol.get_volume(get)
 print stuff
-'''
+
 print "createing a new volume"
 create = {'volume_name':'test11','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
-'''
+
 print "------------------------------------------"
 print "sleeping for 15 seconds"
 time.sleep(15)

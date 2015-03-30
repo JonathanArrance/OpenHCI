@@ -159,6 +159,12 @@ def disclaimer(request):
 def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
 
+def config_e_series(request):
+    return render_to_response('coal/config_e_series.html', RequestContext(request,))
+
+def welcome(request):
+    return render_to_response('coal/welcome.html', RequestContext(request,))
+
 def node_view(request, node_id):
     node=get_node(node_id)
     node['status'] = node_stats.node_status (node['node_mgmt_ip'], node['node_data_ip'])

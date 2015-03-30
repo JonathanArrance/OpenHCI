@@ -1,72 +1,77 @@
 <!-- Begin snapshots widget-->
 <div class="span4">
-    <div class="well">
+    <div class="well storage-well">
         <div class="legend">
+
+            <div id="snapshot_progressbar" class="ui-progressbar progressbar">
+                <span class="progressbar-text">Working</span>
+            </div>
+
             Snapshots
             <a href="#" id="create-snapshot" class="btn" style="float:right">Create</a>
         </div>
 
-        <div id="snapshot-dialog-form" title="Snapshot a volume">
-            <p class="validateTips">All fields are required. </p>
+        <div class="well-tall storage-table">
+            <table id="snapshot_list" class="paleblue widget-table table-tall">
+                <tr>
+                    <th>Snapshot</th>
+                    <th>Volume</th>
+                    <th>Actions</th>
+                </tr>
+                {% if snapshots %}
+                {% for snapshot in snapshots %}
 
-            <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="snap_name">Snapshot Name</label>
-                    <input type="text" name="snap_name" id="snap_name" class="text ui-widget-content ui-corner-all"/>
-                    <label for="snap_volume">Volume</label>
-                    <select name="snap_volume" id="snap_volume">
-                        {% for k,v in volume_info.items %}
-                        <script>snapshotVolumes.setItem("{{v.volume_id}}", { value: "{{v.volume_id}}", option: "{{v.volume_name}}"});</script>
-                        {% endfor %}
-                        <script>refreshSelect($("#snap_volume"), snapshotVolumes);</script>
-                    </select>
-                    <label for="snap_desc">Description</label>
-                    <textarea name="snap_desc" id="snap_desc" class="text ui-widget-content ui-corner-all"
-                              maxlength="80" placeholder="enter a description for the snapshot (optional)"
-                              rows="2"></textarea>
-                </fieldset>
-            </form>
+                <script>
+                    snapshots.setItem("{{snapshot.snapshot_id}}",
+                            { id: "{{snapshot.snapshot_id}}", name: "{{snapshot.snapshot_name}}", volumeId: "{{snapshot.volume_id}}", volumeName: "{{snapshot.volume_name}}" });
+                </script>
+
+                <tr id="{{snapshot.snapshot_id}}">
+                    <td id="{{snapshot.snapshot_id}}-name-cell"><a href="/snapshot/{{snapshot.snapshot_id}}/view/">
+                        <span id="{{snapshot.snapshot_id}}-name-text">{{snapshot.snapshot_name}}</span></a>
+                    </td>
+                    <td id="{{snapshot.snapshot_id}}-volume-cell"><span id="{{snapshot.snapshot_id}}-volume-text">{{snapshot.volume_name}}</span>
+                    </td>
+                    <td id="{{snapshot.snapshot_id}}-actions-cell">
+                        <a href="#" class="delete-snapshot">delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr id="snapshot_placeholder">
+                    <td><p><i>This project has no snapshots</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endif %}
+            </table>
         </div>
-
-        <div id="snapshot-delete-confirm-form" title="Delete Snapshot">
-            <p style="text-align:center;">Delete <span class="snapshot-name"></span>?</p>
-        </div>
-
-        <table id="snapshot_list" class="paleblue widget-table">
-            <tr>
-                <th>Snapshot</th>
-                <th>Volume</th>
-                <th>Actions</th>
-            </tr>
-            {% if snapshots %}
-            {% for snapshot in snapshots %}
-
-            <script>
-                snapshots.setItem("{{snapshot.snapshot_id}}",
-                        { id: "{{snapshot.snapshot_id}}", name: "{{snapshot.snapshot_name}}", volumeId: "{{snapshot.volume_id}}", volumeName: "{{snapshot.volume_name}}" });
-            </script>
-
-            <tr id="{{snapshot.snapshot_id}}">
-                <td id="{{snapshot.snapshot_id}}-name-cell"><a href="/snapshot/{{snapshot.snapshot_id}}/view/">
-                    <span id="{{snapshot.snapshot_id}}-name-text">{{snapshot.snapshot_name}}</span></a>
-                </td>
-                <td id="{{snapshot.snapshot_id}}-volume-cell"><span id="{{snapshot.snapshot_id}}-volume-text">{{snapshot.volume_name}}</span>
-                </td>
-                <td id="{{snapshot.snapshot_id}}-actions-cell">
-                    <a href="#" class="delete-snapshot">delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr id="snapshot_placeholder">
-                <td><p><i>This project has no snapshots</i></p></td>
-                <td></td>
-                <td></td>
-            </tr>
-            {% endif %}
-        </table>
-        <div id="snapshot_progressbar" class="ui-progressbar"
-             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display: none;"></div>
     </div>
+</div>
+
+<div id="snapshot-dialog-form" title="Snapshot a volume">
+    <p class="validateTips">All fields are required. </p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="snap_name">Snapshot Name</label>
+            <input type="text" name="snap_name" id="snap_name" class="text ui-widget-content ui-corner-all"/>
+            <label for="snap_volume">Volume</label>
+            <select name="snap_volume" id="snap_volume">
+                {% for k,v in volume_info.items %}
+                <script>snapshotVolumes.setItem("{{v.volume_id}}", { value: "{{v.volume_id}}", option: "{{v.volume_name}}"});</script>
+                {% endfor %}
+                <script>refreshSelect($("#snap_volume"), snapshotVolumes);</script>
+            </select>
+            <label for="snap_desc">Description</label>
+            <textarea name="snap_desc" id="snap_desc" class="text ui-widget-content ui-corner-all"
+                      maxlength="80" placeholder="enter a description for the snapshot (optional)"
+                      rows="2"></textarea>
+        </fieldset>
+    </form>
+</div>
+
+<div id="snapshot-delete-confirm-form" title="Delete Snapshot">
+    <p style="text-align:center;">Delete <span class="snapshot-name"></span>?</p>
 </div>

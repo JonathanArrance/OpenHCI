@@ -1,109 +1,115 @@
 <!-- Begin image widget-->
 <div class="span4">
-    <div class="well">
+    <div class="well instance-management-well">
         <div class="legend">
+
+            <div id="image_progressbar" class="ui-progressbar progressbar">
+                <span class="progressbar-text">Working</span>
+            </div>
+
             Images
 
             <a href="#" id="import-image" class="btn" style="float:right">Import</a>
         </div>
 
-        <div id="image-import-dialog-form" title="Import existing image">
-            <p class="validateTips">All fields are required. </p>
+        <div class="well-tall instance-management-table">
+            <table class="paleblue widget-table table-tall" id="image_list">
+                <tr>
+                    <th>Image</th>
+                    <th>Actions</th>
+                </tr>
 
-            <form id='image-upload-form' action="#" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
+                {% if images %}
+                {% for image in images %}
 
-                <fieldset>
-                    <label for="import_img_name">Image Name</label>
-                    <input type="text" name="import_img_name" id="import_img_name"
-                           class="text ui-widget-content ui-corner-all image-text"/>
-                    <label for="import_img_cont">Container Format</label>
-                    <select name="import_img_cont" id="import_img_cont" class="image-select">
-                        <option value="bare">bare</option>
-                        <option value="ovf">ovf</option>
-                        <option value="aki">aki</option>
-                        <option value="ari">ari</option>
-                        <option value="ami">ami</option>
-                    </select>
-                    <label for="import_img_disk">Disk Format</label>
-                    <select name="import_img_disk" id="import_img_disk" class="image-select">
-                        <option value="raw">raw</option>
-                        <option value="vhd">vhd</option>
-                        <option value="vmdk">vmdk</option>
-                        <option value="vdi">vdi</option>
-                        <option value="iso">iso</option>
-                        <option value="qcow2">qcow2</option>
-                        <option value="aki">aki</option>
-                        <option value="ari">ari</option>
-                        <option value="ami">ami</option>
-                    </select>
-                    <label for="import_img_type">Local/Remote</label>
-                    <select name="import_img_type" id="import_img_type" class="image-select"
-                            onchange="import_location(this)">
-                        <option value="image_file">local</option>
-                        <option value="image_url">remote</option>
-                    </select>
-                    <label for="import_remote" id="import_remote_label">Remote Image Location (URL)</label>
-                    <input type="text" name="import_remote" id="import_remote"
-                           class="text ui-widget-content ui-corner-all image-text"/>
+                <tr id="{{ image.image_id }}">
+                    <td id="{{ image.image_id }}-name-cell">
+                        <span id="{{ image.image_id }}-name-text">{{image.image_name}}</span>
+                    </td>
+                    <td id="{{ image.image_id }}-actions-cell">
+                        <a href="#" class="delete-image">delete</a>
+                    </td>
+                </tr>
 
-                    <label for="import_local" id="import_local_label">Local Image Location</label>
-                    <input type="file" name="import_local" id="import_local"
-                           class="file ui-widget-content ui-corner-all image-file" style="width: 200px;"/>
-
-                    <label for="os_type">OS Type <span title="When booting a Windows instance, OS Type must be specified. Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">(help)</span></label>
-                    <select name="os_type" id="os_type">
-                        <option value="linux" selected="selected">Linux</option>
-                        <option value="windows">Windows</option>
-                        <option value="other">Other</option>
-                    </select>
-
-                    <label for="import_img_vis">Image Visibility</label>
-                    <select name="import_img_vis" id="import_img_vis" class="image-select">
-                        <option value="public">public</option>
-                        <option value="private">private</option>
-                    </select>
-                </fieldset>
-            </form>
-            <div class="progress" id="upload_progress">
-                <div class="bar" id="upload_bar"></div>
-                <div class="percent" align="center" id="upload_percent">0%</div>
-            </div>
+                {% endfor %}
+                {% else %}
+                <div id="image_placeholder">
+                    <td><p><i>This project has no images.</i></p></td>
+                    <td></td>
+                </div>
+                {% endif %}
+            </table>
         </div>
-
-        <div id="image-delete-confirm-form" title="Delete Image">
-            <p style="text-align:center;">Delete <span class="image-name"></span>?</p>
-        </div>
-
-        <table class="paleblue widget-table" id="image_list">
-            <tr>
-                <th>Image</th>
-                <th>Actions</th>
-            </tr>
-
-            {% if images %}
-            {% for image in images %}
-
-            <tr id="{{ image.image_id }}">
-                <td id="{{ image.image_id }}-name-cell">
-                    <span id="{{ image.image_id }}-name-text">{{image.image_name}}</span>
-                </td>
-                <td id="{{ image.image_id }}-actions-cell">
-                    <a href="#" class="delete-image">delete</a>
-                </td>
-            </tr>
-
-            {% endfor %}
-            {% else %}
-            <div id="image_placeholder">
-                <td><p><i>This project has no images.</i></p></td>
-                <td></td>
-            </div>
-            {% endif %}
-        </table>
-        <div id="image_progressbar" class="ui-progressbar"
-             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display: none;"></div>
     </div>
+</div>
+
+<div id="image-import-dialog-form" title="Import existing image">
+    <p class="validateTips">All fields are required. </p>
+
+    <form id='image-upload-form' action="#" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <fieldset>
+            <label for="import_img_name">Image Name</label>
+            <input type="text" name="import_img_name" id="import_img_name"
+                   class="text ui-widget-content ui-corner-all image-text"/>
+            <label for="import_img_cont">Container Format</label>
+            <select name="import_img_cont" id="import_img_cont" class="image-select">
+                <option value="bare">bare</option>
+                <option value="ovf">ovf</option>
+                <option value="aki">aki</option>
+                <option value="ari">ari</option>
+                <option value="ami">ami</option>
+            </select>
+            <label for="import_img_disk">Disk Format</label>
+            <select name="import_img_disk" id="import_img_disk" class="image-select">
+                <option value="raw">raw</option>
+                <option value="vhd">vhd</option>
+                <option value="vmdk">vmdk</option>
+                <option value="vdi">vdi</option>
+                <option value="iso">iso</option>
+                <option value="qcow2">qcow2</option>
+                <option value="aki">aki</option>
+                <option value="ari">ari</option>
+                <option value="ami">ami</option>
+            </select>
+            <label for="import_img_type">Local/Remote</label>
+            <select name="import_img_type" id="import_img_type" class="image-select"
+                    onchange="import_location(this)">
+                <option value="image_file">local</option>
+                <option value="image_url">remote</option>
+            </select>
+            <label for="import_remote" id="import_remote_label">Remote Image Location (URL)</label>
+            <input type="text" name="import_remote" id="import_remote"
+                   class="text ui-widget-content ui-corner-all image-text"/>
+
+            <label for="import_local" id="import_local_label">Local Image Location</label>
+            <input type="file" name="import_local" id="import_local"
+                   class="file ui-widget-content ui-corner-all image-file" style="width: 200px;"/>
+
+            <label for="os_type">OS Type <span
+                    title="When booting a Windows instance, OS Type must be specified. Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">(help)</span></label>
+            <select name="os_type" id="os_type">
+                <option value="linux" selected="selected">Linux</option>
+                <option value="windows">Windows</option>
+                <option value="other">Other</option>
+            </select>
+
+            <label for="import_img_vis">Image Visibility</label>
+            <select name="import_img_vis" id="import_img_vis" class="image-select">
+                <option value="public">public</option>
+                <option value="private">private</option>
+            </select>
+        </fieldset>
+    </form>
+    <div class="progress" id="upload_progress">
+        <div class="bar" id="upload_bar"></div>
+        <div class="percent" align="center" id="upload_percent">0%</div>
+    </div>
+</div>
+
+<div id="image-delete-confirm-form" title="Delete Image">
+    <p style="text-align:center;">Delete <span class="image-name"></span>?</p>
 </div>
 
 <script type="text/javascript">

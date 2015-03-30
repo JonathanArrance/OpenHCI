@@ -1,132 +1,137 @@
 <!-- Begin volume widget-->
 <div class="span4">
-    <div class="well">
+    <div class="well storage-well">
         <script>getStorage();</script>
         <div class="legend">
+
+            <div id="vol_progressbar" class="ui-progressbar progressbar">
+                <span class="progressbar-text">Working</span>
+            </div>
+
             Volume Storage
             <div style="float:right">
                 <a href="#" id="create-volume" class="btn" style="float:right">Create</a>
             </div>
         </div>
 
-        <div id="volume-dialog-form" title="Create Volume">
-            <p class="validateTips">Create a new volume. All form fields are required.</p>
+        <div class="well-tall storage-table">
+            <table class="paleblue widget-table table-tall" id="volume_list">
 
-            <form>
-                {% csrf_token %}
-                <fieldset>
-                    <label for="volume_name">Volume Name</label>
-                    <input type="text" name="volume_name" id="volume_name"
-                           class="text ui-widget-content ui-corner-all volume-text-field"/>
+                <tr>
+                    <th>Name</th>
+                    <th>Attached To</th>
+                    <th>Actions</th>
+                </tr>
+                <script>volumes.clear();</script>
+                {% if volumes %}
+                {% for k,v in volume_info.items %}
+                <script>
+                    volumes.setItem("{{v.volume_id}}", { size: "{{v.volume_size}}", name: "{{v.volume_name}}" });
+                    usedStorage += Number("{{v.volume_size}}");
+                </script>
 
-                    <label for="volume_size">Volume Size (GB)</label>
-                    <input type="text" name="volume_size" id="volume_size"
-                           class="text ui-widget-content ui-corner-all volume-text-field"/>
-
-                    <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
-
-                    <label for="description">Description</label>
-                    <input type="text" name="description" id="description"
-                           class="text ui-widget-content ui-corner-all volume-text-field"/>
-
-                    <label for="volume_type">Volume Type</label>
-                    <select name="volume_type" id="volume_type" class="volume-select">
-                        {% for voltypes in volume_types %}
-                        <option value="{{voltypes.name}}">{{voltypes.name}}</option>
-                        {% endfor %}
-                    </select>
-                </fieldset>
-            </form>
-        </div>
-
-        <div id="volume-attach-dialog-form" title="Attach volume to instance">
-            <p class="validateTips" style="text-align:center;">Attach <span class="volume-name"></span> to selected
-                instance?</p>
-
-            <form>
-                {% csrf_token %}
-                <label for="instance">Instance</label>
-                <fieldset>
-                    <select name="instance" id="instance">
-                        <script>attachableInstances.clear();</script>
+                <tr id="{{v.volume_id}}" class="{% if v.volume_attached == 'true' %}volume-attached{% endif %}">
+                    <td id="{{v.volume_id}}-name-cell">
+                        <a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/"
+                           class="disable-link"><span id="{{v.volume_id}}-name-text">
+                                {{v.volume_name}}</span>
+                        </a>
+                    </td>
+                    <td id="{{v.volume_id}}-attached-cell">
+                        {% if v.volume_attached == 'false' %}
+                        <span id="{{v.volume_id}}-attached-placeholder">No Attached Instance</span>
+                        {% else %}
                         {% for server in instances %}
-                        {% if server.server_status != "BUILDING" or server.server_status != "ERROR" %}
-                        <script>
-                            attachableInstances.setItem(
-                                    "{{server.server_id}}",
-                                    { value: "{{server.server_id}}", option: "{{server.server_name}}"}
-                            );
-                        </script>
-                        <option value="{{server.server_id}}">{{server.server_name}}</option>
+                        {% if server.server_id == v.volume_instance %}
+                        <span id="{{v.volume_id}}-attached-{{server.server_name}}">{{server.server_name}}</span>
                         {% endif %}
                         {% endfor %}
-                        <script>refreshSelect($("#instance"), attachableInstances);</script>
-                    </select>
-                </fieldset>
-            </form>
+                        {% endif %}
+                    </td>
+                    <td id="{{v.volume_id}}-actions-cell">
+                        {% if v.volume_attached == 'true' %}
+                        <a href="#" class="detach-volume">detach</a>
+                        {% else %}
+                        <a href="#" class="attach-volume">attach</a>
+                        <span class="volume-actions-pipe"> | </span>
+                        <a href="#" class="delete-volume">delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr id="volume_placeholder">
+                    <td><p><i>This project has no volumes</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endif %}
+            </table>
         </div>
-
-        <div id="volume-detach-confirm-form" title="Detach volume from instance">
-            <p class="validateTips" style="text-align:center;">Detach <span class="volume-name"></span>?</p>
-        </div>
-
-        <div id="volume-delete-confirm-form" title="Delete volume">
-            <p class="validateTips" style="text-align:center;">Delete <span class="volume-name"></span>?</p>
-        </div>
-
-        <table class="paleblue widget-table" id="volume_list">
-
-            <tr>
-                <th>Name</th>
-                <th>Attached To</th>
-                <th>Actions</th>
-            </tr>
-            <script>volumes.clear();</script>
-            {% if volumes %}
-            {% for k,v in volume_info.items %}
-            <script>
-                volumes.setItem("{{v.volume_id}}", { size: "{{v.volume_size}}", name: "{{v.volume_name}}" });
-                usedStorage += Number("{{v.volume_size}}");
-            </script>
-
-            <tr id="{{v.volume_id}}" class="{% if v.volume_attached == 'true' %}volume-attached{% endif %}">
-                <td id="{{v.volume_id}}-name-cell">
-                    <a href="/projects/{{project.project_id}}/volumes/{{ v.volume_id }}/view/"
-                       class="disable-link"><span id="{{v.volume_id}}-name-text">
-                                {{v.volume_name}}</span>
-                    </a>
-                </td>
-                <td id="{{v.volume_id}}-attached-cell">
-                    {% if v.volume_attached == 'false' %}
-                    <span id="{{v.volume_id}}-attached-placeholder">No Attached Instance</span>
-                    {% else %}
-                    {% for server in instances %}
-                    {% if server.server_id == v.volume_instance %}
-                    <span id="{{v.volume_id}}-attached-{{server.server_name}}">{{server.server_name}}</span>
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
-                </td>
-                <td id="{{v.volume_id}}-actions-cell">
-                    {% if v.volume_attached == 'true' %}
-                    <a href="#" class="detach-volume">detach</a>
-                    {% else %}
-                    <a href="#" class="attach-volume">attach</a>
-                    <span class="volume-actions-pipe"> | </span>
-                    <a href="#" class="delete-volume">delete</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr id="volume_placeholder">
-                <td><p><i>This project has no volumes</i></p></td>
-                <td></td>
-                <td></td>
-            </tr>
-            {% endif %}
-        </table>
-        <div id="vol_progressbar" class="ui-progressbar"
-             style="height: 1em; margin: 10px 0 0 0; padding: .2em; display:none;"></div>
     </div>
+</div>
+
+<div id="volume-dialog-form" title="Create Volume">
+    <p class="validateTips">Create a new volume. All form fields are required.</p>
+
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="volume_name">Volume Name</label>
+            <input type="text" name="volume_name" id="volume_name"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+            <label for="volume_size">Volume Size (GB)</label>
+            <input type="text" name="volume_size" id="volume_size"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+            <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
+
+            <label for="description">Description</label>
+            <input type="text" name="description" id="description"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+            <label for="volume_type">Volume Type</label>
+            <select name="volume_type" id="volume_type" class="volume-select">
+                {% for voltypes in volume_types %}
+                <option value="{{voltypes.name}}">{{voltypes.name}}</option>
+                {% endfor %}
+            </select>
+        </fieldset>
+    </form>
+</div>
+
+<div id="volume-attach-dialog-form" title="Attach volume to instance">
+    <p class="validateTips" style="text-align:center;">Attach <span class="volume-name"></span> to selected
+        instance?</p>
+
+    <form>
+        {% csrf_token %}
+        <label for="instance">Instance</label>
+        <fieldset>
+            <select name="instance" id="instance">
+                <script>attachableInstances.clear();</script>
+                {% for server in instances %}
+                {% if server.server_status != "BUILDING" or server.server_status != "ERROR" %}
+                <script>
+                    attachableInstances.setItem(
+                            "{{server.server_id}}",
+                            { value: "{{server.server_id}}", option: "{{server.server_name}}"}
+                    );
+                </script>
+                <option value="{{server.server_id}}">{{server.server_name}}</option>
+                {% endif %}
+                {% endfor %}
+                <script>refreshSelect($("#instance"), attachableInstances);</script>
+            </select>
+        </fieldset>
+    </form>
+</div>
+
+<div id="volume-detach-confirm-form" title="Detach volume from instance">
+    <p class="validateTips" style="text-align:center;">Detach <span class="volume-name"></span>?</p>
+</div>
+
+<div id="volume-delete-confirm-form" title="Delete volume">
+    <p class="validateTips" style="text-align:center;">Delete <span class="volume-name"></span>?</p>
 </div>

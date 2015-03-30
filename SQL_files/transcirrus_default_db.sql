@@ -1525,6 +1525,7 @@ CREATE TABLE trans_system_snapshots (
     snap_id character varying NOT NULL,
     vol_id character varying,
     proj_id character varying,
+    user_id character varying,
     snap_name character varying,
     snap_desc character varying
 );
@@ -2363,6 +2364,7 @@ INSERT INTO trans_service_settings VALUES ('keystone            ', 5000, NULL, '
 INSERT INTO trans_service_settings VALUES ('keystone_admin      ', 35357, NULL, 'identity', '/v2.0', 'OpenStack Identity', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('nova                ', 8774, NULL, 'compute', '/v2/$(tenant_id)s', 'OpenStack Compute Service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('cinder              ', 8776, NULL, 'volume', '/v1/$(tenant_id)s', 'OpenStack Volume Service', 'NULL', 'NULL', 'NULL', 'NULL');
+INSERT INTO trans_service_settings VALUES ('cinder_v2           ', 8776, NULL, 'volume', '/v2/$(tenant_id)s', 'OpenStack Volume Service V2', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('glance              ', 9292, NULL, 'image', 'NULL', 'OpenStack Image Service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('swift               ', 8080, NULL, 'object-store', '/v1/AUTH_$(tenant_id)s', 'OpenStack Object Store', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('swift_admin         ', 8080, NULL, 'object-store', '/v1', 'OpenStack Object Store', 'NULL', 'NULL', 'NULL', 'NULL');
@@ -2377,6 +2379,36 @@ INSERT INTO trans_service_settings VALUES ('neutron             ', 9696, NULL, '
 -- Data for Name: trans_subnets; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 
+--
+-- TOC entry 214 (class 1259 OID 30578)
+-- Name: trans_system_clones; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE trans_system_clones (
+    clone_vol_id character varying NOT NULL,
+    source_vol_id character varying,
+    user_id character varying,
+    project_id character varying,
+    clone_name character varying,
+    clone_desc character varying
+);
+
+
+ALTER TABLE public.trans_system_clones OWNER TO transuser;
+
+--
+-- TOC entry 1997 (class 0 OID 30578)
+-- Dependencies: 214
+-- Data for Name: trans_system_clones; Type: TABLE DATA; Schema: public; Owner: transuser
+--
+
+--
+-- TOC entry 1996 (class 2606 OID 30585)
+-- Name: trans_system_clones_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_system_clones
+    ADD CONSTRAINT trans_system_clones_pkey PRIMARY KEY (clone_vol_id);
 
 
 --
@@ -2595,19 +2627,69 @@ ALTER TABLE ONLY trans_zones
 
 
 --
+-- TOC entry 215 (class 1259 OID 21659)
+-- Name: trans_inst_enviro; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
+--
+
+CREATE TABLE trans_inst_enviro (
+    index integer NOT NULL,
+    inst_image_id character varying,
+    vol_snap_id character varying,
+    orig_vol_id character varying,
+    orig_inst_id character varying,
+    orig_vol_mount_location character varying(20)
+);
+
+
+ALTER TABLE public.trans_inst_enviro OWNER TO transuser;
+
+--
+-- TOC entry 214 (class 1259 OID 21657)
+-- Name: trans_inst_enviro_index_seq; Type: SEQUENCE; Schema: public; Owner: transuser
+--
+
+CREATE SEQUENCE trans_inst_enviro_index_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.trans_inst_enviro_index_seq OWNER TO transuser;
+
+--
+-- TOC entry 2009 (class 0 OID 0)
+-- Dependencies: 214
+-- Name: trans_inst_enviro_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
+--
+
+ALTER SEQUENCE trans_inst_enviro_index_seq OWNED BY trans_inst_enviro.index;
+
+
+--
+-- TOC entry 2010 (class 0 OID 0)
+-- Dependencies: 214
+-- Name: trans_inst_enviro_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
+--
+
+SELECT pg_catalog.setval('trans_inst_enviro_index_seq', 1, false);
+
+
+--
 -- TOC entry 213 (class 1259 OID 20987)
 -- Name: trans_inst_snaps; Type: TABLE; Schema: public; Owner: transuser; Tablespace: 
 --
 
 CREATE TABLE trans_inst_snaps (
     index integer NOT NULL,
-    inst_id character varying,
-    snap_id character varying,
-    project_id character varying,
     name character varying,
     type character varying(10),
-    description text,
-    create_date timestamp without time zone
+    inst_id character varying,
+    create_date timestamp without time zone,
+    snap_id character varying,
+    project_id character varying,
+    description text
 );
 
 
@@ -2629,7 +2711,7 @@ CREATE SEQUENCE trans_inst_snaps_index_seq
 ALTER TABLE public.trans_inst_snaps_index_seq OWNER TO transuser;
 
 --
--- TOC entry 1997 (class 0 OID 0)
+-- TOC entry 2011 (class 0 OID 0)
 -- Dependencies: 212
 -- Name: trans_inst_snaps_index_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: transuser
 --
@@ -2638,7 +2720,7 @@ ALTER SEQUENCE trans_inst_snaps_index_seq OWNED BY trans_inst_snaps.index;
 
 
 --
--- TOC entry 1998 (class 0 OID 0)
+-- TOC entry 2012 (class 0 OID 0)
 -- Dependencies: 212
 -- Name: trans_inst_snaps_index_seq; Type: SEQUENCE SET; Schema: public; Owner: transuser
 --
@@ -2647,11 +2729,36 @@ SELECT pg_catalog.setval('trans_inst_snaps_index_seq', 1, false);
 
 
 --
--- TOC entry 1991 (class 2604 OID 20990)
+-- TOC entry 1998 (class 2604 OID 21662)
+-- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
+--
+
+ALTER TABLE ONLY trans_inst_enviro ALTER COLUMN index SET DEFAULT nextval('trans_inst_enviro_index_seq'::regclass);
+
+
+--
+-- TOC entry 1997 (class 2604 OID 20990)
 -- Name: index; Type: DEFAULT; Schema: public; Owner: transuser
 --
 
 ALTER TABLE ONLY trans_inst_snaps ALTER COLUMN index SET DEFAULT nextval('trans_inst_snaps_index_seq'::regclass);
+
+--
+-- TOC entry 2002 (class 2606 OID 21784)
+-- Name: trans_inst_enviro_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_inst_enviro
+    ADD CONSTRAINT trans_inst_enviro_pkey PRIMARY KEY (index);
+
+
+--
+-- TOC entry 2000 (class 2606 OID 21786)
+-- Name: trans_inst_snaps_pkey; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_inst_snaps
+    ADD CONSTRAINT trans_inst_snaps_pkey PRIMARY KEY (index);
 
 
 --

@@ -2,125 +2,65 @@
 
 {% block title %}Project View{% endblock %}
 {% block javascripts %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
 
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
-    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
 
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/user-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/user-add-existing-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/user-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/user-remove-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/user-disable-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/user-enable-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/update_user_password.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-update-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/volume-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/volume-attach-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/volume-detach-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/volume-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/router-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/router-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-delete-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-pause-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-unpause-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-suspend-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-resume-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/fip-assign-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/fip-allocate.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/fip-deallocate-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/fip-unassign-confirm-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-live-migrate-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-migrate-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/instance-evacuate-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/image-import-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/image-delete-confirm-form.js"></script>
-    <!-- <script src="{{ STATIC_URL }}javascripts/project_view/container-dialog-form.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/project_view/object-upload-dialog-form.js"></script> -->
-    <script>
-      var PROJECT = "{{ project.project_name }}";
-    </script>
-    <script>
-      var PROJECT_ID = "{{ project.project_id }}";
-    </script>
-    <script>
-      var DEFAULT_PUBLIC = "{{ default_public }}";
-    </script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+<script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
 <script>
-$(document).ready(function() {
-    $('a[data-confirm]').click(function(ev) {
-        var href = $(this).attr('href');
-        if (!$('#dataConfirmModal').length) {
-            $('body').append('<div id="dataConfirmModal" class="modal" role="dialog" aria-labelledby="dataConfirmLabel" aria-hidden="true">'+
-                                         '<div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>'+
-                                         '<h3 id="dataConfirmLabel">Please Confirm</h3></div><div class="modal-body"></div>'+
-                                         '<div class="modal-footer"><button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>'+
-                                         '<a class="btn btn-primary" id="dataConfirmOK">OK</a></div></div>');
-        }
-        $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
-        $('#dataConfirmOK').attr('href', href);
-        $('#dataConfirmModal').modal({show:true});
-        return false;
-    });
-});
+    var PROJECT = "{{ project.project_name }}";
 </script>
-
+<script>
+    var PROJECT_ID = "{{ project.project_id }}";
+</script>
+<script>
+    var DEFAULT_PUBLIC = "{{ default_public }}";
+</script>
 
 {% endblock %}
 
 {% block content %}
 
-    <div class="span12 well legend-header">
-        {{ project.project_name}}
-    </div>
+<div class="span12 well legend-header">
+    {{ project.project_name}}
+</div>
 
-    <h4>Instance Management</h4>
-    <div class="row-fluid">
-      {% include "coal/project_view_widgets/instances.html" %}
-      {% include "coal/project_view_widgets/floating_ips.html" %}
-    </div>
+<h4 id="instance-management" class="widget-section-header"><div id="instance-management-icon" class="widget-section-icon">-</div>Instance Management</h4>
+<div class="row-fluid widget-section">
+    {% include "coal/project_view_widgets/instances.html" %}
+    {% include "coal/project_view_widgets/floating_ips.html" %}
+</div>
 
-    <h4>Storage</h4>
-    <div class="row-fluid">
-      {% include "coal/project_view_widgets/volumes.html" %}
-    </div>
+<h4 id="storage" class="widget-section-header"><div id="storage-icon" class="widget-section-icon">-</div>Storage</h4>
+<div class="row-fluid widget-section">
+    {% include "coal/project_view_widgets/volumes.html" %}
+</div>
 
-    <h4>Software Defined Networking </h4>
-    <div class="row-fluid">
-      {% include "coal/project_view_widgets/external_networks.html" %}
-      {% include "coal/project_view_widgets/internal_networks.html" %}
-    </div>
-    
-    <h4>Security</h4>
-    <div class="row-fluid">
-      {% include "coal/project_view_widgets/security_groups.html" %}
-      {% include "coal/project_view_widgets/key_pairs.html" %}
-    </div>
+<h4 id="software-defined-networking" class="widget-section-header"><div id="sdn-icon" class="widget-section-icon">-</div>Software Defined Networking</h4>
+<div class="row-fluid widget-section">
+    {% include "coal/project_view_widgets/external_networks.html" %}
+    {% include "coal/project_view_widgets/internal_networks.html" %}
+</div>
 
-
-    </div>
+<h4 id="users-security" class="widget-section-header"><div id="users-security-icon" class="widget-section-icon">-</div>Users/Security</h4>
+<div class="row-fluid widget-section">
+    {% include "coal/project_view_widgets/security_groups.html" %}
+    {% include "coal/project_view_widgets/key_pairs.html" %}
+</div>
 
 {% endblock %}

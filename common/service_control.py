@@ -164,6 +164,22 @@ def ceilometer(action):
     out = _operator(ceil_array,action)
     return out
 
+def ceilometer_cn(action):
+    """
+    DESC: Control the ceilometer service
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: These only work on the ciac node for now
+    """
+    ceil_array = ['openstack-ceilometer-compute']
+    out = _operator(ceil_array,action)
+    return out
+
 def postgresql(action):
     """
     DESC: Control the open vswitch services
