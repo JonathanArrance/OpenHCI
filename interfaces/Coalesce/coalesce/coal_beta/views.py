@@ -328,6 +328,9 @@ def project_view(request, project_id):
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
 
+    volume_types = []
+    volume_types = vo.list_volume_types()
+
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
         v_info = vo.get_volume_info(v_dict)
@@ -405,6 +408,7 @@ def project_view(request, project_id):
                                                         'floating_ips': floating_ips,
                                                         'hosts': hosts,
                                                         'volumes': volumes,
+                                                        'volume_types': volume_types,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         'containers': containers,
@@ -467,6 +471,9 @@ def pu_project_view(request, project_id):
     instances     = so.list_servers(project_id)
     instance_info={}
     flavors       = fo.list_flavors()
+
+    volume_types = []
+    volume_types = vo.list_volume_types()
 
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
@@ -544,6 +551,7 @@ def pu_project_view(request, project_id):
                                                         'routers': routers,
                                                         'floating_ips': floating_ips,
                                                         'volumes': volumes,
+                                                        'volume_types': volume_types,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         'containers': containers,
@@ -569,6 +577,9 @@ def basic_project_view(request, project_id):
     instances     = so.list_servers(project_id)
     flavors       = fo.list_flavors()
     #pub_net_list  = no.list_external_networks()
+
+    volume_types = []
+    volume_types = vo.list_volume_types()
 
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
@@ -718,6 +729,7 @@ we need to build a function to request a vm resize
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
+                                                        'volume_types': volume_types,
                                                         'volume_info':volume_info,
                                                         'images': images,
                                                         'instances': instances,

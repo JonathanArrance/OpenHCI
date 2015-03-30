@@ -31,8 +31,9 @@
 
                     <label for="volume_type">Volume Type</label>
                     <select name="volume_type" id="volume_type" class="volume-select">
-                        <option value="ssd">ssd</option>
-                        <option value="spindle">spindle</option>
+                        {% for voltypes in volume_types %}
+                        <option value="{{voltypes.name}}">{{voltypes.name}}</option>
+                        {% endfor %}
                     </select>
                 </fieldset>
             </form>

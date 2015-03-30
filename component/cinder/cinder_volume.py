@@ -525,8 +525,8 @@ class volume_ops:
         """
         logger.sys_info('\n**Create a new volume type. Component: Cinder Def: get_volume_info**\n')
         if(not 'volume_type_name'):
-            logger.sys_error("Requiered parameter volume_id not given for create volume type operation.")
-            raise Exception("Requiered parameter volume_id not given for create volume type operation.")
+            logger.sys_error("Requiered parameter volume_type not given for create volume type operation.")
+            raise Exception("Requiered parameter volume_type not given for create volume type operation.")
 
         #sanity check
         if(self.status_level < 2):
@@ -535,7 +535,7 @@ class volume_ops:
 
         #Talk to the cinder API
         if(self.is_admin == 1):
-            voltype = volume_type_name.lower()
+            voltype = volume_type_name
             try:
                 #build an api connection
                 api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -543,7 +543,7 @@ class volume_ops:
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
-    
+
             try:
                 #add the new user to openstack 
                 body = '{"volume_type": {"name": "%s"}}'%(voltype)
@@ -553,10 +553,11 @@ class volume_ops:
                 api_path = '/v1/%s/types' %(self.project_id)
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                print "rest_dict: %s" % rest_dict
                 rest = api.call_rest(rest_dict)
             except Exception as e:
+                print "Could not add the volume type %s" %(e)
                 logger.sys_error("Could not add the volume type %s" %(e))
-                #back the user out of the transcirrus DB if the db works and the REST API fails
                 raise
 
             if(rest['response'] == 200):
@@ -565,33 +566,104 @@ class volume_ops:
                 load = json.loads(rest['data'])
                 vol_type_name = str(load['volume_type']['name'])
                 vol_type_id = str(load['volume_type']['id'])
+                print "load: %s" % load
                 r_dict = {"volume_type_name": vol_type_name, "volume_type_id": vol_type_id}
                 return r_dict
             else:
+                print "error:: response: %s, reason: %s, data: %s" % (rest['response'], rest['reason'], rest['data'])
                 #util.http_codes(rest['response'],rest['reason'],rest['data'])
                 ec.error_codes(rest)
         else:
             logger.sys_error("Could not create a new volume type, not an admin.")
             raise Exception("Could not create a new volume type, not an admin.")
 
+    def delete_volume_type(self, volume_type_name):
+        """
+        DESC: Deletes a volume type.
+        INPUT:  volume_type_name - req
+        OUTPUT: True / False
+        ACCESS: Admins can delete volume types.
+        """
+        logger.sys_info('\n**Delete a volume type.**\n')
+        if (not 'volume_type_name'):
+            logger.sys_error("Requiered parameter volume_type_name not given for delete volume type operation.")
+            raise Exception("Requiered parameter volume_type_name not given for create volume type operation.")
+
+        #sanity check
+        if (self.status_level < 2):
+            logger.sys_error("Status level not sufficient to delete volume types.")
+            raise Exception("Status level not sufficient to delete volume types.")
+
+        #Talk to the cinder API
+        if (self.is_admin == 1):
+            try:
+                #build an api connection
+                api_dict = {"username": self.username, "password": self.password, "project_id": self.project_id}
+                api = caller(api_dict)
+            except:
+                logger.sys_error ("Could not connect to the API")
+                raise Exception ("Could not connect to the API")
+
+            vol_list = self.list_volume_types()
+            vol_type_id = None
+            for vol_type in vol_list:
+                if vol_type['name'].lower() == volume_type_name.lower():
+                    vol_type_id = vol_type['id']
+                    break
+
+            if vol_type_id == None:
+                raise Exception ("Volume Type %s was not found for deletion" % volume_type_name)
+
+            try:
+                # delete the volume type 
+                body = ''
+                token = self.token
+                header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+                function = 'DELETE'
+                api_path = '/v1/%s/types/%s' % (self.project_id, vol_type_id)
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                rest = api.call_rest(rest_dict)
+            except Exception as e:
+                logger.sys_error("Could not delete the volume type %s, exception: %s" % (voltype, e))
+                raise Exception ("Could not delete the volume type %s, exception: %s" % (voltype, e))
+
+            if (rest['response'] == 200):
+                logger.sys_info("Delete volume type %s was successful" % voltype)
+                return True
+            else:
+                logger.sys_error("Could not delete the volume type %s, error: %s" % (voltype, rest['response']))
+                raise Exception ("Could not delete the volume type %s, error: %s" % (voltype, rest['response']))
+        else:
+            logger.sys_error ("Could not delete the volume type %s, must be an admin." % volume_type_name)
+            raise Exception ("Could not delete the volume type %s, must be an admin." % volume_type_name)
+
     def list_volume_types(self):
         """
         DESC: List the available volume types.
         INPUT: none
-        OUTPUT: r_dict of array - name
-                                - id
-                                - extra_specs - backends, etc...
+        OUTPUT: array of dict  - name
+                               - id
+                               - extra_specs - backends, etc...
         ACCESS: Admin - can assign volume types to backends
                 PU - none
                 user - none
         NOTE:
-        The output is like this
-        {"volume_types": [
-        {"extra_specs": {"volume_backend_name": "RHS"}, "name": "test", "id": "3e1c9036-4ccd-40e1-9b44-6fd2cc3dff4b"},
-        {"extra_specs": {"volume_backend_name": "ssd"}, "name": "ssd", "id": "97109e9a-198f-4509-9ecc-d9859e919446"},
-        {"extra_specs": {"volume_backend_name": "spindle"}, "name": "spindle", "id": "411e8c4a-7f74-4ac9-8d1a-56fdc838b973"},
-        {"extra_specs": {}, "name": "jon", "id": "d1c4878f-aa43-4483-8cfe-e0a7a4262b8f"}
-        ]}
+        The REST output looks like this:
+          {"volume_types":
+            [
+              {"extra_specs": {"volume_backend_name": "RHS"},     "name": "test",    "id": "3e1c9036-4ccd-40e1-9b44-6fd2cc3dff4b"},
+              {"extra_specs": {"volume_backend_name": "ssd"},     "name": "ssd",     "id": "97109e9a-198f-4509-9ecc-d9859e919446"},
+              {"extra_specs": {"volume_backend_name": "spindle"}, "name": "spindle", "id": "411e8c4a-7f74-4ac9-8d1a-56fdc838b973"},
+              {"extra_specs": {},                                 "name": "jon",     "id": "d1c4878f-aa43-4483-8cfe-e0a7a4262b8f"}
+            ]
+          }
+          We return an array of dicts that looks like this:
+            [{"extra_specs": {"volume_backend_name": "RHS"},     "name": "test",    "id": "3e1c9036-4ccd-40e1-9b44-6fd2cc3dff4b"},
+             {"extra_specs": {"volume_backend_name": "ssd"},     "name": "ssd",     "id": "97109e9a-198f-4509-9ecc-d9859e919446"},
+             {"extra_specs": {"volume_backend_name": "spindle"}, "name": "spindle", "id": "411e8c4a-7f74-4ac9-8d1a-56fdc838b973"},
+             {"extra_specs": {},                                 "name": "jon",     "id": "d1c4878f-aa43-4483-8cfe-e0a7a4262b8f"}
+            ]
         """
         #sanity check
         if(self.status_level < 2):
@@ -624,7 +696,16 @@ class volume_ops:
                 raise e
 
             if(rest['response'] == 200):
-                return rest['data']
+                #read the json that is returned
+                logger.sys_info("list_volume_types: Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
+                load = json.loads(rest['data'])
+                r_dict = []
+                for vtype in load['volume_types']:
+                    name = vtype['name']
+                    id = vtype['id']
+                    extra_specs = vtype['extra_specs']
+                    r_dict.append({'name': name, 'id': id, 'extra_specs': extra_specs})
+                return r_dict
             else:
                 #util.http_codes(rest['response'],rest['reason'],rest['data'])
                 ec.error_codes(rest)
@@ -642,6 +723,7 @@ class volume_ops:
                 user - none
         NOTE: as of now only spindle and ssd will be displayed
         """
+        raise Exception ("function list_volume_backends is not supported, call list_volume_types instead")
         if(self.is_admin == 1):
             r_array = ['ssd','spindle']
             return r_array
