@@ -56,11 +56,14 @@ import transcirrus.operations.third_party_storage.eseries.config as eseries
 import transcirrus.operations.third_party_storage.nfs.config as nfs
 
 
-# Return a list of supported 3rd party storage systems.
+# Return a list of supported 3rd party storage systems and
+# if that system is currently configured.
 # When a new 3rd party storage system is supported, add
 # it to the list below.
 def get_supported_third_party_storage():
-    list = ["NetApp E-Series", "nfs"]
+    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled']},
+            {'name': "nfs",             'configured': get_nfs()['enabled']}
+           ]
     return (list)
 
 
@@ -150,15 +153,16 @@ def update_eseries (data):
 # Get E-Series data from cinder config.
 def get_eseries():
     '''
-    return data = {'enabled':    "0/1",        "0" not enabled or "1" is enabled
-                   'server':     "ip-addr",
-                   'srv_port':   "port_num",
-                   'transport':  "transport",
-                   'login':      "username",
-                   'pwd':        "password",
-                   'ctrl_pwd':   "password",
-                   'disk_pools': ["pool1", "pool2"],
-                   'ctrl_ips':   ["ip-addr1", "ip-addr2"]
+    return data = {'enabled':      "0/1",        "0" not enabled or "1" is enabled
+                   'pre_existing': "0/1"         "0" not using pre-existing web proxy server or "1" using pre-existing web proxy server
+                   'server':       "ip-addr",
+                   'srv_port':     "port_num",
+                   'transport':    "transport",
+                   'login':        "username",
+                   'pwd':          "password",
+                   'ctrl_pwd':     "password",
+                   'disk_pools':   ["pool1", "pool2"],
+                   'ctrl_ips':     ["ip-addr1", "ip-addr2"]
                   }
     '''
 
@@ -166,6 +170,10 @@ def get_eseries():
     if common.backend_configured (eseries.ESERIES_NAME):
         enabled = "1"
         data = eseries.get_eseries_data()
+        if data['server'] == "localhost":
+            data['pre_existing'] = "0"
+        else:
+            data['pre_existing'] = "1"
     else:
         enabled = "0"
 
@@ -195,7 +203,7 @@ def get_eseries_pre_existing_data (data):
 
 
 # Delete E-Series data from cinder config.
-def delete_eseries():
+def delete_eseries (auth):
     common.delete_backend (eseries.ESERIES_NAME)
     common.delete_stanza (eseries.ESERIES_NAME)
     common.delete_voltype (auth, eseries.ESERIES_NAME)

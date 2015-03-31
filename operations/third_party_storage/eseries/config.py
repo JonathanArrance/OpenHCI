@@ -19,7 +19,6 @@ def add_eseries_stanza (data):
     curr_file = common.CINDER_CONF
     outfile = open (curr_file, 'a')
 
-    print "data: %s" % data
     outfile.writelines ("\n")
     outfile.writelines ("[" + ESERIES_NAME + "]\n")
     outfile.writelines ("# static data\n")

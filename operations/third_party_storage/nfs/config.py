@@ -49,6 +49,7 @@ def add_nfs_conf (mountpoints):
     outfile.close()
     return
 
+
 def add_base_mountpoint():
     if os.path.isdir (NFS_MOUNTPOINT_BASE):
         return

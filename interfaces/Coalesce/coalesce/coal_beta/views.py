@@ -77,6 +77,9 @@ from transcirrus.component.swift.swiftconnection import SwiftConnection
 #import transcirrus.operations.upgrade as upgrade
 #sys.path.append("/usr/lib/python2.6/site-packages/")
 
+import transcirrus.operations.third_party_storage.third_party_config as tpc
+from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
+
 # Custom imports
 #from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
@@ -2051,6 +2054,136 @@ def upgrade (request, version="stable"):
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+
+# --- Routines for 3rd party storage ---
+
+# Return the names of supported 3rd party storage providers and if they are configured (enabled).
+def supported_third_party_storage (request):
+    '''
+        returns json:
+            status:
+                success
+                    providers: array of dict [{'name': "3rd party storage name", 'configured': "0/1"}]
+                        0 - storage provider is not currently configured
+                        1 - storage provider is currently configured
+                error
+                    message: error message
+    '''
+    try:
+        providers = tpc.get_supported_third_party_storage()
+        out = {'status' : "success", 'providers' : providers}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting supported 3rd party storage providers: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Return E-Series configuration data.
+def eseries_get (request):
+    '''
+        returns json:
+            status:
+                success
+                    data: dict {'pre_existing': "0/1",            0 - not using pre-existing server; 1 - using pre-existing web proxy srv
+                                'server':  "server hostname/IP",  web proxy server IP address/hostname
+                                'srv_port': "listen port",        normally 8080 or 8443
+                                'transport': "transport",         http/https
+                                'login': "username",              username into web proxy
+                                'pwd': "password",                password for user
+                                'ctrl_pwd': "ctrl-password",      password into storage controller(s)
+                                'ctrl_ips': ["ip1", "ip2"],       mgmt IP/hostnames for storage controllers
+                                'disk_pools': ["pool1", "pool2"]  disk/storage pools
+                               }
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'data' : {}}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting NetApp E-Series configuration data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete E-Series configuration.
+def eseries_delete (request):
+    '''
+        returns json:
+            status:
+                success
+                    providers: array of dict [{'name': "3rd party storage name", 'configured': "0/1"}]
+                        0 - storage provider is not currently configured
+                        1 - storage provider is currently configured
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'message' : "NetApp E-Series configuration has been deleted."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Setup the E-Series web proxy server with the given data and return the configured IP addresses.
+def eseries_set_web_proxy_srv (request, server, srv_port, transport, login, pwd):
+    '''
+        input:
+            server:    "server hostname/IP"  web proxy server IP address/hostname
+            srv_port:  "listen port"         normally 8080 or 8443
+            transport: "transport"           http/https
+            login:     "username"            username into web proxy
+            pwd:       "password"            password for user
+        returns json:
+            status:
+                success
+                    ips: array of IP addresses ["ip1", "ip2", "ip3"]
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'ips' : []}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error setting NetApp E-Series web proxy configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get the controller password and IP addresses and return the configured disk/storage pools.
+def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
+    '''
+        input:
+            ctrl_pwd: "ctrl-password"   password into storage controller(s)
+            ctrl_ips: "ip1,ip2"         mgmt IP/hostnames for storage controllers
+        returns json:
+            status:
+                success
+                    disk_pools: array of disk pools ["pool1", "pool2", "pool3"]
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'pools' : []}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error setting NetApp E-Series controller data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get the disk pools and commit the configuration.
+def eseries_set_config (request, disk_pools):
+    '''
+        input:
+            disk_pools: "pool1,pool2"   disk/storage pools
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully added"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error applying NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+# ---
 
 def setup(request):
     if request.method == 'POST':

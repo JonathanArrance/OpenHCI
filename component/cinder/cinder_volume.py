@@ -5,7 +5,6 @@
 import sys
 import json
 import time
-import random
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -77,9 +76,6 @@ class volume_ops:
         #get the db object
         self.db = util.db_connect()
 
-        #random number used if sec group or key name taken
-        self.rannum = random.randrange(1000,9000)
-
     def create_volume(self,create_vol):
         """
         DESC: Create a new volume in a project
@@ -89,11 +85,9 @@ class volume_ops:
                         volume_name - REQ
                         volume_size - REQ
                         project_id - REQ
-                        volume_type - Optional default is spindle
+                        volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
                         description - Optional
-                        snapshot_id - Optional
-                        source_vol_id - Optional
         OUTPUTS: r_dict - volume_name
                         - volume_type
                         - volume_id
@@ -107,11 +101,13 @@ class volume_ops:
         if(not create_vol):
             logger.sys_error("Did not pass in create_vol dictionary to create volume operation.")
             raise Exception("Did not pass in create_vol dictionary to create volume operation.")
-        if(('volume_name' not in create_vol) or (create_vol['volume_name'] == '')):
+        if(('volume_name' not in create_vol) or ('volume_size' not in create_vol)):
             logger.sys_error("Did not pass required params to create volume operation.")
             raise Exception("Did not pass required params to create volume operation.")
-
-        #sanity check
+        if('description' not in create_vol):
+            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
+            create_vol['description'] = "%s volume" %(create_vol['project_id'])
+         #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to create volumes.")
             raise Exception("Status level not sufficient to create volumes.")
@@ -128,9 +124,16 @@ class volume_ops:
         #default to ssd
         voltype = None
         if('volume_type' not in create_vol):
-            voltype = 'spindle'
+            voltype = 'ssd'
         elif('volume_type' in create_vol):
             voltype = create_vol['volume_type'].lower()
+            print voltype
+
+        #check if the volume type is ssd or spindle
+        if((voltype == 'ssd') or (voltype == 'spindle')):
+            pass
+        else:
+            raise Exception("The volume type specified does not exist.")
 
         #get the name of the project based on the id
         try:
@@ -149,24 +152,18 @@ class volume_ops:
 
         #check to see if a vol in the project with same name already exists
         try:
-            select_vol = {"select":"*","from":"trans_system_vols","where":"proj_id='%s'" %(create_vol['project_id']),"and":"vol_name='%s'"%(create_vol['volume_name'])}
-            self.volume = self.db.pg_select(select_vol)
+            select_vol = {"select":"vol_id","from":"trans_system_vols","where":"proj_id='%s'" %(create_vol['project_id']),"and":"vol_name='%s'"%(create_vol['volume_name'])}
+            volume = self.db.pg_select(select_vol)
         except:
             logger.sql_error("Could not get the volume name from Transcirrus DB.")
             raise Exception("Could not get the volume name from Transcirrus DB.")
 
-        if((len(self.volume)>1) and (self.volume[0][3] == create_vol['volume_name'])):
+        if(len(volume) >= 1):
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
-            create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
-
-        if('description' not in create_vol):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
-            if('snapshot_id' in create_vol):
-                create_vol['description'] = "%s volume from snapshot %s." %(create_vol['volume_name'],create_vol['snapshot_id'])
-            elif('source_vol_id' in create_vol):
-                create_vol['description'] = "%s volume clone from volume %s." %(create_vol['volume_name'],create_vol['source_vol_id'])
-            else:
-                create_vol['description'] = "%s volume" %(create_vol['project_id'])
+            raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
+        
+        #check the project capacity
+        # nned to impliment quatas
 
         if(create_flag == 1):
             try:
@@ -177,34 +174,28 @@ class volume_ops:
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
-
+    
             try:
-                #add the new user to openstack
-                if('snapshot_id' in create_vol):
-                    self.body = '{"volume": {"status": "creating", "description": "%s", "availability_zone": null, "source_volid": null, "snapshot_id": "%s", "size": "%s", "user_id": null, "name": "%s", "imageRef": null, "attach_status": "detached", "volume_type": null, "project_id": "%s", "metadata": {}}}'%(create_vol['description'],create_vol['snapshot_id'],create_vol['volume_size'],create_vol['volume_name'],create_vol['project_id'])
-                elif('source_vol_id' in create_vol):
-                    self.body = '{"volume": {"status": "creating", "description": "%s", "availability_zone": null, "source_volid": null, "snapshot_id": null, "size": "%s", "user_id": null, "name": "%s", "imageRef": null, "attach_status": "detached", "volume_type": null, "project_id": "%s", "metadata": {}}}'%(create_vol['description'],create_vol['volume_size'],create_vol['volume_name'],create_vol['project_id'])
-                else:
-                    self.body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
+                #add the new user to openstack 
+                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
                 function = 'POST'
-                api_path = '/v2/%s/volumes' %(create_vol['project_id'])
+                api_path = '/v1/%s/volumes' %(create_vol['project_id'])
                 sec = self.sec
-                rest_dict = {"body": self.body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception, e:
                 raise e
 
             load = json.loads(rest['data'])
-            if(rest['response'] == 202):
+            if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
-                volname = str(load['volume']['name'])
+                volname = str(load['volume']['display_name'])
                 volid = str(load['volume']['id'])
                 volsize = int(load['volume']['size'])
-                voltype = str(load['volume']['volume_type'])
 
                 input_dict = {'volume_id':volid,'project_id':create_vol['project_id']}
                 while(True):
@@ -225,11 +216,11 @@ class volume_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":voltype,"vol_attached_to_inst":"NONE"}
+                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":create_vol['volume_type'],"vol_attached_to_inst":"NONE"}
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except Exception, e:
                     self.db.pg_transaction_rollback()
-                    logger.sql_error("Could not enter in volume name information into Transcirrus DB")
+                    logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
                     raise e
                 else:
                     self.db.pg_transaction_commit()
@@ -240,129 +231,6 @@ class volume_ops:
         else:
             logger.sys_error("Could not create a new volume. Unknown error occured. ERROR: 555")
             raise Exception("Could not create a new volume. Unknown error occured. ERROR: 555")
-
-    def create_vol_from_snapshot(self,input_dict):
-        """
-        DESC: Create a new volume in a project from an exisiting snapshot in the project.
-        All user levels can spin up new volumes.
-        INPUTS: volume_size - REQ
-                project_id - REQ
-                snapshot_id - REQ
-                volume_name - OP
-                volume_zone - Optional default is nova
-                description - Optional
-        OUTPUTS: r_dict - volume_name
-                        - volume_type
-                        - volume_id
-                        - volume_size
-        ACCESS: Admins can create a volume with any snapshot, Users can only create
-                volumes with snapshots they own.
-        NOTE: You can not create two volumes with the same name in the same project.
-        """
-        #create = {'volume_name':'test111','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd','snapshot_id':'a32d8390-1df0-445a-b560-f38697dd3d8f'}
-        #make sure snapshot id is given.
-        if(('snapshot_id' not in input_dict) or (input_dict['snapshot_id'] == '')):
-            logger.sys_error("Snapshot ID is required.")
-            raise Exception("Snapshot ID is required.")
-
-        if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
-            input_dict['volume_zone'] = 'nova'
-
-        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
-            logger.sys_error("Project ID is required.")
-            raise Exception("Poject ID is required.")
-
-        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == '')):
-            input_dict['volume_name'] = input_dict['snapshot_id'] + '_vol_from_snap_%s'%(str(self.rannum))
-
-        if('description' not in input_dict):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
-            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
-
-        if(self.is_admin == 0):
-            if(self.user_level == 1):
-                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
-            elif(self.is_admin == 2):
-                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"user_id='%s'"%(self.user_id)}
-        else:
-            self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id'])}
-
-        #check if the snapshot exists in the project and that the user can use it
-        try:
-            get_snap = self.db.pg_select(self.select_snap)
-        except:
-            logger.sys_error("The snapshot does not exist in this project, or you may not have permission to use it.")
-            raise Exception("The snapshot does not exist in this project, or you may not have permission to use it.")
-
-        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id']}
-
-        output = self.create_volume(input_dict)
-
-        return output
-
-    def create_vol_clone(self,input_dict):
-        """
-        DESC: Create a new volume in a project from an exisiting snapshot in the project.
-        All user levels can spin up new volumes.
-        INPUTS: volume_id - REQ
-                project_id - REQ
-                volume_name - OP
-                volume_zone - Optional default is nova
-                description - Optional
-        OUTPUTS: r_dict - volume_name
-                        - volume_type
-                        - volume_id
-                        - volume_size
-        ACCESS: Admins can create a volume with any snapshot, Users can only create
-                volumes with snapshots they own.
-        NOTE: You can not create two volumes with the same name in the same project.
-        """
-
-        #make sure snapshot id is given.
-        if(('volume_id' not in input_dict) or (input_dict['volume_id'] == '')):
-            logger.sys_error("Volume ID is required.")
-            raise Exception("Volume ID is required.")
-
-        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
-            logger.sys_error("Project ID is required.")
-            raise Exception("Poject ID is required.")
-
-        if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
-            input_dict['volume_zone'] = 'nova'
-
-        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == '')):
-            input_dict['volume_name'] = input_dict['volume_id'] + '_clone_%s'%(str(self.rannum))
-
-        if('description' not in input_dict):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
-            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
-
-        if(self.is_admin == 0):
-            if(self.user_level == 1):
-                self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
-            elif(self.is_admin == 2):
-                self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"user_id='%s'"%(self.user_id)}
-        else:
-            self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
-
-        #check if the snapshot exists in the project and that the user can use it
-        try:
-            get_vol= self.db.pg_select(self.select_vol)
-        except:
-            logger.sys_error("The volume does not exist in this project, or you may not have permission to clone it.")
-            raise Exception("The volume does not exist in this project, or you may not have permission to clone it.")
-
-        #if no vol size given
-        if(('volume_size' not in input_dict) or (input_dict['volume_size'] == '')):
-            input_dict['volume_size'] = get_vol[0][1]
-
-        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'volume_id':input_dict['volume_id']}
-
-        output = self.create_volume(input_dict)
-
-        return output
 
     def get_volume(self,input_dict):
         """
@@ -400,7 +268,7 @@ class volume_ops:
             #NOTE: if token is not converted python will pass unicode and not a string
             header = {"Content-Type": "application/json", "X-Auth-Token": token}
             function = 'GET'
-            api_path = '/v2/%s/volumes/%s' %(input_dict['project_id'],input_dict['volume_id'])
+            api_path = '/v1/%s/volumes/%s' %(input_dict['project_id'],input_dict['volume_id'])
             sec = self.sec
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
             rest = api.call_rest(rest_dict)
@@ -415,6 +283,11 @@ class volume_ops:
             ec.error_codes(rest)
 
         return load
+
+
+
+    def create_vol_from_snapshot(self):
+        print "not implemented"
 
     def delete_volume(self,delete_vol):
         """
@@ -500,7 +373,7 @@ class volume_ops:
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
                 function = 'DELETE'
-                api_path = '/v2/%s/volumes/%s' %(delete_vol['project_id'],delete_vol['volume_id'])
+                api_path = '/v1/%s/volumes/%s' %(delete_vol['project_id'],delete_vol['volume_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -638,7 +511,7 @@ class volume_ops:
             except Exception as e:
                 logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
 
-        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_mount_location':get_vol[0][9],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name}
+        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name}
         return r_dict
 
     def create_volume_type(self,volume_type_name):
@@ -672,15 +545,14 @@ class volume_ops:
                 raise Exception("Could not connect to the API")
 
             try:
-                #add the new user to openstack 
+                #add the new volume type to openstack 
                 body = '{"volume_type": {"name": "%s"}}'%(voltype)
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
                 function = 'POST'
-                api_path = '/v2/%s/types' %(self.project_id)
+                api_path = '/v1/%s/types' %(self.project_id)
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
-                print "rest_dict: %s" % rest_dict
                 rest = api.call_rest(rest_dict)
             except Exception as e:
                 print "Could not add the volume type %s" %(e)
@@ -693,7 +565,6 @@ class volume_ops:
                 load = json.loads(rest['data'])
                 vol_type_name = str(load['volume_type']['name'])
                 vol_type_id = str(load['volume_type']['id'])
-                print "load: %s" % load
                 r_dict = {"volume_type_name": vol_type_name, "volume_type_id": vol_type_id}
                 return r_dict
             else:
@@ -752,15 +623,15 @@ class volume_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                logger.sys_error("Could not delete the volume type %s, exception: %s" % (voltype, e))
-                raise Exception ("Could not delete the volume type %s, exception: %s" % (voltype, e))
+                logger.sys_error("Could not delete the volume type %s, exception: %s" % (volume_type_name, e))
+                raise Exception ("Could not delete the volume type %s, exception: %s" % (volume_type_name, e))
 
-            if (rest['response'] == 200):
-                logger.sys_info("Delete volume type %s was successful" % voltype)
+            if (rest['response'] == 202 or rest['response'] == 200):
+                logger.sys_info("Delete volume type %s was successful" % volume_type_name)
                 return True
             else:
-                logger.sys_error("Could not delete the volume type %s, error: %s" % (voltype, rest['response']))
-                raise Exception ("Could not delete the volume type %s, error: %s" % (voltype, rest['response']))
+                logger.sys_error("Could not delete the volume type %s, error: %s" % (volume_type_name, rest['response']))
+                raise Exception ("Could not delete the volume type %s, error: %s" % (volume_type_name, rest['response']))
         else:
             logger.sys_error ("Could not delete the volume type %s, must be an admin." % volume_type_name)
             raise Exception ("Could not delete the volume type %s, must be an admin." % volume_type_name)
@@ -813,7 +684,7 @@ class volume_ops:
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
                 function = 'GET'
-                api_path = '/v2/%s/types' %(self.project_id)
+                api_path = '/v1/%s/types' %(self.project_id)
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
@@ -895,7 +766,7 @@ class volume_ops:
                 token = self.token
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
                 function = 'POST'
-                api_path = '/v2/%s/types/%s/extra_specs' %(self.project_id,input_dict['volume_type_id'])
+                api_path = '/v1/%s/types/%s/extra_specs' %(self.project_id,input_dict['volume_type_id'])
                 sec = self.sec
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
