@@ -9,8 +9,7 @@ import subprocess
 from transcirrus.component.cinder.cinder_volume import volume_ops
 
 # Common constants
-##CINDER_CONF = "/etc/cinder.conf"
-CINDER_CONF = "cinder.conf"
+CINDER_CONF = "/etc/cinder.conf"
 
 
 def backend_configured (backend_name):

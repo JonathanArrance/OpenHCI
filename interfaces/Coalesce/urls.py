@@ -389,7 +389,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_delete',
             name='eseries_delete'),
 
-	url(r'^eseries/web_proxy_srv/set/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
+	url(r'^eseries/web_proxy_srv/set/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
 	    'coalesce.coal_beta.views.eseries_set_web_proxy_srv',
             name='eseries_set_web_proxy_srv'),
 

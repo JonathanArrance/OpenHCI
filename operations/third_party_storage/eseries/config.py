@@ -5,7 +5,7 @@
 import transcirrus.operations.third_party_storage.common as common
 
 # Constants
-ESERIES_NAME = "e-series"
+ESERIES_NAME = "NetApp_E-Series"
 
 
 def add_eseries_to_cinder (data):

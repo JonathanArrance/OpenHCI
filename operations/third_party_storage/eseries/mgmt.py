@@ -61,7 +61,6 @@ class eseries_mgmt():
         return (self._client.list_storage_pools())
 
     def set_storage_pools (self, storage_pools):
-        ##pools = [x.strip().lower() if x else None for x in storage_pools.split(',')]
         pools = [x.strip().lower() if x else None for x in storage_pools]
 
         ## NOTE: Need to verify if this is getting all storage pool from all controllers
@@ -125,8 +124,6 @@ class eseries_mgmt():
             except socket.gaierror as e:
                 raise exception.NoValidHost ("Controller IP '%(host)s' could not be resolved: %(e)s." % {'host': host, 'e': e})
 
-        ##ips = [i.strip() for i in self.ctrl_ips.split(",")]
-        ##ips = [x for x in ips if _resolve_host(x)]
         ips = [x for x in self.ctrl_ips if _resolve_host(x)]
 
         self.host = self.resolve_hostname (self.server)

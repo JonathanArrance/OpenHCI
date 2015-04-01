@@ -184,21 +184,23 @@ def get_eseries():
 # Get E-Series data for our internal web proxy service.
 def get_eseries_pre_existing_data (data):
     '''
-    return data = {'server':     "localhost",
-                   'srv_port':   "8443",
-                   'transport':  "https",
-                   'login':      "rw",
-                   'pwd':        "rw",
-                   'ctrl_pwd':   given,
-                   'disk_pools': given,
-                   'ctrl_ips':   given
+    return data = {'server':       "localhost",
+                   'srv_port':     "8443",
+                   'transport':    "https",
+                   'service_path': "/devmgr/v2"
+                   'login':        "rw",
+                   'pwd':          "rw",
+                   'ctrl_pwd':     given,
+                   'disk_pools':   given,
+                   'ctrl_ips':     given
                   }
     '''
-    data['server']    = "localhost"
-    data['srv_port']  = "8443"
-    data['transport'] = "https"
-    data['login']     = "rw"
-    data['pwd']       = "rw"
+    data['server']       = "localhost"
+    data['srv_port']     = "8443"
+    data['transport']    = "https"
+    data['service_path'] = "/devmgr/v2"
+    data['login']        = "rw"
+    data['pwd']          = "rw"
     return (data)
 
 
