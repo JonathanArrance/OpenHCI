@@ -10,7 +10,7 @@
 '''
  Background steps for manually configuring storage for cinder:
 
-   changes to /etc/cinder.conf
+   changes to /etc/cinder/cinder.conf
      add new backend name to 'enabled_backends'
        enabled_backends=ssd,spindle,nfs,NetApp_E-Series
      add a stanza for the backend
@@ -34,7 +34,7 @@
         [NetApp_E-Series]
         # static data
         volume_group=cinder-volume-eseries
-        volume_backend_name=e-series
+        volume_backend_name=NetApp_E-Series
         volume_driver=cinder.volume.drivers.netapp.common.NetAppDriver
         netapp_storage_protocol=iscsi
         netapp_storage_family=eseries
@@ -107,10 +107,10 @@ def get_nfs():
 
 
 # Delete nfs data from cinder and nfs configs.
-def delete_nfs():
+def delete_nfs (auth):
     common.delete_backend (nfs.NFS_NAME)
     common.delete_stanza (nfs.NFS_NAME)
-    nfs.delete_nfs_conf (nfs.NFS_NAME)
+    nfs.delete_nfs_conf()
     common.delete_voltype (auth, nfs.NFS_NAME)
     common.restart_cinder_volume_proc()
     return

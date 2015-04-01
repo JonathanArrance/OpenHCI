@@ -22,11 +22,11 @@ import requests
 
 import six.moves.urllib.parse as urlparse
 
-from cinder import exception
-from cinder.openstack.common import log as logging
+#from cinder import exception
+#from cinder.openstack.common import log as logging
 
 
-LOG = logging.getLogger(__name__)
+#LOG = logging.getLogger(__name__)
 
 
 class WebserviceClient(object):
@@ -45,9 +45,11 @@ class WebserviceClient(object):
         if host is None or port is None or scheme is None:
             msg = _("One of the required inputs from host, port"
                     " or scheme not found.")
-            raise exception.InvalidInput(reason=msg)
+            #raise exception.InvalidInput(reason=msg)
+            raise Exception (msg)
         if scheme not in ('http', 'https'):
-            raise exception.InvalidInput(reason=_("Invalid transport type."))
+            #raise exception.InvalidInput(reason=_("Invalid transport type."))
+            raise Exception ("Invalid transport type.")
 
     def _create_endpoint(self, scheme, host, port, service_path):
         """Creates end point url for the service."""
@@ -65,8 +67,8 @@ class WebserviceClient(object):
                        headers=None, timeout=None, verify=False):
         url = url or self._endpoint
 
-        msg = "method: %s - url: %s - params: %s - data: %s - headers %s - verify: %s" % (method,url,params,data,headers,verify)
-        LOG.exception(_("request data:: %s"), msg)
+        #msg = "method: %s - url: %s - params: %s - data: %s - headers %s - verify: %s" % (method,url,params,data,headers,verify)
+        #LOG.exception(_("request data:: %s"), msg)
 
 
         try:
@@ -76,10 +78,11 @@ class WebserviceClient(object):
         # Catching error conditions other than the perceived ones.
         # Helps propagating only known exceptions back to the caller.
         except Exception as e:
-            LOG.exception(_("Unexpected error while invoking web service."
-                            " Error - %s."), e)
-            raise exception.NetAppDriverException(
-                _("Invoking web service failed."))
+            #LOG.exception(_("Unexpected error while invoking web service."
+            #                " Error - %s."), e)
+            #raise exception.NetAppDriverException(
+            #    _("Invoking web service failed."))
+            raise Exception ("Invoking web service failed.")
         self._eval_response(response)
         return response
 
@@ -112,7 +115,8 @@ class RestClient(WebserviceClient):
         kwargs = kwargs or {}
         if use_system:
             if not self._system_id:
-                raise exception.NotFound(_('Storage system id not set.'))
+                #raise exception.NotFound(_('Storage system id not set.'))
+                raise Exception ('Storage system id not set.')
             kwargs['system-id'] = self._system_id
         path = path.format(**kwargs)
         if not self._endpoint.endswith('/'):
@@ -131,9 +135,9 @@ class RestClient(WebserviceClient):
 
         params = {'m': method, 'p': path, 'd': scrubbed_data,
                   'sys': use_system, 't': timeout, 'v': verify, 'k': kwargs}
-        LOG.debug(_("Invoking rest with method: %(m)s, path: %(p)s,"
-                    " data: %(d)s, use_system: %(sys)s, timeout: %(t)s,"
-                    " verify: %(v)s, kwargs: %(k)s.") % (params))
+        #LOG.debug(_("Invoking rest with method: %(m)s, path: %(p)s,"
+        #            " data: %(d)s, use_system: %(sys)s, timeout: %(t)s,"
+        #            " verify: %(v)s, kwargs: %(k)s.") % (params))
         url = self._get_resource_url(path, use_system, **kwargs)
         if self._content_type == 'json':
                 headers = {'Accept': 'application/json',
@@ -144,8 +148,9 @@ class RestClient(WebserviceClient):
                                           timeout=timeout, verify=verify)
                 return res.json() if res.text else None
         else:
-            raise exception.NetAppDriverException(
-                _("Content type not supported."))
+            #raise exception.NetAppDriverException(
+            #    _("Content type not supported."))
+            raise Exception ("Content type not supported.")
 
     def _eval_response(self, response):
         """Evaluates response before passing result to invoker."""
@@ -158,7 +163,8 @@ class RestClient(WebserviceClient):
                 msg = _("Response error - %s.") % response.text
             else:
                 msg = _("Response error code - %s.") % status_code
-            raise exception.NetAppDriverException(msg)
+            #raise exception.NetAppDriverException(msg)
+            raise Exception (msg)
 
     def create_volume(self, pool, label, size, unit='gb', seg_size=0):
         """Creates volume on array."""
