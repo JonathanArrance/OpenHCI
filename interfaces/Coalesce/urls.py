@@ -391,6 +391,32 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.download_public_key',
             name='download_public_key'),
 
+	# --- 3rd Party Storage ----
+
+	url(r'^supported_third_party_storage/$',
+	    'coalesce.coal_beta.views.supported_third_party_storage',
+            name='supported_third_party_storage'),
+
+	url(r'^eseries/get/$',
+	    'coalesce.coal_beta.views.eseries_get',
+            name='eseries_get'),
+
+	url(r'^eseries/delete/$',
+	    'coalesce.coal_beta.views.eseries_delete',
+            name='eseries_delete'),
+
+	url(r'^eseries/web_proxy_srv/set/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_set_web_proxy_srv',
+            name='eseries_set_web_proxy_srv'),
+
+	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_set_controller',
+            name='eseries_set_controller'),
+
+	url(r'^eseries/config/set/(?P<disk_pools>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_set_config',
+            name='eseries_set_config'),
+
         # --- Setup ----
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',

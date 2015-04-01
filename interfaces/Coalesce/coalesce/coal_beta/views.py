@@ -79,11 +79,18 @@ from transcirrus.component.swift.swiftconnection import SwiftConnection
 #import transcirrus.operations.upgrade as upgrade
 #sys.path.append("/usr/lib/python2.6/site-packages/")
 
+import transcirrus.operations.third_party_storage.third_party_config as tpc
+from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
+
 # Custom imports
 #from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
 
+# Globals
 cache_key = None
+eseries_config = None
+nfs_config = None
+
 
 def stats(request):
     try:
@@ -335,6 +342,9 @@ def project_view(request, project_id):
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
 
+    volume_types = []
+    volume_types = vo.list_volume_types()
+
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
         v_info = vo.get_volume_info(v_dict)
@@ -416,6 +426,7 @@ def project_view(request, project_id):
                                                         'floating_ips': floating_ips,
                                                         'hosts': hosts,
                                                         'volumes': volumes,
+                                                        'volume_types': volume_types,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         'containers': containers,
@@ -479,6 +490,9 @@ def pu_project_view(request, project_id):
     instances     = so.list_servers(project_id)
     instance_info={}
     flavors       = fo.list_flavors()
+
+    volume_types = []
+    volume_types = vo.list_volume_types()
 
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
@@ -556,6 +570,7 @@ def pu_project_view(request, project_id):
                                                         'routers': routers,
                                                         'floating_ips': floating_ips,
                                                         'volumes': volumes,
+                                                        'volume_types': volume_types,
                                                         'volume_info': volume_info,
                                                         'snapshots': snapshots,
                                                         'containers': containers,
@@ -581,6 +596,9 @@ def basic_project_view(request, project_id):
     instances     = so.list_servers(project_id)
     flavors       = fo.list_flavors()
     #pub_net_list  = no.list_external_networks()
+
+    volume_types = []
+    volume_types = vo.list_volume_types()
 
     for volume in volumes:
         v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
@@ -730,6 +748,7 @@ we need to build a function to request a vm resize
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
+                                                        'volume_types': volume_types,
                                                         'volume_info':volume_info,
                                                         'images': images,
                                                         'instances': instances,
@@ -2116,6 +2135,196 @@ def upgrade (request, version="stable"):
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+
+# --- Routines for 3rd party storage ---
+
+# Return the names of supported 3rd party storage providers and if they are configured (enabled).
+def supported_third_party_storage (request):
+    '''
+        returns json:
+            status:
+                success
+                    providers: array of dict [{'name': "nfs", 'configured': "0"},
+                                              {'name': "NetApp E-Series", 'configured': "1"}
+                                             ]
+                                             name: 3rd party storage name
+                                             configured: 0/1
+                                                         0 - storage provider is not currently configured
+                                                         1 - storage provider is currently configured
+                error
+                    message: error message
+    '''
+    try:
+        providers = tpc.get_supported_third_party_storage()
+        out = {'status' : "success", 'providers' : providers}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting supported 3rd party storage providers: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Return E-Series configuration data.
+def eseries_get (request):
+    '''
+        returns json:
+            status:
+                success
+                    data: dict {'pre_existing': "0/1",            0 - not using pre-existing server; 1 - using pre-existing web proxy srv
+                                'server':  "server hostname/IP",  web proxy server IP address/hostname
+                                'srv_port': "listen port",        normally 8080 or 8443
+                                'transport': "transport",         http/https
+                                'login': "username",              username into web proxy
+                                'pwd': "password",                password for user
+                                'ctrl_pwd': "ctrl-password",      password into storage controller(s)
+                                'ctrl_ips': ["ip1", "ip2"],       mgmt IP/hostnames for storage controllers
+                                'disk_pools': ["pool1", "pool2"]  disk/storage pools
+                               }
+                error
+                    message: error message
+    '''
+    try:
+        data = tpc.get_eseries()
+        out = {'status' : "success", 'data' : data}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting NetApp E-Series configuration data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete E-Series configuration.
+def eseries_delete (request):
+    '''
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        tpc.delete_eseries (auth)
+        out = {'status' : "success", 'message' : "NetApp E-Series configuration has been deleted."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Setup the E-Series web proxy server with the given data and return the configured IP addresses.
+# If we are using a pre-existing web proxy then the remaining input is ignored.
+def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transport, login, pwd):
+    '''
+        input:
+            pre_existing: "0/1"                 0 - not using pre-existing web proxy; 1 using pre-existy web proxy
+            The remaining inputs are relevant only if pre_existing = "1"
+            server:       "server hostname/IP"  web proxy server IP address/hostname
+            srv_port:     "listen port"         normally 8080 or 8443
+            transport:    "transport"           http/https
+            login:        "username"            username into web proxy
+            pwd:          "password"            password for user
+        returns json:
+            status:
+                success
+                    ips: array of IP addresses ["ip1", "ip2", "ip3"]
+                error
+                    message: error message
+    '''
+    global eseries_config
+    service_path = "/devmgr/v2"         # Hard coded path since most users will not change the default
+
+    try:
+        if pre_existing == "1":
+            eseries_config = eseries_mgmt (transport, server, srv_port, service_path, login, pwd)
+        else:
+            data = {}
+            data = tpc.get_eseries_pre_existing_data (data)
+            eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], data['service_path'], data['login'], data['pwd'])
+
+        storage_systems = eseries_config.get_storage_systems()
+        for system in storage_systems:
+            found_ips = eseries_config.get_storage_system_ips (system['id'])
+
+        out = {'status' : "success", 'ips' : found_ips}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error setting NetApp E-Series web proxy configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get the controller password and IP addresses and return the configured disk/storage pools.
+def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
+    '''
+        input:
+            ctrl_pwd: "ctrl-password"   password into storage controller(s)
+            ctrl_ips: "ip1,ip2"         mgmt IP/hostnames for storage controllers
+        returns json:
+            status:
+                success
+                    disk_pools: array of dict [{'name': "pool1", 'free': "10", 'total': "100"},
+                                               {'name': "pool2", 'free': "10", 'total': "100"}
+                                               {'name': "pool3", 'free': "10", 'total': "100"}
+                                              ]
+                                              name: disk/storage pool name
+                                              free: free space on disk pool in GigaBytes
+                                              total: total space on disk pool in GigaBytes
+                error
+                    message: error message
+    '''
+    global eseries_config
+
+    try:
+        ips = ctrl_ips.split(",")
+        eseries_config.set_ctrl_password_and_ips (ctrl_password, ips)
+        disks = config.get_storage_pools()
+
+        pools = []
+        for disk in disks:
+            free_capacity_gb = 0
+            total_capacity_gb = 0
+            usage = eseries_config.get_pool_usage (disk['id'])
+            pools.append ({'name': disk['label'], 'free': usage['free_capacity_gb'], 'total': usage['total_capacity_gb']})
+
+        out = {'status' : "success", 'pools' : pools}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error setting NetApp E-Series controller data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get the disk pools and commit the configuration.
+def eseries_set_config (request, disk_pools):
+    '''
+        input:
+            disk_pools: "pool1,pool2"   disk/storage pools
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+
+        storage_pools = disk_pools.split(",")
+        eseries_config.set_storage_pools (storage_pools)
+
+        data = {'server':     eseries_config.server, 
+                'srv_port':   eseries_config.port, 
+                'transport':  eseries_config.scheme, 
+                'login':      eseries_config.username, 
+                'pwd':        eseries_config.password, 
+                'ctrl_pwd':   eseries_config.ctrl_password, 
+                'ctrl_ips':   eseries_config.ctrl_ips,
+                'disk_pools': eseries_config.storage_pools}
+        if eseries_config.server == "localhost":
+            pre_existing = False
+        else:
+            pre_existing = True
+        tpc.add_eseries (data, auth, pre_existing=pre_existing)
+
+        out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully added"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error applying NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+# ---
 
 def setup(request):
     if request.method == 'POST':
