@@ -669,47 +669,47 @@ class volume_ops:
             raise Exception("Status level not sufficient to create volume types.")
 
         #Talk to the cinder API
-        if(self.is_admin == 1):
-            try:
-                #build an api connection
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                api = caller(api_dict)
-            except:
-                logger.sys_error("Could not connect to the API")
-                raise Exception("Could not connect to the API")
+        #if(self.is_admin == 1):
+        try:
+            #build an api connection
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
 
-            try:
-                #add the new user to openstack 
-                body = ''
-                token = self.token
-                header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
-                function = 'GET'
-                api_path = '/v1/%s/types' %(self.project_id)
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
-                rest = api.call_rest(rest_dict)
-            except Exception as e:
-                logger.sys_error("Could not get volume type list, %s" %(e))
-                #back the user out of the transcirrus DB if the db works and the REST API fails
-                raise e
+        try:
+            #add the new user to openstack 
+            body = ''
+            token = self.token
+            header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+            function = 'GET'
+            api_path = '/v1/%s/types' %(self.project_id)
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not get volume type list, %s" %(e))
+            #back the user out of the transcirrus DB if the db works and the REST API fails
+            raise e
 
-            if(rest['response'] == 200):
-                #read the json that is returned
-                logger.sys_info("list_volume_types: Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
-                load = json.loads(rest['data'])
-                r_dict = []
-                for vtype in load['volume_types']:
-                    name = vtype['name']
-                    id = vtype['id']
-                    extra_specs = vtype['extra_specs']
-                    r_dict.append({'name': name, 'id': id, 'extra_specs': extra_specs})
-                return r_dict
-            else:
-                #util.http_codes(rest['response'],rest['reason'],rest['data'])
-                ec.error_codes(rest)
+        if(rest['response'] == 200):
+            #read the json that is returned
+            logger.sys_info("list_volume_types: Response %s with Reason %s Data: %s" %(rest['response'],rest['reason'],rest['data']))
+            load = json.loads(rest['data'])
+            r_dict = []
+            for vtype in load['volume_types']:
+                name = vtype['name']
+                id = vtype['id']
+                extra_specs = vtype['extra_specs']
+                r_dict.append({'name': name, 'id': id, 'extra_specs': extra_specs})
+            return r_dict
         else:
-            logger.sys_error("Could not get volume type list.")
-            raise ("Could not get volume type list.")
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
+        #else:
+        #    logger.sys_error("Could not get volume type list.")
+        #    raise ("Could not get volume type list.")
 
     def list_volume_backends(self):
         """

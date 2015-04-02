@@ -918,6 +918,18 @@ def security_group_view(request, groupid, project_id):
                                                         'sec_group': sec_group,
                                                         }))
 
+def update_instance_secgroups(request, project_id, instance_id, secgroup_id, action):
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        update_sec = {'project_id':project_id,'instance_id':instance_id,'secgroup_id':secgroup_id,'action':action}
+        out = sa.update_instance_secgroup(update_sec)
+        out['status'] = 'success'
+        out['message'] = 'The instance %s security group %s has been %s'%(out['instance_name'],out['secgroup_name'],action)
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not change the instance security group: %s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def create_keypair(request, key_name, project_id):
     try:
         auth = request.session['auth']
