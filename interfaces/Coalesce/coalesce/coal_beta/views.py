@@ -2082,13 +2082,16 @@ def supported_third_party_storage (request):
     return HttpResponse(simplejson.dumps(out))
 
 
+# --- Routines for E-Series ---
+
 # Return E-Series configuration data.
 def eseries_get (request):
     '''
         returns json:
             status:
                 success
-                    data: dict {'pre_existing': "0/1",            0 - not using pre-existing server; 1 - using pre-existing web proxy srv
+                    data: dict {'enabled':      "0/1",           "0" not enabled or "1" is enabled
+                                'pre_existing': "0/1",            "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
                                 'server':  "server hostname/IP",  web proxy server IP address/hostname
                                 'srv_port': "listen port",        normally 8080 or 8443
                                 'transport': "transport",         http/https
@@ -2158,7 +2161,6 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
             data = tpc.get_eseries_pre_existing_data (data)
             eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], data['service_path'], data['login'], data['pwd'])
 
-        print "getting storage systems"
         storage_systems = eseries_config.get_storage_systems()
         for system in storage_systems:
             if system['name'] == "":
@@ -2171,7 +2173,7 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
     return HttpResponse(simplejson.dumps(out))
 
 
-# Get the controller password and IP addresses and return the configured disk/storage pools.
+# Set the E-Series controller password and IP addresses and return the configured disk/storage pools.
 def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     '''
         input:
@@ -2193,13 +2195,14 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     global eseries_config
 
     try:
+        print "eseries_config.server: %s" % eseries_config.server
         if ctrl_pwd == None:
             ctrl_password = ""
         else:
             ctrl_password = ctrl_pwd
         ips = ctrl_ips.split(",")
         eseries_config.set_ctrl_password_and_ips (ctrl_password, ips)
-        disks = config.get_storage_pools()
+        disks = eseries_config.get_storage_pools()
 
         pools = []
         for disk in disks:
@@ -2214,7 +2217,7 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     return HttpResponse(simplejson.dumps(out))
 
 
-# Get the disk pools and commit the configuration.
+# Set the E-Series disk pools and commit the configuration.
 def eseries_set_config (request, disk_pools):
     '''
         input:
@@ -2249,6 +2252,137 @@ def eseries_set_config (request, disk_pools):
         out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully added"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error applying NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Update the E-Series web proxy server and cinder with the given data.
+# If we are using a pre-existing web proxy then the web proxy server data is ignored.
+def eseries_update (request, pre_existing, server, srv_port, transport, login, pwd, ctrl_pwd, ctrl_ips, disk_pools):
+    '''
+        input:
+            pre_existing: "0/1"                 0 - not using pre-existing web proxy; 1 using pre-existy web proxy
+            The following are relevant only if pre_existing = "1"
+              server:     "server hostname/IP"  web proxy server IP address/hostname
+              srv_port:   "listen port"         normally 8080 or 8443
+              transport:  "transport"           http/https
+              login:      "username"            username into web proxy
+              pwd:        "password"            password for user
+            The remaining are required
+              ctrl_pwd:   "ctrl-password"       password for storage controller(s)
+              ctrl_ips:   "ip1,ip2"             mgmt IP/hostnames for storage controllers
+              disk_pools: "pool1,pool2"         disk/storage pools
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    global eseries_config
+
+    try:
+        if pre_existing == "1":
+            existing = True
+        else:
+            existing = False
+
+        if ctrl_pwd == None:
+            ctrl_password = ""
+        else:
+            ctrl_password = ctrl_pwd
+        ips = ctrl_ips.split(",")
+
+        storage_pools = disk_pools.split(",")
+
+        data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_pwd, 'disk_pools': storage_pools, 'ctrl_ips': ips}
+        tpc.update_eseries (data, existing)
+
+        out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully updated"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# --- Routines for NFS ---
+
+# Return NFS configuration data.
+def nfs_get (request):
+    '''
+        returns json:
+            status:
+                success
+                    data: dict {'enabled':    "0/1",                "0" not enabled or "1" is enabled
+                                'mountpoint': ["mntpt1", "mntpt2"]  array of mountpoints
+                error
+                    message: error message
+    '''
+    try:
+        data = tpc.get_nfs()
+        out = {'status' : "success", 'data' : data}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting NFS configuration data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete NFS configuration.
+def nfs_delete (request):
+    '''
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        tpc.delete_nfs (auth)
+        out = {'status' : "success", 'message' : "NFS configuration has been deleted."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting NFS configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Setup NFS in cinder with the given mountpoint(s).
+def nfs_set (request, mountpoints):
+    '''
+        input:
+            mountpoints: array of mountpoints ["mntpt1", "mntpt2", "mntpt3"]
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        mntpts = mountpoints.split(",")
+        tpc.add_nfs (mntpts, auth)
+        out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding NFS storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Update NFS in cinder with the given mountpoint(s).
+def nfs_update (request, mountpoints):
+    '''
+        input:
+            mountpoints: array of mountpoints ["mntpt1", "mntpt2", "mntpt3"]
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        mntpts = mountpoints.split(",")
+        tpc.update_nfs (mntpts)
+        out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 # ---

@@ -555,9 +555,8 @@ class volume_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                print "Could not add the volume type %s" %(e)
                 logger.sys_error("Could not add the volume type %s" %(e))
-                raise
+                raise Exception("Could not add the volume type %s" %(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -568,9 +567,8 @@ class volume_ops:
                 r_dict = {"volume_type_name": vol_type_name, "volume_type_id": vol_type_id}
                 return r_dict
             else:
-                print "error:: response: %s, reason: %s, data: %s" % (rest['response'], rest['reason'], rest['data'])
-                #util.http_codes(rest['response'],rest['reason'],rest['data'])
-                ec.error_codes(rest)
+                logger.sys_error("Could not create new volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
+                raise Exception ("Could not create new volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
         else:
             logger.sys_error("Could not create a new volume type, not an admin.")
             raise Exception("Could not create a new volume type, not an admin.")
@@ -629,9 +627,13 @@ class volume_ops:
             if (rest['response'] == 202 or rest['response'] == 200):
                 logger.sys_info("Delete volume type %s was successful" % volume_type_name)
                 return True
+            elif (rest['response'] == 400):
+                data = json.loads(rest['data'])
+                logger.sys_error("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], data['badRequest']['message']))
+                raise Exception ("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], data['badRequest']['message']))
             else:
-                logger.sys_error("Could not delete the volume type %s, error: %s" % (volume_type_name, rest['response']))
-                raise Exception ("Could not delete the volume type %s, error: %s" % (volume_type_name, rest['response']))
+                logger.sys_error("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
+                raise Exception ("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
         else:
             logger.sys_error ("Could not delete the volume type %s, must be an admin." % volume_type_name)
             raise Exception ("Could not delete the volume type %s, must be an admin." % volume_type_name)

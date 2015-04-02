@@ -82,6 +82,7 @@ class flavor_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not get the defined instance flavors: %s" %(e))
+            raise Exception("Could not get the defined instance flavors: %s" %(e))
 
         #check the response and make sure it is a 200 or 203
         if((rest['response'] == 200) or (rest['response'] == 203)):

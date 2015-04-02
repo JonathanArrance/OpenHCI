@@ -142,7 +142,9 @@ def add_eseries (data, auth, pre_existing=True):
 
 
 # Update E-Series data in cinder config.
-def update_eseries (data):
+def update_eseries (data, pre_existing=True):
+    if not pre_existing:
+        data = eseries.get_eseries_pre_existing_data (data)
     if not common.delete_stanza (eseries.ESERIES_NAME):
         return (False)
     eseries.add_eseries_stanza (data)
