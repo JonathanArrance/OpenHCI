@@ -2158,8 +2158,11 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
             data = tpc.get_eseries_pre_existing_data (data)
             eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], data['service_path'], data['login'], data['pwd'])
 
+        print "getting storage systems"
         storage_systems = eseries_config.get_storage_systems()
         for system in storage_systems:
+            if system['name'] == "":
+                continue
             found_ips = eseries_config.get_storage_system_ips (system['id'])
 
         out = {'status' : "success", 'ips' : found_ips}
@@ -2172,7 +2175,7 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
 def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     '''
         input:
-            ctrl_pwd: "ctrl-password"   password into storage controller(s)
+            ctrl_pwd: "ctrl-password"   password for storage controller(s)
             ctrl_ips: "ip1,ip2"         mgmt IP/hostnames for storage controllers
         returns json:
             status:
@@ -2190,6 +2193,10 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     global eseries_config
 
     try:
+        if ctrl_pwd == None:
+            ctrl_password = ""
+        else:
+            ctrl_password = ctrl_pwd
         ips = ctrl_ips.split(",")
         eseries_config.set_ctrl_password_and_ips (ctrl_password, ips)
         disks = config.get_storage_pools()

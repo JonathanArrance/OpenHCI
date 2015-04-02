@@ -28,10 +28,6 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.terms_of_use',
             name='terms-of-use'),
 
-        url(r'^config_e_series/$',
-            'coalesce.coal_beta.views.config_e_series',
-            name='config_e_series'),
-
         url(r'^disclaimer/$',
             'coalesce.coal_beta.views.disclaimer',
             name='disclaimer'),
