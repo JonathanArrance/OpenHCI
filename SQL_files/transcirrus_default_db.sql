@@ -2690,6 +2690,7 @@ CREATE TABLE trans_inst_snaps (
     snap_id character varying,
     project_id character varying,
     description text
+    user_id character varying
 );
 
 
