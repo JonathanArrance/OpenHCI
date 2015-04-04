@@ -918,18 +918,6 @@ def security_group_view(request, groupid, project_id):
                                                         'sec_group': sec_group,
                                                         }))
 
-def update_instance_secgroups(request, project_id, instance_id, secgroup_id, action):
-    try:
-        auth = request.session['auth']
-        sa = server_actions(auth)
-        update_sec = {'project_id':project_id,'instance_id':instance_id,'secgroup_id':secgroup_id,'action':action}
-        out = sa.update_instance_secgroup(update_sec)
-        out['status'] = 'success'
-        out['message'] = 'The instance %s security group %s has been %s'%(out['instance_name'],out['secgroup_name'],action)
-    except Exception as e:
-        out = {'status' : "error", 'message' : "Could not change the instance security group: %s"%(e)}
-    return HttpResponse(simplejson.dumps(out))
-
 def create_keypair(request, key_name, project_id):
     try:
         auth = request.session['auth']
@@ -2109,7 +2097,7 @@ def eseries_get (request):
                                 'transport': "transport",         http/https
                                 'login': "username",              username into web proxy
                                 'pwd': "password",                password for user
-                                'ctrl_pwd': "ctrl-password",      password into storage controller(s)
+                                'ctrl_pwd': "ctrl-password",      password into storage controller(s); "" is valid if no password is set
                                 'ctrl_ips': ["ip1", "ip2"],       mgmt IP/hostnames for storage controllers
                                 'disk_pools': ["pool1", "pool2"]  disk/storage pools
                                }
@@ -2189,7 +2177,7 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
 def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     '''
         input:
-            ctrl_pwd: "ctrl-password"   password for storage controller(s)
+            ctrl_pwd: "ctrl-password"   password for storage controller(s); "" is valid if no password is set
             ctrl_ips: "ip1,ip2"         mgmt IP/hostnames for storage controllers
         returns json:
             status:
@@ -2207,13 +2195,8 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     global eseries_config
 
     try:
-        print "eseries_config.server: %s" % eseries_config.server
-        if ctrl_pwd == None:
-            ctrl_password = ""
-        else:
-            ctrl_password = ctrl_pwd
         ips = ctrl_ips.split(",")
-        eseries_config.set_ctrl_password_and_ips (ctrl_password, ips)
+        eseries_config.set_ctrl_password_and_ips (ctrl_pwd, ips)
         disks = eseries_config.get_storage_pools()
 
         pools = []
@@ -2280,7 +2263,7 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
               login:      "username"            username into web proxy
               pwd:        "password"            password for user
             The remaining are required
-              ctrl_pwd:   "ctrl-password"       password for storage controller(s)
+              ctrl_pwd:   "ctrl-password"       password for storage controller(s); "" is valid if no password is set
               ctrl_ips:   "ip1,ip2"             mgmt IP/hostnames for storage controllers
               disk_pools: "pool1,pool2"         disk/storage pools
         returns json:
@@ -2298,12 +2281,7 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
         else:
             existing = False
 
-        if ctrl_pwd == None:
-            ctrl_password = ""
-        else:
-            ctrl_password = ctrl_pwd
         ips = ctrl_ips.split(",")
-
         storage_pools = disk_pools.split(",")
 
         data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_pwd, 'disk_pools': storage_pools, 'ctrl_ips': ips}

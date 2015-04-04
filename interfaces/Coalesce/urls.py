@@ -390,7 +390,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_set_web_proxy_srv',
             name='eseries_set_web_proxy_srv'),
 
-	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/$',
+	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/$',
 	    'coalesce.coal_beta.views.eseries_set_controller',
             name='eseries_set_controller'),
 
@@ -398,7 +398,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_set_config',
             name='eseries_set_config'),
 
-	url(r'^eseries/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/$',
+	url(r'^eseries/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/$',
 	    'coalesce.coal_beta.views.eseries_update',
             name='eseries_update'),
 
