@@ -32,6 +32,7 @@ __builtin__._ = retmsg
 
 class eseries_mgmt():
     SLEEP_SECS = 5
+    GigaBytes = units.GiB
 
     def __init__ (self, scheme, host, port, service_path, username, password):
         self.scheme = scheme
@@ -59,6 +60,13 @@ class eseries_mgmt():
 
     def get_storage_pools (self):
         return (self._client.list_storage_pools())
+
+    def get_volumes (self):
+        return (self._client.list_volumes())
+
+    def get_thin_volumes (self):
+        path = "/storage-systems/{system-id}/thin-volumes"
+        return (self._client._invoke('GET', path))
 
     def set_storage_pools (self, storage_pools):
         pools = [x.strip().lower() if x else None for x in storage_pools]
@@ -100,8 +108,8 @@ class eseries_mgmt():
                 tot_bytes = int(pool['totalRaidedSpace'], 0)
                 used_bytes = int(pool['usedSpace'], 0)
                 break
-        free_capacity_gb = (tot_bytes - used_bytes) / units.GiB
-        total_capacity_gb = tot_bytes / units.GiB
+        free_capacity_gb = (tot_bytes - used_bytes) / self.GigaBytes
+        total_capacity_gb = tot_bytes / self.GigaBytes
         usage = {'free_capacity_gb': free_capacity_gb, 'total_capacity_gb': total_capacity_gb}
         return (usage)
 
