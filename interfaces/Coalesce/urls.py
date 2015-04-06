@@ -397,6 +397,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.supported_third_party_storage',
             name='supported_third_party_storage'),
 
+    # --- E-Series ---
 	url(r'^eseries/get/$',
 	    'coalesce.coal_beta.views.eseries_get',
             name='eseries_get'),
@@ -409,13 +410,34 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_set_web_proxy_srv',
             name='eseries_set_web_proxy_srv'),
 
-	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/$',
+	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/$',
 	    'coalesce.coal_beta.views.eseries_set_controller',
             name='eseries_set_controller'),
 
 	url(r'^eseries/config/set/(?P<disk_pools>[^/]+)/$',
 	    'coalesce.coal_beta.views.eseries_set_config',
             name='eseries_set_config'),
+
+	url(r'^eseries/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_update',
+            name='eseries_update'),
+
+    # --- nfs ---
+	url(r'^nfs/get/$',
+	    'coalesce.coal_beta.views.nfs_get',
+            name='nfs_get'),
+
+	url(r'^nfs/delete/$',
+	    'coalesce.coal_beta.views.nfs_delete',
+            name='nfs_delete'),
+
+	url(r'^nfs/set/(?P<mountpoints>[^/]+)/$',
+	    'coalesce.coal_beta.views.nfs_set',
+            name='nfs_set'),
+
+	url(r'^nfs/update/(?P<mountpoints>[^/]+)/$',
+	    'coalesce.coal_beta.views.nfs_update',
+            name='nfs_update'),
 
         # --- Setup ----
         url(r'^setup/$',

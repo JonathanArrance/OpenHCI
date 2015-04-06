@@ -983,8 +983,8 @@ class server_actions:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except:
-            logger.sys_error("Error in server suspend request.")
-            raise Exception("Error in server suspend request")
+            logger.sys_error("Error getting server console.")
+            raise Exception("Error getting server console.")
 
         if(rest['response'] == 200):
                 # this method does not return any response body
@@ -995,6 +995,109 @@ class server_actions:
             logger.sys_error("Could not get server status %s"%(input_dict['instance_id']))
         else:
             util.http_codes(rest['response'],rest['reason'],rest['data'])
+
+    def update_instance_secgroup(self,input_dict):
+        """
+        DESC: Allows a user to be able to add/remove the security group to an instance.
+        INPUT: input_dict - project_id - REQ
+                          - instance_id - REQ
+                          - secgroup_id - REQ
+                          - action add/remove - REQ
+        OUTPUT: r_dict - instance_id
+                       - secgroup_id
+        ACCESS: Admin - Can change the secgroup of any instance
+                PU - Can change any instance in his project
+                User - Can only chnage instance sec groups they own.
+        NOTES: You can only add secgroups you have created.
+        """
+        logger.sys_info('\n**Server action update security group. Component: Nova Def: update_instance_secgroup**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+            if(value == ''):
+                logger.sys_error('Reguired value not passed.')
+                raise Exception('Reguired value not passed.')
+
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
+
+        #make sure add or remove specifed
+        action = input_dict['action']
+        if(action.lower() == 'add'):
+            logger.sys_info('Valid option add in update_instance_secgroup.')
+        elif(action.lower() == 'remove'):
+            logger.sys_info('Valid option remove in update_instance_secgroup.')
+        else:
+            logger.sys_error('An unknow action has been specified for update_instance_secgroup.')
+            raise Exception('An unknow action has been specified for update_instance_secgroup.')
+
+        #confirm that the user can modify the instance
+        if(self.user_level == 1):
+            self.get_inst = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']), 'and':"proj_id='%s'"%(self.project_id)}
+        elif(self.user_level == 2):
+            self.get_inst = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']), 'and':"user_id='%s'"%(self.user_id)}
+        elif(self.user_level == 0):
+            self.get_inst = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']), 'and':"proj_id='%s'"%(input_dict['project_id'])}
+
+        try:
+            inst = self.db.pg_select(self.get_inst)
+        except:
+            logger.sys_error('Can not change security group info for the instance with id %s'%(input_dict['instance_id']))
+            raise Exception('Can not change security group info for the instance with id %s'%(input_dict['instance_id']))
+
+        #confirm that the user owns the sec group in question.
+        if(self.user_level == 1):
+            self.get_sec = {'select':'sec_group_name','from':'trans_security_group','where':"sec_group_id='%s'"%(input_dict['secgroup_id']), 'and':"proj_id='%s'"%(self.project_id)}
+        elif(self.user_level == 2):
+            self.get_sec = {'select':'sec_group_name','from':'trans_security_group','where':"sec_group_id='%s'"%(input_dict['secgroup_id']), 'and':"user_id='%s'"%(self.user_id)}
+        elif(self.user_level == 0):
+            self.get_sec = {'select':'sec_group_name','from':'trans_security_group','where':"sec_group_id='%s'"%(input_dict['secgroup_id']), 'and':"proj_id='%s'"%(input_dict['project_id'])}
+
+        try:
+            sec_group = self.db.pg_select(self.get_sec)
+        except:
+            logger.sys_error('Can not change security group info for %s'%(input_dict['secgroup_id']))
+            raise Exception('Can not change security group info for %s'%(input_dict['secgroup_id']))
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            if(input_dict['action'] == 'remove'):
+                self.body='{"removeSecurityGroup": {"name": "%s"}}'%(sec_group[0][0])
+            if(input_dict['action'] == 'add'):
+                self.body='{"addSecurityGroup": {"name": "%s"}}'%(sec_group[0][0])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": self.body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sys_error("Error in server security group update request.")
+            raise Exception("Error in server security group update request.")
+
+        if(rest['response'] == 202):
+                # this method does not return any response body
+                r_dict = {'instance_name':inst[0][0],'instance_id':input_dict['instance_id'],'secgroup_id':input_dict['secgroup_id'],'secgroup_name':sec_group[0][0]}
+                return r_dict
+        else:
+            nova_ec.error_codes(rest)
 
     def validate_instance(self,input_dict):
         """

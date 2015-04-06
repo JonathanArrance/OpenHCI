@@ -9,15 +9,15 @@ import transcirrus.operations.third_party_storage.common as common
 
 # Constants
 NFS_NAME = "nfs"
-##NFS_SHARES_CONF = "/etc/cinder/shares_nfs.conf"
-NFS_SHARES_CONF = "shares_nfs.conf"
+NFS_SHARES_CONF = "/etc/cinder/shares_nfs.conf"
+#NFS_SHARES_CONF = "shares_nfs.conf"
 NFS_MOUNTPOINT_BASE = "/mnt/nfs-vols/cinder-volume"
 
 
-def add_nfs_to_cinder (data):
+def add_nfs_to_cinder():
     if not common.add_backend (NFS_NAME):
         return (False)
-    add_nfs_stanza (data)
+    add_nfs_stanza()
     return (True)
 
 
@@ -77,5 +77,7 @@ def get_nfs_data():
 
 
 def delete_nfs_conf():
+    if not os.path.exists (NFS_SHARES_CONF):
+        return
     os.remove (NFS_SHARES_CONF)
     return

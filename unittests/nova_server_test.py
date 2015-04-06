@@ -22,6 +22,11 @@ store = server_storage_ops(perms)
 nova = server_ops(perms)
 action = server_admin_actions(perms)
 sa = server_actions(perms)
+
+input_dict = {'project_id':'157a34897e8246b4871676c5feb64ab8','instance_id':'84180110-b7cf-47ed-b962-8a35b0e172b4','secgroup_id': 'eb66d78f-ec7f-4162-a073-04425cd45d0a','action':'add'}
+yo = sa.update_instance_secgroup(input_dict)
+print yo
+
 '''
 yo = sa.list_instance_snaps('e12a1c25-379b-44db-b0c6-359e7ec62e1b')
 print yo
