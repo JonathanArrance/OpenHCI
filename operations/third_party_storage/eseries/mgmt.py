@@ -107,16 +107,19 @@ class eseries_mgmt():
 
     def convert_vol_name (self, label, auth):
         if len(label) != 26:
-            return (label)
+            if len(label) > 10:
+                return (label[0:10])
+            else:
+                return (label)
 
-        vol_id = self.convert_es_fmt_to_uuid (label)
+        vol_id = self.convert_es_fmt_to_uuid (label)    # returns a UUID
 
         vo = volume_ops(auth)
         volumes = vo.list_volumes()
 
-        vol_name = label
+        vol_name = label[0:10]
         for vol in volumes:
-            if vol['volume_id'] == vol_id:
+            if vol['volume_id'].strip() == str(vol_id):
                 vol_name = vol['volume_name']
         return (vol_name)
 
