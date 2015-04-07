@@ -183,7 +183,13 @@ def delete_param (line, param):
 
 def add_voltype (auth, name):
     vo = volume_ops(auth)
-    vo.create_volume_type (name)
+    vol_type = vo.create_volume_type (name)
+
+    type_dict = {}
+    type_dict['volume_type_id'] = vol_type['volume_type_id']
+    type_dict['volume_backend_name'] = vol_type['volume_type_name']
+
+    vo.assign_volume_type_to_backend (type_dict)
     return
 
 

@@ -126,14 +126,19 @@ class volume_ops:
         if('volume_type' not in create_vol):
             voltype = 'ssd'
         elif('volume_type' in create_vol):
-            voltype = create_vol['volume_type'].lower()
-            print voltype
+            voltype = create_vol['volume_type']
 
-        #check if the volume type is ssd or spindle
-        if((voltype == 'ssd') or (voltype == 'spindle')):
-            pass
-        else:
-            raise Exception("The volume type specified does not exist.")
+        ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
+        vol_type_found = True
+        #voltype_list = self.list_volume_types()
+        #vol_type_found = False
+        #for vol_type in voltype_list:
+        #    if vol_type['name'].lower() == voltype.lower():
+        #        vol_type_found = True
+        #        break
+
+        if not vol_type_found:
+            raise Exception ("Volume Type %s was not found for volume creation" % voltype)
 
         #get the name of the project based on the id
         try:
@@ -187,7 +192,8 @@ class volume_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception, e:
-                raise e
+                logger.sys_error("Error creating new volume - %s" % e)
+                raise Exception("Error creating new volume - %s" % e)
 
             load = json.loads(rest['data'])
             if(rest['response'] == 200):
@@ -227,7 +233,9 @@ class volume_ops:
                     r_dict = {"volume_id": volid, "volume_type": voltype,"volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
-                ec.error_codes(rest)
+                logger.sys_error("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
+                raise Exception("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
+                #ec.error_codes(rest)
         else:
             logger.sys_error("Could not create a new volume. Unknown error occured. ERROR: 555")
             raise Exception("Could not create a new volume. Unknown error occured. ERROR: 555")
@@ -681,7 +689,7 @@ class volume_ops:
             raise Exception("Could not connect to the API")
 
         try:
-            #add the new user to openstack 
+            #get list of volume types
             body = ''
             token = self.token
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
@@ -692,8 +700,7 @@ class volume_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not get volume type list, %s" %(e))
-            #back the user out of the transcirrus DB if the db works and the REST API fails
-            raise e
+            raise Exception ("Could not get volume type list, %s" %(e))
 
         if(rest['response'] == 200):
             #read the json that is returned
@@ -708,7 +715,9 @@ class volume_ops:
             return r_dict
         else:
             #util.http_codes(rest['response'],rest['reason'],rest['data'])
-            ec.error_codes(rest)
+            #ec.error_codes(rest)
+            logger.sys_error("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
+            raise Exception ("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
         #else:
         #    logger.sys_error("Could not get volume type list.")
         #    raise ("Could not get volume type list.")
