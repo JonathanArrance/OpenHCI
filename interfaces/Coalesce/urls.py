@@ -402,6 +402,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_update',
             name='eseries_update'),
 
+	url(r'^eseries/get/stats/$',
+	    'coalesce.coal_beta.views.eseries_stats',
+            name='eseries_stats'),
+
     # --- nfs ---
 	url(r'^nfs/get/$',
 	    'coalesce.coal_beta.views.nfs_get',
