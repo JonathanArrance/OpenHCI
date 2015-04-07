@@ -410,7 +410,11 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_set_web_proxy_srv',
             name='eseries_set_web_proxy_srv'),
 
-	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/$',
+	url(r'^eseries/controller/set/(?P<ctrl_ips>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_set_controller',
+            name='eseries_set_controller'),
+
+	url(r'^eseries/controller/set/(?P<ctrl_ips>[^/]+)/(?P<ctrl_pwd>[^/]+|)/$',
 	    'coalesce.coal_beta.views.eseries_set_controller',
             name='eseries_set_controller'),
 

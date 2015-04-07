@@ -61,8 +61,8 @@ import transcirrus.operations.third_party_storage.nfs.config as nfs
 # When a new 3rd party storage system is supported, add
 # it to the list below.
 def get_supported_third_party_storage():
-    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled']},
-            {'name': "nfs",             'configured': get_nfs()['enabled']}
+    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled'], 'id': "eseries"},
+            {'name': "nfs",             'configured': get_nfs()['enabled'], 'id': "nfs"}
            ]
     return (list)
 

@@ -29,15 +29,15 @@
     <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/jquery-1.9.1.js"></script>
     <script src="{{ STATIC_URL }}javascripts/bootswatch.js"></script>
     <script src="{{ STATIC_URL }}javascripts/bootstrap.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/d3.min.js"></script>
+
+
     <script>
         function clearMessage() {
             document.getElementById("warning-messages").remove();
         }
-    </script>
-    <script>
+
         var USERNAME = "{{ username }}";
-    </script>
-    <script>
         var STATIC_URL = "{{ STATIC_URL }}";
     </script>
     {% block javascripts %}{% endblock %}
@@ -49,8 +49,10 @@
         <!-- Masthead ================================================== -->
         <header id="overview">
             <div class="row-fluid">
-                <a href="/welcome"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png" alt="TransCirrus"
-                     width="205px!important" height="110px!important" style="float:left; margin-left: 20px;"></a>
+                <a href="/welcome"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png"
+                                        alt="TransCirrus"
+                                        width="205px!important" height="110px!important"
+                                        style="float:left; margin-left: 20px;"></a>
 
                 <div class="span5">
                     <h1 class="page-header">{% block title %}OVERRIDE THIS{% endblock %}</h1>
@@ -98,7 +100,8 @@
     <p></p>
     <ul class="messages" id="warning-messages" onclick="clearMessage()">
         {% for message in messages %}
-        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide message)</li>
+        <li
+        {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide message)</li>
         {% endfor %}
     </ul>
     {% endif %}

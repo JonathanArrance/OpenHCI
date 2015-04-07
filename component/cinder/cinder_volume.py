@@ -5,6 +5,7 @@
 import sys
 import json
 import time
+import random
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -60,6 +61,8 @@ class volume_ops:
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
+
+            self.rannum = random.randrange(1000,9000)
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -160,7 +163,6 @@ class volume_ops:
 
         if(len(volume) >= 1):
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
-<<<<<<< HEAD
             create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
 
         if('description' not in create_vol) or (create_vol['description'] == 'none'):
@@ -171,12 +173,10 @@ class volume_ops:
                 create_vol['description'] = "%s volume clone from volume %s." %(create_vol['volume_name'],create_vol['source_vol_id'])
             else:
                 create_vol['description'] = "%s volume" %(create_vol['project_id'])
-=======
             raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
         
         #check the project capacity
         # nned to impliment quatas
->>>>>>> 988c4ed5eb9c947b16e2cd4064e1dc2f048f7639
 
         if(create_flag == 1):
             try:
@@ -245,7 +245,6 @@ class volume_ops:
             logger.sys_error("Could not create a new volume. Unknown error occurred. ERROR: 555")
             raise Exception("Could not create a new volume. Unknown error occurred. ERROR: 555")
 
-<<<<<<< HEAD
     def create_vol_from_snapshot(self,input_dict):
         """
         DESC: Create a new volume in a project from an existing snapshot in the project.
@@ -369,8 +368,6 @@ class volume_ops:
 
         return output
 
-=======
->>>>>>> 988c4ed5eb9c947b16e2cd4064e1dc2f048f7639
     def get_volume(self,input_dict):
         """
         DESC: Strictly call the v1 cinder API to get real time vol info

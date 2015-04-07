@@ -147,11 +147,22 @@ def stats(request):
                                     'num_net': num_net,
                                     'num_users': num_users})
 
+
+
+            providers = tpc.get_supported_third_party_storage()
+            eseries_configured = 0
+
+            for p in providers:
+                if p.name == "NetApp E-Series":
+                    if p.configured == 1:
+                        eseries_configured = 1
+
             return render_to_response('coal/stat_panel.html', RequestContext(request, {'full_stats': full_stats,
                                                                                        'tot_users': tot_users,
                                                                                        'tot_proj': tot_proj,
                                                                                        'tot_nodes': tot_nodes,
-                                                                                       'tenant_info': tenant_info,}))
+                                                                                       'tenant_info': tenant_info,
+                                                                                       'eseries_configured': eseries_configured}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
 
@@ -284,7 +295,6 @@ def project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     so = server_ops(auth)
-    sa = server_actions(auth)
     no = neutron_net_ops(auth)
     l3o = layer_three_ops(auth)
     vo = volume_ops(auth)
@@ -334,8 +344,7 @@ def project_view(request, project_id):
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
-    instance_snapshots = {}
-    instance_info={}
+    instance_info = {}
     flavors       = fo.list_flavors()
 
     hosts=[]
@@ -373,10 +382,6 @@ def project_view(request, project_id):
                       'server_flavor': ''}
             sname = instance['server_name']
             instance_info[sname] = i_info
-
-        inst_snaps = sa.list_instance_snaps(instance['server_id'])
-        iname = instance['server_name']
-        instance_snapshots[iname] = inst_snaps
 
     try:
         images    = go.list_images()
@@ -432,7 +437,6 @@ def project_view(request, project_id):
                                                         'containers': containers,
                                                         'images': images,
                                                         'instances': instances,
-                                                        'instance_snapshots': instance_snapshots,
                                                         'instance_info': instance_info,
                                                         'flavors': flavors,
                                                         }))
@@ -2254,7 +2258,7 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
 
 
 # Set the E-Series controller password and IP addresses and return the configured disk/storage pools.
-def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
+def eseries_set_controller (request, ctrl_ips, ctrl_pwd=None):
     '''
         input:
             ctrl_pwd: "ctrl-password"   password for storage controller(s); "" is valid if no password is set
@@ -2276,7 +2280,12 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
 
     try:
         ips = ctrl_ips.split(",")
-        eseries_config.set_ctrl_password_and_ips (ctrl_pwd, ips)
+        if (ctrl_pwd == None):
+            password = ""
+        else:
+            password = ctrl_pwd
+
+        eseries_config.set_ctrl_password_and_ips (password, ips)
         disks = eseries_config.get_storage_pools()
 
         pools = []
@@ -2371,7 +2380,6 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
     return HttpResponse(simplejson.dumps(out))
-
 
 # --- Routines for NFS ---
 

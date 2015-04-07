@@ -636,7 +636,6 @@ class server_actions:
                          - snapshot_description - OP
         OUTPUT: r_dict - snapshot_name
                        - snapshot_id
-                       - instance_id
         ACCESS: Cloud Admin - can snashot any vm
                 PU - snapshot only vms in thei project
                 User - snapshot only the vms they own
@@ -676,10 +675,10 @@ class server_actions:
             logger.sys_error('The current user can not perform the backup operation.')
             raise Exception('The current user can not perform the backup operation.')
 
-        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == 'none')):
+        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == '')):
             snap_dict['snapshot_name'] = server[0][0] + '_snapshot'
 
-        if (('snapshot_description' not in snap_dict) or (snap_dict['snapshot_description'] == '')):
+        if (('snapshot_description' not in snap_dict) or (snap_dict['snapshot_description'] == 'none')):
             snap_dict['snapshot_description'] = 'None'
 
         # Create an API connection with the Admin
@@ -776,11 +775,8 @@ class server_actions:
         elif(self.user_level == 0):
             self.get_inst_snap = {'select':'snap_id,name,project_id','from':'trans_inst_snaps','where':"inst_id='%s'"%(instance_id)}
 
-        try:
-            snapshots = self.db.pg_select(self.get_inst_snap)
-        except:
-            logger.sys_error('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
-            raise Exception('Can not find the snapshot with id %s'%(input_dict['snapshot_id']))
+        # try:
+        snapshots = self.db.pg_select(self.get_inst_snap)
 
         r_array = []
         for snap in snapshots:

@@ -114,6 +114,16 @@ function checkLength(o, n, min, max) {
     }
 }
 
+function checkRange(o, n, min, max) {
+    if (o.val() > max || o.val() < min) {
+        o.addClass("ui-state-error");
+        flagError(o, n + " must be between " + min + " and " + max + ".");
+        return false;
+    } else {
+        return true;
+    }
+}
+
 function checkRegexp(o, regexp, n) {
     if (!( regexp.test(o.val()))) {
         o.addClass("ui-state-error");
@@ -131,6 +141,32 @@ function checkUsername(o) {
         flagError(
             o,
             "Username may consist of a-z, 0-9 and underscores, and must being with a letter.");
+        return false;
+    } else {
+        return true
+    }
+}
+
+function checkHostname(o) {
+    var regexp = /^([0-9a-z_])+$/i;
+    if (!( regexp.test(o.val()))) {
+        o.addClass("ui-state-error");
+        flagError(
+            o,
+            "Hostname may consist of a-z, 0-9 and underscores.");
+        return false;
+    } else {
+        return true
+    }
+}
+
+function checkIp(o) {
+    var regexp = /^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$/i;
+    if (!( regexp.test(o.val()))) {
+        o.addClass("ui-state-error");
+        flagError(
+            o,
+            "IP addresses must be formatted properly (ex: 255.255.255.255)");
         return false;
     } else {
         return true

@@ -5233,6 +5233,12 @@ th > small {
     width: 50%;
 }
 
+.widget-table-third {
+    border-collapse: collapse;
+    border: 2px solid #696969;
+    width: 33%;
+}
+
 .widget-console {
     width: 720px;
     height: 434px;
