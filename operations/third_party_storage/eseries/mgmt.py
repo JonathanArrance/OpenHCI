@@ -8,6 +8,11 @@ import uuid
 import sys
 import socket
 import __builtin__
+import base64
+import binascii
+import uuid
+
+from transcirrus.component.cinder.cinder_volume import volume_ops
 
 # We have to add & remove python2.6 from the search path so that the e-series
 # client code can find the correct packages. The client.py file had to be
@@ -32,6 +37,7 @@ __builtin__._ = retmsg
 
 class eseries_mgmt():
     SLEEP_SECS = 5
+    GigaBytes = units.GiB
 
     def __init__ (self, scheme, host, port, service_path, username, password):
         self.scheme = scheme
@@ -59,6 +65,13 @@ class eseries_mgmt():
 
     def get_storage_pools (self):
         return (self._client.list_storage_pools())
+
+    def get_volumes (self):
+        return (self._client.list_volumes())
+
+    def get_thin_volumes (self):
+        path = "/storage-systems/{system-id}/thin-volumes"
+        return (self._client._invoke('GET', path))
 
     def set_storage_pools (self, storage_pools):
         pools = [x.strip().lower() if x else None for x in storage_pools]
@@ -91,6 +104,26 @@ class eseries_mgmt():
             ips.append(interface['ipv4Address'])
         return (ips)
 
+
+    def convert_vol_name (self, label, auth):
+        if len(label) != 26:
+            if len(label) > 10:
+                return (label[0:10])
+            else:
+                return (label)
+
+        vol_id = self.convert_es_fmt_to_uuid (label)    # returns a UUID
+
+        vo = volume_ops(auth)
+        volumes = vo.list_volumes()
+
+        vol_name = label[0:10]
+        for vol in volumes:
+            if vol['volume_id'].strip() == str(vol_id):
+                vol_name = vol['volume_name']
+        return (vol_name)
+
+
     def get_pool_usage (self, id):
         tot_bytes = 0
         used_bytes = 0
@@ -100,8 +133,8 @@ class eseries_mgmt():
                 tot_bytes = int(pool['totalRaidedSpace'], 0)
                 used_bytes = int(pool['usedSpace'], 0)
                 break
-        free_capacity_gb = (tot_bytes - used_bytes) / units.GiB
-        total_capacity_gb = tot_bytes / units.GiB
+        free_capacity_gb = (tot_bytes - used_bytes) / self.GigaBytes
+        total_capacity_gb = tot_bytes / self.GigaBytes
         usage = {'free_capacity_gb': free_capacity_gb, 'total_capacity_gb': total_capacity_gb}
         return (usage)
 
@@ -111,6 +144,11 @@ class eseries_mgmt():
         res = socket.getaddrinfo(hostname, None)[0]
         family, socktype, proto, canonname, sockaddr = res
         return sockaddr[0]
+
+    def convert_es_fmt_to_uuid(self, es_label):
+        """Converts e-series name format to uuid."""
+        es_label_b32 = es_label.ljust(32, '=')
+        return uuid.UUID(binascii.hexlify(base64.b32decode(es_label_b32)))
 
     # The following modified code was taken from cinder.volume.drivers.netapp.eseries.iscsi.py
 

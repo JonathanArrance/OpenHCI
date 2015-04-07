@@ -2381,6 +2381,94 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
         out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+<<<<<<< HEAD
+=======
+
+# Get E-Series statistics for disk pools.
+def eseries_stats (request):
+    '''
+        input:
+        returns json:
+            status:
+                success
+                    stats: dict - defination TBD
+                error
+                    message: error message
+    '''
+    global eseries_config
+    service_path = "/devmgr/v2"         # Hard coded path since most users will not change the default
+
+    try:
+        if eseries_config == None:
+            data = tpc.get_eseries()
+            if data['enabled'] != "1":
+                out = {'status' : "error", 'message' : "Error getting E-Series statistics, web proxy server is not configured"}
+                return HttpResponse(simplejson.dumps(out))
+
+            eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], service_path, data['login'], data['pwd'])
+            eseries_config.set_ctrl_password_and_ips (data['ctrl_pwd'], data['ctrl_ips'])
+            eseries_config.set_storage_pools (data['disk_pools'])
+
+        stats = {}
+        stats['title'] = "Disk Pool Usage"
+        data  = []
+
+        pools = eseries_config.get_storage_pools()
+        for pool in pools:
+            pool_usage = eseries_config.get_pool_usage (pool['id'])
+
+            vol_stats = {}
+            vol_stats['origin'] = pool['label']
+            vol_stats['volumeName'] = "free-space"
+            vol_stats['usage'] = pool_usage['free_capacity_gb']
+            vol_stats['type'] = "thick"
+            vol_stats['thin_vols'] = []
+
+            volumes = eseries_config.get_volumes()
+            for volume in volumes:
+                if volume['volumeGroupRef'] == pool['volumeGroupRef']:
+                    vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
+ 
+                    vol_stats = {}
+                    vol_stats['origin'] = pool['label']
+                    vol_stats['volumeName'] = volume['label']
+                    vol_stats['usage'] = vol_capacity_gb
+                    vol_stats['max'] = 0
+                    vol_stats['type'] = "thick"
+                    data.append(vol_stats)
+ 
+                    if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
+                        thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
+                        thin_free_capacity_gb = vol_capacity_gb
+                        for thin in thin_volumes:
+                            if thin['storageVolumeRef'] == volume['volumeRef']:
+                                capacity_gb = int(thin['capacity'], 0) / eseries_config.GigaBytes
+                                max_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
+                                thin_free_capacity_gb = thin_free_capacity_gb - capacity_gb
+
+                                vol_stats = {}
+                                vol_stats['origin'] = volume['label']
+                                vol_stats['volumeName'] = thin['label']
+                                vol_stats['usage'] = capacity_gb
+                                vol_stats['max'] = max_gb
+                                data.append(vol_stats)
+
+                        vol_stats = {}
+                        vol_stats['origin'] = volume['label']
+                        vol_stats['volumeName'] = "free-space"
+                        vol_stats['usage'] = thin_free_capacity_gb
+                        vol_stats['max'] = vol_capacity_gb
+                        data.append(vol_stats)
+
+        stats['data'] = data
+        out = {'status' : "success", 'stats' : stats}
+
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting NetApp E-Series statistics: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+>>>>>>> c4e6552436e5891a39f398d11445eb9de3a1041a
 # --- Routines for NFS ---
 
 # Return NFS configuration data.
