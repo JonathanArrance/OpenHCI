@@ -8,6 +8,11 @@ import uuid
 import sys
 import socket
 import __builtin__
+import base64
+import binascii
+import uuid
+
+from transcirrus.component.cinder.cinder_volume import volume_ops
 
 # We have to add & remove python2.6 from the search path so that the e-series
 # client code can find the correct packages. The client.py file had to be
@@ -99,6 +104,23 @@ class eseries_mgmt():
             ips.append(interface['ipv4Address'])
         return (ips)
 
+
+    def convert_vol_name (self, label, auth):
+        if len(label) != 26:
+            return (label)
+
+        vol_id = self.convert_es_fmt_to_uuid (label)
+
+        vo = volume_ops(auth)
+        volumes = vo.list_volumes()
+
+        vol_name = label
+        for vol in volumes:
+            if vol['volume_id'] == vol_id:
+                vol_name = vol['volume_name']
+        return (vol_name)
+
+
     def get_pool_usage (self, id):
         tot_bytes = 0
         used_bytes = 0
@@ -119,6 +141,11 @@ class eseries_mgmt():
         res = socket.getaddrinfo(hostname, None)[0]
         family, socktype, proto, canonname, sockaddr = res
         return sockaddr[0]
+
+    def convert_es_fmt_to_uuid(self, es_label):
+        """Converts e-series name format to uuid."""
+        es_label_b32 = es_label.ljust(32, '=')
+        return uuid.UUID(binascii.hexlify(base64.b32decode(es_label_b32)))
 
     # The following modified code was taken from cinder.volume.drivers.netapp.eseries.iscsi.py
 
