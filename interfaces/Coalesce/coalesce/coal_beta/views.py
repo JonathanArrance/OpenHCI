@@ -2342,8 +2342,9 @@ def eseries_stats (request):
                     vol_stats['origin'] = pool['label']
                     vol_stats['volumeName'] = volume['label']
                     vol_stats['usage'] = vol_capacity_gb
+                    vol_stats['max'] = 0
                     vol_stats['type'] = "thick"
-                    vol_stats['thin_vols'] = []
+                    data.append(vol_stats)
  
                     if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
                         thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
@@ -2354,21 +2355,20 @@ def eseries_stats (request):
                                 max_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
                                 thin_free_capacity_gb = thin_free_capacity_gb - capacity_gb
 
-                                thin_vol_stats = {}
-                                thin_vol_stats['origin'] = volume['label']
-                                thin_vol_stats['volumeName'] = thin['label']
-                                thin_vol_stats['usage'] = capacity_gb
-                                thin_vol_stats['max'] = max_gb
-                                vol_stats['thin_vols'].append(thin_vol_stats)
+                                vol_stats = {}
+                                vol_stats['origin'] = volume['label']
+                                vol_stats['volumeName'] = thin['label']
+                                vol_stats['usage'] = capacity_gb
+                                vol_stats['max'] = max_gb
+                                data.append(vol_stats)
 
-                        thin_vol_stats = {}
-                        thin_vol_stats['origin'] = volume['label']
-                        thin_vol_stats['volumeName'] = "free-space"
-                        thin_vol_stats['usage'] = thin_free_capacity_gb
-                        thin_vol_stats['max'] = vol_capacity_gb
-                        vol_stats['thin_vols'].append(thin_vol_stats)
+                        vol_stats = {}
+                        vol_stats['origin'] = volume['label']
+                        vol_stats['volumeName'] = "free-space"
+                        vol_stats['usage'] = thin_free_capacity_gb
+                        vol_stats['max'] = vol_capacity_gb
+                        data.append(vol_stats)
 
-                    data.append(vol_stats)
         stats['data'] = data
         out = {'status' : "success", 'stats' : stats}
 
