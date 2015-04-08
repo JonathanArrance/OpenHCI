@@ -30,254 +30,148 @@
 
 {% block content %}
 
-<div class="span10 offset1">
-<div class="well no-padding">
-<div class="legend-header">
-    Admin Panel
+<script>
+    var eseries_configured;
+    $.getJSON('/supported_third_party_storage/')
+            .done(function (data) {
+                data.providers.forEach(function (provider) {
+                    if (provider.id == "eseries") {
+                        eseries_configured = !(provider.configured == 0);
+                        console.log(eseries_configured);
 
-    <a href="#" id="config-third-party-storage" class="btn" style="float:right">Configure 3PS</a>
-    <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
-</div>
-
-<div class="well">
-    <div class="legend">
-        Cloud Stats
-    </div>
-    <table class="paleblue widget-table-third" style="display: inline-table; float: left;">
-        <tr>
-            <th>Nodes</th>
-            <th>Projects</th>
-            <th>Users</th>
-        </tr>
-        <tr>
-            <td>{{ tot_nodes }}</td>
-            <td>{{ tot_proj }}</td>
-            <td>{{ tot_users }}</td>
-        </tr>
-    </table>
-
-    <div id="graph-container" style="display:inline-block; margin:0 auto 0 5%; border: 1px solid #696969">
-        <p style="margin: 0 auto;">E-Series Storage</p>
-        <div id="graph">
-            <script>console.log("{{ eseries_configured }}")</script>
-            {% if eseries_configured == 1 %}
-            <style>
-
-                #graph {
-                    font: 10px sans-serif;
-                }
-
-                .arc path {
-                    stroke: #fff;
-                }
-
-            </style>
-            <script>
-
-                var sampleSet = {
-                    "title": "DummyData",
-                    "data": [
-                        {
-                            "origin": "Disk_Pool_1",
-                            "volumeName": "Vol1",
-                            "usage": 15,
-                            "type": "thick"
-                        },
-                        {
-                            "origin": "Disk_Pool_1",
-                            "volumeName": "Vol2",
-                            "usage": 25,
-                            "type": "thick"
-                        },
-                        {
-                            "origin": "Disk_Pool_1",
-                            "volumeName": "Repo_06",
-                            "usage": 50,
-                            "type": "thick"
-                        },
-                        {
-                            "origin": "Repo_06",
-                            "volumeName": "thinVol1",
-                            "usage": 10,
-                            "max": 20,
-                            "type": "thin"
-                        },
-                        {
-                            "origin": "Repo_06",
-                            "volumeName": "thinVol2",
-                            "usage": 10,
-                            "max": 30,
-                            "type": "thin"
-                        },
-                        {
-                            "origin": "Repo_06",
-                            "volumeName": "freespace",
-                            "usage": 20,
-                            "max": 40,
-                            "type": "freespace"
+                        if (eseries_configured) {
+                            $("#graph-placeholder").hide();
+                            $("#graph").html(graph());
+                            $("#graph").show();
+                        } else {
+                            $("#graph-title").html("E-Series Storage (gb) (Not Configured)");
                         }
-                    ]
-                };
+                    }
+                })
+            });
+</script>
 
-                var m = 10, r = 90, z = d3.scale.category20c();
+<div class="span10 offset1">
+    <div class="well no-padding">
+        <div class="legend-header">
+            Admin Panel
 
-                var pie = d3.layout.pie()
-                        .value(function (d) {
-                            return +d.usage;
-                        })
-                        .sort(function (a, b) {
-                            return b.usage - a.usage;
-                        });
+            <a href="#" id="config-third-party-storage" class="btn" style="float:right">Configure 3PS</a>
+            <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
+        </div>
 
-                var arc = d3.svg.arc()
-                        .innerRadius(r / 2)
-                        .outerRadius(r);
+        <div class="well">
+            <div class="legend">
+                Cloud Stats
+            </div>
+            <table class="paleblue widget-table-third" style="display: inline-table; float: left;">
+                <tr>
+                    <th>Nodes</th>
+                    <th>Projects</th>
+                    <th>Users</th>
+                </tr>
+                <tr>
+                    <td>{{ tot_nodes }}</td>
+                    <td>{{ tot_proj }}</td>
+                    <td>{{ tot_users }}</td>
+                </tr>
+            </table>
 
-                var disks = d3.nest()
-                        .key(function (d) {
-                            return d.origin;
-                        })
-                        .entries(sampleSet.data);
+            <div id="graph-container" style="display:inline-block; margin:0 auto 0 5%; border: 1px solid #696969">
+                <h6 id="graph-title" style="margin: 10px 10px;">E-Series Storage (gb)</h6>
 
-                var svg = d3.select("#graph")
-                        .selectAll("div")
-                        .data(disks)
-                        .enter()
-                        .append("div")
-                        .style("display", "inline-block")
-                        .style("width", (r + m) * 2 + "px")
-                        .style("height", (r + m) * 2 + "px")
-                        .append("svg:svg")
-                        .attr("width", (r + m) * 2)
-                        .attr("height", (r + m) * 2)
-                        .append("svg:g")
-                        .attr("transform", "translate(" + (r + m) + "," + (r + m) + ")");
+                <div id="graph">
+                    <style>
 
-                svg.append("svg:text")
-                        .attr("dy", ".35em")
-                        .attr("text-anchor", "middle")
-                        .text(function (d) {
-                            return d.key;
-                        });
+                        #graph {
+                            font: 10px sans-serif;
+                        }
 
+                        .arc path {
+                            stroke: #fff;
+                        }
 
-                var g = svg.selectAll("g")
-                        .data(function (d) {
-                            return pie(d.values);
-                        })
-                        .enter().append("svg:g");
+                    </style>
+                </div>
+            </div>
+        </div>
 
-                g.append("svg:path")
-                        .attr("d", arc)
-                        .style("fill", function (d) {
-                            return z(d.data.volumeName);
-                        })
-                        .append("svg:title")
-                        .text(function (d) {
-                            return d.data.volumeName + ": " + d.data.usage;
-                        });
+        <div class="well well-wide">
+            <div class="legend">
+                Node Stats
+            </div>
 
-                g.filter(function (d) {
-                    return d.endAngle - d.startAngle > .2;
-                }).append("svg:text")
-                        .attr("dy", ".35em")
-                        .attr("text-anchor", "middle")
-                        .attr("transform", function (d) {
-                            return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-                        })
-                        .text(function (d) {
-                            return d.data.volumeName + ": " + d.data.usage;
-                        });
+            {% for node in full_stats %}
+            <table class="paleblue widget-table table-wide" style="margin-bottom: 3em">
+                <tr>
+                    <th>Node Name</th>
+                    <th>Type</th>
+                    <th>CPU Usage</th>
+                    <th>Memory Usage</th>
+                    <th>Swap Usage</th>
+                </tr>
+                <tr>
+                    <td>{{ node.name }}</td>
+                    <td>{{ node.type }}</td>
+                    <td>{{ node.cpu_system }}%</td>
+                    <td>{{ node.mem_used_percent }}%</td>
+                    <td>{{ node.swap_used_percent }}%</td>
+                </tr>
+            </table>
+            <div class="legend sub-legend">
+                Disk Stats for {{ node.name }}
+            </div>
+            <table class="paleblue widget-table table-wide">
+                <tr>
+                    <th>Disk Name</th>
+                    <th>Total Space</th>
+                    <th>Disk Usage</th>
+                </tr>
+                {% for disk in node.disks %}
+                <tr>
+                    <td>{{ disk.name }}</td>
+                    <td>{{ disk.total_space }}MB</td>
+                    <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endfor %}
+        </div>
+        <!-- end span6-->
 
-                function angle(d) {
-                    var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
-                    return a > 90 ? a - 180 : a;
-                }
-
-            </script>
-            {% else %}
-            <p>Not configured</p>
-            {% endif %}
+        <div class="well well-wide">
+            <div class="legend">
+                Project Stats
+            </div>
+            <table class="paleblue widget-table table-wide">
+                <tr>
+                    <th>Project Name</th>
+                    <th>Instances</th>
+                    <th>Floating IPs</th>
+                    <th>Volumes</th>
+                    <th>Containers</th>
+                    <th>Routers</th>
+                    <th>Internal Networks</th>
+                    <th>Users</th>
+                </tr>
+                {% for tenant in tenant_info %}
+                {% if tenant.project_name != "trans_default"%}
+                <tr>
+                    <td>{{ tenant.project_name }}</td>
+                    <td>{{ tenant.num_servers }}</td>
+                    <td>{{ tenant.num_fips }}</td>
+                    <td>{{ tenant.num_vol }}</td>
+                    <td>{{ tenant.num_cont }}</td>
+                    <td>{{ tenant.num_rout }}</td>
+                    <td>{{ tenant.num_net }}</td>
+                    <td>{{ tenant.num_users }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
         </div>
     </div>
-</div>
-
-<div class="well well-wide">
-    <div class="legend">
-        Node Stats
-    </div>
-
-    {% for node in full_stats %}
-    <table class="paleblue widget-table table-wide" style="margin-bottom: 3em">
-        <tr>
-            <th>Node Name</th>
-            <th>Type</th>
-            <th>CPU Usage</th>
-            <th>Memory Usage</th>
-            <th>Swap Usage</th>
-        </tr>
-        <tr>
-            <td>{{ node.name }}</td>
-            <td>{{ node.type }}</td>
-            <td>{{ node.cpu_system }}%</td>
-            <td>{{ node.mem_used_percent }}%</td>
-            <td>{{ node.swap_used_percent }}%</td>
-        </tr>
-    </table>
-    <div class="legend sub-legend">
-        Disk Stats for {{ node.name }}
-    </div>
-    <table class="paleblue widget-table table-wide">
-        <tr>
-            <th>Disk Name</th>
-            <th>Total Space</th>
-            <th>Disk Usage</th>
-        </tr>
-        {% for disk in node.disks %}
-        <tr>
-            <td>{{ disk.name }}</td>
-            <td>{{ disk.total_space }}MB</td>
-            <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% endfor %}
-</div>
-<!-- end span6-->
-
-<div class="well well-wide">
-    <div class="legend">
-        Project Stats
-    </div>
-    <table class="paleblue widget-table table-wide">
-        <tr>
-            <th>Project Name</th>
-            <th>Instances</th>
-            <th>Floating IPs</th>
-            <th>Volumes</th>
-            <th>Containers</th>
-            <th>Routers</th>
-            <th>Internal Networks</th>
-            <th>Users</th>
-        </tr>
-        {% for tenant in tenant_info %}
-        {% if tenant.project_name != "trans_default"%}
-        <tr>
-            <td>{{ tenant.project_name }}</td>
-            <td>{{ tenant.num_servers }}</td>
-            <td>{{ tenant.num_fips }}</td>
-            <td>{{ tenant.num_vol }}</td>
-            <td>{{ tenant.num_cont }}</td>
-            <td>{{ tenant.num_rout }}</td>
-            <td>{{ tenant.num_net }}</td>
-            <td>{{ tenant.num_users }}</td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-    </table>
-</div>
-</div>
-<!-- end span6-->
+    <!-- end span6-->
 </div>
 
 <div id="dialog-form-update-password" title="Update Password">
@@ -458,6 +352,8 @@ $(function () {
                                                 if (data.status == "success") {
 
                                                     message.showMessage("success", data.message);
+                                                    eseries_configured = false;
+
                                                 }
                                             })
                                             .fail(function () {
@@ -552,7 +448,7 @@ $(function () {
                             var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
 
                             if (provider.configured == 0) {
-                                newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a><span> | </span><a href="#" id="delete-' + provider.id + '">delete</a></td>';
+                                newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a>';
                             } else if (provider.configured == 1) {
                                 newRow += '<td>Yes</td><td><a href="#" id="delete-' + provider.id + '">delete</a></td>';
                             }
@@ -586,6 +482,9 @@ $(function () {
                                                 if (data.status == "success") {
 
                                                     message.showMessage("success", data.message);
+                                                    eseries_configured = false;
+                                                    $("#graph-title").html("E-Series Storage (gb) (Not Configured)");
+                                                    $("#graph").hide();
                                                 }
                                             })
                                             .fail(function () {
@@ -795,7 +694,14 @@ $(function () {
                             if (data.status == "success") {
 
                                 message.showMessage("success", data.message);
-                                this.dialog("close");
+                                eseries_configured = true;
+                                $("#graph").html(graph());
+                                $("#graph").show();
+                                $("#graph-title").html("E-Series Storage (gb)");
+                                $("#3ps-config-form").dialog("close");
+                                $("#eseries-web-proxy-server-data").hide();
+                                $("#eseries-storage-controller-data").hide();
+                                $("#eseries-disk-pools").hide();
                             }
 
                         })
@@ -816,6 +722,88 @@ $(function () {
         }
     });
 });
+
+function graph() {
+
+    var url = "/eseries/get/stats/";
+
+    d3.json(url, function (error, json) {
+
+        var m = 10, r = 100, z = d3.scale.category20c();
+
+        var pie = d3.layout.pie()
+                .value(function (d) {
+                    return +d.usage;
+                })
+                .sort(function (a, b) {
+                    return b.usage - a.usage;
+                });
+
+        var arc = d3.svg.arc()
+                .innerRadius(r / 2)
+                .outerRadius(r);
+
+        var disks = d3.nest()
+                .key(function (d) {
+                    return d.origin;
+                })
+                .entries(json.stats.data);
+
+        var svg = d3.select("#graph").selectAll("div")
+                .data(disks)
+                .enter().append("div")
+                .style("display", "inline-block")
+                .style("width", (r + m) * 2 + "px")
+                .style("height", (r + m) * 2 + "px")
+                .append("svg:svg")
+                .attr("width", (r + m) * 2)
+                .attr("height", (r + m) * 2)
+                .append("svg:g")
+                .attr("transform", "translate(" + (r + m) + "," + (r + m) + ")");
+
+        svg.append("svg:text")
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .text(function (d) {
+                    return d.key;
+                });
+
+
+        var g = svg.selectAll("g")
+                .data(function (d) {
+                    return pie(d.values);
+                })
+                .enter().append("svg:g");
+
+        g.append("svg:path")
+                .attr("d", arc)
+                .style("fill", function (d) {
+                    return z(d.data.volumeName);
+                })
+                .append("svg:title")
+                .text(function (d) {
+                    return d.data.volumeName + ": " + d.data.usage;
+                });
+
+        g.filter(function (d) {
+            return d.endAngle - d.startAngle > .2;
+        }).append("svg:text")
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .attr("transform", function (d) {
+                    return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
+                })
+                .text(function (d) {
+                    return d.data.volumeName + ": " + d.data.usage;
+                });
+    });
+
+    function angle(d) {
+        var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+        return a > 90 ? a - 180 : a;
+    }
+}
+
 </script>
 
 {% endblock %}

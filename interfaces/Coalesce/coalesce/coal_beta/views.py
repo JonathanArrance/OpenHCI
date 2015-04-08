@@ -147,22 +147,11 @@ def stats(request):
                                     'num_net': num_net,
                                     'num_users': num_users})
 
-
-
-            providers = tpc.get_supported_third_party_storage()
-            eseries_configured = 0
-
-            for p in providers:
-                if p.name == "NetApp E-Series":
-                    if p.configured == 1:
-                        eseries_configured = 1
-
             return render_to_response('coal/stat_panel.html', RequestContext(request, {'full_stats': full_stats,
                                                                                        'tot_users': tot_users,
                                                                                        'tot_proj': tot_proj,
                                                                                        'tot_nodes': tot_nodes,
-                                                                                       'tenant_info': tenant_info,
-                                                                                       'eseries_configured': eseries_configured}))
+                                                                                       'tenant_info': tenant_info,}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
 
@@ -2381,9 +2370,6 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
         out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-<<<<<<< HEAD
-=======
-
 # Get E-Series statistics for disk pools.
 def eseries_stats (request):
     '''
@@ -2467,8 +2453,6 @@ def eseries_stats (request):
         out = {'status' : "error", 'message' : "Error getting NetApp E-Series statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-
->>>>>>> c4e6552436e5891a39f398d11445eb9de3a1041a
 # --- Routines for NFS ---
 
 # Return NFS configuration data.
