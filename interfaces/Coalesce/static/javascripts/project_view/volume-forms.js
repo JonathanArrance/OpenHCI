@@ -52,7 +52,7 @@ $(function () {
                         checkDuplicateName(volume_name, volumes) &&
                         checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
                         checkStorage(volume_size) &&
-                        checkLength(description, "Description", 0, 16);
+                        checkLength(description, "Description", 1, 16);
 
                     if (isValid) {
 
