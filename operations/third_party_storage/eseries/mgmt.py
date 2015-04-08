@@ -112,14 +112,14 @@ class eseries_mgmt():
             else:
                 return (label)
 
-        vol_id = self.convert_es_fmt_to_uuid (label)    # returns a UUID
+        vol_id = str(self.convert_es_fmt_to_uuid(label))    # returns a UUID that we convert to a str
 
         vo = volume_ops(auth)
         volumes = vo.list_volumes()
 
         vol_name = label[0:10]
         for vol in volumes:
-            if vol['volume_id'].strip() == str(vol_id):
+            if vol['volume_id'] == str(vol_id):
                 vol_name = vol['volume_name']
         return (vol_name)
 

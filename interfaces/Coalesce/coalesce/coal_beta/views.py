@@ -2370,6 +2370,7 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
         out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+
 # Get E-Series statistics for disk pools.
 def eseries_stats (request):
     '''
@@ -2385,6 +2386,8 @@ def eseries_stats (request):
     service_path = "/devmgr/v2"         # Hard coded path since most users will not change the default
 
     try:
+        auth = request.session['auth']
+
         if eseries_config == None:
             data = tpc.get_eseries()
             if data['enabled'] != "1":
@@ -2414,10 +2417,11 @@ def eseries_stats (request):
             for volume in volumes:
                 if volume['volumeGroupRef'] == pool['volumeGroupRef']:
                     vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
- 
+
+                    vol_name = eseries_config.convert_vol_name(volume['label'], auth) 
                     vol_stats = {}
                     vol_stats['origin'] = pool['label']
-                    vol_stats['volumeName'] = volume['label']
+                    vol_stats['volumeName'] = vol_name
                     vol_stats['usage'] = vol_capacity_gb
                     vol_stats['max'] = 0
                     vol_stats['type'] = "thick"
@@ -2431,9 +2435,10 @@ def eseries_stats (request):
                                 provisioned_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
                                 quota_gb = int(thin['provisionedCapacityQuota'], 0) / eseries_config.GigaBytes
 
+                                thin_name = eseries_config.convert_vol_name(thin['label'], auth) 
                                 vol_stats = {}
-                                vol_stats['origin'] = volume['label']
-                                vol_stats['volumeName'] = thin['label']
+                                vol_stats['origin'] = vol_name
+                                vol_stats['volumeName'] = thin_name
                                 vol_stats['usage'] = capacity_gb
                                 vol_stats['max'] = quota_gb
                                 data.append(vol_stats)
