@@ -672,7 +672,7 @@ $(function () {
                                     '<a href="#" class="attach-volume">attach</a><span class="volume-actions-pipe"> | </span>' +
                                     '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
                                     '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
-                                    '<a href="#" class="delete-volume">delete</a>';
+                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a>';
 
                                 $(actionsCell).append(newActions).fadeIn();
                                 $(targetAttached).append("No Attached Instance").fadeIn();
