@@ -2364,8 +2364,8 @@ def eseries_stats (request):
                         vol_stats = {}
                         vol_stats['origin'] = volume['label']
                         vol_stats['volumeName'] = "provisioned"
-                        vol_stats['usage'] = provisioned_gb
-                        vol_stats['max'] = quota_gb - provisioned_gb
+                        vol_stats['usage'] = quota_gb - provisioned_gb
+                        vol_stats['max'] = quota_gb
                         data.append(vol_stats)
 
         stats['data'] = data
