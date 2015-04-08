@@ -794,7 +794,19 @@ function graph() {
                     return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
                 })
                 .text(function (d) {
-                    return d.data.volumeName + ": " + d.data.usage;
+                    return d.data.volumeName;
+                });
+
+        g.filter(function (d) {
+            return d.endAngle - d.startAngle > .2;
+        }).append("svg:text")
+                .attr("dy", "15")
+                .attr("text-anchor", "middle")
+                .attr("transform", function (d) {
+                    return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
+                })
+                .text(function (d) {
+                    return d.data.usage;
                 });
     });
 
