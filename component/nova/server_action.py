@@ -21,8 +21,6 @@ from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 import transcirrus.component.nova.error as nova_ec
-#from flavor import flavor_ops
-
 
 class server_actions:
     #UPDATED and Unit tested
@@ -91,10 +89,8 @@ class server_actions:
             logger.sys_error("Could not connect to db with error: %s" %(e))
             raise Exception("Could not connect to db with error: %s" %(e))
 
-        #call flavor ops
         self.flavor = flavor_ops(user_dict)
         self.datetime = datetime.date.today()
-
         self.glance = glance_ops(user_dict)
 
     #DESC: used to clean up after the server class
@@ -396,7 +392,7 @@ class server_actions:
             #see if the server in the users tenant
             if(self.user_level == 1):
                 try:
-                    get_server = {'select':'inst_id','from':'trans_instances','where':"proj_id='%s'"%(input_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
+                    get_server = {'select':'inst_id,inst_flav_name','from':'trans_instances','where':"proj_id='%s'"%(input_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
                     server = self.db.pg_select(get_server)
                 except:
                     logger.sys_error("The virtual server instance cannot be rebooted.")
@@ -428,7 +424,6 @@ class server_actions:
                 # check the response code
             except:
                 logger.sys_error("Error in sending resize request to server.")
-                #raise Exception("Error in sending resize request to server.")
                 return 'ERROR'
 
             if(rest['response'] == 202):
@@ -448,7 +443,6 @@ class server_actions:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                #util.http_codes(rest['response'],rest['reason'])
                 nova_ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can resize the server.")

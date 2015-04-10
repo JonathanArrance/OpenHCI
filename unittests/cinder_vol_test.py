@@ -21,7 +21,7 @@ print "instantiating a volume abject."
 vol = volume_ops(d)
 snap = snapshot_ops(d)
 
-
+'''
 print "createing a new volume"
 create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
@@ -33,13 +33,13 @@ create = {'snapshot_name':'trans_snap4','snapshot_desc':'Yo yo','project_id':"d4
 create_snap = snap.create_snapshot(create)
 print create_snap
 time.sleep(5)
-
+'''
 print "createing a new volume from snap"
-create = {'volume_name':'trans_from_snap4','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'snapshot_id':create_snap['snapshot_id']}
-create_vol_from_snap = vol.create_volume(create)
+create = {'volume_name':'trans_from_snap4','volume_size':'1','project_id':"157a34897e8246b4871676c5feb64ab8",'snapshot_id':'93923748-8f5b-44d7-a55a-0808927f7cc7'}
+create_vol_from_snap = vol.create_vol_from_snapshot(create)
 print create_vol_from_snap
 time.sleep(5)
-
+'''
 print "createing a new volume from snap"
 create = {'volume_name':'trans_from_snap_delta','volume_size':'1','project_id':"d4b29af44660474da7d5f884ec107f76",'snapshot_id':create_snap['snapshot_id']}
 create_vol = vol.create_vol_from_snapshot(create)
@@ -59,7 +59,7 @@ create_vol = vol.create_vol_clone(create)
 print create_vol
 time.sleep(5)
 
-'''
+
 print "createing a new volume snap"
 create = {'snapshot_name':'the_snapshot','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':'23e06c9b-c6fa-4f59-9a0d-9b2bebcfb449'}
 create_vol = snap.create_snapshot(create)

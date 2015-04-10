@@ -24,7 +24,7 @@ print "**Instantiating Glance Object...**"
 i= glance_ops(b)
 print i
 print
-
+"""
 print "**Listing Images...**"
 li = i.list_images()
 print li
@@ -45,7 +45,7 @@ print "File: %s" %str(gi['image_file'])
 print "Schema: %s" %str(gi['schema'])
 print
 
-"""
+
 print "**Creating Image: test...**"
 input_dict = {'image_name':"test", 'image_file':"cirros-0.3.1-x86_64-disk.img", 'container_format': "bare", 'disk_format': "raw", 'visibility': "public"}
 ii = i.import_image(input_dict)
@@ -108,7 +108,7 @@ print group
 """
 
 print "**Creating Image: test2...**"
-input_dict = {'image_name':"test2", 'image_url':"http://192.168.10.10/cirros-0.3.1-x86_64-disk.img", 'container_format': "bare", 'disk_format': "raw", 'visibility': "public"}
+input_dict = {'image_name':"doon2",'image_type':'image_url','image_location':"http://cdn.download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img", 'container_format': "bare", 'disk_format': "qcow2", 'visibility': "public"}
 ii = i.import_image(input_dict)
 print ii
 print
@@ -117,7 +117,7 @@ print "**Listing Images...**"
 li = i.list_images()
 print li
 print
-
+"""
 for image in li:
     if(image['image_name'] == "test2"):
         del_name = image['image_name']
@@ -136,7 +136,7 @@ print "File: %s" %str(gi['image_file'])
 print "Schema: %s" %str(gi['schema'])
 print
 
-"""
+
 print "**Deleting Image: %s...**" %(del_name)
 di = i.delete_image(del_id)
 print di
