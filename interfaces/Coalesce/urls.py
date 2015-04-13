@@ -13,7 +13,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
 
         url(r'^$',
-            'coalesce.coal_beta.views.welcome',
+            'coalesce.coal_beta.views.stats',
             name='home'),
 
         url(r'^welcome/$',
@@ -175,6 +175,14 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.delete_image',
             name='delete_image'),
 
+	url(r'^create_instance_snapshot/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<snapshot_name>[^/]+)/(?P<snapshot_description>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_instance_snapshot',
+            name='create_instance_snapshot'),
+
+	url(r'^revert_instance_snapshot/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.revert_instance_snapshot',
+            name='revert_instance_snapshot'),
+
 	# --- Floating IPs ----
 
 	url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
@@ -218,6 +226,18 @@ urlpatterns = patterns('',
 	    url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
         'coalesce.coal_beta.views.delete_volume',
             name='delete_volume'),
+
+	    url(r'^create_vol_from_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/(?P<description>[^/]+)/$',
+        'coalesce.coal_beta.views.create_vol_from_snapshot',
+            name='create_vol_from_snapshot'),
+
+	    url(r'^create_vol_clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/(?P<description>[^/]+)/$',
+        'coalesce.coal_beta.views.create_vol_clone',
+            name='create_vol_clone'),
+
+	    url(r'^revert_volume_snapshot/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.revert_volume_snapshot',
+            name='revert_volume_snapshot'),
 
 	# --- Snapshots ----
 
@@ -377,6 +397,7 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.supported_third_party_storage',
             name='supported_third_party_storage'),
 
+    # --- E-Series ---
 	url(r'^eseries/get/$',
 	    'coalesce.coal_beta.views.eseries_get',
             name='eseries_get'),
@@ -389,13 +410,42 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_set_web_proxy_srv',
             name='eseries_set_web_proxy_srv'),
 
-	url(r'^eseries/controller/set/(?P<ctrl_pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/$',
+	url(r'^eseries/controller/set/(?P<ctrl_ips>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_set_controller',
+            name='eseries_set_controller'),
+
+	url(r'^eseries/controller/set/(?P<ctrl_ips>[^/]+)/(?P<ctrl_pwd>[^/]+|)/$',
 	    'coalesce.coal_beta.views.eseries_set_controller',
             name='eseries_set_controller'),
 
 	url(r'^eseries/config/set/(?P<disk_pools>[^/]+)/$',
 	    'coalesce.coal_beta.views.eseries_set_config',
             name='eseries_set_config'),
+
+	url(r'^eseries/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_update',
+            name='eseries_update'),
+
+	url(r'^eseries/get/stats/$',
+	    'coalesce.coal_beta.views.eseries_stats',
+            name='eseries_stats'),
+
+    # --- nfs ---
+	url(r'^nfs/get/$',
+	    'coalesce.coal_beta.views.nfs_get',
+            name='nfs_get'),
+
+	url(r'^nfs/delete/$',
+	    'coalesce.coal_beta.views.nfs_delete',
+            name='nfs_delete'),
+
+	url(r'^nfs/set/(?P<mountpoints>[^/]+)/$',
+	    'coalesce.coal_beta.views.nfs_set',
+            name='nfs_set'),
+
+	url(r'^nfs/update/(?P<mountpoints>[^/]+)/$',
+	    'coalesce.coal_beta.views.nfs_update',
+            name='nfs_update'),
 
         # --- Setup ----
         url(r'^setup/$',

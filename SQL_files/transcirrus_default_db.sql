@@ -2206,7 +2206,7 @@ INSERT INTO nova_default VALUES ('neutron_ovs_bridge', 'br-int', 'nova.conf', 49
 INSERT INTO nova_default VALUES ('security_group_api', 'neutron', 'nova.conf', 50);
 INSERT INTO nova_default VALUES ('verbose', 'False', 'nova.conf', 51);
 INSERT INTO nova_default VALUES ('debug', 'False', 'nova.conf', 52);
-INSERT INTO nova_default VALUES ('cpu_allocation_ratio', '16.0', 'nova.conf', 53);
+INSERT INTO nova_default VALUES ('cpu_allocation_ratio', '6.0', 'nova.conf', 53);
 INSERT INTO nova_default VALUES ('disk_allocation_ratio', '1.0', 'nova.conf', 54);
 INSERT INTO nova_default VALUES ('max_instances_per_host', '50', 'nova.conf', 55);
 INSERT INTO nova_default VALUES ('ram_allocation_ratio', '1.5', 'nova.conf', 56);
@@ -2214,6 +2214,7 @@ INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AvailabilityZoneF
 INSERT INTO nova_default VALUES ('compute_driver', 'libvirt.LibvirtDriver', 'nova.conf', 58);
 INSERT INTO nova_default VALUES ('vnc_enabled', 'true', 'nova.conf', 59);
 INSERT INTO nova_default VALUES ('vnc_keymap', 'en-us', 'nova.conf', 60);
+INSERT INTO nova_default VALUES ('cpu_mode', 'host-passthrough', 'nova.conf', 61);
 INSERT INTO nova_default VALUES ('auth_protocol', 'http', 'nova.conf', 65);
 INSERT INTO nova_default VALUES ('auth_version', 'v2.0', 'nova.conf', 67);
 INSERT INTO nova_default VALUES ('admin_user', 'nova', 'nova.conf', 68);
@@ -2624,6 +2625,7 @@ CREATE TABLE trans_inst_snaps (
     snap_id character varying,
     project_id character varying,
     description text
+    user_id character varying
 );
 
 

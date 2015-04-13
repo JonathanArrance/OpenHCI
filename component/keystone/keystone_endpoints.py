@@ -162,7 +162,7 @@ class endpoint_ops:
                 self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],get_service[0][0],get_service[0][1])
 
             if(input_dict['service_name'] == 'nova'):
-                self.public_api = "http://%s:%s%s" %(self.pub_ip[0][0],self.get_service[0][0],self.get_service[0][1])
+                self.admin_api = "http://%s:%s%s" %(self.ep_ip[0][0],self.get_service[0][0],self.get_service[0][1])
         except:
             logger.sql_error("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))
             raise Exception("Could not get the service info for OpenStack %s service from database." %(input_dict['service_name']))

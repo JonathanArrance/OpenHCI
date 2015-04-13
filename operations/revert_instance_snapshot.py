@@ -90,7 +90,10 @@ def revert_inst_snap(input_dict,auth_dict):
     create = server.create_server(create_dict)
 
     #add back the float ip
-    if(inst_info['server_public_ips']):
+    print inst_info
+    if(inst_info['server_public_ips'] == 'None'):
+        logger.sys_info("Instance %s does not have a floating ip."%(inst_info['server_name']))
+    else:
         assign_dict = {'floating_ip':inst_info['server_public_ips'],'instance_id': create['vm_id'],'project_id':input_dict['project_id'],'action':'add'}
         assign = three.update_floating_ip(assign_dict)
 

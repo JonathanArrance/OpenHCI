@@ -45,6 +45,8 @@ from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
+from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
+from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
 import transcirrus.common.util as util
 import transcirrus.common.wget as wget
 from transcirrus.database.node_db import list_nodes, get_node
@@ -91,7 +93,7 @@ eseries_config = None
 nfs_config = None
 
 
-def welcome(request):
+def stats(request):
     try:
         auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
@@ -333,7 +335,7 @@ def project_view(request, project_id):
     sec_groups    = so.list_sec_group(project_id)
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
-    instance_info={}
+    instance_info = {}
     flavors       = fo.list_flavors()
 
     hosts=[]
@@ -920,18 +922,6 @@ def security_group_view(request, groupid, project_id):
                                                         'sec_group': sec_group,
                                                         }))
 
-def update_instance_secgroups(request, project_id, instance_id, secgroup_id, action):
-    try:
-        auth = request.session['auth']
-        sa = server_actions(auth)
-        update_sec = {'project_id':project_id,'instance_id':instance_id,'secgroup_id':secgroup_id,'action':action}
-        out = sa.update_instance_secgroup(update_sec)
-        out['status'] = 'success'
-        out['message'] = 'The instance %s security group %s has been %s'%(out['instance_name'],out['secgroup_name'],action)
-    except Exception as e:
-        out = {'status' : "error", 'message' : "Could not change the instance security group: %s"%(e)}
-    return HttpResponse(simplejson.dumps(out))
-
 def create_keypair(request, key_name, project_id):
     try:
         auth = request.session['auth']
@@ -1008,19 +998,13 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
         
         # Use wget to download the file.
-        download_dir   = "/tmp/images/"
-        logger.sys_info("HACK: filename file %s"%(download_dir))
+        download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-        logger.sys_info("HACK: filename file %s"%(download_fname))
         download_file  = download_dir + download_fname
-        logger.sys_info("HACK: download file %s"%(download_file))
-        
+
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
         filename, content_type = wget.download (image_location,download_file, download_progress)
-        logger.sys_info("HACK: filename file %s"%(filename))
-        logger.sys_info("HACK: content_type file %s"%(content_type))
-        
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
@@ -1030,7 +1014,6 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         out = go.import_image(import_dict)
         out['status'] = "success"
         out['message'] = "Remote image %s was uploaded." % image_name
-        logger.sys_info("HACK: content_type file %s"%(out))
     except Exception as e:
         cache.delete(cache_key)
         cache_key = None
@@ -1068,6 +1051,47 @@ def delete_image (request, image_id):
         out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description):
+    out = {}
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        create = {'project_id': project_id, 'server_id': server_id, 'snapshot_name': snapshot_name, 'snapshot_description': snapshot_description}
+        out = sa.create_instance_snapshot(create)
+        out['status'] = 'success'
+        out['message'] = "Snapshot %s has been created."%(snapshot_name)
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
+        out = revert_inst_snap(create, auth)
+        out['server_info'] = so.get_server(out['instance']['vm_id'])
+        out['status'] = 'success'
+        out['message'] = "Instance has been reverted."
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        create = {'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name, 'snapshot_id': snapshot_id}
+        vol = revert_vol_snap(create, auth)
+        out['volume_info'] = vol['volume_info']
+        out['attach_info'] = vol['attach_info']
+        out['status'] = 'success'
+        out['message'] = "Volume has been reverted."
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
     out = {}
     try:
@@ -1096,6 +1120,33 @@ def delete_volume(request, volume_id, project_id):
     except Exception as e:
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
+
+def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volume_name, description):
+    out = {}
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        create = { 'project_id':project_id, 'snapshot_id': snapshot_id, 'volume_size': volume_size, 'volume_name': volume_name, 'description': description }
+        out = vo.create_vol_from_snapshot(create)
+        out['status'] = 'success'
+        out['message'] = "Volume %s was created from snapshot."%(volume_name)
+    except Exception as e:
+        out = {"status": "error", "message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def create_vol_clone(request, project_id, volume_id, volume_name, description):
+    out = {}
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        create = { 'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name, 'description': description}
+        out = vo.create_vol_clone(create)
+        out['status'] = 'success'
+        out['message'] = "Volume clone %s was created."%(volume_name)
+    except Exception as e:
+        out = {"status": "error", "message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 
 def list_volumes(request,project_id):
     try:
@@ -1703,15 +1754,18 @@ def router_view(request, router_id):
 def instance_view(request, project_id, server_id):
     auth = request.session['auth']
     so = server_ops(auth)
+    sa = server_actions(auth)
     fo = flavor_ops(auth)
     i_dict = {'server_id': server_id, 'project_id': project_id}
     server = so.get_server(i_dict)
     flavors = fo.list_flavors()
+    snapshots = sa.list_instance_snaps(server_id)
 
     return render_to_response('coal/instance_view.html',
                                RequestContext(request, {
                                                         'server': server,
                                                         'flavors': flavors,
+                                                        'snapshots': snapshots,
                                                         'current_project_id': project_id,
                                                         }))
 
@@ -2075,19 +2129,22 @@ def supported_third_party_storage (request):
     return HttpResponse(simplejson.dumps(out))
 
 
+# --- Routines for E-Series ---
+
 # Return E-Series configuration data.
 def eseries_get (request):
     '''
         returns json:
             status:
                 success
-                    data: dict {'pre_existing': "0/1",            0 - not using pre-existing server; 1 - using pre-existing web proxy srv
+                    data: dict {'enabled':      "0/1",           "0" not enabled or "1" is enabled
+                                'pre_existing': "0/1",            "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
                                 'server':  "server hostname/IP",  web proxy server IP address/hostname
                                 'srv_port': "listen port",        normally 8080 or 8443
                                 'transport': "transport",         http/https
                                 'login': "username",              username into web proxy
                                 'pwd': "password",                password for user
-                                'ctrl_pwd': "ctrl-password",      password into storage controller(s)
+                                'ctrl_pwd': "ctrl-password",      password into storage controller(s); "" is valid if no password is set
                                 'ctrl_ips': ["ip1", "ip2"],       mgmt IP/hostnames for storage controllers
                                 'disk_pools': ["pool1", "pool2"]  disk/storage pools
                                }
@@ -2151,7 +2208,6 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
             data = tpc.get_eseries_pre_existing_data (data)
             eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], data['service_path'], data['login'], data['pwd'])
 
-        print "getting storage systems"
         storage_systems = eseries_config.get_storage_systems()
         for system in storage_systems:
             if system['name'] == "":
@@ -2164,11 +2220,11 @@ def eseries_set_web_proxy_srv (request, pre_existing, server, srv_port, transpor
     return HttpResponse(simplejson.dumps(out))
 
 
-# Get the controller password and IP addresses and return the configured disk/storage pools.
-def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
+# Set the E-Series controller password and IP addresses and return the configured disk/storage pools.
+def eseries_set_controller (request, ctrl_ips, ctrl_pwd=None):
     '''
         input:
-            ctrl_pwd: "ctrl-password"   password for storage controller(s)
+            ctrl_pwd: "ctrl-password"   password for storage controller(s); "" is valid if no password is set
             ctrl_ips: "ip1,ip2"         mgmt IP/hostnames for storage controllers
         returns json:
             status:
@@ -2186,13 +2242,14 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     global eseries_config
 
     try:
-        if ctrl_pwd == None:
-            ctrl_password = ""
-        else:
-            ctrl_password = ctrl_pwd
         ips = ctrl_ips.split(",")
-        eseries_config.set_ctrl_password_and_ips (ctrl_password, ips)
-        disks = config.get_storage_pools()
+        if (ctrl_pwd == None):
+            password = ""
+        else:
+            password = ctrl_pwd
+
+        eseries_config.set_ctrl_password_and_ips (password, ips)
+        disks = eseries_config.get_storage_pools()
 
         pools = []
         for disk in disks:
@@ -2207,7 +2264,7 @@ def eseries_set_controller (request, ctrl_pwd, ctrl_ips):
     return HttpResponse(simplejson.dumps(out))
 
 
-# Get the disk pools and commit the configuration.
+# Set the E-Series disk pools and commit the configuration.
 def eseries_set_config (request, disk_pools):
     '''
         input:
@@ -2242,6 +2299,218 @@ def eseries_set_config (request, disk_pools):
         out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully added"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error applying NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Update the E-Series web proxy server and cinder with the given data.
+# If we are using a pre-existing web proxy then the web proxy server data is ignored.
+def eseries_update (request, pre_existing, server, srv_port, transport, login, pwd, ctrl_pwd, ctrl_ips, disk_pools):
+    '''
+        input:
+            pre_existing: "0/1"                 0 - not using pre-existing web proxy; 1 using pre-existy web proxy
+            The following are relevant only if pre_existing = "1"
+              server:     "server hostname/IP"  web proxy server IP address/hostname
+              srv_port:   "listen port"         normally 8080 or 8443
+              transport:  "transport"           http/https
+              login:      "username"            username into web proxy
+              pwd:        "password"            password for user
+            The remaining are required
+              ctrl_pwd:   "ctrl-password"       password for storage controller(s); "" is valid if no password is set
+              ctrl_ips:   "ip1,ip2"             mgmt IP/hostnames for storage controllers
+              disk_pools: "pool1,pool2"         disk/storage pools
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    global eseries_config
+
+    try:
+        if pre_existing == "1":
+            existing = True
+        else:
+            existing = False
+
+        ips = ctrl_ips.split(",")
+        storage_pools = disk_pools.split(",")
+
+        data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_pwd, 'disk_pools': storage_pools, 'ctrl_ips': ips}
+        tpc.update_eseries (data, existing)
+
+        out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully updated"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get E-Series statistics for disk pools.
+def eseries_stats (request):
+    '''
+        input:
+        returns json:
+            status:
+                success
+                    stats: dict - defination TBD
+                error
+                    message: error message
+    '''
+    global eseries_config
+    service_path = "/devmgr/v2"         # Hard coded path since most users will not change the default
+
+    try:
+        auth = request.session['auth']
+
+        if eseries_config == None:
+            data = tpc.get_eseries()
+            if data['enabled'] != "1":
+                out = {'status' : "error", 'message' : "Error getting E-Series statistics, web proxy server is not configured"}
+                return HttpResponse(simplejson.dumps(out))
+
+            eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], service_path, data['login'], data['pwd'])
+            eseries_config.set_ctrl_password_and_ips (data['ctrl_pwd'], data['ctrl_ips'])
+            eseries_config.set_storage_pools (data['disk_pools'])
+
+        stats = {}
+        stats['title'] = "Disk Pool Usage"
+        data  = []
+
+        pools = eseries_config.get_storage_pools()
+        for pool in pools:
+            pool_usage = eseries_config.get_pool_usage (pool['id'])
+
+            vol_stats = {}
+            vol_stats['origin'] = pool['label']
+            vol_stats['volumeName'] = "free-space"
+            vol_stats['usage'] = pool_usage['free_capacity_gb']
+            vol_stats['type'] = "thick"
+            data.append(vol_stats)
+
+            volumes = eseries_config.get_volumes()
+            for volume in volumes:
+                if volume['volumeGroupRef'] == pool['volumeGroupRef']:
+                    vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
+
+                    vol_name = eseries_config.convert_vol_name(volume['label'], auth) 
+                    vol_stats = {}
+                    vol_stats['origin'] = pool['label']
+                    vol_stats['volumeName'] = vol_name
+                    vol_stats['usage'] = vol_capacity_gb
+                    vol_stats['max'] = 0
+                    vol_stats['type'] = "thick"
+                    data.append(vol_stats)
+ 
+                    if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
+                        thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
+                        for thin in thin_volumes:
+                            if thin['storageVolumeRef'] == volume['volumeRef']:
+                                capacity_gb = vol_capacity_gb
+                                provisioned_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
+                                quota_gb = int(thin['provisionedCapacityQuota'], 0) / eseries_config.GigaBytes
+
+                                thin_name = eseries_config.convert_vol_name(thin['label'], auth) 
+                                vol_stats = {}
+                                vol_stats['origin'] = vol_name
+                                vol_stats['volumeName'] = thin_name
+                                vol_stats['usage'] = capacity_gb
+                                vol_stats['max'] = quota_gb
+                                data.append(vol_stats)
+
+                        vol_stats = {}
+                        vol_stats['origin'] = volume['label']
+                        vol_stats['volumeName'] = "provisioned"
+                        vol_stats['usage'] = quota_gb - provisioned_gb
+                        vol_stats['max'] = quota_gb
+                        data.append(vol_stats)
+
+        stats['data'] = data
+        out = {'status' : "success", 'stats' : stats}
+
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting NetApp E-Series statistics: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+# --- Routines for NFS ---
+
+# Return NFS configuration data.
+def nfs_get (request):
+    '''
+        returns json:
+            status:
+                success
+                    data: dict {'enabled':    "0/1",                "0" not enabled or "1" is enabled
+                                'mountpoint': ["mntpt1", "mntpt2"]  array of mountpoints
+                error
+                    message: error message
+    '''
+    try:
+        data = tpc.get_nfs()
+        out = {'status' : "success", 'data' : data}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting NFS configuration data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete NFS configuration.
+def nfs_delete (request):
+    '''
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        tpc.delete_nfs (auth)
+        out = {'status' : "success", 'message' : "NFS configuration has been deleted."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting NFS configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Setup NFS in cinder with the given mountpoint(s).
+def nfs_set (request, mountpoints):
+    '''
+        input:
+            mountpoints: array of mountpoints ["mntpt1", "mntpt2", "mntpt3"]
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        mntpts = mountpoints.split(",")
+        tpc.add_nfs (mntpts, auth)
+        out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding NFS storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Update NFS in cinder with the given mountpoint(s).
+def nfs_update (request, mountpoints):
+    '''
+        input:
+            mountpoints: array of mountpoints ["mntpt1", "mntpt2", "mntpt3"]
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        mntpts = mountpoints.split(",")
+        tpc.update_nfs (mntpts)
+        out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 # ---

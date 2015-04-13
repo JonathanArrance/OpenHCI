@@ -32,7 +32,10 @@ def add_eseries_stanza (data):
     outfile.writelines ("netapp_server_hostname=" + data['server'] + "\n")
     outfile.writelines ("netapp_login=" + data['login'] + "\n")
     outfile.writelines ("netapp_password=" + data['pwd'] + "\n")
-    outfile.writelines ("netapp_sa_password=" + data['ctrl_pwd'] + "\n")
+    if data['ctrl_pwd'] == "":
+        outfile.writelines ("#netapp_sa_password=" + data['ctrl_pwd'] + "\n")   # NetApp driver gets confused if sa_password is blank so we comment it out.
+    else:
+        outfile.writelines ("netapp_sa_password=" + data['ctrl_pwd'] + "\n")
     outfile.writelines ("netapp_server_port=" + data['srv_port'] + "\n")
     outfile.writelines ("netapp_transport_type=" + data['transport'] + "\n")
 

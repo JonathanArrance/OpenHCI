@@ -103,7 +103,6 @@ $(function () {
     });
 
     $('input[name=update_transport]').change(function () {
-        console.log("transport changed");
         var checked = $('input[name=update_transport]:checked').val();
         if (checked == 'tcp') {
             $("#update_ports").val(tcpPorts);

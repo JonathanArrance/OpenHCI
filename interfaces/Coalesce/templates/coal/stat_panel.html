@@ -17,8 +17,12 @@
 <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
 <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+<script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/update-admin-password.js"></script>
+
+<!-- DEBUG -->
+<!--<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>-->
+
 
 {% endblock %}
 
@@ -26,11 +30,32 @@
 
 {% block content %}
 
+<script>
+    var eseries_configured;
+    $.getJSON('/supported_third_party_storage/')
+            .done(function (data) {
+                data.providers.forEach(function (provider) {
+                    if (provider.id == "eseries") {
+                        eseries_configured = !(provider.configured == 0);
+
+                        if (eseries_configured) {
+                            $("#graph-placeholder").hide();
+                            $("#graph").html(graph());
+                            $("#graph").show();
+                        } else {
+                            $("#graph-title").html("E-Series Storage (gb) (Not Configured)");
+                        }
+                    }
+                })
+            });
+</script>
+
 <div class="span10 offset1">
     <div class="well no-padding">
         <div class="legend-header">
             Admin Panel
 
+            <a href="#" id="config-third-party-storage" class="btn" style="float:right">Configure 3PS</a>
             <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
         </div>
 
@@ -38,7 +63,7 @@
             <div class="legend">
                 Cloud Stats
             </div>
-            <table class="paleblue widget-table-half">
+            <table class="paleblue widget-table-third" style="display: inline-table; float: left;">
                 <tr>
                     <th>Nodes</th>
                     <th>Projects</th>
@@ -50,6 +75,25 @@
                     <td>{{ tot_users }}</td>
                 </tr>
             </table>
+
+            <div id="graph-container"
+                 style="display:inline-block; width: 59%; margin:0 auto 0 5%; border: 1px solid #696969">
+                <h6 id="graph-title" style="margin: 10px 10px;">E-Series Storage (gb)</h6>
+
+                <div id="graph">
+                    <style>
+
+                        #graph {
+                            font: 10px sans-serif;
+                        }
+
+                        .arc path {
+                            stroke: #fff;
+                        }
+
+                    </style>
+                </div>
+            </div>
         </div>
 
         <div class="well well-wide">
@@ -130,23 +174,655 @@
     <!-- end span6-->
 </div>
 
-    <div id="dialog-form-update-password" title="Update Password">
-        <p class="validateTips">All form fields are required.</p>
+<div id="dialog-form-update-password" title="Update Password">
+    <p class="validateTips">All form fields are required.</p>
 
-        <form>
-            {% csrf_token %}
-            <fieldset>
-                <label for="password1">Password</label>
-                <input type="password" name="password1" id="password1" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-                <label for="password2">Confirm Password</label>
-                <input type="password" name="password2" id="password2" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-            </fieldset>
-        </form>
-    </div>
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <label for="password1">Password</label>
+            <input type="password" name="password1" id="password1" value=""
+                   class="text ui-widget-content ui-corner-all"/>
+            <label for="password2">Confirm Password</label>
+            <input type="password" name="password2" id="password2" value=""
+                   class="text ui-widget-content ui-corner-all"/>
+        </fieldset>
+    </form>
+</div>
 
+<div id="3ps-config-form">
+    <p class="validateTips">Configure Third Party Storage</p>
+
+    {% csrf_token %}
+
+    <div class="ajax-loader" id="3ps-loader-1" style="display:none"></div>
+    <div id="3ps-table-container"></div>
+
+    <fieldset id="eseries-web-proxy-server-data" style="display: none; text-align: center; margin: 10px auto;">
+
+        <label style="display:block; margin: 10px auto;">Use exiting E-Series Web Proxy Server?</label>
+        <label>
+            Yes:
+            <input name="eseries-use-existing" id="yes" value="1" checked="" type="radio">
+        </label>
+        <label>
+            No (under construction):
+            <input name="eseries-use-existing" id="no" value="0" disabled="disabled" type="radio">
+        </label>
+
+        <p style="margin: 10px auto;">E-Series Web Proxy Server Data</p>
+
+        <label for="eseries-hostname-ip" style="display:block">Hostname / IP</label>
+        <input name="eseries-hostname-ip" id="eseries-hostname-ip" value="" class="text ui-widget-content ui-corner-all"
+               type="text">
+
+        <label for="eseries-login" style="display:block">Login</label>
+        <input name="eseries-login" id="eseries-login" value="" class="text ui-widget-content ui-corner-all"
+               type="text">
+
+        <label for="eseries-password" style="display:block">Password</label>
+        <input name="eseries-password" id="eseries-password" value="" class="text ui-widget-content ui-corner-all"
+               type="password">
+
+        <label style="display: block;">Transport</label>
+        <label>
+            HTTP:
+            <input name="eseries-transport" id="http" value="http" checked="" type="radio">
+        </label>
+        <label>
+            HTTPS:
+            <input name="eseries-transport" id="https" value="https" type="radio">
+        </label>
+
+        <label for="eseries-server-port" style="display: block;">Server Port</label>
+        <input name="eseries-server-port" id="eseries-server-port" value="8080"
+               class="text ui-widget-content ui-corner-all" type="text">
+
+        <p style="margin: 10px auto;">E-Series Storage Controller Data</p>
+
+        <label for="eseries-storage-controller-password" style="display:block">Storage Controller Password</label>
+        <input name="eseries-storage-controller-password" id="eseries-storage-controller-password" value=""
+               class="text ui-widget-content ui-corner-all" type="password">
+
+        <a class="" href="#" id="eseries-discover-controllers"
+           style="display: block; width: 200px; margin: 10px auto; border: 1px solid rgb(105, 105, 105); border-radius: 4px; padding: 3px 0px; background: none repeat scroll 0% 0% rgb(237, 237, 237); color: rgb(173, 104, 43);">Discover
+            Controllers</a>
+
+        <div class="ajax-loader" id="3ps-loader-2" style="display: none;"></div>
+    </fieldset>
+
+    <fieldset id="eseries-storage-controller-data" style="display:none; text-align: center; margin: 10px auto;">
+        <label for="eseries-mgmt-hostnames-ips" style="display:block">Management Hostnames / IPs</label>
+        <select name="eseries-mgmt-hostnames-ips" id="eseries-mgmt-hostnames-ips" multiple size="0"></select>
+
+        <a href="#" id="eseries-discover-disk-pools"
+           style="display: block; width: 200px; margin:10px auto; border: 1px solid rgb(105, 105, 105); border-radius: 4px; padding: 3px 0px; background: none repeat scroll 0% 0% rgb(237, 237, 237); color: rgb(173, 104, 43);">Discover
+            Disk Pools</a>
+
+        <div class="ajax-loader" id="3ps-loader-3" style="display:none"></div>
+    </fieldset>
+
+    <fieldset id="eseries-disk-pools" style="display:none; text-align: center; margin: 10px auto;">
+        <label for="eseries-storage-disk-pools" style="display:block"></label>
+        <select name="eseries-storage-disk-pools" id="eseries-storage-disk-pools" multiple size="0"></select>
+    </fieldset>
 </div><!-- end row-fluid-->
 
+<script>
+$(function () {
+
+    // Form Elements
+    var useExisting = $('input[name=eseries-use-existing]:checked').val(),
+            hostnameIp = $("#eseries-hostname-ip"),
+            login = $("#eseries-login"),
+            password = $("#eseries-password"),
+            transport = $('input[name=eseries-transport]:checked').val(),
+            port = $("#eseries-server-port"),
+            controllerPassword = $("#eseries-storage-controller-password"),
+            controllers = $("#eseries-mgmt-hostnames-ips"),
+            disks = $("#eseries-storage-disk-pools"),
+            allFields = $([]).add(useExisting).add(hostnameIp).add(login).add(password).add(port).add(controllerPassword).add(controllers).add(disks);
+
+    // Local Variables
+    var controllerIps = [],
+            diskPools = [];
+
+    $('input[name=eseries-transport]').change(function () {
+        var checked = $('input[name=eseries-transport]:checked').val();
+        if (checked == 'http') {
+            $("#eseries-server-port").val("8080");
+        } else if (checked == 'https') {
+            $("#eseries-server-port").val("8443");
+        }
+    });
+
+    $("#retry").click(function (event) {
+
+        event.preventDefault();
+        $("#3ps-table-container").empty();
+        $("#3ps-loader-1").show();
+        $.getJSON('/supported_third_party_storage/')
+                .done(function (data) {
+
+                    if (data.status == "error") {
+
+                        message.showMessage('error', data.message);
+
+                        var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
+                        $("#3ps-table-container").append(retry);
+                    }
+
+                    if (data.status == "success") {
+
+                        var configTable = '<table class="paleblue widget-table" id="3ps-table"><tr><th>Name</th><th>Configured</th><th>Actions</th></tr></table>';
+                        $("#3ps-table-container").append(configTable);
+
+                        for (provider in data.providers) {
+
+                            var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
+
+                            if (provider.configured == 0) {
+                                newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a><a href="#" id="delete-' + provider.id + '">delete</a></td>';
+                            } else if (provider.configured == 1) {
+                                newRow += '<td>Yes</td><td><a href="#" id="delete-' + provider.id + '">delete</a></td>';
+                            }
+
+                            newRow += '</tr>';
+
+                            $("#3ps-table").append(newRow);
+
+                            if (provider.id == "eseries") {
+
+                                var configId = "#configure-eseries";
+                                $(configId).bind("click", function (event) {
+
+                                    event.preventDefault();
+
+                                    $("#eseries-web-proxy-server-data").show();
+                                });
+
+                                var deleteId = "#delete-eseries";
+                                $(deleteId).bind("click", function (event) {
+
+                                    event.preventDefault();
+                                    $.getJSON("/eseries/delete/")
+                                            .done(function (data) {
+
+                                                if (data.status == "error") {
+
+                                                    message.showMessage("error", data.message);
+                                                }
+
+                                                if (data.status == "success") {
+
+                                                    message.showMessage("success", data.message);
+                                                    eseries_configured = false;
+
+                                                }
+                                            })
+                                            .fail(function () {
+
+                                                message.showMessage("error", "Server Fault");
+                                            })
+                                            .always(function () {
+
+                                                $("#3ps-config-form").dialog("close");
+                                            })
+                                });
+                            }
+
+                            if (provider.id == "nfs") {
+
+                                var configId = "#configure-nfs";
+                                $(configId).bind("click", function (event) {
+
+                                    event.preventDefault();
+                                });
+
+                                var deleteId = "#delete-nfs";
+                                $(deleteId).bind("click", function (event) {
+
+                                    event.preventDefault();
+                                    $.getJSON("/nfs/delete/")
+                                            .done(function (data) {
+
+                                                if (data.status == "error") {
+
+                                                    message.showMessage("error", data.message);
+                                                }
+
+                                                if (data.status == "success") {
+
+                                                    message.showMessage("success", data.message);
+                                                }
+                                            })
+                                            .fail(function () {
+
+                                                message.showMessage("error", "Server Fault");
+                                            })
+                                            .always(function () {
+
+                                                $("#3ps-config-form").dialog("close");
+                                            })
+                                });
+                            }
+                        }
+                    }
+                })
+                .fail(function () {
+
+                    message.showMessage('error', "Server Fault");
+
+                    var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
+                    $("#3ps-table-container").append(retry);
+                })
+                .always(function () {
+
+                    $("#3ps-loader-1").hide();
+                });
+    });
+
+    $("#config-third-party-storage").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        $("#3ps-table-container").empty();
+        $("#3ps-config-form").dialog("open");
+        $("#3ps-loader-1").show();
+        $.getJSON('/supported_third_party_storage/')
+                .done(function (data) {
+
+                    if (data.status == "error") {
+
+                        message.showMessage('error', data.message);
+
+                        var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
+                        $("#3ps-table-container").append(retry);
+                    }
+
+                    if (data.status == "success") {
+
+                        var configTable = '<table class="paleblue widget-table" id="3ps-table"><tr><th>Name</th><th>Configured</th><th>Actions</th></tr></table>';
+                        $("#3ps-table-container").append(configTable);
+
+                        for (var i = 0; i < data.providers.length; i++) {
+
+                            var provider = data.providers[i];
+                            var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
+
+                            if (provider.configured == 0) {
+                                newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a>';
+                            } else if (provider.configured == 1) {
+                                newRow += '<td>Yes</td><td><a href="#" id="delete-' + provider.id + '">delete</a></td>';
+                            }
+
+                            newRow += '</tr>';
+
+                            $("#3ps-table").append(newRow);
+
+                            if (provider.id == "eseries") {
+
+                                var configId = "#configure-eseries";
+                                $(configId).bind("click", function (event) {
+
+                                    event.preventDefault();
+
+                                    $("#eseries-web-proxy-server-data").show();
+                                });
+
+                                var deleteId = "#delete-eseries";
+                                $(deleteId).bind("click", function (event) {
+
+                                    event.preventDefault();
+                                    $.getJSON("/eseries/delete/")
+                                            .done(function (data) {
+
+                                                if (data.status == "error") {
+
+                                                    message.showMessage("error", data.message);
+                                                }
+
+                                                if (data.status == "success") {
+
+                                                    message.showMessage("success", data.message);
+                                                    eseries_configured = false;
+                                                    $("#graph-title").html("E-Series Storage (gb) (Not Configured)");
+                                                    $("#graph").hide();
+                                                }
+                                            })
+                                            .fail(function () {
+
+                                                message.showMessage("error", "Server Fault");
+                                            })
+                                            .always(function () {
+
+                                                $("#3ps-config-form").dialog("close");
+                                            })
+                                });
+                            }
+
+                            if (provider.id == "nfs") {
+
+                                var configId = "#configure-nfs";
+                                $(configId).bind("click", function (event) {
+
+                                    event.preventDefault();
+                                });
+
+                                var deleteId = "#delete-nfs";
+                                $(deleteId).bind("click", function (event) {
+
+                                    event.preventDefault();
+                                    $.getJSON("/nfs/delete/")
+                                            .done(function (data) {
+
+                                                if (data.status == "error") {
+
+                                                    message.showMessage("error", data.message);
+                                                }
+
+                                                if (data.status == "success") {
+
+                                                    message.showMessage("success", data.message);
+                                                }
+                                            })
+                                            .fail(function () {
+
+                                                message.showMessage("error", "Server Fault");
+                                            })
+                                            .always(function () {
+
+                                                $("#3ps-config-form").dialog("close");
+                                            })
+                                });
+                            }
+                        }
+                    }
+                })
+                .fail(function () {
+
+                    message.showMessage('error', "Server Fault");
+
+                    var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
+                    $("#3ps-table-container").append(retry);
+                })
+                .always(function () {
+
+                    $("#3ps-loader-1").hide();
+                });
+    });
+
+    $("#eseries-discover-controllers").click(function (event) {
+
+        event.preventDefault();
+
+        controllers.empty();
+        clearUiValidation(allFields);
+
+        var isValid =
+//                checkHostname(confHostnameIp) &&
+//                checkIp(confHostnameIp) &&
+                checkRange($("#eseries-server-port"), "Server Port", 80, 65535);
+
+        // Confirmed Selections
+        var confUseExisting = $('input[name=eseries-use-existing]:checked').val(),
+                confHostnameIp = $("#eseries-hostname-ip").val(),
+                confLogin = $("#eseries-login").val(),
+                confPassword = $("#eseries-password").val(),
+                confTransport = $('input[name=eseries-transport]:checked').val(),
+                confPort = $("#eseries-server-port").val();
+
+        if (isValid) {
+
+            disableLink("#eseries-discover-controllers", true);
+            $("#3ps-loader-2").show();
+
+            $.getJSON('/eseries/web_proxy_srv/set/' + confUseExisting + '/' + confHostnameIp + '/' + confPort + '/' + confTransport + '/' + confLogin + '/' + confPassword + '/')
+                    .done(function (data) {
+
+                        if (data.status == "error") {
+
+                            message.showMessage("error", data.message);
+                        }
+
+                        if (data.status == "success") {
+
+                            var size = 0;
+
+                            for (var ip in data.ips) {
+                                var option = '<option value="' + data.ips[ip] + '" selected>' + data.ips[ip] + '</option>';
+                                controllers.append(option);
+                                controllerIps.push(data.ips[ip]);
+                                size++;
+                            }
+
+                            controllers.size = size;
+
+                            $("#eseries-storage-controller-data").show();
+                        }
+                    })
+                    .fail(function () {
+
+                        message.showMessage("error", "Server Fault");
+                    })
+                    .always(function () {
+
+                        disableLink("#eseries-discover-controllers", false);
+                        $("#3ps-loader-2").hide();
+                    });
+        }
+    });
+
+    $("#eseries-discover-disk-pools").click(function (event) {
+
+        event.preventDefault();
+        disableLink("#eseries-discover-disk-pools", true);
+
+        // Confirmed Selections
+        var confControllerPassword = $("#eseries-storage-controller-password").val();
+
+        var url;
+
+        if (confControllerPassword.length > 0) {
+
+            url = 'eseries/controller/set/' + confControllerPassword + '/' + controllerIps + '/';
+        } else {
+
+            url = 'eseries/controller/set/' + controllerIps + '/'
+        }
+
+        $.getJSON(url)
+                .done(function (data) {
+
+                    if (data.status == "error") {
+
+                        message.showMessage("error", data.message);
+                    }
+
+                    if (data.status == "success") {
+                        var size = 0;
+
+                        for (var disk in data.pools) {
+                            var option = '<option value="' + data.pools[disk] + '" selected>' + data.pools[disk].name + ' (' + data.pools[disk].free + '/' + data.pools[disk].total + 'gb available)</option>';
+                            disks.append(option);
+                            diskPools.push(data.pools[disk].name);
+                            size++;
+                        }
+
+                        disks.size = size;
+                    }
+
+                    $("#eseries-disk-pools").show();
+                })
+                .fail(function () {
+
+                    message.showMessage("error", "Server Fault");
+                })
+                .always(function () {
+
+                    disableLink("#eseries-discover-disk-pools", false);
+                    $("#3ps-loader-2").hide();
+                });
+    });
+
+    $("#3ps-config-form").dialog({
+        autoOpen: false,
+        height: 450,
+        width: 300,
+        modal: true,
+        resizable: false,
+        closeOnEscape: true,
+        draggable: true,
+        show: "fade",
+        position: {
+            my: "center",
+            at: "center",
+            of: $('#page-content')
+        },
+        buttons: {
+            "Configure": function () {
+
+                // Remove UI validation flags
+                clearUiValidation(allFields);
+
+                $.getJSON('eseries/config/set/' + diskPools + '/')
+                        .done(function (data) {
+
+
+                            if (data.status == "error") {
+
+                                message.showMessage("error", data.message);
+                            }
+
+                            if (data.status == "success") {
+
+                                message.showMessage("success", data.message);
+                                eseries_configured = true;
+                                $("#graph").html(graph());
+                                $("#graph").show();
+                                $("#graph-title").html("E-Series Storage (gb)");
+                                $("#3ps-config-form").dialog("close");
+                                $("#eseries-web-proxy-server-data").hide();
+                                $("#eseries-storage-controller-data").hide();
+                                $("#eseries-disk-pools").hide();
+                            }
+
+                        })
+                        .fail(function () {
+
+                            message.showMessage("error", "Server Fault");
+                        })
+                        .always(function () {
+
+                        });
+            },
+            "Cancel": function () {
+
+                // Reset form validation
+                resetUiValidation(allFields);
+                $("#eseries-web-proxy-server-data").hide();
+                $("#eseries-storage-controller-data").hide();
+                $("#eseries-disk-pools").hide();
+                $("#3ps-config-form").dialog("close");
+            }
+        }
+    });
+});
+
+function graph() {
+
+    var url = "/eseries/get/stats/";
+
+    d3.json(url, function (error, json) {
+
+        var m = 10, r = 100, z = d3.scale.category20c();
+
+        var pie = d3.layout.pie()
+                .value(function (d) {
+                    return +d.usage;
+                })
+                .sort(function (a, b) {
+                    return b.usage - a.usage;
+                });
+
+        var arc = d3.svg.arc()
+                .innerRadius(r / 2)
+                .outerRadius(r);
+
+        var disks = d3.nest()
+                .key(function (d) {
+                    return d.origin;
+                })
+                .entries(json.stats.data);
+
+        var svg = d3.select("#graph").selectAll("div")
+                .data(disks)
+                .enter().append("div")
+                .style("display", "inline-block")
+                .style("width", (r + m) * 2 + "px")
+                .style("height", (r + m) * 2 + "px")
+                .append("svg:svg")
+                .attr("width", (r + m) * 2)
+                .attr("height", (r + m) * 2)
+                .append("svg:g")
+                .attr("transform", "translate(" + (r + m) + "," + (r + m) + ")");
+
+        svg.append("svg:text")
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .text(function (d) {
+                    return d.key;
+                });
+
+
+        var g = svg.selectAll("g")
+                .data(function (d) {
+                    return pie(d.values);
+                })
+                .enter().append("svg:g");
+
+        g.append("svg:path")
+                .attr("d", arc)
+                .style("fill", function (d) {
+                    return z(d.data.volumeName);
+                })
+                .append("svg:title")
+                .text(function (d) {
+                    return d.data.volumeName + ": " + d.data.usage;
+                });
+
+        g.filter(function (d) {
+            return d.endAngle - d.startAngle > .2;
+        }).append("svg:text")
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .attr("transform", function (d) {
+                    return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
+                })
+                .text(function (d) {
+                    return d.data.volumeName;
+                });
+
+        g.filter(function (d) {
+            return d.endAngle - d.startAngle > .2;
+        }).append("svg:text")
+                .attr("dy", "15")
+                .attr("text-anchor", "middle")
+                .attr("transform", function (d) {
+                    return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
+                })
+                .text(function (d) {
+                    return d.data.usage;
+                });
+    });
+
+    function angle(d) {
+        var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+        return a > 90 ? a - 180 : a;
+    }
+}
+
+</script>
 
 {% endblock %}

@@ -5,6 +5,7 @@
 import sys
 import json
 import time
+import random
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -60,6 +61,8 @@ class volume_ops:
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
+
+            self.rannum = random.randrange(1000,9000)
 
         if((self.username == "") or (self.password == "")):
             logger.sys_error("Credentials not properly passed.")
@@ -126,14 +129,19 @@ class volume_ops:
         if('volume_type' not in create_vol):
             voltype = 'ssd'
         elif('volume_type' in create_vol):
-            voltype = create_vol['volume_type'].lower()
-            print voltype
+            voltype = create_vol['volume_type']
 
-        #check if the volume type is ssd or spindle
-        if((voltype == 'ssd') or (voltype == 'spindle')):
-            pass
-        else:
-            raise Exception("The volume type specified does not exist.")
+        ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
+        vol_type_found = True
+        #voltype_list = self.list_volume_types()
+        #vol_type_found = False
+        #for vol_type in voltype_list:
+        #    if vol_type['name'].lower() == voltype.lower():
+        #        vol_type_found = True
+        #        break
+
+        if not vol_type_found:
+            raise Exception ("Volume Type %s was not found for volume creation" % voltype)
 
         #get the name of the project based on the id
         try:
@@ -160,6 +168,16 @@ class volume_ops:
 
         if(len(volume) >= 1):
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
+            create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
+
+        if('description' not in create_vol) or (create_vol['description'] == 'none'):
+            logger.sys_warning("Did not pass in a volume description setting the default description.")
+            if('snapshot_id' in create_vol):
+                create_vol['description'] = "%s volume from snapshot %s." %(create_vol['volume_name'],create_vol['snapshot_id'])
+            elif('source_vol_id' in create_vol):
+                create_vol['description'] = "%s volume clone from volume %s." %(create_vol['volume_name'],create_vol['source_vol_id'])
+            else:
+                create_vol['description'] = "%s volume" %(create_vol['project_id'])
             raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
         
         #check the project capacity
@@ -187,7 +205,8 @@ class volume_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception, e:
-                raise e
+                logger.sys_error("Error creating new volume - %s" % e)
+                raise Exception("Error creating new volume - %s" % e)
 
             load = json.loads(rest['data'])
             if(rest['response'] == 200):
@@ -208,7 +227,7 @@ class volume_ops:
                         time.sleep(2)
                     elif(status['volume']['status'] == 'unknown'):
                         logger.sys_info('Volume with ID %s in unknown state.'%(volid))
-                        raise Exception("Could not create a new volume. Unknown error occured.")
+                        raise Exception("Could not create a new volume. Unknown error occurred.")
                     elif(status['volume']['status'] == 'error'):
                         logger.sys_info('Volume with ID %s failed to provision.'%(volid))
                         raise Exception("Could not create a new volume. ERROR: 555")
@@ -220,17 +239,142 @@ class volume_ops:
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except Exception, e:
                     self.db.pg_transaction_rollback()
-                    logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
+                    logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(volname))
                     raise e
                 else:
                     self.db.pg_transaction_commit()
                     r_dict = {"volume_id": volid, "volume_type": voltype,"volume_name": volname, "volume_size": volsize}
                     return r_dict
             else:
-                ec.error_codes(rest)
+                logger.sys_error("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
+                raise Exception("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
+                #ec.error_codes(rest)
         else:
-            logger.sys_error("Could not create a new volume. Unknown error occured. ERROR: 555")
-            raise Exception("Could not create a new volume. Unknown error occured. ERROR: 555")
+            logger.sys_error("Could not create a new volume. Unknown error occurred. ERROR: 555")
+            raise Exception("Could not create a new volume. Unknown error occurred. ERROR: 555")
+
+    def create_vol_from_snapshot(self,input_dict):
+        """
+        DESC: Create a new volume in a project from an existing snapshot in the project.
+        All user levels can spin up new volumes.
+        INPUTS: volume_size - REQ
+                project_id - REQ
+                snapshot_id - REQ
+                volume_name - OP
+                volume_zone - Optional default is nova
+                description - Optional
+        OUTPUTS: r_dict - volume_name
+                        - volume_type
+                        - volume_id
+                        - volume_size
+        ACCESS: Admins can create a volume with any snapshot, Users can only create
+                volumes with snapshots they own.
+        NOTE: You can not create two volumes with the same name in the same project.
+        """
+        #create = {'volume_name':'test111','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd','snapshot_id':'a32d8390-1df0-445a-b560-f38697dd3d8f'}
+        #make sure snapshot id is given.
+        if(('snapshot_id' not in input_dict) or (input_dict['snapshot_id'] == '')):
+            logger.sys_error("Snapshot ID is required.")
+            raise Exception("Snapshot ID is required.")
+
+        if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
+            input_dict['volume_zone'] = 'nova'
+
+        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
+            logger.sys_error("Project ID is required.")
+            raise Exception("Project ID is required.")
+
+        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
+            input_dict['volume_name'] = input_dict['snapshot_id'] + '_vol_from_snap_%s'%(str(self.rannum))
+
+        if('description' not in input_dict) or (input_dict['description'] == 'none'):
+            logger.sys_warning("Did not pass in a volume description setting the default description.")
+            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
+
+        if(self.is_admin == 0):
+            if(self.user_level == 1):
+                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            elif(self.is_admin == 2):
+                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"user_id='%s'"%(self.user_id)}
+        else:
+            self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id'])}
+
+        #check if the snapshot exists in the project and that the user can use it
+        try:
+            get_snap = self.db.pg_select(self.select_snap)
+        except:
+            logger.sys_error("The snapshot does not exist in this project, or you may not have permission to use it.")
+            raise Exception("The snapshot does not exist in this project, or you may not have permission to use it.")
+
+        input_dict2 = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
+                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id']}
+
+        output = self.create_volume(input_dict)
+
+        return output
+
+    def create_vol_clone(self,input_dict):
+        """
+        DESC: Create a new volume in a project from an existing snapshot in the project.
+        All user levels can spin up new volumes.
+        INPUTS: volume_id - REQ
+                project_id - REQ
+                volume_name - OP
+                volume_zone - Optional default is nova
+                description - Optional
+        OUTPUTS: r_dict - volume_name
+                        - volume_type
+                        - volume_id
+                        - volume_size
+        ACCESS: Admins can create a volume with any snapshot, Users can only create
+                volumes with snapshots they own.
+        NOTE: You can not create two volumes with the same name in the same project.
+        """
+
+        #make sure snapshot id is given.
+        if(('volume_id' not in input_dict) or (input_dict['volume_id'] == '')):
+            logger.sys_error("Volume ID is required.")
+            raise Exception("Volume ID is required.")
+
+        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
+            logger.sys_error("Project ID is required.")
+            raise Exception("Project ID is required.")
+
+        if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
+            input_dict['volume_zone'] = 'nova'
+
+        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
+            input_dict['volume_name'] = input_dict['volume_id'] + '_clone_%s'%(str(self.rannum))
+
+        if('description' not in input_dict) or (input_dict['description'] == 'none'):
+            logger.sys_warning("Did not pass in a volume description setting the default description.")
+            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
+
+        if(self.is_admin == 0):
+            if(self.user_level == 1):
+                self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+            elif(self.is_admin == 2):
+                self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"user_id='%s'"%(self.user_id)}
+        else:
+            self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
+
+        #check if the snapshot exists in the project and that the user can use it
+        try:
+            get_vol= self.db.pg_select(self.select_vol)
+        except:
+            logger.sys_error("The volume does not exist in this project, or you may not have permission to clone it.")
+            raise Exception("The volume does not exist in this project, or you may not have permission to clone it.")
+
+        #if no vol size given
+        if(('volume_size' not in input_dict) or (input_dict['volume_size'] == '')):
+            input_dict['volume_size'] = get_vol[0][1]
+
+        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
+                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'volume_id':input_dict['volume_id']}
+
+        output = self.create_volume(input_dict)
+
+        return output
 
     def get_volume(self,input_dict):
         """
@@ -555,9 +699,8 @@ class volume_ops:
                 rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8776"}
                 rest = api.call_rest(rest_dict)
             except Exception as e:
-                print "Could not add the volume type %s" %(e)
                 logger.sys_error("Could not add the volume type %s" %(e))
-                raise
+                raise Exception("Could not add the volume type %s" %(e))
 
             if(rest['response'] == 200):
                 #read the json that is returned
@@ -568,9 +711,8 @@ class volume_ops:
                 r_dict = {"volume_type_name": vol_type_name, "volume_type_id": vol_type_id}
                 return r_dict
             else:
-                print "error:: response: %s, reason: %s, data: %s" % (rest['response'], rest['reason'], rest['data'])
-                #util.http_codes(rest['response'],rest['reason'],rest['data'])
-                ec.error_codes(rest)
+                logger.sys_error("Could not create new volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
+                raise Exception ("Could not create new volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
         else:
             logger.sys_error("Could not create a new volume type, not an admin.")
             raise Exception("Could not create a new volume type, not an admin.")
@@ -629,9 +771,13 @@ class volume_ops:
             if (rest['response'] == 202 or rest['response'] == 200):
                 logger.sys_info("Delete volume type %s was successful" % volume_type_name)
                 return True
+            elif (rest['response'] == 400):
+                data = json.loads(rest['data'])
+                logger.sys_error("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], data['badRequest']['message']))
+                raise Exception ("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], data['badRequest']['message']))
             else:
-                logger.sys_error("Could not delete the volume type %s, error: %s" % (volume_type_name, rest['response']))
-                raise Exception ("Could not delete the volume type %s, error: %s" % (volume_type_name, rest['response']))
+                logger.sys_error("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
+                raise Exception ("Could not delete the volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
         else:
             logger.sys_error ("Could not delete the volume type %s, must be an admin." % volume_type_name)
             raise Exception ("Could not delete the volume type %s, must be an admin." % volume_type_name)
@@ -679,7 +825,7 @@ class volume_ops:
             raise Exception("Could not connect to the API")
 
         try:
-            #add the new user to openstack 
+            #get list of volume types
             body = ''
             token = self.token
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
@@ -690,8 +836,7 @@ class volume_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not get volume type list, %s" %(e))
-            #back the user out of the transcirrus DB if the db works and the REST API fails
-            raise e
+            raise Exception ("Could not get volume type list, %s" %(e))
 
         if(rest['response'] == 200):
             #read the json that is returned
@@ -706,7 +851,9 @@ class volume_ops:
             return r_dict
         else:
             #util.http_codes(rest['response'],rest['reason'],rest['data'])
-            ec.error_codes(rest)
+            #ec.error_codes(rest)
+            logger.sys_error("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
+            raise Exception ("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
         #else:
         #    logger.sys_error("Could not get volume type list.")
         #    raise ("Could not get volume type list.")

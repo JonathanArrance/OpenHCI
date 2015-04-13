@@ -158,7 +158,9 @@
     </form>
 </div>
 
-{% if user_level == 0 %}
+<div id="instance-delete-confirm-form" title="Delete Instance">
+    <p style="text-align:center;">Delete <span class="instance-name"></span>?</p>
+</div>
 
 <div id="instance-pause-confirm-form" title="Pause Instance">
     <p style="text-align:center;">Pause <span class="instance-name"></span>?</p>
@@ -175,9 +177,3 @@
 <div id="instance-resume-confirm-form" title="Resume Instance">
     <p style="text-align:center;">Resume <span class="instance-name"></span>?</p>
 </div>
-
-<div id="instance-delete-confirm-form" title="Delete Instance">
-    <p style="text-align:center;">Delete <span class="instance-name"></span>?</p>
-</div>
-
-{% endif %}

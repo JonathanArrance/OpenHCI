@@ -61,8 +61,8 @@ import transcirrus.operations.third_party_storage.nfs.config as nfs
 # When a new 3rd party storage system is supported, add
 # it to the list below.
 def get_supported_third_party_storage():
-    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled']},
-            {'name': "nfs",             'configured': get_nfs()['enabled']}
+    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled'], 'id': "eseries"},
+            {'name': "nfs",             'configured': get_nfs()['enabled'], 'id': "nfs"}
            ]
     return (list)
 
@@ -142,7 +142,9 @@ def add_eseries (data, auth, pre_existing=True):
 
 
 # Update E-Series data in cinder config.
-def update_eseries (data):
+def update_eseries (data, pre_existing=True):
+    if not pre_existing:
+        data = eseries.get_eseries_pre_existing_data (data)
     if not common.delete_stanza (eseries.ESERIES_NAME):
         return (False)
     eseries.add_eseries_stanza (data)

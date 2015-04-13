@@ -121,6 +121,7 @@ $(function () {
                                     var rowCount = $('#instance_list tr').length;
                                     if (rowCount >= 2) {
                                         $('#instance_placeholder').remove().fadeOut();
+                                        setVisible("#create-instance-snapshot", true);
                                     }
 
                                     // Append new row to instance-list
@@ -131,10 +132,6 @@ $(function () {
                                         data.server_info.server_id,
                                         { id: data.server_info.server_id, name: data.server_info.server_name, status: data.server_info.server_status,
                                             flavor: data.server_info.server_flavor, os: data.server_info.server_os, console: data.server_info.novnc_console }
-                                    );
-                                    instanceOpts.setItem(
-                                        data.server_info.server_id,
-                                        { value: data.server_info.server_id, option: data.server_info.server_name }
                                     );
                                     consoleLinks.setItem(
                                         data.server_info.server_id,
@@ -147,6 +144,7 @@ $(function () {
                                     // Update selects
                                     addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
                                     addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
+                                    addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance_to_snap"), instanceOpts);
                                 }
                             })
                             .fail(function () {
@@ -307,10 +305,14 @@ $(function () {
                                 instances.removeItem(confId);
                                 instanceOpts.removeItem(confId);
 
+                                // Update Selects
+                                refreshSelect('#instance_to_snap', instanceOpts);
+
                                 // If last row, append placeholder
                                 var rowCount = $('#instance_list tr').length;
                                 if (rowCount < 2) {
                                     $(table).append(placeholder).fadeIn();
+                                    setVisible("#create-instance-snapshot", false);
                                 }
                             }
                         })

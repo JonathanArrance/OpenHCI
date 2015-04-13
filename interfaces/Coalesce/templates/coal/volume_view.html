@@ -70,10 +70,6 @@
                     <td id="volume-attached">{{volume_info.volume_attached}}</td>
                 </tr>
                 <tr>
-                    <th>Mount Point</th>
-                    <td id="volume-mount">{{volume_info.volume_mount}}</td>
-                </tr>
-                <tr>
                     <th>Attached To (Name: Id)</th>
                     <td id="volume-server">
                         {% if volume_info.volume_attached == 'true' %}
@@ -112,6 +108,13 @@
                 {% endif %}
                 {% endfor %}
             </table>
+            <script>
+                $(function () {
+                    if ($('#volume_list tr').length < 2) {
+                        $('#volume_list').append("<tr><td>This volume does not have any snapshots.</td><td></td></tr>").fadeIn();
+                    }
+                });
+            </script>
         </div>
     </div>
     {% endif %}
