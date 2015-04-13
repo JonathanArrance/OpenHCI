@@ -137,6 +137,14 @@ def run_setup(new_system_variables,auth_dict):
     else:
         return "Cinder error."
 
+    logger.sys_info('Building Cinder V2 endpoints')
+    cinderv2_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'cinder_v2'}
+    create_cinderv2 = endpoint.create_endpoint(cinderv2_input_dict)
+    if(create_cinderv2['endpoint_id']):
+        logger.sys_info("Cinder endpoint set up complete.")
+    else:
+        return "Cinder V2 error."
+
     logger.sys_info('Building Glance endpoints')
     glance_input_dict = {'cloud_name':sys_vars['CLOUD_NAME'],'service_name':'glance'}
     create_glance = endpoint.create_endpoint(glance_input_dict)

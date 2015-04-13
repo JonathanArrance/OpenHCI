@@ -453,7 +453,7 @@ class server_ops:
                     time.sleep(10)
                 elif(status['server_status'] == 'ERROR'):
                     logger.sys_info('Server with ID %s failed to build.'%(self.load['server']['id']))
-                    raise Exception("Could not create a new server. ERROR: 555")
+                    raise Exception("Could not create a new server due to an unknown error. Please contact your TransCirrus support representitive. ERROR: 555")
             try:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
@@ -487,6 +487,7 @@ class server_ops:
                        - sec_key_name
                        - sec_group_name
                        - server_flavor
+                       - flavor_id
                        - server_os
                        - server_net_id
                        - server_int_net - dict of int net info
@@ -496,6 +497,7 @@ class server_ops:
                        - server_public_ips
                        - floating_ip_id
                        - novnc_console
+                       - date_created
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
         """
@@ -567,13 +569,13 @@ class server_ops:
             input_dict = {'project_id':input_dict['project_id'],'instance_id':input_dict['server_id']}
             novnc = self.server_actions.get_instance_console(input_dict)
             #build the return dictionary
-            r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],
+            r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'flavor_id':load['server']['flavor']['id'],
                       'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
-                      'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc}
+                      'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc,'date_created':load['server']['created']}
             return r_dict
         elif(rest['response'] == 409):
             #logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
-            logger.sys_error("%s ERROR: 404"%(str(load['itemNotFound']['message'])))
+            logger.sys_error("%s ERROR: 409"%(str(load['itemNotFound']['message'])))
         #else:
         #    ec.error_codes(rest)
 

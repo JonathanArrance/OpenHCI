@@ -362,7 +362,6 @@ def setup(d):
             d.msgbox("An error has occured in setting the first time boot flag.")
         success_msg(d, timeout)
         clear_screen(d)
-        #util.reboot_system()
     else:
         rollback_msg(d, timeout)
         clear_screen(d)

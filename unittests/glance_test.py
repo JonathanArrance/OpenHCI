@@ -14,7 +14,7 @@ from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.glance.glance_ops import glance_ops
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","test")
+c= authorization("admin","password")
 
 print "Get admin authorization dictionary..."
 b = c.get_auth()
@@ -22,6 +22,12 @@ b = c.get_auth()
 print "Image..."
 i= glance_ops(b)
 print i
+
+get_image = {'image_name':'yoimage','image_disk_format':'qcow2','image_is_public':'True','image_is_protected':'True',
+             'project_id':'157a34897e8246b4871676c5feb64ab8','url':'http://cdn.download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img'}
+yup = i.import_image(get_image)
+print yup
+
 '''
 
 d = i.delete_image("a6920f75-d179-4917-86ee-1237a2da0f1a")
@@ -39,7 +45,7 @@ for x in li:
 
 
 #get_image = {'img_name':'yoimage','img_disk_format':'qcow2','img_is_public':'True','img_is_protected':'True',
-#             'project_id':'66069dc297a449ca90582187011ac8e9','url':'http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img'}
+#             'project_id':'66069dc297a449ca90582187011ac8e9','url':'http://cdn.download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img'}
 get_image = {'img_name':'yoimage2','img_disk_format':'qcow2','img_is_public':'True','img_is_protected':'False',
              'project_id':'66069dc297a449ca90582187011ac8e9','file_location':'/home/transuser/cirros-0.3.1-x86_64-disk.img'}
 yup = i.import_image(get_image)

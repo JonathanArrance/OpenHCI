@@ -23,15 +23,29 @@ nova = server_ops(perms)
 action = server_admin_actions(perms)
 sa = server_actions(perms)
 
+input_dict = {'host_name':'ciac-10176','project_id':'157a34897e8246b4871676c5feb64ab8'}
+yo = action.get_os_host(input_dict)
+
+print yo
+
+input_dict = {'zone':'nova','project_id':'157a34897e8246b4871676c5feb64ab8'}
+yo = action.list_compute_hosts(input_dict)
+
+print yo
+
+'''
 input_dict = {'project_id':'157a34897e8246b4871676c5feb64ab8','instance_id':'84180110-b7cf-47ed-b962-8a35b0e172b4','secgroup_id': 'eb66d78f-ec7f-4162-a073-04425cd45d0a','action':'add'}
 yo = sa.update_instance_secgroup(input_dict)
 print yo
 
+<<<<<<< HEAD
+=======
 '''
 yo = sa.list_instance_snaps('e12a1c25-379b-44db-b0c6-359e7ec62e1b')
 print yo
 
 
+>>>>>>> 242ba2c3b5c55c83557c7ff4d616de49221e153b
 input_dict = {'instance_id':'e2cb3662-c42f-4299-b00e-851e99a67367','project_id':'d4b29af44660474da7d5f884ec107f76'}
 yo = store.list_attached_vols(input_dict)
 
@@ -39,7 +53,7 @@ print yo
 
 print '---------------'
 
-server_input = {'server_id':input_dict['instance_id'],'project_id':input_dict['project_id']}
+server_input = {'server_id':'187d4804-cbf5-4e61-9992-da9e9fb2d637','project_id':'157a34897e8246b4871676c5feb64ab8'}
 inst_info = nova.get_server(server_input)
 
 print inst_info

@@ -239,7 +239,7 @@ class volume_ops:
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except Exception, e:
                     self.db.pg_transaction_rollback()
-                    logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(r_dict['volume_name']))
+                    logger.sql_error("Could not enter in volume %s information into Transcirrus DB" %(volname))
                     raise e
                 else:
                     self.db.pg_transaction_commit()
@@ -306,7 +306,7 @@ class volume_ops:
             logger.sys_error("The snapshot does not exist in this project, or you may not have permission to use it.")
             raise Exception("The snapshot does not exist in this project, or you may not have permission to use it.")
 
-        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
+        input_dict2 = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
                       'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id']}
 
         output = self.create_volume(input_dict)

@@ -206,7 +206,7 @@ def set_first_time_boot(set_flag):
         r_dict = {'first_time_boot':'OK'}
     except:
         db.pg_transaction_rollback()
-        logger.sql_error("Could not connect to the Transcirrus setting db. Returning ERROR.")
+        logger.sql_error("FIRST_TIME_BOOT_FLAG: Could not connect to the Transcirrus setting db to set . Returning ERROR.")
         r_dict = {'first_time_boot':'ERROR'}
 
     db.pg_close_connection()
