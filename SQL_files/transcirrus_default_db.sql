@@ -2689,7 +2689,7 @@ CREATE TABLE trans_inst_snaps (
     create_date timestamp without time zone,
     snap_id character varying,
     project_id character varying,
-    description text
+    description text,
     user_id character varying
 );
 
