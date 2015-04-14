@@ -2299,7 +2299,7 @@ INSERT INTO trans_service_settings VALUES ('keystone            ', 5000, NULL, '
 INSERT INTO trans_service_settings VALUES ('keystone_admin      ', 35357, NULL, 'identity', '/v2.0', 'OpenStack Identity', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('nova                ', 8774, NULL, 'compute', '/v2/$(tenant_id)s', 'OpenStack Compute Service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('cinder              ', 8776, NULL, 'volume', '/v1/$(tenant_id)s', 'OpenStack Volume Service', 'NULL', 'NULL', 'NULL', 'NULL');
-INSERT INTO trans_service_settings VALUES ('cinder_v2           ', 8776, NULL, 'volume', '/v2/$(tenant_id)s', 'OpenStack Volume Service V2', 'NULL', 'NULL', 'NULL', 'NULL');
+INSERT INTO trans_service_settings VALUES ('cinder_v2           ', 8776, NULL, 'volumev2', '/v2/$(tenant_id)s', 'OpenStack Volume Service V2', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('glance              ', 9292, NULL, 'image', 'NULL', 'OpenStack Image Service', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('swift               ', 8080, NULL, 'object-store', '/v1/AUTH_$(tenant_id)s', 'OpenStack Object Store', 'NULL', 'NULL', 'NULL', 'NULL');
 INSERT INTO trans_service_settings VALUES ('swift_admin         ', 8080, NULL, 'object-store', '/v1', 'OpenStack Object Store', 'NULL', 'NULL', 'NULL', 'NULL');
