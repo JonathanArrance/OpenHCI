@@ -510,14 +510,6 @@ def run_setup(new_system_variables,auth_dict):
     time.sleep(1)
     os.system('sudo echo "gateway_external_network_id = %s" >> /etc/neutron/l3_agent.ini'%(default_public['net_id']))
 
-    #if the node is set as multinode, enable multinode
-    #if(sys_vars['SINGLE_NODE'] == '0'):
-    #    status = node_util.enable_multi_node()
-    #    if(status != 'OK'):
-    #        logger.sys_error("Could not enable multi-node. Check the interface and try again.")
-    #    else:
-    #        logger.sys_info("Multi-node configuration enabled.")
-
     logger.sys_info("Restarting the Mgmt network adapter.")
     card_restart = util.restart_network_card("bond0")
     if(card_restart == 'OK'):
@@ -534,7 +526,6 @@ def run_setup(new_system_variables,auth_dict):
     #add the spindle and SSD vol types
     volumes = volume_ops(auth_dict)
     ssd = volumes.create_volume_type("ssd")
-    
     spindle = volumes.create_volume_type("spindle")
 
     #add the volume backings
@@ -563,6 +554,7 @@ def run_setup(new_system_variables,auth_dict):
                     'container_format':"bare",
                     'disk_format':"qcow2",
                     'visibility':'public',
+                    'image_type':'image_file',
                     'image_location':"/transcirrus/cirros-0.3.1-x86_64-disk.img",
                     'os_type':"linux"
                     }
@@ -578,6 +570,7 @@ def run_setup(new_system_variables,auth_dict):
                     'container_format':"bare",
                     'disk_format':"qcow2",
                     'visibility':'public',
+                    'image_type':'image_file',
                     'image_location':"/transcirrus/precise-server-cloudimg-amd64-disk1.img",
                     'os_type':"linux"
                     }
@@ -593,6 +586,7 @@ def run_setup(new_system_variables,auth_dict):
                     'container_format':"bare",
                     'disk_format':"qcow2",
                     'visibility':'public',
+                    'image_type':'image_file',
                     'image_location':"/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
                     'os_type':"linux"
                     }
