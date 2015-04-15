@@ -1,6 +1,6 @@
 <!-- Begin volume widget-->
 <div class="span4">
-    <div class="well storage-well">
+    <div class="well {% if user_level > 1 %} instance-management-well {% else %} storage-well {% endif %}">
         <script>getStorage();</script>
         <div class="legend">
 
@@ -15,7 +15,7 @@
             </div>
         </div>
 
-        <div class="well-tall storage-table">
+        <div class="well-tall {% if user_level > 1 %} instance-management-table {% else %} storage-table{% endif %}">
             <table class="paleblue widget-table table-tall" id="volume_list">
 
                 <tr>
