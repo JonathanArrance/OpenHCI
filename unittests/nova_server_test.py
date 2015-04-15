@@ -23,26 +23,33 @@ nova = server_ops(perms)
 action = server_admin_actions(perms)
 sa = server_actions(perms)
 
-input_dict = {'project_id':'157a34897e8246b4871676c5feb64ab8','instance_id':'84180110-b7cf-47ed-b962-8a35b0e172b4','secgroup_id': 'eb66d78f-ec7f-4162-a073-04425cd45d0a','action':'add'}
-yo = sa.update_instance_secgroup(input_dict)
+'''
+input_dict = {'host_name':'ciac-10176','project_id':'157a34897e8246b4871676c5feb64ab8'}
+yo = action.get_os_host(input_dict)
+
 print yo
 
-'''
+input_dict = {'zone':'nova','project_id':'157a34897e8246b4871676c5feb64ab8'}
+yo = action.list_compute_hosts(input_dict)
+
+print yo
+
 yo = sa.list_instance_snaps('e12a1c25-379b-44db-b0c6-359e7ec62e1b')
 print yo
-
 
 input_dict = {'instance_id':'e2cb3662-c42f-4299-b00e-851e99a67367','project_id':'d4b29af44660474da7d5f884ec107f76'}
 yo = store.list_attached_vols(input_dict)
 
 print yo
-
+'''
 print '---------------'
 
-server_input = {'server_id':input_dict['instance_id'],'project_id':input_dict['project_id']}
+server_input = {'server_id':'98286d44-fa56-4c79-bb45-179910c75828','project_id':'157a34897e8246b4871676c5feb64ab8'}
 inst_info = nova.get_server(server_input)
 
 print inst_info
+
+'''
 
 back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
 yo = sa.create_instance_backup(back_image)
@@ -54,12 +61,6 @@ yo = sa.create_instance_snapshot(snap_image)
 print yo
 
 time.sleep(30)
-
-'''
-doop = sa.delete_instance_snapshot('a2eb26d0-ac42-4a9d-a131-ad65fc70093f')
-print doop
-'''
-
 
 auth2 = authorization("bill","test")
 #get the user dict

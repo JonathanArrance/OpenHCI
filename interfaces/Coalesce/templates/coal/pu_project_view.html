@@ -23,13 +23,9 @@
 <script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
 <script>
-    var PROJECT = "{{ project.project_name }}";
-</script>
-<script>
-    var PROJECT_ID = "{{ project.project_id }}";
-</script>
-<script>
-    var DEFAULT_PUBLIC = "{{ default_public }}";
+    var     PROJECT = "{{ project.project_name }}",
+            PROJECT_ID = "{{ project.project_id }}",
+            DEFAULT_PUBLIC = "{{ default_public }}";
 </script>
 
 {% endblock %}

@@ -446,7 +446,6 @@ class server_admin_actions:
         ACCESS: ONLY the admin can migrate an instance
         NOTES: This is not the same as the migration function
         """
-        print "in live-migrate def"
         for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
@@ -465,7 +464,6 @@ class server_admin_actions:
         except:
             logger.sys_error("Could not connect to the API")
             raise Exception("Could not connect to the API")
-        print "before call"
         try:
             # construct request header and body
             body='{"os-migrateLive": {"host": "%s","block_migration": "false", "disk_over_commit": "false"}}'%(openstack_host_id)
@@ -485,7 +483,6 @@ class server_admin_actions:
                 # this method does not return any response body
                 logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason'],rest['data']))
         else:
-            #util.http_codes(rest['response'],rest['reason'],rest['data'])
             ec.error_codes(rest)
 
         return 'OK'
@@ -550,8 +547,8 @@ class server_admin_actions:
         """
         http://docs.openstack.org/api/openstack-compute/2/content/GET_os-hosts-v2_listHosts_v2__tenant_id__os-hosts_ext-os-hosts.html
         DESC: Get the openstack compute hosts in the cloud.
-        INPUT: input_dict - project_id
-                          - zone
+        INPUT: input_dict - project_id - REQ
+                          - zone - OP
         OUTPUT: array of r_dict - zone
                                 - host_name
                                 - service
@@ -669,7 +666,7 @@ class server_admin_actions:
         NOTES:
         """
         logger.sys_info('\n**Getting physical host. Component: Nova Def: get_os_hosts**\n')
-        for key,value in input_dictt.items():
+        for key,value in input_dict.items():
             if(key == ''):
                 logger.sys_error('Reguired value not passed.')
                 raise Exception('Reguired value not passed.')
