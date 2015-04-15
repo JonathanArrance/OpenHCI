@@ -135,13 +135,17 @@ class glance_ops:
             logger.sys_error("Could not connect to the API caller")
             raise Exception("Could not connect to the API caller")
 
-        try:
-            # Open the downloaded file.
-            download_file  = input_dict['image_location']
-            file_open = open(download_file, 'rb')
-        except Exception as e:
-            logger.sys_error("Could not open image file: %s" % e)
-            raise Exception("Could not open image file: %s" % e)
+        file_open = None
+        if(input_dict['image_type'] == 'image_file'):
+            try:
+                # Open the downloaded file.
+                download_file  = input_dict['image_location']
+                file_open = open(download_file, 'rb')
+            except Exception as e:
+                logger.sys_error("Could not open image file: %s" % e)
+                raise Exception("Could not open image file: %s" % e)
+        elif(input_dict['image_type'] == 'image_url'):
+            file_open = input_dict['image_location']
 
         if('visibility' in input_dict):
             body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility'],
@@ -185,17 +189,18 @@ class glance_ops:
     
             if((rest['response'] == 201 or rest['response'] == 204)):
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                file_open.close()
+                if(input_dict['image_type'] == 'image_file'):
+                    file_open.close()
 
-                command = "sudo rm -f " + download_file
+                    command = "sudo rm -f " + download_file
 
-                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                std_out, std_err = subproc.communicate()
-
-                # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
-                if subproc.returncode != 0:
-                    logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
-                    logger.sys_error("Error message: %s" % std_err)
+                    subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                    std_out, std_err = subproc.communicate()
+    
+                    # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
+                    if subproc.returncode != 0:
+                        logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
+                        logger.sys_error("Error message: %s" % std_err)
 
                 return ret_dict
             else:

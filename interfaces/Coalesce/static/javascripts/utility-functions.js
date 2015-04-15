@@ -187,15 +187,12 @@ function checkEmail(o) {
 }
 
 function checkPassword(o) {
-    var regexp = /^([0-9a-zA-Z])+$/;
-    if (!( regexp.test(o.val()))) {
+    if (o.val().length > 16 || o.val().length < 8) {
         o.addClass("ui-state-error");
-        flagError(
-            o,
-            "Password may consist of a-z and 0-9.");
+        flagError(o, "Password must be between 8 and 16 characters.");
         return false;
     } else {
-        return true
+        return true;
     }
 }
 
@@ -522,35 +519,44 @@ function addToSelect(value, option, select, hashTable) {
     refreshSelect(select, hashTable);
 }
 
+function hideSection(tableSelector, wellSelector, iconSelector) {
+
+    // Let's assume the content is hidden for now
+    var isHidden = true;
+
+    $(wellSelector).each(function (input, element) {
+        if (!$(element).hasClass("well-hidden")) {
+            // if ANY of the children of the selected "well" element DOES NOT have a class of well-hidden, then the
+            // section can't be hidden, so we set isHidden to false and break the loop
+            isHidden = false;
+            return false;
+        }
+    });
+
+    if (isHidden) {
+
+        $(tableSelector).show(0);
+        $(wellSelector).removeClass("well-hidden");
+        $(iconSelector).text("-");
+        isHidden = false;
+    } else {
+
+        $(tableSelector).hide(0);
+        $(wellSelector).addClass("well-hidden");
+        $(iconSelector).text("+");
+        isHidden = true;
+    }
+}
+
 // --- INSTANCE MANAGEMENT
 
-var instanceManagementHidden = false;
-
 $(function () {
-    $("#instance-management").click(function (event) {
+    $("#instance-management-icon").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        $(".instance-management-well").each(function (input, element) {
-            if (!$(element).hasClass("well-hidden")) {
-                instanceManagementHidden = false;
-            }
-        });
-
-        if (instanceManagementHidden) {
-
-            $(".instance-management-table").show(0);
-            $(".instance-management-well").removeClass("well-hidden");
-            $("#instance-management-icon").text("-");
-            instanceManagementHidden = false;
-        } else {
-
-            $(".instance-management-table").hide(0);
-            $(".instance-management-well").addClass("well-hidden");
-            $("#instance-management-icon").text("+");
-            instanceManagementHidden = true;
-        }
+        hideSection(".instance-management-table", ".instance-management-well", "#instance-management-icon");
     });
 });
 
@@ -579,33 +585,14 @@ $(function () {
 
 // --- STORAGE
 
-var storageHidden = false;
 
 $(function () {
-    $("#storage").click(function (event) {
+    $("#storage-icon").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        $(".storage-well").each(function (input, element) {
-            if (!$(element).hasClass("well-hidden")) {
-                storageHidden = false;
-            }
-        });
-
-        if (storageHidden) {
-
-            $(".storage-table").show(0);
-            $(".storage-well").removeClass("well-hidden");
-            $("#storage-icon").text("-");
-            storageHidden = false;
-        } else {
-
-            $(".storage-table").hide(0);
-            $(".storage-well").addClass("well-hidden");
-            $("#storage-icon").text("+");
-            storageHidden = true;
-        }
+        hideSection(".storage-table", ".storage-well", "#storage-icon");
     });
 });
 
@@ -658,7 +645,7 @@ function updateRevertVolumeSnapshots(volumeId) {
     select.empty();
 
     for (var snap in snapshots.items) {
-        if (snapshots.items[snap].volumeId  == volumeId) {
+        if (snapshots.items[snap].volumeId == volumeId) {
             select.append(
                     '<option value="' + snap + '">' + snapshots.getItem(snap).name + '</option>'
             );
@@ -668,33 +655,13 @@ function updateRevertVolumeSnapshots(volumeId) {
 
 // --- SOFTWARE DEFINED NETWORKS
 
-var sdnHidden = false;
-
 $(function () {
-    $("#software-defined-networking").click(function (event) {
+    $("#sdn-icon").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        $(".sdn-well").each(function (input, element) {
-            if (!$(element).hasClass("well-hidden")) {
-                sdnHidden = false;
-            }
-        });
-
-        if (sdnHidden) {
-
-            $(".sdn-table").show(0);
-            $(".sdn-well").removeClass("well-hidden");
-            $("#sdn-icon").text("-");
-            sdnHidden = false;
-        } else {
-
-            $(".sdn-table").hide(0);
-            $(".sdn-well").addClass("well-hidden");
-            $("#sdn-icon").text("+");
-            sdnHidden = true;
-        }
+        hideSection(".sdn-table", ".sdn-well", "#sdn-icon");
     });
 });
 
@@ -717,33 +684,13 @@ $(function () {
 
 // --- USERS/SECURITY
 
-var usersSecurityHidden = false;
-
 $(function () {
-    $("#users-security").click(function (event) {
+    $("#users-security-icon").click(function (event) {
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        $(".user-well").each(function (input, element) {
-            if (!$(element).hasClass("well-hidden")) {
-                usersSecurityHidden = false;
-            }
-        });
-
-        if (usersSecurityHidden) {
-
-            $(".user-table").show(0);
-            $(".user-well").removeClass("well-hidden");
-            $("#user-security-icon").text("-");
-            usersSecurityHidden = false;
-        } else {
-
-            $(".user-table").hide(0);
-            $(".user-well").addClass("well-hidden");
-            $("#user-security-icon").text("+");
-            usersSecurityHidden = true;
-        }
+        hideSection(".user-table", ".user-well", "#user-security-icon");
     });
 });
 

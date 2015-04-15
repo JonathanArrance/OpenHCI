@@ -52,6 +52,7 @@ import transcirrus.common.wget as wget
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
+import transcirrus.operations.migrate_server as migration
 import transcirrus.common.logger as logger
 
 # Avoid shadowing the login() and logout() views below.
@@ -292,6 +293,7 @@ def project_view(request, project_id):
     ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
+    qo = quota_ops(auth)
     #do not call until version2
     #aso = account_service_ops(auth)
 
@@ -986,15 +988,15 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type}
-
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type}
+        
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
-
+        
         # Setup our cache to track the progress.
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
-
+        
         # Use wget to download the file.
         download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
@@ -1002,12 +1004,11 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
 
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
-        filename, content_type = wget.download (image_location, download_file, download_progress)
-
+        filename, content_type = wget.download (image_location,download_file, download_progress)
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
-
+        
         # Add the image to glance.
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
@@ -1189,22 +1190,6 @@ def detach_volume(request, project_id, volume_id):
         out = {'status' : "error", 'message' : "Could not detach the volume."}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def create_snapshot(request, project_id, name, volume_id, desc):
-    try:
-        auth = request.session['auth']
-        sno = snapshot_ops(auth)
-        create_snap = {'project_id': project_id, 'snapshot_name': name, 'volume_id': volume_id, 'snapshot_desc': desc}
-        out = sno.create_snapshot(create_snap)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'The snapshot %s has been created for volume id %s'%(name,volume_id))
-        return HttpResponseRedirect(redirect_to)
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
-
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
         auth = request.session['auth']
@@ -1216,22 +1201,6 @@ def create_snapshot(request, project_id, name, volume_id, desc):
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not create snapshot : %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
-'''
-def delete_snapshot(request, project_id, snapshot_id):
-    try:
-        auth = request.session['auth']
-        sno = snapshot_ops(auth)
-        delete_snap = {'project_id': project_id, 'snapshot_id': snapshot_id}
-        out = sno.delete_snapshot(delete_snap)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        messages.warning(request, 'The snapshot with id %s has been deleted.'%(snapshot_id))
-        return HttpResponseRedirect(redirect_to)
-    except Exception as e:
-        messages.warning(request, "%s"%(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-'''
 
 def delete_snapshot(request, project_id, snapshot_id):
     output = {}
@@ -1535,7 +1504,13 @@ def resize_server(request, project_id, instance_id, flavor_id):
         auth = request.session['auth']
         input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
         so = server_ops(auth)
+        fo = flavor_ops(auth)
         serv_info = so.get_server(input_dict)
+        flavor_info = fo.get_flavor(flavor_id)
+        server_flav = fo.get_flavor(serv_info['flavor_id'])
+        if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
+            logger.sys_error('Could not resize instance, disk space is less than current spec.')
+            raise Exception('Could not resize instance, disk space is less than current spec.')
         rs = rs_server.resize_and_confirm(auth, input_dict)
         if(rs == 'OK'):
             out['status'] = 'success'
@@ -1608,31 +1583,30 @@ def power_on_server(request,project_id,instance_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
+
 def live_migrate_server(request, project_id, instance_id, host_name):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        out = ssa.live_migrate_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to live migrate server.")
-        return HttpResponseRedirect(redirect_to)
+        input_dict = {'project_id':project_id, 'instance_id':instance_id, 'migration_type':'live', 'openstack_host_id':host_name}
+        out = migration.migrate_instance(auth, input_dict)
+        out['status'] = 'success'
+        out['message'] = 'Successfully live migrated instance %s'%(out['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def migrate_server(request, project_id, instance_id):
-    input_dict = {'project_id':project_id, 'instance_id':instance_id}
     try:
         auth = request.session['auth']
         saa = server_admin_actions(auth)
-        out = ssa.migrate_server(input_dict)
-        referer = request.META.get('HTTP_REFERER', None)
-        redirect_to = urlsplit(referer, 'http', False)[2]
-        return HttpResponseRedirect(redirect_to)
-    except:
-        messages.warning(request, "Unable to migrate server.")
-        return HttpResponseRedirect(redirect_to)
+        input_dict = {'project_id':project_id, 'instance_id':instance_id}
+        out = migration.migrate_instance(auth, input_dict)
+        out['status'] = 'success'
+        out['message'] = 'Successfully offline migrated instance %s'%(out['server_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def evacuate_server(request, project_id, instance_id, host_name):
     input_dict = {'project_id':project_id, 'instance_id':instance_id, 'openstack_host_id':host_name}

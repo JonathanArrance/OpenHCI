@@ -20,14 +20,10 @@ Copyright (c) 2010-2014 anatoly techtonik
 import sys, shutil, os
 import tempfile
 import math
+import transcirrus.common.logger as logger
 
-PY3K = sys.version_info >= (3, 0)
-if PY3K:
-  import urllib.request as urllib
-  import urllib.parse as urlparse
-else:
-  import urllib
-  import urlparse
+import urllib
+import urlparse
 
 
 __version__ = "2.2"
@@ -264,6 +260,7 @@ __current_size = 0  # global state variable, which exists solely as a
                     # http://bugs.python.org/issue16409
                     # fixed in Python 3.3.1
 def callback_progress(blocks, block_size, total_size, bar_function):
+    logger.sys_info("HACK: blocks %s block_size %s total_size %s bar_function %s"%(blocks,block_size,total_size,bar_function))
     """callback function for urlretrieve that is called when connection is
     created and when once for each block
 
@@ -281,18 +278,18 @@ def callback_progress(blocks, block_size, total_size, bar_function):
  
     width = min(100, get_console_width())
 
-    if sys.version_info[:3] == (3, 3, 0):  # regression workaround
-        if blocks == 0:  # first call
-            __current_size = 0
-        else:
-            __current_size += block_size
-        current_size = __current_size
-    else:
-        current_size = min(blocks*block_size, total_size)
+    #if sys.version_info[:3] == (3, 3, 0):  # regression workaround
+    #    if blocks == 0:  # first call
+    #        __current_size = 0
+    #    else:
+    #        __current_size += block_size
+    #    current_size = __current_size
+    #else:
+    current_size = min(blocks*block_size, total_size)
+    logger.sys_info("HACK: %s"%(current_size))
     progress = bar_function(current_size, total_size, width)
     if progress:
         sys.stdout.write("\r" + progress)
-
 
 def download(url, out=None, bar=bar_adaptive):
     """High level function, which downloads URL into tmp file in current
@@ -303,43 +300,46 @@ def download(url, out=None, bar=bar_adaptive):
     :param out: output filename or directory
     :return:    filename where URL is downloaded to
     """
-    try:
-        names = dict()
-        names["out"] = out or ''
-        names["url"] = filename_from_url(url)
-        # get filename for temp file in current directory
-        prefix = (names["url"] or names["out"] or ".") + "."
-        (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=prefix, dir=".")
-        os.close(fd)
-        os.unlink(tmpfile)
+    #try:
+    names = dict()
+    names["out"] = out or ''
+    names["url"] = filename_from_url(url)
+    # get filename for temp file in current directory
+    prefix = (names["url"] or names["out"] or ".") + "."
+    (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=prefix)
+    os.close(fd)
+    os.unlink(tmpfile)
 
-        # set progress monitoring callback
-        def callback_charged(blocks, block_size, total_size):
-            # 'closure' to set bar drawing function in callback
-            callback_progress(blocks, block_size, total_size, bar_function=bar)
-        if bar:
-            callback = callback_charged
-        else:
-            callback = None
+    # set progress monitoring callback
+    #def callback_charged(blocks, block_size, total_size):
+        # 'closure' to set bar drawing function in callback
+    #    callback_progress(blocks, block_size, total_size, bar_function=bar)
+    #if bar:
+    #    callback = callback_charged
+    #    logger.syslog("HACK: callback %s"%(callback))
+    #else:
+    callback = None
 
-        # Replacing the orginial call to urlretrieve to our own URL opener so we can catch HTTP errors.
-        ##(tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback)
-        (tmpfile, headers) = MyURLopener().retrieve (url, filename=tmpfile, reporthook=callback)
+    # Replacing the orginial call to urlretrieve to our own URL opener so we can catch HTTP errors.
+    ##(tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback)
+    (tmpfile, headers) = MyURLopener().retrieve (url, filename=tmpfile, reporthook=callback)
+    logger.sys_info("HACK: tmpfile %s headers %s"%(tmpfile,headers))
 
-        names["header"] = filename_from_headers(headers)
-        if os.path.isdir(names["out"]):
-            filename = names["header"] or names["url"]
-            filename = names["out"] + "/" + filename
-        else:
-            filename = names["out"] or names["header"] or names["url"]
-        # add numeric ' (x)' suffix if filename already exists
-        if os.path.exists(filename):
-            filename = filename_fix_existing(filename)
-        shutil.move(tmpfile, filename)
-        content_type = content_type_from_headers(headers)
-        return (filename, content_type)
-    except Exception as e:
-        raise Exception ("Could not wget image: %s" % e)
+    #names["header"] = filename_from_headers(headers)
+    #if os.path.isdir(names["out"]):
+    #    filename = names["header"] or names["url"]
+    #    filename = names["out"] + "/" + filename
+    #else:
+    filename = names["out"] or names["header"] or names["url"]
+    logger.sysinfo("HACK: filename %s"%(filename))
+    # add numeric ' (x)' suffix if filename already exists
+    if os.path.exists(filename):
+        filename = filename_fix_existing(filename)
+    shutil.move(tmpfile, filename)
+    content_type = content_type_from_headers(headers)
+    return (filename, content_type)
+    #except Exception as e:
+    #    raise Exception ("Could not wget image: %s" % e)
 
 usage = """\
 usage: wget.py [options] URL
