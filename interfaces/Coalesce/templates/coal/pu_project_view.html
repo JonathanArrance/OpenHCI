@@ -38,6 +38,10 @@
 
 <div class="span12 well legend-header">
     {{ project.project_name}}
+    {% if user_level == 0 %}
+    <a href="#" id="delete-project" class="btn btn-danger" style="float:right">Delete Project</a>
+    {% endif %}
+    <a href="#" id="create-machine" class="btn btn-success" style="float:right">Build-A-Machine</a>
 </div>
 
 <h4 id="instance-management" class="widget-section-header"><div id="instance-management-icon" class="widget-section-icon">-</div>Instance Management</h4>
