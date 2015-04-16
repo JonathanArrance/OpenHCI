@@ -690,7 +690,7 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        hideSection(".user-table", ".user-well", "#user-security-icon");
+        hideSection(".user-table", ".user-well", "#users-security-icon");
     });
 });
 
