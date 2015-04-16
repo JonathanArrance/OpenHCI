@@ -1,6 +1,6 @@
 <!-- Begin image widget-->
 <div class="span4">
-    <div class="well instance-management-well">
+    <div class="well {% if user_level > 1 %} advanced-group-well {% else %} instance-management-well{% endif %}">
         <div class="legend">
 
             <div id="image_progressbar" class="ui-progressbar progressbar">
@@ -12,7 +12,7 @@
             <a href="#" id="import-image" class="btn" style="float:right">Import</a>
         </div>
 
-        <div class="well-tall instance-management-table">
+        <div class="well-tall {% if user_level > 1 %} advanced-group-table {% else %} instance-management-table{% endif %}">
             <table class="paleblue widget-table table-tall" id="image_list">
                 <tr>
                     <th>Image</th>

@@ -1,6 +1,6 @@
 <!-- Begin snapshots widget-->
 <div class="span4">
-    <div class="well storage-well">
+    <div class="well {% if user_level > 1 %} advanced-group-well {% else %} storage-well{% endif %}">
         <div class="legend">
 
             <div id="snapshot_progressbar" class="ui-progressbar progressbar">
@@ -12,7 +12,7 @@
             <a href="#" id="create-snapshot" class="btn" style="float:right">Create</a>
         </div>
 
-        <div class="well-tall storage-table">
+        <div class="well-tall {% if user_level > 1 %} advanced-group-table {% else %} storage-table{% endif %}">
             <table id="snapshot_list" class="paleblue widget-table table-tall">
                 <tr>
                     <th>Snapshot</th>
