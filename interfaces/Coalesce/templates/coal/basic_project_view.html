@@ -20,16 +20,28 @@
 <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
 <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+<!-- DEBUG
 <script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
+DEBUG -->
+<!-- DEBUG -->
+<script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
+<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+<!-- DEBUG -->
 <script>
-    var PROJECT = "{{ project.project_name }}";
-</script>
-<script>
-    var PROJECT_ID = "{{ project.project_id }}";
-</script>
-<script>
-    var DEFAULT_PUBLIC = "{{ default_public }}";
+    var PROJECT = "{{ project.project_name }}",
+            PROJECT_ID = "{{ project.project_id }}",
+            DEFAULT_PUBLIC = "{{ default_public }}";
 </script>
 
 {% endblock %}
@@ -55,7 +67,10 @@
     {% include "coal/project_view_widgets/internal_networks.html" %}
 </div>
 
-<h4 id="advanced-group" class="widget-section-header"><div id="advanced-group-icon" class="widget-section-icon">-</div>Advanced Menu</h4>
+<h4 id="advanced-group" class="widget-section-header">
+    <div id="advanced-group-icon" class="widget-section-icon">-</div>
+    Advanced Menu
+</h4>
 <div class="row-fluid widget-section">
     {% include "coal/project_view_widgets/snapshots.html" %}
     {% include "coal/project_view_widgets/images.html" %}
