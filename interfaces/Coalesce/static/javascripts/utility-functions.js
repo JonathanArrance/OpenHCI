@@ -787,6 +787,18 @@ $(function () {
     checkAddUser();
 });
 
+// --- Advanced Group
+
+$(function () {
+    $("#advanced-group-icon").click(function (event) {
+
+        // Prevent scrolling to top of page on click
+        event.preventDefault();
+
+        hideSection(".advanced-group-table", ".advanced-group-well", "#advanced-group-icon");
+    });
+});
+
 // --- BUG FIXER: Add <div id="delete-check></div> before TEXT NODES needing to be deleted on page load
 function deleteCheck(containerId) {
     $(document).ready(function () {
