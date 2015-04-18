@@ -546,6 +546,13 @@ $(function () {
                                 $(targetAttached).append(confInstanceName).fadeIn();
 
                                 confRow.addClass("volume-attached");
+
+                                // Remove volume
+                                snapshotVolumes.removeItem(confId);
+
+                                // Update select
+                                refreshSelect($("#snap_volume"), snapshotVolumes);
+
                             }
                         })
                         .fail(function () {
@@ -669,7 +676,7 @@ $(function () {
                                 $(targetAttached).empty().fadeOut();
 
                                 var newActions =
-                                    '<a href="#" class="attach-volume">attach</a><span class="volume-actions-pipe"> | </span>' +
+                                    '<a href="#" class="attach-volume">attach</a>' +
                                     '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
                                     '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
                                     '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a>';
@@ -678,6 +685,12 @@ $(function () {
                                 $(targetAttached).append("No Attached Instance").fadeIn();
 
                                 confRow.removeClass("volume-attached");
+
+                                // Add to volumes
+                                snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+
+                                // Update select
+                                refreshSelect($("#snap_volume"), snapshotVolumes);
                             }
                         })
                         .fail(function () {
