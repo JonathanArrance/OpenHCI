@@ -93,6 +93,7 @@ class volume_ops:
                         volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
                         description - Optional
+                            # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
         OUTPUTS: r_dict - volume_name
                         - volume_type
                         - volume_id
@@ -109,9 +110,9 @@ class volume_ops:
         if(('volume_name' not in create_vol) or ('volume_size' not in create_vol)):
             logger.sys_error("Did not pass required params to create volume operation.")
             raise Exception("Did not pass required params to create volume operation.")
-        if('description' not in create_vol):
-            logger.sys_warning("Did not pass in a volume description setting the defaut description.")
-            create_vol['description'] = "%s volume" %(create_vol['project_id'])
+        # if(('description' not in create_vol) or (create_vol['description'] == 'none')):
+        #     logger.sys_warning("Did not pass in a volume description setting the default description.")
+        #     create_vol['description'] = "%s volume" %(create_vol['project_id'])
          #sanity check
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to create volumes.")
@@ -172,20 +173,19 @@ class volume_ops:
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
             create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
 
-        if(('snapshot_id' in create_vol) and ('volume_id' in create_vol)):
             logger.sys_error("Can not create a volume clone and a volume from snapshot at the same time.")
             raise Exception("Can not create a volume clone and a volume from snapshot at the same time.")
 
-        if('description' not in create_vol) or (create_vol['description'] == 'none'):
-            logger.sys_warning("Did not pass in a volume description setting the default description.")
-            if('snapshot_id' in create_vol):
-                create_vol['description'] = "%s volume from snapshot %s." %(create_vol['volume_name'],create_vol['snapshot_id'])
-            elif('source_vol_id' in create_vol):
-                create_vol['description'] = "%s volume clone from volume %s." %(create_vol['volume_name'],create_vol['source_vol_id'])
-            else:
-                create_vol['description'] = "%s volume" %(create_vol['project_id'])
-            raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
-
+        # if('description' not in create_vol) or (create_vol['description'] == 'none'):
+        #     logger.sys_warning("Did not pass in a volume description setting the default description.")
+        #     if('snapshot_id' in create_vol):
+        #         create_vol['description'] = "%s volume from snapshot %s." %(create_vol['volume_name'],create_vol['snapshot_id'])
+        #     elif('source_vol_id' in create_vol):
+        #         create_vol['description'] = "%s volume clone from volume %s." %(create_vol['volume_name'],create_vol['source_vol_id'])
+        #     else:
+        #         create_vol['description'] = "%s volume" %(create_vol['project_id'])
+        #     raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
+        
         #check the project capacity
         # nned to impliment quatas
 
@@ -278,6 +278,7 @@ class volume_ops:
                 volume_name - OP
                 volume_zone - Optional default is nova
                 description - Optional
+                    # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
         OUTPUTS: r_dict - volume_name
                         - volume_type
                         - volume_id
@@ -302,9 +303,9 @@ class volume_ops:
         if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
             input_dict['volume_name'] = input_dict['snapshot_id'] + '_vol_from_snap_%s'%(str(self.rannum))
 
-        if('description' not in input_dict) or (input_dict['description'] == 'none'):
-            logger.sys_warning("Did not pass in a volume description setting the default description.")
-            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
+        # if('description' not in input_dict) or (input_dict['description'] == 'none'):
+        #     logger.sys_warning("Did not pass in a volume description setting the default description.")
+        #     input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
@@ -329,10 +330,11 @@ class volume_ops:
             logger.sys_error("Could not determin the volume type.")
             raise Exception("Could not determin the volume type.")
 
+	#REMOVED DESCRIPTION AS IT IS UNUSED
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id'],'volume_type':get_type[0][0]}
+                      'volume_zone':input_dict['volume_zone'],'snapshot_id':input_dict['snapshot_id'],'volume_type':get_type[0][0]}
 
-        output = self.create_volume(input_dict)
+        output = self.create_volume(input_dict2)
 
         return output
 
@@ -345,6 +347,7 @@ class volume_ops:
                 volume_name - OP
                 volume_zone - Optional default is nova
                 description - Optional
+                    # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
         OUTPUTS: r_dict - volume_name
                         - volume_type
                         - volume_id
@@ -369,9 +372,9 @@ class volume_ops:
         if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
             input_dict['volume_name'] = input_dict['volume_id'] + '_clone_%s'%(str(self.rannum))
 
-        if('description' not in input_dict) or (input_dict['description'] == 'none'):
-            logger.sys_warning("Did not pass in a volume description setting the default description.")
-            input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
+        # if('description' not in input_dict) or (input_dict['description'] == 'none'):
+        #     logger.sys_warning("Did not pass in a volume description setting the default description.")
+        #     input_dict['description'] = "%s volume from snapshot" %(input_dict['project_id'])
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
