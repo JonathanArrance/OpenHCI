@@ -106,7 +106,7 @@ $(function () {
                                     // Add to snapshots
                                     snapshots.setItem(data.snapshot_id,
                                         { id: data.snapshot_id, name: data.snapshot_name, volumeId: data.volume_id, volumeName: volumes.getItem(data.volume_id).name,
-                                        value: data.snapshot_id, option: data.snapshot_name });
+                                            value: data.snapshot_id, option: data.snapshot_name });
 
                                     // Update Select
                                     refreshSelect("#revert_snapshot_name", snapshots);
@@ -377,7 +377,9 @@ $(function () {
                                         '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
                                         '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instances</span></td>' +
                                         '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
-                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a>';
 
                                     // Check to see if this is the first volume to be generated, if so remove placeholder and reveal create-snapshot buttons
                                     var rowCount = $("#volume_list tr").length;

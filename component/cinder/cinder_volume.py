@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # get the user level from the transcirrus system DB
-#passes the user level out 
+#passes the user level out
 import sys
 import json
 import time
@@ -57,7 +57,7 @@ class volume_ops:
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
-                
+
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
@@ -88,6 +88,8 @@ class volume_ops:
                         volume_name - REQ
                         volume_size - REQ
                         project_id - REQ
+                        snapshot_id - Optional used if creating vol from snap
+                        source_vol_id - Optional used if creating volume clone
                         volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
                         description - Optional
@@ -170,6 +172,10 @@ class volume_ops:
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
             create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
 
+        if(('snapshot_id' in create_vol) and ('volume_id' in create_vol)):
+            logger.sys_error("Can not create a volume clone and a volume from snapshot at the same time.")
+            raise Exception("Can not create a volume clone and a volume from snapshot at the same time.")
+
         if('description' not in create_vol) or (create_vol['description'] == 'none'):
             logger.sys_warning("Did not pass in a volume description setting the default description.")
             if('snapshot_id' in create_vol):
@@ -179,7 +185,7 @@ class volume_ops:
             else:
                 create_vol['description'] = "%s volume" %(create_vol['project_id'])
             raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
-        
+
         #check the project capacity
         # nned to impliment quatas
 
@@ -192,10 +198,18 @@ class volume_ops:
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
-    
+
+            if('snapshot_id' in create_vol):
+                #vol from snap
+                self.body = '{"volume": {"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": "%s", "user_id": null, "size": "%s", "display_name": "%s", "imageRef": null, "attach_status": "detached", "volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['snapshot_id'],create_vol['volume_size'],create_vol['volume_name'],voltype)
+            elif('source_vol_id' in create_vol):
+                #clone
+                self.body = '{"volume": {"status": "creating", "availability_zone": null, "source_volid": "%s", "display_description": null, "snapshot_id": null, "user_id": null, "size": "%s", "display_name": "%s", "imageRef": null, "attach_status": "detached", "volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['source_vol_id'],create_vol['volume_size'],create_vol['volume_name'],voltype)
+            else:
+                self.body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
             try:
                 #add the new user to openstack 
-                body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
+                body = self.body
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
                 header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": token}
@@ -215,6 +229,7 @@ class volume_ops:
                 volname = str(load['volume']['display_name'])
                 volid = str(load['volume']['id'])
                 volsize = int(load['volume']['size'])
+                voltype = str(load['volume']['volume_type'])
 
                 input_dict = {'volume_id':volid,'project_id':create_vol['project_id']}
                 while(True):
@@ -235,7 +250,7 @@ class volume_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":create_vol['volume_type'],"vol_attached_to_inst":"NONE"}
+                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":voltype,"vol_attached_to_inst":"NONE"}
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except Exception, e:
                     self.db.pg_transaction_rollback()
@@ -247,8 +262,8 @@ class volume_ops:
                     return r_dict
             else:
                 logger.sys_error("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
-                raise Exception("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
-                #ec.error_codes(rest)
+                #raise Exception("Could not create a new volume - %s: %s" % (rest['response'], rest['reason']))
+                ec.error_codes(rest)
         else:
             logger.sys_error("Could not create a new volume. Unknown error occurred. ERROR: 555")
             raise Exception("Could not create a new volume. Unknown error occurred. ERROR: 555")
@@ -293,11 +308,11 @@ class volume_ops:
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
-                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+                self.select_snap = {'select':'proj_id,vol_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
             elif(self.is_admin == 2):
-                self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"user_id='%s'"%(self.user_id)}
+                self.select_snap = {'select':'proj_id,vol_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"user_id='%s'"%(self.user_id)}
         else:
-            self.select_snap = {'select':'proj_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id'])}
+            self.select_snap = {'select':'proj_id,vol_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id'])}
 
         #check if the snapshot exists in the project and that the user can use it
         try:
@@ -306,8 +321,16 @@ class volume_ops:
             logger.sys_error("The snapshot does not exist in this project, or you may not have permission to use it.")
             raise Exception("The snapshot does not exist in this project, or you may not have permission to use it.")
 
-        input_dict2 = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id']}
+        #get the original volume type
+        try:
+            select_vol = {'select':'vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(get_snap[0][1])}
+            get_type = self.db.pg_select(select_vol)
+        except:
+            logger.sys_error("Could not determin the volume type.")
+            raise Exception("Could not determin the volume type.")
+
+        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
+                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'snapshot_id':input_dict['snapshot_id'],'volume_type':get_type[0][0]}
 
         output = self.create_volume(input_dict)
 
@@ -352,11 +375,11 @@ class volume_ops:
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
-                self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
             elif(self.is_admin == 2):
-                self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"user_id='%s'"%(self.user_id)}
+                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"user_id='%s'"%(self.user_id)}
         else:
-            self.select_vol = {'select':'proj_id,vol_size','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
+            self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
 
         #check if the snapshot exists in the project and that the user can use it
         try:
@@ -370,7 +393,8 @@ class volume_ops:
             input_dict['volume_size'] = get_vol[0][1]
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'volume_id':input_dict['volume_id']}
+                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'volume_id':input_dict['volume_id'],'volume_type':get_vol[0][2],
+                      'source_vol_id':input_dict['volume_id']}
 
         output = self.create_volume(input_dict)
 
@@ -427,11 +451,6 @@ class volume_ops:
             ec.error_codes(rest)
 
         return load
-
-
-
-    def create_vol_from_snapshot(self):
-        print "not implemented"
 
     def delete_volume(self,delete_vol):
         """
@@ -655,7 +674,7 @@ class volume_ops:
             except Exception as e:
                 logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
 
-        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name}
+        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name, 'volume_mount_location': get_vol[0][9]}
         return r_dict
 
     def create_volume_type(self,volume_type_name):
@@ -825,7 +844,7 @@ class volume_ops:
             raise Exception("Could not connect to the API")
 
         try:
-            #get list of volume types
+        #get list of volume types
             body = ''
             token = self.token
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}

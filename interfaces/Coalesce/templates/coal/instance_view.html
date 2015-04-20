@@ -122,30 +122,32 @@
                 </tr>
             </table>
 
-            <div id="widget-actions" class="well top well-wide">
-                <table class="paleblue widget-table">
-                    <tr>
-                        <th>Actions</th>
-                    </tr>
-                    <tr>
-                            <a href="#" id="resize-server">Resize Instance</a>
-                            {% if server.server_status != "SHUTOFF" %}
-                            <a href="#" id="reboot-server"> Reboot </a>
-                            <a href="#" id="cycle-server"> Power Cycle </a>
-                            <a href="#" id="poweroff-server"> Power Off </a>
-                            <a href="#" id="poweron-server" style="display:none"> Power On </a>
-                            {% else %}
-                            <a href="#" id="reboot-server" style="display:none"> Reboot </a>
-                            <a href="#" id="cycle-server" style="display:none"> Power Cycle </a>
-                            <a href="#" id="poweroff-server" style="display:none"> Power Off </a>
-                            <a href="#" id="poweron-server"> Power On </a>
-                            {% endif %}
-                            {% if server.server_status == "ACTIVE" %}
-                            <a href="#" id="revert-server"> Revert </a>
-                            {% endif %}
-                    </tr>
-                </table>
-            </div>
+            <!--<div id="widget-actions" class="well top well-wide">-->
+            <table class="paleblue widget-table" style="margin-top: 10px;">
+                <tr>
+                    <th>Actions</th>
+                </tr>
+                <tr>
+                    <td id="widget-actions">
+                        <a href="#" class="btn" id="resize-server">Resize Instance</a>
+                        {% if server.server_status != "SHUTOFF" %}
+                        <a href="#" class="btn" id="reboot-server"> Reboot </a>
+                        <a href="#" class="btn" id="cycle-server"> Power Cycle </a>
+                        <a href="#" class="btn" id="poweroff-server"> Power Off </a>
+                        <a href="#" class="btn" id="poweron-server" style="display:none"> Power On </a>
+                        {% else %}
+                        <a href="#" class="btn" id="reboot-server" style="display:none"> Reboot </a>
+                        <a href="#" class="btn" id="cycle-server" style="display:none"> Power Cycle </a>
+                        <a href="#" class="btn" id="poweroff-server" style="display:none"> Power Off </a>
+                        <a href="#" class="btn" id="poweron-server"> Power On </a>
+                        {% endif %}
+                        {% if server.server_status == "ACTIVE" %}
+                        <a href="#" class="btn" id="revert-server"> Revert </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+            <!--</div>-->
         </div>
     </div>
     <!-- end span6 -->
@@ -197,7 +199,7 @@
 
 <div class="row-fluid">
     <div class="span12">
-        <div class="well top widget-console-well well-wide">
+        <div class="well top well-wide">
             <div class="legend">
                 <div id="widget-console-icon" class="widget-section-icon" style="float:left; margin-top: -3px;">-</div>
 
@@ -205,8 +207,10 @@
 
                 <a href="#" id="refresh-console" class="btn" style="float: right;">Refresh</a>
             </div>
-            <iframe id="instance-console" class="widget-console" name="noVNCConsole"
-                    src="{{server.novnc_console}}"></iframe>
+            <div class="widget-console-well">
+                <iframe id="instance-console" class="widget-console" name="noVNCConsole"
+                        src="{{server.novnc_console}}"></iframe>
+            </div>
         </div>
     </div>
     <!-- end span12 -->

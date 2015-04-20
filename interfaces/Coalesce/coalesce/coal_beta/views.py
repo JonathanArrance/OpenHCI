@@ -1051,8 +1051,7 @@ def delete_image (request, image_id):
         out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description):
-    out = {}
+def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description=None):
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
