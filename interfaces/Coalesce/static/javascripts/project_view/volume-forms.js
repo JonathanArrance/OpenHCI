@@ -13,9 +13,8 @@ $(function () {
         // Form Elements
         var volume_name = $("#volume_name"),
             volume_size = $("#volume_size"),
-            description = $("#description"),
             volume_type = $("#volume_type"),
-            allFields = $([]).add(volume_name).add(volume_size).add(description).add(volume_type);
+            allFields = $([]).add(volume_name).add(volume_size).add(volume_type);
 
         // Open modal form when create-volume button is clicked
         $(document).on("click", "#create-volume", function (event) {
@@ -51,20 +50,14 @@ $(function () {
                         checkLength(volume_name, "Volume Name", 3, 16) &&
                         checkDuplicateName(volume_name, volumes) &&
                         checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
-                        checkStorage(volume_size) &&
-                        checkLength(description, "Description", 1, 16);
+                        checkStorage(volume_size);
 
                     if (isValid) {
 
                         // Confirmed Selections
                         var confVolume = volume_name.val(),
                             confSize = volume_size.val(),
-                            confDesc = description.val(),
                             confType = volume_type.val();
-
-                        if (confDesc == '') {
-                            confDesc = 'none';
-                        }
 
                         message.showMessage('notice', 'Creating new volume ' + volume_name.val());
 
@@ -76,7 +69,7 @@ $(function () {
                         $(progressbar).progressbar({value: false});
                         disableProgressbar(progressbar, "volumes", false);
 
-                        $.getJSON('/create_volume/' + confVolume + '/' + confSize + '/' + confDesc + '/' + confType + '/' + PROJECT_ID + '/')
+                        $.getJSON('/create_volume/' + confVolume + '/' + confSize + '/' + confType + '/' + PROJECT_ID + '/')
                             .done(function (data) {
 
                                 if (data.status == 'error') {
@@ -296,8 +289,7 @@ $(function () {
 
         // Form Elements
         var volume_name = $("#clone_volume_name"),
-            description = $("#description"),
-            allFields = $([]).add(volume_name).add(description);
+            allFields = $([]).add(volume_name);
 
         // Local Variables
         var id,
@@ -339,15 +331,10 @@ $(function () {
 
                     // Confirmed Selections
                     var confId = id,
-                        confVol = volume_name.val(),
-                        confDesc = description.val();
+                        confVol = volume_name.val();
 
                     if (confVol == '') {
                         confVol = 'none';
-                    }
-
-                    if (confDesc == '') {
-                        confDesc = 'none';
                     }
 
                     message.showMessage('notice', "Cloning " + $(volume).text() + ".");
@@ -372,7 +359,7 @@ $(function () {
                     $(actionsCell).empty().fadeOut();
                     $(actionsCell).append(loaderHtml).fadeIn();
 
-                    $.getJSON('/create_vol_clone/' + PROJECT_ID + '/' + confId + '/' + confVol + '/' + confDesc + '/')
+                    $.getJSON('/create_vol_clone/' + PROJECT_ID + '/' + confId + '/' + confVol + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {

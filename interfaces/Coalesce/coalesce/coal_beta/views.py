@@ -989,14 +989,14 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         auth = request.session['auth']
         go = glance_ops(auth)
         import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type}
-        
+
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
-        
+
         # Setup our cache to track the progress.
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
-        
+
         # Use wget to download the file.
         download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
@@ -1008,7 +1008,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
-        
+
         # Add the image to glance.
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
@@ -1092,12 +1092,13 @@ def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+def create_volume(request, volume_name, volume_size, volume_type, project_id):
     out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'volume_type': volume_type, 'project_id': project_id}
+        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'volume_type': volume_type, 'project_id': project_id}
         out = vo.create_volume(create_vol)
         out['status'] = 'success'
         out['message'] = "Volume %s was created."%(volume_name)
@@ -1121,12 +1122,13 @@ def delete_volume(request, volume_id, project_id):
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
 
-def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volume_name, description):
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volume_name):
     out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create = { 'project_id':project_id, 'snapshot_id': snapshot_id, 'volume_size': volume_size, 'volume_name': volume_name, 'description': description }
+        create = { 'project_id':project_id, 'snapshot_id': snapshot_id, 'volume_size': volume_size, 'volume_name': volume_name }
         out = vo.create_vol_from_snapshot(create)
         out['status'] = 'success'
         out['message'] = "Volume %s was created from snapshot."%(volume_name)
@@ -1134,12 +1136,13 @@ def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volu
         out = {"status": "error", "message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_vol_clone(request, project_id, volume_id, volume_name, description):
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+def create_vol_clone(request, project_id, volume_id, volume_name):
     out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create = { 'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name, 'description': description}
+        create = { 'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name }
         out = vo.create_vol_clone(create)
         out['status'] = 'success'
         out['message'] = "Volume clone %s was created."%(volume_name)
@@ -2282,12 +2285,12 @@ def eseries_set_config (request, disk_pools):
         storage_pools = disk_pools.split(",")
         eseries_config.set_storage_pools (storage_pools)
 
-        data = {'server':     eseries_config.server, 
-                'srv_port':   eseries_config.port, 
-                'transport':  eseries_config.scheme, 
-                'login':      eseries_config.username, 
-                'pwd':        eseries_config.password, 
-                'ctrl_pwd':   eseries_config.ctrl_password, 
+        data = {'server':     eseries_config.server,
+                'srv_port':   eseries_config.port,
+                'transport':  eseries_config.scheme,
+                'login':      eseries_config.username,
+                'pwd':        eseries_config.password,
+                'ctrl_pwd':   eseries_config.ctrl_password,
                 'ctrl_ips':   eseries_config.ctrl_ips,
                 'disk_pools': eseries_config.storage_pools}
         if eseries_config.server == "localhost":
@@ -2392,7 +2395,7 @@ def eseries_stats (request):
                 if volume['volumeGroupRef'] == pool['volumeGroupRef']:
                     vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
 
-                    vol_name = eseries_config.convert_vol_name(volume['label'], auth) 
+                    vol_name = eseries_config.convert_vol_name(volume['label'], auth)
                     vol_stats = {}
                     vol_stats['origin'] = pool['label']
                     vol_stats['volumeName'] = vol_name
@@ -2400,7 +2403,7 @@ def eseries_stats (request):
                     vol_stats['max'] = 0
                     vol_stats['type'] = "thick"
                     data.append(vol_stats)
- 
+
                     if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
                         thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
                         for thin in thin_volumes:
@@ -2409,7 +2412,7 @@ def eseries_stats (request):
                                 provisioned_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
                                 quota_gb = int(thin['provisionedCapacityQuota'], 0) / eseries_config.GigaBytes
 
-                                thin_name = eseries_config.convert_vol_name(thin['label'], auth) 
+                                thin_name = eseries_config.convert_vol_name(thin['label'], auth)
                                 vol_stats = {}
                                 vol_stats['origin'] = vol_name
                                 vol_stats['volumeName'] = thin_name

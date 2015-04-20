@@ -272,8 +272,7 @@ $(function () {
         // Form Elements
         var volume_name = $("#vol_from_snap_name"),
             volume_size = $("#vol_from_snap_size"),
-            description = $("#vol_from_snap_desc"),
-            allFields = $([]).add(volume_name).add(volume_size).add(description);
+            allFields = $([]).add(volume_name).add(volume_size);
 
         $(document).on('click', '.create-volume-from-snapshot', function (event) {
 
@@ -311,28 +310,24 @@ $(function () {
                     // Remove UI validation flags
                     clearUiValidation(allFields);
 
+                    console.log(volume_name);
+
                     // Validate form inputs
                     var isValid =
                         checkLength(volume_name, "Volume Name", 0, 16) &&
                         checkDuplicateName(volume_name, volumes) &&
-                        checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
-                        checkLength(description, "Description", 0, 16);
+                        checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0);
 
                     if (isValid) {
 
                         // Confirmed Selections
                         var confVolume = volume_name.val(),
                             confSize = volume_size.val(),
-                            confDesc = description.val(),
                             confId = id,
                             confClonedVolume = $(volume).text();
 
                         if (confVolume == '') {
                             confVolume = 'none'
-                        }
-
-                        if (confDesc == '') {
-                            confDesc = 'none'
                         }
 
                         message.showMessage('notice', "Cloning " + confClonedVolume + ".");
@@ -357,7 +352,7 @@ $(function () {
                         $(actionsCell).empty().fadeOut();
                         $(actionsCell).append(loaderHtml).fadeIn();
 
-                        $.getJSON('/create_vol_from_snapshot/' + PROJECT_ID + '/' + confId + '/' + confSize + '/' + confVolume + '/' + confDesc + '/')
+                        $.getJSON('/create_vol_from_snapshot/' + PROJECT_ID + '/' + confId + '/' + confSize + '/' + confVolume + '/')
                             .done(function (data) {
 
                                 if (data.status == 'error') {
