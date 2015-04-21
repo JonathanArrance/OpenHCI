@@ -433,6 +433,10 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.eseries_stats',
             name='eseries_stats'),
 
+	url(r'^eseries/license/set/(?P<license_key>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_add_license',
+            name='eseries_add_license'),
+
     # --- nfs ---
 	url(r'^nfs/get/$',
 	    'coalesce.coal_beta.views.nfs_get',
