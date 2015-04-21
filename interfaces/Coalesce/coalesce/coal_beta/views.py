@@ -2431,6 +2431,29 @@ def eseries_stats (request):
         out = {'status' : "error", 'message' : "Error getting NetApp E-Series statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
+
+# Get E-Series statistics for disk pools.
+def eseries_add_license (request, license_key):
+    '''
+        input:
+            license_key - a valid E-Series license key
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        if tpc.add_eseries_license (license_key):
+            out = {'status' : "success", 'message' : "NetApp E-Series storage license has been added."}
+        else:
+            out = {'status' : "error", 'message' : "Error: Invalid NetApp E-Series storage license key."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding NetApp E-Series storage license: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
 # --- Routines for NFS ---
 
 # Return NFS configuration data.
