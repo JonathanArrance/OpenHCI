@@ -56,13 +56,17 @@ import transcirrus.operations.third_party_storage.eseries.config as eseries
 import transcirrus.operations.third_party_storage.nfs.config as nfs
 
 
+# Storage vendor numbers used for licensing.
+NFS_VENDOR     = 0
+ESERIES_VENDOR = 1
+
 # Return a list of supported 3rd party storage systems and
-# if that system is currently configured.
+# if that system is currently configured and licensed.
 # When a new 3rd party storage system is supported, add
-# it to the list below.
+# it to the lists above and below.
 def get_supported_third_party_storage():
-    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled'], 'id': "eseries"},
-            {'name': "nfs",             'configured': get_nfs()['enabled'], 'id': "nfs"}
+    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled'], 'licensed': get_eseries()['licensed'], 'id': "eseries"},
+            {'name': "nfs",             'configured': get_nfs()['enabled'],     'licensed': get_nfs()['licensed'],     'id': "nfs"}
            ]
     return (list)
 
@@ -91,6 +95,7 @@ def update_nfs (mountpoints):
 def get_nfs():
     '''
     return data = {'enabled': "0/1",        "0" not enabled or "1" is enabled
+                   'licensed': "0/1",       "0" not licensed or "1" is licensed
                    'mountpoint': ["host1/ip-addr1:mountpoint", "host2/ip-addr2:mountpoint"]
                   }
     '''
@@ -102,7 +107,8 @@ def get_nfs():
     else:
         enabled = "0"
 
-    data = {'enabled': enabled, 'mountpoint': mountpoints}
+    # Since we give away NFS, it will always be licensed.
+    data = {'enabled': enabled, 'licensed': "1", 'mountpoint': mountpoints}
     return (data)
 
 
@@ -156,6 +162,7 @@ def update_eseries (data, pre_existing=True):
 def get_eseries():
     '''
     return data = {'enabled':      "0/1",        "0" not enabled or "1" is enabled
+                   'licensed':     "0/1",        "0" not licensed or "1" is licensed
                    'pre_existing': "0/1"         "0" not using pre-existing web proxy server or "1" using pre-existing web proxy server
                    'server':       "ip-addr",
                    'srv_port':     "port_num",
@@ -179,7 +186,13 @@ def get_eseries():
     else:
         enabled = "0"
 
+    if common.is_licensed (eseries.ESERIES_NAME):
+        licensed = "1"
+    else:
+        licensed = "0"
+
     data['enabled'] = enabled
+    data['licensed'] = licensed
     return (data)
 
 
@@ -213,3 +226,13 @@ def delete_eseries (auth):
     common.delete_voltype (auth, eseries.ESERIES_NAME)
     common.restart_cinder_volume_proc()
     return
+
+
+# Add the E-Series license key to the database.
+def add_eseries_license (key):
+    key_valid, cust_num, date, capacity, vendor = common.decode_license_key (key)
+
+    if not key_valid or vendor != ESERIES_VENDOR:
+        return (False)
+
+    return (common.add_license (eseries.ESERIES_NAME, key))
