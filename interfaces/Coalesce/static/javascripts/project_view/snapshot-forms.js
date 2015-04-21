@@ -81,7 +81,7 @@ $(function () {
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', data.message);
+                                    message.showMessage('success', "Created snapshot " + data.snapshot_name + " of volume " + volumes.items[confVolume].name + ".");
 
                                     // Initialize empty string for new snapshot row
                                     var newRow =
@@ -285,7 +285,7 @@ $(function () {
             volume = snapshots.items[id].volumeName;
 
             // Add name-text to form
-            $('div#create-volume-from-snapshot-form > p > span.vol-from-snap-name').empty().append($(volume).text());
+            $('div#create-volume-from-snapshot-form > p > span.vol-from-snap-name').empty().append(volume);
 
             $('#create-volume-from-snapshot-form').dialog("open");
         });
@@ -310,8 +310,6 @@ $(function () {
                     // Remove UI validation flags
                     clearUiValidation(allFields);
 
-                    console.log(volume_name);
-
                     // Validate form inputs
                     var isValid =
                         checkLength(volume_name, "Volume Name", 0, 16) &&
@@ -324,7 +322,7 @@ $(function () {
                         var confVolume = volume_name.val(),
                             confSize = volume_size.val(),
                             confId = id,
-                            confClonedVolume = $(volume).text();
+                            confClonedVolume = volume;
 
                         if (confVolume == '') {
                             confVolume = 'none'

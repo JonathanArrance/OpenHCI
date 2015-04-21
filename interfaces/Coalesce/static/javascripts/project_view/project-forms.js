@@ -387,11 +387,14 @@ function changeBamSection(toSection) {
         case "confirm":
             form.dialog({ height: 333 });
             tips.html("Here are the specifications for your new machine, you can go back to edit them or press confirm to create the machine.");
+            console.log("-------- USER INPUT OBJECT ---------");
+            console.log(bamInputs);
             break;
     }
 }
 
 function changeBamKeyInput() {
+
     var checked = $('input[name=bam-select-key-input]:checked').val();
 
     if (checked == 'select') {
@@ -412,8 +415,6 @@ function changeBamKeyInput() {
 function changeBamNetworkInput() {
 
     var checked = $('input[name=bam-select-network-input]:checked').val();
-
-    console.log("net input changed");
 
     if (checked == 'select') {
         $("#bam-create-network-name").css("display", "none");
@@ -441,8 +442,6 @@ function changeBamNetworkInput() {
 function changeBamSecurityInput() {
 
     var checked = $('input[name=bam-select-security-input]:checked').val();
-
-    console.log("net input changed");
 
     if (checked == 'select') {
         $("#bam-create-security-name").css("display", "none");

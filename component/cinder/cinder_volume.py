@@ -330,11 +330,11 @@ class volume_ops:
             logger.sys_error("Could not determin the volume type.")
             raise Exception("Could not determin the volume type.")
 
-	#REMOVED DESCRIPTION AS IT IS UNUSED
+        #REMOVED DESCRIPTION AS IT IS UNUSED
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
                       'volume_zone':input_dict['volume_zone'],'snapshot_id':input_dict['snapshot_id'],'volume_type':get_type[0][0]}
 
-        output = self.create_volume(input_dict2)
+        output = self.create_volume(input_dict)
 
         return output
 
@@ -396,7 +396,7 @@ class volume_ops:
             input_dict['volume_size'] = get_vol[0][1]
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-                      'volume_zone':input_dict['volume_zone'],'description':input_dict['description'],'volume_id':input_dict['volume_id'],'volume_type':get_vol[0][2],
+                      'volume_zone':input_dict['volume_zone'],'volume_id':input_dict['volume_id'],'volume_type':get_vol[0][2],
                       'source_vol_id':input_dict['volume_id']}
 
         output = self.create_volume(input_dict)
