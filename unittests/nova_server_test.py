@@ -22,12 +22,12 @@ store = server_storage_ops(perms)
 nova = server_ops(perms)
 action = server_admin_actions(perms)
 sa = server_actions(perms)
-
+'''
 input_dict = {'project_id':'157a34897e8246b4871676c5feb64ab8','instance_id':'84180110-b7cf-47ed-b962-8a35b0e172b4','secgroup_id': 'eb66d78f-ec7f-4162-a073-04425cd45d0a','action':'add'}
 yo = sa.update_instance_secgroup(input_dict)
 print yo
 
-'''
+
 yo = sa.list_instance_snaps('e12a1c25-379b-44db-b0c6-359e7ec62e1b')
 print yo
 
@@ -48,17 +48,17 @@ back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'b
 yo = sa.create_instance_backup(back_image)
 print yo
 
-
-snap_image = {'server_id':'e7485ba5-9ef7-4653-9012-21176d6d247a','project_id':'d4b29af44660474da7d5f884ec107f76','snapshot_description':'This a test1'}
+'''
+snap_image = {'server_id':'99e85016-4f7d-43cf-b28e-ebca2d0fadda','project_id':'27e633859b2b46db9b0fc0cbece206ea','snapshot_description':'This a test1'}
 yo = sa.create_instance_snapshot(snap_image)
 print yo
-
+'''
 time.sleep(30)
 
-'''
+
 doop = sa.delete_instance_snapshot('a2eb26d0-ac42-4a9d-a131-ad65fc70093f')
 print doop
-'''
+
 
 
 auth2 = authorization("bill","test")

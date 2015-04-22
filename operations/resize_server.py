@@ -40,12 +40,12 @@ def resize_and_confirm(auth_dict,server_dict):
         logger.sys_info("Server status is %s."%(status['server_status']))
 
     logger.sys_info('Sleeping for 60 seconds while instance %s stabilizes.'%(server_dict['server_id']))
-    time.sleep(60)
+    #time.sleep(60)
 
     #we need to confirm the resize of the server
-    confirm = action.confirm_resize(server_dict)
-    if(confirm != 'OK'):
-        logger.sys_error('Could not confirm the instance resize.')
-        raise Exception('Could not confirm the instance resize.')
+    #confirm = action.confirm_resize(server_dict)
+    #if(confirm != 'OK'):
+    #    logger.sys_error('Could not confirm the instance resize.')
+    #    raise Exception('Could not confirm the instance resize.')
 
     return 'OK'
