@@ -1071,7 +1071,8 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         out = revert_inst_snap(create, auth)
-        out['server_info'] = so.get_server(out['instance']['vm_id'])
+        new_server = {'server_id':out['instance']['vm_id'],'project_id':project_id}
+        out['server_info'] = so.get_server(new_server)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
     except Exception as e:
