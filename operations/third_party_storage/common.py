@@ -181,6 +181,27 @@ def delete_backend (backend_name):
     return (updated)
 
 
+def backend_in_use (backend):
+    try:
+        handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
+    except Exception as e:
+        raise Exception ("Could not connect to TransCirrus DB with error: %s" % e)
+
+    try:
+        select_vols = {'select':'vol_id', 'from':'trans_system_vols', 'where':"vol_type='%s' and vol_attached='true'" % (backend)}
+        vols = handle.pg_select (select_vols)
+    except Exception as e:
+        raise Exception ("Could not get volume usage from TransCirrus DB with error: %s" % e)
+    finally:
+        handle.pg_close_connection()
+
+    if len(vols) == 0:
+        in_use = False
+    else:
+        in_use = True
+    return (in_use)
+
+
 def delete_stanza (stanza_name):
     curr_file = CINDER_CONF
     new_file = curr_file + ".new"

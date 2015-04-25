@@ -65,8 +65,18 @@ ESERIES_VENDOR = 1
 # When a new 3rd party storage system is supported, add
 # it to the lists above and below.
 def get_supported_third_party_storage():
-    list = [{'name': "NetApp E-Series", 'configured': get_eseries()['enabled'], 'licensed': get_eseries()['licensed'], 'id': "eseries"},
-            {'name': "nfs",             'configured': get_nfs()['enabled'],     'licensed': get_nfs()['licensed'],     'id': "nfs"}
+    list = [{'name':       "NetApp E-Series", 
+             'configured': get_eseries()['enabled'], 
+             'licensed':   get_eseries()['licensed'], 
+             'in_use':     get_eseries()['in_use'], 
+             'id':         "eseries"
+            },
+            {'name':       "nfs",
+             'configured': get_nfs()['enabled'],
+             'licensed':   get_nfs()['licensed'],
+             'in_use':     get_nfs()['in_use'],
+             'id':         "nfs"
+            }
            ]
     return (list)
 
@@ -94,8 +104,9 @@ def update_nfs (mountpoints):
 # Get nfs data from the nfs config.
 def get_nfs():
     '''
-    return data = {'enabled': "0/1",        "0" not enabled or "1" is enabled
-                   'licensed': "0/1",       "0" not licensed or "1" is licensed
+    return data = {'enabled':    "0/1",       "0" not enabled or "1" is enabled
+                   'licensed':   "0/1",       "0" not licensed or "1" is licensed
+                   'in_use':     "0/1",       "0" not in use or "1" is in use (attached to an instance)
                    'mountpoint': ["host1/ip-addr1:mountpoint", "host2/ip-addr2:mountpoint"]
                   }
     '''
@@ -107,8 +118,13 @@ def get_nfs():
     else:
         enabled = "0"
 
+    if common.backend_in_use (nfs.NFS_NAME):
+        in_use = "1"
+    else:
+        in_use = "0"
+
     # Since we give away NFS, it will always be licensed.
-    data = {'enabled': enabled, 'licensed': "1", 'mountpoint': mountpoints}
+    data = {'enabled': enabled, 'licensed': "1", 'in_use': in_use, 'mountpoint': mountpoints}
     return (data)
 
 
@@ -163,6 +179,7 @@ def get_eseries():
     '''
     return data = {'enabled':      "0/1",        "0" not enabled or "1" is enabled
                    'licensed':     "0/1",        "0" not licensed or "1" is licensed
+                   'in_use':       "0/1",        "0" not in use or "1" is in use (attached to an instance)
                    'pre_existing': "0/1"         "0" not using pre-existing web proxy server or "1" using pre-existing web proxy server
                    'server':       "ip-addr",
                    'srv_port':     "port_num",
@@ -191,8 +208,14 @@ def get_eseries():
     else:
         licensed = "0"
 
+    if common.backend_in_use (eseries.ESERIES_NAME):
+        in_use = "1"
+    else:
+        in_use = "0"
+
     data['enabled'] = enabled
     data['licensed'] = licensed
+    data['in_use'] = in_use
     return (data)
 
 
