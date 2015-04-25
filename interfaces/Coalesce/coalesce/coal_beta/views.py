@@ -53,6 +53,7 @@ from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
+import transcirrus.operations.server_volume_ops as svo
 import transcirrus.common.logger as logger
 
 # Avoid shadowing the login() and logout() views below.
@@ -989,14 +990,14 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         auth = request.session['auth']
         go = glance_ops(auth)
         import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type}
-        
+
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
-        
+
         # Setup our cache to track the progress.
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
-        
+
         # Use wget to download the file.
         download_dir   = "/var/lib/glance/images/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
@@ -1008,7 +1009,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
-        
+
         # Add the image to glance.
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
@@ -1051,8 +1052,7 @@ def delete_image (request, image_id):
         out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description):
-    out = {}
+def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description=None):
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
@@ -1071,7 +1071,8 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         out = revert_inst_snap(create, auth)
-        out['server_info'] = so.get_server(out['instance']['vm_id'])
+        new_server = {'server_id':out['instance']['vm_id'],'project_id':project_id}
+        out['server_info'] = so.get_server(new_server)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
     except Exception as e:
@@ -1092,12 +1093,13 @@ def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_volume(request, volume_name, volume_size, description, volume_type, project_id):
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+def create_volume(request, volume_name, volume_size, volume_type, project_id):
     out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'description': description, 'volume_type': volume_type, 'project_id': project_id}
+        create_vol = {'volume_name': volume_name, 'volume_size': volume_size, 'volume_type': volume_type, 'project_id': project_id}
         out = vo.create_volume(create_vol)
         out['status'] = 'success'
         out['message'] = "Volume %s was created."%(volume_name)
@@ -1121,12 +1123,13 @@ def delete_volume(request, volume_id, project_id):
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
 
-def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volume_name, description):
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volume_name):
     out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create = { 'project_id':project_id, 'snapshot_id': snapshot_id, 'volume_size': volume_size, 'volume_name': volume_name, 'description': description }
+        create = { 'project_id':project_id, 'snapshot_id': snapshot_id, 'volume_size': volume_size, 'volume_name': volume_name }
         out = vo.create_vol_from_snapshot(create)
         out['status'] = 'success'
         out['message'] = "Volume %s was created from snapshot."%(volume_name)
@@ -1134,19 +1137,19 @@ def create_vol_from_snapshot(request, project_id, snapshot_id, volume_size, volu
         out = {"status": "error", "message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-def create_vol_clone(request, project_id, volume_id, volume_name, description):
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+def create_vol_clone(request, project_id, volume_id, volume_name):
     out = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        create = { 'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name, 'description': description}
+        create = { 'project_id': project_id, 'volume_id': volume_id, 'volume_name': volume_name }
         out = vo.create_vol_clone(create)
         out['status'] = 'success'
         out['message'] = "Volume clone %s was created."%(volume_name)
     except Exception as e:
         out = {"status": "error", "message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
-
 
 def list_volumes(request,project_id):
     try:
@@ -1161,34 +1164,36 @@ def list_volumes(request,project_id):
     return HttpResponse(simplejson.dumps(out))
 
 def attach_volume(request, project_id, instance_id, volume_id):
+    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        sso = server_storage_ops(auth)
-        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc"}
-        att = sso.attach_vol_to_server(attach_vol)
+        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc",'action':'mount'}
+        att = svo.server_vol_ops(auth,attach_vol)
         get_vol = {'project_id': project_id, 'volume_id': volume_id}
-        out = vo.get_volume_info(get_vol)
-        out['status'] = 'success'
-        out['message'] = "Volume %s attached to %s."%(out['volume_name'],out['volume_instance_name'])
+        vol = vo.get_volume_info(get_vol)
+        if(att == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "Volume %s attached to %s."%(vol['volume_name'],vol['volume_instance_name'])
     except Exception, e:
-        out = {'status' : "error", 'message' : "Could not attach the volume."}
-    return HttpResponse(simplejson.dumps(out))
+        output = {'status' : "error", 'message' : "Could not attach the volume: %s" %(e)}
+    return HttpResponse(simplejson.dumps(output))
 
 def detach_volume(request, project_id, volume_id):
+    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        sso = server_storage_ops(auth)
         v_dict = {'volume_id': volume_id, 'project_id': project_id}
-        out = vo.get_volume_info(v_dict)
-        detach_vol = {'project_id': project_id, 'instance_id': out['volume_instance'], 'volume_id': volume_id}
-        detach = sso.detach_vol_from_server(detach_vol)
-        out['status'] = 'success'
-        out['message'] = "Volume %s detached from %s."%(out['volume_name'],out['volume_instance_name'])
+        vol = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': vol['volume_instance'], 'volume_id': volume_id,'action':'unmount'}
+        detach = svo.server_vol_ops(auth,detach_vol)
+        if(detach == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "Volume %s detached from %s."%(vol['volume_name'],vol['volume_instance_name'])
     except Exception, e:
-        out = {'status' : "error", 'message' : "Could not detach the volume."}
-    return HttpResponse(simplejson.dumps(out))
+        output = {'status' : "error", 'message' : "Could not detach the volume: %s."%(e)}
+    return HttpResponse(simplejson.dumps(output))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
@@ -2282,12 +2287,12 @@ def eseries_set_config (request, disk_pools):
         storage_pools = disk_pools.split(",")
         eseries_config.set_storage_pools (storage_pools)
 
-        data = {'server':     eseries_config.server, 
-                'srv_port':   eseries_config.port, 
-                'transport':  eseries_config.scheme, 
-                'login':      eseries_config.username, 
-                'pwd':        eseries_config.password, 
-                'ctrl_pwd':   eseries_config.ctrl_password, 
+        data = {'server':     eseries_config.server,
+                'srv_port':   eseries_config.port,
+                'transport':  eseries_config.scheme,
+                'login':      eseries_config.username,
+                'pwd':        eseries_config.password,
+                'ctrl_pwd':   eseries_config.ctrl_password,
                 'ctrl_ips':   eseries_config.ctrl_ips,
                 'disk_pools': eseries_config.storage_pools}
         if eseries_config.server == "localhost":
@@ -2392,7 +2397,7 @@ def eseries_stats (request):
                 if volume['volumeGroupRef'] == pool['volumeGroupRef']:
                     vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
 
-                    vol_name = eseries_config.convert_vol_name(volume['label'], auth) 
+                    vol_name = eseries_config.convert_vol_name(volume['label'], auth)
                     vol_stats = {}
                     vol_stats['origin'] = pool['label']
                     vol_stats['volumeName'] = vol_name
@@ -2400,7 +2405,7 @@ def eseries_stats (request):
                     vol_stats['max'] = 0
                     vol_stats['type'] = "thick"
                     data.append(vol_stats)
- 
+
                     if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
                         thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
                         for thin in thin_volumes:
@@ -2409,7 +2414,7 @@ def eseries_stats (request):
                                 provisioned_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
                                 quota_gb = int(thin['provisionedCapacityQuota'], 0) / eseries_config.GigaBytes
 
-                                thin_name = eseries_config.convert_vol_name(thin['label'], auth) 
+                                thin_name = eseries_config.convert_vol_name(thin['label'], auth)
                                 vol_stats = {}
                                 vol_stats['origin'] = vol_name
                                 vol_stats['volumeName'] = thin_name

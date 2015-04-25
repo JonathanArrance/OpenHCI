@@ -63,9 +63,11 @@
             <label for="snap_volume">Volume</label>
             <select name="snap_volume" id="snap_volume">
                 {% for k,v in volume_info.items %}
+                {% if v.volume_instance_name == None %}
                 <script>snapshotVolumes.setItem("{{v.volume_id}}", { value: "{{v.volume_id}}", option: "{{v.volume_name}}"});</script>
+                {% endif %}
                 {% endfor %}
-                <script>refreshSelect($("#snap_volume"), snapshotVolumes);</script>
+                <script>$(function() { refreshSelect($("#snap_volume"), snapshotVolumes); });</script>
             </select>
             <label for="snap_desc">Description</label>
             <textarea name="snap_desc" id="snap_desc" class="text ui-widget-content ui-corner-all"
@@ -87,8 +89,6 @@
             <label for="vol_from_snap_name">Volume Name</label>
             <input type="text" name="vol_from_snap_name" id="vol_from_snap_name"
                    class="text ui-widget-content ui-corner-all"/>
-            <label for="vol_from_snap_desc">Description</label>
-            <input type="text" name="vol_from_snap_desc" id="vol_from_snap_desc" class="text ui-widget-content ui-corner-all"/>
         </fieldset>
     </form>
 </div>

@@ -357,7 +357,7 @@ class snapshot_ops:
             except:
                 logger.sys_error("Could not get the volume name.")
                 raise Exception("Could not get the volume name.")
-            snap_dict = {"volume_name":vol_name[0][0],"volume_id":snap[1],"snapshot_name":snap[3],"snapshot_id":snap[0]}
+            snap_dict = {"volume_name":vol_name[0][0],"volume_id":snap[1],"snapshot_name":snap[4],"snapshot_id":snap[0]}
             r_array.append(snap_dict)
 
         self.db.pg_close_connection()
