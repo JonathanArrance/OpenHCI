@@ -378,7 +378,7 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
     d.tailbox('/var/log/caclogs/systemlog.txt')
-    ran = run_setup(new_system_variables, user_dict,d)
+    ran = run_setup(new_system_variables, user_dict)
     change_admin_password(user_dict, pwd)
     timeout = 10
 
