@@ -92,9 +92,11 @@ def userbox(d):
 def progbox(d):
     d.guage_start()
     count = 0
+    prog = 0
     while (message != 'END'):
-        out = subprocess.Popen('sudo tail -f /var/log/caclogs/system.log', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stat_raw = out.stdout.readlines
+        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        count = count + 1
+        stat_raw = out.stdout.readlines()
         logger.sys_info("HACK 1 %s"%(stat_raw))
         stat = stat_raw[0].split(':')
         logger.sys_info("HACK 2 %s"%(stat))
@@ -102,7 +104,7 @@ def progbox(d):
         logger.sys_info("HACK 3 %s"%(message))
         if(message != 'END'):
             d.gauge_update(count, message)
-            count = count + 1.6
+            prog = prog + 1.6
     d.guage_stop()
 
 def passwordbox(d):
