@@ -398,10 +398,11 @@ def run_setup(new_system_variables,auth_dict):
 
 
     logger.sys_info('SETUP:Setting OpenStack networking configs and bridges.')
-    out = subprocess.Popen('ipcalc -p %s %s > /dev/null'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     cidr = process[0].split("=")
     os.system("sudo ip addr add %s/%s dev br-ex > /dev/null" %(sys_vars['UPLINK_IP'],cidr[1].rstrip()))
+    logger.sys_info('SETUP:OpenStack networking configs and bridges set up.')
 
     #add the internal bridge
     logger.sys_info("Adding br-int")
