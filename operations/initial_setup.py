@@ -44,9 +44,6 @@ for field in fields:
 run_setup(new_system_variables,auth_dict)
 '''
 def run_setup(new_system_variables,auth_dict):
-    #classify a NULL for subprocess
-    FNULL = open(os.devnull, 'w')
-
     #retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
     node_name = util.get_system_name()
@@ -401,7 +398,7 @@ def run_setup(new_system_variables,auth_dict):
 
 
     logger.sys_info('SETUP:Setting OpenStack networking configs and bridges.')
-    out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=FNULL, stderr=FNULL)
+    out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     cidr = process[0].split("=")
     os.system("sudo ip addr add %s/%s dev br-ex > /dev/null" %(sys_vars['UPLINK_IP'],cidr[1].rstrip()))
