@@ -223,7 +223,7 @@ def run_setup(new_system_variables,auth_dict):
             logger.sys_info("SETUP:Nova config file written.")
     time.sleep(1)
     #HACK CentOS6.5 may not be needed in the future
-    os.system('sudo usermod -G lock nova > /dev/null')
+    os.system("sudo usermod -G lock nova > /dev/null")
     os.system("sudo nova-manage db sync > /dev/null")
     time.sleep(1)
     #start the NOVA service
@@ -244,7 +244,7 @@ def run_setup(new_system_variables,auth_dict):
         else:
             logger.sys_info("SETUP:Cinder config file written.")
     time.sleep(1)
-    os.system("sudo cinder-manage db sync . /dev/null")
+    os.system("sudo cinder-manage db sync >> /dev/null")
     time.sleep(1)
     #start the cinder service
     cinder_start = service.cinder('restart')
