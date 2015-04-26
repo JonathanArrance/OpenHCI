@@ -419,12 +419,13 @@ def avahi(action):
     NOTES: This does not ues the private _operator def since the "sevice" statts and stops differently.
     """
     avahi = 0
+    FNULL = open(os.devnull, 'w')
     if(action.lower() == 'start'):
         avahi = os.system('sudo avahi-autoipd --force-bind -D bond3')
     elif(action.lower() == 'stop'):
         avahi = os.system('sudo avahi-autoipd --kill bond3')
     elif(action.lower() == 'status'):
-        out = subprocess.Popen('sudo ps -o pid,cmd -C avahi-autoipd', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = subprocess.Popen('sudo ps -o pid,cmd -C avahi-autoipd', shell=True, stdout=FNULL, stderr=FNULL)
         process = out.stdout.readlines()
         return process
 
