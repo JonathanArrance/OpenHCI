@@ -321,7 +321,7 @@ def run_setup(new_system_variables,auth_dict):
             #Exit the setup return to factory default
             return write_neutron_config
         else:
-            logger.sys_info("SETUP:Neutron config file written.")
+            logger.sys_info("Neutron config file written.")
     #HACK - centOS6.5 - may not be needed in future
     os.system('sudo ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini > /dev/null')
     os.system('sudo chown -R neutron:neutron /var/lib/neutron > /dev/null')
@@ -398,7 +398,7 @@ def run_setup(new_system_variables,auth_dict):
 
 
     logger.sys_info('SETUP:Setting OpenStack networking configs and bridges.')
-    out = subprocess.Popen('ipcalc -p %s %s'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out = subprocess.Popen('ipcalc -p %s %s > /dev/null'%(sys_vars['UPLINK_IP'],sys_vars['UPLINK_SUBNET']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process = out.stdout.readlines()
     cidr = process[0].split("=")
     os.system("sudo ip addr add %s/%s dev br-ex > /dev/null" %(sys_vars['UPLINK_IP'],cidr[1].rstrip()))
