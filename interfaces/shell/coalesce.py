@@ -100,7 +100,7 @@ def progbox(d):
         logger.sys_info("HACK 1 %s"%(stat_raw))
         stat = stat_raw[0].split(':')
         logger.sys_info("HACK 2 %s"%(stat))
-        message = stat[1]
+        message = stat[-1].strip()
         logger.sys_info("HACK 3 %s"%(message))
         if(message != 'END'):
             d.gauge_update(count, message)
@@ -378,7 +378,7 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
     ran = run_setup(new_system_variables, user_dict)
-    #progbox()
+    progbox()
     change_admin_password(user_dict, pwd)
     timeout = 10
 
