@@ -6,6 +6,7 @@
 import os
 import time
 import subprocess
+import dialog
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -43,7 +44,8 @@ for field in fields:
         new_system_variables.append(updated_field_dict)
 run_setup(new_system_variables,auth_dict)
 '''
-def run_setup(new_system_variables,auth_dict):
+def run_setup(new_system_variables,auth_dict,d):
+    d.guage_start()
     #retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
     node_name = util.get_system_name()
@@ -54,7 +56,9 @@ def run_setup(new_system_variables,auth_dict):
     #rollback_sys_vars = util.get_system_variables(node_id)
 
     #add all of the new value from the interface into the db
-    logger.sys_info('SETUP0:Updateing system variables.')
+    logger.sys_info('SETUP:Updateing system variables.')
+    d.gauge_update(50,'Updateing system variables.')
+    d.gauge_stop()
     update_sys_vars = util.update_system_variables(new_system_variables)
     if((update_sys_vars == 'ERROR') or (update_sys_vars == 'NA')):
         logger.sys_error("Could not update the system variables, Setup has failed.")

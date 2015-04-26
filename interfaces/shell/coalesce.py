@@ -377,8 +377,8 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    ran = run_setup(new_system_variables, user_dict)
-    progbox()
+    ran = run_setup(new_system_variables, user_dict,d)
+    #progbox(d)
     change_admin_password(user_dict, pwd)
     timeout = 10
 
