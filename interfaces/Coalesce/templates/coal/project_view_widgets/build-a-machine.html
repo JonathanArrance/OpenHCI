@@ -1,21 +1,25 @@
-<div id="build-a-machine-form" title="Build-A-Machine">
-    <p id="bam-tips" class="validateTips">Start by describing your virtual machine.</p>
+{% load staticfiles %}
 
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/build_a_machine.css"
+      xmlns="http://www.w3.org/1999/html"/>
+
+<div id="build-a-machine-form" title="Build-A-Machine">
     <form>
         {% csrf_token %}
 
-        <fieldset id="bam-instance-section">
+        <fieldset id="instance-fieldset">
+            <legend>Instance</legend>
             <label for="bam-instance-name">Instance Name</label>
             <input type="text" name="bam-instance-name" id="bam-instance-name"
                    class="text ui-widget-content ui-corner-all instance-text-field"/>
-
+            <br/>
             <label for="bam-select-image-name">Select an Image</label>
             <select name="bam-select-image-name" id="bam-select-image-name">
                 <script>$(function () {
                     refreshSelect($("#bam-select-image-name"), imageInstOpts);
                 });</script>
             </select>
-
+            <br/>
             <label for="bam-flavor-name">Flavor</label>
             <select name="bam-flavor-name" id="bam-flavor-name">
                 {% for flavor in flavors %}
@@ -23,38 +27,12 @@
                 {% endfor %}
             </select>
         </fieldset>
-
-        <fieldset id="bam-key-section" style="display: none">
-
-            <label style="display: block;">Select or create security key?</label>
-            <label>
-                Select:
-                <input name="bam-select-key-input" id="bam-key-select-input" value="select" checked type="radio">
-            </label>
-            <label>
-                Create:
-                <input name="bam-select-key-input" id="bam-key-create-input" value="create" type="radio">
-            </label>
-
-            <label id="bam-select-key-label" for="bam-select-key-name" style="display: block; margin-top: 10px;">Select
-                a Key</label>
-            <select name="bam-select-key-name" id="bam-select-key-name">
-                <script>$(function () {
-                    refreshSelect($("#bam-select-key-name"), secKeyInstOpts);
-                });</script>
-            </select>
-
-            <label id="bam-create-key-label" for="bam-create-key-name" style="display: block; margin-top: 10px;">Create
-                a Key</label>
-            <input type="text" name="bam-create-key-name" id="bam-create-key-name"
-                   class="text ui-widget-content ui-corner-all"/>
-        </fieldset>
-
-        <fieldset id="bam-volume-section" style="display: none">
+        <fieldset>
+            <legend>Storage</legend>
             <label for="bam-volume-name">Volume Name</label>
             <input type="text" name="bam-volume-name" id="bam-volume-name"
                    class="text ui-widget-content ui-corner-all volume-text-field"/>
-
+            <br/>
             <label for="bam-volume-size">Volume Size (GB)</label>
             <input type="text" name="bam-volume-size" id="bam-volume-size"
                    class="text ui-widget-content ui-corner-all volume-text-field"/>
@@ -69,97 +47,40 @@
             </select>
         </fieldset>
 
-        <fieldset id="bam-network-section" style="display: none">
-
-            <label style="display: block;">Select or create network?</label>
-            <label>
-                Select:
-                <input name="bam-select-network-input" id="bam-network-select-input" value="select" checked
-                       type="radio">
-            </label>
-            <label>
-                Create:
-                <input name="bam-select-network-input" id="bam-network-create-input" value="create" type="radio">
-            </label>
-
-            <label id="bam-select-network-name-label" for="bam-select-network-name"
-                   style="display: block; margin-top: 10px;">Private Network</label>
-            <select name="bam-select-network-name" id="bam-select-network-name">
+        <fieldset id="security-key-fieldset">
+            <legend>Security Key</legend>
+            <label id="bam-select-key-label" for="bam-select-key-name">Select a Key</label>
+            <select name="bam-select-key-name" id="bam-select-key-name">
                 <script>$(function () {
-                    refreshSelect($("#bam-select-network-name"), privNetInstOpts);
+                    refreshSelect($("#bam-select-key-name"), secKeyInstOpts);
                 });</script>
-            </select>
-
-            <label id="bam-create-network-name-label" for="bam-create-network-name"
-                   style="display: block; margin-top: 10px;">Private Network Name</label>
-            <input type="text" name="bam-create-network-name" id="bam-create-network-name"
-                   class="text ui-widget-content ui-corner-all privateNet-text-field"/>
-
-            <label id="bam-create-network-admin-label" for="bam-create-network-admin-state" style="display: block;">Admin
-                State?</label>
-            <select name="bam-create-network-admin-state" id="bam-create-network-admin-state">
-                <option value="true" selected="selected">true</option>
-                <option value="false">false</option>
-            </select>
-            <label id="bam-create-network-shared-label" for="bam-create-network-shared"
-                   style="display: block;">Shared?</label>
-            <select name="bam-create-network-shared" id="bam-create-network-shared">
-                <option value="false" selected="selected">false</option>
-                <option value="true">true</option>
             </select>
         </fieldset>
 
-        <fieldset id="bam-security-section" style="display: none">
-
-            <label style="display: block;">Select or create security group?</label>
-            <label>
-                Select:
-                <input name="bam-select-security-input" id="bam-security-select-input" value="select" checked
-                       type="radio">
-            </label>
-            <label>
-                Create:
-                <input name="bam-select-security-input" id="bam-security-create-input" value="create" type="radio">
-            </label>
-
-            <label id="bam-select-security-name-label" for="bam-select-security-name">Security Group</label>
+        <fieldset>
+            <legend>Security Group</legend>
+            <label id="bam-select-security-name-label" for="bam-select-security-name">Select a security group.</label>
             <select name="bam-select-security-name" id="bam-select-security-name">
                 <script>$(function () {
                     refreshSelect($("#bam-select-security-name"), secGroupInstOpts);
                 });</script>
             </select>
-
-            <label id="bam-create-security-name-label" for="bam-create-security-name">Group Name</label>
-            <input type="text" name="bam-create-security-name" id="bam-create-security-name" value=""
-                   class="text ui-widget-content ui-corner-all"/>
-
-            <label id="bam-create-security-description-label" for="bam-create-security-description">Group
-                Description</label>
-            <input type="text" name="bam-create-security-description" id="bam-create-security-description" value=""
-                   class="text ui-widget-content ui-corner-all"/>
-
-            <label id="bam-create-security-transport-label">Transport Protocol</label>
-            <label id="bam-create-security-tcp-label">
-                TCP:
-                <input type="radio" name="bam-create-security-transport" id="bam-create-security-tcp" value='tcp'
-                       checked>
-            </label>
-            <label id="bam-create-security-udp-label">
-                UDP:
-                <input type="radio" name="bam-create-security-transport" id="bam-create-security-udp" value='udp'>
-            </label>
-
-            <label id="bam-create-security-ports-label" for="bam-create-security-ports">Ports</label>
-            <input type="text" name="bam-create-security-ports" id="bam-create-security-ports" value="443,80,22"
-                   class="text ui-widget-content ui-corner-all"/>
         </fieldset>
-    </form>
 
-    <div id="bam-button-container" style="float: right">
-        <a href="#" class="btn" id="bam-back-button">Back</a>
-        <a href="#" class="btn" id="bam-next-button">Next</a>
-        <a href="#" class="btn" id="bam-confirm-button" style="display:none">Confirm</a>
-    </div>
+        <fieldset>
+            <legend>Network</legend>
+            <label id="bam-select-network-name-label" for="bam-select-network-name">Select a network</label>
+            <select name="bam-select-network-name" id="bam-select-network-name">
+                <script>$(function () {
+                    refreshSelect($("#bam-select-network-name"), privNetInstOpts);
+                });</script>
+            </select>
+        </fieldset>
+
+        <div>
+            <a href="#" class="btn" id="bam-next-button">Create</a>
+        </div>
+    </form>
 </div>
 
 <script>
