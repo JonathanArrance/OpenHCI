@@ -6,7 +6,6 @@
 import os
 import time
 import subprocess
-import dialog
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
