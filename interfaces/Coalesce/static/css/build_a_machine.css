@@ -17,6 +17,10 @@
     float: left;
 }
 
+#network-fieldset {
+    float: left;
+}
+
 #security-key-fieldset {
     float: left;
 }
@@ -31,7 +35,10 @@
 }
 
 #bam-next-button {
+    margin-top: 10px;
     width: 95%;
+    padding-top: 10px;
+    padding-bottom: 10px;
 
 }
 
