@@ -71,7 +71,7 @@ $(function () {
         $("#build-a-machine-form").dialog({
             autoOpen: false,
             height: 525,
-            width: 535,
+            width: 550,
             modal: true,
             resizable: false,
             closeOnEscape: true,
