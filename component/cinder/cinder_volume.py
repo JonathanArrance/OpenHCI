@@ -187,7 +187,7 @@ class volume_ops:
         #     raise Exception("Volume with the name %s already exists."%(create_vol['volume_name']))
         
         #check the project capacity
-        # nned to impliment quatas
+        # need to impliment quatas
 
         if(create_flag == 1):
             try:
@@ -371,6 +371,12 @@ class volume_ops:
 
         if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
             input_dict['volume_name'] = input_dict['volume_id'] + '_clone_%s'%(str(self.rannum))
+
+        #check if the volume is in the available state.
+        vol_stats = self.get_volume(input_dict)
+        if(vol_stats['volume']['status'] != "available"):
+            logger.sys_error('Could not clone the volume %s, please make sure it is not attached to an instance, or not in an error state.'%(vol_stats['volume']['display_name']))
+            raise Exception('Could not clone the volume %s, please make sure it is not attached to an instance, or not in an error state.'%(vol_stats['volume']['display_name']))
 
         # if('description' not in input_dict) or (input_dict['description'] == 'none'):
         #     logger.sys_warning("Did not pass in a volume description setting the default description.")

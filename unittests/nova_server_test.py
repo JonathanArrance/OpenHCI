@@ -51,7 +51,7 @@ print yo
 '''
 print '---------------'
 
-server_input = {'server_id':'98286d44-fa56-4c79-bb45-179910c75828','project_id':'157a34897e8246b4871676c5feb64ab8'}
+server_input = {'server_id':'d69170a7-a071-4311-86af-553a5aae378c','project_id':'6492cba476994153800c5220a2f51bc2'}
 inst_info = nova.get_server(server_input)
 
 print inst_info

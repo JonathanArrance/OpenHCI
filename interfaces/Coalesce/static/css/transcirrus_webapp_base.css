@@ -5342,7 +5342,6 @@ th > small {
     left: 35%;
     margin-top: 2px;
     z-index: 10000;
-    position: absolute;
 }
 
 .volume-attached {

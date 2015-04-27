@@ -53,6 +53,7 @@ from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
+import transcirrus.operations.server_volume_ops as svo
 import transcirrus.common.logger as logger
 
 # Avoid shadowing the login() and logout() views below.
@@ -1070,7 +1071,8 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         out = revert_inst_snap(create, auth)
-        out['server_info'] = so.get_server(out['instance']['vm_id'])
+        new_server = {'server_id':out['instance']['vm_id'],'project_id':project_id}
+        out['server_info'] = so.get_server(new_server)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
     except Exception as e:
@@ -1149,7 +1151,6 @@ def create_vol_clone(request, project_id, volume_id, volume_name):
         out = {"status": "error", "message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-
 def list_volumes(request,project_id):
     try:
         auth = request.session['auth']
@@ -1163,34 +1164,36 @@ def list_volumes(request,project_id):
     return HttpResponse(simplejson.dumps(out))
 
 def attach_volume(request, project_id, instance_id, volume_id):
+    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        sso = server_storage_ops(auth)
-        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc"}
-        att = sso.attach_vol_to_server(attach_vol)
+        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc",'action':'mount'}
+        att = svo.server_vol_ops(auth,attach_vol)
         get_vol = {'project_id': project_id, 'volume_id': volume_id}
-        out = vo.get_volume_info(get_vol)
-        out['status'] = 'success'
-        out['message'] = "Volume %s attached to %s."%(out['volume_name'],out['volume_instance_name'])
+        vol = vo.get_volume_info(get_vol)
+        if(att == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "Volume %s attached to %s."%(vol['volume_name'],vol['volume_instance_name'])
     except Exception, e:
-        out = {'status' : "error", 'message' : "Could not attach the volume."}
-    return HttpResponse(simplejson.dumps(out))
+        output = {'status' : "error", 'message' : "Could not attach the volume: %s" %(e)}
+    return HttpResponse(simplejson.dumps(output))
 
 def detach_volume(request, project_id, volume_id):
+    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        sso = server_storage_ops(auth)
         v_dict = {'volume_id': volume_id, 'project_id': project_id}
-        out = vo.get_volume_info(v_dict)
-        detach_vol = {'project_id': project_id, 'instance_id': out['volume_instance'], 'volume_id': volume_id}
-        detach = sso.detach_vol_from_server(detach_vol)
-        out['status'] = 'success'
-        out['message'] = "Volume %s detached from %s."%(out['volume_name'],out['volume_instance_name'])
+        vol = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': vol['volume_instance'], 'volume_id': volume_id,'action':'unmount'}
+        detach = svo.server_vol_ops(auth,detach_vol)
+        if(detach == 'OK'):
+            output['status'] = 'success'
+            output['message'] = "Volume %s detached from %s."%(vol['volume_name'],vol['volume_instance_name'])
     except Exception, e:
-        out = {'status' : "error", 'message' : "Could not detach the volume."}
-    return HttpResponse(simplejson.dumps(out))
+        output = {'status' : "error", 'message' : "Could not detach the volume: %s."%(e)}
+    return HttpResponse(simplejson.dumps(output))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
