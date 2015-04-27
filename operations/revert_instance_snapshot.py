@@ -90,7 +90,6 @@ def revert_inst_snap(input_dict,auth_dict):
     create = server.create_server(create_dict)
 
     #add back the float ip
-    print inst_info
     if(inst_info['server_public_ips'] == 'None'):
         logger.sys_info("Instance %s does not have a floating ip."%(inst_info['server_name']))
     else:
@@ -98,7 +97,7 @@ def revert_inst_snap(input_dict,auth_dict):
         assign = three.update_floating_ip(assign_dict)
 
     #reattach the volumes
-    if(len(attached) > 1):
+    if(len(attached) >= 1):
         for vol in attached:
             attach = {'project_id':input_dict['project_id'],'instance_id':create['vm_id'],'volume_id':vol['vol_id'],'mount_point':vol['vol_mount_location']}
             att_vol = storage.attach_vol_to_server(attach)
