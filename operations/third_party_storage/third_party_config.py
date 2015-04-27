@@ -106,7 +106,7 @@ def get_nfs():
     '''
     return data = {'enabled':    "0/1",       "0" not enabled or "1" is enabled
                    'licensed':   "0/1",       "0" not licensed or "1" is licensed
-                   'in_use':     "0/1",       "0" not in use or "1" is in use (attached to an instance)
+                   'in_use':     "0/1",       "0" not in use or "1" volume type is in use
                    'mountpoint': ["host1/ip-addr1:mountpoint", "host2/ip-addr2:mountpoint"]
                   }
     '''
@@ -179,7 +179,7 @@ def get_eseries():
     '''
     return data = {'enabled':      "0/1",        "0" not enabled or "1" is enabled
                    'licensed':     "0/1",        "0" not licensed or "1" is licensed
-                   'in_use':       "0/1",        "0" not in use or "1" is in use (attached to an instance)
+                   'in_use':       "0/1",        "0" not in use or "1" volume type is in use
                    'pre_existing': "0/1"         "0" not using pre-existing web proxy server or "1" using pre-existing web proxy server
                    'server':       "ip-addr",
                    'srv_port':     "port_num",
