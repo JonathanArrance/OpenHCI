@@ -2206,7 +2206,7 @@ INSERT INTO nova_default VALUES ('neutron_ovs_bridge', 'br-int', 'nova.conf', 49
 INSERT INTO nova_default VALUES ('security_group_api', 'neutron', 'nova.conf', 50);
 INSERT INTO nova_default VALUES ('verbose', 'False', 'nova.conf', 51);
 INSERT INTO nova_default VALUES ('debug', 'False', 'nova.conf', 52);
-INSERT INTO nova_default VALUES ('cpu_allocation_ratio', '6.0', 'nova.conf', 53);
+INSERT INTO nova_default VALUES ('cpu_allocation_ratio', '10.0', 'nova.conf', 53);
 INSERT INTO nova_default VALUES ('disk_allocation_ratio', '1.0', 'nova.conf', 54);
 INSERT INTO nova_default VALUES ('max_instances_per_host', '50', 'nova.conf', 55);
 INSERT INTO nova_default VALUES ('ram_allocation_ratio', '1.5', 'nova.conf', 56);

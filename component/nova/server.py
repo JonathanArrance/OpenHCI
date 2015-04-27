@@ -541,7 +541,7 @@ class server_ops:
         #this is a HACK to get the server internal IP - I want to have all this info in the DB, need a polling mechanisim to poll until the
         #server is up and then get the ip
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":input_dict['project_id']}
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(input_dict['project_id'] != self.project_id):
                     self.token = get_token(self.username,self.password,input_dict['project_id'])
             api = caller(api_dict)

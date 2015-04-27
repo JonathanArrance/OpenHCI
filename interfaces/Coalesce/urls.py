@@ -211,7 +211,8 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.volume_view',
             name='volume_view'),
 
-        url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<description>[^/]+)/(?P<volume_type>[^/]+)/(?P<project_id>[^/]+)/$',
+        # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+        url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_type>[^/]+)/(?P<project_id>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
@@ -227,11 +228,13 @@ urlpatterns = patterns('',
         'coalesce.coal_beta.views.delete_volume',
             name='delete_volume'),
 
-	    url(r'^create_vol_from_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/(?P<description>[^/]+)/$',
+        # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+	    url(r'^create_vol_from_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/$',
         'coalesce.coal_beta.views.create_vol_from_snapshot',
             name='create_vol_from_snapshot'),
 
-	    url(r'^create_vol_clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/(?P<description>[^/]+)/$',
+        # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+	    url(r'^create_vol_clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/$',
         'coalesce.coal_beta.views.create_vol_clone',
             name='create_vol_clone'),
 
@@ -429,6 +432,10 @@ urlpatterns = patterns('',
 	url(r'^eseries/get/stats/$',
 	    'coalesce.coal_beta.views.eseries_stats',
             name='eseries_stats'),
+
+	url(r'^eseries/license/set/(?P<license_key>[^/]+)/$',
+	    'coalesce.coal_beta.views.eseries_add_license',
+            name='eseries_add_license'),
 
     # --- nfs ---
 	url(r'^nfs/get/$',

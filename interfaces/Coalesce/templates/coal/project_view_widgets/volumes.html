@@ -77,7 +77,7 @@
 </div>
 
 <div id="volume-dialog-form" title="Create Volume">
-    <p class="validateTips">Create a new volume. Volume name and size are required.</p>
+    <p class="validateTips">Create a new volume. Volume name, size and type are required.</p>
 
     <form>
         {% csrf_token %}
@@ -91,10 +91,6 @@
                    class="text ui-widget-content ui-corner-all volume-text-field"/>
 
             <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
-
-            <label for="description">Description</label>
-            <input type="text" name="description" id="description"
-                   class="text ui-widget-content ui-corner-all volume-text-field"/>
 
             <label for="volume_type">Volume Type</label>
             <select name="volume_type" id="volume_type" class="volume-select">
@@ -114,10 +110,6 @@
         <fieldset>
             <label for="clone_volume_name">Volume Name</label>
             <input type="text" name="clone_volume_name" id="clone_volume_name"
-                   class="text ui-widget-content ui-corner-all volume-text-field"/>
-
-            <label for="clone_description">Description</label>
-            <input type="text" name="clone_description" id="clone_description"
                    class="text ui-widget-content ui-corner-all volume-text-field"/>
         </fieldset>
     </form>

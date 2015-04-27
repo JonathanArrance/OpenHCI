@@ -1531,7 +1531,10 @@ def getDhcpServer():
 
     #dhcp_file = "/var/lib/dhcp/dhclient.bond1.leases"
     dhcp_file = "/var/lib/dhclient/dhclient-bond1.leases"
-    dhcp_server = ""
+    # this is a hack that will help us ensure that the correct DHCP server is used on the data network. The correct fix
+    #is to remove or clear the dhcp leases file.
+    dhcp_server = "172.24.24.10"
+    '''
     global dhcp_retry
 
     while dhcp_retry:
@@ -1551,7 +1554,7 @@ def getDhcpServer():
             restart_dhclient()
             dhcp_retry = dhcp_retry-1
             time.sleep(1)
-
+    '''
     if (dhcp_server == ""):
         logger.sys_error("Error in getting DHCP server IP")
         sys.exit()

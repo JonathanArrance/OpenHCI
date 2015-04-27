@@ -7,10 +7,96 @@
 import os
 import subprocess
 from transcirrus.component.cinder.cinder_volume import volume_ops
+import transcirrus.common.config as config
+from transcirrus.database.postgres import pgsql
+import json
 
 # Common constants
 CINDER_CONF = "/etc/cinder/cinder.conf"
-#CINDER_CONF = "cinder.conf"
+
+# License key constants
+STORAGE_KEY_LEN = 15
+STORAGE_KEY_CUSTNUM_START = 0
+STORAGE_KEY_CUSTNUM_END = STORAGE_KEY_CUSTNUM_START + 4
+STORAGE_KEY_DATE_START = STORAGE_KEY_CUSTNUM_END
+STORAGE_KEY_DATE_END = STORAGE_KEY_DATE_START + 5
+STORAGE_KEY_CAPACITY_START = STORAGE_KEY_DATE_END
+STORAGE_KEY_CAPACITY_END = STORAGE_KEY_CAPACITY_START + 3
+STORAGE_KEY_VENDOR_START = STORAGE_KEY_CAPACITY_END
+STORAGE_KEY_VENDOR_END = STORAGE_KEY_VENDOR_START + 1
+STORAGE_KEY_CHKSUM_START = STORAGE_KEY_VENDOR_END
+STORAGE_KEY_CHKSUM_END = STORAGE_KEY_CHKSUM_START + 2
+
+def decode_license_key (key):
+    key_valid = False
+    cust_num = None
+    date = None
+    capacity = None
+    vendor = None
+
+    if len(key) == STORAGE_KEY_LEN:
+        cust_num = int (key[STORAGE_KEY_CUSTNUM_START:STORAGE_KEY_CUSTNUM_END], 16)
+        date     = int (key[STORAGE_KEY_DATE_START:STORAGE_KEY_DATE_END], 16)
+        capacity = int (key[STORAGE_KEY_CAPACITY_START:STORAGE_KEY_CAPACITY_END], 16)
+        vendor = int (key[STORAGE_KEY_VENDOR_START:STORAGE_KEY_VENDOR_END], 16)
+        checksum = int (key[STORAGE_KEY_CHKSUM_START:STORAGE_KEY_CHKSUM_END], 16)
+
+        subkey = str(cust_num) + str(date) + str(capacity) + str(vendor)
+        chksum = 0
+        for c in subkey:
+            chksum = chksum + int(c, 16)
+        if checksum == chksum:
+            key_valid = True
+
+    return (key_valid, cust_num, date, capacity, vendor)
+
+
+def is_licensed (backend_name):
+    try:
+        handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
+    except Exception as e:
+        raise Exception ("Could not connect to TransCirrus DB with error: %s" % e)
+
+    try:
+        license_key_name = backend_name + "_license"
+        select_license = {'select':'param_value', 'from':'trans_system_settings', 'where':"parameter='%s'" % (license_key_name)}
+        license = handle.pg_select (select_license)
+    except Exception as e:
+        raise Exception ("Could not get license key from TransCirrus DB with error: %s" % e)
+    finally:
+        handle.pg_close_connection()
+
+    if len(license) == 0:
+        return (False)
+
+    return (True)
+
+
+def add_license (backend_name, key):
+    if is_licensed (backend_name):
+        return (True)
+
+    try:
+        handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
+    except Exception as e:
+        raise Exception ("Could not connect to TransCirrus DB with error: %s" % e)
+
+    key_valid, cust_num, date, capacity, vendor = decode_license_key (key)
+    if not key_valid:
+        return (False)
+
+    lic_data = '{"key": "%s", "cust_num": "%s", "date": "%06d", "capacity": "%s", "vendor": "%s"}' % (key, cust_num, date, capacity, vendor)
+    license_key_name = backend_name + "_license"
+
+    try:
+        insert_lic = {"parameter": license_key_name, "param_value": lic_data}
+        handle.pg_insert ("trans_system_settings", insert_lic)
+    except Exception, e:
+        raise Exception ("Error adding license key into TransCirrus DB: %s" % e)
+    finally:
+        handle.pg_close_connection()
+
+    return (True)
 
 
 def backend_configured (backend_name):
@@ -93,6 +179,27 @@ def delete_backend (backend_name):
         os.remove (new_file)
 
     return (updated)
+
+
+def backend_in_use (backend):
+    try:
+        handle = pgsql (config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER, config.TRAN_DB_PASS)
+    except Exception as e:
+        raise Exception ("Could not connect to TransCirrus DB with error: %s" % e)
+
+    try:
+        select_vols = {'select':'vol_id', 'from':'trans_system_vols', 'where':"vol_type='%s'" % (backend)}
+        vols = handle.pg_select (select_vols)
+    except Exception as e:
+        raise Exception ("Could not get volume usage from TransCirrus DB with error: %s" % e)
+    finally:
+        handle.pg_close_connection()
+
+    if len(vols) == 0:
+        in_use = False
+    else:
+        in_use = True
+    return (in_use)
 
 
 def delete_stanza (stanza_name):

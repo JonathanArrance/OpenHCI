@@ -1,0 +1,93 @@
+{% load staticfiles %}
+
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/build_a_machine.css"
+      xmlns="http://www.w3.org/1999/html"/>
+
+<div id="build-a-machine-form" title="Build-A-Machine">
+    <form>
+        {% csrf_token %}
+
+        <fieldset id="instance-fieldset">
+            <legend>Instance</legend>
+            <label for="bam-instance-name">Instance Name</label>
+            <input type="text" name="bam-instance-name" id="bam-instance-name"
+                   class="text ui-widget-content ui-corner-all instance-text-field"/>
+            <br/>
+            <label for="bam-select-image-name">Select an Image</label>
+            <select name="bam-select-image-name" id="bam-select-image-name">
+                <script>$(function () {
+                    refreshSelect($("#bam-select-image-name"), imageInstOpts);
+                });</script>
+            </select>
+            <br/>
+            <label for="bam-flavor-name">Flavor</label>
+            <select name="bam-flavor-name" id="bam-flavor-name">
+                {% for flavor in flavors %}
+                <option value="{{flavor.flavor_name}}">{{flavor.flavor_name}}</option>
+                {% endfor %}
+            </select>
+        </fieldset>
+        <fieldset>
+            <legend>Storage</legend>
+            <label for="bam-volume-name">Volume Name</label>
+            <input type="text" name="bam-volume-name" id="bam-volume-name"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+            <br/>
+            <label for="bam-volume-size">Volume Size (GB)</label>
+            <input type="text" name="bam-volume-size" id="bam-volume-size"
+                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+            <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
+
+            <label for="bam-volume-type">Volume Type</label>
+            <select name="bam-volume-type" id="bam-volume-type" class="volume-select">
+                {% for voltypes in volume_types %}
+                <option value="{{voltypes.name}}">{{voltypes.name}}</option>
+                {% endfor %}
+            </select>
+        </fieldset>
+
+        <fieldset id="security-key-fieldset">
+            <legend>Security Key</legend>
+            <label id="bam-select-key-label" for="bam-select-key-name">Select a Key</label>
+            <select name="bam-select-key-name" id="bam-select-key-name">
+                <script>$(function () {
+                    refreshSelect($("#bam-select-key-name"), secKeyInstOpts);
+                });</script>
+            </select>
+        </fieldset>
+
+        <fieldset>
+            <legend>Security Group</legend>
+            <label id="bam-select-security-name-label" for="bam-select-security-name">Select a security group.</label>
+            <select name="bam-select-security-name" id="bam-select-security-name">
+                <script>$(function () {
+                    refreshSelect($("#bam-select-security-name"), secGroupInstOpts);
+                });</script>
+            </select>
+        </fieldset>
+
+        <fieldset>
+            <legend>Network</legend>
+            <label id="bam-select-network-name-label" for="bam-select-network-name">Select a network</label>
+            <select name="bam-select-network-name" id="bam-select-network-name">
+                <script>$(function () {
+                    refreshSelect($("#bam-select-network-name"), privNetInstOpts);
+                });</script>
+            </select>
+        </fieldset>
+
+        <div>
+            <a href="#" class="btn" id="bam-next-button">Create</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(function () {
+        changeBamKeyInput();
+        changeBamNetworkInput();
+        changeBamSecurityInput();
+        initializeBamSection();
+    });
+</script>
