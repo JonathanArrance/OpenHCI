@@ -32,7 +32,7 @@
 
 <script>
     var eseries_configured;
-    $.getJSON('/supported_third_party_storage/')
+    var third_party_storage = $.getJSON('/supported_third_party_storage/')
             .done(function (data) {
                 data.providers.forEach(function (provider) {
                     if (provider.id == "eseries") {
@@ -249,6 +249,14 @@
             Controllers</a>
 
         <div class="ajax-loader" id="3ps-loader-2" style="display: none;"></div>
+        <button class="configure-3ps" data-provider="eseries">Configure</button>
+    </fieldset>
+    <fieldset id="eseries-license-confirmation" style="display:none; text-align: center; margin: 10px auto;">
+        <label>
+            License Number:
+            <input id="eseries-license-no" type="text">
+        </label>
+        <button id="confirm-license">Confirm License</button>
     </fieldset>
 
     <fieldset id="eseries-storage-controller-data" style="display:none; text-align: center; margin: 10px auto;">
@@ -266,6 +274,24 @@
         <label for="eseries-storage-disk-pools" style="display:block"></label>
         <select name="eseries-storage-disk-pools" id="eseries-storage-disk-pools" multiple size="0"></select>
     </fieldset>
+
+    <fieldset id="eseries-license-controller" style="display:none; text-align: center; margin: 10px auto;">
+        <label for="eseries-license-confirmation" style="display:block">Enter License No</label>
+        <input name="eseries-license-confirmation" id="eseries-license-confirmation" type="text">
+    </fieldset>
+    <fieldset id="nfs-web-proxy-server-data" style="display: none; text-align: center; margin: 10px auto;">
+
+        <p style="margin: 10px auto;">NFS Web Proxy Server Data</p>
+
+        <label for="nfs-hostname-ip" style="display:block">Hostname / IP</label>
+        <input name="nfs-hostname-ip" id="nfs-hostname-ip" value="" class="text ui-widget-content ui-corner-all"
+               type="text">
+
+        <label for="nfs-server-port" style="display: block;">Server Port</label>
+        <input name="nfs-server-port" id="nfs-server-port" value="8080"
+               class="text ui-widget-content ui-corner-all" type="text">
+        <button class="configure-3ps" data-provider="nfs">Configure</button>
+    </fieldset>
 </div><!-- end row-fluid-->
 
 <script>
@@ -281,6 +307,7 @@ $(function () {
             controllerPassword = $("#eseries-storage-controller-password"),
             controllers = $("#eseries-mgmt-hostnames-ips"),
             disks = $("#eseries-storage-disk-pools"),
+            licenseNo = $("#eseries-license-no").val(),
             allFields = $([]).add(useExisting).add(hostnameIp).add(login).add(password).add(port).add(controllerPassword).add(controllers).add(disks);
 
     // Local Variables
@@ -296,132 +323,6 @@ $(function () {
         }
     });
 
-    $("#retry").click(function (event) {
-
-        event.preventDefault();
-        $("#3ps-table-container").empty();
-        $("#3ps-loader-1").show();
-        $.getJSON('/supported_third_party_storage/')
-                .done(function (data) {
-
-                    if (data.status == "error") {
-
-                        message.showMessage('error', data.message);
-
-                        var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
-                        $("#3ps-table-container").append(retry);
-                    }
-
-                    if (data.status == "success") {
-
-                        var configTable = '<table class="paleblue widget-table" id="3ps-table"><tr><th>Name</th><th>Configured</th><th>Actions</th></tr></table>';
-                        $("#3ps-table-container").append(configTable);
-
-                        for (provider in data.providers) {
-
-                            var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
-
-                            if (provider.configured == 0) {
-                                newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a><a href="#" id="delete-' + provider.id + '">delete</a></td>';
-                            } else if (provider.configured == 1) {
-                                newRow += '<td>Yes</td><td><a href="#" id="delete-' + provider.id + '">delete</a></td>';
-                            }
-
-                            newRow += '</tr>';
-
-                            $("#3ps-table").append(newRow);
-
-                            if (provider.id == "eseries") {
-
-                                var configId = "#configure-eseries";
-                                $(configId).bind("click", function (event) {
-
-                                    event.preventDefault();
-
-                                    $("#eseries-web-proxy-server-data").show();
-                                });
-
-                                var deleteId = "#delete-eseries";
-                                $(deleteId).bind("click", function (event) {
-
-                                    event.preventDefault();
-                                    $.getJSON("/eseries/delete/")
-                                            .done(function (data) {
-
-                                                if (data.status == "error") {
-
-                                                    message.showMessage("error", data.message);
-                                                }
-
-                                                if (data.status == "success") {
-
-                                                    message.showMessage("success", data.message);
-                                                    eseries_configured = false;
-
-                                                }
-                                            })
-                                            .fail(function () {
-
-                                                message.showMessage("error", "Server Fault");
-                                            })
-                                            .always(function () {
-
-                                                $("#3ps-config-form").dialog("close");
-                                            })
-                                });
-                            }
-
-                            if (provider.id == "nfs") {
-
-                                var configId = "#configure-nfs";
-                                $(configId).bind("click", function (event) {
-
-                                    event.preventDefault();
-                                });
-
-                                var deleteId = "#delete-nfs";
-                                $(deleteId).bind("click", function (event) {
-
-                                    event.preventDefault();
-                                    $.getJSON("/nfs/delete/")
-                                            .done(function (data) {
-
-                                                if (data.status == "error") {
-
-                                                    message.showMessage("error", data.message);
-                                                }
-
-                                                if (data.status == "success") {
-
-                                                    message.showMessage("success", data.message);
-                                                }
-                                            })
-                                            .fail(function () {
-
-                                                message.showMessage("error", "Server Fault");
-                                            })
-                                            .always(function () {
-
-                                                $("#3ps-config-form").dialog("close");
-                                            })
-                                });
-                            }
-                        }
-                    }
-                })
-                .fail(function () {
-
-                    message.showMessage('error', "Server Fault");
-
-                    var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
-                    $("#3ps-table-container").append(retry);
-                })
-                .always(function () {
-
-                    $("#3ps-loader-1").hide();
-                });
-    });
-
     $("#config-third-party-storage").click(function (event) {
 
         // Prevent scrolling to top of page on click
@@ -430,15 +331,13 @@ $(function () {
         $("#3ps-table-container").empty();
         $("#3ps-config-form").dialog("open");
         $("#3ps-loader-1").show();
-        $.getJSON('/supported_third_party_storage/')
-                .done(function (data) {
-
+            	third_party_storage.done(function (data) {
                     if (data.status == "error") {
 
                         message.showMessage('error', data.message);
 
-                        var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
-                        $("#3ps-table-container").append(retry);
+                        /*var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
+                        $("#3ps-table-container").append(retry);*/
                     }
 
                     if (data.status == "success") {
@@ -452,7 +351,11 @@ $(function () {
                             var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
 
                             if (provider.configured == 0) {
-                                newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a>';
+                            	if(provider.id == 'eseries'){
+                            		newRow += '<td>No</td><td><a href="#" id="license-' + provider.id + '">License</a>';
+                            	} else {
+                                	newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a>';
+                            	}
                             } else if (provider.configured == 1) {
                                 newRow += '<td>Yes</td><td><a href="#" id="delete-' + provider.id + '">delete</a></td>';
                             }
@@ -470,7 +373,15 @@ $(function () {
 
                                     $("#eseries-web-proxy-server-data").show();
                                 });
-
+                                
+                                var licenseConfirm = "#license-eseries";
+                                $(licenseConfirm).bind("click", function(){
+                                	
+                                	event.preventDefault();
+                                	
+                                	$("#eseries-license-confirmation").show();
+                                });
+                                
                                 var deleteId = "#delete-eseries";
                                 $(deleteId).bind("click", function (event) {
 
@@ -508,6 +419,9 @@ $(function () {
                                 $(configId).bind("click", function (event) {
 
                                     event.preventDefault();
+                                    
+                                    
+                                    $("#nfs-web-proxy-server-data").show();
                                 });
 
                                 var deleteId = "#delete-nfs";
@@ -525,6 +439,7 @@ $(function () {
                                                 if (data.status == "success") {
 
                                                     message.showMessage("success", data.message);
+                                                    
                                                 }
                                             })
                                             .fail(function () {
@@ -544,14 +459,73 @@ $(function () {
 
                     message.showMessage('error', "Server Fault");
 
-                    var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
-                    $("#3ps-table-container").append(retry);
+                    /*var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
+                    $("#3ps-table-container").append(retry);*/
                 })
                 .always(function () {
 
                     $("#3ps-loader-1").hide();
                 });
     });
+    
+    $(".configure-3ps").on('click', function(){
+    	var provider = $(this).data("provider");
+
+		// Remove UI validation flags
+		clearUiValidation(allFields);
+
+		$.getJSON( provider + '/config/set/' + diskPools + '/')
+			.done(function (data) {
+
+
+				if (data.status == "error") {
+
+					message.showMessage("error", data.message);
+				}
+
+				if (data.status == "success") {
+
+					message.showMessage("success", data.message);
+					if(provider == 'eseries'){
+						eseries_configured = true;
+						$("#eseries-web-proxy-server-data").hide();
+						$("#eseries-storage-controller-data").hide();
+						$("#eseries-disk-pools").hide();
+						$("#graph").html(graph());
+						$("#graph").show();
+						$("#graph-title").html("E-Series Storage (gb)");
+					} else if(provider == 'nfs') {
+						message.showMessage("error", "shit man");
+					}
+					$("#3ps-config-form").dialog("close");
+				}
+
+			})
+			.fail(function () {
+
+				message.showMessage("error", "Server Fault");
+			})
+			.always(function () {
+
+			});
+	});
+	
+	$("#confirm-license").on("click", function(){
+		var licenseNo = $("#eseries-license-no").val();
+		$.getJSON('/eseries/license/set/' + licenseNo + '/')
+			.done(function(data){
+				console.log(data);
+				
+				
+			})
+			.fail(function () {
+
+				message.showMessage("error", "Server Fault");
+			})
+			.always(function () {
+
+			});
+	});
 
     $("#eseries-discover-controllers").click(function (event) {
 
@@ -681,49 +655,13 @@ $(function () {
             of: $('#page-content')
         },
         buttons: {
-            "Configure": function () {
-
-                // Remove UI validation flags
-                clearUiValidation(allFields);
-
-                $.getJSON('eseries/config/set/' + diskPools + '/')
-                        .done(function (data) {
-
-
-                            if (data.status == "error") {
-
-                                message.showMessage("error", data.message);
-                            }
-
-                            if (data.status == "success") {
-
-                                message.showMessage("success", data.message);
-                                eseries_configured = true;
-                                $("#graph").html(graph());
-                                $("#graph").show();
-                                $("#graph-title").html("E-Series Storage (gb)");
-                                $("#3ps-config-form").dialog("close");
-                                $("#eseries-web-proxy-server-data").hide();
-                                $("#eseries-storage-controller-data").hide();
-                                $("#eseries-disk-pools").hide();
-                            }
-
-                        })
-                        .fail(function () {
-
-                            message.showMessage("error", "Server Fault");
-                        })
-                        .always(function () {
-
-                        });
-            },
             "Cancel": function () {
 
                 // Reset form validation
                 resetUiValidation(allFields);
-                $("#eseries-web-proxy-server-data").hide();
-                $("#eseries-storage-controller-data").hide();
-                $("#eseries-disk-pools").hide();
+                $("#3ps-config-form fieldset").each(function(){
+                	$(this).hide();
+                });
                 $("#3ps-config-form").dialog("close");
             }
         }
