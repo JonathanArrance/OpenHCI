@@ -32,6 +32,7 @@
 
 <script>
     var eseries_configured;
+    var eseries_licensed;
     var third_party_storage = $.getJSON('/supported_third_party_storage/')
             .done(function (data) {
                 data.providers.forEach(function (provider) {
@@ -351,10 +352,10 @@ $(function () {
                             var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
 
                             if (provider.configured == 0) {
-                            	if(provider.id == 'eseries'){
-                            		newRow += '<td>No</td><td><a href="#" id="license-' + provider.id + '">License</a>';
+                            	if(provider.id == 'eseries' && eseries_licensed != true){
+                            		newRow += '<td>No</td><td><a href="#" id="license-' + provider.id + '">License</a></td>';
                             	} else {
-                                	newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a>';
+                                	newRow += '<td>No</td><td><a href="#" id="configure-' + provider.id + '">configure</a></td>';
                             	}
                             } else if (provider.configured == 1) {
                                 newRow += '<td>Yes</td><td><a href="#" id="delete-' + provider.id + '">delete</a></td>';
@@ -470,12 +471,17 @@ $(function () {
     
     $(".configure-3ps").on('click', function(){
     	var provider = $(this).data("provider");
-
+		var config3ps;
 		// Remove UI validation flags
 		clearUiValidation(allFields);
-
-		$.getJSON( provider + '/config/set/' + diskPools + '/')
-			.done(function (data) {
+		
+		if(provider == 'eseries'){
+			config3ps = $.getJSON( 'eseries/config/set/' + diskPools + '/');
+		} else {
+			config3ps = $.getJSON( 'nfs/set/' + '"hostname|ip-addr:/mountpoint"' + '/');
+		}
+			
+			config3ps.done(function (data) {
 
 
 				if (data.status == "error") {
@@ -486,18 +492,22 @@ $(function () {
 				if (data.status == "success") {
 
 					message.showMessage("success", data.message);
-					if(provider == 'eseries'){
-						eseries_configured = true;
-						$("#eseries-web-proxy-server-data").hide();
-						$("#eseries-storage-controller-data").hide();
-						$("#eseries-disk-pools").hide();
-						$("#graph").html(graph());
-						$("#graph").show();
-						$("#graph-title").html("E-Series Storage (gb)");
-					} else if(provider == 'nfs') {
-						message.showMessage("error", "shit man");
-					}
+					
+					$("#3ps-config-form fieldset").each(function(){
+						$(this).hide();
+					});
 					$("#3ps-config-form").dialog("close");
+					
+					if(provider == 'eseries'){
+					
+						eseries_configured = true;
+						$("#graph").html(graph()).show();
+						$("#graph-title").html("E-Series Storage (gb)");
+						
+					} else {
+						nfs_configured = true;
+						//do nfs stuff **************************************************************************************************
+					}
 				}
 
 			})
@@ -511,11 +521,22 @@ $(function () {
 	});
 	
 	$("#confirm-license").on("click", function(){
-		var licenseNo = $("#eseries-license-no").val();
+		/*var licenseNo = $("#eseries-license-no").val();
 		$.getJSON('/eseries/license/set/' + licenseNo + '/')
 			.done(function(data){
-				console.log(data);
+				console.log(data);*/
 				
+				eseries_licensed = true;
+				$("#license-eseries").replaceWith('<a href="#" id="configure-eseries">configure</a>');
+				$("#eseries-license-confirmation").hide();
+				var configId = "#configure-eseries";
+				$(configId).bind("click", function (event) {
+
+					event.preventDefault();
+
+					$("#eseries-web-proxy-server-data").show();
+				});
+				/*
 				
 			})
 			.fail(function () {
@@ -524,7 +545,8 @@ $(function () {
 			})
 			.always(function () {
 
-			});
+			});*/
+		
 	});
 
     $("#eseries-discover-controllers").click(function (event) {
