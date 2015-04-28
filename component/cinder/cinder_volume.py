@@ -386,10 +386,11 @@ class volume_ops:
         if(self.is_admin == 0):
             if(self.user_level == 1):
                 self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
-            elif(self.is_admin == 2):
-                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"user_id='%s'"%(self.user_id)}
+            elif(self.user_level == 2):
+                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
         else:
             self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
+        logger.sys_info('HACK %s'%(self.select_vol))
 
         #check if the snapshot exists in the project and that the user can use it
         try:
