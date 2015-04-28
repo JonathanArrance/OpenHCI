@@ -1,42 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/error_code.css"
+      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"/>
     <head>
     </head>
+    <body bgcolor="#272765" style="text-align: center">
+            <img id="error_code_img" src="{{ STATIC_URL }}images/ErrorCode500.png" >
     <body>
-    <div class="row-fluid offset1">
-        <div class="span3">
-            <div class="well" style="overflow-y: auto; overflow-x: hidden;">
-                <div class="error">
-                    <ul>
-                        <li>
-                            <a href="/">
-                            <img src="{{ STATIC_URL }}images/500_error.jpg" alt="500 Error" style="width:751px;height:262px"></a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="span7">
-            <div class="well">
-    
-                <div class="legend">
-                    Welcome
-                </div>
-    
-                <p>Welcome to the Coalesce cloud management interface by Trans<span
-                        style="color: rgb(255,111,15)">Cirrus</span>.
-                </p>
-    
-                <p>You are not currenly logged in, please
-                    <a href={% url 'login_page' %} class="btn btn-primary">Log In</a></p>
-    
-                <p>If you don't have or have forgotten your logon credentials, please contact your
-                    Trans<span style="color: rgb(255,111,15)">Cirrus</span> Cloud Administrator to gain access to this site.
-                </p>
-    
-            </div>
-        </div>
-    </div>
-    </body>
 </html>
