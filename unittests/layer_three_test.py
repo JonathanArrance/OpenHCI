@@ -8,11 +8,11 @@ auth = authorization('admin','password')
 a = auth.get_auth()
 router = layer_three_ops(a)
 
-'''
-ip_list = router.list_floating_ips("13d92fe4b2de4051abc5de0654277af0")
+
+ip_list = router.list_floating_ips("6492cba476994153800c5220a2f51bc2")
 print "fip list"
 print ip_list
-
+'''
 get_ip = router.get_floating_ip("2476890a-ab03-4c16-b99c-b5fddd92d8e4");
 print "get ip"
 print get_ip
@@ -73,12 +73,12 @@ print "deleteing router"
 router_dict = {'router_id':'411fb076-5f22-474b-8b8b-d05bb646b197','project_id':"84d3e074012a42ce919771c503993f4e"}
 yo = router.delete_router(router_dict)
 print yo
-'''
+
 print "Allocating a new floating ip"
 s = {'ext_net_id':"1d8bb1cd-85b6-45fa-8b43-f51eb302aa25",'project_id':"9a2b2eae323f437eb60183d26fa76a50"}
 yo = router.allocate_floating_ip(s)
 print yo
-'''
+
 print "Listing floating ips"
 yo2 = router.list_floating_ips()
 print yo2

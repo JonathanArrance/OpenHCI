@@ -124,12 +124,15 @@ class server_storage_ops:
             logger.sys_error("Project could not be found.")
             raise Exception("Project could not be found.")
 
+        #if(self.is_admin == 0):
+        #    if(self.project_id != input_dict['project_id']):
+        #        logger.sys_error("Users can only attach volumes to instances in their project.")
+        #        raise Exception("Users can only attach volumes to instances in their project.")
+
         if(self.is_admin == 0):
             if(self.project_id != input_dict['project_id']):
-                logger.sys_error("Users can only reboot virtual serves in their project.")
-                raise Exception("Users can only reboot virtual serves in their project.")
-
-        if(self.is_admin != 1):
+                logger.sys_error("Users can only attach volumes to instances in their project.")
+                raise Exception("Users can only attach volumes to instances in their project.")
         #check if the volume/instance given is owned by the user
             try:
                 select_vol = {'select':'vol_name','from':'trans_system_vols','where':"keystone_user_uuid='%s'"%(self.user_id),'and':"vol_id='%s'"%(input_dict['volume_id'])}
@@ -143,7 +146,7 @@ class server_storage_ops:
 
             try:
                 #username needs to be changed to keystone user uuid
-                select_instance = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']),'and':"inst_username='%s'"%(self.username)}
+                select_instance = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id']),'and':"inst_user_id='%s'"%(self.user_id)}
                 inst_name = self.db.pg_select(select_instance)
                 if(inst_name == ''):
                     logger.sys_error("The user does not own the instance.")
@@ -152,61 +155,59 @@ class server_storage_ops:
                 logger.sys_error("The instance given does not exist. Can not attach.")
                 raise Exception("The instance given does not exist. Can not attach")
 
-        if(self.user_level <= 1):
-            try:
-                #build an api connection
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                if(input_dict['project_id'] != self.project_id):
-                        self.token = get_token(self.username,self.password,input_dict['project_id'])
-                api = caller(api_dict)
-            except:
-                logger.sys_error("Could not connect to the api caller.")
-                raise Exception("Could not connect to the api caller.")
+        #if(self.user_level <= 2):
+        try:
+            #build an api connection
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(input_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the api caller.")
+            raise Exception("Could not connect to the api caller.")
 
-            try:
-                #add the new user to openstack 
+        try:
+            # First we need find the next available mountpoint for this instance.
+            # We have to get the mountpoint(s) already in use (if any) by the instance.
+            select_dev = {'select':'vol_mount_location','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(input_dict['instance_id'])}
+            dev_list = self.db.pg_select (select_dev)
+            if (len(dev_list) == 0):
+                # We didn't get any devices so we need to make sure we have a valid instance.
+                select_inst = {'select':'inst_id','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id'])}
+                inst_list = self.db.pg_select (select_inst)
+                if (len(inst_list) == 0):
+                    # We got a bad instance because it wasn't in the db.
+                    logger.sys_error("The given instance for the mountpoint does not exist.")
+                    raise Exception("The given instance for the mountpoint does not exist.")
 
-                # First we need find the next available mountpoint for this instance.
-                # We have to get the mountpoint(s) already in use (if any) by the instance.
-                select_dev = {'select':'vol_mount_location','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(input_dict['instance_id'])}
-                dev_list = self.db.pg_select (select_dev)
-                if (len(dev_list) == 0):
-                    # We didn't get any devices so we need to make sure we have a valid instance.
-                    select_inst = {'select':'inst_id','from':'trans_instances','where':"inst_id='%s'"%(input_dict['instance_id'])}
-                    inst_list = self.db.pg_select (select_inst)
-                    if (len(inst_list) == 0):
-                        # We got a bad instance because it wasn't in the db.
-                        logger.sys_error("The given instance for the mountpoint does not exist.")
-                        raise Exception("The given instance for the mountpoint does not exist.")
+            # Go get the next available mountpoint based on what the instance already is using and update the dict for later use.
+            mountpoint = self.find_available_mountpoint(dev_list)
+            logger.sys_info("Given mountpoint: %s being changed to %s" % (input_dict['mount_point'], mountpoint))
+            input_dict['mount_point'] = mountpoint
 
-                # Go get the next available mountpoint based on what the instance already is using and update the dict for later use.
-                mountpoint = self.find_available_mountpoint(dev_list)
-                logger.sys_info("Given mountpoint: %s being changed to %s" % (input_dict['mount_point'], mountpoint))
-                input_dict['mount_point'] = mountpoint
+            body = '{"volumeAttachment": {"device": "%s", "volumeId": "%s"}}'%(input_dict['mount_point'],input_dict['volume_id'])
+            token = self.token
+            #NOTE: if token is not converted python will pass unicode and not a string
+            header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/os-volume_attachments' %(input_dict['project_id'],input_dict['instance_id'])
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            raise e
 
-                body = '{"volumeAttachment": {"device": "%s", "volumeId": "%s"}}'%(input_dict['mount_point'],input_dict['volume_id'])
-                token = self.token
-                #NOTE: if token is not converted python will pass unicode and not a string
-                header = {"Content-Type": "application/json", "X-Auth-Project-Id": proj_name[0][0], "X-Auth-Token": str(token)}
-                function = 'POST'
-                api_path = '/v2/%s/servers/%s/os-volume_attachments' %(input_dict['project_id'],input_dict['instance_id'])
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":"8774"}
-                rest = api.call_rest(rest_dict)
-            except Exception as e:
-                self.db.pg_transaction_rollback()
-                raise e
-
-            if(rest['response'] == 200):
-                #insert the volume info into the DB
-                self.db.pg_transaction_begin()
-                update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='%s',vol_attached=true,vol_mount_location='%s'"%(input_dict['instance_id'],input_dict['mount_point']),'where':"vol_id='%s'"%(input_dict['volume_id'])}
-                self.db.pg_update(update_vol)
-                self.db.pg_transaction_commit()
-                return "OK"
-            else:
-                #util.http_codes(rest['response'],rest['reason'],rest['data'])
-                ec.error_codes(rest)
+        if(rest['response'] == 200):
+            #insert the volume info into the DB
+            self.db.pg_transaction_begin()
+            update_vol = {'table':'trans_system_vols','set':"vol_attached_to_inst='%s',vol_attached=true,vol_mount_location='%s'"%(input_dict['instance_id'],input_dict['mount_point']),'where':"vol_id='%s'"%(input_dict['volume_id'])}
+            self.db.pg_update(update_vol)
+            self.db.pg_transaction_commit()
+            return "OK"
+        else:
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
     def detach_vol_from_server(self,input_dict):
         #curl -i http://192.168.10.30:8774/v2/7c9b14b98b7944e7a829a2abdab12e02/servers/1d0abaa2-e981-449b-a3b2-7e52f400cb30/os-volume_attachments/a5d6820b-140b-4a35-b5a3-57f05e3b23f6 -X DELETE -H "X-Auth-Project-Id: demo"

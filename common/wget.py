@@ -286,7 +286,6 @@ def callback_progress(blocks, block_size, total_size, bar_function):
     #    current_size = __current_size
     #else:
     current_size = min(blocks*block_size, total_size)
-    logger.sys_info("HACK: %s"%(current_size))
     progress = bar_function(current_size, total_size, width)
     if progress:
         sys.stdout.write("\r" + progress)
@@ -323,7 +322,6 @@ def download(url, out=None, bar=bar_adaptive):
     # Replacing the orginial call to urlretrieve to our own URL opener so we can catch HTTP errors.
     ##(tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback)
     (tmpfile, headers) = MyURLopener().retrieve (url, filename=tmpfile, reporthook=callback)
-    logger.sys_info("HACK: tmpfile %s headers %s"%(tmpfile,headers))
 
     #names["header"] = filename_from_headers(headers)
     #if os.path.isdir(names["out"]):
@@ -331,7 +329,6 @@ def download(url, out=None, bar=bar_adaptive):
     #    filename = names["out"] + "/" + filename
     #else:
     filename = names["out"] or names["header"] or names["url"]
-    logger.sysinfo("HACK: filename %s"%(filename))
     # add numeric ' (x)' suffix if filename already exists
     if os.path.exists(filename):
         filename = filename_fix_existing(filename)

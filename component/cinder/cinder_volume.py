@@ -135,13 +135,14 @@ class volume_ops:
             voltype = create_vol['volume_type']
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
-        vol_type_found = True
-        #voltype_list = self.list_volume_types()
-        #vol_type_found = False
-        #for vol_type in voltype_list:
-        #    if vol_type['name'].lower() == voltype.lower():
-        #        vol_type_found = True
-        #        break
+        #vol_type_found = True
+        voltype_list = self.list_volume_types()
+        vol_type_found = False
+        for vol_type in voltype_list:
+            name = vol_type['name']
+            if name.lower() == voltype.lower():
+                vol_type_found = True
+                break
 
         if not vol_type_found:
             raise Exception ("Volume Type %s was not found for volume creation" % voltype)
