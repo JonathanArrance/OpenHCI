@@ -26,7 +26,7 @@ print types
 
 
 print "createing a new volume"
-create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"6492cba476994153800c5220a2f51bc2",'volume_type':'ssd'}
+create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"6492cba476994153800c5220a2f51bc2",'volume_type':'spindle'}
 create_vol = vol.create_volume(create)
 print create_vol
 time.sleep(5)
