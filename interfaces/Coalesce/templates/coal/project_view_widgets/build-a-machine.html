@@ -1,7 +1,7 @@
 {% load staticfiles %}
 
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/build_a_machine.css"
-      xmlns="http://www.w3.org/1999/html"/>
+      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"/>
 
 <div id="build-a-machine-form" title="Build-A-Machine">
     <form>
@@ -9,12 +9,12 @@
 
         <fieldset id="instance-fieldset">
             <legend>Instance</legend>
-            <label for="bam-instance-name">Instance Name</label>
-            <input type="text" name="bam-instance-name" id="bam-instance-name"
-                   class="text ui-widget-content ui-corner-all instance-text-field"/>
+            <label for="bam-instance-name" title="THIS IS A SAMPLE TIP" class="masterTooltip">Instance Name</label>
+            <input title="THIS IS A SAMPLE TIP" type="text" name="bam-instance-name" id="bam-instance-name"
+                   class="text ui-widget-content ui-corner-all instance-text-field masterTooltip" />
             <br/>
             <label for="bam-select-image-name">Select an Image</label>
-            <select name="bam-select-image-name" id="bam-select-image-name">
+            <select title="THIS IS A SAMPLE TIP" name="bam-select-image-name" id="bam-select-image-name" class="masterTooltip">
                 <script>$(function () {
                     refreshSelect($("#bam-select-image-name"), imageInstOpts);
                 });</script>
@@ -55,9 +55,7 @@
                     refreshSelect($("#bam-select-key-name"), secKeyInstOpts);
                 });</script>
             </select>
-        </fieldset>
-
-        <fieldset>
+            </br>
             <legend>Security Group</legend>
             <label id="bam-select-security-name-label" for="bam-select-security-name">Select a security group.</label>
             <select name="bam-select-security-name" id="bam-select-security-name">
@@ -67,7 +65,7 @@
             </select>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="network-fieldset">
             <legend>Network</legend>
             <label id="bam-select-network-name-label" for="bam-select-network-name">Select a network</label>
             <select name="bam-select-network-name" id="bam-select-network-name">

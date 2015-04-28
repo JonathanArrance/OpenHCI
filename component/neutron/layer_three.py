@@ -870,14 +870,15 @@ class layer_three_ops:
         NOTE: This info can be obtained from the transcirrus db
         """
         get_floating = None
-        try:
-            if(self.is_admin == 1):
-                if(project_id):
-                    get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s'order by index ASC"%(project_id)}
-                else:
-                    get_floating = {'select':"*",'from':"trans_floating_ip order by index ASC"}
+        if(self.is_admin == 1):
+            if(project_id):
+                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s'order by index ASC"%(project_id)}
             else:
-                get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s' order by index ASC"%(self.project_id)}
+                get_floating = {'select':"*",'from':"trans_floating_ip order by index ASC"}
+        else:
+            get_floating = {'select':"*",'from':"trans_floating_ip",'where':"proj_id='%s' order by index ASC"%(self.project_id)}
+
+        try:
             floating = self.db.pg_select(get_floating)
         except:
             sys_error("Could not get list of floating ips.")
@@ -886,7 +887,13 @@ class layer_three_ops:
         r_array = []
         for floater in floating:
             r_dict = {'floating_ip':floater[1],'floating_ip_id':floater[2],'floating_in_use':floater[6]}
-            r_array.append(r_dict)
+            if(self.user_level == 2):
+                if(floater[7] == self.user_id):
+                    r_array.append(r_dict)
+                elif(floater[6] == 'false'):
+                    r_array.append(r_dict)
+            else:
+                r_array.append(r_dict)
 
         return r_array
 
@@ -1078,13 +1085,24 @@ class layer_three_ops:
             logger.sys_error('%s is not a valid floating ip action.'%(action))
             raise Exception('%s is not a valid floating ip action.'%(action))
 
-        #see if the instance exists
+        #see if the instance exists and can be modified
+        if(self.user_level == 2):
+            self.get_inst = {'select':"inst_name,inst_user_id",'from':"trans_instances",'where':"inst_id='%s'"%(update_dict['instance_id']),'and':"inst_user_id='%s'"%(self.user_id)}
+        elif(self.user_level == 1):
+            self.get_inst = {'select':"inst_name,inst_user_id",'from':"trans_instances",'where':"inst_id='%s'"%(update_dict['instance_id']),'and':"proj_id='%s'"%(self.project_id)}
+        else:
+            self.get_inst = {'select':"inst_name,inst_user_id",'from':"trans_instances",'where':"inst_id='%s'"%(update_dict['instance_id'])}
+
         try:
-            get_inst = {'select':"inst_name,inst_user_id",'from':"trans_instances",'where':"inst_id='%s'"%(update_dict['instance_id'])}
-            inst = self.db.pg_select(get_inst)
+            inst = self.db.pg_select(self.get_inst)
+            logger.sys_info('HACK line1092 %s'%(inst))
         except:
-            logger.sys_error('%s does not exist.'%(update_dict['instance_id']))
-            raise Exception('%s does not exist.'%(update_dict['instance_id']))
+            logger.sys_error('%s does not exist, or is not owned by user.'%(update_dict['instance_id']))
+            raise Exception('%s does not exist, or is not owned by user.'%(update_dict['instance_id']))
+
+        if(len(inst) == 0):
+            logger.sys_error('%s does not exist, or is not owned by user.'%(update_dict['instance_id']))
+            raise Exception('%s does not exist, or is not owned by user.'%(update_dict['instance_id']))
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(update_dict['project_id'])}
@@ -1093,15 +1111,15 @@ class layer_three_ops:
             logger.sys_error("Project could not be found.")
             raise Exception("Project could not be found.")
 
-        if(self.user_level >= 1):
-            if(self.project_id != update_dict['project_id']):
-                logger.sys_error("Power user can only update floating ips in their project.")
-                raise Exception("Power user can only update floating ips in their project.")
-        elif(self.user_level == 2):
-            #check to see if the instance belongs to the user
-            if(self.user_id != inst[0][1]):
-                logger.sys_error("User can only update floating ips in their project on instances they own.")
-                raise Exception("User can only update floating ips in their project on instances they own.")
+        #if(self.user_level == 1):
+        #    if(self.project_id != update_dict['project_id']):
+        #        logger.sys_error("Power user can only update floating ips in their project.")
+        #        raise Exception("Power user can only update floating ips in their project.")
+        #elif(self.user_level == 2):
+        #    #check to see if the instance belongs to the user
+        #    if(self.user_id != inst[0][1]):
+        #        logger.sys_error("User can only update floating ips in their project on instances they own.")
+        #        raise Exception("User can only update floating ips in their project on instances they own.")
 
         #make sure the floating ip is in the project
         try:
@@ -1154,9 +1172,9 @@ class layer_three_ops:
                 self.db.pg_update(update)
                 
                 if(action == 'add'):
-                    update_float = {'table':'trans_floating_ip','set':"in_use=True",'where':"floating_ip_id='%s'"%(floater[0][0])}
+                    update_float = {'table':'trans_floating_ip','set':"in_use=True,user_id='%s'"%(self,user_id),'where':"floating_ip_id='%s'"%(floater[0][0])}
                 elif(action == 'remove'):
-                    update_float = {'table':'trans_floating_ip','set':"in_use=False",'where':"floating_ip_id='%s'"%(floater[0][0])}
+                    update_float = {'table':'trans_floating_ip','set':"in_use=False,user_id=NULL",'where':"floating_ip_id='%s'"%(floater[0][0])}
                 self.db.pg_update(update_float)
             except:
                 self.db.pg_transaction_rollback()

@@ -974,7 +974,8 @@ CREATE TABLE trans_floating_ip (
     proj_id character varying,
     router_id character varying,
     fixed_ip character varying,
-    in_use character varying DEFAULT false
+    in_use character varying DEFAULT false,
+    user_id character varying
 );
 
 

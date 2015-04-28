@@ -466,7 +466,7 @@ def monit(action):
 def _operator(service_array,action,silent=True):
     #need to check the status of the call and error corrctly - Figure this out later
     for service in service_array:
-        process = []
+        #process = []
         out = None
         time.sleep(1)
         if(action.lower() == 'start' or action.lower() == 'restart'):
@@ -490,7 +490,7 @@ def _operator(service_array,action,silent=True):
                 out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         elif(action.lower() == 'status'):
             out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process = out.stdout.readlines()
+        #process = out.stdout.readlines()
         #print process[0]
         #if(process[0] == ""):
         #    return 'ERROR'

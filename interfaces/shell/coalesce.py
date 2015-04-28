@@ -89,6 +89,23 @@ def userbox(d):
             break
     return answer
 
+def progbox(d):
+    d.guage_start()
+    count = 0
+    prog = 0
+    while (message != 'END'):
+        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        count = count + 1
+        stat_raw = out.stdout.readlines()
+        logger.sys_info("HACK 1 %s"%(stat_raw))
+        stat = stat_raw[0].split(':')
+        logger.sys_info("HACK 2 %s"%(stat))
+        message = stat[-1].strip()
+        logger.sys_info("HACK 3 %s"%(message))
+        if(message != 'END'):
+            d.gauge_update(count, message)
+            prog = prog + 1.6
+    d.guage_stop()
 
 def passwordbox(d):
     """Takes input of password"""
@@ -212,7 +229,16 @@ def clear_screen(d):
 
 def setup(d):
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
-        "interface tool for your TransCirrus system.", width=60, height=10)
+        "interface tool for your TransCirrus system.\n"
+        "\n"
+        "Node Name: %s\n"
+        "Node ID: %s\n"
+        "\n"
+        "Node Cluster IP: %s \n"
+        "Node Uplink IP: %s\n"
+        "Node MGMT IP: %s\n"
+        %(util.get_node_name(),util.get_node_id(),util.get_cluster_ip(),util.get_uplink_ip(),util.get_mgmt_ip()), width=60, height=15)
+
     controls(d)
     user_dict = None
     while(True):
@@ -351,6 +377,7 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
+    #d.tailbox('/var/log/caclogs/systemlog.txt')
     ran = run_setup(new_system_variables, user_dict)
     change_admin_password(user_dict, pwd)
     timeout = 10

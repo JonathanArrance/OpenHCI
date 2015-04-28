@@ -70,8 +70,8 @@ $(function () {
 
         $("#build-a-machine-form").dialog({
             autoOpen: false,
-            height: 525,
-            width: 550,
+            height: 350,
+            width: 1060,
             modal: true,
             resizable: false,
             closeOnEscape: true,

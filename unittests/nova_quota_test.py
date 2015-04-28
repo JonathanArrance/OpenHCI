@@ -14,7 +14,7 @@ from transcirrus.component.nova.quota import quota_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("test2","password")
 #a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
@@ -29,7 +29,7 @@ quota = quota_ops(d)
 #instantiate a flavor_ops object
 #print "project and user given"
 #input_dicty = {'user_id':'f7c4bfb8220f469d8112bae4ee8136e1', 'project_id':'54209ef0f7ba4935a2a8984cba4f27f2'}
-y = quota.get_project_quotas('f2eeb95139f048529589c4ad99a1abb6')
+y = quota.get_project_quotas('6492cba476994153800c5220a2f51bc2')
 print y
 
 #print "user given"

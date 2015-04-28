@@ -14,14 +14,14 @@ from transcirrus.component.nova.server_action import server_actions
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-auth = authorization("admin","password")
+auth = authorization("test2","password")
 
 #get the user dict
 perms = auth.get_auth()
 store = server_storage_ops(perms)
 nova = server_ops(perms)
-action = server_admin_actions(perms)
-sa = server_actions(perms)
+#action = server_admin_actions(perms)
+#sa = server_actions(perms)
 
 '''
 input_dict = {'host_name':'ciac-10176','project_id':'157a34897e8246b4871676c5feb64ab8'}
@@ -48,15 +48,12 @@ input_dict = {'instance_id':'e2cb3662-c42f-4299-b00e-851e99a67367','project_id':
 yo = store.list_attached_vols(input_dict)
 
 print yo
-'''
-print '---------------'
 
 server_input = {'server_id':'d69170a7-a071-4311-86af-553a5aae378c','project_id':'6492cba476994153800c5220a2f51bc2'}
 inst_info = nova.get_server(server_input)
 
 print inst_info
 
-'''
 
 back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
 yo = sa.create_instance_backup(back_image)
@@ -209,13 +206,13 @@ serv_list = nova.list_all_servers()
 print serv_list
 print "---------------------------------------"
 time.sleep(2)
-
-input_dict = {'project_id': 'bf54175ff7594e23b8f320c74fb05d68' ,'instance_id': '226f545a-37b4-485d-89bd-b9893bc1e100','volume_id': '2bf22af0-9b1d-4005-8db7-b9fed877a228','mount_point': '/dev/vdc'}
+'''
+input_dict = {'project_id': '6492cba476994153800c5220a2f51bc2' ,'instance_id': 'd37d66ab-bdc7-42e4-939a-58a592f70a6e','volume_id': '6a110555-1128-40e6-9cc2-2ff01d927cef','mount_point': '/dev/vdc'}
 print input_dict
 attach = store.attach_vol_to_server(input_dict)
 
 print attach
-
+'''
 time.sleep(10)
 
 input_dict2 = {'project_id': '0591dbde27ce4904b50cdd0d598e1d7e' ,'instance_id': 'ab25fbe7-945c-473e-94a7-3edf30958b1f','volume_id': '2f10ea39-0b36-4155-8424-6795911044ac'}
