@@ -173,6 +173,7 @@ class volume_ops:
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
             create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
 
+        if(('snapshot_id' in create_vol) and ('volume_id' in create_vol)):
             logger.sys_error("Can not create a volume clone and a volume from snapshot at the same time.")
             raise Exception("Can not create a volume clone and a volume from snapshot at the same time.")
 
