@@ -13,7 +13,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 
-a = authorization("admin","password")
+a = authorization("test2","password")
 #get the user dict
 d = a.get_auth()
 
@@ -21,13 +21,16 @@ print "instantiating a volume abject."
 vol = volume_ops(d)
 snap = snapshot_ops(d)
 
-'''
+types = vol.list_volume_types()
+print types
+
+
 print "createing a new volume"
-create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"157a34897e8246b4871676c5feb64ab8",'volume_type':'ssd'}
+create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"6492cba476994153800c5220a2f51bc2",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)
 print create_vol
 time.sleep(5)
-
+'''
 print "createing a new volume snap"
 create = {'snapshot_name':'trans_snap4','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
 create_snap = snap.create_snapshot(create)
@@ -51,13 +54,13 @@ time.sleep(5)
 print "createing a new volume clone"
 create = {'volume_name':'trans_clone','volume_size':'1','project_id':"157a34897e8246b4871676c5feb64ab8",'volume_id':'9f5ca463-0415-49b3-82a1-fdade5693601'}
 
-'''
+
 print "createing a new volume clone"
 create = {'volume_name':'trans_clone','volume_size':'1','project_id':"27e633859b2b46db9b0fc0cbece206ea",'volume_id':'6a807dc5-8c95-4703-939f-9a909b0aa483'}
 create_vol = vol.create_vol_clone(create)
 print create_vol
 time.sleep(5)
-'''
+
 print "createing a new volume clone2"
 create = {'project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
 create_vol = vol.create_vol_clone(create)
@@ -96,7 +99,8 @@ print voltype
 voltype2 = vol.create_volume_type("e-series")
 print voltype2
 
-get = {'volume_id':'23e06c9b-c6fa-4f59-9a0d-9b2bebcfb449','project_id':'d4b29af44660474da7d5f884ec107f76'}
+
+get = {'volume_id':'6a110555-1128-40e6-9cc2-2ff01d927cef','project_id':'6492cba476994153800c5220a2f51bc2'}
 yo = vol.get_volume_info(get)
 print yo
 
