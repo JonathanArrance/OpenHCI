@@ -473,23 +473,23 @@ def _operator(service_array,action,silent=True):
             if(silent is True):
                 os.system('sudo chkconfig %s on >> /dev/null'%(service))
                 os.system('sudo service %s restart >> /dev/null'%(service))
-                out = subprocess.Popen('sudo service %s status >> /dev/null'%(service), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out = subprocess.Popen('sudo service %s status >> /dev/null'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             else:
                 os.system('sudo chkconfig %s on'%(service))
                 os.system('sudo service %s restart'%(service))
-                out = subprocess.Popen('sudo service %s status'%(service), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             time.sleep(1)
         elif(action.lower() == 'stop'):
             if(silent is True):
                 os.system('sudo chkconfig %s off >> /dev/null'%(service))
                 os.system('sudo service %s stop >> /dev/null'%(service))
-                out = subprocess.Popen('sudo service %s status >> /dev/null'%(service), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out = subprocess.Popen('sudo service %s status >> /dev/null'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             else:
                 os.system('sudo chkconfig %s off'%(service))
                 os.system('sudo service %s stop'%(service))
-                out = subprocess.Popen('sudo service %s status'%(service), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         elif(action.lower() == 'status'):
-            out = subprocess.Popen('sudo service %s status'%(service), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out = subprocess.Popen('sudo service %s status'%(service), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #process = out.stdout.readlines()
         #print process[0]
         #if(process[0] == ""):

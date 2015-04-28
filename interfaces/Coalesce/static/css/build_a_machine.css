@@ -1,0 +1,44 @@
+#build-a-machine-form fieldset {
+    display: inline-block;
+    width: 250px;
+    padding-right: 5px;
+}
+
+#build-a-machine-form legend {
+    font-size: 12px;
+    font-weight: bold;
+    height: 28px;
+    border-bottom: 1px;
+    border-color: #ff790c;
+    border-style: solid;
+}
+
+#instance-fieldset {
+    float: left;
+}
+
+#network-fieldset {
+    float: left;
+}
+
+#security-key-fieldset {
+    float: left;
+}
+
+#build-a-machine-form label {
+    color: #000000;
+    width: 15em;
+    float: left;
+    text-align: left;
+    margin-right: 0.5em;
+    display: block;
+}
+
+#bam-next-button {
+    margin-top: 10px;
+    width: 95%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+}
+

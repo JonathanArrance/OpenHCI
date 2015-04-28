@@ -92,14 +92,19 @@ def userbox(d):
 def progbox(d):
     d.guage_start()
     count = 0
+    prog = 0
     while (message != 'END'):
-        out = subprocess.Popen('sudo tail -f /var/log/caclogs/system.log', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stat_raw = out.stdout.readlines
+        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        count = count + 1
+        stat_raw = out.stdout.readlines()
+        logger.sys_info("HACK 1 %s"%(stat_raw))
         stat = stat_raw[0].split(':')
-        message = stat[1]
+        logger.sys_info("HACK 2 %s"%(stat))
+        message = stat[-1].strip()
+        logger.sys_info("HACK 3 %s"%(message))
         if(message != 'END'):
             d.gauge_update(count, message)
-            count = count + 1.6
+            prog = prog + 1.6
     d.guage_stop()
 
 def passwordbox(d):
@@ -372,8 +377,8 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
+    #d.tailbox('/var/log/caclogs/systemlog.txt')
     ran = run_setup(new_system_variables, user_dict)
-    progbox()
     change_admin_password(user_dict, pwd)
     timeout = 10
 
