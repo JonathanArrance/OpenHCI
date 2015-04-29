@@ -135,13 +135,14 @@ class volume_ops:
             voltype = create_vol['volume_type']
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
-        vol_type_found = True
-        #voltype_list = self.list_volume_types()
-        #vol_type_found = False
-        #for vol_type in voltype_list:
-        #    if vol_type['name'].lower() == voltype.lower():
-        #        vol_type_found = True
-        #        break
+        #vol_type_found = True
+        voltype_list = self.list_volume_types()
+        vol_type_found = False
+        for vol_type in voltype_list:
+            name = vol_type['name']
+            if name.lower() == voltype.lower():
+                vol_type_found = True
+                break
 
         if not vol_type_found:
             raise Exception ("Volume Type %s was not found for volume creation" % voltype)
@@ -173,6 +174,7 @@ class volume_ops:
             logger.sql_error("Volume with the name %s already exists."%(create_vol['volume_name']))
             create_vol['volume_name'] = create_vol['volume_name']+'_%s'%(str(self.rannum))
 
+        if(('snapshot_id' in create_vol) and ('volume_id' in create_vol)):
             logger.sys_error("Can not create a volume clone and a volume from snapshot at the same time.")
             raise Exception("Can not create a volume clone and a volume from snapshot at the same time.")
 
@@ -385,10 +387,11 @@ class volume_ops:
         if(self.is_admin == 0):
             if(self.user_level == 1):
                 self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
-            elif(self.is_admin == 2):
-                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"user_id='%s'"%(self.user_id)}
+            elif(self.user_level == 2):
+                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
         else:
             self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
+        logger.sys_info('HACK %s'%(self.select_vol))
 
         #check if the snapshot exists in the project and that the user can use it
         try:

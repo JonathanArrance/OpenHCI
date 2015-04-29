@@ -91,7 +91,7 @@ class admin_ops:
                        - floatingips
                        - routers
                        - ports
-        ACCESS: Only Admins can list quotas for tenants.
+        ACCESS: Only admins can list network quotas.
         """
         logger.sys_info('\n**Listing network quotas. Component: Neutron Def: list_net_quota**\n')
         if(project_id == ''):
@@ -104,14 +104,7 @@ class admin_ops:
         floating = None
         router = None
 
-        if(self.user_level <= 1):
-            
-            #check if power user is in the project
-            if(self.user_level == 1):
-                if(self.project_id != project_id):
-                    logger.sys_error('Power users can only list quotas in their networks.')
-                    raise Exception('Power users can only list quotas in their networks.')
-
+        if(self.is_admin == 1):
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
@@ -122,7 +115,7 @@ class admin_ops:
             except:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
-
+    
             try:
                 body = ''
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
@@ -135,7 +128,7 @@ class admin_ops:
             except:
                 logger.sql_error("Could not get the quota info.")
                 raise Exception("Could not get the quota info.")
-
+    
             if(rest['response'] == 200):
                 #read the json that is returned
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -164,7 +157,8 @@ class admin_ops:
                 return 'ERROR'
         else:
             logger.sys_error("Users can not get network quota info.")
-            raise Exception("Users can not get network quota info.")
+            r_dict = {'networks': 'NA','subnets': 'NA','floatingips': 'NA','routers': 'NA','ports': 'NA','project_id': self.project_id}
+            return r_array
 
     def get_net_quota(self,project_id):
         """
