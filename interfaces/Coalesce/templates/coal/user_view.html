@@ -21,13 +21,9 @@
 <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
 <script src="{{ STATIC_URL }}javascripts/user_view/update-user-password.js"></script>
 <script>
-var PROJECT = "{{ project_name}}";
-        </script>
-<script>
-    var PROJECT_ID = "{{ current_project_id}}";
-</script>
-<script>
-    var USER_ID = "{{ user_info.user_id }}";
+var PROJECT = "{{ project_name}}",
+        PROJECT_ID = "{{ current_project_id}}",
+        USER_ID = "{{ user_info.user_id }}";
 </script>
 
 {% endblock %}
