@@ -13,7 +13,7 @@ SRC_PATH =  os.path.join(PROJECT_PATH, 'src')
 if SRC_PATH not in sys.path:
     sys.path.insert(1, SRC_PATH)
 
-DEBUG = True 
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (

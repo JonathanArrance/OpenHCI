@@ -122,8 +122,8 @@ $(function () {
                             .always(function () {
 
                                 // Reset interface
+                                setVisibleInLineBlock("#create-volume", true);
                                 disableProgressbar(progressbar, "volumes", true);
-                                setVisible("#create-volume", true);
                                 disableLinks(false);
                                 resetUiValidation(allFields);
                             });
