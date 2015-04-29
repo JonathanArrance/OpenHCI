@@ -1,9 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-  <head>
-  </head>
-  <body>
-    <h1>File or Page Not Found</h1>
-    <p><a href="/">Login Page</a>.
-  </body>
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/error_code.css"
+      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"/>
+    <head>
+    </head>
+    <body bgcolor="#272765" style="text-align: center">
+            <img id="error_code_img" src="{{ STATIC_URL }}images/ErrorCode404.png" >
+    <body>
 </html>
