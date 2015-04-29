@@ -5,10 +5,11 @@
 """Setup for Transcirrus CiaC"""
 
 from __future__ import nested_scopes, division
-import sys, os, time, getopt, subprocess, dialog
+import sys, os, time, getopt, subprocess, dialog, ast
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
+import transcirrus.common.logger as logger
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -227,7 +228,7 @@ def clear_screen(d):
     return -1
 
 
-def setup(d):
+def setup(d):   
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
         "interface tool for your TransCirrus system.\n"
         "\n"
@@ -377,12 +378,46 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    #d.tailbox('/var/log/caclogs/systemlog.txt')
-    ran = run_setup(new_system_variables, user_dict)
-    change_admin_password(user_dict, pwd)
-    timeout = 10
+    p = subprocess.Popen(['python2.7', 'from transcirrus.operations.initial_setup import run_setup', 'run_setup(' + str(new_system_variables) + ', ' + str(user_dict) + ')'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    d.gauge_start(text='Preparing your cloud...')
+    fill = 0
+    status = None
+    status1 = None
+    while(1):
+        fill = fill + 1
+        if(fill > 100):
+            status = p.wait()
+            fill = 0;
+            o = subprocess.Popen(['python2.7', 'from transcirrus.operations.change_adminuser_password import change_admin_password', 'change_admin_password(' + str(user_dict) + ', ' + str(pwd) + ')'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            while(1):
+                d.gauge_update(fill, text='Updating credentials...', update_text=1)
+                fill = fill + 10
+                time.sleep(1)
+                if(fill > 100):
+                    status1 = o.wait()
+                    break
+            break
+        if(fill < 5):
+            d.gauge_update(fill)
+        elif(fill < 16):
+            d.gauge_update(fill, text='Warming air...', update_text=1)
+        elif(fill < 32):
+            d.gauge_update(fill, text='Evaporating water...', update_text=1)
+        elif(fill < 48):
+            d.gauge_update(fill, text='Expanding and cooling air...', update_text=1)
+        elif(fill < 64):
+            d.gauge_update(fill, text='Reaching dew point...', update_text=1)
+        elif(fill < 70):
+            d.gauge_update(fill, text='Conducing water vapor...', update_text=1)
+        else:
+            d.gauge_update(fill, text='Forming cloud...', update_text=1)
+        time.sleep(2)
+    d.gauge_stop()
 
-    if(ran == "OK"):
+    timeout = 10
+    
+    if(status != None):
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
