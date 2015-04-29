@@ -14,7 +14,7 @@ from transcirrus.component.keystone.keystone_users import user_ops
 
 print "Loggin in as the default admin."
 #onlyt an admin can create a new user
-a = authorization("admin","password")
+a = authorization("test","password")
 #get the user dict
 d = a.get_auth()
 
@@ -111,12 +111,13 @@ print create_pu
 add_user_dict = {"username":"admin","user_role":'admin',"project_name":'jon1'}
 add = use.add_user_to_project(add_user_dict)
 print add
-
+'''
 print "getting test power user info"
-user_info = {"username":'admin',"project_name":'trans_default'}
+user_info = {"username":'test',"project_name":'test'}
 get_p = use.get_user_info(user_info)
 print get_p
 time.sleep(2)
+'''
 print "---------------------------------------------"
 
 print "Create a new admin user."
@@ -157,11 +158,11 @@ time.sleep(2)
 print "----------------------------------------------"
 
 print "Removing user from project"
-'''
+
 remove_user_dict = {"user_id":"19706e3221ec4c2792982f893de78339","project_id":'9a2b2eae323f437eb60183d26fa76a50'}
 remove = use.remove_user_from_project(remove_user_dict)
 print remove
-'''
+
 print "Deleteing a testuser"
 delete = {"user_id":"d6f7082a31834aa38b88a8a4b789d091","project_id":'da0379a70f5447639f892540745650d3'}
 
