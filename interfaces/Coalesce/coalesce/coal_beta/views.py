@@ -826,7 +826,7 @@ def volume_view(request, project_id, volume_id):
     sno = snapshot_ops(auth)
     so = server_ops(auth)
     instances = so.list_servers(project_id)
-    snapshots = sno.list_snapshots()
+    snapshots = sno.list_snapshots(project_id)
     vol_dict = {'project_id': project_id, 'volume_id': volume_id}
     volume_info = vo.get_volume_info(vol_dict)
     attached_to = None
@@ -1048,10 +1048,10 @@ def delete_image (request, image_id):
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        go.delete_image(image_id)
-        #if(del_image == 'OK'):
-        out['status'] = "success"
-        out['message'] = "Image was deleted."
+        del_image = go.delete_image(image_id)
+        if(del_image == 'OK'):
+            out['status'] = "success"
+            out['message'] = "Image was deleted."
     except Exception, e:
         out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
