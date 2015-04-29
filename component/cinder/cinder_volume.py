@@ -135,14 +135,15 @@ class volume_ops:
             voltype = create_vol['volume_type']
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
-        #vol_type_found = True
-        voltype_list = self.list_volume_types()
-        vol_type_found = False
-        for vol_type in voltype_list:
-            name = vol_type['name']
-            if name.lower() == voltype.lower():
-                vol_type_found = True
-                break
+        #This needs to be fixed, it is broken for some reason all of the sudden.
+        vol_type_found = True
+        #voltype_list = self.list_volume_types(input_dict['project_id'])
+        #vol_type_found = False
+        #for vol_type in voltype_list:
+        #    name = vol_type['name']
+        #    if name.lower() == voltype.lower():
+        #        vol_type_found = True
+        #        break
 
         if not vol_type_found:
             raise Exception ("Volume Type %s was not found for volume creation" % voltype)
@@ -312,7 +313,7 @@ class volume_ops:
         if(self.is_admin == 0):
             if(self.user_level == 1):
                 self.select_snap = {'select':'proj_id,vol_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
-            elif(self.is_admin == 2):
+            elif(self.user_level == 2):
                 self.select_snap = {'select':'proj_id,vol_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id']),'and':"user_id='%s'"%(self.user_id)}
         else:
             self.select_snap = {'select':'proj_id,vol_id','from':'trans_system_snapshots','where':"snap_id='%s'"%(input_dict['snapshot_id'])}
@@ -816,7 +817,7 @@ class volume_ops:
     def list_volume_types(self):
         """
         DESC: List the available volume types.
-        INPUT: none
+        INPUT: None
         OUTPUT: array of dict  - name
                                - id
                                - extra_specs - backends, etc...
@@ -856,7 +857,7 @@ class volume_ops:
             raise Exception("Could not connect to the API")
 
         try:
-        #get list of volume types
+            #get list of volume types
             body = ''
             token = self.token
             header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
