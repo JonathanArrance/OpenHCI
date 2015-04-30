@@ -1172,7 +1172,7 @@ class layer_three_ops:
                 self.db.pg_update(update)
                 
                 if(action == 'add'):
-                    update_float = {'table':'trans_floating_ip','set':"in_use=True,user_id='%s'"%(self,user_id),'where':"floating_ip_id='%s'"%(floater[0][0])}
+                    update_float = {'table':'trans_floating_ip','set':"in_use=True,user_id='%s'"%(self.user_id),'where':"floating_ip_id='%s'"%(floater[0][0])}
                 elif(action == 'remove'):
                     update_float = {'table':'trans_floating_ip','set':"in_use=False,user_id=NULL",'where':"floating_ip_id='%s'"%(floater[0][0])}
                 self.db.pg_update(update_float)
