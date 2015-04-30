@@ -388,65 +388,66 @@ class server_actions:
                 logger.sys_error("Users can only reboot virtual serves in their project.")
                 raise Exception("Users can only reboot virtual serves in their project.")
         
-        if(self.user_level <= 1):
-            #see if the server in the users tenant
-            if(self.user_level == 1):
-                try:
-                    get_server = {'select':'inst_id,inst_flav_name','from':'trans_instances','where':"proj_id='%s'"%(input_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
-                    server = self.db.pg_select(get_server)
-                except:
-                    logger.sys_error("The virtual server instance cannot be rebooted.")
-                    raise Exception("The virtual server instance cannot be rebooted.")
-
-            #get the new flavor name
-            flavor_info = self.flavor.get_flavor(input_dict['flavor_id'])
-
-            # Create an API connection with the Admin
+        #Make it so all users can resize an instance
+        #if(self.user_level <= 1):
+        #see if the server in the users tenant
+        if(self.user_level >= 1):
             try:
-                # build an API connection for the admin user
-                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-                if(input_dict['project_id'] != self.project_id):
-                    self.token = get_token(self.username,self.password,input_dict['project_id'])
-                api = caller(api_dict)
+                get_server = {'select':'inst_id,inst_flav_name','from':'trans_instances','where':"proj_id='%s'"%(input_dict['project_id']),'and':"inst_user_id='%s'"%(self.user_id)}
+                server = self.db.pg_select(get_server)
             except:
-                logger.sys_error("Could not connect to the API")
-                raise Exception("Could not connect to the API")
+                logger.sys_error("The virtual server instance cannot be resized.")
+                raise Exception("The virtual server instance cannot be resized.")
+
+        #get the new flavor name
+        flavor_info = self.flavor.get_flavor(input_dict['flavor_id'])
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(input_dict['project_id'] != self.project_id):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+        try:
+            # construct request header and body
+            body='{"resize": {"flavorRef": "%s"}}' % (input_dict['flavor_id'])
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['server_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except:
+            logger.sys_error("Error in sending resize request to server.")
+            return 'ERROR'
+
+        if(rest['response'] == 202):
+            #update the instance with the new flavor and set confirm flag to 1
+            stamp = util.time_stamp()
             try:
-                # construct request header and body
-                body='{"resize": {"flavorRef": "%s"}}' % (input_dict['flavor_id'])
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'POST'
-                api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['server_id'])
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-                rest = api.call_rest(rest_dict)
-                # check the response code
+                self.db.pg_transaction_begin()
+                update_inst = {'table':'trans_instances','set':"inst_flav_name='%s',inst_confirm_resize=1,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%(flavor_info['flavor_name'],stamp['julian'],stamp['raw']),'where':"inst_id='%s'"%(input_dict['server_id'])}
+                self.db.pg_update(update_inst)
             except:
-                logger.sys_error("Error in sending resize request to server.")
+                #print update_inst
+                self.db.pg_transaction_rollback()
+                logger.sql_error('Could not update the instance %s with resize information.'%(input_dict['server_id']))
+                #raise Exception('Could not update the instance %s with resize information.'%(input_dict['server_id']))
                 return 'ERROR'
-
-            if(rest['response'] == 202):
-                #update the instance with the new flavor and set confirm flag to 1
-                stamp = util.time_stamp()
-                try:
-                    self.db.pg_transaction_begin()
-                    update_inst = {'table':'trans_instances','set':"inst_flav_name='%s',inst_confirm_resize=1,inst_resize_julian_date='%s',inst_resize_hr_date='%s'"%(flavor_info['flavor_name'],stamp['julian'],stamp['raw']),'where':"inst_id='%s'"%(input_dict['server_id'])}
-                    self.db.pg_update(update_inst)
-                except:
-                    #print update_inst
-                    self.db.pg_transaction_rollback()
-                    logger.sql_error('Could not update the instance %s with resize information.'%(input_dict['server_id']))
-                    #raise Exception('Could not update the instance %s with resize information.'%(input_dict['server_id']))
-                    return 'ERROR'
-                else:
-                    self.db.pg_transaction_commit()
-                    return 'OK'
             else:
-                nova_ec.error_codes(rest)
+                self.db.pg_transaction_commit()
+                return 'OK'
         else:
-            logger.sys_error("Only an admin or a power user can resize the server.")
-            raise Exception("Only an admin or a power user can resize the server.")
+            nova_ec.error_codes(rest)
+        #else:
+        #    logger.sys_error("Only an admin or a power user can resize the server.")
+        #    raise Exception("Only an admin or a power user can resize the server.")
 
     def confirm_resize(self, confirm_dict):
         """
