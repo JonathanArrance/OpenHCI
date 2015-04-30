@@ -84,11 +84,15 @@ def get_supported_third_party_storage():
 # Add/Update/Get/Delete nfs data to cinder.
 def add_nfs (mountpoints, auth):
     # mountpoints = ["hostname|ip-addr:/mountpoint", "hostname|ip-addr:/mountpoint"]
-    if not nfs.add_nfs_to_cinder():
-        return (False)
-    nfs.add_nfs_conf (mountpoints)
-    nfs.add_base_mountpoint()
-    common.add_voltype (auth, nfs.NFS_NAME)
+    try:
+        if not nfs.add_nfs_to_cinder():
+            return (False)
+        nfs.add_nfs_conf (mountpoints)
+        nfs.add_base_mountpoint()
+        common.add_voltype (auth, nfs.NFS_NAME)
+    except Exception as e:
+        delete_nfs (auth)       # try to clean up anything that was already done.
+        raise e
     common.restart_cinder_volume_proc()
     return (True)
 
@@ -154,11 +158,15 @@ def add_eseries (data, auth, pre_existing=True):
                    'ctrl_ips':   ["ip-addr1", "ip-addr2"]
                   }
     '''
-    if not pre_existing:
-        data = eseries.get_eseries_pre_existing_data (data)
-    if not eseries.add_eseries_to_cinder (data):
-        return (False)
-    common.add_voltype (auth, eseries.ESERIES_NAME)
+    try:
+        if not pre_existing:
+            data = eseries.get_eseries_pre_existing_data (data)
+        if not eseries.add_eseries_to_cinder (data):
+            return (False)
+        common.add_voltype (auth, eseries.ESERIES_NAME)
+    except Exception as e:
+        delete_eseries (auth)       # try to clean up anything that was already done.
+        raise e
     common.restart_cinder_volume_proc()
     return (True)
 

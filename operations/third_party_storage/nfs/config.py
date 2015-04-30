@@ -53,7 +53,7 @@ def add_nfs_conf (mountpoints):
 def add_base_mountpoint():
     if os.path.isdir (NFS_MOUNTPOINT_BASE):
         return
-    os.mkdir (NFS_MOUNTPOINT_BASE)
+    os.makedirs (NFS_MOUNTPOINT_BASE)
     uid = pwd.getpwnam("cinder").pw_uid
     gid = grp.getgrnam("cinder").gr_gid
     os.chown (NFS_MOUNTPOINT_BASE, uid, gid)

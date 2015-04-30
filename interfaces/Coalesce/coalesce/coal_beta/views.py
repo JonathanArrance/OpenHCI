@@ -2126,13 +2126,21 @@ def supported_third_party_storage (request):
         returns json:
             status:
                 success
-                    providers: array of dict [{'name': "nfs", 'configured': "0"},
-                                              {'name': "NetApp E-Series", 'configured': "1"}
+                    providers: array of dict [{'name': "nfs", 'configured': "1", 'licensed': "1", 'in_use': "1", 'id': "nfs"},
+                                              {'name': "NetApp E-Series", 'configured': "1", 'licensed': "0", 'in_use': "0", 'id': "eseries"}
                                              ]
                                              name: 3rd party storage name
                                              configured: 0/1
-                                                         0 - storage provider is not currently configured
-                                                         1 - storage provider is currently configured
+                                                         0 - storage provider is not configured
+                                                         1 - storage provider is configured
+                                             licensed:   0/1
+                                                         0 - storage provider is not licensed
+                                                         1 - storage provider is licensed
+                                             in_use:     0/1
+                                                         0 - storage provider has no volumes in use (created) 
+                                                         1 - storage provider has volumes in use
+                                             id:         <storage provider id>
+                                                         id for storage provider
                 error
                     message: error message
     '''
@@ -2152,7 +2160,9 @@ def eseries_get (request):
         returns json:
             status:
                 success
-                    data: dict {'enabled':      "0/1",           "0" not enabled or "1" is enabled
+                    data: dict {'enabled':      "0/1",            "0" not enabled or "1" is enabled
+                                'licensed':     "0/1",            "0" not licensed or "1" is licensed
+                                'in_use':       "0/1",            "0" not in use or "1" volume type is in use
                                 'pre_existing': "0/1",            "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
                                 'server':  "server hostname/IP",  web proxy server IP address/hostname
                                 'srv_port': "listen port",        normally 8080 or 8443
@@ -2478,6 +2488,8 @@ def nfs_get (request):
             status:
                 success
                     data: dict {'enabled':    "0/1",                "0" not enabled or "1" is enabled
+                                'licensed':   "0/1",                "0" not licensed or "1" is licensed
+                                'in_use':     "0/1",                "0" not in use or "1" volume type is in use
                                 'mountpoint': ["mntpt1", "mntpt2"]  array of mountpoints
                 error
                     message: error message
