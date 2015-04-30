@@ -12,6 +12,7 @@ import random
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
+import transcirrus.component.neutron.error as ec
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -271,13 +272,13 @@ class neutron_net_ops:
             logger.sys_error("Project could not be found.")
             raise Exception("Project could not be found.")
 
-        if(self.user_level == 1):
+        if(self.user_level >= 1):
             if(self.project_id != create_dict['project_id']):
-                logger.sys_error("Power user can only create networks in their project.")
-                raise Exception("Power user can only create networks in their project.")
-        elif(self.user_level == 2):
-            logger.sys_error("Users can not remove networks in their project.")
-            raise Exception("Users can not remove networks in their project.")
+                logger.sys_error("Users can only create networks in their project.")
+                raise Exception("Users can only create networks in their project.")
+        #elif(self.user_level == 2):
+        #    logger.sys_error("Users can not remove networks in their project.")
+        #    raise Exception("Users can not remove networks in their project.")
 
         #set the strings
         admin_state = create_dict['admin_state']
@@ -301,7 +302,7 @@ class neutron_net_ops:
                 rand_id = random.randrange(0,100000)
                 create_dict['net_name'] = create_dict['net_name']+'_%s'%(str(rand_id))
 
-        if(self.user_level <= 1):
+        if(self.user_level <= 2):
             #Create an API connection with the admin
             try:
                 #build an api connection for the admin user
@@ -354,7 +355,8 @@ class neutron_net_ops:
                     r_dict = {'net_name':create_dict['net_name'],'net_id':load['network']['id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can create a new network.")
             raise Exception("Only an admin or a power user can create a new network.")
@@ -454,7 +456,8 @@ class neutron_net_ops:
                     r_dict = {'net_name':create_dict['net_name'],'net_id':load['network']['id']}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can create a new network.")
             raise Exception("Only an admin or a power user can create a new network.")
@@ -485,16 +488,19 @@ class neutron_net_ops:
             logger.sys_error("Project could not be found.")
             raise Exception("Project could not be found.")
 
-        if(self.user_level == 1):
+        if(self.user_level >= 1):
             if(self.project_id != remove_dict['project_id']):
-                logger.sys_error("Power user can only remove networks in their project.")
-                raise Exception("Power user can only remove networks in their project.")
-        elif(self.user_level == 2):
-            logger.sys_error("Users can not remove networks in their project.")
-            raise Exception("Users can not remove networks in their project.")
+                logger.sys_error("Users can only remove networks in their project.")
+                raise Exception("Users can only remove networks in their project.")
 
         #get the network. Make sure it exists
         net = self.get_network(remove_dict['net_id'])
+
+        if(self.user_level == 2):
+            if(self.user_id != net['net_creator_id']):
+                logger.sys_error('Users can only remove networks they created.')
+                raise Exception('Users can only remove networks they created.')
+
         if(net):
             if(len(net['net_subnet_id']) >= 1):
                 logger.error('Can not remove network %s, it has subnets attached.' %(remove_dict['net_id']))
@@ -503,33 +509,29 @@ class neutron_net_ops:
             logger.error("Network with the id %s in project %s does not exist."%(remove_dict['net_id'],remove_dict['project_id']))
             raise("Network with the id %s in project %s does not exist."%(remove_dict['net_id'],remove_dict['project_id']))
 
-        if(self.user_level <= 1):
-            try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
-                if(self.project_id != remove_dict['project_id']):
-                    self.token = get_token(self.username,self.password,remove_dict['project_id'])
-                api = caller(api_dict)
-            except:
-                logger.sys_error("Could not connect to the API")
-                raise Exception("Could not connect to the API")
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":remove_dict['project_id']}
+            if(self.project_id != remove_dict['project_id']):
+                self.token = get_token(self.username,self.password,remove_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
 
-            try:
-            #add the new user to openstack
-                body = ''
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'DELETE'
-                api_path = '/v2.0/networks/%s' %(remove_dict['net_id'])
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-                rest = api.call_rest(rest_dict)
-            except:
-                self.db.pg_transaction_rollback()
-                logger.sql_error("Could not remove the network from Neutron.")
-                raise Exception("Could not remove the network from Neutron.")
-        else:
-            logger.sys_error("Only an admin or a power user can remove a new network.")
-            raise Exception("Only an admin or a power user can remove a new network.")
+        try:
+        #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/networks/%s' %(remove_dict['net_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+        except:
+            self.db.pg_transaction_rollback()
+            logger.sql_error("Could not remove the network from Neutron.")
+            raise Exception("Could not remove the network from Neutron.")
 
          #check the response and make sure it is a 204
         if(rest['response'] == 204):
@@ -548,7 +550,8 @@ class neutron_net_ops:
                 self.db.pg_transaction_commit()
                 return 'OK'
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            ec.error_codes(rest)
 
     def update_network(self,toggle_dict):
         """
@@ -627,7 +630,8 @@ class neutron_net_ops:
                     r_dict = {'net_name':net['net_name'],'net_id':net['net_id'],'admin_state_up':state}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can remove a new network.")
             raise Exception("Only an admin or a power user can remove a new network.")
@@ -652,15 +656,13 @@ class neutron_net_ops:
             if(not net):
                 logger.sql_error("The network was not found.")
                 raise Exception("The network was not found.")
-            
             get_sub_nets = {}
             if(self.is_admin == 1):
                 get_sub_nets = {'select':"subnet_name,subnet_id,net_id",'from':"trans_subnets",'where':"net_id='%s'"%(net['net_id'])}
             else:
                 get_sub_nets = {'select':"subnet_name,subnet_id,net_id",'from':"trans_subnets",'where':"proj_id='%s'"%(self.project_id),'and':"net_id='%s'"%(net['net_id'])}
-    
+
             subnets = self.db.pg_select(get_sub_nets)
-    
             r_array = []
             for subnet in subnets:
                 r_dict = {}
@@ -674,7 +676,7 @@ class neutron_net_ops:
         """
         DESC: Get all of the information for a specific subnet. All user types
               can get information for subnets in the project networks.
-        INPUT: subnet_name
+        INPUT: subnet_id
         OUTPUT: r_dict - subnet_name
                        - subnet_class
                        - subnet_ip_ver
@@ -683,6 +685,7 @@ class neutron_net_ops:
                        - subnet_allocation_start
                        - subnet_allocation_end
                        - subnet_dhcp_enable
+                       - subnet_network_id
         NOTE: all of the return info can be quried from the transcirrus db. May use
               rest api to verify subent exsists(not required).
         """
@@ -690,21 +693,20 @@ class neutron_net_ops:
             logger.sys_error("No subnet name was specified.")
             raise Exception("No subnet name was specified.")
 
-        if(self.user_level <= 1):
-            get_subnet = {}
-            try:
-                if(self.is_admin == 1):
-                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable,subnet_id",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id)}
-                else:
-                    get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable,subnet_id",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id),'and':"proj_id='%s'" %(self.project_id)}
-                sub = self.db.pg_select(get_subnet)
-            except:
-                logger.sql_error("Could not connect to the Transcirrus db.")
-                raise Exception("Could not connect to the Transcirrus db.")
+        if(self.is_admin == 1):
+            self.get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable,subnet_id,net_id",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id)}
+        elif(self.is_admin == 0):
+            self.get_subnet = {'select':"subnet_name,subnet_class,subnet_ip_ver,subnet_cidr,subnet_allocation_start,subnet_allocation_end,subnet_gateway,subnet_mask,subnet_dhcp_enable,subnet_id,net_id",'from':"trans_subnets",'where':"subnet_id='%s'" %(subnet_id),'and':"proj_id='%s'" %(self.project_id)}
 
-            #build a better array
-            r_dict = {'subnet_name':sub[0][0],'subnet_class':sub[0][1],'subnet_ip_ver':sub[0][2],'subnet_cidr':sub[0][3],'subnet_allocation_start':sub[0][4],'subnet_allocation_end':sub[0][5],'subnet_gateway':sub[0][6],'subnet_mask':sub[0][7],'subnet_dhcp_enable':sub[0][8],'subnet_id':sub[0][9]}
-            return r_dict
+        try:
+            sub = self.db.pg_select(self.get_subnet)
+        except:
+            logger.sql_error("Could not connect to the Transcirrus db.")
+            raise Exception("Could not connect to the Transcirrus db.")
+
+        #build a better array
+        r_dict = {'subnet_name':sub[0][0],'subnet_class':sub[0][1],'subnet_ip_ver':sub[0][2],'subnet_cidr':sub[0][3],'subnet_allocation_start':sub[0][4],'subnet_allocation_end':sub[0][5],'subnet_gateway':sub[0][6],'subnet_mask':sub[0][7],'subnet_dhcp_enable':sub[0][8],'subnet_id':sub[0][9],'subnet_network_id':sub[0][10]}
+        return r_dict
 
     def remove_net_subnet(self,del_dict):
         """
@@ -727,56 +729,72 @@ class neutron_net_ops:
             logger.sys_error("Can not have a blank project id when deleteing a subnet")
             raise Exception("Can not have a blank project id when deleteing a subnet")
 
-        if(self.user_level <= 1):
-            #check if the subnet exists
-            sub = self.get_net_subnet(del_dict['subnet_id'])
-            if(sub == None):
-                raise Exception('Could not find the subnet to delete.')
+        try:
+            get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(del_dict['project_id'])}
+            project = self.db.pg_select(get_proj)
+        except:
+            logger.sys_error("Project could not be found.")
+            raise Exception("Project could not be found.")
 
+        if(self.user_level >= 1):
+            if(self.project_id != del_dict['project_id']):
+                logger.sys_error("Users can only remove subnets in their project.")
+                raise Exception("Users can only remove subnets in their project.")
+
+        #get the network. Make sure it exists
+        sub = self.get_net_subnet(del_dict['subnet_id'])
+        if(sub == None):
+            raise Exception('Could not find the subnet to delete.')
+
+        if(self.user_level == 2):
+            #get the network. Make sure it exists
+            net = self.get_network(del_dict['net_id'])
+            if(self.user_id != net['net_creator_id']):
+                logger.sys_error('Users can only remove subnets they created.')
+                raise Exception('Users can only remove subnets they created.')
+
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":del_dict['project_id']}
+            if(self.project_id != del_dict['project_id']):
+                self.token = get_token(self.username,self.password,del_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            #add the new user to openstack
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'DELETE'
+            api_path = '/v2.0/subnets/%s' %(sub['subnet_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+            rest = api.call_rest(rest_dict)
+        except:
+            logger.sql_error("Could not remove the subnet from Neutron.")
+            raise Exception("Could not remove the subnet from Neutron.")
+
+        #check the response and make sure it is a 204
+        if(rest['response'] == 204):
+            #read the json that is returned
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             try:
-                api_dict = {"username":self.username, "password":self.password, "project_id":del_dict['project_id']}
-                if(self.project_id != del_dict['project_id']):
-                    self.token = get_token(self.username,self.password,del_dict['project_id'])
-                api = caller(api_dict)
+                self.db.pg_transaction_begin()
+                #insert new net info
+                update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id=NULL,proj_id=NULL,subnet_id=NULL",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
+                self.db.pg_update(update_dict)
             except:
-                logger.sys_error("Could not connect to the API")
-                raise Exception("Could not connect to the API")
-
-            try:
-                #add the new user to openstack
-                body = ''
-                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-                function = 'DELETE'
-                api_path = '/v2.0/subnets/%s' %(sub['subnet_id'])
-                token = self.token
-                sec = self.sec
-                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
-                rest = api.call_rest(rest_dict)
-            except:
-                logger.sql_error("Could not remove the subnet from Neutron.")
-                raise Exception("Could not remove the subnet from Neutron.")
-
-            #check the response and make sure it is a 204
-            if(rest['response'] == 204):
-                #read the json that is returned
-                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                try:
-                    self.db.pg_transaction_begin()
-                    #insert new net info
-                    update_dict = {'table':"trans_subnets",'set':"in_use=0,net_id=NULL,proj_id=NULL,subnet_id=NULL",'where':"subnet_id='%s'"%(sub['subnet_id']),'and':"net_id='%s'"%(del_dict['net_id'])}
-                    self.db.pg_update(update_dict)
-                except:
-                    self.db.pg_transaction_rollback()
-                    logger.sys_error("Could not set the subnet to disabled in the Transcirrus DB.")
-                    raise Exception("Could not set the subnet to disabled in the Transcirrus DB.")
-                else:
-                    self.db.pg_transaction_commit()
-                    return 'OK'
+                self.db.pg_transaction_rollback()
+                logger.sys_error("Could not set the subnet to disabled in the Transcirrus DB.")
+                raise Exception("Could not set the subnet to disabled in the Transcirrus DB.")
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                self.db.pg_transaction_commit()
+                return 'OK'
         else:
-            logger.sys_error("Only an admin or a power user can remove a subnet.")
-            raise Exception("Only an admin or a power user can remove a subnet.")
+            #util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def remove_net_pub_subnet(self,pub_subnet_id):
         """
@@ -833,7 +851,8 @@ class neutron_net_ops:
                     self.db.pg_transaction_commit()
                     return 'OK'
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can remove a subnet.")
             raise Exception("Only an admin or a power user can remove a subnet.")
@@ -976,7 +995,8 @@ class neutron_net_ops:
                     r_dict = {'subnet_name':name,'subnet_id':load['subnet']['id'],'subnet_cidr':cidr}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can add a new subnet.")
             raise Exception("Only an admin or a power user can add a new subnet.")
@@ -1057,7 +1077,7 @@ class neutron_net_ops:
             logger.sql_error("Could not get subnet information from the Transcirrus db.")
             raise Exception("Could not get subnet information from the Transcirrus db.")
 
-        if(self.user_level <= 1):
+        if(self.user_level <= 2):
             #Create an API connection with the admin
             try:
                 api_dict = {"username":self.username, "password":self.password, "project_id":net['project_id']}
@@ -1101,7 +1121,8 @@ class neutron_net_ops:
                     r_dict = {'subnet_name':sub[0][13],'subnet_id':load['subnet']['id'],'subnet_cidr':sub[0][4],'subnet_start_range':sub[0][6],'subnet_end_range':sub[0][7],'subnet_mask':sub[0][14],'subnet_gateway':sub[0][5]}
                     return r_dict
             else:
-                util.http_codes(rest['response'],rest['reason'])
+                #util.http_codes(rest['response'],rest['reason'],rest['data'])
+                ec.error_codes(rest)
         else:
             logger.sys_error("Only an admin or a power user can add a new subnet.")
             raise Exception("Only an admin or a power user can add a new subnet.")
