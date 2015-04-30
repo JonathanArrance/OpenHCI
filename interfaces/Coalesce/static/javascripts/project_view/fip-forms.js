@@ -69,6 +69,7 @@ $(function () {
                 checkAssignFip();
                 disableProgressbar(progressbar, "fips", true);
                 setVisible('#allocate_ip', true);
+                //setVisibleInLineBlock(#assignableFips, true);
                 disableLinks(false);
             });
     });
@@ -422,6 +423,7 @@ $(function () {
                             checkAssignFip();
                             disableProgressbar(progressbar, "fips", true);
                             setVisible('#assign_ip', true);
+                            setVisibleInLineBlock('#assign_ip', true);
                             disableActions("unassign_ip", false);
                             disableLinks(false);
                         });
