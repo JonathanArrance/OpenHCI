@@ -14,7 +14,6 @@ from transcirrus.database.postgres import pgsql
 class telemetry_ops:
 
     def __init__(self,user_dict):
-       def __init__(self,user_dict):
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
@@ -65,31 +64,36 @@ class telemetry_ops:
 
     def __del__(self):
         self.db.pg_close_connection()
-
     
-    def alarm_combination_create()
+    
+    def alarm_combination_create():
+      pass
         #Create a new alarm based on state of other alarms.
     
     
-    def alarm_combination_update()
+    def alarm_combination_update():
+      pass
         #Update an existing alarm based on state of other alarms.
         
     
-    def alarm_create()
+    def alarm_create():
+      pass
         #Create a new alarm (Deprecated). Use alarm-threshold-create instead.
     
     
-    def alarm_delete()
+    def alarm_delete():
+      pass
         #Delete an alarm.
     
     
-    def alarm_history()
+    def alarm_history():
+      pass
         #Display the change history of an alarm.
         
     
-    def alarm_list(self, project_id)
+    def alarm_list(self, project_id):
         #List the user's alarms.
-         try:
+        try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(self.project_id != project_id):
                     self.token = get_token(self.username,self.password,project_id)
@@ -97,7 +101,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
-
+    
         try:
             body = ''
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
@@ -112,7 +116,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not list alarms.")
             raise Exception("Could not list alarms.")
-
+    
         if(rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -122,45 +126,55 @@ class telemetry_ops:
             util.http_codes(rest['response'],rest['reason'])
             
         
-    def alarm_show()
+    def alarm_show():
+        pass
         #Show an alarm.
         
         
-    def alarm_state_get()
+    def alarm_state_get():
+        pass
         #Get the state of an alarm.
     
     
-    def alarm_state_set()
+    def alarm_state_set():
+        pass
         #Set the state of an alarm.
         
     
-    def alarm_threshold_create()
+    def alarm_threshold_create():
+        pass
         #Create a new alarm based on computed statistics.
     
     
-    def alarm_threshold_update()
+    def alarm_threshold_update():
+        pass
         #Update an existing alarm based on computed statistics.
         
     
-    def alarm_update()
+    def alarm_update():
+        pass
         #Update an existing alarm (Deprecated).
         
     
-    def event_list()
+    def event_list():
+        pass
         #List events.
         #Events not implemented in packstack
         
     
-    def event_show()
+    def event_show():
+        pass
         #Show a particular event.
         #Events not implemented in packstack
     
     
-    def event_type_list()
+    def event_type_list():
+        pass
         #List event types.
         #Events not implemented in packstack
         
     def list_meters(self, project_id):
+        pass
         #List the meters.
         
         try:
@@ -171,7 +185,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
-
+    
         try:
             body = ''
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
@@ -186,7 +200,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not list meters.")
             raise Exception("Could not list meters.")
-
+    
         if(rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -195,19 +209,22 @@ class telemetry_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
         
-    def query_alarm_history()
+    def query_alarm_history():
+        pass
         #Query Alarm History.
     
         
-    def query_alarms()
+    def query_alarms():
+        pass
         #Query Alarms.
     
     
-    def query_samples()
+    def query_samples():
+        pass
         #Query samples.
         
         
-    def resource_list(self, project_id)
+    def resource_list(self, project_id):
         #List the resources.
         
         try:
@@ -218,7 +235,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
-
+    
         try:
             body = ''
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
@@ -233,7 +250,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not list resources.")
             raise Exception("Could not list resources.")
-
+    
         if(rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -243,17 +260,18 @@ class telemetry_ops:
             util.http_codes(rest['response'],rest['reason'])
         
         
-    def resource_show()
+    def resource_show():
+        pass
         #Show the resource.
         
         
-    def sample_create()
+    def sample_create():
+        pass
         #Create a sample.
         
         
-    def sample_list(self, meter_id)
+    def sample_list(self, meter_id):
         #List the samples for a meter.
-        
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(self.project_id != project_id):
@@ -262,7 +280,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
-
+    
         try:
             body = ''
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
@@ -277,7 +295,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not list samples.")
             raise Exception("Could not list samples.")
-
+    
         if(rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -287,7 +305,7 @@ class telemetry_ops:
             util.http_codes(rest['response'],rest['reason'])
         
         
-    def statistics(self, meter_id)
+    def statistics(self, meter_id):
         #List the statistics for a meter.
         
         try:
@@ -298,7 +316,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
-
+    
         try:
             body = ''
             header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
@@ -313,7 +331,7 @@ class telemetry_ops:
         except:
             logger.sys_error("Could get statistics.")
             raise Exception("Could get statistics.")
-
+    
         if(rest['response'] == 200):
             #read the json that is returned
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
@@ -323,11 +341,13 @@ class telemetry_ops:
             util.http_codes(rest['response'],rest['reason'])
         
         
-    def trait_description_list()
+    def trait_description_list():
+        pass
         #List trait info for an event type.
         #Events not implemented in packstack
         
         
-    def trait_list()
+    def trait_list():
+        pass
         #List trait all traits with name <trait_name> for Event Type
         #Events not implemented in packstack
