@@ -18,7 +18,9 @@ $(function () {
         // Disable links and widget buttons
         disableLinks(true);
         setVisible('#allocate_ip', false);
+        setVisibleInLineBlock('#allocate_ip', false);
         setVisible('#assign_ip', false);
+        setVisibleInLineBlock('#assign_ip', false);
 
         // Initialize progressbar and make it visible if hidden
         $(progressbar).progressbar({value: false});
@@ -69,7 +71,7 @@ $(function () {
                 checkAssignFip();
                 disableProgressbar(progressbar, "fips", true);
                 setVisible('#allocate_ip', true);
-                //setVisibleInLineBlock(#assignableFips, true);
+                setVisibleInLineBlock('#allocate_ip', true);
                 disableLinks(false);
             });
     });
@@ -131,7 +133,9 @@ $(function () {
                     disableLinks(true);
                     disableActions("deallocate_ip", true);
                     setVisible('#allocate_ip', false);
+                    setVisibleInLineBlock('#allocate_ip', false);
                     setVisible('#assign_ip', false);
+                    setVisibleInLineBlock('#assign_ip', false);
 
                     // Initialize progressbar and make it visible
                     $(progressbar).progressbar({value: false});
@@ -184,6 +188,7 @@ $(function () {
                             checkAssignFip();
                             disableProgressbar(progressbar, "fips", true);
                             setVisible('#allocate_ip', true);
+                            setVisibleInLineBlock('#allocate_ip', false);
                             disableActions("deallocate_ip", false);
                             disableLinks(false);
                         });
@@ -238,7 +243,9 @@ $(function () {
                     // Disable widget view links and hide widget buttons
                     disableLinks(true);
                     setVisible('#allocate_ip', false);
+                    setVisibleInLineBlock('#allocate_ip', false);
                     setVisible('#assign_ip', false);
+                    setVisibleInLineBlock('#assign_ip', false);
 
                     // Initialize progressbar and make it visible if hidden
                     $(progressbar).progressbar({value: false});
@@ -286,6 +293,7 @@ $(function () {
                             checkAssignFip();
                             disableProgressbar(progressbar, "fips", true);
                             setVisible('#allocate_ip', true);
+                            setVisibleInLineBlock('#allocate_ip', true);
                             disableLinks(false);
                         });
 
@@ -361,6 +369,7 @@ $(function () {
                     disableLinks(true);
                     disableActions("unassign_ip", true);
                     setVisible('#assign_ip', false);
+                    setVisibleInLineBlock('#assign_ip', false);
 
                     // Initialize progressbar and make it visible
                     $(progressbar).progressbar({value: false});
