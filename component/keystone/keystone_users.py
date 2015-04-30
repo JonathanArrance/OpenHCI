@@ -777,6 +777,7 @@ class user_ops:
             raise Exception("Blank parametrs passed into get_user_info, INVALID.")
 
         #check if the calling user is an admin and if so proceed
+        #this is a HACK. With this a user can look at another user. that should not happen
         if(self.user_level <= 2):
             logger.sys_info("User identified as an admin or pu.")
             #check the user status if user status is <= 1 error - must be enabled in both OS and Tran
