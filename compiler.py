@@ -19,7 +19,7 @@ for root, dirs, files in os.walk("/usr/local/lib/python2.7/transcirrus"):
             os.system("sudo rm %s/%s.py"%(root,f[0]))
         #os.remove(glob.glob("%s/*.py"%(str(root))))
 
-compileall.compile_dir("/opt/" + folder,force=1)
+compileall.compile_dir("/opt/",force=1)
 
 for root, dirs, files in os.walk("/opt"):
     for raw in files:
