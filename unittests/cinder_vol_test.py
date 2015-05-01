@@ -20,17 +20,20 @@ d = a.get_auth()
 print "instantiating a volume abject."
 vol = volume_ops(d)
 snap = snapshot_ops(d)
+s = snap.list_snapshots()
+print s
 
+'''
 types = vol.list_volume_types()
 print types
 
 
 print "createing a new volume"
-create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"6492cba476994153800c5220a2f51bc2",'volume_type':'ssd'}
+create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"6492cba476994153800c5220a2f51bc2",'volume_type':'spindle'}
 create_vol = vol.create_volume(create)
 print create_vol
 time.sleep(5)
-'''
+
 print "createing a new volume snap"
 create = {'snapshot_name':'trans_snap4','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
 create_snap = snap.create_snapshot(create)

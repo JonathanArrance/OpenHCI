@@ -53,7 +53,6 @@ from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
-import transcirrus.operations.server_volume_ops as svo
 import transcirrus.common.logger as logger
 
 # Avoid shadowing the login() and logout() views below.
@@ -92,7 +91,6 @@ from coalesce.coal_beta.forms import *
 cache_key = None
 eseries_config = None
 nfs_config = None
-
 
 def stats(request):
     try:
@@ -154,6 +152,20 @@ def stats(request):
                                                                                        'tot_proj': tot_proj,
                                                                                        'tot_nodes': tot_nodes,
                                                                                        'tenant_info': tenant_info,}))
+        elif(auth != None and auth['is_admin'] == 0):
+            uo = user_ops(auth)
+            qo = quota_ops(auth)
+
+            project_id = auth['project_id']
+            project = qo.get_project_quotas(project_id)
+            project_name = project['project_name']
+            username = auth['username']
+            user_dict = {'username': username, 'project_name': project_name}
+            user_info = uo.get_user_info(user_dict)
+            return render_to_response('coal/user_view.html',
+                               RequestContext(request, {'project_name': project_name,
+                                                        'current_project_id': project_id,
+                                                        'user_info': user_info,}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
 
@@ -1071,8 +1083,7 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         out = revert_inst_snap(create, auth)
-        new_server = {'server_id':out['instance']['vm_id'],'project_id':project_id}
-        out['server_info'] = so.get_server(new_server)
+        out['server_info'] = so.get_server(out['instance']['vm_id'])
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
     except Exception as e:
@@ -1151,6 +1162,7 @@ def create_vol_clone(request, project_id, volume_id, volume_name):
         out = {"status": "error", "message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
+
 def list_volumes(request,project_id):
     try:
         auth = request.session['auth']
@@ -1164,36 +1176,34 @@ def list_volumes(request,project_id):
     return HttpResponse(simplejson.dumps(out))
 
 def attach_volume(request, project_id, instance_id, volume_id):
-    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
-        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc",'action':'mount'}
-        att = svo.server_vol_ops(auth,attach_vol)
+        sso = server_storage_ops(auth)
+        attach_vol = {'project_id': project_id, 'instance_id': instance_id, 'volume_id': volume_id, 'mount_point': "/dev/vdc"}
+        att = sso.attach_vol_to_server(attach_vol)
         get_vol = {'project_id': project_id, 'volume_id': volume_id}
-        vol = vo.get_volume_info(get_vol)
-        if(att == 'OK'):
-            output['status'] = 'success'
-            output['message'] = "Volume %s attached to %s."%(vol['volume_name'],vol['volume_instance_name'])
+        out = vo.get_volume_info(get_vol)
+        out['status'] = 'success'
+        out['message'] = "Volume %s attached to %s."%(out['volume_name'],out['volume_instance_name'])
     except Exception, e:
-        output = {'status' : "error", 'message' : "Could not attach the volume: %s" %(e)}
-    return HttpResponse(simplejson.dumps(output))
+        out = {'status' : "error", 'message' : "Could not attach the volume."}
+    return HttpResponse(simplejson.dumps(out))
 
 def detach_volume(request, project_id, volume_id):
-    output = {}
     try:
         auth = request.session['auth']
         vo = volume_ops(auth)
+        sso = server_storage_ops(auth)
         v_dict = {'volume_id': volume_id, 'project_id': project_id}
-        vol = vo.get_volume_info(v_dict)
-        detach_vol = {'project_id': project_id, 'instance_id': vol['volume_instance'], 'volume_id': volume_id,'action':'unmount'}
-        detach = svo.server_vol_ops(auth,detach_vol)
-        if(detach == 'OK'):
-            output['status'] = 'success'
-            output['message'] = "Volume %s detached from %s."%(vol['volume_name'],vol['volume_instance_name'])
+        out = vo.get_volume_info(v_dict)
+        detach_vol = {'project_id': project_id, 'instance_id': out['volume_instance'], 'volume_id': volume_id}
+        detach = sso.detach_vol_from_server(detach_vol)
+        out['status'] = 'success'
+        out['message'] = "Volume %s detached from %s."%(out['volume_name'],out['volume_instance_name'])
     except Exception, e:
-        output = {'status' : "error", 'message' : "Could not detach the volume: %s."%(e)}
-    return HttpResponse(simplejson.dumps(output))
+        out = {'status' : "error", 'message' : "Could not detach the volume."}
+    return HttpResponse(simplejson.dumps(out))
 
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
@@ -2781,3 +2791,17 @@ def handle_uploaded_file(f):
 def password_change(request):
     return render_to_response('coal/change-password.html', RequestContext(request, {  }))
 
+#HTTP Status Codes
+#
+# def handler404(request):
+#     response = render_to_response('404/', {},
+#                                   context_instance=RequestContext(request))
+#     response.status_code = 404
+#     return response
+#
+#
+# def handler500(request):
+#     response = render_to_response('500/', {},
+#                                   context_instance=RequestContext(request))
+#     response.status_code = 500
+#     return response

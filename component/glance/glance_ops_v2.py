@@ -107,9 +107,9 @@ class glance_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-        if(self.user_level == 2):
-            logger.sys_error('Users can not import images.')
-            return 'ERROR'
+        #if(self.user_level == 2):
+        #    logger.sys_error('Users can not import images.')
+        #    return 'ERROR'
 
         if(('image_name' not in input_dict) or (input_dict['image_name'] == '')):
             logger.sys_error('Image name not specified')
@@ -224,6 +224,13 @@ class glance_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
+        #check to see what project image owned by. Can not delete images outside of your project
+        if(self.is_admin == 0):
+            image = self.get_image(image_id)
+            if(image['project_id'] != self.project_id):
+                logger.sys_info("Users can not delete images that are not in their project.")
+                raise Exception("Users can not delete images that are not in their project.")
+
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -247,10 +254,11 @@ class glance_ops:
 
         if((rest['response'] == 204)):
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            return 'OK'
         else:
             logger.sys_error("Delete image from db - bad status: %s" % rest['reason'])
             raise Exception("Delete image from db - bad status: %s" % rest['reason'])
-        return        
+
         
     def list_images(self):
         """
@@ -306,7 +314,7 @@ class glance_ops:
         INPUT: image_id
         OUTPUT: r_dict - image_name
                        - image_id
-                       - user_id
+                       - project_id
                        - status
                        - visibility
                        - size
@@ -345,7 +353,7 @@ class glance_ops:
         if((rest['response'] == 200)):
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
+            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])

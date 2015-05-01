@@ -483,6 +483,18 @@ function setVisible(selector, bool) {
     }
 }
 
+function setVisibleInLineBlock(selector, bool) {
+    if (bool) {
+        if ($(selector).css('display', 'none')) {
+            $(selector).fadeIn('fast');
+        }
+    } else {
+        if ($(selector).css('display', 'inline-block')) {
+            $(selector).fadeOut('fast');
+        }
+    }
+}
+
 function emptyAndAppend(selector, newContent) {
     fadeOutAndEmpty(selector);
     setTimeout(function () {

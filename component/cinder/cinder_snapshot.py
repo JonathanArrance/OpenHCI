@@ -335,16 +335,18 @@ class snapshot_ops:
             logger.sql_error("Could not connect to the Transcirrus DB ")
             raise e
 
-        try:
-            select_snap = None
-            if(self.is_admin == 1):
-                if(project_id):
-                    select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(project_id)}
-                else:
-                    select_snap = {'select':"*",'from':"trans_system_snapshots"}
+        if(self.is_admin == 1):
+            if(project_id):
+                self.select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(project_id)}
             else:
-                select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(self.project_id)}
-            snaps = self.db.pg_select(select_snap)
+                self.select_snap = {'select':"*",'from':"trans_system_snapshots"}
+        elif(self.user_level == 1):
+            self.select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(self.project_id)}
+        elif(self.user_level == 2):
+            self.select_snap = {'select':"*",'from':"trans_system_snapshots",'where':"proj_id='%s'" %(self.project_id), 'and':"user_id='%s'"%(self.user_id)}
+
+        try:
+            snaps = self.db.pg_select(self.select_snap)
         except:
             logger.sys_error("Could not list snapshots.")
             raise Exception("Could not list snapshots.")
