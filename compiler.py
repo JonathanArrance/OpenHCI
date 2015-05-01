@@ -9,17 +9,18 @@ for folder in folders:
     compileall.compile_dir("/usr/local/lib/python2.7/transcirrus/" + folder,force=1)
 
 for root, dirs, files in os.walk("/usr/local/lib/python2.7/transcirrus"):
-    if(dirs):
-        for direct in dirs:
-            if( direct == 'interfaces'):
-                continue
+    #direct = None
+    #if(dirs):
+    #    for direct in dirs:
+    #        if( direct == 'interfaces'):
+    #            continue
     for raw in files:
         f = raw.split('.')
         if(f[0] == 'config'):
             continue
         else:
             os.system("sudo rm %s/%s.py"%(root,f[0]))
-        #os.remove(glob.glob("%s/*.py"%(str(root))))
+            #os.remove(glob.glob("%s/*.py"%(str(root))))
 
 compileall.compile_dir("/opt/",force=1)
 
