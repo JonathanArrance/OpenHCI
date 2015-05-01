@@ -605,6 +605,7 @@ def run_setup(new_system_variables,auth_dict):
     #checkpoint['status'] = 'OK'
     #print checkpoint
     #logger.sys_info("Service status: %s"%(checkpoint))
+    os.system('sudo chmod 775 /var/lib/glance/images')
     logger.sys_info("SETUP57:END")
     return 'OK'
 
