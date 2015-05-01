@@ -9,8 +9,10 @@ for folder in folders:
     compileall.compile_dir("/usr/local/lib/python2.7/transcirrus/" + folder,force=1)
 
 for root, dirs, files in os.walk("/usr/local/lib/python2.7/transcirrus"):
-    if(root == 'interfaces'):
-        continue
+    if(dirs):
+        for direct in dirs:
+            if( direct == 'interfaces'):
+                continue
     for raw in files:
         f = raw.split('.')
         if(f[0] == 'config'):
