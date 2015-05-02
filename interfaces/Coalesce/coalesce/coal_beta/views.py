@@ -2523,7 +2523,7 @@ def nfs_set (request, mountpoints):
     '''
     try:
         auth = request.session['auth']
-        mntpts = mountpoints.split(",")
+        mntpts = mountpoints.replace("%","/").split(",")
         tpc.add_nfs (mntpts, auth)
         out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
     except Exception, e:
@@ -2544,7 +2544,7 @@ def nfs_update (request, mountpoints):
                     message: error message
     '''
     try:
-        mntpts = mountpoints.split(",")
+        mntpts = mountpoints.replace("%","/").split(",")
         tpc.update_nfs (mntpts)
         out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
     except Exception, e:
