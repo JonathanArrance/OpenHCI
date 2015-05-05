@@ -60,10 +60,20 @@ def add_storage_conf():
         print "Error message: %s" % std_err
         return
 
-    # Loop through the output (line by line) and extract the mount point
-    # and add it to our monit disks.conf file.
-    lines = std_out.split("\n")
+    # Update the disks.conf file with the mount points we will find.
+    # To do this we read the disks.conf file until we get to the
+    # line with "# Start" and then write/overwrite with each
+    # mount point we found.
+    handle = open (MONIT_CONF_LOC + DK_CONF, 'r+')
+    line = handle.readline()
+    while line:
+        if line.find("# Start") >= 0:
+            break
+        line = handle.readline()
 
+    # Loop through the output (line by line) and extract the mount point(s)
+    # and add them to our disks.conf file.
+    lines = std_out.split("\n")
     for line in lines:
         # Skip blank lines
         if len(line) < 1:
@@ -76,12 +86,12 @@ def add_storage_conf():
         mountpoint = line.split()[2]
         name = mountpoint.split("/")[2]
 
-        # Update the disks.conf file with this mount point.
-        handle = open (MONIT_CONF_LOC + DK_CONF, 'a')
         handle.write ("check filesystem %s with path %s\n" % (name, mountpoint))
         handle.write ("  if space usage > 80% then alert\n")
         handle.write ("  if inode usage > 80% then alert\n\n")
-        handle.close()
+
+    handle.truncate()
+    handle.close()
     return
 
 
