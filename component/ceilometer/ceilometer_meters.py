@@ -87,7 +87,7 @@ class meter_ops:
             raise Exception("Could not list meters.")
 
         if(rest['response'] == 200):
-            #read the json that is returned
+            #read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             print load
