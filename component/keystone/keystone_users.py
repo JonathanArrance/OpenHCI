@@ -182,7 +182,6 @@ class user_ops:
                     body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": "%s"}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'],self.new_user_proj_id)
                 else:
                     body = '{"user": {"email":"%s", "password": "%s", "enabled": true, "name": "%s", "tenantId": null}}' %(new_user_dict['email'],new_user_dict['password'],new_user_dict['username'])
-                logger.sys_info("%s"%(body))
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/users'

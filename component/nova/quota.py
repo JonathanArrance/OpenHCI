@@ -272,7 +272,6 @@ class quota_ops:
               not given then the users project id  and user id will be used.
         """
         logger.sys_info('\n**Updateing nova and cinder quotas. Component: Nova Def: update_project_quotas**\n')
-        print input_dict
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to list quotas.")
             raise Exception("Status level not sufficient to list quotas.")
@@ -392,7 +391,6 @@ class quota_ops:
                 elif(port == '8774'):
                     self.body = '{"quota_set": {"metadata_items": %d, "injected_files": %d, "ram": %d, "key_pairs": %d, "instances": %d, "security_group_rules": %d, "fixed_ips": %d, "security_groups": %d, "injected_file_content_bytes": %d, "tenant_id": "%s", "floating_ips": %d, "cores": %d, "injected_file_path_bytes": %d}}'%(self.metadata_items,self.injected_files,self.ram,self.key_pairs,self.instances,
                      self.security_group_rules,self.fixed_ips,self.security_groups,self.injected_file_content_bytes,input_dict['project_id'],self.floating_ips,self.cores,self.injected_file_path_bytes)
-                print self.body
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
                 function = 'PUT'
                 api_path = '/%s/%s/os-quota-sets/%s' %(apiver,input_dict['project_id'],input_dict['project_id'])
