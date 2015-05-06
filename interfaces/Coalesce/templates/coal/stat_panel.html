@@ -288,8 +288,8 @@
         <input name="nfs-hostname-ip" id="nfs-hostname-ip" value="" class="text ui-widget-content ui-corner-all"
                type="text">
 
-        <label for="nfs-server-port" style="display: block;">Server Port</label>
-        <input name="nfs-server-port" id="nfs-server-port" value="8080"
+        <label for="nfs-mountpoint" style="display: block;">Mountpoint</label>
+        <input name="nfs-mountpoint" id="nfs-mountpoint" value="8080"
                class="text ui-widget-content ui-corner-all" type="text">
         <button class="configure-3ps" data-provider="nfs">Configure</button>
     </fieldset>
@@ -469,16 +469,28 @@ $(function () {
                 });
     });
     
+    function hideFields(){
+		resetUiValidation(allFields);
+		$("#3ps-config-form fieldset").each(function(){
+			$(this).hide();
+		});
+	}
+    
     $(".configure-3ps").on('click', function(){
     	var provider = $(this).data("provider");
 		var config3ps;
+		var ipString = $("#nfs-hostname-ip").val();
+		var mntPtString = $("#nfs-mountpoint").val();
+		var concatURLparam = [];
+		var testString = $('#nfs-hostname-ip').val();
+		
 		// Remove UI validation flags
 		clearUiValidation(allFields);
 		
 		if(provider == 'eseries'){
 			config3ps = $.getJSON( 'eseries/config/set/' + diskPools + '/');
 		} else {
-			config3ps = $.getJSON( 'nfs/set/' + '"hostname|ip-addr:/mountpoint"' + '/');
+			config3ps = $.getJSON( 'nfs/set/' + testString + '/');
 		}
 			
 			config3ps.done(function (data) {
@@ -493,9 +505,7 @@ $(function () {
 
 					message.showMessage("success", data.message);
 					
-					$("#3ps-config-form fieldset").each(function(){
-						$(this).hide();
-					});
+					hideFields();
 					$("#3ps-config-form").dialog("close");
 					
 					if(provider == 'eseries'){
@@ -506,7 +516,6 @@ $(function () {
 						
 					} else {
 						nfs_configured = true;
-						//do nfs stuff **************************************************************************************************
 					}
 				}
 
@@ -680,10 +689,7 @@ $(function () {
             "Cancel": function () {
 
                 // Reset form validation
-                resetUiValidation(allFields);
-                $("#3ps-config-form fieldset").each(function(){
-                	$(this).hide();
-                });
+                hideFields();
                 $("#3ps-config-form").dialog("close");
             }
         }
