@@ -100,5 +100,5 @@ class meter_ops:
     def create_meter(self):
         pass
     
-    def shaow_meter_stats(self):
+    def show_meter_stats(self):
         pass
