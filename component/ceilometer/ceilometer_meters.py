@@ -64,10 +64,10 @@ class meter_ops:
     def list_meters(self, project_id):
         
         # try:
-        api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+        api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
         print (api_dict)
-        if(self.project_id != project_id):
-            self.token = get_token(self.username,self.password,project_id)
+        if(project_id != self.project_id):
+            self.token = get_token(self.username,self.password,self.project_id)
         api = caller(api_dict)
         print (api)
         # except:
