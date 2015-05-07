@@ -62,20 +62,19 @@ class meter_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
     def list_meters(self, project_id):
+
+        print(project_id)
         
-        # try:
-        api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
-        print (api_dict)
-        if(project_id != self.project_id):
-            self.token = get_token(self.username,self.password,self.project_id)
-        api = caller(api_dict)
-        print (api)
-        # except:
-        #     logger.sys_error("Could not connect to the Keystone API")
-        #     raise Exception("Could not connect to the Keystone API")
-
-
-
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            print (api_dict)
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,self.project_id)
+            api = caller(api_dict)
+            print (api)
+        except:
+            logger.sys_error("Could not connect to the Keystone API")
+            raise Exception("Could not connect to the Keystone API")
 
         try:
             body = ''
@@ -88,6 +87,7 @@ class meter_ops:
             if(self.api_ip):
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
+            print(rest)
         except:
             logger.sys_error("Could not list meters.")
             raise Exception("Could not list meters.")
