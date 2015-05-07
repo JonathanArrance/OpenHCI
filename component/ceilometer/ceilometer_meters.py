@@ -62,16 +62,12 @@ class meter_ops:
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
     def list_meters(self, project_id):
-
-        print(project_id)
         
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
-            print (api_dict)
             if(project_id != self.project_id):
                 self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
-            print (api)
         except:
             logger.sys_error("Could not connect to the Keystone API")
             raise Exception("Could not connect to the Keystone API")
@@ -79,7 +75,6 @@ class meter_ops:
         try:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
-            # header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'GET'
             api_path = '/v2/meters'
             token = self.token
@@ -88,7 +83,6 @@ class meter_ops:
             if(self.api_ip):
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
-            print(rest)
         except:
             logger.sys_error("Could not list meters.")
             raise Exception("Could not list meters.")
@@ -104,9 +98,9 @@ class meter_ops:
 
     def show_cpu_percentage_statistics(self, project_id, start_time, end_time):
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            if(self.project_id != project_id):
-                    self.token = get_token(self.username,self.password,project_id)
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the Keystone API")
@@ -114,10 +108,10 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'GET'
             api_path = '/v2/meters/compute.node.cpu.percent/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
-            token = self.adm_token
+            token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
             if(self.api_ip):
@@ -137,9 +131,9 @@ class meter_ops:
 
     def show_vcpu_statistics(self, project_id, start_time, end_time):
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            if(self.project_id != project_id):
-                    self.token = get_token(self.username,self.password,project_id)
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the Keystone API")
@@ -147,10 +141,10 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'GET'
             api_path = 'v2/meters/vcpus/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
-            token = self.adm_token
+            token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
             if(self.api_ip):
@@ -170,9 +164,9 @@ class meter_ops:
 
     def show_disk_root_usage_statistics(self, project_id, start_time, end_time):
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            if(self.project_id != project_id):
-                    self.token = get_token(self.username,self.password,project_id)
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the Keystone API")
@@ -180,10 +174,10 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'GET'
             api_path = 'v2/meters/disk.root.size/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
-            token = self.adm_token
+            token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
             if(self.api_ip):
@@ -203,9 +197,9 @@ class meter_ops:
 
     def show_memory_usage_statistics(self, project_id, start_time, end_time):
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            if(self.project_id != project_id):
-                    self.token = get_token(self.username,self.password,project_id)
+            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the Keystone API")
@@ -213,10 +207,10 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'GET'
             api_path = 'v2/meters/memory.usage/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
-            token = self.adm_token
+            token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
             if(self.api_ip):
