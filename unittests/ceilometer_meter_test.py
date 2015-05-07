@@ -24,3 +24,31 @@ print "Listing meters"
 project_id = "6c1c12eb76b5407fa4d5bf9e150a5f0c"
 lm = mo.list_meters(project_id)
 print lm
+
+print "Show CPU percentage statistics for a given time frame"
+project_id = "9cf52d0ab22c4beab7baf3e84bb849dc"
+start_time = "2015-05-07T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+cpustats = mo.show_cpu_percentage_statistics(project_id, start_time, end_time)
+print cpustats
+
+print "Show VCPU statistics for a given time frame"
+project_id = "9cf52d0ab22c4beab7baf3e84bb849dc"
+start_time = "2015-05-07T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+vcpustats = mo.show_vcpu_statistics(project_id, start_time, end_time)
+print vcpustats
+
+print "Show disk root usage statistics for a given time frame"
+project_id = "9cf52d0ab22c4beab7baf3e84bb849dc"
+start_time = "2015-05-07T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+diskrootstats = mo.show_disk_root_usage_statistics(project_id, start_time, end_time)
+print diskrootstats
+
+print "Show disk root usage statistics for a given time frame"
+project_id = "9cf52d0ab22c4beab7baf3e84bb849dc"
+start_time = "2015-05-07T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+memoryusagestats = mo.show_memory_usage_statistics(project_id, start_time, end_time)
+print memoryusagestats
