@@ -39,16 +39,16 @@ end_time = "2015-05-07T14%3A00%3A00"
 diskrootstats = mo.show_disk_root_usage_statistics(project_id, start_time, end_time)
 print diskrootstats
 
-# print "Show memory usage statistics for a given time frame"
-# project_id = "10796d79f7124e0f8c9505b64bd8819d"
-# start_time = "2015-05-07T13%3A00%3A00"
-# end_time = "2015-05-07T14%3A00%3A00"
-# memoryusagestats = mo.show_memory_usage_statistics(project_id, start_time, end_time)
-# print memoryusagestats
-#
-# print "Show VCPU statistics for a given time frame"
-# project_id = "10796d79f7124e0f8c9505b64bd8819d"
-# start_time = "2015-05-07T13%3A00%3A00"
-# end_time = "2015-05-07T14%3A00%3A00"
-# vcpustats = mo.show_vcpu_statistics(project_id, start_time, end_time)
-# print vcpustats
+print "Show memory usage statistics for a given time frame"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-07T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+memoryusagestats = mo.show_memory_usage_statistics(project_id, start_time, end_time)
+print memoryusagestats
+
+print "Show VCPU statistics for a given time frame"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-07T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+vcpustats = mo.show_vcpu_statistics(project_id, start_time, end_time)
+print vcpustats
