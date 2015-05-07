@@ -28,7 +28,7 @@ print mo
 print "Show CPU percentage statistics for a given time frame"
 project_id = "10796d79f7124e0f8c9505b64bd8819d"
 start_time = "2015-05-05T13%3A00%3A00"
-end_time = "2015-05-07T14%3A00%3A00"
+end_time = "2015-05-07T20%3A00%3A00"
 cpustats = mo.show_cpu_percentage_statistics(project_id, start_time, end_time)
 print cpustats
 
