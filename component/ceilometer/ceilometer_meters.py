@@ -68,8 +68,8 @@ class meter_ops:
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
             print (api_dict)
-            if(project_id != self.project_id):
-                self.token = get_token(self.username,self.password,self.project_id)
+            # if(project_id != self.project_id):
+            #     self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
             print (api)
         except:
