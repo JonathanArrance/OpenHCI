@@ -68,8 +68,8 @@ class meter_ops:
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
             print (api_dict)
-            # if(project_id != self.project_id):
-            #     self.token = get_token(self.username,self.password,self.project_id)
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,self.project_id)
             api = caller(api_dict)
             print (api)
         except:
@@ -78,10 +78,11 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            # header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'GET'
             api_path = '/v2/meters'
-            token = self.adm_token
+            token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
             if(self.api_ip):
