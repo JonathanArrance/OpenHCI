@@ -108,7 +108,7 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-keystoneclient"}
             function = 'GET'
             api_path = '/v2/meters/compute.node.cpu.percent/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
             token = self.token
@@ -141,7 +141,7 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-keystoneclient"}
             function = 'GET'
             api_path = 'v2/meters/disk.root.size/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
             token = self.token
@@ -174,7 +174,7 @@ class meter_ops:
 
         try:
             body = ''
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-keystoneclient"}
             function = 'GET'
             api_path = 'v2/meters/memory.usage/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
             token = self.token
