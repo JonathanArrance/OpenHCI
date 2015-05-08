@@ -111,7 +111,7 @@ class meter_ops:
             function = 'GET'
             if (resource_id is None):
                 api_path = '/v2/meters/' + meter_type + '/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
-            else :
+            else:
                 api_path = '/v2/meters/' + meter_type + '/statistics?q.field=resource&q.field=timestamp&q.field=timestamp&q.op=eq&q.op=gt&q.op=le&q.type=&q.type=&q.type=&q.value=' + resource_identifier + '&q.value=' + start_time + '&q.value=' + end_time
             token = self.token
             sec = 'FALSE'
