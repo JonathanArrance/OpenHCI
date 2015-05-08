@@ -71,7 +71,7 @@ project_id = "10796d79f7124e0f8c9505b64bd8819d"
 start_time = "2015-05-05T13%3A00%3A00"
 end_time = "2015-05-07T23%3A00"
 meter_type = "memory.usage"
-resource_identifier = "9d60427f-2602-4582-9bd6-18b9757f976f"
+resource_identifier = "37128ad6-daaa-4d22-9509-b7e1c6b08697"
 resourcememorystats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
 print resourcememorystats
 
