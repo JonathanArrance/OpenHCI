@@ -95,7 +95,7 @@ class meter_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
-    def show_statistics(self, project_id, start_time, end_time, meter_type, resource_identifier=None):
+    def show_statistics(self, project_id, start_time, end_time, meter_type, tenant_identifier=None, resource_identifier=None):
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
             if(project_id != self.project_id):
@@ -109,10 +109,14 @@ class meter_ops:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'GET'
-            if (resource_identifier != None):
-                api_path = '/v2/meters/' + meter_type + '/statistics?q.field=resource&q.field=timestamp&q.field=timestamp&q.op=eq&q.op=gt&q.op=le&q.type=&q.type=&q.type=&q.value=' + resource_identifier + '&q.value=' + start_time + '&q.value=' + end_time
-            else:
+            if ((tenant_identifier == None) and (resource_identifier == None)):
                 api_path = '/v2/meters/' + meter_type + '/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
+            elif ((tenant_identifier == None) and (resource_identifier != None)):
+                api_path = '/v2/meters/' + meter_type + '/statistics?q.field=resource&q.field=timestamp&q.field=timestamp&q.op=eq&q.op=gt&q.op=le&q.type=&q.type=&q.type=&q.value=' + resource_identifier + '&q.value=' + start_time + '&q.value=' + end_time
+            elif ((tenant_identifier != None) and (resource_identifier == None)):
+                api_path = '/v2/meters/' + meter_type + '/statistics?q.field=project&q.field=timestamp&q.field=timestamp&q.op=eq&q.op=gt&q.op=le&q.type=&q.type=&q.type=&q.value=' + tenant_identifier + '&q.value=' + start_time + '&q.value=' + end_time
+            elif ((tenant_identifier != None) and (resource_identifier != None)):
+                api_path = '/v2/meters/' + meter_type + '/statistics?q.field=project&q.field=resource&q.field=timestamp&q.field=timestamp&q.op=eq&q.op=eq&q.op=gt&q.op=le&q.type=&q.type=&q.type=&q.type=&q.value=' + tenant_identifier + '&q.value=' + resource_identifier + '&q.value=' + start_time + '&q.value=' + end_time
             token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
