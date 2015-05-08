@@ -128,7 +128,7 @@ class meter_ops:
         else:
             util.http_codes(rest['response'],rest['reason'])
 
-    def show_statistics_for_meter_and_resource(self, project_id, start_time, end_time, meter_type, resource_identifier):
+    def show_statistics_for_meter_and_resource(self, project_id, start_time, end_time, meter_type, asdfdasfdsafadf):
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
             if(project_id != self.project_id):
