@@ -20,10 +20,10 @@ print "Instantiating meters object"
 mo = meter_ops(b)
 print mo
 
-# print "Listing meters"
-# project_id = "10796d79f7124e0f8c9505b64bd8819d"
-# lm = mo.list_meters(project_id)
-# print lm
+print "Listing meters"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+lm = mo.list_meters(project_id)
+print lm
 
 print "Show CPU percentage statistics"
 project_id = "10796d79f7124e0f8c9505b64bd8819d"
@@ -63,7 +63,7 @@ start_time = "2015-05-05T13%3A00%3A00"
 end_time = "2015-05-07T23%3A00"
 meter_type = "vcpus"
 resource_identifier = "9d60427f-2602-4582-9bd6-18b9757f976f"
-resourcevcpustats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
+resourcevcpustats = mo.show_statistics(project_id, start_time, end_time, meter_type, resource_identifier)
 print resourcevcpustats
 
 print "Show memory.usage statistics for resource"
@@ -72,7 +72,7 @@ start_time = "2015-05-05T13%3A00%3A00"
 end_time = "2015-05-07T23%3A00"
 meter_type = "memory.usage"
 resource_identifier = "37128ad6-daaa-4d22-9509-b7e1c6b08697"
-resourcememorystats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
+resourcememorystats = mo.show_statistics(project_id, start_time, end_time, meter_type, resource_identifier)
 print resourcememorystats
 
 print "Show disk.root.size statistics for resource"
@@ -81,5 +81,5 @@ start_time = "2015-05-05T13%3A00%3A00"
 end_time = "2015-05-07T23%3A00"
 meter_type = "disk.root.size"
 resource_identifier = "9d60427f-2602-4582-9bd6-18b9757f976f"
-resourcediskstats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
+resourcediskstats = mo.show_statistics(project_id, start_time, end_time, meter_type, resource_identifier)
 print resourcediskstats
