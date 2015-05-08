@@ -119,6 +119,12 @@ class meter_ops:
             if(self.api_ip):
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
+
+            print api_path
+            print "-------"
+            print rest
+            print "-------"
+            print rest
         except:
             logger.sys_error("Could not list meters.")
             raise Exception("Could not list meters.")
