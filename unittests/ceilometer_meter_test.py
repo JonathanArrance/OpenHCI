@@ -56,3 +56,12 @@ end_time = "2015-05-07T14%3A00%3A00"
 meter_type = "vcpus"
 vcpustats = mo.show_statistics(project_id, start_time, end_time, meter_type)
 print vcpustats
+
+print "Show VCPU statistics for resource"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+meter_type = "vcpus"
+resource_id = "9d60427f-2602-4582-9bd6-18b9757f976f"
+resourcevcpustats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_id)
+print resourcevcpustats
