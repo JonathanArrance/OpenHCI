@@ -92,6 +92,7 @@ class volume_ops:
                         source_vol_id - Optional used if creating volume clone
                         volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
+                        image_id - Optional os image
                         description - Optional
                             # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
         OUTPUTS: r_dict - volume_name
@@ -179,6 +180,11 @@ class volume_ops:
             logger.sys_error("Can not create a volume clone and a volume from snapshot at the same time.")
             raise Exception("Can not create a volume clone and a volume from snapshot at the same time.")
 
+        if('image_id' not in create_vol):
+            create_vol['image_id'] = '"imageRef": null'
+        else:
+            create_vol['image_id'] = '"imageRef": "%s"'%(create_vol['image_id'])
+
         # if('description' not in create_vol) or (create_vol['description'] == 'none'):
         #     logger.sys_warning("Did not pass in a volume description setting the default description.")
         #     if('snapshot_id' in create_vol):
@@ -204,12 +210,12 @@ class volume_ops:
 
             if('snapshot_id' in create_vol):
                 #vol from snap
-                self.body = '{"volume": {"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": "%s", "user_id": null, "size": "%s", "display_name": "%s", "imageRef": null, "attach_status": "detached", "volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['snapshot_id'],create_vol['volume_size'],create_vol['volume_name'],voltype)
+                self.body = '{"volume": {"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": "%s", "user_id": null, "size": "%s", "display_name": "%s", %s, "attach_status": "detached", "volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['snapshot_id'],create_vol['volume_size'],create_vol['volume_name'],create_vol['image_id'],voltype)
             elif('source_vol_id' in create_vol):
                 #clone
-                self.body = '{"volume": {"status": "creating", "availability_zone": null, "source_volid": "%s", "display_description": null, "snapshot_id": null, "user_id": null, "size": "%s", "display_name": "%s", "imageRef": null, "attach_status": "detached", "volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['source_vol_id'],create_vol['volume_size'],create_vol['volume_name'],voltype)
+                self.body = '{"volume": {"status": "creating", "availability_zone": null, "source_volid": "%s", "display_description": null, "snapshot_id": null, "user_id": null, "size": "%s", "display_name": "%s", %s, "attach_status": "detached", "volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['source_vol_id'],create_vol['volume_size'],create_vol['volume_name'],create_vol['image_id'],voltype)
             else:
-                self.body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", "imageRef": null,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],voltype)
+                self.body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", %s,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],create_vol['image_id'],voltype)
             try:
                 #add the new user to openstack 
                 body = self.body
@@ -392,7 +398,6 @@ class volume_ops:
                 self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
         else:
             self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
-        logger.sys_info('HACK %s'%(self.select_vol))
 
         #check if the snapshot exists in the project and that the user can use it
         try:
@@ -401,13 +406,63 @@ class volume_ops:
             logger.sys_error("The volume does not exist in this project, or you may not have permission to clone it.")
             raise Exception("The volume does not exist in this project, or you may not have permission to clone it.")
 
-        #if no vol size given
         if(('volume_size' not in input_dict) or (input_dict['volume_size'] == '')):
             input_dict['volume_size'] = get_vol[0][1]
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
                       'volume_zone':input_dict['volume_zone'],'volume_id':input_dict['volume_id'],'volume_type':get_vol[0][2],
                       'source_vol_id':input_dict['volume_id']}
+
+        output = self.create_volume(input_dict)
+
+        return output
+
+    def create_bootable_volume(self,input_dict):
+        """
+        DESC: Create a new volume in a project from an existing snapshot in the project.
+        All user levels can spin up new volumes.
+        INPUTS: project_id - REQ
+                image_id - REQ
+                volume_type - REQ
+                volume_size - REQ
+                volume_name - OP
+                volume_zone - Optional default is nova
+
+        OUTPUTS: r_dict - volume_name
+                        - volume_type
+                        - volume_id
+                        - volume_size
+        ACCESS: Admins can create a volume with any snapshot, Users can only create
+                volumes with snapshots they own.
+        NOTE: You can not create two volumes with the same name in the same project.
+        """
+        #make sure snapshot id is given.
+        if(('volume_type' not in input_dict) or (input_dict['volume_type'] == '')):
+            logger.sys_error("Volume Type is required.")
+            raise Exception("Volume Type is required.")
+
+        if(('volume_size' not in input_dict) or (input_dict['volume_size'] == '')):
+            logger.sys_error("Volume Size is required.")
+            raise Exception("Volume Size is required.")
+
+        if(('project_id' not in input_dict) or (input_dict['project_id'] == '')):
+            logger.sys_error("Project ID is required.")
+            raise Exception("Project ID is required.")
+
+        if(('volume_zone' not in input_dict) or (input_dict['volume_zone'] == '')):
+            input_dict['volume_zone'] = 'nova'
+
+        if(('image_id' not in input_dict) or (input_dict['image_id'] == '')):
+            logger.sys_error("Image ID is required.")
+            raise Exception("Image ID is required.")
+
+        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
+            input_dict['volume_name'] = input_dict['volume_id'] + '_boot_%s'%(str(self.rannum))
+        else:
+            input_dict['volume_name'] = input_dict['volume_name'] + '_boot_%s'%(str(self.rannum))
+
+        input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
+              'volume_zone':input_dict['volume_zone'],'image_id':input_dict['image_id'],'volume_type':input_dict['volume_type']}
 
         output = self.create_volume(input_dict)
 

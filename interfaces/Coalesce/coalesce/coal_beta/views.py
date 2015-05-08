@@ -1403,6 +1403,27 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
+def boot_instance_from_volume(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id,volume_type):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        no = neutron_net_ops(auth)
+        instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
+                        'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
+                        'network_name': network_name,'image_name': image_name,
+                        'flavor_name':flavor_name, 'name':name}
+        out = so.create_server(instance)
+        priv_net_list = no.list_internal_networks(project_id)
+        default_priv = priv_net_list[0]['net_id']
+        input_dict = {'server_id':out['vm_id'], 'net_id': default_priv, 'project_id': project_id}
+        #net_info = so.attach_server_to_network(input_dict)
+        out['server_info']= so.get_server(input_dict)
+        out['status'] = 'success'
+        out['message'] = "New server %s was created."%(out['vm_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def list_servers(request,project_id):
     try:
         auth = request.session['auth']
