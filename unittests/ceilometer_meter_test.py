@@ -20,7 +20,39 @@ print "Instantiating meters object"
 mo = meter_ops(b)
 print mo
 
-print "Listing meters"
-project_id = "6c1c12eb76b5407fa4d5bf9e150a5f0c"
-lm = mo.list_meters(project_id)
-print lm
+# print "Listing meters"
+# project_id = "10796d79f7124e0f8c9505b64bd8819d"
+# lm = mo.list_meters(project_id)
+# print lm
+
+print "Show CPU percentage statistics"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T20%3A00%3A00"
+meter_type = "compute.node.cpu.percent"
+cpustats = mo.show_statistics(project_id, start_time, end_time, meter_type)
+print cpustats
+
+print "Show disk root usage statistics"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+meter_type = "disk.root.size"
+diskrootstats = mo.show_statistics(project_id, start_time, end_time, meter_type)
+print diskrootstats
+
+print "Show memory usage statistics"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+meter_type = "memory.usage"
+memoryusagestats = mo.show_statistics(project_id, start_time, end_time, meter_type)
+print memoryusagestats
+
+print "Show VCPU statistics"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T14%3A00%3A00"
+meter_type = "vcpus"
+vcpustats = mo.show_statistics(project_id, start_time, end_time, meter_type)
+print vcpustats
