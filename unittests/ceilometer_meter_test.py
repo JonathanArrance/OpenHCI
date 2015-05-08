@@ -65,3 +65,21 @@ meter_type = "vcpus"
 resource_identifier = "9d60427f-2602-4582-9bd6-18b9757f976f"
 resourcevcpustats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
 print resourcevcpustats
+
+print "Show memory.usage statistics for resource"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T23%3A00"
+meter_type = "memory.usage"
+resource_identifier = "9d60427f-2602-4582-9bd6-18b9757f976f"
+resourcememorystats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
+print resourcememorystats
+
+print "Show disk.root.size statistics for resource"
+project_id = "10796d79f7124e0f8c9505b64bd8819d"
+start_time = "2015-05-05T13%3A00%3A00"
+end_time = "2015-05-07T23%3A00"
+meter_type = "disk.root.size"
+resource_identifier = "9d60427f-2602-4582-9bd6-18b9757f976f"
+resourcediskstats = mo.show_statistics_for_meter_and_resource(project_id, start_time, end_time, meter_type, resource_identifier)
+print resourcediskstats
