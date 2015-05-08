@@ -109,10 +109,10 @@ class meter_ops:
             body = ''
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'GET'
-            if (resource_id is None):
-                api_path = '/v2/meters/' + meter_type + '/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
-            else:
+            if (resource_id is not None):
                 api_path = '/v2/meters/' + meter_type + '/statistics?q.field=resource&q.field=timestamp&q.field=timestamp&q.op=eq&q.op=gt&q.op=le&q.type=&q.type=&q.type=&q.value=' + resource_identifier + '&q.value=' + start_time + '&q.value=' + end_time
+            else:
+                api_path = '/v2/meters/' + meter_type + '/statistics?q.field=timestamp&q.field=timestamp&q.op=gt&q.op=le&q.type=&q.type=&q.value=' + start_time + '&q.value=' + end_time
             token = self.token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function": function, "api_path": api_path, "token": token, "sec": sec, "port": 8777}
