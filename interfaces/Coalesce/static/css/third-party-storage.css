@@ -1,0 +1,104 @@
+#add-mountpoint {
+    line-height: 25px;
+    margin: 0 0 9px;
+}
+
+#mountpoints {
+    max-height: 110px;
+    height: 110px;
+    overflow-y: scroll;
+    border: 1px solid lightgray;
+}
+
+#nfs-mountpoint {
+    width: 230px !important;
+}
+
+#tps-form {
+    position: relative !important;
+    padding: 5px !important;
+    border: 1px solid #d3d3d3 !important;
+    margin: 0 -5px !important;
+}
+
+#tps-form-legend {
+    font-size: 16px !important;
+    border: 1px solid #d3d3d3 !important;
+    font-weight: bold !important;
+    display: block;
+    width: initial;
+    padding: 0 2px;
+    margin-bottom: initial;
+    line-height: initial;
+    color: #666;
+}
+
+.eseries-button {
+    display: block;
+    width: 200px;
+    margin: 10px auto;
+    border: 1px solid rgb(105, 105, 105);
+    border-radius: 4px;
+    padding: 3px 0;
+    background: none repeat scroll 0 0 rgb(237, 237, 237);
+    color: rgb(173, 104, 43) !important;
+}
+
+.remove-mountpoint {
+    line-height: 16px !important;
+    margin: -3px 0 0 10px;
+}
+
+.mountpoint {
+    border: 1px dashed #D3D3D3;
+    width: 225px;
+    padding: 2px 0 0;
+    max-width: 225px;
+    margin: 5px auto;
+    text-align: left;
+    max-height: 20px;
+}
+
+.mountpoint-text {
+    overflow: hidden;
+    max-width: 195px;
+    width: 195px;
+    height: 15px;
+    max-height: 15px;
+    display: inline-block;
+}
+
+#tps-config-form label {
+    font-weight: bold;
+    display: inline-block;
+    padding: 0 20px 0 0;
+    color: #666;
+}
+
+#tps-config-form input[type=text],
+#tps-config-form input[type=password] {
+    width: 245px;
+}
+
+#tps-config-form select {
+    width: 100%;
+}
+
+#tps-config-form input[type=radio] {
+    margin: 0 0 3px 0;
+}
+
+#tps-config-form .normal {
+    font-weight: normal;
+}
+
+#tps-config-form .block-center {
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+}
+
+#tps-config-form button {
+    line-height: 25px;
+    color: rgb(173, 104, 43)
+}

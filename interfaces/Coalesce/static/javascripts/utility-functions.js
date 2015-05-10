@@ -104,6 +104,16 @@ function flagError(input, t) {
     }, 500);
 }
 
+function checkRequired(o, n) {
+    if (o.val() == "" || o. val() == undefined || o.val() == "None") {
+        o.addClass("ui-state-error");
+        flagError(o, n + " is required.");
+        return false;
+    } else {
+        return true;
+    }
+}
+
 function checkLength(o, n, min, max) {
     if (o.val().length > max || o.val().length < min) {
         o.addClass("ui-state-error");
@@ -214,7 +224,7 @@ function checkStorage(o) {
         o.addClass("ui-state-error");
         flagError(
             o,
-                "There is only " + availableStorage + "gbs of available storage.");
+            "There is only " + availableStorage + "gbs of available storage.");
         return false;
     } else {
         return true;
@@ -438,7 +448,7 @@ function disableActions(id, bool) {
         if (disabledActions.hasItem(actions)) {
             disabledActions.items[actions].count++;
         } else {
-            disabledActions.setItem(actions, { count: 1 });
+            disabledActions.setItem(actions, {count: 1});
             $(actions).bind('click', false);
             $(actions).css('color', disabledColor);
         }
@@ -516,7 +526,7 @@ function refreshSelect(select, hashTable) {
     $(select).empty();
     for (var item in hashTable.items) {
         $(select).append(
-                '<option value="' + hashTable.items[item].value + '">' + hashTable.items[item].option + '</option>'
+            '<option value="' + hashTable.items[item].value + '">' + hashTable.items[item].option + '</option>'
         );
     }
 }
@@ -527,7 +537,7 @@ function removeFromSelect(value, select, hashTable) {
 }
 
 function addToSelect(value, option, select, hashTable) {
-    hashTable.setItem(value, { value: value, option: option });
+    hashTable.setItem(value, {value: value, option: option});
     refreshSelect(select, hashTable);
 }
 
@@ -659,7 +669,7 @@ function updateRevertVolumeSnapshots(volumeId) {
     for (var snap in snapshots.items) {
         if (snapshots.items[snap].volumeId == volumeId) {
             select.append(
-                    '<option value="' + snap + '">' + snapshots.getItem(snap).name + '</option>'
+                '<option value="' + snap + '">' + snapshots.getItem(snap).name + '</option>'
             );
         }
     }
@@ -765,7 +775,8 @@ function updateSecGroupPorts(newPorts) {
         secGroupPorts[i] = {
             from_port: newPorts[i].from_port,
             to_port: newPorts[i].to_port,
-            transport: newPorts[i].transport };
+            transport: newPorts[i].transport
+        };
     }
 
     getSecGroupPorts();
