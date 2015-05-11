@@ -2153,7 +2153,8 @@ def eseries_get (request):
             status:
                 success
                     data: dict {'enabled':      "0/1",           "0" not enabled or "1" is enabled
-                                'pre_existing': "0/1",            "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
+                                'licensed':     "0/1",           "0" - not licensed; "1" - is licensed
+                                'pre_existing': "0/1",           "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
                                 'server':  "server hostname/IP",  web proxy server IP address/hostname
                                 'srv_port': "listen port",        normally 8080 or 8443
                                 'transport': "transport",         http/https
@@ -2353,7 +2354,6 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
 
         data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_pwd, 'disk_pools': storage_pools, 'ctrl_ips': ips}
         tpc.update_eseries (data, existing)
-
         out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully updated"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
@@ -2441,7 +2441,6 @@ def eseries_stats (request):
 
         stats['data'] = data
         out = {'status' : "success", 'stats' : stats}
-
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting NetApp E-Series statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2478,7 +2477,9 @@ def nfs_get (request):
             status:
                 success
                     data: dict {'enabled':    "0/1",                "0" not enabled or "1" is enabled
+                                'licensed':     "0/1",              "0" - not licensed; "1" - is licensed
                                 'mountpoint': ["mntpt1", "mntpt2"]  array of mountpoints
+                               }
                 error
                     message: error message
     '''
@@ -2549,6 +2550,138 @@ def nfs_update (request, mountpoints):
         out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# --- Routines for Nimble ---
+
+# Return Nimble configuration data.
+def nimble_get (request):
+    '''
+        returns json:
+            status:
+                success
+                    data: dict {'enabled':  "0/1",         "0" not enabled or "1" is enabled
+                                'licensed': "0/1",         "0" - not licensed; "1" - is licensed
+                                'server':   "ip-address",  hostname or ip address of the nimble storage
+                                'login':    "username",    username to login with
+                                'pwd':      "password"     password to login with
+                               }
+                error
+                    message: error message
+    '''
+    try:
+        data = tpc.get_nimble()
+        out = {'status' : "success", 'data' : data}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting Nimble configuration data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete Nimble configuration.
+def nimble_delete (request):
+    '''
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        tpc.delete_nimble (auth)
+        out = {'status' : "success", 'message' : "Nimble configuration has been deleted."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting Nimble configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Setup Nimble in cinder with the given server, login, password.
+def nimble_set (request, server, login, pwd):
+    '''
+        input:
+            server: hostname or ip address of the nimble storage
+            login:  username to login with
+            pwd:    password to login with
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        data = {'server': server, 'login': login, 'pwd': pwd}
+        tpc.add_nimble (data, auth)
+        out = {'status' : "success", 'message' : "Nimble storage has been successfully added"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding Nimble storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Update Nimble in cinder with the given server, login, password.
+def nimble_update (request, server, login, pwd):
+    '''
+        input:
+            server: hostname or ip address of the nimble storage
+            login:  username to login with
+            pwd:    password to login with
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        data = {'server': server, 'login': login, 'pwd': pwd}
+        tpc.update_nimble (data)
+        out = {'status' : "success", 'message' : "Nimble storage has been successfully updated"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating Nimble storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get Nimble statistics for disk pools.
+def nimble_add_license (request, license_key):
+    '''
+        input:
+            license_key - a valid Nimble license key
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        if tpc.add_eseries_license (license_key):
+            out = {'status' : "success", 'message' : "Nimble storage license has been added."}
+        else:
+            out = {'status' : "error", 'message' : "Error: Invalid Nimble storage license key."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding Nimble storage license: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get Nimble statistics for disk pools.
+def nimble_stats (request):
+    '''
+        input:
+        returns json:
+            status:
+                success
+                    stats: dict - defination TBD
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'stats' : stats}
+        out = {'status' : "error", 'message' : "Not implemented yet"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting Nimble statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 # ---

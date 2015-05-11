@@ -464,6 +464,32 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.nfs_update',
             name='nfs_update'),
 
+    # --- Nimble ---
+	url(r'^nimble/get/$',
+	    'coalesce.coal_beta.views.nimble_get',
+            name='nimble_get'),
+
+	url(r'^nimble/delete/$',
+	    'coalesce.coal_beta.views.nimble_delete',
+            name='nimble_delete'),
+
+	url(r'^nimble/set/(?P<server>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
+	    'coalesce.coal_beta.views.nimble_set',
+            name='nimble_set'),
+
+	url(r'^nimble/update/(?P<server>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
+	    'coalesce.coal_beta.views.nimble_update',
+            name='nimble_update'),
+
+	url(r'^nimble/license/set/(?P<license_key>[^/]+)/$',
+	    'coalesce.coal_beta.views.nimble_add_license',
+            name='nimble_add_license'),
+
+	url(r'^nimble/get/stats/$',
+	    'coalesce.coal_beta.views.nimble_stats',
+            name='nimble_stats'),
+
+
         # --- Setup ----
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',

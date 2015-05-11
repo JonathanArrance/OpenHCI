@@ -21,6 +21,12 @@ def add_nfs_to_cinder():
     return (True)
 
 
+def update_nfs_conf (mountpoints):
+    delete_nfs_conf()
+    add_nfs_conf (mountpoints)
+    return (True)
+
+
 def add_nfs_stanza():
     curr_file = common.CINDER_CONF
     outfile = open (curr_file, 'a')
