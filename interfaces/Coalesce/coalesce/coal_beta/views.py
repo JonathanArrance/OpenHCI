@@ -2552,24 +2552,23 @@ def nfs_update (request, mountpoints):
         out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-# ---Ceilometer Statistics---
-# Return the admin statistics for total vcpus
+# ---Ceilometer Statistics ----
 def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id=None, ceil_resource_id=None):
     try:
         out = {}
         auth = request.session['auth']
         ceil = meter_ops(auth)
 
-        #Meter Overview for environment
+        # Meter Overview for environment
         if ((ceil_tenant_id == None) and (ceil_resource_id == None)):
             result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type)
-        #Meter for instance/resource
+        # Meter for instance/resource
         elif ((ceil_tenant_id == None) and (ceil_resource_id != None)):
             result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_resource_id)
-        #Meter Overview for tenant
+        # Meter Overview for tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id == None)):
             result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id)
-        #Meter Overview for resource in tenant
+        # Meter Overview for resource in tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id != None)):
             result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_resource_id, ceil_tenant_id)
 
