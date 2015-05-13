@@ -596,7 +596,7 @@ def run_setup(new_system_variables,auth_dict):
     if(import_fedora != 'OK'):
         logger.sys_warning('Could not import the default Fedora image.')
     else:
-        logger.sys_info("SETUP5:Added the CentOS 6.5 image...")
+        logger.sys_info("SETUP:Added the CentOS 6.5 image...")
 
     #set the first time boot flag
     #first_boot = node_util.set_first_time_boot('UNSET')

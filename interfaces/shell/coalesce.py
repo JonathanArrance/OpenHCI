@@ -418,7 +418,7 @@ def setup(d):
     
     timeout = 10
     
-    if(p.exitcode != None):
+    if(p.exitcode == 0):
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
