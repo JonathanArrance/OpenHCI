@@ -21,6 +21,8 @@
     <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
     <script src="{{ STATIC_URL }}javascripts/update-admin-password.js"></script>
     <script src="{{ STATIC_URL }}javascripts/third-party-storage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/d3.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
 {% endblock %}
 
 {% block title %}{% endblock %}
@@ -72,6 +74,86 @@
                     </div>
                 </div>
             </div>
+
+                <div class="row-fluid">
+                    <div id="widget-actions" class="well top">
+                        <div class="legend">
+                            Cloud Meters
+                        </div>
+
+                        <script>
+                            var gauges = [];
+
+                            function createGauge(name, label, min, max)
+                            {
+                                var config =
+                                {
+                                    size: 120,
+                                    label: label,
+                                    min: undefined != min ? min : 0,
+                                    max: undefined != max ? max : 1000,
+                                    minorTicks: 10
+                                }
+
+                                var range = config.max - config.min;
+                                config.yellowZones = [{ from: config.min + range*0.75, to: config.min + range*0.9 }];
+                                config.redZones = [{ from: config.min + range*0.9, to: config.max }];
+
+                                gauges[name] = new Gauge(name + "GaugeContainer", config);
+                                gauges[name].render();
+                            }
+
+                            function createGauges()
+                            {
+                                createGauge("vcpu", "VCPU Count", 1, 16);
+                                createGauge("memoryusage", "Memory Usage MB", 512, 16384);
+                                createGauge("diskrootsize", "Root Size GB", 10, 5000);
+                                createGauge("cpupercent", "CPU  %", 0, 100);
+                                createGauge("cpuuserpercent", "CPU User %", 0, 100);
+                                createGauge("cpuidlepercent", "CPU Idle %", 0, 100);
+                                createGauge("cpuiowaitpercent", "CPU I/O Wait %", 0, 100);
+                                createGauge("cpukernelpercent", "CPU Kernel %", 0, 100);
+
+                            }
+
+                            function updateGauges()
+                            {
+                                for (var key in gauges)
+                                {
+                                    var value = getRandomValue(gauges[key])
+                                    gauges[key].redraw(value);
+                                }
+                            }
+
+                            function getRandomValue(gauge)
+                            {
+                                var overflow = 0; //10;
+                                return gauge.config.min - overflow + (gauge.config.max - gauge.config.min + overflow*2) *  Math.random();
+                            }
+
+                            function initialize()
+                            {
+                                createGauges();
+                                {#5000 = 5 seconds#}
+                                setInterval(updateGauges, 5000);
+                            }
+
+                        </script>
+                        <div style="text-align: center">
+                            <body onload="initialize()" style="font: 10px arial">
+                                <span id="vcpuGaugeContainer"></span>
+                                <span id="memoryusageGaugeContainer"></span>
+                                <span id="diskrootsizeGaugeContainer"></span>
+                                <span id="cpupercentGaugeContainer"></span>
+                                <span id="cpuuserpercentGaugeContainer"></span>
+                                <span id="cpuidlepercentGaugeContainer"></span>
+                                <span id="cpuiowaitpercentGaugeContainer"></span>
+                                <span id="cpukernelpercentGaugeContainer"></span>
+                            </body>
+                        </div>
+
+                    </div>
+                </div>
 
             <div class="well well-wide">
                 <div class="legend">
@@ -130,6 +212,9 @@
                         <th>Routers</th>
                         <th>Internal Networks</th>
                         <th>Users</th>
+                        <th>VCPU Count</th>
+                        <th>Memory Usage MB</th>
+                        <th>Disk Root Size GB</th>
                     </tr>
                     {% for tenant in tenant_info %}
                         {% if tenant.project_name != "trans_default" %}
@@ -142,6 +227,9 @@
                                 <td>{{ tenant.num_rout }}</td>
                                 <td>{{ tenant.num_net }}</td>
                                 <td>{{ tenant.num_users }}</td>
+                                <td>5</td>
+                                <td>2048</td>
+                                <td>500</td>
                             </tr>
                         {% endif %}
                     {% endfor %}

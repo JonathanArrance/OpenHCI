@@ -10,7 +10,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 
 print "Instantiating authorization object for an default admin"
-c = authorization("admin","password")
+c = authorization("admin", "password")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()

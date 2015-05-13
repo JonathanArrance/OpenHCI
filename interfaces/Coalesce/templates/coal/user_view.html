@@ -99,6 +99,76 @@ var PROJECT = "{{ project_name}}",
     </div>
     <!-- end span5-->
 
+    <div class="span7">
+        <div class="row-fluid">
+            <div id="widget-actions" class="well top">
+                <div class="legend">
+                    Project Meters
+                </div>
+                <script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3.js"></script>
+                <script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
+                <script>
+                    var gauges = [];
+
+                    function createGauge(name, label, min, max)
+                    {
+                        var config =
+                        {
+                            size: 120,
+                            label: label,
+                            min: undefined != min ? min : 0,
+                            max: undefined != max ? max : 1000,
+                            minorTicks: 10
+                        }
+
+                        var range = config.max - config.min;
+                        config.yellowZones = [{ from: config.min + range*0.75, to: config.min + range*0.9 }];
+                        config.redZones = [{ from: config.min + range*0.9, to: config.max }];
+
+                        gauges[name] = new Gauge(name + "GaugeContainer", config);
+                        gauges[name].render();
+                    }
+
+                    function createGauges()
+                    {
+                        createGauge("vcpu", "VCPU", 1, 16);
+                        createGauge("memoryusage", "Memory Usage", 512, 16384);
+                        createGauge("diskrootsize", "Disk Root Size", 10, 5000);
+                    }
+
+                    function updateGauges()
+                    {
+                        for (var key in gauges)
+                        {
+                            var value = getRandomValue(gauges[key])
+                            gauges[key].redraw(value);
+                        }
+                    }
+
+                    function getRandomValue(gauge)
+                    {
+                        var overflow = 0; //10;
+                        return gauge.config.min - overflow + (gauge.config.max - gauge.config.min + overflow*2) *  Math.random();
+                    }
+
+                    function initialize()
+                    {
+                        createGauges();
+                        {#5000 = 5 seconds#}
+                        setInterval(updateGauges, 5000);
+                    }
+
+                </script>
+                <body onload="initialize()" style="font: 10px arial">
+                    <span id="vcpuGaugeContainer"></span>
+                    <span id="memoryusageGaugeContainer"></span>
+                    <span id="diskrootsizeGaugeContainer"></span>
+                </body>
+            </div>
+        </div>
+    </div>
+
+
     <div id="dialog-form-update-password" title="Update Password">
         <p class="validateTips">All form fields are required.</p>
 
