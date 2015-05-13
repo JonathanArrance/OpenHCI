@@ -1250,9 +1250,8 @@ def restart_network_card(net_adapter):
     NOTE: This should be used after the network card config files have been written.
           If all is given as net_adapter then all net adapters are restarted.
     """
-
     if(net_adapter.lower() == 'all'):
-        os.system('sudo service network restart > /dev/null')
+        os.system('sudo service network restart')
     else:
         down = os.system('sudo ifdown %s' %(net_adapter))
         if(down == '256'):
@@ -1261,8 +1260,7 @@ def restart_network_card(net_adapter):
         up = os.system('sudo ifup %s' %(net_adapter))
         if(up != 0):
             return 'ERROR'
-
-    return 'OK'
+        return 'OK'
 
 def enable_network_card(net_adapter):
     """

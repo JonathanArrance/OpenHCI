@@ -6,6 +6,7 @@
 
 from __future__ import nested_scopes, division
 import sys, os, time, getopt, subprocess, dialog, ast
+from multiprocessing import Process
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
@@ -378,10 +379,8 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    p = subprocess.Popen(['python2.7', 'from transcirrus.operations.initial_setup import run_setup', 'import ast',
-                          'nsvS = ' + str(new_system_variables), 'nsv = ast.literal_eval(nsvS)',
-                          'uS = ' + str(user_dict), 'u = ast.literal_eval(uS)',
-                          'run_setup(nsv,u)'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = Process(target=run_setup, args=(new_system_variables, user_dict))
+    p.start()
     
     d.gauge_start(text='Preparing your cloud...')
     fill = 0
@@ -390,17 +389,16 @@ def setup(d):
     while(1):
         fill = fill + 1
         if(fill > 100):
-            status = p.wait()
+            status = p.join()
             fill = 0;
-            o = subprocess.Popen(['python2.7', 'from transcirrus.operations.change_adminuser_password import change_admin_password',
-                                  'import ast', 'uS = ' + str(user_dict), 'u = ast.literal_eval(uS)',
-                                  'p = ' + str(pwd), 'change_admin_password(u, p)'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            o = Process(target=change_admin_password, args=(user_dict, pwd))
+            o.start()
             while(1):
                 d.gauge_update(fill, text='Updating credentials...', update_text=1)
                 fill = fill + 10
                 time.sleep(1)
                 if(fill > 100):
-                    status1 = o.wait()
+                    status1 = o.join()
                     break
             break
         if(fill < 5):
@@ -419,10 +417,10 @@ def setup(d):
             d.gauge_update(fill, text='Forming cloud...', update_text=1)
         time.sleep(2)
     d.gauge_stop()
-
+    
     timeout = 10
     
-    if(status != None):
+    if(p.exitcode == 0):
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):

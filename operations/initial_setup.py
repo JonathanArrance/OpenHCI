@@ -44,6 +44,13 @@ for field in fields:
 run_setup(new_system_variables,auth_dict)
 '''
 def run_setup(new_system_variables,auth_dict):
+    null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
+    # save the current file descriptors to a tuple
+    save = os.dup(1), os.dup(2)
+    # put /dev/null fds on 1 and 2
+    os.dup2(null_fds[0], 1)
+    os.dup2(null_fds[1], 2)
+    
     #retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
     node_name = util.get_system_name()
@@ -607,6 +614,14 @@ def run_setup(new_system_variables,auth_dict):
     #logger.sys_info("Service status: %s"%(checkpoint))
     os.system('sudo chmod 775 /var/lib/glance/images')
     logger.sys_info("SETUP57:END")
+    
+    # restore file descriptors so I can print the results
+    os.dup2(save[0], 1)
+    os.dup2(save[1], 2)
+    # close the temporary fds
+    os.close(null_fds[0])
+    os.close(null_fds[1])
+    
     return 'OK'
 
 def check_setup():
