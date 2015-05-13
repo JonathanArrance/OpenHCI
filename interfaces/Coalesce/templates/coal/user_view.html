@@ -140,9 +140,28 @@ var PROJECT = "{{ project_name}}",
                     {
                         for (var key in gauges)
                         {
+                            var value = getCeilometerResults(gauges[key], "vcpus")
                             var value = getRandomValue(gauges[key])
                             gauges[key].redraw(value);
                         }
+                    }
+
+                    function getCeilometerResults(guage, meterType)
+                    {
+                        var endDate = new Date();
+                        var startDate = new Date(endDate);
+                        var durationInMinutes = 60;
+                        startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
+                        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + startDate.getHours() + "%3A" + startDate.getMinutes();
+                        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + endDate.getHours() + "%3A" + endDate.getMinutes();
+                        url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/"
+
+                        var result;
+                        $.getJSON(url).done(function(data) {
+                            result = data.statistics[0]["sum"];
+                            console.log(result);
+                            return result.toString();
+                        });
                     }
 
                     function getRandomValue(gauge)
@@ -159,11 +178,13 @@ var PROJECT = "{{ project_name}}",
                     }
 
                 </script>
-                <body onload="initialize()" style="font: 10px arial">
-                    <span id="vcpuGaugeContainer"></span>
-                    <span id="memoryusageGaugeContainer"></span>
-                    <span id="diskrootsizeGaugeContainer"></span>
-                </body>
+                <div style="text-align: center">
+                    <body onload="initialize()" style="font: 10px arial">
+                        <span id="vcpuGaugeContainer"></span>
+                        <span id="memoryusageGaugeContainer"></span>
+                        <span id="diskrootsizeGaugeContainer"></span>
+                    </body>
+                </div>
             </div>
         </div>
     </div>
