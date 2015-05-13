@@ -6,6 +6,7 @@
 
 from __future__ import nested_scopes, division
 import sys, os, time, getopt, subprocess, dialog, ast
+from multiprocessing import Process
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
@@ -378,51 +379,46 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    p = subprocess.Popen(['python2.7', 'from transcirrus.operations.initial_setup import run_setup', 'import ast',
-                          'nsvS = ' + str(new_system_variables), 'nsv = ast.literal_eval(nsvS)',
-                          'uS = ' + str(user_dict), 'u = ast.literal_eval(uS)',
-                          'run_setup(nsv,u)'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = Process(target=run_setup, args=(new_system_variables, user_dict))
+    p.start()
     
-    d.gauge_start(text='Preparing your cloud...')
+    fill_text = "Preparing your cloud..."
+    d.gauge_start(text=fill_text)
     fill = 0
     status = None
     status1 = None
+    count = 0
     while(1):
-        fill = fill + 1
-        if(fill > 100):
-            status = p.wait()
+        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out.wait()
+        time.sleep(1)
+        stat_raw = out.stdout.readlines()
+        if(len(stat_raw) == 0):
+            continue
+        count = count + 1
+        fill = fill + 1.851
+        stat = stat_raw[0].split(':')
+        fill_text = stat[-1].strip()
+        if(fill_text == "END"):
+            status = p.join()
             fill = 0;
-            o = subprocess.Popen(['python2.7', 'from transcirrus.operations.change_adminuser_password import change_admin_password',
-                                  'import ast', 'uS = ' + str(user_dict), 'u = ast.literal_eval(uS)',
-                                  'p = ' + str(pwd), 'change_admin_password(u, p)'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            o = Process(target=change_admin_password, args=(user_dict, pwd))
+            o.start()
             while(1):
                 d.gauge_update(fill, text='Updating credentials...', update_text=1)
                 fill = fill + 10
                 time.sleep(1)
                 if(fill > 100):
-                    status1 = o.wait()
+                    status1 = o.join()
                     break
             break
-        if(fill < 5):
-            d.gauge_update(fill)
-        elif(fill < 16):
-            d.gauge_update(fill, text='Warming air...', update_text=1)
-        elif(fill < 32):
-            d.gauge_update(fill, text='Evaporating water...', update_text=1)
-        elif(fill < 48):
-            d.gauge_update(fill, text='Expanding and cooling air...', update_text=1)
-        elif(fill < 64):
-            d.gauge_update(fill, text='Reaching dew point...', update_text=1)
-        elif(fill < 82):
-            d.gauge_update(fill, text='Conducing water vapor...', update_text=1)
         else:
-            d.gauge_update(fill, text='Forming cloud...', update_text=1)
-        time.sleep(2)
+            d.gauge_update(fill, text=fill_text, update_text=1)
     d.gauge_stop()
-
+    
     timeout = 10
     
-    if(status != None):
+    if(p.exitcode != None):
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
