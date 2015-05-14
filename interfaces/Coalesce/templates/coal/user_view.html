@@ -110,12 +110,13 @@ var PROJECT = "{{ project_name}}",
                 <script>
                     var gauges = [];
 
-                    function createGauge(name, label, min, max)
+                    function createGauge(name, label, meterType, min, max)
                     {
                         var config =
                         {
                             size: 120,
                             label: label,
+                            meterType: meterType,
                             min: undefined != min ? min : 0,
                             max: undefined != max ? max : 1000,
                             minorTicks: 10
@@ -131,22 +132,16 @@ var PROJECT = "{{ project_name}}",
 
                     function createGauges()
                     {
-                        createGauge("vcpu", "VCPU", 1, 16);
-                        createGauge("memoryusage", "Memory Usage", 512, 16384);
-                        createGauge("diskrootsize", "Disk Root Size", 10, 5000);
+                        createGauge("vcpus", "VCPU", "vcpus", 1, 16);
+                        createGauge("memory", "Memory Alloc", "memory", 512, 16384);
+                        createGauge("diskrootsize", "Disk Root Size", "disk.root.size", 10, 5000);
                     }
 
                     function updateGauges()
                     {
                         for (var key in gauges)
                         {
-                            getCeilometerResults(gauges[key], "vcpus").done(function (data) {
-                                var result;
-                                result = data.statistics[0]["sum"];
-{#                                gauges[key].redraw(result);#}
-                            })
-                            var value = getRandomValue(gauges[key])
-                            gauges[key].redraw(value);
+                            getCeilometerResults(gauges[key], gauges[key].config.meterType)
                         }
                     }
 
@@ -156,20 +151,21 @@ var PROJECT = "{{ project_name}}",
                         var startDate = new Date(endDate);
                         var durationInMinutes = 60;
                         startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
-                        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + startDate.getHours() + "%3A" + startDate.getMinutes();
-                        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + endDate.getHours() + "%3A" + endDate.getMinutes();
-                        url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/"
-
+                        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
+                        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
+                        url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/"
 
                         return $.getJSON(url).done(function(data) {
-
+                            if (data.message != "empty dataset")
+                                {
+                                    var result = data.statistics[0]["sum"];
+                                    guage.redraw(result);
+                                }
                         });
                     }
 
-                    function getRandomValue(gauge)
-                    {
-                        var overflow = 0; //10;
-                        return gauge.config.min - overflow + (gauge.config.max - gauge.config.min + overflow*2) *  Math.random();
+                    function getProjectID() {
+                        return $("#user-project").html();
                     }
 
                     function initialize()
@@ -182,8 +178,8 @@ var PROJECT = "{{ project_name}}",
                 </script>
                 <div style="text-align: center">
                     <body onload="initialize()" style="font: 10px arial">
-                        <span id="vcpuGaugeContainer"></span>
-                        <span id="memoryusageGaugeContainer"></span>
+                        <span id="vcpusGaugeContainer"></span>
+                        <span id="memoryGaugeContainer"></span>
                         <span id="diskrootsizeGaugeContainer"></span>
                     </body>
                 </div>
