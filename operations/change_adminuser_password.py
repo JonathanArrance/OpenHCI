@@ -15,7 +15,14 @@ import transcirrus.common.util as util
 def change_admin_password(auth_dict,new_password):
     #change the linux password
     if((auth_dict['is_admin'] == 1) and (auth_dict['adm_token'] != '') and (auth_dict['adm_token'] == config.ADMIN_TOKEN)):
-        print ('echo -e '+new_password+'\n'+new_password+'\n | sudo passwd admin')
+        null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
+        # save the current file descriptors to a tuple
+        save = os.dup(1), os.dup(2)
+        # put /dev/null fds on 1 and 2
+        os.dup2(null_fds[0], 1)
+        os.dup2(null_fds[1], 2)
+        
+        #print ('echo -e '+new_password+'\n'+new_password+'\n | sudo passwd admin')
         os.system('echo \''+new_password+'\n'+new_password+'\n\' | sudo passwd admin')
         logger.sys_info("Password for admin user successfully changed.")
         #instantiate the object
@@ -39,6 +46,14 @@ def change_admin_password(auth_dict,new_password):
         write_creds = os.system("""sudo sed -i 's/OS_PASSWORD=.*/OS_PASSWORD=%s/g' /home/transuser/factory_creds"""%(new_password))
         if(write_creds != 0):
             logger.sys_warning('Could not write the new credentials file in transuser home directory.')
+        
+        # restore file descriptors so I can print the results
+        os.dup2(save[0], 1)
+        os.dup2(save[1], 2)
+        # close the temporary fds
+        os.close(null_fds[0])
+        os.close(null_fds[1])
+        
         return 'OK'
     else:
         logger.sys_error("Could not change the admin user passowrd")
