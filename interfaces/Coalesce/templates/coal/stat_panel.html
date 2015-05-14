@@ -166,9 +166,6 @@
                         <th>Routers</th>
                         <th>Internal Networks</th>
                         <th>Users</th>
-                        <th>VCPU Count</th>
-                        <th>Memory Usage MB</th>
-                        <th>Disk Root Size GB</th>
                     </tr>
                     {% for tenant in tenant_info %}
                         {% if tenant.project_name != "trans_default" %}
@@ -181,9 +178,6 @@
                                 <td>{{ tenant.num_rout }}</td>
                                 <td>{{ tenant.num_net }}</td>
                                 <td>{{ tenant.num_users }}</td>
-{#                                <td>5</td>#}
-{#                                <td>2048</td>#}
-{#                                <td>500</td>#}
                             </tr>
                         {% endif %}
                     {% endfor %}
