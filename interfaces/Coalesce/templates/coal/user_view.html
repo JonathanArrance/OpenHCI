@@ -140,7 +140,11 @@ var PROJECT = "{{ project_name}}",
                     {
                         for (var key in gauges)
                         {
-                            var value = getCeilometerResults(gauges[key], "vcpus")
+                            getCeilometerResults(gauges[key], "vcpus").done(function (data) {
+                                var result;
+                                result = data.statistics[0]["sum"];
+{#                                gauges[key].redraw(result);#}
+                            })
                             var value = getRandomValue(gauges[key])
                             gauges[key].redraw(value);
                         }
@@ -156,11 +160,9 @@ var PROJECT = "{{ project_name}}",
                         var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + endDate.getHours() + "%3A" + endDate.getMinutes();
                         url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/"
 
-                        var result;
-                        $.getJSON(url).done(function(data) {
-                            result = data.statistics[0]["sum"];
-                            console.log(result);
-                            return result.toString();
+
+                        return $.getJSON(url).done(function(data) {
+
                         });
                     }
 
