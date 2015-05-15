@@ -73,7 +73,7 @@ def get_supported_third_party_storage():
              'in_use':     get_eseries()['in_use'], 
              'id':         "eseries"
             },
-            {'name':       "nfs",
+            {'name':       "NFS",
              'configured': get_nfs()['enabled'],
              'licensed':   get_nfs()['licensed'],
              'in_use':     get_nfs()['in_use'],

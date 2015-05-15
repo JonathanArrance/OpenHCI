@@ -2320,7 +2320,7 @@ def eseries_set_config (request, disk_pools):
 
 # Update the E-Series web proxy server and cinder with the given data.
 # If we are using a pre-existing web proxy then the web proxy server data is ignored.
-def eseries_update (request, pre_existing, server, srv_port, transport, login, pwd, ctrl_pwd, ctrl_ips, disk_pools):
+def eseries_update (request, pre_existing, server, srv_port, transport, login, pwd, ctrl_ips, disk_pools, ctrl_pwd=None):
     '''
         input:
             pre_existing: "0/1"                 0 - not using pre-existing web proxy; 1 using pre-existy web proxy
@@ -2352,7 +2352,12 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
         ips = ctrl_ips.split(",")
         storage_pools = disk_pools.split(",")
 
-        data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_pwd, 'disk_pools': storage_pools, 'ctrl_ips': ips}
+        if (ctrl_pwd == None):
+            ctrl_password = ""
+        else:
+            ctrl_password = ctrl_pwd
+
+        data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_password, 'disk_pools': storage_pools, 'ctrl_ips': ips}
         tpc.update_eseries (data, existing)
         out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully updated"}
     except Exception, e:
@@ -2657,7 +2662,7 @@ def nimble_add_license (request, license_key):
                     message: error message
     '''
     try:
-        if tpc.add_eseries_license (license_key):
+        if tpc.add_nimble_license (license_key):
             out = {'status' : "success", 'message' : "Nimble storage license has been added."}
         else:
             out = {'status' : "error", 'message' : "Error: Invalid Nimble storage license key."}
