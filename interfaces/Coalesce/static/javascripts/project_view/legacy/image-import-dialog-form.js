@@ -16,7 +16,7 @@ $(function () {
     var uploading = false;
 
     // Form Elements
-    var image_name = $("#import_img_name"),
+    var image_name = $("#bam-image-name"),
         disk_format = $("#import_img_disk"),
         container_format = $("#import_img_cont"),
         image_type = $("#import_img_type"),

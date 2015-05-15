@@ -1,91 +1,411 @@
 {% load staticfiles %}
 
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/build_a_machine.css"
-      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"/>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/build_a_machine.css"/>
 
 <div id="build-a-machine-form" title="Build-A-Machine">
     <form>
         {% csrf_token %}
 
-        <fieldset id="instance-fieldset">
+        <fieldset id="bam-instance-section">
             <legend>Instance</legend>
-            <label for="bam-instance-name" title="THIS IS A SAMPLE TIP" class="masterTooltip">Instance Name</label>
-            <input title="THIS IS A SAMPLE TIP" type="text" name="bam-instance-name" id="bam-instance-name"
-                   class="text ui-widget-content ui-corner-all instance-text-field masterTooltip" />
-            <br/>
-            <label for="bam-select-image-name">Select an Image</label>
-            <select title="THIS IS A SAMPLE TIP" name="bam-select-image-name" id="bam-select-image-name" class="masterTooltip">
-                <script>$(function () {
-                    refreshSelect($("#bam-select-image-name"), imageInstOpts);
-                });</script>
-            </select>
-            <br/>
-            <label for="bam-flavor-name">Flavor</label>
-            <select name="bam-flavor-name" id="bam-flavor-name">
-                {% for flavor in flavors %}
-                <option value="{{flavor.flavor_name}}">{{flavor.flavor_name}}</option>
-                {% endfor %}
-            </select>
+            <h6>Please enter the following information to build a virtual machine instance:</h6>
+
+            <div class="bam-form">
+                <label for="bam-instance-name">Name</label>
+                <input type="text" name="bam-instance-name" id="bam-instance-name"/>
+                <label for="bam-instance-image">Image</label>
+                <select name="bam-select-image-name" id="bam-instance-image">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-instance-image"), imageInstOpts);
+                            $("#bam-instance-image").append($('<option></option>')
+                                    .val("upload")
+                                    .html("Upload Image"));
+                        });
+                    </script>
+                </select>
+
+                <div class="instance-spacer"></div>
+                <label for="bam-instance-flavor">Flavor</label>
+                <select name="bam-flavor-name" id="bam-instance-flavor">
+                    {% for flavor in flavors %}
+                        <option value="{{ flavor.flavor_name }}">{{ flavor.flavor_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="bam-info">
+
+                <br>
+
+                <p>Name: Enter a descriptive name for your VM instance. The name must be at least 3 characters
+                    and no more than 16 characters in length.</p>
+
+                <p>Image: Use the pulldown to select an image that has already been uploaded for you or select
+                    "Upload Image" to upload your own image. If you are uploading a new image, the next screen will
+                    allow you to upload your new image.</p>
+
+                <p>Flavor: Use the pull down to select the size characteristics for your virtual machine. The following
+                    chart defines the different flavor meanings:</p>
+            </div>
+
+            <div class="bam-table">
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <th>Memory (mb)</th>
+                        <th>VCPUs</th>
+                        <th>Disk (gb)</th>
+                    </tr>
+                    <tr>
+                        <td>m1.tiny</td>
+                        <td>512</td>
+                        <td>1</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>m1.small</td>
+                        <td>2048</td>
+                        <td>1</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>m1.medium</td>
+                        <td>4096</td>
+                        <td>2</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>m1.large</td>
+                        <td>8192</td>
+                        <td>4</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>m1.xlarge</td>
+                        <td>16384</td>
+                        <td>8</td>
+                        <td>10</td>
+                    </tr>
+                </table>
+            </div>
         </fieldset>
-        <fieldset>
+
+        <fieldset id="bam-image-section" style="display: none;">
+            <legend>Image</legend>
+            <h6>Please enter the following information to upload your image:</h6>
+
+            <div class="bam-form">
+                <label for="bam-image-name">Name</label>
+                <input type="text" name="bam-image-name" id="bam-image-name"/>
+
+                <label for="bam-image-container">Container Format</label>
+                <select name="bam-image-container" id="bam-image-container">
+                    <option value="bare">bare</option>
+                    <option value="ovf">ovf</option>
+                    <option value="aki">aki</option>
+                    <option value="ari">ari</option>
+                    <option value="ami">ami</option>
+                </select>
+
+                <label for="bam-image-disk">Disk Format</label>
+                <select name="bam-image-disk" id="bam-image-disk">
+                    <option value="raw">raw</option>
+                    <option value="vhd">vhd</option>
+                    <option value="vmdk">vmdk</option>
+                    <option value="vdi">vdi</option>
+                    <option value="iso">iso</option>
+                    <option value="qcow2">qcow2</option>
+                    <option value="aki">aki</option>
+                    <option value="ari">ari</option>
+                    <option value="ami">ami</option>
+                </select>
+
+                <label for="bam-image-location">Local/Remote</label>
+                <select name="bam-image-location" id="bam-image-location">
+                    <option value="image_file" selected>local</option>
+                    <option value="image_url">remote</option>
+                </select>
+
+                <label for="bam-image-import-remote">Remote Image Location</label>
+                <input type="text" name="bam-image-import-remote" id="bam-image-import-remote"/>
+
+                <label for="bam-image-import-local" style="height: 22px; line-height: 20px;">Local Image
+                    Location</label>
+                <input type="file" name="bam-image-import-local" id="bam-image-import-local"/>
+
+                <div class="image-spacer"></div>
+
+                <label for="bam-image-os">OS Type
+                    <span title="When booting a Windows instance, OS Type must be specified.
+                        Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">
+                        (help)
+                    </span>
+                </label>
+                <select name="bam-image-os" id="bam-image-os">
+                    <option value="linux" selected="selected">Linux</option>
+                    <option value="windows">Windows</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <label for="bam-image-visibility">Visibility</label>
+                <select name="bam-image-visibility" id="bam-image-visibility">
+                    <option value="public">public</option>
+                    <option value="private">private</option>
+                </select>
+            </div>
+            <div class="bam-info">
+                <br>
+
+                <p>Name: Enter a descriptive name for your image. The name must be at least 3 characters and no
+                    more than 20 characters in length.</p>
+
+                <p>Container Format: Use the pull down to select the container format that the image is in.</p>
+                <br>
+
+                <p>Disk Format: Use the pulldown to select disk format that the image is in.</p>
+                <br>
+
+                <p>Local/Remote: Select ‘local’ if the image to upload is located on your current computer/laptop.
+                    Select ‘remote’ if the image is located on another server.</p>
+
+                <ul>
+                    <li>
+                        Local Image Location: Press the ‘Browse’ button to bring up the local browse window to select
+                        the image file to upload.
+                    </li>
+                    <li>
+                        Remote Image Location (URL): Enter the URL for the location to the image file to upload. The URL
+                        must start with ‘http://’, ‘https://’, ‘ftp://’, etc.
+                    </li>
+                </ul>
+
+                <p>OS Type: Select the OS type that the image represents. If your OS is not Linux or Windows then choose
+                    ‘Other’.</p>
+                <br>
+
+                <p>Visibility: If you would like others to use your image then choose ‘Public’ otherwise choose
+                    ‘Private’</p>
+
+            </div>
+        </fieldset>
+
+        <fieldset id="bam-volume-section" style="display: none;">
             <legend>Storage</legend>
-            <label for="bam-volume-name">Volume Name</label>
-            <input type="text" name="bam-volume-name" id="bam-volume-name"
-                   class="text ui-widget-content ui-corner-all volume-text-field"/>
-            <br/>
-            <label for="bam-volume-size">Volume Size (GB)</label>
-            <input type="text" name="bam-volume-size" id="bam-volume-size"
-                   class="text ui-widget-content ui-corner-all volume-text-field"/>
+            <h6>Please enter the following information to add permanent storage to your instance:</h6>
 
-            <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
+            <div class="bam-form">
 
-            <label for="bam-volume-type">Volume Type</label>
-            <select name="bam-volume-type" id="bam-volume-type" class="volume-select">
-                {% for voltypes in volume_types %}
-                <option value="{{voltypes.name}}">{{voltypes.name}}</option>
-                {% endfor %}
-            </select>
+                <label for="bam-volume-select-existing">Select Existing Volume</label>
+                <select name="bam-volume-select-existing" id="bam-volume-select-existing">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-volume-select-existing"), volumes);
+                            $("#bam-volume-select-existing").append($('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume"));
+                        });
+                    </script>
+                </select>
+                <hr>
+                <div class="volume-spacer"></div>
+                <label for="bam-volume-name">Name</label>
+                <input type="text" name="bam-volume-name" id="bam-volume-name"
+                       class="text ui-widget-content ui-corner-all volume-text-field"/>
+                <br/>
+                <label for="bam-volume-size">Size (GB)</label>
+                <input type="text" name="bam-volume-size" id="bam-volume-size"
+                       class="text ui-widget-content ui-corner-all volume-text-field"/>
+
+                <div class="volume-available-storage-bar"><span class="volume-available-storage-label"></span></div>
+                <div class="volume-spacer"></div>
+
+                <label for="bam-volume-type">Type</label>
+                <select name="bam-volume-type" id="bam-volume-type" class="volume-select">
+                    {% for voltypes in volume_types %}
+                        <option value="{{ voltypes.name }}">{{ voltypes.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="bam-info">
+                <br>
+
+                <p>To choose an existing volume, use the pulldown to select a volume to attach to your new instance. If
+                    no volumes exist, you can create a new volume or skip adding permanent storage to your instance.</p>
+                <br>
+
+                <p>To create a new volume, the following information is required:</p>
+                <ul>
+                    <li>Name: Enter a descriptive name for your new volume. The name must be at least 3
+                        characters and no more than 16 characters in length.
+                    </li>
+                    <li>Size: Enter the size in GigaBytes (GB) of the volume to be created.</li>
+                    <li>Quota (GB): Your administrator has set a quota on the amount of disk space you can create. This
+                        graph shows how much of the space you have already allocated from your total allotment.
+                    </li>
+                    <li>Type: Select the type of storage to create your volume on. The default types are ‘ssd’
+                        and ‘spindle’. For performance ssd is faster than spindle. If you need a large amount of storage
+                        and performance is not an issue, then ‘spindle’ may be a better option.
+                    </li>
+                </ul>
+            </div>
         </fieldset>
 
-        <fieldset id="security-key-fieldset">
-            <legend>Security Key</legend>
-            <label id="bam-select-key-label" for="bam-select-key-name">Select a Key</label>
-            <select name="bam-select-key-name" id="bam-select-key-name">
-                <script>$(function () {
-                    refreshSelect($("#bam-select-key-name"), secKeyInstOpts);
-                });</script>
-            </select>
-            </br>
+        <fieldset id="bam-security-section" style="display: none;">
+            <legend>Security</legend>
+            <h6>Please enter the following network and security information:</h6>
+
+            <div class="bam-form">
+                <label for="bam-security-ip">Floating IP</label>
+                <select name="bam-security-ip" id="bam-security-ip">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-security-ip"), assignableFips);
+                        });
+                    </script>
+                </select>
+
+                <hr>
+
+                <div class="security-spacer"></div>
+                <label for="bam-security-select-key">Key Pair</label>
+                <select name="bam-security-select-key" id="bam-security-select-key">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
+                            $("#bam-security-select-key").append($('<option></option>')
+                                    .val("create")
+                                    .html("Create Key"));
+                        });
+                    </script>
+                </select>
+
+                <div class="security-spacer"></div>
+                <label for="bam-security-create-key">Key Pair Name</label>
+                <input type="text" name="bam-security-create-key" id="bam-security-create-key"/>
+
+                <hr>
+
+                <label for="bam-security-group">Security Group</label>
+                <select name="bam-security-group" id="bam-security-group">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-security-group"), secGroupInstOpts);
+                            $("#bam-security-group").append($('<option></option>')
+                                    .val("create")
+                                    .html("Create Group"));
+                        });
+                    </script>
+                </select>
+            </div>
+
+            <div class="bam-info">
+                <br>
+
+                <p>Floating IP : To assign an external IP address to your new instance, select an IP address in pulldown
+                    list. If no IP addresses are available, please contact your cloud administrator.</p>
+
+                <br>
+                <br>
+
+                <p>Key Pair: To assign a key pair to your instance, select an existing key pair in the pulldown list.
+                    Key Pairs are Public and Private RSA keys that are used to access your VM instance. The Public key
+                    will automatically be applied to your instance. You will use the Private key to login to your
+                    instance (if required). If you do not have an existing key pair or would like to create your own,
+                    then select "Create Key" and enter the name below.</p>
+
+                <p>Key Pair Name: Enter a descriptive name for your security key pair. The name must be at least 3
+                    characters and no more than 16 characters in length.</p>
+
+                <br>
+                <br>
+                <br>
+
+                <p>Security: To assign a security group to your instance, select a security group from
+                    the pulldown list. Security Groups are network ports allowed to connect to your instance. This is
+                    similar to firewall rules. If you do not have an existing security group or would like to create
+                    your own, then choose “Create Group” in the pulldown. The next screen will then allow you to create
+                    your new security group.</p>
+            </div>
+        </fieldset>
+
+        <fieldset id="bam-group-section" style="display: none;">
             <legend>Security Group</legend>
-            <label id="bam-select-security-name-label" for="bam-select-security-name">Select a security group.</label>
-            <select name="bam-select-security-name" id="bam-select-security-name">
-                <script>$(function () {
-                    refreshSelect($("#bam-select-security-name"), secGroupInstOpts);
-                });</script>
-            </select>
+            <h6>Please enter the following security group information:</h6>
+
+            <p>Security Groups are similar to rules you would setup in a firewall to allow specific
+                application/transport ports to connect to your instance.</p>
+
+            <div class="bam-form">
+                <label for="bam-group-name">Name</label>
+                <input type="text" name="bam-group-name" id="bam-group-name"/>
+                <label for="bam-group-description">Description</label>
+                <input type="text" name="bam-group-description" id="bam-group-description"/>
+                <label for="bam-group-transport">Transport</label>
+                <select name="bam-group-transport" id="bam-group-transport">
+                    <option value="tcp" selected>TCP</option>
+                    <option value="udp">UDP</option>
+                </select>
+                <div class="group-spacer"></div>
+                <label for="bam-group-ports">Ports</label>
+                <input type="text" name="bam-group-ports" id="bam-group-ports" value="443,80,22"/>
+            </div>
+
+            <div class="bam-info">
+                <br>
+
+                <p>Name: Enter a descriptive name for your security group. The name must be at least 3 characters and no
+                    more than 16 characters in length.</p>
+
+                <p>Description: A brief description of your security group.</p>
+
+                <br><br>
+
+                <p>Transport: The transport protocol for the security group ports.</p>
+
+                <br><br>
+
+                <p>Ports: A comma separated list of ports that are able to connect to your instance.</p>
+            </div>
+
+            <div class="bam-table">
+
+                <label class="block-clear">Common TCP/UDP ports:</label>
+                <table>
+                    <tr>
+                        <th>ssh</th>
+                        <th>telnet</th>
+                        <th>http</th>
+                        <th>smtp</th>
+                    </tr>
+                    <tr>
+                        <td>22</td>
+                        <td>23</td>
+                        <td>80</td>
+                        <td>25</td>
+                    </tr>
+                    <tr>
+                        <th>https</th>
+                        <th>smtps</th>
+                        <th>ftp</th>
+                        <th>nfs</th>
+                    </tr>
+                    <tr>
+                        <td>443</td>
+                        <td>465</td>
+                        <td>20, 21</td>
+                        <td>1025</td>
+                    </tr>
+                </table>
+            </div>
         </fieldset>
 
-        <fieldset id="network-fieldset">
-            <legend>Network</legend>
-            <label id="bam-select-network-name-label" for="bam-select-network-name">Select a network</label>
-            <select name="bam-select-network-name" id="bam-select-network-name">
-                <script>$(function () {
-                    refreshSelect($("#bam-select-network-name"), privNetInstOpts);
-                });</script>
-            </select>
-        </fieldset>
+    <fieldset id="bam-progress-section" style="display: none;"></fieldset>
 
         <div>
-            <a href="#" class="btn" id="bam-next-button">Create</a>
+            <a href="#" class="btn" id="bam-next-button">Next</a>
+            <a href="#" class="btn" id="bam-back-button">Back</a>
+            <a href="#" class="btn" id="bam-create-button">Create</a>
         </div>
     </form>
 </div>
-
-<script>
-    $(function () {
-        changeBamKeyInput();
-        changeBamNetworkInput();
-        changeBamSecurityInput();
-        initializeBamSection();
-    });
-</script>
