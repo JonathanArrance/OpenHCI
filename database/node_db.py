@@ -138,10 +138,13 @@ def insert_node(input_dict):
         input_dict['node_virt_type'] = 'qemu'
 
     #hack to account for physical core node
+    cpu_mode = None
     if(util.is_node_phy() == '1'):
         input_dict['node_virt_type'] = 'kvm'
-    #elif(util.is_node_phy() == '0'):
-    #    input_dict['node_virt_type'] = 'qemu'
+        cpu_mode = {"parameter":"cpu_mode","param_value":"host-passthrough",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    elif(util.is_node_phy() == '0'):
+        input_dict['node_virt_type'] = 'qemu'
+        cpu_mode = {"parameter":"cpu_mode","param_value":"host-model",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
 
     if('node_gluster_peer' not in input_dict):
         input_dict['node_gluster_peer'] = '0'
@@ -303,7 +306,7 @@ def insert_node(input_dict):
             nova_array = [insert_nova_db,insert_nova_ip,insert_vncproxy,insert_vnclisten,insert_novncproxy,insert_avail_zone,insert_node_virt,insert_nova_rabbit,insert_nova_metadata,insert_metadata_host,
                           insert_neutron_host,insert_neutron_admin,insert_nova_auth,insert_nova_auth_uri,insert_nova_memcached,insert_nova_neu_ten_id,insert_nova_ec2workers,insert_nova_nworkers,
                           insert_nova_mworkers,insert_nova_workers,insert_spice,insert_spiceproxy,insert_nova_ec2_url,insert_nova_glance,insert_nova_glance_api,insert_nova_s3_url,insert_nova_dhcp_domain,
-                          insert_nova_host,insert_xvpvncproxy]
+                          insert_nova_host,insert_xvpvncproxy,cpu_mode]
             for nova in nova_array:
                 db.pg_transaction_begin()
                 db.pg_insert('nova_node',nova)

@@ -427,7 +427,6 @@ class volume_ops:
                 volume_size - REQ
                 volume_name - OP
                 volume_zone - Optional default is nova
-
         OUTPUTS: r_dict - volume_name
                         - volume_type
                         - volume_id
@@ -456,13 +455,14 @@ class volume_ops:
             logger.sys_error("Image ID is required.")
             raise Exception("Image ID is required.")
 
-        if(('volume_name' not in input_dict) or (input_dict['volume_name'] == 'none')):
-            input_dict['volume_name'] = input_dict['volume_id'] + '_boot_%s'%(str(self.rannum))
+        if('volume_name' not in input_dict or input_dict['volume_name'] == None):
+            input_dict['volume_name'] = input_dict['image_id'] + '_boot_%s'%(str(self.rannum))
         else:
             input_dict['volume_name'] = input_dict['volume_name'] + '_boot_%s'%(str(self.rannum))
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
-              'volume_zone':input_dict['volume_zone'],'image_id':input_dict['image_id'],'volume_type':input_dict['volume_type']}
+                      'volume_zone':input_dict['volume_zone'],'image_id':input_dict['image_id'],'volume_type':input_dict['volume_type']
+                      }
 
         output = self.create_volume(input_dict)
 

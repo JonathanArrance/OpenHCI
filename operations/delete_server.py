@@ -5,6 +5,7 @@ import transcirrus.common.util as util
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
+from transcirrus.component.cinder.cinder_volume.py import volume_ops
 
 def delete_server(auth_dict, delete_dict):
     """
@@ -18,6 +19,7 @@ def delete_server(auth_dict, delete_dict):
     nova = server_ops(auth_dict)
     layer_three = layer_three_ops(auth_dict)
     server_storage = server_storage_ops(auth_dict)
+    cinder = volume_ops(auth_dict)
     db = util.db_connect()
 
     #remove the volumes attached to the instance.

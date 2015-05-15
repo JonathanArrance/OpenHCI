@@ -2215,7 +2215,7 @@ INSERT INTO nova_default VALUES ('scheduler_default_filters', 'AvailabilityZoneF
 INSERT INTO nova_default VALUES ('compute_driver', 'libvirt.LibvirtDriver', 'nova.conf', 58);
 INSERT INTO nova_default VALUES ('vnc_enabled', 'true', 'nova.conf', 59);
 INSERT INTO nova_default VALUES ('vnc_keymap', 'en-us', 'nova.conf', 60);
-INSERT INTO nova_default VALUES ('cpu_mode', 'host-passthrough', 'nova.conf', 61);
+--INSERT INTO nova_default VALUES ('cpu_mode', 'host-passthrough', 'nova.conf', 61);
 INSERT INTO nova_default VALUES ('auth_protocol', 'http', 'nova.conf', 65);
 INSERT INTO nova_default VALUES ('auth_version', 'v2.0', 'nova.conf', 67);
 INSERT INTO nova_default VALUES ('admin_user', 'nova', 'nova.conf', 68);

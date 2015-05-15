@@ -16,6 +16,8 @@ from django.views.decorators.cache import never_cache
 from django.core import serializers
 from django.utils import simplejson
 from django.core.cache import cache
+import transcirrus.common.util as util
+import transcirrus.common.wget as wget
 
 import time
 import os
@@ -23,7 +25,6 @@ import sys
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
-import transcirrus.common.node_stats as node_stats
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
@@ -42,14 +43,15 @@ from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.operations.initial_setup import run_setup
-import transcirrus.operations.build_complete_project as bcp
-import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
 from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
-import transcirrus.common.util as util
-import transcirrus.common.wget as wget
+from transcirrus.operations.boot_new_instance import boot_instance
 from transcirrus.database.node_db import list_nodes, get_node
+
+import transcirrus.common.node_stats as node_stats
+import transcirrus.operations.build_complete_project as bcp
+import transcirrus.operations.delete_server as ds
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
@@ -1378,23 +1380,21 @@ def delete_vm_spec(request,flavor_id):
     except Exception as e:
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
-
-def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
+'''
+new shit
+def create_image(request, instance_name, sec_group_name, avail_zone, flavor_id, sec_key_name, image_id, network_name, project_id):
     #this is used to create new instance. Not sure why it is called create image
-    #if(amount is None):
-    #    amount = '1'
     try:
         auth = request.session['auth']
-        so = server_ops(auth)
         no = neutron_net_ops(auth)
         instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
                         'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
-                        'network_name': network_name,'image_name': image_name,
-                        'flavor_name':flavor_name, 'name':name}
-        out = so.create_server(instance)
+                        'network_name': network_name,'image_id': image_id,
+                        'flavor_id':flavor_id, 'instance_name':instance_name}
+        out = boot_instance(instance,auth)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
-        input_dict = {'server_id':out['vm_id'], 'net_id': default_priv, 'project_id': project_id}
+        input_dict = {'server_id':out['instance']['vm_id'], 'net_id': default_priv, 'project_id': project_id}
         #net_info = so.attach_server_to_network(input_dict)
         out['server_info']= so.get_server(input_dict)
         out['status'] = 'success'
@@ -1402,8 +1402,12 @@ def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
+'''
 
-def boot_instance_from_volume(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id,volume_type):
+def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
+    #this is used to create new instance. Not sure why it is called create image
+    #if(amount is None):
+    #    amount = '1'
     try:
         auth = request.session['auth']
         so = server_ops(auth)
