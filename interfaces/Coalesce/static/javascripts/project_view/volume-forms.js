@@ -22,7 +22,7 @@ $(function () {
             // Prevent scrolling to top of page on click
             event.preventDefault();
 
-            getStorage();
+            getStorage(PROJECT_ID);
             $("#volume-dialog-form").dialog("open");
         });
 
