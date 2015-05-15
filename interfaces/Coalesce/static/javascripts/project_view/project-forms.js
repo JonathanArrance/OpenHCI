@@ -428,7 +428,7 @@ function getNextSection(current, button) {
                     nextSection = current;
                 }
             } else if (button == "back") {
-                if (bamParams["security"].inputs.group == "create") {
+                if (bamParams["security"].inputs.group.value == "create") {
                     nextSection = "group"
                 } else {
                     nextSection = "security"
