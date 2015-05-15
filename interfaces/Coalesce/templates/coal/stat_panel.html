@@ -374,14 +374,24 @@
             url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/"
 
             return $.getJSON(url).done(function(data) {
-                if (data.message != "empty dataset")
+                if (data.status == "success")
+                {
+                    if (data.message != "empty dataset")
                     {
                         var result = data.statistics[0][calcType];
                         guage.redraw(result);
                     }
+                }
+                else
+                {
+                    if (got_data)
+                        message.showMessage('error', data.message);
+                    got_data = false;
+                }
             });
         }
 
+        var got_data = true;
         function initialize()
         {
             createGauges();
