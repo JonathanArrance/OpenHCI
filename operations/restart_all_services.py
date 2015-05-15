@@ -21,6 +21,14 @@ def restart_services():
     ACCESS: Only an admin can control the dhcp services.
     NOTES:
     """
+    
+    null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
+    # save the current file descriptors to a tuple
+    save = os.dup(1), os.dup(2)
+    # put /dev/null fds on 1 and 2
+    os.dup2(null_fds[0], 1)
+    os.dup2(null_fds[1], 2)
+    
     success = {}
 
     #stop the monit service
@@ -33,7 +41,7 @@ def restart_services():
     #except Exception as e:
     #    logger.sys_error('Could not restart network after setup completed: %s.'%(e))
     #    success['network'] = 'False'
-
+    
     br = util.restart_network_card('br-ex')
     if(br == 'OK'):
         logger.sys_info('br-ex restarted.')
@@ -123,4 +131,12 @@ def restart_services():
     #sc.monit('start')
 
     #always return the services successfully restarted
+    
+    # restore file descriptors so I can print the results
+    os.dup2(save[0], 1)
+    os.dup2(save[1], 2)
+    # close the temporary fds
+    os.close(null_fds[0])
+    os.close(null_fds[1])
+    
     return success

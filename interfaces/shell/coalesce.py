@@ -5,10 +5,12 @@
 """Setup for Transcirrus CiaC"""
 
 from __future__ import nested_scopes, division
-import sys, os, time, getopt, subprocess, dialog
+import sys, os, time, getopt, subprocess, dialog, ast
+from multiprocessing import Process
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
+import transcirrus.common.logger as logger
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -227,7 +229,7 @@ def clear_screen(d):
     return -1
 
 
-def setup(d):
+def setup(d):   
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
         "interface tool for your TransCirrus system.\n"
         "\n"
@@ -377,12 +379,46 @@ def setup(d):
         {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
         {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
 
-    #d.tailbox('/var/log/caclogs/systemlog.txt')
-    ran = run_setup(new_system_variables, user_dict)
-    change_admin_password(user_dict, pwd)
+    p = Process(target=run_setup, args=(new_system_variables, user_dict))
+    p.start()
+    
+    fill_text = "Preparing your cloud..."
+    d.gauge_start(text=fill_text)
+    fill = 0
+    status = None
+    status1 = None
+    count = 0
+    while(1):
+        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out.wait()
+        time.sleep(1)
+        stat_raw = out.stdout.readlines()
+        if(len(stat_raw) == 0):
+            continue
+        count = count + 1
+        fill = fill + 1.851
+        stat = stat_raw[0].split(':')
+        fill_text = stat[-1].strip()
+        if(fill_text == "END"):
+            status = p.join()
+            fill = 0;
+            o = Process(target=change_admin_password, args=(user_dict, pwd))
+            o.start()
+            while(1):
+                d.gauge_update(fill, text='Updating credentials...', update_text=1)
+                fill = fill + 10
+                time.sleep(1)
+                if(fill > 100):
+                    status1 = o.join()
+                    break
+            break
+        else:
+            d.gauge_update(fill, text=fill_text, update_text=1)
+    d.gauge_stop()
+    
     timeout = 10
-
-    if(ran == "OK"):
+    
+    if(p.exitcode == 0):
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if(flag_set['first_time_boot'] != 'OK'):
