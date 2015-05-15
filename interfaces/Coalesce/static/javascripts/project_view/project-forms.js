@@ -333,6 +333,7 @@ $(function () {
 
 function initializeBamSection() {
     changeBamSection();
+    getStorage(PROJECT_ID);
     $("#build-a-machine-form").dialog("close");
 }
 
