@@ -41,6 +41,7 @@ from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
+from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 import transcirrus.operations.delete_server as ds
@@ -137,6 +138,7 @@ def stats(request):
 
                 users = to.list_tenant_users(tenant['project_id'])
                 num_users = len(users)
+
 
                 tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
@@ -2687,6 +2689,55 @@ def nimble_stats (request):
         out = {'status' : "error", 'message' : "Not implemented yet"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting Nimble statistics: %s" % e}
+
+
+# ---Ceilometer Statistics ----
+def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id=None, ceil_resource_id=None):
+    try:
+        out = {}
+        auth = request.session['auth']
+        ceil = meter_ops(auth)
+
+        # Meter Overview for environment
+        if ((ceil_tenant_id == None) and (ceil_resource_id == None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type)
+        # Meter for instance/resource
+        elif ((ceil_tenant_id == None) and (ceil_resource_id != None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_resource_id)
+        # Meter Overview for tenant
+        elif ((ceil_tenant_id != None) and (ceil_resource_id == None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id)
+        # Meter Overview for resource in tenant
+        elif ((ceil_tenant_id != None) and (ceil_resource_id != None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id)
+
+        if result == []:
+            # No data was provided for this meter.
+            out = {'status' : "success", 'message' : "empty dataset"}
+        else:
+            out = {'status' : "success", 'statistics' : result}
+
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Error getting statistics"}
+    return HttpResponse(simplejson.dumps(out))
+
+def get_statistics_for_instance(request, project_id, instance_id, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id):
+    try:
+        out = {}
+        auth = request.session['auth']
+        ceil = meter_ops(auth)
+
+        # Meter Overview for resource in tenant
+        result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id)
+
+        if result == []:
+            # No data was provided for this meter.
+            out = {'status' : "success", 'message' : "empty dataset"}
+        else:
+            out = {'status' : "success", 'statistics' : result}
+
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Error getting statistics"}
     return HttpResponse(simplejson.dumps(out))
 
 # ---
@@ -2928,18 +2979,3 @@ def handle_uploaded_file(f):
 @never_cache
 def password_change(request):
     return render_to_response('coal/change-password.html', RequestContext(request, {  }))
-
-#HTTP Status Codes
-#
-# def handler404(request):
-#     response = render_to_response('404/', {},
-#                                   context_instance=RequestContext(request))
-#     response.status_code = 404
-#     return response
-#
-#
-# def handler500(request):
-#     response = render_to_response('500/', {},
-#                                   context_instance=RequestContext(request))
-#     response.status_code = 500
-#     return response
