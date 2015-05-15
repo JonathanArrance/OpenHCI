@@ -110,16 +110,17 @@ var PROJECT = "{{ project_name}}",
                 <script>
                     var gauges = [];
 
-                    function createGauge(name, label, meterType, min, max)
+                    function createGauge(name, label, meterType, calcType, min, max, minorTicks)
                     {
                         var config =
                         {
                             size: 120,
                             label: label,
                             meterType: meterType,
+                            calcType: calcType,
                             min: undefined != min ? min : 0,
                             max: undefined != max ? max : 1000,
-                            minorTicks: 10
+                            minorTicks: minorTicks
                         }
 
                         var range = config.max - config.min;
@@ -132,9 +133,9 @@ var PROJECT = "{{ project_name}}",
 
                     function createGauges()
                     {
-                        createGauge("vcpus", "VCPU", "vcpus", 1, 16);
-                        createGauge("memory", "Memory Alloc", "memory", 512, 16384);
-                        createGauge("diskrootsize", "Disk Root Size", "disk.root.size", 10, 5000);
+                        createGauge("vcpus", "vCPU Count", "vcpus", "sum", 0, 64, 16);
+                        createGauge("memory", "RAM Alloc MB", "memory", "sum", 0, 16384, 26.2);
+                        createGauge("diskrootsize", "Disk Alloc GB", "disk.root.size", "sum", 0, 1000, 8);
                     }
 
                     function updateGauges()
