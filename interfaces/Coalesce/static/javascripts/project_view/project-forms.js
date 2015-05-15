@@ -65,13 +65,34 @@ $(function () {
             // Prevent scrolling to top of page on click
             event.preventDefault();
 
+            if (currentSection == "initialize") {
+                initializeBamSection();
+            }
             $("#build-a-machine-form").dialog("open");
         });
 
+        $("#bam-next-button").click(function (event) {
+
+            event.preventDefault();
+            changeBamSection("next");
+        });
+
+        $("#bam-back-button").click(function (event) {
+
+            event.preventDefault();
+            changeBamSection("back");
+        });
+
+        $("#bam-image-location").change(function () {
+            changeImageLocation($(this), $("#bam-image-import-local"), $("#bam-image-import-remote"));
+        });
+
+        changeImageLocation($("#bam-image-location"), $("#bam-image-import-local"), $("#bam-image-import-remote"));
+
         $("#build-a-machine-form").dialog({
             autoOpen: false,
-            height: 350,
-            width: 1060,
+            height: 455,
+            width: 600,
             modal: true,
             resizable: false,
             closeOnEscape: true,
@@ -85,187 +106,396 @@ $(function () {
             close: function () {
             }
         });
-
-        $("#bam-create-button").click(function (event) {
-            // TODO: IMPLEMENT create click event
-        });
-
-        $("#bam-cancel-button").click(function (event) {
-
-            // TODO: IMPLEMENT cancel click event
-        });
-
     });
 });
 
-var bamSections = {
-        "instance": "#bam-instance-section",
-        "key": "#bam-key-section",
-        "volume": "#bam-volume-section",
-        "network": "#bam-network-section",
-        "security": "#bam-security-section"
-    },
-    currentSection = "instance";
+// Declare and Initialize variables on document ready
+var currentSection,
+    bamParams;
 
-var bamInputs = {
-    "instance-name": "",
-    "instance-image-input": "",
-    "instance-image": "",
-    "instance-flavor": "",
-    "key": "",
-    "volume-name": "",
-    "volume-size": "",
-    "volume-type": "",
-    "network-input": "",
-    "network-name": "",
-    "network-admin": "",
-    "network-shared": "",
-    "security-input": "",
-    "security-name": "",
-    "security-description": "",
-    "security-transport": "",
-    "security-ports": ""
-};
+$(function () {
+    currentSection = "initialize";
+    bamParams = {
+        "instance": {
+            "section": "#bam-instance-section",
+            "inputs": {
+                "name": {
+                    "element": $("#bam-instance-name"),
+                    "validation": function () {
+                        return checkLength(this.element, "Instance Name", 3, 16) && checkDuplicateName(this.element, instanceOpts);
+                    },
+                    "value": ""
+                },
+                "image": {
+                    "element": $("#bam-instance-image"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "flavor": {
+                    "element": $("#bam-instance-flavor"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                }
+            }
+        },
+        "image": {
+            "section": "#bam-image-section",
+            "inputs": {
+                "name": {
+                    "element": $("#bam-image-name"),
+                    "validation": function () {
+                        return checkLength(this.element, "Image Name", 3, 20);
+                    },
+                    "value": ""
+                },
+                "container": {
+                    "element": $("#bam-image-container"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "disk": {
+                    "element": $("#bam-image-disk"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "type": {
+                    "element": $("#bam-image-location"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "importLocal": {
+                    "element": $("#bam-image-import-local"),
+                    "validation": function () {
+                        if ($("#bam-image-location").val() == "image_file") {
+                            return checkFile(this.element);
+                        } else {
+                            return true;
+                        }
+                    },
+                    "value": ""
+                },
+                "importRemote": {
+                    "element": $("#bam-image-import-remote"),
+                    "validation": function () {
+                        if ($("#bam-image-location").val() == "image_url") {
+                            return checkUrl(this.element);
+                        } else {
+                            return true;
+                        }
+                    },
+                    "value": ""
+                },
+                "os": {
+                    "element": $("#bam-image-os"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "visibility": {
+                    "element": $("#bam-image-visibility"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                }
+            }
+        },
+        "volume": {
+            "section": "#bam-volume-section",
+            "inputs": {
+                "select": {
+                    "element": $("#bam-volume-select-existing"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "name": {
+                    "element": $("#bam-volume-name"),
+                    "validation": function () {
+                        if ($("#bam-volume-select-existing").val() == "create") {
+                            return checkLength(this.element, "Volume Name", 3, 16) && checkDuplicateName(this.element, volumes);
+                        } else {
+                            return true;
+                        }
+                    },
+                    "value": ""
+                },
+                "size": {
+                    "element": $("#bam-volume-size"),
+                    "validation": function () {
+                        if ($("#bam-volume-select-existing").val() == "create") {
+                            return checkSize(this.element, "Volume Size must be greater than 0.", 1, 0) && checkStorage(this.element);
+                        } else {
+                            return true;
+                        }
+                    },
+                    "value": ""
+                },
+                "type": {
+                    "element": $("#bam-volume-type"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                }
+            }
+        },
+        "security": {
+            "section": "#bam-security-section",
+            "inputs": {
+                "ip": {
+                    "element": $("#bam-security-ip"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "key": {
+                    "element": $("#bam-security-select-key"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "newKey": {
+                    "element": $("#bam-security-create-key"),
+                    "validation": function () {
+                        if ($("#bam-security-select-key").val() == "create") {
+                            return checkLength(this.element, "Key Pair Name", 3, 16);
+                        } else {
+                            return true;
+                        }
+                    },
+                    "value": ""
+                },
+                "group": {
+                    "element": $("#bam-security-group"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                }
+            }
+        },
+        "group": {
+            "section": "#bam-group-section",
+            "inputs": {
+                "name": {
+                    "element": $("#bam-group-name"),
+                    "validation": function () {
+                        return checkLength(this.element, "Security Group Name", 3, 16);
+                    },
+                    "value": ""
+                },
+                "description": {
+                    "element": $("#bam-group-description"),
+                    "validation": function () {
+                        return checkLength(this.element, "Security Group Description", 0, 80);
+                    },
+                    "value": ""
+                },
+                "transport": {
+                    "element": $("#bam-group-transport"),
+                    "validation": function () {
+                        return true;
+                    },
+                    "value": ""
+                },
+                "ports": {
+                    "element": $("#bam-group-ports"),
+                    "validation": function () {
+                        if (this["value"] == "") {
+                            this["value"] = "443,80,22";
+                        }
+                        return true;
+                    },
+                    "value": ""
+                }
+            }
+        },
+        "progress": {
+            "section": "bam-progress-section"
+        }
+    }
+});
 
 function initializeBamSection() {
-    var form = $("#build-a-machine-form");
-    currentSection = "instance";
-    $("#bam-cancel-button").hide(0);
-    form.dialog({height: 318});
-    $("#bam-tips").html("Start by describing your virtual machine.");
-    form.dialog("close");
+    changeBamSection();
+    $("#build-a-machine-form").dialog("close");
 }
 
-function changeBamSection(toSection) {
+function changeBamSection(button) {
 
-    $(bamSections[currentSection]).hide(0);
-    $(bamSections[toSection]).show(0);
-    currentSection = toSection;
+    for (var section in bamParams) {
+        for (var input in bamParams[section].inputs) {
+            clearUiValidation(bamParams[section].inputs[input].element);
+        }
+    }
+
+    // Handle Inputs
+    var nextSection = getNextSection(currentSection, button);
+    switchSections(currentSection, nextSection);
+}
+
+function getNextSection(current, button) {
+    var nextSection;
+    switch (current) {
+        case "initialize":
+            nextSection = "instance";
+            break;
+        case "instance":
+            if (button = "next") {
+                if (getInputs(current)) {
+                    if (bamParams.instance.inputs.image.value == "upload") {
+                        nextSection = "image";
+                    } else {
+                        nextSection = "volume";
+                    }
+                } else {
+                    nextSection = current;
+                }
+            }
+            break;
+        case "image":
+            if (button == "next") {
+                if (getInputs(current)) {
+                    nextSection = "volume";
+                } else {
+                    nextSection = current;
+                }
+            } else if (button = "back") {
+                nextSection = "instance";
+            }
+            break;
+        case "volume":
+            if (button == "next") {
+                if (getInputs(current)) {
+                    nextSection = "security"
+                } else {
+                    nextSection = current;
+                }
+            } else if (button == "back") {
+                if (bamParams.instance.inputs.image.value == "upload") {
+                    nextSection = "image";
+                } else {
+                    nextSection = "instance";
+                }
+            }
+            break;
+        case "security":
+            if (button == "next") {
+                if (getInputs(current)) {
+                    if (bamParams[current].inputs.group.value == "create") {
+                        nextSection = "group";
+                    } else {
+                        nextSection = "progress";
+                    }
+                } else {
+                    nextSection = current;
+                }
+            } else if (button == "back") {
+                nextSection = "volume"
+            }
+            break;
+        case "group":
+            if (button == "next") {
+                if (getInputs(current)) {
+                    nextSection = "progress"
+                } else {
+                    nextSection = current;
+                }
+            } else if (button == "back") {
+                nextSection = "security"
+            }
+            break;
+        case "progress":
+            if (button == "next") {
+                if (getInputs(current)) {
+                    nextSection = "progress"
+                } else {
+                    nextSection = current;
+                }
+            } else if (button == "back") {
+                if (bamParams["security"].inputs.group == "create") {
+                    nextSection = "group"
+                } else {
+                    nextSection = "security"
+                }
+            }
+            break;
+    }
+    return nextSection;
+}
+
+function getInputs(section) {
+    for (var key in bamParams[section].inputs) {
+        if (bamParams[section].inputs[key].validation()) {
+            bamParams[section].inputs[key].value = bamParams[section].inputs[key].element.val();
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+function switchSections(current, next) {
+    if (current != "initialize") {
+        $(bamParams[current].section).hide(0);
+    }
+    $(bamParams[next].section).show(0);
+    currentSection = next;
 
     var form = $("#build-a-machine-form"),
-        create = $("#bam-create-button"),
-        cancel = $("#bam-cancel-button"),
-        tips = $("#bam-tips");
+        createBtn = $("#bam-create-button"),
+        nextBtn = $("#bam-next-button"),
+        backBtn = $("#bam-back-button");
 
+    // -- Handle Dom Manipulation
     switch (currentSection) {
-
         case "instance":
-            back.hide(0);
-            form.dialog({height: 318});
-            tips.html("Start by describing your virtual machine.");
+            backBtn.hide(0);
+            createBtn.hide(0);
+            form.dialog({height: 455});
             break;
-
-        case "key":
-            back.show(0);
-            form.dialog({height: 262});
-            tips.html("Now select a pre-existing security key, or create a new one.");
+        case "image":
+            backBtn.show(0);
+            form.dialog({height: 610});
+            changeImageLocation($("#bam-image-location"), $("bam-image-import-local"), $("bam-image-import-remote"));
             break;
-
         case "volume":
-            form.dialog({height: 333});
-            tips.html("Now create a volume to attach to the virtual machine.");
+            backBtn.show(0);
+            form.dialog({height: 560});
             break;
-
-        case "network":
-            form.dialog({height: 333});
-            tips.html("Now select or create a network to use with the virtual machine.");
-            break;
-
         case "security":
-            form.dialog({height: 358});
-            tips.html("Now select or create a security group for the virtual machine.");
+            form.dialog({height: 605});
+            nextBtn.show();
+            createBtn.hide();
             break;
-
-        case "confirm":
+        case "group":
+            form.dialog({height: 505});
+            nextBtn.show();
+            createBtn.hide();
+            break;
+        case "progress":
             form.dialog({height: 333});
-            tips.html("Here are the specifications for your new machine, you can go back to edit them or press confirm to create the machine.");
-            console.log("-------- USER INPUT OBJECT ---------");
-            console.log(bamInputs);
+            nextBtn.hide();
+            createBtn.show();
+            console.log(bamParams);
             break;
-    }
-}
-
-function changeBamKeyInput() {
-
-    var checked = $('input[name=bam-select-key-input]:checked').val();
-
-    if (checked == 'select') {
-        $("#bam-create-key-name").css("display", "none");
-        $("#bam-create-key-label").css("display", "none");
-        $("#bam-select-key-name").css("display", "inline-block");
-        $("#bam-select-key-label").css("display", "block");
-    }
-
-    if (checked == 'create') {
-        $("#bam-create-key-name").css("display", "inline-block");
-        $("#bam-create-key-label").css("display", "block");
-        $("#bam-select-key-name").css("display", "none");
-        $("#bam-select-key-label").css("display", "none");
-    }
-}
-
-function changeBamNetworkInput() {
-
-    var checked = $('input[name=bam-select-network-input]:checked').val();
-
-    if (checked == 'select') {
-        $("#bam-create-network-name").css("display", "none");
-        $("#bam-create-network-name-label").css("display", "none");
-        $("#bam-create-network-admin-state").css("display", "none");
-        $("#bam-create-network-admin-label").css("display", "none");
-        $("#bam-create-network-shared").css("display", "none");
-        $("#bam-create-network-shared-label").css("display", "none");
-        $("#bam-select-network-name").css("display", "inline-block");
-        $("#bam-select-network-name-label").css("display", "block");
-    }
-
-    if (checked == 'create') {
-        $("#bam-create-network-name").css("display", "inline-block");
-        $("#bam-create-network-name-label").css("display", "block");
-        $("#bam-create-network-admin-state").css("display", "inline-block");
-        $("#bam-create-network-admin-label").css("display", "block");
-        $("#bam-create-network-shared").css("display", "inline-block");
-        $("#bam-create-network-shared-label").css("display", "block");
-        $("#bam-select-network-name").css("display", "none");
-        $("#bam-select-network-name-label").css("display", "none");
-    }
-}
-
-function changeBamSecurityInput() {
-
-    var checked = $('input[name=bam-select-security-input]:checked').val();
-
-    if (checked == 'select') {
-        $("#bam-create-security-name").css("display", "none");
-        $("#bam-create-security-name-label").css("display", "none");
-        $("#bam-create-security-description").css("display", "none");
-        $("#bam-create-security-description-label").css("display", "none");
-        $("#bam-create-security-transport").css("display", "none");
-        $("#bam-create-security-transport-label").css("display", "none");
-        $("#bam-create-security-ports").css("display", "none");
-        $("#bam-create-security-ports-label").css("display", "none");
-        $("#bam-create-security-tcp").css("display", "none");
-        $("#bam-create-security-tcp-label").css("display", "none");
-        $("#bam-create-security-udp").css("display", "none");
-        $("#bam-create-security-udp-label").css("display", "none");
-        $("#bam-select-security-name").css("display", "inline-block");
-        $("#bam-select-security-name-label").css("display", "block");
-    }
-
-    if (checked == 'create') {
-        $("#bam-create-security-name").css("display", "inline-block");
-        $("#bam-create-security-name-label").css("display", "block");
-        $("#bam-create-security-description").css("display", "inline-block");
-        $("#bam-create-security-description-label").css("display", "block");
-        $("#bam-create-security-transport").css("display", "inline-block");
-        $("#bam-create-security-transport-label").css("display", "block");
-        $("#bam-create-security-ports").css("display", "inline-block");
-        $("#bam-create-security-ports-label").css("display", "block");
-        $("#bam-create-security-tcp").css("display", "inline-block");
-        $("#bam-create-security-tcp-label").css("display", "inline-block");
-        $("#bam-create-security-udp").css("display", "inline-block");
-        $("#bam-create-security-udp-label").css("display", "inline-block");
-        $("#bam-select-security-name").css("display", "none");
-        $("#bam-select-security-name-label").css("display", "none");
+        case "confirm":
+            form.dialog({height: 605});
+            break;
     }
 }

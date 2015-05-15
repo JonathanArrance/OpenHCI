@@ -94,7 +94,7 @@ $(function () {
                                         '<td id="' + data.sec_group_id + '-username-cell">' +
                                         '<span id="' + data.sec_group_id + '-username-text">' + data.username + '</span></td>' +
                                         '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a>' +
-                                        // '<span> | </span><a href="#" class="update-secGroup">update</a></td>' +
+                                            // '<span> | </span><a href="#" class="update-secGroup">update</a></td>' +
                                         '</tr>';
 
                                     // Check to see if this is the first sec group to be generated
@@ -108,6 +108,7 @@ $(function () {
 
                                     // Update selects
                                     addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), secGroupInstOpts);
+                                    refreshSelect($("#bam-security-group"), secGroupInstOpts);
                                 }
                             })
                             .fail(function () {
@@ -228,6 +229,7 @@ $(function () {
 
                             // Update selects
                             removeFromSelect(confSecGroup, $("#sec_group_name"), secGroupInstOpts);
+                            refreshSelect($("#bam-security-group"), secGroupInstOpts);
                         })
                         .fail(function () {
 
