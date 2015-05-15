@@ -139,8 +139,6 @@ def stats(request):
                 users = to.list_tenant_users(tenant['project_id'])
                 num_users = len(users)
 
-                function ()
-
                 tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
                                     'num_fips': num_fips,
