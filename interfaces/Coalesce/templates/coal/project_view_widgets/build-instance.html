@@ -1,8 +1,8 @@
 {% load staticfiles %}
 
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/build_a_machine.css"/>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/build-instance.css"/>
 
-<div id="build-a-machine-form" title="Build-A-Machine">
+<div id="build-instance-form" title="Build Instance">
     <form>
         {% csrf_token %}
 
@@ -201,6 +201,11 @@
                     <script>
                         $(function () {
                             refreshSelect($("#bam-volume-select-existing"), volumes);
+                            $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
                             $("#bam-volume-select-existing").append($('<option></option>')
                                     .val("create")
                                     .html("Create Volume"));
@@ -261,6 +266,11 @@
                     <script>
                         $(function () {
                             refreshSelect($("#bam-security-ip"), assignableFips);
+                            $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Attaching IP")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-security-ip"));
                         });
                     </script>
                 </select>
@@ -346,6 +356,7 @@
                     <option value="tcp" selected>TCP</option>
                     <option value="udp">UDP</option>
                 </select>
+
                 <div class="group-spacer"></div>
                 <label for="bam-group-ports">Ports</label>
                 <input type="text" name="bam-group-ports" id="bam-group-ports" value="443,80,22"/>
@@ -400,12 +411,47 @@
             </div>
         </fieldset>
 
-    <fieldset id="bam-progress-section" style="display: none;"></fieldset>
+        <fieldset id="bam-progress-section" style="display: none;">
+            <legend>Progress</legend>
+            <h6>Your Instance information:</h6>
+
+            <div class="bam-form">
+                <ul>
+                    <li class="instance"><label>Instance Name:</label><span class="name"></span></li>
+                    <li class="image"><label>Image Name:</label><span class="name"></span></li>
+                    <li class="instance"><label>Instance Flavor:</label><span class="flavor"></span></li>
+                    <li></li>
+                    <li class="volume"><label>Volume Name:</label><span class="name"></span></li>
+                    <li class="volume"><label>Volume Size:</label><span class="size"></span></li>
+                    <li class="volume"><label>Volume Type:</label><span class="type"></span></li>
+                    <li></li>
+                    <li class="security"><label>Floating IP Address:</label><span class="ip"></span></li>
+                    <li class="security"><label>Security Group:</label><span class="group"></span></li>
+                    <li class="security"><label>Security Key Pair:</label><span class="key"></span></li>
+                </ul>
+
+                <label>Overall Progress:</label>
+                <div class="bam-overall-progress-bar"><span class="bam-overall-progress-label"></span></div>
+                <label>Image Upload Progress:</label>
+                <div class="bam-image-upload-bar"><span class="bam-image-upload-label"></span></div>
+            </div>
+
+            <div class="bam-info">
+                <p>Please verify the information provided. If there are any issues, use the "Back" button to fix them.
+                    If the information is correct, click the ‘Create’ button and the creation process will begin.
+                </p>
+
+                <p>The progress bars will show you the status of your creation process. The Overall Progress bar is the
+                    overall progress of the entire creation process. The Image Upload is the progress of uploading your
+                    image. The Volume Creation is the progress of creating and attaching your new image to your
+                    instance.</p>
+            </div>
+        </fieldset>
 
         <div>
+            <a href="#" class="btn" id="bam-create-button">Create</a>
             <a href="#" class="btn" id="bam-next-button">Next</a>
             <a href="#" class="btn" id="bam-back-button">Back</a>
-            <a href="#" class="btn" id="bam-create-button">Create</a>
         </div>
     </form>
 </div>

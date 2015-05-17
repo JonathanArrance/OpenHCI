@@ -55,7 +55,7 @@ $(function () {
         });
     });
 
-    // --- Build-A-Machine ---
+    // --- Build Instance ---
 
     $(function () {
 
@@ -68,7 +68,7 @@ $(function () {
             if (currentSection == "initialize") {
                 initializeBamSection();
             }
-            $("#build-a-machine-form").dialog("open");
+            $("#build-instance-form").dialog("open");
         });
 
         $("#bam-next-button").click(function (event) {
@@ -83,13 +83,19 @@ $(function () {
             changeBamSection("back");
         });
 
+        $("#bam-create-button").click(function (event) {
+
+            event.preventDefault();
+            buildInstance();
+        });
+
         $("#bam-image-location").change(function () {
             changeImageLocation($(this), $("#bam-image-import-local"), $("#bam-image-import-remote"));
         });
 
         changeImageLocation($("#bam-image-location"), $("#bam-image-import-local"), $("#bam-image-import-remote"));
 
-        $("#build-a-machine-form").dialog({
+        $("#build-instance-form").dialog({
             autoOpen: false,
             height: 455,
             width: 600,
@@ -326,7 +332,7 @@ $(function () {
             }
         },
         "progress": {
-            "section": "bam-progress-section"
+            "section": "#bam-progress-section"
         }
     }
 });
@@ -334,7 +340,9 @@ $(function () {
 function initializeBamSection() {
     changeBamSection();
     getStorage(PROJECT_ID);
-    $("#build-a-machine-form").dialog("close");
+    $(".bam-overall-progress-bar").progressbar({ value: 0});
+    $(".bam-image-upload-bar").progressbar({ value: 0});
+    $("#build-instance-form").dialog("close");
 }
 
 function changeBamSection(button) {
@@ -422,13 +430,7 @@ function getNextSection(current, button) {
             }
             break;
         case "progress":
-            if (button == "next") {
-                if (getInputs(current)) {
-                    nextSection = "progress"
-                } else {
-                    nextSection = current;
-                }
-            } else if (button == "back") {
+            if (button == "back") {
                 if (bamParams["security"].inputs.group.value == "create") {
                     nextSection = "group"
                 } else {
@@ -458,7 +460,7 @@ function switchSections(current, next) {
     $(bamParams[next].section).show(0);
     currentSection = next;
 
-    var form = $("#build-a-machine-form"),
+    var form = $("#build-instance-form"),
         createBtn = $("#bam-create-button"),
         nextBtn = $("#bam-next-button"),
         backBtn = $("#bam-back-button");
@@ -490,13 +492,80 @@ function switchSections(current, next) {
             createBtn.hide();
             break;
         case "progress":
-            form.dialog({height: 333});
+            updateProgressSection();
+            form.dialog({height: 360});
             nextBtn.hide();
             createBtn.show();
-            console.log(bamParams);
             break;
         case "confirm":
             form.dialog({height: 605});
             break;
     }
+}
+
+function updateProgressSection() {
+    $("#bam-progress-section").find("div.bam-form").find("ul").children().each(function () {
+        if ($(this).attr("class") != undefined) {
+
+            $(this).find("span").html(bamParams[$(this).attr("class")].inputs[$(this).find("span").attr("class")].value);
+
+            if ($(this).attr("class") == "image") {
+                checkImageInput(this);
+            } else if ($(this).attr("class") == "volume") {
+                checkVolumeInputs(this);
+            } else if ($(this).attr("class") == "security") {
+                checkSecurityInputs(this);
+            }
+        }
+    });
+}
+
+function checkImageInput(self) {
+    if (bamParams["instance"].inputs["image"].value == "create") {
+        $(self).find("span").html(bamParams["image"].inputs["name"].value);
+    } else {
+        $(self).find("span").html(bamParams["instance"].inputs["image"].value);
+    }
+}
+
+function checkVolumeInputs(self) {
+    if (bamParams["volume"].inputs["select"].value == "none") {
+        if ($(self).find("span").attr("class") == "name") {
+            $(self).find("span").html("Skip");
+        } else if ($(self).find("span").attr("class") == "size") {
+            $(self).find("span").html("N/A");
+        } else if ($(self).find("span").attr("class") == "type") {
+            $(self).find("span").html("N/A");
+        }
+    } else if (bamParams["volume"].inputs["select"].value != "none" && bamParams["volume"].inputs["select"].value != "create") {
+        if ($(self).find("span").attr("class") == "name") {
+            $(self).find("span").html(volumes.getItem(bamParams["volume"].inputs["select"].value).name);
+        } else if ($(self).find("span").attr("class") == "size") {
+            $(self).find("span").html(volumes.getItem(bamParams["volume"].inputs["select"].value).size);
+        } else if ($(self).find("span").attr("class") == "type") {
+            $(self).find("span").html(volumes.getItem(bamParams["volume"].inputs["select"].value).type);
+        }
+    }
+}
+
+function checkSecurityInputs(self) {
+    if ($(self).find("span").attr("class") == "ip") {
+        if (bamParams["security"].inputs["ip"].value == "none") {
+            $(self).find("span").html("Skip");
+        } else {
+            $(self).find("span").html(assignableFips.getItem(bamParams["security"].inputs["ip"].value).option)
+        }
+    } else if ($(self).find("span").attr("class") == "group") {
+        if (bamParams["security"].inputs["group"].value == "create") {
+            $(self).find("span").html(bamParams["group"].inputs["name"].value);
+        }
+    } else if ($(self).find("span").attr("class") == "key") {
+        if (bamParams["security"].inputs["key"].value == "create") {
+            $(self).find("span").html(bamParams["security"].inputs["newKey"].value);
+        }
+    }
+}
+
+function buildInstance() {
+    console.log(bamParams);
 }
