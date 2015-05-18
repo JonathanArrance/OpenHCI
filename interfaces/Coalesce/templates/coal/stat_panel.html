@@ -352,11 +352,11 @@
             createGauge("vcpus", "vCPU Count", "vcpus", "avg", 0, 64, 16);
             createGauge("memory", "RAM Alloc MB", "memory", "avg", 0, 128000, 8);
             createGauge("diskrootsize", "Disk Alloc GB", "disk.root.size", "avg", 0, 1000, 8);
-            createGauge("cpupercent", "Avg CPU  %", "compute.node.cpu.percent", "avg", 0, 100, 5);
-            createGauge("cpuuserpercent", "Avg CPU User %", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
-            createGauge("cpuidlepercent", "Avg CPU Idle %", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
-            createGauge("cpuiowaitpercent", "Avg CPU I/O Wait %", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
-            createGauge("cpukernelpercent", "Avg CPU Kernel %", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
+            createGauge("cpupercent", "CPU as %", "compute.node.cpu.percent", "avg", 0, 100, 5);
+            createGauge("cpuuserpercent", "CPU User as %", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
+            createGauge("cpuidlepercent", "CPU Idle as %", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
+            createGauge("cpuiowaitpercent", "CPU I/O Wait as %", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
+            createGauge("cpukernelpercent", "CPU Kernel as %", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
         }
 
         function updateGauges()
