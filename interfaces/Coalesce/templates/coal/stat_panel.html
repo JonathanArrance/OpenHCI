@@ -388,20 +388,21 @@
                 }
                 else
                 {
-                    if (got_data)
-                        message.showMessage('error', data.message);
-                    got_data = false;
+{#                    if (got_data)#}
+                    message.showMessage('error', data.message);
+{#                    got_data = false;#}
                 }
             });
         }
 
-        var got_data = true;
+{#        var got_data = true;#}
 
         function initialize()
         {
             createGauges();
             {#5000 = 5 seconds#}
             setInterval(updateGauges, 10000);
+            setTimeout(updateGauges, 1000);
         }
 
     </script>
