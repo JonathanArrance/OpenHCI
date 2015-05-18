@@ -195,11 +195,7 @@ def backend_in_use (backend):
     finally:
         handle.pg_close_connection()
 
-    if len(vols) == 0:
-        in_use = False
-    else:
-        in_use = True
-    return (in_use)
+    return (len(vols))
 
 
 def delete_stanza (stanza_name):

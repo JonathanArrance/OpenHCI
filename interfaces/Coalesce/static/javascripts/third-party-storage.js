@@ -406,7 +406,7 @@ $(function ()
             else if (provider.in_use == 0)
                 newRow += '<td>Configured - no volumes</td><td><a href="#" id="update-' + provider.id + '">update</a> <a href="#" id="delete-' + provider.id + '">delete</a></td>';
             else
-                newRow += '<td>Configured - with volumes</td><td><a href="#" id="update-' + provider.id + '">update</a></td>';
+                newRow += '<td>Configured - with ' + provider.in_use + ' volumes</td><td><a href="#" id="update-' + provider.id + '">update</a></td>';
 
             newRow += '</tr>';
 
@@ -747,7 +747,7 @@ $(function ()
         d3.json(url, function (error, json)
         {
 
-            var m = 10, r = 100, z = d3.scale.category20c();
+            var m = 10, r = 50, z = d3.scale.category20c();
 
             var pie = d3.layout.pie()
                 .value(function (d)

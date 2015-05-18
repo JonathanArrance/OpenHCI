@@ -118,7 +118,7 @@ def get_nfs():
     '''
     return data = {'enabled':    "0/1",       "0" not enabled or "1" is enabled
                    'licensed':   "0/1",       "0" not licensed or "1" is licensed
-                   'in_use':     "0/1",       "0" not in use or "1" volume type is in use
+                   'in_use':     "0/1",       "0" no volumes created or the number of volumes of this type that exist
                    'mountpoint': ["host1/ip-addr1:mountpoint", "host2/ip-addr2:mountpoint"]
                   }
     '''
@@ -129,10 +129,7 @@ def get_nfs():
     else:
         enabled = "0"
 
-    if common.backend_in_use (nfs.NFS_NAME):
-        in_use = "1"
-    else:
-        in_use = "0"
+    in_use = common.backend_in_use (nfs.NFS_NAME)
 
     # Since we give away NFS, it will always be licensed.
     data = {'enabled': enabled, 'licensed': "1", 'in_use': in_use, 'mountpoint': mountpoints}
@@ -193,7 +190,7 @@ def get_eseries():
     '''
     return data = {'enabled':      "0/1",        "0" not enabled or "1" is enabled
                    'licensed':     "0/1",        "0" not licensed or "1" is licensed
-                   'in_use':       "0/1",        "0" not in use or "1" volume type is in use
+                   'in_use':       "0/1",        "0" no volumes created or the number of volumes of this type that exist
                    'pre_existing': "0/1"         "0" not using pre-existing web proxy server or "1" using pre-existing web proxy server
                    'server':       "ip-addr",
                    'srv_port':     "port_num",
@@ -221,10 +218,7 @@ def get_eseries():
     else:
         licensed = "0"
 
-    if common.backend_in_use (eseries.ESERIES_NAME):
-        in_use = "1"
-    else:
-        in_use = "0"
+    in_use = common.backend_in_use (eseries.ESERIES_NAME)
 
     data['enabled'] = enabled
     data['licensed'] = licensed
@@ -307,7 +301,7 @@ def get_nimble():
     '''
     return data = {'enabled':    "0/1",       "0" not enabled or "1" is enabled
                    'licensed':   "0/1",       "0" not licensed or "1" is licensed
-                   'in_use':     "0/1",       "0" not in use or "1" volume type is in use
+                   'in_use':     "0/1",       "0" no volumes created or the number of volumes of this type that exist
                    'server':     "ip-addr",
                    'login':      "username",
                    'pwd':        "password"
@@ -325,10 +319,7 @@ def get_nimble():
     else:
         licensed = "0"
 
-    if common.backend_in_use (nimble.NIMBLE_NAME):
-        in_use = "1"
-    else:
-        in_use = "0"
+    in_use = common.backend_in_use (nimble.NIMBLE_NAME)
 
     data['enabled'] = enabled
     data['licensed'] = licensed
