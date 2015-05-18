@@ -2,17 +2,30 @@ $(function ()
 {
     var ESERIES_ID = "",
         ESERIES_NAME = "",
-        ESERIES_CONFIG_HEIGHT = 635;
+        ESERIES_CONFIG_WIDTH = 290,
+        ESERIES_CONFIG_HEIGHT = 530;
+
+    var ESERIES_CONTROLLER_DATA_WIDTH = 290,
+        ESERIES_CONTROLLER_DATA_HEIGHT = 290;
+
+    var ESERIES_DISK_POOLS_WIDTH = 350,
+        ESERIES_DISK_POOLS_HEIGHT = 279;
 
     var NFS_ID = "",
         NFS_NAME = "",
-        NFS_CONFIG_HEIGHT = 360;
+        NFS_CONFIG_WIDTH = 330,
+        NFS_CONFIG_HEIGHT = 350;
 
     var NIMBLE_ID = "",
         NIMBLE_NAME = "",
+        NIMBLE_CONFIG_WIDTH = 290,
         NIMBLE_CONFIG_HEIGHT = 360;
 
-    var LICENSE_HEIGHT = 250;
+    var TPS_FORM_WIDTH = 420,
+        TPS_FORM_HEIGHT = 228;
+
+    var LICENSE_WIDTH = 300,
+        LICENSE_HEIGHT = 250;
 
     var third_party_storage,
         current_provider_id = "",
@@ -33,8 +46,9 @@ $(function ()
         nimhost = $("#nimble-hostname-ip"),
         nimlogin = $("#nimble-login"),
         nimpwd = $("#nimble-password"),
-        mntpts = $("#nfs-mountpoint"),
-        allFields = $([]).add(useExisting).add(hostnameIp).add(login).add(password).add(port).add(controllerPassword).add(controllers).add(disks).add(license).add(nimhost).add(nimlogin).add(nimpwd).add(mntpts);
+        mntpt = $("#nfs-mountpoint"),
+        mntpts = $("#mountpoints"),
+        allFields = $([]).add(useExisting).add(hostnameIp).add(login).add(password).add(port).add(controllerPassword).add(controllers).add(disks).add(license).add(nimhost).add(nimlogin).add(nimpwd).add(mntpt).add(mntpts);
 
     // Local Variables
     var controllerIps = [],
@@ -68,8 +82,10 @@ $(function ()
     $(document).on("click", ".remove-mountpoint", function ()
     {
         var index = $(this).closest(".mountpoint").attr('id');
-        mountpoints[index] = undefined;
+        //mountpoints[index] = undefined;
+        delete mountpoints[index];
         $(this).closest(".mountpoint").fadeOut();
+        $("#" + index).remove();
     });
 
     $(".configure-tps").on('click', function ()
@@ -110,7 +126,6 @@ $(function ()
         else if (provider == 'nfs')
         {
             var params = configureMountpoints();
-            console.log("params: " + params);
             if (params != "")
             {
                 isValid = true;
@@ -130,7 +145,7 @@ $(function ()
                 if (configure)
                     config3ps = $.getJSON('nimble/set/' + params + '/');
                 else
-                    config3ps = $.getJSON('nimble/udpate/' + params + '/');
+                    config3ps = $.getJSON('nimble/update/' + params + '/');
             }
         }
 
@@ -202,7 +217,7 @@ $(function ()
                         controllers.size = size;
 
                         $("#eseries-config-data").hide();
-                        $("#tps-config-form").dialog({ height: 285 });
+                        $("#tps-config-form").dialog({ height: ESERIES_CONTROLLER_DATA_HEIGHT, width: ESERIES_CONTROLLER_DATA_WIDTH });
                         $("#eseries-storage-controller-data").show();
                     }
 
@@ -228,7 +243,7 @@ $(function ()
         event.preventDefault();
 
         $("#eseries-storage-controller-data").hide();
-        $("#tps-config-form").dialog({ height: 260 });
+        $("#tps-config-form").dialog({ height: ESERIES_DISK_POOLS_HEIGHT, width: ESERIES_DISK_POOLS_WIDTH });
         disableLink("#eseries-discover-disk-pools", true);
 
         // Confirmed Selections
@@ -278,8 +293,8 @@ $(function ()
     $("#tps-config-form").dialog(
     {
         autoOpen: false,
-        height: 300,
-        width: 300,
+        height: TPS_FORM_HEIGHT,
+        width: TPS_FORM_WIDTH,
         modal: true,
         resizable: true,
         closeOnEscape: true,
@@ -342,6 +357,13 @@ $(function ()
 
     function hideFields()
     {
+        var keys = Object.keys(mountpoints);
+        for (var i = 0; i < keys.length; i++)
+        {
+            $("#mp" + i).remove();
+        }
+        mountpoints = {};
+
         resetUiValidation(allFields);
         $("#tps-config-form fieldset").each(function ()
         {
@@ -355,7 +377,7 @@ $(function ()
     function buildTpsDialog()
     {
         $("#tps-table-container").empty();
-        $("#tps-config-form").dialog({ height: 300, width: 450 }).dialog("open");
+        $("#tps-config-form").dialog({ height: TPS_FORM_HEIGHT, width: TPS_FORM_WIDTH }).dialog("open");
         $("#tps-form-legend").html("Third Party Storage");
 
         close_tps_form = true;
@@ -395,9 +417,9 @@ $(function ()
                 ESERIES_ID = provider.id;
                 ESERIES_NAME = provider.name;
 
-                buildConfigure(ESERIES_ID, ESERIES_NAME, ESERIES_CONFIG_HEIGHT);
-                buildLicense(ESERIES_ID, ESERIES_NAME, LICENSE_HEIGHT);
-                buildUpdate(ESERIES_ID, ESERIES_NAME, ESERIES_CONFIG_HEIGHT);
+                buildConfigure(ESERIES_ID, ESERIES_NAME, ESERIES_CONFIG_WIDTH, ESERIES_CONFIG_HEIGHT);
+                buildLicense(ESERIES_ID, ESERIES_NAME);
+                buildUpdate(ESERIES_ID, ESERIES_NAME, ESERIES_CONFIG_WIDTH, ESERIES_CONFIG_HEIGHT);
                 deleteConfigure(ESERIES_ID, ESERIES_NAME);
             }
 
@@ -406,9 +428,9 @@ $(function ()
                 NFS_ID = provider.id;
                 NFS_NAME = provider.name;
 
-                buildConfigure(NFS_ID, NFS_NAME, NFS_CONFIG_HEIGHT);
-                buildLicense(NFS_ID, NFS_NAME, LICENSE_HEIGHT);
-                buildUpdate(NFS_ID, NFS_NAME, NFS_CONFIG_HEIGHT);
+                buildConfigure(NFS_ID, NFS_NAME, NFS_CONFIG_WIDTH, NFS_CONFIG_HEIGHT);
+                buildLicense(NFS_ID, NFS_NAME);
+                buildUpdate(NFS_ID, NFS_NAME, NFS_CONFIG_WIDTH, NFS_CONFIG_HEIGHT);
                 deleteConfigure(NFS_ID, NFS_NAME);
             }
 
@@ -417,47 +439,46 @@ $(function ()
                 NIMBLE_ID = provider.id;
                 NIMBLE_NAME = provider.name;
 
-                buildConfigure(NIMBLE_ID, NIMBLE_NAME, NIMBLE_CONFIG_HEIGHT);
-                buildLicense(NIMBLE_ID, NIMBLE_NAME, LICENSE_HEIGHT);
-                buildUpdate(NIMBLE_ID, NIMBLE_NAME, NIMBLE_CONFIG_HEIGHT);
+                buildConfigure(NIMBLE_ID, NIMBLE_NAME, NIMBLE_CONFIG_WIDTH, NIMBLE_CONFIG_HEIGHT);
+                buildLicense(NIMBLE_ID, NIMBLE_NAME);
+                buildUpdate(NIMBLE_ID, NIMBLE_NAME, NIMBLE_CONFIG_WIDTH, NIMBLE_CONFIG_HEIGHT);
                 deleteConfigure(NIMBLE_ID, NIMBLE_NAME);
             }
         }
     }
 
-    function buildConfigureDetails(id, name, dialog_ht, event)
+    function buildConfigureDetails(id, name, dialog_wd, dialog_ht, event)
     {
 
         var prov_name = name;
         close_tps_form = false;
         if (event != undefined)
             event.preventDefault();
-        //hideFields();
         $("#tps-table").hide();
-        $("#tps-config-form").dialog({ height: dialog_ht });
+        $("#tps-config-form").dialog({ height: dialog_ht, width: dialog_wd });
         $("#tps-form-legend").html(prov_name);
         $("#" + id + "-config-data").show();
         return;
     }
 
-    function buildConfigure(id, name, dialog_ht)
+    function buildConfigure(id, name, dialog_wd, dialog_ht)
     {
         var configId = "#configure-" + id;
         $(configId).bind("click", function (event)
         {
-            buildConfigureDetails(id, name, dialog_ht, event)
+            buildConfigureDetails(id, name, dialog_wd, dialog_ht, event)
         });
         return;
     }
 
-    function buildUpdate(id, name, dialog_ht)
+    function buildUpdate(id, name, dialog_wd, dialog_ht)
     {
         var updateId = "#update-" + id;
         $(updateId).bind("click", function (event)
         {
             close_tps_form = false;
             event.preventDefault();
-            updateTps(id, name, dialog_ht);
+            updateTps(id, name, dialog_wd, dialog_ht);
         });
         return;
     }
@@ -475,7 +496,7 @@ $(function ()
         return;
     }
 
-    function buildLicense(id, name, dialog_ht)
+    function buildLicense(id, name)
     {
         var prov_name = name + " License";
         var licenseConfirm = "#license-" + id;
@@ -486,14 +507,14 @@ $(function ()
             event.preventDefault();
             hideFields();
             $("#tps-table").hide();
-            $("#tps-config-form").dialog({ height: dialog_ht });
+            $("#tps-config-form").dialog({ height: LICENSE_HEIGHT, width: LICENSE_WIDTH });
             $("#tps-form-legend").html(prov_name);
             $("#license-confirm").show();
         });
         return;
     }
 
-    function updateTps(id, name, dialog_ht)
+    function updateTps(id, name, dialog_wd, dialog_ht)
     {
         var url = "/" + id + "/get/";
 
@@ -504,7 +525,6 @@ $(function ()
                 {
                     if (id == "nfs")
                     {
-                        console.log(ret_data.data.mountpoint);
                         $.each(ret_data.data.mountpoint, function (mp)
                         {
                             addMountpoint(ret_data.data.mountpoint[mp]);
@@ -535,7 +555,7 @@ $(function ()
                         $("#nimble-button").html("Update " + name);
                     }
 
-                    buildConfigureDetails(id, name, dialog_ht)
+                    buildConfigureDetails(id, name, dialog_wd, dialog_ht)
                 }
 
                 else if (ret_data.status == "error")
@@ -582,13 +602,16 @@ $(function ()
     function addMountpoint(mountpoint)
     {
         var index = "mp" + Object.keys(mountpoints).length;
-        var mp = {
-            "index": index,
-            "mountpoint": mountpoint,
-            "html": '<div id="' + index + '" class="mountpoint"><span class="mountpoint-text">' + mountpoint + '</span><button class="remove-mountpoint">-</button></div>'
-        };
-        mountpoints[index] = mp;
-        $("#mountpoints").append($(mp.html).fadeIn());
+        if ($("#" + index).length == 0)
+        {
+            var mp = {
+                "index": index,
+                "mountpoint": mountpoint,
+                "html": '<div id="' + index + '" class="mountpoint"><span class="mountpoint-text">' + mountpoint + '</span><button class="remove-mountpoint">-</button></div>'
+            };
+            mountpoints[index] = mp;
+            $("#mountpoints").append($(mp.html).fadeIn());
+        }
     }
 
     function configureEseries()
@@ -616,10 +639,7 @@ $(function ()
 
         for (var i = 0; i < keys.length; i++)
         {
-            if (mountpoints[keys[i]] != undefined)
-            {
-                validKeys[validKeys.length] = mountpoints[keys[i]];
-            }
+            validKeys[validKeys.length] = mountpoints[keys[i]];
         }
 
         for (var j = 0; j < validKeys.length; j++)
@@ -641,7 +661,9 @@ $(function ()
             }
         }
 
-        mountpoints = {};
+        $(".mountpoints").empty();
+        //mountpoints = {};
+
         return paramString;
     }
 
@@ -706,10 +728,12 @@ $(function ()
         if (checked == 'http')
         {
             $("#eseries-server-port").val("8080");
-        } else if (checked == 'https')
+        }
+        else if (checked == 'https')
         {
             $("#eseries-server-port").val("8443");
-        } else
+        }
+        else
         {
             $('input[id=http]').prop('checked', true);
             $("#eseries-server-port").val("8080");
