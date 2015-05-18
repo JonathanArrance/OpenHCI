@@ -747,7 +747,7 @@ $(function ()
         d3.json(url, function (error, json)
         {
 
-            var m = 10, r = 100, z = d3.scale.category20c();
+            var m = 10, r = 75, z = d3.scale.category20c();
 
             var pie = d3.layout.pie()
                 .value(function (d)
