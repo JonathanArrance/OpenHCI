@@ -45,7 +45,6 @@ function initializeUtilities() {
     // Call functions
     checkAssignFip();
     changeImageLocation($("#import_img_type"), $("#import_local"), $("#import_remote"));
-    getStorage();
     checkCreateRouter();
     checkAddUser();
 }
@@ -708,8 +707,8 @@ var volumes = new HashTable(),
     snapshots = new HashTable(),
     snapshotVolumes = new HashTable();
 
-function getStorage() {
-    $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')
+function getStorage(projectId) {
+    $.getJSON('/projects/' + projectId + '/get_project_quota/')
         .done(function (data) {
             totalStorage = data.gigabytes;
             updateUsedStorage();
