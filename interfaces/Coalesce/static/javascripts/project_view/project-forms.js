@@ -575,26 +575,92 @@ function checkSecurityInputs(self) {
 
 function buildInstance() {
 
-    updateProgress(0, "Initializing");
-    updateProgress(0, "Creating Group?");
-
     // local variables
-    var secGroup,
+    var uploadedImage,
+        secGroup,
         key,
         instanceName,
         instanceId,
-        volume;
+        volume,
+        steps = 7;
 
-    var createSecGroup = $.Deferred(),
+    var uploadImage = $.Deferred(),
+        createSecGroup = $.Deferred(),
         createKey = $.Deferred(),
         createInstance = $.Deferred(),
         createVolume = $.Deferred(),
         attachVolume = $.Deferred(),
         assignIp = $.Deferred();
 
+    updateProgress(0, steps, "Initializing");
+
+    if (bamParams.instance.inputs.image.value == "upload") {
+        updateProgress(0, steps, "Uploading Image");
+        var imageType = bamParams.image.inputs.type.value,
+            imageProgressId = guid(),
+            url = "";
+        if (imageType == "image_file") {
+            url = '/import_local/' +
+            bamParams.image.inputs.name.value + '/' +
+            bamParams.image.inputs.container.value + '/' +
+            bamParams.image.inputs.disk.value + '/' +
+            bamParams.image.inputs.type.value + '/' +
+            "na" + '/' +
+            bamParams.image.inputs.visibility.value + '/' +
+            bamParams.image.inputs.os.value + '/' +
+            imageProgressId + '/';
+        } else {
+            url = '/import_remote/' +
+            bamParams.image.inputs.name.value + '/' +
+            bamParams.image.inputs.container.value + '/' +
+            bamParams.image.inputs.disk.value + '/' +
+            bamParams.image.inputs.type.value + '/' +
+            bamParams.image.inputs.importRemote.value + '/' +
+            bamParams.image.inputs.visibility.value + '/' +
+            bamParams.image.inputs.os.value + '/' +
+            imageProgressId + '/';
+        }
+
+        uploadImage = $.ajax({
+            type: "POST",
+            url: url,
+            data: new FormData($("#bam-image-section")[0]),
+            contentType: false,
+            cache: false,
+            processData: false,
+            async: true,
+            xhr: function () {
+                // This function will be called during the upload to update the progress of the upload.
+                var xhr = $.ajaxSettings.xhr();
+                $(".bam-image-upload-bar").progressbar({value: 0});
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        var percentage = Math.floor(100 * parseInt(e.loaded) / parseInt(e.total));
+                        $(".bam-image-upload-bar").progressbar({value: percentage});
+                        percentage = percentage + "%";
+                        $('.bam-image-upload-label').html(percentage);
+                    }
+                };
+                return xhr;
+            }
+        })
+            .done(function (data) {
+                addImage(data);
+                uploadedImage = bamParams.image.inputs.name.value;
+            })
+            .fail(function () {
+                message.showMessage("error", "Error: Could not upload image");
+                return false;
+            });
+    }
+    else {
+        uploadedImage = bamParams.instance.inputs.image.value;
+        uploadImage.resolve();
+    }
+
     if (bamParams.security.inputs.group.value == "create") {
 
-        updateProgress(0, "Creating Group");
+        updateProgress(1, steps, "Creating Group");
         createSecGroup = $.getJSON(
             '/create_security_group/' +
             bamParams.group.inputs.name.value + '/' +
@@ -611,7 +677,7 @@ function buildInstance() {
                 if (data.status == 'success') {
                     // Initialize empty string for new router row
                     addSecGroup(data);
-                    updateProgress(1, "Group Created");
+                    updateProgress(2, steps, "Group Created");
                     secGroup = bamParams["group"].inputs["name"].value;
                 }
             }).fail(function () {
@@ -623,10 +689,8 @@ function buildInstance() {
         createSecGroup.resolve();
     }
 
-    updateProgress(1, "Creating Key?");
-
     if (bamParams.security.inputs.key.value == "create") {
-        updateProgress(1, "Creating Key");
+        updateProgress(2, steps, "Creating Key");
         createKey = $.getJSON('/create_sec_keys/' + bamParams.security.inputs.newKey.value + '/' + PROJECT_ID + '/')
             .done(function (data) {
                 if (data.status == 'error') {
@@ -636,7 +700,7 @@ function buildInstance() {
                 if (data.status == 'success') {
                     // Initialize empty string for new router row
                     addKey(data);
-                    updateProgress(2, "Key Created");
+                    updateProgress(3, steps, "Key Created");
                     key = data.key_name;
                 }
             })
@@ -649,9 +713,9 @@ function buildInstance() {
         createKey.resolve();
     }
 
-    $.when(createSecGroup, createKey)
+    $.when(uploadImage, createSecGroup, createKey)
         .done(function () {
-            updateProgress(2, "Creating Instance");
+            updateProgress(3, steps, "Creating Instance");
             createInstance = $.getJSON(
                 '/create_image/' +
                 bamParams.instance.inputs.name.value + '/' +
@@ -659,7 +723,7 @@ function buildInstance() {
                 '/nova/' +
                 bamParams.instance.inputs.flavor.value + '/' +
                 key + '/' +
-                bamParams.instance.inputs.image.value + '/' +
+                uploadedImage + '/' +
                 bamParams.instance.inputs.network.value + '/' +
                 PROJECT_ID + '/')
                 .done(function (data) {
@@ -670,7 +734,7 @@ function buildInstance() {
                     if (data.status == 'success') {
                         // Initialize empty string for new router row
                         addInstance(data);
-                        updateProgress(3, "Instance Created");
+                        updateProgress(4, steps, "Instance Created");
                         instanceName = data.server_info.server_name.toString();
                         instanceId = data.server_info.server_id.toString();
                     }
@@ -681,11 +745,8 @@ function buildInstance() {
                 });
 
             $.when(createInstance).done(function () {
-
-                updateProgress(3, "Creating Volume?");
-
                 if (bamParams.volume.inputs.select.value == "create") {
-                    updateProgress(3, "Creating Volume");
+                    updateProgress(4, steps, "Creating Volume");
                     createVolume = $.getJSON(
                         '/create_volume/' +
                         bamParams.volume.inputs.name.value + '/' +
@@ -701,7 +762,7 @@ function buildInstance() {
 
                             if (data.status == 'success') {
                                 addVolume(data, instanceName);
-                                updateProgress(3, "Volume Created");
+                                updateProgress(5, steps, "Volume Created");
                                 volume = data.volume_id.toString();
                             }
                         })
@@ -711,17 +772,17 @@ function buildInstance() {
                         });
                 } else if (bamParams.volume.inputs.select.value == "none") {
                     volume = "skip";
-                    updateProgress(4, "Skipping Volume");
+                    updateProgress(5, steps, "Skipping Volume");
                     createVolume.resolve();
                 } else {
                     volume = bamParams.volume.inputs.select.value;
-                    updateProgress(4, "Volume Selected");
+                    updateProgress(5, steps, "Volume Selected");
                     createVolume.resolve();
                 }
 
                 $.when(createVolume).done(function () {
                     if (volume != "skip") {
-                        updateProgress(4, "Attaching Volume");
+                        updateProgress(5, steps, "Attaching Volume");
                         attachVolume = $.getJSON(
                             '/attach_volume/' + PROJECT_ID + '/' + instanceId + '/' + volume + '/')
                             .done(function (data) {
@@ -734,7 +795,7 @@ function buildInstance() {
                                 if (data.status == 'success') {
 
                                     var volumeRowSelector = "#" + volume;
-                                    updateProgress(5, "Volume Attached");
+                                    updateProgress(6, steps, "Volume Attached");
                                     $(volumeRowSelector).addClass("volume-attached");
                                 }
                             })
@@ -748,7 +809,7 @@ function buildInstance() {
 
                     $.when(attachVolume).done(function () {
                         if (bamParams.security.inputs.ip.value != "none") {
-                            updateProgress(5, "Assigning IP");
+                            updateProgress(6, steps, "Assigning IP");
                             assignIp = $.getJSON(
                                 '/assign_floating_ip/' +
                                 assignableFips.getItem(bamParams["security"].inputs["ip"].value).option + '/' +
@@ -764,7 +825,7 @@ function buildInstance() {
                                     if (data.status == 'success') {
 
                                         addIp(data, instanceId, instanceName);
-                                        updateProgress(6, "IP Assigned");
+                                        updateProgress(7, steps, "IP Assigned");
                                     }
                                 })
                                 .fail(function () {
@@ -776,7 +837,7 @@ function buildInstance() {
                         }
 
                         $.when(assignIp).done(function () {
-                            updateProgress(6, "Complete");
+                            updateProgress(7, steps, "Complete");
                         });
                     });
                 });
@@ -784,9 +845,30 @@ function buildInstance() {
         });
 }
 
-function updateProgress(stepCount, stepLabel) {
-    $(".bam-overall-progress-bar").progressbar({value: (stepCount / 6) * 100});
+function updateProgress(stepCount, steps, stepLabel) {
+    $(".bam-overall-progress-bar").progressbar({value: (stepCount / steps) * 100});
     $(".bam-overall-progress-label").html(stepLabel);
+}
+
+function addImage(data) {
+    $("<tr></tr>")
+        .prop("id", data.image_id)
+        .append($("<td></td>")
+            .prop("id", data.image_id + '-name-cell')
+            .append($("<span></span>")
+                .prop("id", data.image_id + '-name-text')
+                .html(bamParams.image.inputs.name.value.toString())))
+        .append($("<td></td>")
+            .prop("id", data.image_id + "-actions-cell")
+            .append(
+            $("<a></a>")
+                .prop("href", "#")
+                .prop("class", "delete-image")
+                .html("delete")))
+        .appendTo($('#image_list'));
+    // Update selects
+    addToSelect(bamParams.image.inputs.name.value, bamParams.image.inputs.name.value, $("#image_name"), imageInstOpts);
+    refreshSelect($("#bam-instance-image"), imageInstOpts);
 }
 
 function addSecGroup(data) {
@@ -1027,141 +1109,3 @@ function addIp(data, instanceId, instanceName) {
     // Add assigned class
     $(document.getElementById(data.floating_ip_id)).addClass("fip-assigned");
 }
-
-//var uploadingImage = bamParams.instance.inputs.image.value == "upload",
-//        imageType = bamParams.image.inputs.type.value,
-//        imageProgressId = guid(),
-//        uploadedImage;
-//
-//    if (uploadingImage) {
-//        var url = "";
-//        if (imageType == "image_file") {
-//            url = '/import_local/' +
-//            bamParams.image.inputs.name.value + '/' +
-//            bamParams.image.inputs.container.value + '/' +
-//            bamParams.image.inputs.disk.value + '/' +
-//            bamParams.image.inputs.type.value + '/' +
-//            "na" + '/' +
-//            bamParams.image.inputs.visibility.value + '/' +
-//            bamParams.image.inputs.os.value + '/' +
-//            imageProgressId + '/';
-//        } else {
-//            url = '/import_remote/' +
-//            bamParams.image.inputs.name.value + '/' +
-//            bamParams.image.inputs.container.value + '/' +
-//            bamParams.image.inputs.disk.value + '/' +
-//            bamParams.image.inputs.type.value + '/' +
-//            bamParams.image.inputs.importRemote.value + '/' +
-//            bamParams.image.inputs.visibility.value + '/' +
-//            bamParams.image.inputs.os.value + '/' +
-//            imageProgressId + '/';
-//        }
-//        var formData = new FormData();
-//        formData.append("import_local", $("#bam-image-import-local").val());
-//        $.ajax({
-//                type: "POST",
-//                url: url,
-//                data: formData,
-//                contentType: false,
-//                cache: false,
-//                processData: false,
-//                async: true,
-//                progress: function () {
-//                    // This function will be called during the upload to update the progress of the upload.
-//                    var bar = $(".bam-image-upload-bar"),
-//                        label = $('.bam-image-upload-label');
-//                    var xhr = $.ajaxSettings.xhr();
-//                    xhr.upload.onprogress = function (e) {
-//                        if (e.lengthComputable) {
-//                            var percentage = Math.floor(100 * parseInt(e.loaded) / parseInt(e.total));
-//                            percentage = percentage + "%";
-//                            bar.progressbar({value: percentage});
-//                            label.html(percentage);
-//                        }
-//                    };
-//                    return xhr;
-//                },
-//                done: function (data) {
-//                    $("<tr></tr>")
-//                        .prop("id", data.image_id)
-//                        .append($("<td></td>")
-//                            .prop("id", data.image_id + '-name-cell')
-//                            .append($("<span></span>")
-//                                .prop("id", data.image_id + '-name-text')
-//                                .html(bamParams.image.inputs.name.value.toString())))
-//                        .append($("<td></td>")
-//                            .prop("id", data.image_id + "-actions-cell")
-//                            .append(
-//                            $("<a></a>")
-//                                .prop("href", "#")
-//                                .prop("class", "delete-image")
-//                                .html("delete")))
-//                        .appendTo($('#image_list'));
-//                    // Update selects
-//                    addToSelect(bamParams.image.inputs.name.value, bamParams.image.inputs.name.value, $("#image_name"), imageInstOpts);
-//                    refreshSelect($("#bam-instance-image"), imageInstOpts);
-//                    uploadedImage = bamParams.image.inputs.name.value;
-//                },
-//                fail: function () {
-//                    message.showMessage("error", "Error: Could not upload image");
-//                    return false;
-//                },
-//                complete: function () {
-//                    if (bamParams.security.inputs.group.value == "create") {
-//                        var createSecGroup = $.getJSON(
-//                            '/create_security_group/' +
-//                            bamParams.group.inputs.name.value + '/' +
-//                            bamParams.group.inputs.description.value + '/' +
-//                            bamParams.group.inputs.ports.value + '/' +
-//                            bamParams.group.inputs.transport.value + '/' +
-//                            PROJECT_ID + '/')
-//                            .done(function (data) {
-//                                if (data.status == 'error') {
-//                                    message.showMessage('error', data.message);
-//                                    return false;
-//                                }
-//                                if (data.status == 'success') {
-//                                    // Initialize empty string for new router row
-//                                    $("<tr></tr>")
-//                                        .prop("id", data.sec_group_id)
-//                                        .append(
-//                                        $("<td></td>")
-//                                            .prop("id", data.sec_group_id + '-name-cell')
-//                                            .append(
-//                                            $("<a></a>")
-//                                                .prop("href", '/security_group/' + data.sec_group_id + '/' + PROJECT_ID + '/view/')
-//                                                .append($("<span></span>")
-//                                                    .prop("id", data.sec_group_id + '-name-text')
-//                                                    .html(data.sec_group_name.toString()))))
-//                                        .append(
-//                                        $("<td></td>")
-//                                            .prop("id", data.sec_group_id + '-username-cell')
-//                                            .append(
-//                                            $("<span></span>")
-//                                                .prop("id", data.sec_group_id + '-username-text')
-//                                                .html(data.username.toString())))
-//                                        .append(
-//                                        $("<td></td>")
-//                                            .prop("id", data.sec_group_id + '-actions-cell')
-//                                            .append(
-//                                            $("<a></a>")
-//                                                .prop("href", "#")
-//                                                .prop("class", "delete-secGroup")
-//                                                .html("delete")
-//                                        )
-//                                    ).appendTo($("#secGroup_list"));
-//
-//                                    // Update selects
-//                                    addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), secGroupInstOpts);
-//                                    refreshSelect($("#bam-security-group"), secGroupInstOpts);
-//                                }
-//                            })
-//                            .fail(function () {
-//                                message.showMessage("error", "Error: Could not create security group");
-//                                return false;
-//                            });
-//                    }
-//                }
-//            }
-//        );
-//    }

@@ -115,7 +115,6 @@ div.group-spacer {
 #bam-next-button,
 #bam-back-button,
 #bam-create-button {
-    margin: 10px 0;
     float: right;
 }
 
@@ -139,8 +138,22 @@ div.group-spacer {
 .bam-overall-progress-label {
     position: absolute;
     left: 0;
-    padding: 2px 0 0 100px;
+    padding: 2px 0 0 240px;
     color: #FFF;
     text-shadow: -1px 0 #696969, 0 1px #696969, 1px 0 #696969, 0 -1px #696969;
     font-weight: bold;
+}
+
+.bam-image-upload-label {
+    position: absolute;
+    left: 0;
+    padding: 2px 0 0 250px;
+    color: #FFF;
+    text-shadow: -1px 0 #696969, 0 1px #696969, 1px 0 #696969, 0 -1px #696969;
+    font-weight: bold;
+}
+
+.bam-bars {
+    display: inline-block;
+    width: 100%;
 }
