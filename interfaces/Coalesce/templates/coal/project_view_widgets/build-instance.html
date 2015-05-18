@@ -3,7 +3,7 @@
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/build-instance.css"/>
 
 <div id="build-instance-form" title="Build Instance">
-    <form>
+    <form id="bam-form-element" action="#" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         <fieldset id="bam-instance-section">
@@ -11,8 +11,10 @@
             <h6>Please enter the following information to build a virtual machine instance:</h6>
 
             <div class="bam-form">
+
                 <label for="bam-instance-name">Name</label>
                 <input type="text" name="bam-instance-name" id="bam-instance-name"/>
+
                 <label for="bam-instance-image">Image</label>
                 <select name="bam-select-image-name" id="bam-instance-image">
                     <script>
@@ -25,13 +27,24 @@
                     </script>
                 </select>
 
+                <label style="display: none" for="bam-instance-network">Private Network</label>
+                <select style="display: none"  name="bam-instance-network" id="bam-instance-network">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-instance-network"), privNetInstOpts);
+                        });
+                    </script>
+                </select>
+
                 <div class="instance-spacer"></div>
+
                 <label for="bam-instance-flavor">Flavor</label>
                 <select name="bam-flavor-name" id="bam-instance-flavor">
                     {% for flavor in flavors %}
                         <option value="{{ flavor.flavor_name }}">{{ flavor.flavor_name }}</option>
                     {% endfor %}
                 </select>
+
             </div>
 
             <div class="bam-info">
@@ -47,6 +60,7 @@
 
                 <p>Flavor: Use the pull down to select the size characteristics for your virtual machine. The following
                     chart defines the different flavor meanings:</p>
+
             </div>
 
             <div class="bam-table">
@@ -96,63 +110,62 @@
             <h6>Please enter the following information to upload your image:</h6>
 
             <div class="bam-form">
-                <label for="bam-image-name">Name</label>
-                <input type="text" name="bam-image-name" id="bam-image-name"/>
+                    <label for="bam-image-name">Name</label>
+                    <input type="text" name="bam-image-name" id="bam-image-name"/>
 
-                <label for="bam-image-container">Container Format</label>
-                <select name="bam-image-container" id="bam-image-container">
-                    <option value="bare">bare</option>
-                    <option value="ovf">ovf</option>
-                    <option value="aki">aki</option>
-                    <option value="ari">ari</option>
-                    <option value="ami">ami</option>
-                </select>
+                    <label for="bam-image-container">Container Format</label>
+                    <select name="bam-image-container" id="bam-image-container">
+                        <option value="bare">bare</option>
+                        <option value="ovf">ovf</option>
+                        <option value="aki">aki</option>
+                        <option value="ari">ari</option>
+                        <option value="ami">ami</option>
+                    </select>
 
-                <label for="bam-image-disk">Disk Format</label>
-                <select name="bam-image-disk" id="bam-image-disk">
-                    <option value="raw">raw</option>
-                    <option value="vhd">vhd</option>
-                    <option value="vmdk">vmdk</option>
-                    <option value="vdi">vdi</option>
-                    <option value="iso">iso</option>
-                    <option value="qcow2">qcow2</option>
-                    <option value="aki">aki</option>
-                    <option value="ari">ari</option>
-                    <option value="ami">ami</option>
-                </select>
+                    <label for="bam-image-disk">Disk Format</label>
+                    <select name="bam-image-disk" id="bam-image-disk">
+                        <option value="raw">raw</option>
+                        <option value="vhd">vhd</option>
+                        <option value="vmdk">vmdk</option>
+                        <option value="vdi">vdi</option>
+                        <option value="iso">iso</option>
+                        <option value="qcow2">qcow2</option>
+                        <option value="aki">aki</option>
+                        <option value="ari">ari</option>
+                        <option value="ami">ami</option>
+                    </select>
 
-                <label for="bam-image-location">Local/Remote</label>
-                <select name="bam-image-location" id="bam-image-location">
-                    <option value="image_file" selected>local</option>
-                    <option value="image_url">remote</option>
-                </select>
+                    <label for="bam-image-location">Local/Remote</label>
+                    <select name="bam-image-location" id="bam-image-location">
+                        <option value="image_file" selected>local</option>
+                        <option value="image_url">remote</option>
+                    </select>
 
-                <label for="bam-image-import-remote">Remote Image Location</label>
-                <input type="text" name="bam-image-import-remote" id="bam-image-import-remote"/>
+                    <label for="bam-image-import-remote">Remote Image Location</label>
+                    <input type="text" name="bam-image-import-remote" id="bam-image-import-remote"/>
 
-                <label for="bam-image-import-local" style="height: 22px; line-height: 20px;">Local Image
-                    Location</label>
-                <input type="file" name="bam-image-import-local" id="bam-image-import-local"/>
+                    <label for="bam-image-import-local" style="height: 22px; line-height: 20px;">Local Image Location</label>
+                    <input type="file" name="bam-image-import-local" id="bam-image-import-local"/>
 
-                <div class="image-spacer"></div>
+                    <div class="image-spacer"></div>
 
-                <label for="bam-image-os">OS Type
+                    <label for="bam-image-os">OS Type
                     <span title="When booting a Windows instance, OS Type must be specified.
                         Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">
                         (help)
                     </span>
-                </label>
-                <select name="bam-image-os" id="bam-image-os">
-                    <option value="linux" selected="selected">Linux</option>
-                    <option value="windows">Windows</option>
-                    <option value="other">Other</option>
-                </select>
+                    </label>
+                    <select name="bam-image-os" id="bam-image-os">
+                        <option value="linux" selected="selected">Linux</option>
+                        <option value="windows">Windows</option>
+                        <option value="other">Other</option>
+                    </select>
 
-                <label for="bam-image-visibility">Visibility</label>
-                <select name="bam-image-visibility" id="bam-image-visibility">
-                    <option value="public">public</option>
-                    <option value="private">private</option>
-                </select>
+                    <label for="bam-image-visibility">Visibility</label>
+                    <select name="bam-image-visibility" id="bam-image-visibility">
+                        <option value="public">public</option>
+                        <option value="private">private</option>
+                    </select>
             </div>
             <div class="bam-info">
                 <br>
@@ -419,6 +432,7 @@
                 <ul>
                     <li class="instance"><label>Instance Name:</label><span class="name"></span></li>
                     <li class="image"><label>Image Name:</label><span class="name"></span></li>
+                    <li class="instance"><label>Instance Network:</label><span class="network"></span></li>
                     <li class="instance"><label>Instance Flavor:</label><span class="flavor"></span></li>
                     <li></li>
                     <li class="volume"><label>Volume Name:</label><span class="name"></span></li>
@@ -431,8 +445,10 @@
                 </ul>
 
                 <label>Overall Progress:</label>
+
                 <div class="bam-overall-progress-bar"><span class="bam-overall-progress-label"></span></div>
                 <label>Image Upload Progress:</label>
+
                 <div class="bam-image-upload-bar"><span class="bam-image-upload-label"></span></div>
             </div>
 

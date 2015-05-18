@@ -91,7 +91,7 @@ $(function () {
                                         '<span id="' + data.net_id + '-name-text">' + data.net_name + '</span>' + '</a></td>' +
                                         '<td id="' + data.net_id + '-status-cell">' +
                                         'shared: <span id="' + data.net_id + '-shared-text">' + confShared + '</span>' +
-                                        '<span id="{{ value.net_id }}-status-pipe"> | </span>' +
+                                        '<span id="' + data.net_id + '-status-pipe"> | </span>' +
                                         'admin state: <span id="' + data.net_id + '-admin-text">' + confAdminState + '</span></td>' +
                                         '<td id="' + data.net_id + '-subnet-cell"><span id="' + data.subnet.subnet_id + '">' + data.subnet.subnet_name + '</span></td>' +
                                         '<td id="' + data.net_id + '-actions-cell"><a href="#" class="delete-privateNet">delete</a></td>' + '</tr>';
@@ -106,11 +106,16 @@ $(function () {
                                     }
 
                                     // Add to privateNetworks
-                                    privateNetworks.setItem(data.net_id, { id: data.net_id, name: data.net_name, router: "None" });
+                                    privateNetworks.setItem(data.net_id, {
+                                        id: data.net_id,
+                                        name: data.net_name,
+                                        router: "None"
+                                    });
 
                                     // Update selects
                                     addToSelect(data.net_name, data.net_name, $("#network_name"), privNetInstOpts);
                                     addToSelect(data.net_id, data.net_name, $("#priv_net"), privNetRoutOpts);
+                                    refreshSelect($("#bam-instance-network"), privNetInstOpts);
                                 }
 
                             })
@@ -318,6 +323,7 @@ $(function () {
 
                                 // Update selects
                                 removeFromSelect(confPrivateNet, $("#network_name"), privNetInstOpts);
+                                refreshSelect($("#bam-instance-network"), privNetInstOpts);
                                 removeFromSelect(confId, $("#priv_net"), privNetRoutOpts);
                             }
                         })
