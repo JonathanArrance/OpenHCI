@@ -2713,12 +2713,12 @@ def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, cei
 
         if result == []:
             # No data was provided for this meter.
-            out = {'status' : "success", 'message' : "empty dataset"}
+            out = {'status': "success", 'message' : "empty dataset"}
         else:
-            out = {'status' : "success", 'statistics' : result}
+            out = {'status': "success", 'statistics' : result}
 
     except Exception as e:
-        out = {'status' : "error", 'message' : "Error getting statistics"}
+        out = {'status': "error", 'message' : "Error getting statistics: %s" %e}
     return HttpResponse(simplejson.dumps(out))
 
 def get_statistics_for_instance(request, project_id, instance_id, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id):
@@ -2732,12 +2732,12 @@ def get_statistics_for_instance(request, project_id, instance_id, ceil_start_tim
 
         if result == []:
             # No data was provided for this meter.
-            out = {'status' : "success", 'message' : "empty dataset"}
+            out = {'status': "success", 'message' : "empty dataset"}
         else:
-            out = {'status' : "success", 'statistics' : result}
+            out = {'status': "success", 'statistics' : result}
 
     except Exception as e:
-        out = {'status' : "error", 'message' : "Error getting statistics"}
+        out = {'status': "error", 'message' : "Error getting statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 # ---
