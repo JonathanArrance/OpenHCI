@@ -136,9 +136,9 @@ class meter_ops:
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
 
-        except:
-            logger.sys_error("Could not list meters.")
-            raise Exception("Could not list meters.")
+        except Exception as e:
+            logger.sys_error("Could not list meters: %s" % e)
+            raise Exception("Could not list meters: %s" % e)
 
         if rest['response'] == 200:
             # read the json that is returned.
