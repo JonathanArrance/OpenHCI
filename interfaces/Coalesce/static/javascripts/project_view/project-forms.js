@@ -340,6 +340,9 @@ $(function () {
         },
         "progress": {
             "section": "#bam-progress-section"
+        },
+        "confirm": {
+            "section": "#bam-confirm-section"
         }
     }
 });
@@ -470,13 +473,15 @@ function switchSections(current, next) {
     var form = $("#build-instance-form"),
         createBtn = $("#bam-create-button"),
         nextBtn = $("#bam-next-button"),
-        backBtn = $("#bam-back-button");
+        backBtn = $("#bam-back-button"),
+        finishBtn = $("#bam-finish-button");
 
     // -- Handle Dom Manipulation
     switch (currentSection) {
         case "instance":
             backBtn.hide(0);
             createBtn.hide(0);
+            finishBtn.hide(0);
             form.dialog({height: 455});
             break;
         case "image":
@@ -490,21 +495,24 @@ function switchSections(current, next) {
             break;
         case "security":
             form.dialog({height: 605});
-            nextBtn.show();
-            createBtn.hide();
+            nextBtn.show(0);
+            createBtn.hide(0);
             break;
         case "group":
             form.dialog({height: 505});
-            nextBtn.show();
-            createBtn.hide();
+            nextBtn.show(0);
+            createBtn.hide(0);
             break;
         case "progress":
             updateProgressSection();
             form.dialog({height: 440});
-            nextBtn.hide();
-            createBtn.show();
+            nextBtn.hide(0);
+            createBtn.show(0);
             break;
         case "confirm":
+            createBtn.hide();
+            backBtn.hide();
+            finishBtn.show();
             form.dialog({height: 605});
             break;
     }
@@ -579,6 +587,7 @@ function buildInstance() {
     var uploadedImage,
         secGroup,
         key,
+        keyId,
         instanceName,
         instanceId,
         volume,
@@ -702,6 +711,7 @@ function buildInstance() {
                     addKey(data);
                     updateProgress(3, steps, "Key Created");
                     key = data.key_name;
+                    keyId = data.key_id;
                 }
             })
             .fail(function () {
@@ -710,11 +720,14 @@ function buildInstance() {
             });
     } else {
         key = bamParams.security.inputs.key.value;
+        keyId = secKeyInstOpts.items[key].id;
         createKey.resolve();
     }
 
     $.when(uploadImage, createSecGroup, createKey)
         .done(function () {
+            console.log("key link = " + '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
+            $(".bam-confirm-key").prop("href", '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
             updateProgress(3, steps, "Creating Instance");
             createInstance = $.getJSON(
                 '/create_image/' +
@@ -735,6 +748,7 @@ function buildInstance() {
                         // Initialize empty string for new router row
                         addInstance(data);
                         updateProgress(4, steps, "Instance Created");
+                        $(".bam-confirm-name").html(bamParams.instance.inputs.name.value.toString());
                         instanceName = data.server_info.server_name.toString();
                         instanceId = data.server_info.server_id.toString();
                     }
@@ -823,9 +837,9 @@ function buildInstance() {
                                     }
 
                                     if (data.status == 'success') {
-
                                         addIp(data, instanceId, instanceName);
                                         updateProgress(7, steps, "IP Assigned");
+                                        $(".bam-confirm-ip").html(assignableFips.getItem(bamParams["security"].inputs["ip"].value).option.toString());
                                     }
                                 })
                                 .fail(function () {
@@ -838,11 +852,14 @@ function buildInstance() {
 
                         $.when(assignIp).done(function () {
                             updateProgress(7, steps, "Complete");
+                            switchSections(currentSection, "confirm");
                         });
                     });
                 });
             });
-        });
+        }
+    )
+    ;
 }
 
 function updateProgress(stepCount, steps, stepLabel) {

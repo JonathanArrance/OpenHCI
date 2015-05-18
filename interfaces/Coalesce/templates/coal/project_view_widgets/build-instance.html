@@ -478,7 +478,75 @@
         </fieldset>
     </form>
 
+    <form id="bam-confirm-section" style="display: none">
+        <fieldset>
+            <legend>Success</legend>
+            <h6>Login/Access Information:</h6>
+
+            <div class="bam-form">
+
+                <label>Instance Name: </label><span class="bam-confirm-name"></span>
+                <label>External IP address: </label><span class="bam-confirm-ip"></span>
+                <label>Linux Device: </label><span>/dev/vdb</span>
+
+                <a class="bam-confirm-key" href="">Download RSA Key</a>
+            </div>
+
+            <div class="bam-info">
+                <p>Please use the given information to access and login to your new virtual machine instance. If your
+                    instance requires a key to login, you will need to download the RSA Private Key file to
+                    use when logging in.</p>
+
+                <p>If a password is needed, the following are common username/passwords for the
+                    following OSes:</p>
+
+                <table>
+                    <tr>
+                        <th>OS</th>
+                        <td>Username/Password</td>
+                    </tr>
+                    <tr>
+                        <th>Cirros</th>
+                        <td>cirros / cubswin</td>
+                    </tr>
+                    <tr>
+                        <th>CentOS 6</th>
+                        <td>cloud-user / RSA Key</td>
+                    </tr>
+                    <tr>
+                        <th>CentOS 7</th>
+                        <td>centos / RSA Key</td>
+                    </tr>
+                    <tr>
+                        <th>Ubuntu</th>
+                        <td>ubuntu / RSA Key</td>
+                    </tr>
+                    <tr>
+                        <th>Fedora</th>
+                        <td>fedora / RSA Key</td>
+                    </tr>
+                    <tr>
+                        <th>RHEL</th>
+                        <td>cloud-user / RSA Key</td>
+                    </tr>
+                    <tr>
+                        <th>Debian</th>
+                        <td>admin / RSA Key</td>
+                    </tr>
+                </table>
+
+                <p>You can access your like so:</p>
+
+                <p>Linux> ssh -I &#60;rsa-private-key-file&#62; fedora@204.64.2.44</p>
+
+                <p>If at anytime you forget this information, you can retrieve it
+                    by clicking the name of your instance in the Project View page.</p>
+            </div>
+        </fieldset>
+    </form>
+
     <div>
+        <a href="#" class="btn" id="bam-finish-button">Finish</a>
         <a href="#" class="btn" id="bam-create-button">Create</a>
         <a href="#" class="btn" id="bam-next-button">Next</a>
         <a href="#" class="btn" id="bam-back-button">Back</a>
