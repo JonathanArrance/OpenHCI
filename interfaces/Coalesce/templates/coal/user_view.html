@@ -20,6 +20,8 @@
 <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
 <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
 <script src="{{ STATIC_URL }}javascripts/user_view/update-user-password.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
 <script>
 var PROJECT = "{{ project_name}}",
         PROJECT_ID = "{{ current_project_id}}",
@@ -103,80 +105,8 @@ var PROJECT = "{{ project_name}}",
         <div class="row-fluid">
             <div id="widget-actions" class="well top">
                 <div class="legend">
-                    Project Meters
+                    Last 24hrs: Average Project Meters
                 </div>
-                <script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3.js"></script>
-                <script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
-                <script>
-                    var gauges = [];
-
-                    function createGauge(name, label, meterType, calcType, min, max, minorTicks)
-                    {
-                        var config =
-                        {
-                            size: 120,
-                            label: label,
-                            meterType: meterType,
-                            calcType: calcType,
-                            min: undefined != min ? min : 0,
-                            max: undefined != max ? max : 1000,
-                            minorTicks: minorTicks
-                        }
-
-                        var range = config.max - config.min;
-                        config.yellowZones = [{ from: config.min + range*0.75, to: config.min + range*0.9 }];
-                        config.redZones = [{ from: config.min + range*0.9, to: config.max }];
-
-                        gauges[name] = new Gauge(name + "GaugeContainer", config);
-                        gauges[name].render();
-                    }
-
-                    function createGauges()
-                    {
-                        createGauge("vcpus", "vCPU Count", "vcpus", "sum", 0, 64, 16);
-                        createGauge("memory", "RAM Alloc MB", "memory", "sum", 0, 16384, 26.2);
-                        createGauge("diskrootsize", "Disk Alloc GB", "disk.root.size", "sum", 0, 1000, 8);
-                    }
-
-                    function updateGauges()
-                    {
-                        for (var key in gauges)
-                        {
-                            getCeilometerResults(gauges[key], gauges[key].config.meterType)
-                        }
-                    }
-
-                    function getCeilometerResults(guage, meterType)
-                    {
-                        var endDate = new Date();
-                        var startDate = new Date(endDate);
-                        var durationInMinutes = 1440;
-                        startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
-                        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
-                        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
-                        url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/"
-
-                        return $.getJSON(url).done(function(data) {
-                            if (data.message != "empty dataset")
-                                {
-                                    var result = data.statistics[0]["sum"];
-                                    guage.redraw(result);
-                                }
-                        });
-                    }
-
-                    function getProjectID() {
-                        return $("#user-project").html();
-                    }
-
-                    function initialize()
-                    {
-                        createGauges();
-                        {#5000 = 5 seconds#}
-                        setInterval(updateGauges, 5000);
-                    }
-
-                </script>
                 <div style="text-align: center">
                     <body onload="initialize()" style="font: 10px arial">
                         <span id="vcpusGaugeContainer"></span>
@@ -206,5 +136,87 @@ var PROJECT = "{{ project_name}}",
     </div>
 </div>
 <!-- end row-fluid-->
+
+<script>
+    var gauges = [];
+
+    function createGauge(name, label, meterType, calcType, min, max, minorTicks)
+    {
+        var config =
+        {
+            size: 120,
+            label: label,
+            meterType: meterType,
+            calcType: calcType,
+            min: undefined != min ? min : 0,
+            max: undefined != max ? max : 1000,
+            minorTicks: minorTicks
+        }
+
+        var range = config.max - config.min;
+        config.yellowZones = [{ from: config.min + range*0.75, to: config.min + range*0.9 }];
+        config.redZones = [{ from: config.min + range*0.9, to: config.max }];
+
+        gauges[name] = new Gauge(name + "GaugeContainer", config);
+        gauges[name].render();
+    }
+
+    function createGauges()
+    {
+        createGauge("vcpus", "vCPU Count", "vcpus", "avg", 0, 64, 16);
+        createGauge("memory", "RAM Alloc MB", "memory", "avg", 0, 128000, 8);
+        createGauge("diskrootsize", "Disk Alloc GB", "disk.root.size", "avg", 0, 1000, 8);
+    }
+
+    function updateGauges()
+    {
+        for (var key in gauges)
+        {
+            getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
+        }
+    }
+
+    function getCeilometerResults(guage, meterType, calcType)
+    {
+        var endDate = new Date();
+        var startDate = new Date(endDate);
+        var durationInMinutes = 1440;
+        startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
+        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
+        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
+        url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/"
+
+        return $.getJSON(url).done(function(data) {
+            if (data.status == "success")
+            {
+                if (data.message != "empty dataset")
+                {
+                    var result = data.statistics[0][calcType];
+                    guage.redraw(result);
+                }
+            }
+            else
+            {
+                if (got_data)
+                    message.showMessage('error', data.message);
+                got_data = false;
+            }
+        });
+    }
+
+    var got_data = true;
+
+    function getProjectID() {
+        return $("#user-project").html();
+    }
+
+    function initialize()
+    {
+        createGauges();
+        {#5000 = 5 seconds#}
+        setInterval(updateGauges, 5000);
+    }
+
+</script>
 
 {% endblock %}
