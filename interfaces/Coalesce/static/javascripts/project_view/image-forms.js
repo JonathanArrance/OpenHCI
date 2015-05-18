@@ -3,6 +3,7 @@ $(function () {
     // Widget Elements
     var progressbar = $("#image_progressbar"),
         table = $("#image_list"),
+        form = $('#image-import-dialog-form'),
         placeholder =
             '<tr id="#image_placeholder"><td><p><i>This project has no image</i></p></td><td></td></tr>';
 
@@ -75,11 +76,11 @@ $(function () {
                             if (!checkUrl(import_remote))
                                 return;
 
-                            disableFormInputs('image', [ 'text', 'select', 'file'], true);
+                            disableFormInputs('image', ['text', 'select', 'file'], true);
                             disableLinks(true);
 
                             // Start the progress bar function so it can start querying the server for status.
-                            startProgressBarUpdate(progress_id);
+                            startProgressBarUpdate(progress_id, form);
 
                             // All the data is good so post the data to the server.
                             image_location = import_remote;
@@ -122,7 +123,6 @@ $(function () {
 
                                         // The upload was successful so add the table entry, display a message to the user and close the dialog box.
                                         //var ret_data = JSON.parse(data);
-                                        console.log('success: image_id:' + ret_data.image_id);
                                         $('#image_list').append(newRow);
 
                                         // Update selects
@@ -131,7 +131,7 @@ $(function () {
                                         message.showMessage("success", ret_data.message);
 
                                         $("#image-import-dialog-form").dialog("close");
-                                        disableFormInputs('image', [ 'text', 'select', 'file'], false);
+                                        disableFormInputs('image', ['text', 'select', 'file'], false);
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
@@ -142,7 +142,7 @@ $(function () {
                                         message.showMessage("error", "Server Fault");
 
                                         $("#image-import-dialog-form").dialog("close");
-                                        disableFormInputs('image', [ 'text', 'select', 'file'], false);
+                                        disableFormInputs('image', ['text', 'select', 'file'], false);
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
@@ -182,9 +182,9 @@ $(function () {
                                     async: true,                    // must be true to get updated with the progress of the upload
                                     xhr: function () {
                                         // This function will be called during the upload to update the progress of the upload.
-                                        var bar = $('#image-import-dialog-form').find('#upload_bar');
-                                        var percent = $('#image-import-dialog-form').find('#upload_percent');
-                                        disableFormInputs('image', [ 'text', 'select', 'file'], true);
+                                        var bar = form.find('.upload-bar'),
+                                            percent = form.find('.upload-percent');
+                                        disableFormInputs('image', ['text', 'select', 'file'], true);
 
                                         var xhr = $.ajaxSettings.xhr();
                                         xhr.upload.onprogress = function (e) {
@@ -214,19 +214,21 @@ $(function () {
                                             '<td id="' + ret_data.image_id + '-actions-cell"><a href="#" class="delete-image">delete</a></td></tr>';
 
                                         // The upload was successful so add the table entry, display a message to the user and close the dialog box.
-                                        console.log('success: image_id:' + ret_data.image_id);
+                                        //console.log('success: image_id:' + ret_data.image_id);
                                         $('#image_list').append(newRow);
 
                                         // Update selects
                                         addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
+                                        refreshSelect($("#bam-image-name"), imageInstOpts);
 
                                         message.showMessage("success", ret_data.message);
 
                                         $("#image-import-dialog-form").dialog("close");
-                                        disableFormInputs('image', [ 'text', 'select', 'file'], false);
+                                        disableFormInputs('image', ['text', 'select', 'file'], false);
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     },
                                     error: function () {
 
@@ -234,7 +236,7 @@ $(function () {
                                         message.showMessage("error", "Server Fault");
 
                                         $("#image-import-dialog-form").dialog("close");
-                                        disableFormInputs('image', [ 'text', 'select', 'file'], false);
+                                        disableFormInputs('image', ['text', 'select', 'file'], false);
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
@@ -250,53 +252,6 @@ $(function () {
                 }
             });
     });
-
-// This function will update the progress bar every second with the progress of the remote upload.
-// The progress is determined by querying the server for the current progress.
-    var g_progress_intv = 0;
-
-    function startProgressBarUpdate(upload_id) {
-        var bar = $('#image-import-dialog-form').find('#upload_bar');
-        var percent = $('#image-import-dialog-form').find('#upload_percent');
-
-        if (g_progress_intv != 0)
-            clearInterval(g_progress_intv);
-
-        g_progress_intv = setInterval(function () {
-            $.getJSON("/get_upload_progress/" + upload_id, function (data) {
-                if (data.status == "error") {
-
-                    // We got an error back so display the message and stop updating the progress bar.
-                    message.showMessage("error", data.message);
-                    clearInterval(g_progress_intv);
-                    g_progress_intv = 0;
-                    return;
-                }
-
-                if (data.length == -1) {
-
-                    percentage = "100%";
-                    bar.width(percentage);
-                    percent.html(percentage);
-                    clearInterval(g_progress_intv);
-                    g_progress_intv = 0;
-                    return;
-                }
-
-                length = parseInt(data.length);
-                if (length > 0)
-                    var percentage = Math.floor(100 * parseInt(data.uploaded) / length);
-                else
-                    var percentage = 0;
-
-                percentage = percentage + "%";
-                bar.width(percentage);
-                percent.html(percentage);
-            });
-        }, 1000);
-        return;
-    }
-
 
     // --- Delete ---
 
@@ -387,6 +342,7 @@ $(function () {
 
                                 // Update selects
                                 removeFromSelect(confImage, $("#image_name"), imageInstOpts);
+                                refreshSelect($("#bam-image-name"), imageInstOpts);
                             }
 
                             // If last image, reveal placeholder

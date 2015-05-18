@@ -211,15 +211,15 @@
             <div class="ajax-loader" id="tps-loader-1" style="display:none"></div>
             <div id="tps-table-container"></div>
 
-            <fieldset id="eseries-license-confirmation" style="display:none;">
+            <fieldset id="license-confirm" style="display:none;">
                 <label>
-                    License Number:
-                    <input id="eseries-license-no" type="text">
+                    License Key:
+                    <input id="license-num" type="text">
                 </label>
-                <button id="confirm-license">Confirm License</button>
+                <button class="configure-tps block-center" id="license-apply">Apply License</button>
             </fieldset>
 
-            <fieldset id="eseries-web-proxy-server-data" style="display: none;">
+            <fieldset id="eseries-config-data" style="display: none;">
 
                 <label>Use exiting E-Series Web Proxy Server?</label>
 
@@ -285,22 +285,36 @@
             <fieldset id="eseries-disk-pools" style="display:none;">
                 <label for="eseries-storage-disk-pools"></label>
                 <select name="eseries-storage-disk-pools" id="eseries-storage-disk-pools" multiple size="0"></select>
-                <button class="configure-tps block-center" data-provider="eseries">Configure E-Series Storage</button>
+                <button class="configure-tps block-center" id="eseries-button" data-provider="eseries">Configure E-Series Storage</button>
             </fieldset>
 
-            <fieldset id="eseries-license-controller" style="display:none;">
-                <label for="eseries-license-confirmation">Enter License No</label>
-                <input name="eseries-license-confirmation" id="eseries-license-confirmation" type="text">
-            </fieldset>
-
-            <fieldset id="nfs-web-proxy-server-data" style="display: none;">
-                <label for="nfs-mountpoint">Hostname / IP</label>
+            <fieldset id="nfs-config-data" style="display: none;">
+                <label for="nfs-mountpoint">NFS Mountpoint</label>
                 <input name="nfs-mountpoint" id="nfs-mountpoint" value="" class="text ui-widget-content ui-corner-all"
                        type="text">
                 <button id="add-mountpoint">+</button>
                 <div id="mountpoints"></div>
-                <button class="configure-tps block-center" data-provider="nfs" style="margin-top: 10px;">Configure
-                </button>
+                <button class="configure-tps block-center" id="nfs-button" data-provider="nfs" style="margin-top: 10px;">Configure NFS</button>
+            </fieldset>
+
+            <fieldset id="nimble-config-data" style="display: none;">
+                <label for="nimble-hostname-ip">Hostname/IP:</label>
+                <input name="nimble-hostname-ip" id="nimble-hostname-ip" value=""
+                       class="text ui-widget-content ui-corner-all"
+                       type="text">
+
+                <div id="nlogin"></div>
+                <label for="nimble-login">Login:</label>
+                <input name="nimble-login" id="nimble-login" value="" class="text ui-widget-content ui-corner-all"
+                       type="text">
+
+                <div id="npwd"></div>
+                <label for="nimble-password">Password:</label>
+                <input name="nimble-password" id="nimble-password" value=""
+                       class="text ui-widget-content ui-corner-all"
+                       type="password">
+
+                <button class="configure-tps block-center" id="nimble-button" data-provider="nimble">Configure Nimble Storage</button>
             </fieldset>
         </fieldset>
     </div><!-- end row-fluid-->
@@ -360,14 +374,24 @@
             url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/"
 
             return $.getJSON(url).done(function(data) {
-                if (data.message != "empty dataset")
+                if (data.status == "success")
+                {
+                    if (data.message != "empty dataset")
                     {
                         var result = data.statistics[0][calcType];
                         guage.redraw(result);
                     }
+                }
+                else
+                {
+                    if (got_data)
+                        message.showMessage('error', data.message);
+                    got_data = false;
+                }
             });
         }
 
+        var got_data = true;
         function initialize()
         {
             createGauges();

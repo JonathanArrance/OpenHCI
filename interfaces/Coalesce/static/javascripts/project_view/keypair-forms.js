@@ -94,6 +94,7 @@ $(function () {
 
                                     // Update Selects
                                     addToSelect(data.key_name, data.key_name, $("#sec_key_name"), secKeyInstOpts);
+                                    refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
                                 }
                             })
                             .fail(function () {
@@ -202,6 +203,7 @@ $(function () {
 
                                 // Update selects
                                 removeFromSelect(confKeypair, $("#sec_key_name"), secKeyInstOpts)
+                                refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
                             }
 
                             // If last keypair, reveal placeholder

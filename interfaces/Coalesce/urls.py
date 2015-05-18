@@ -425,8 +425,12 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.eseries_set_config',
             name='eseries_set_config'),
 
-        url(r'^eseries/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_pwd>[^/]+|)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/$',
-            'coalesce.coal_beta.views.eseries_update',
+	    url(r'^eseries/config/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/(?P<ctrl_pwd>[^/]+|)/$',
+	        'coalesce.coal_beta.views.eseries_update',
+            name='eseries_update'),
+
+	    url(r'^eseries/config/update/(?P<pre_existing>[^/]+)/(?P<server>[^/]+)/(?P<srv_port>[^/]+)/(?P<transport>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/(?P<ctrl_ips>[^/]+)/(?P<disk_pools>[^/]+)/$',
+	        'coalesce.coal_beta.views.eseries_update',
             name='eseries_update'),
 
         url(r'^eseries/get/stats/$',
@@ -453,6 +457,31 @@ urlpatterns = patterns('',
         url(r'^nfs/update/(?P<mountpoints>[^/]+)/$',
             'coalesce.coal_beta.views.nfs_update',
             name='nfs_update'),
+
+        # --- Nimble ---
+	    url(r'^nimble/get/$',
+	        'coalesce.coal_beta.views.nimble_get',
+            name='nimble_get'),
+
+	    url(r'^nimble/delete/$',
+	        'coalesce.coal_beta.views.nimble_delete',
+            name='nimble_delete'),
+
+	    url(r'^nimble/set/(?P<server>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
+	        'coalesce.coal_beta.views.nimble_set',
+            name='nimble_set'),
+
+	    url(r'^nimble/update/(?P<server>[^/]+)/(?P<login>[^/]+)/(?P<pwd>[^/]+)/$',
+	        'coalesce.coal_beta.views.nimble_update',
+            name='nimble_update'),
+
+	    url(r'^nimble/license/set/(?P<license_key>[^/]+)/$',
+	        'coalesce.coal_beta.views.nimble_add_license',
+            name='nimble_add_license'),
+
+	    url(r'^nimble/get/stats/$',
+	        'coalesce.coal_beta.views.nimble_stats',
+            name='nimble_stats'),
 
         # --- Ceilometer Statistics ----
         url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/$',
