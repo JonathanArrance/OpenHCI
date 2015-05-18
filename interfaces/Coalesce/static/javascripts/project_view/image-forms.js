@@ -127,6 +127,7 @@ $(function () {
 
                                         // Update selects
                                         addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
+                                        refreshSelect($("#bam-instance-image"), imageInstOpts);
 
                                         message.showMessage("success", ret_data.message);
 
@@ -163,14 +164,13 @@ $(function () {
                             // to keep from having to convert /'s to %47.
                             loc = "na";
 
-                            var os = os_type.val();
-
                             // Build the url that we will use to send the form data. The file contents are handled seperately.
-                            var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + os + '/' + progress_id + '/';
+                            var url = '/import_local/' + image_name.val() + '/' + container_format.val() + '/' + disk_format.val() + '/' + image_type.val() + '/' + loc + '/' + visibility.val() + '/' + os_type.val() + '/' + progress_id + '/';
 
                             // Send the form data via the ajax call and setup the function that will update the progress bar.
                             uploading = true;
                             var form_data = new FormData($('#image-upload-form')[0]);
+
                             $.ajax(
                                 {
                                     type: 'POST',
@@ -179,7 +179,7 @@ $(function () {
                                     contentType: false,
                                     cache: false,
                                     processData: false,
-                                    async: true,                    // must be true to get updated with the progress of the upload
+                                    async: true,
                                     xhr: function () {
                                         // This function will be called during the upload to update the progress of the upload.
                                         var bar = form.find('.upload-bar'),
@@ -219,7 +219,7 @@ $(function () {
 
                                         // Update selects
                                         addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
-                                        refreshSelect($("#bam-image-name"), imageInstOpts);
+                                        refreshSelect($("#bam-instance-image"), imageInstOpts);
 
                                         message.showMessage("success", ret_data.message);
 

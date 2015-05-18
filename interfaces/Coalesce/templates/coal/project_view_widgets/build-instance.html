@@ -1,18 +1,20 @@
 {% load staticfiles %}
 
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/build_a_machine.css"/>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/build-instance.css"/>
 
-<div id="build-a-machine-form" title="Build-A-Machine">
-    <form>
-        {% csrf_token %}
+<div id="build-instance-form" title="Build Instance">
+    {% csrf_token %}
 
-        <fieldset id="bam-instance-section">
+    <form id="bam-instance-section">
+        <fieldset>
             <legend>Instance</legend>
             <h6>Please enter the following information to build a virtual machine instance:</h6>
 
             <div class="bam-form">
+
                 <label for="bam-instance-name">Name</label>
                 <input type="text" name="bam-instance-name" id="bam-instance-name"/>
+
                 <label for="bam-instance-image">Image</label>
                 <select name="bam-select-image-name" id="bam-instance-image">
                     <script>
@@ -25,13 +27,24 @@
                     </script>
                 </select>
 
+                <label style="display: none" for="bam-instance-network">Private Network</label>
+                <select style="display: none" name="bam-instance-network" id="bam-instance-network">
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-instance-network"), privNetInstOpts);
+                        });
+                    </script>
+                </select>
+
                 <div class="instance-spacer"></div>
+
                 <label for="bam-instance-flavor">Flavor</label>
                 <select name="bam-flavor-name" id="bam-instance-flavor">
                     {% for flavor in flavors %}
                         <option value="{{ flavor.flavor_name }}">{{ flavor.flavor_name }}</option>
                     {% endfor %}
                 </select>
+
             </div>
 
             <div class="bam-info">
@@ -47,6 +60,7 @@
 
                 <p>Flavor: Use the pull down to select the size characteristics for your virtual machine. The following
                     chart defines the different flavor meanings:</p>
+
             </div>
 
             <div class="bam-table">
@@ -90,8 +104,10 @@
                 </table>
             </div>
         </fieldset>
+    </form>
 
-        <fieldset id="bam-image-section" style="display: none;">
+    <form id="bam-image-section" action="#" method="post" enctype="multipart/form-data" style="display: none;">
+        <fieldset>
             <legend>Image</legend>
             <h6>Please enter the following information to upload your image:</h6>
 
@@ -128,11 +144,11 @@
                 </select>
 
                 <label for="bam-image-import-remote">Remote Image Location</label>
-                <input type="text" name="bam-image-import-remote" id="bam-image-import-remote"/>
+                <input type="text" name="import_remote" id="bam-image-import-remote"/>
 
                 <label for="bam-image-import-local" style="height: 22px; line-height: 20px;">Local Image
                     Location</label>
-                <input type="file" name="bam-image-import-local" id="bam-image-import-local"/>
+                <input type="file" name="import_local" id="bam-image-import-local"/>
 
                 <div class="image-spacer"></div>
 
@@ -189,8 +205,10 @@
 
             </div>
         </fieldset>
+    </form>
 
-        <fieldset id="bam-volume-section" style="display: none;">
+    <form id="bam-volume-section" style="display: none;">
+        <fieldset>
             <legend>Storage</legend>
             <h6>Please enter the following information to add permanent storage to your instance:</h6>
 
@@ -201,6 +219,11 @@
                     <script>
                         $(function () {
                             refreshSelect($("#bam-volume-select-existing"), volumes);
+                            $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
                             $("#bam-volume-select-existing").append($('<option></option>')
                                     .val("create")
                                     .html("Create Volume"));
@@ -250,8 +273,10 @@
                 </ul>
             </div>
         </fieldset>
+    </form>
 
-        <fieldset id="bam-security-section" style="display: none;">
+    <form id="bam-security-section" style="display: none;">
+        <fieldset>
             <legend>Security</legend>
             <h6>Please enter the following network and security information:</h6>
 
@@ -261,6 +286,11 @@
                     <script>
                         $(function () {
                             refreshSelect($("#bam-security-ip"), assignableFips);
+                            $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Attaching IP")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-security-ip"));
                         });
                     </script>
                 </select>
@@ -328,8 +358,10 @@
                     your new security group.</p>
             </div>
         </fieldset>
+    </form>
 
-        <fieldset id="bam-group-section" style="display: none;">
+    <form id="bam-group-section" style="display: none;">
+        <fieldset>
             <legend>Security Group</legend>
             <h6>Please enter the following security group information:</h6>
 
@@ -346,6 +378,7 @@
                     <option value="tcp" selected>TCP</option>
                     <option value="udp">UDP</option>
                 </select>
+
                 <div class="group-spacer"></div>
                 <label for="bam-group-ports">Ports</label>
                 <input type="text" name="bam-group-ports" id="bam-group-ports" value="443,80,22"/>
@@ -399,13 +432,55 @@
                 </table>
             </div>
         </fieldset>
-
-    <fieldset id="bam-progress-section" style="display: none;"></fieldset>
-
-        <div>
-            <a href="#" class="btn" id="bam-next-button">Next</a>
-            <a href="#" class="btn" id="bam-back-button">Back</a>
-            <a href="#" class="btn" id="bam-create-button">Create</a>
-        </div>
     </form>
+
+    <form id="bam-progress-section" style="display: none;">
+        <fieldset>
+            <legend>Progress</legend>
+            <h6>Your Instance information:</h6>
+
+            <div class="bam-form">
+                <ul>
+                    <li class="instance"><label>Instance Name:</label><span class="name"></span></li>
+                    <li class="image"><label>Image Name:</label><span class="name"></span></li>
+                    <li class="instance"><label>Instance Network:</label><span class="network"></span></li>
+                    <li class="instance"><label>Instance Flavor:</label><span class="flavor"></span></li>
+                    <li></li>
+                    <li class="volume"><label>Volume Name:</label><span class="name"></span></li>
+                    <li class="volume"><label>Volume Size:</label><span class="size"></span></li>
+                    <li class="volume"><label>Volume Type:</label><span class="type"></span></li>
+                    <li></li>
+                    <li class="security"><label>Floating IP Address:</label><span class="ip"></span></li>
+                    <li class="security"><label>Security Group:</label><span class="group"></span></li>
+                    <li class="security"><label>Security Key Pair:</label><span class="key"></span></li>
+                </ul>
+
+                <label>Overall Progress:</label>
+            </div>
+
+            <div class="bam-info">
+                <p>Please verify the information provided. If there are any issues, use the "Back" button to fix them.
+                    If the information is correct, click the ‘Create’ button and the creation process will begin.
+                </p>
+
+                <p>The progress bars will show you the status of your creation process. The Overall Progress bar is the
+                    overall progress of the entire creation process. The Image Upload is the progress of uploading your
+                    image. The Volume Creation is the progress of creating and attaching your new image to your
+                    instance.</p>
+            </div>
+
+            <div class="bam-bars">
+                <div class="bam-overall-progress-bar"><span class="bam-overall-progress-label"></span></div>
+                <label>Image Upload Progress:</label>
+
+                <div class="bam-image-upload-bar"><span class="bam-image-upload-label"></span></div>
+            </div>
+        </fieldset>
+    </form>
+
+    <div>
+        <a href="#" class="btn" id="bam-create-button">Create</a>
+        <a href="#" class="btn" id="bam-next-button">Next</a>
+        <a href="#" class="btn" id="bam-back-button">Back</a>
+    </div>
 </div>
