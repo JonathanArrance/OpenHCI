@@ -95,6 +95,9 @@ $(function () {
                                     // Update Selects
                                     addToSelect(data.key_name, data.key_name, $("#sec_key_name"), secKeyInstOpts);
                                     refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
+                                    $("#bam-security-select-key").append($('<option></option>')
+                                        .val("create")
+                                        .html("Create Key"));
                                 }
                             })
                             .fail(function () {
@@ -202,8 +205,11 @@ $(function () {
                                 $(targetRow).fadeOut().remove();
 
                                 // Update selects
-                                removeFromSelect(confKeypair, $("#sec_key_name"), secKeyInstOpts)
+                                removeFromSelect(confKeypair, $("#sec_key_name"), secKeyInstOpts);
                                 refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
+                                $("#bam-security-select-key").append($('<option></option>')
+                                    .val("create")
+                                    .html("Create Key"));
                             }
 
                             // If last keypair, reveal placeholder

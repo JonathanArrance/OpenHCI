@@ -130,8 +130,14 @@ $(function () {
                                     // Add to instances
                                     instances.setItem(
                                         data.server_info.server_id,
-                                        { id: data.server_info.server_id, name: data.server_info.server_name, status: data.server_info.server_status,
-                                            flavor: data.server_info.server_flavor, os: data.server_info.server_os, console: data.server_info.novnc_console }
+                                        {
+                                            id: data.server_info.server_id,
+                                            name: data.server_info.server_name,
+                                            status: data.server_info.server_status,
+                                            flavor: data.server_info.server_flavor,
+                                            os: data.server_info.server_os,
+                                            console: data.server_info.novnc_console
+                                        }
                                     );
                                     consoleLinks.setItem(
                                         data.server_info.server_id,
@@ -281,9 +287,12 @@ $(function () {
                                     var volActionsCell = document.getElementById(data.vols[i] + '-actions-cell');
                                     $(volActionsCell).empty().fadeOut();
                                     var newVolAction = '<a href="#" class="attach-volume">attach</a>' +
-                                        '<span class="volume-actions-pipe"> | </span>' +
-                                        '<a href="#" class="delete-volume">delete</a>';
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a>';
                                     $(volActionsCell).append(newVolAction).fadeIn();
+
+                                    snapshotVolumes.setItem(data.vols[i], { value: data.vols[i], option: volumes.items[data.vols[i]].name })
                                 }
 
                                 // Unassign floating IPs
@@ -299,6 +308,10 @@ $(function () {
                                     $(ipActionsCell).empty().fadeOut();
                                     var newIpAction = '<a id="' + data.floating_ip_id[j] + '" class="deallocate_ip" href="#">deallocate</a>';
                                     $(ipActionsCell).append(newIpAction).fadeIn();
+
+                                    console.log(fips);
+                                    console.log(data.floating_ip_id[j]);
+                                    assignableFips.setItem(data.floating_ip_id[j], { value: data.floating_ip_id[j], option: fips.getItem(data.floating_ip_id[j]).ip })
                                 }
 
                                 // Remove from instances
@@ -307,6 +320,22 @@ $(function () {
 
                                 // Update Selects
                                 refreshSelect('#instance_to_snap', instanceOpts);
+                                refreshSelect($("#bam-security-ip"), assignableFips);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Attaching IP")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-security-ip"));
+                                refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                                 // If last row, append placeholder
                                 var rowCount = $('#instance_list tr').length;

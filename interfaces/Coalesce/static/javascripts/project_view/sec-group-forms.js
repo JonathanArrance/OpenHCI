@@ -109,6 +109,9 @@ $(function () {
                                     // Update selects
                                     addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), secGroupInstOpts);
                                     refreshSelect($("#bam-security-group"), secGroupInstOpts);
+                                    $("#bam-security-group").append($('<option></option>')
+                                        .val("create")
+                                        .html("Create Group"));
                                 }
                             })
                             .fail(function () {
@@ -230,6 +233,9 @@ $(function () {
                             // Update selects
                             removeFromSelect(confSecGroup, $("#sec_group_name"), secGroupInstOpts);
                             refreshSelect($("#bam-security-group"), secGroupInstOpts);
+                            $("#bam-security-group").append($('<option></option>')
+                                .val("create")
+                                .html("Create Group"));
                         })
                         .fail(function () {
 

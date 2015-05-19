@@ -218,15 +218,16 @@
                 <select name="bam-volume-select-existing" id="bam-volume-select-existing">
                     <script>
                         $(function () {
-                            refreshSelect($("#bam-volume-select-existing"), volumes);
+                            refreshSelect($("#bam-volume-select-existing"), snapshotVolumes);
                             $('<option></option>')
                                     .val("none")
                                     .html("Skip Adding Storage")
                                     .prop("selected", "selected")
                                     .prependTo($("#bam-volume-select-existing"));
-                            $("#bam-volume-select-existing").append($('<option></option>')
+                            $('<option></option>')
                                     .val("create")
-                                    .html("Create Volume"));
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
                         });
                     </script>
                 </select>
@@ -483,7 +484,7 @@
             <legend>Success</legend>
             <h6>Login/Access Information:</h6>
 
-            <div class="bam-form">
+            <div class="bam-confirm-form">
 
                 <label>Instance Name: </label><span class="bam-confirm-name"></span>
                 <label>External IP address: </label><span class="bam-confirm-ip"></span>
@@ -492,9 +493,9 @@
                 <a class="bam-confirm-key" href="">Download RSA Key</a>
             </div>
 
-            <div class="bam-info">
+            <div class="bam-confirm-info">
                 <p>Please use the given information to access and login to your new virtual machine instance. If your
-                    instance requires a key to login, you will need to download the RSA Private Key file to
+                    instance requires a key to login, you will need to download the RSA Key file to
                     use when logging in.</p>
 
                 <p>If a password is needed, the following are common username/passwords for the
@@ -503,7 +504,7 @@
                 <table>
                     <tr>
                         <th>OS</th>
-                        <td>Username/Password</td>
+                        <th>Username/Password</th>
                     </tr>
                     <tr>
                         <th>Cirros</th>
@@ -535,9 +536,13 @@
                     </tr>
                 </table>
 
-                <p>You can access your like so:</p>
+                <br>
 
-                <p>Linux> ssh -I &#60;rsa-private-key-file&#62; fedora@204.64.2.44</p>
+                <h6>You can access your like so:</h6>
+
+                <p>Linux:</p>
+
+                <p>&#62; ssh -I &#60;RSA Key file&#62; fedora@204.64.2.44</p>
 
                 <p>If at anytime you forget this information, you can retrieve it
                     by clicking the name of your instance in the Project View page.</p>
