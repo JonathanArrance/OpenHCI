@@ -200,8 +200,9 @@ $(function () {
                             checkAssignFip();
                             disableProgressbar(progressbar, "fips", true);
                             setVisible('#allocate_ip', true);
-                            setVisibleInLineBlock('#allocate_ip', false);
-                            disableActions("deallocate_ip", false);
+                            setVisibleInLineBlock('#allocate_ip', true);
+                            setVisible('#assign_ip', true);
+                            setVisibleInLineBlock('#assign_ip', true);
                             disableLinks(false);
                         });
 

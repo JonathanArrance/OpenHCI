@@ -606,6 +606,7 @@ function buildInstance() {
     updateProgress(step, steps, "Initializing");
 
     if (bamParams.instance.inputs.image.value == "upload") {
+        uploadedImage = bamParams.image.inputs.name.value;
         updateProgress(step, steps, "Uploading Image");
         var imageType = bamParams.image.inputs.type.value,
             imageProgressId = guid(),
@@ -664,7 +665,6 @@ function buildInstance() {
                 if (data.status == 'success') {
                     addImage(data);
                     step++;
-                    uploadedImage = bamParams.image.inputs.name.value;
                 }
             })
             .fail(function () {
@@ -896,9 +896,7 @@ function buildInstance() {
                     });
                 });
             });
-        }
-    )
-    ;
+        });
 }
 
 function updateProgress(stepCount, steps, stepLabel) {
