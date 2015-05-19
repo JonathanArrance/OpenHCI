@@ -606,6 +606,7 @@ function buildInstance() {
     updateProgress(step, steps, "Initializing");
 
     if (bamParams.instance.inputs.image.value == "upload") {
+        uploadedImage = bamParams.image.inputs.name.value;
         updateProgress(step, steps, "Uploading Image");
         var imageType = bamParams.image.inputs.type.value,
             imageProgressId = guid(),
@@ -656,9 +657,15 @@ function buildInstance() {
             }
         })
             .done(function (data) {
-                addImage(data);
-                step++;
-                uploadedImage = bamParams.image.inputs.name.value;
+                if (data.status == 'error') {
+                    message.showMessage('error', data.message);
+                    error = true;
+                    return false;
+                }
+                if (data.status == 'success') {
+                    addImage(data);
+                    step++;
+                }
             })
             .fail(function () {
                 message.showMessage("error", "Error: Could not upload image");
@@ -692,8 +699,8 @@ function buildInstance() {
                 if (data.status == 'success') {
                     // Initialize empty string for new router row
                     addSecGroup(data);
-                    updateProgress(step, steps, "Group Created");
                     step++;
+                    updateProgress(step, steps, "Group Created");
                     secGroup = bamParams["group"].inputs["name"].value;
                 }
             }).fail(function () {
@@ -719,8 +726,8 @@ function buildInstance() {
                 if (data.status == 'success') {
                     // Initialize empty string for new router row
                     addKey(data);
-                    updateProgress(step, steps, "Key Created");
                     step++;
+                    updateProgress(step, steps, "Key Created");
                     key = data.key_name;
                     keyId = data.key_id;
                 }
@@ -760,6 +767,7 @@ function buildInstance() {
                     if (data.status == 'success') {
                         // Initialize empty string for new router row
                         addInstance(data);
+                        step++;
                         updateProgress(step, steps, "Instance Created");
                         $(".bam-confirm-name").html(bamParams.instance.inputs.name.value.toString());
                         instanceName = data.server_info.server_name.toString();
@@ -791,8 +799,8 @@ function buildInstance() {
 
                             if (data.status == 'success') {
                                 addVolume(data, instanceName);
-                                updateProgress(step, steps, "Volume Created");
                                 step++;
+                                updateProgress(step, steps, "Volume Created");
                                 volume = data.volume_id.toString();
                             }
                         })
@@ -803,13 +811,13 @@ function buildInstance() {
                         });
                 } else if (bamParams.volume.inputs.select.value == "none") {
                     volume = "skip";
-                    updateProgress(step, steps, "Skipping Volume");
                     step++;
+                    updateProgress(step, steps, "Skipping Volume");
                     createVolume.resolve();
                 } else {
                     volume = bamParams.volume.inputs.select.value;
-                    updateProgress(step, steps, "Volume Selected");
                     step++;
+                    updateProgress(step, steps, "Volume Selected");
                     createVolume.resolve();
                 }
 
@@ -829,8 +837,8 @@ function buildInstance() {
                                 if (data.status == 'success') {
 
                                     var volumeRowSelector = "#" + volume;
-                                    updateProgress(step, steps, "Volume Attached");
                                     step++;
+                                    updateProgress(step, steps, "Volume Attached");
                                     $(volumeRowSelector).addClass("volume-attached");
                                 }
                             })
@@ -862,8 +870,8 @@ function buildInstance() {
 
                                     if (data.status == 'success') {
                                         addIp(data, instanceId, instanceName);
-                                        updateProgress(step, steps, "IP Assigned");
                                         step++;
+                                        updateProgress(step, steps, "IP Assigned");
                                         $(".bam-confirm-ip").html(fips.getItem(bamParams["security"].inputs["ip"].value).ip);
                                     }
                                 })
@@ -888,9 +896,7 @@ function buildInstance() {
                     });
                 });
             });
-        }
-    )
-    ;
+        });
 }
 
 function updateProgress(stepCount, steps, stepLabel) {
