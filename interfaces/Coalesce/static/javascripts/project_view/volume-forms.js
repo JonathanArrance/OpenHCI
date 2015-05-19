@@ -114,6 +114,15 @@ $(function () {
                                     // Update select
                                     refreshSelect($("#snap_volume"), snapshotVolumes);
                                     refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                    $('<option></option>')
+                                        .val("none")
+                                        .html("Skip Adding Storage")
+                                        .prop("selected", "selected")
+                                        .prependTo($("#bam-volume-select-existing"));
+                                    $('<option></option>')
+                                        .val("create")
+                                        .html("Create Volume")
+                                        .appendTo($("#bam-volume-select-existing"));
 
                                     // Update usedStorage
                                     updateUsedStorage();
@@ -252,6 +261,15 @@ $(function () {
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
                                 refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                                 // Update usedStorage
                                 updateUsedStorage();
@@ -408,6 +426,15 @@ $(function () {
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
                                 refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                                 // Update usedStorage
                                 updateUsedStorage();
@@ -550,6 +577,15 @@ $(function () {
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
                                 refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                             }
                         })
@@ -693,6 +729,15 @@ $(function () {
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
                                 refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
                             }
                         })
                         .fail(function () {
@@ -866,6 +911,15 @@ $(function () {
                                     // Update select
                                     refreshSelect($("#snap_volume"), snapshotVolumes);
                                     refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                    $('<option></option>')
+                                        .val("none")
+                                        .html("Skip Adding Storage")
+                                        .prop("selected", "selected")
+                                        .prependTo($("#bam-volume-select-existing"));
+                                    $('<option></option>')
+                                        .val("create")
+                                        .html("Create Volume")
+                                        .appendTo($("#bam-volume-select-existing"));
 
                                     // Update usedStorage
                                     updateUsedStorage();

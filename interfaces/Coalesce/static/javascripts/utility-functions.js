@@ -612,6 +612,7 @@ var instances = new HashTable(),
     secKeyInstOpts = new HashTable(),
     privNetInstOpts = new HashTable(),
     imageInstOpts = new HashTable(),
+    fips = new HashTable();
     assignableFips = new HashTable(),
     assignableInstances = new HashTable();
 

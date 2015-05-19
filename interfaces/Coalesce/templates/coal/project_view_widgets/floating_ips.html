@@ -9,14 +9,14 @@
             <div id="fip_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
-            
+
             Floating IP's
 
             {% if user_level <= 1 %}
-            <a href="#" id="allocate_ip" class="btn btn-widget" style="float:right">Allocate</a>
-            <a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
+                <a href="#" id="allocate_ip" class="btn btn-widget" style="float:right">Allocate</a>
+                <a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
             {% else %}
-            <a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
+                <a href="#" id="assign_ip" class="btn btn-widget" style="float:right">Assign</a>
             {% endif %}
         </div>
 
@@ -30,39 +30,40 @@
                 </tr>
 
                 {% if floating_ips %}
-                {% for fip in floating_ips %}
-                <tr id="{{fip.floating_ip_id}}" class="{% if fip.instance_name != '' %}fip-assigned{% endif %}">
-                    <td id="{{fip.floating_ip_id}}-ip-cell">
-                        <a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-link">
-                            <span id="{{fip.floating_ip_id}}-ip-address">{{fip.floating_ip}}</span>
-                        </a>
-                    </td>
-                    <td id="{{fip.floating_ip_id}}-instance-cell">
-                        {% if fip.instance_name == "" %}
-                        <span id="{{fip.floating_ip_id}}-instance-name">None</span>
-                        {% else %}
-                        <span id="{{fip.floating_ip_id}}-instance-name">{{fip.instance_name}}</span>
-                        {% endif %}
-                    </td>
-                    <td id="{{fip.floating_ip_id}}-actions-cell">
-                        {% if fip.floating_in_use == 'true' %}
-                        <a href="#" class="unassign_ip">unassign</a>
-                        {% else %}
-                        <a href="#" class="deallocate_ip">deallocate</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
+                    {% for fip in floating_ips %}
+                        <tr id="{{ fip.floating_ip_id }}"
+                            class="{% if fip.instance_name != '' %}fip-assigned{% endif %}">
+                            <td id="{{ fip.floating_ip_id }}-ip-cell">
+                                <a href="/floating_ip/{{ fip.floating_ip_id }}/view/" class="disable-link">
+                                    <span id="{{ fip.floating_ip_id }}-ip-address">{{ fip.floating_ip }}</span>
+                                </a>
+                            </td>
+                            <td id="{{ fip.floating_ip_id }}-instance-cell">
+                                {% if fip.instance_name == "" %}
+                                    <span id="{{ fip.floating_ip_id }}-instance-name">None</span>
+                                {% else %}
+                                    <span id="{{ fip.floating_ip_id }}-instance-name">{{ fip.instance_name }}</span>
+                                {% endif %}
+                            </td>
+                            <td id="{{ fip.floating_ip_id }}-actions-cell">
+                                {% if fip.floating_in_use == 'true' %}
+                                    <a href="#" class="unassign_ip">unassign</a>
+                                {% else %}
+                                    <a href="#" class="deallocate_ip">deallocate</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
                 {% else %}
 
-                <tr id="fip_placeholder">
-                    <td>
-                        <p><i>This project has no floating IPs</i>
-                        </p>
-                    </td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                    <tr id="fip_placeholder">
+                        <td>
+                            <p><i>This project has no floating IPs</i>
+                            </p>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endif %}
 
             </table>
@@ -81,13 +82,20 @@
             <select name="assign_floating_ip" id="assign_floating_ip">
                 <script>assignableFips.clear();</script>
                 {% for fip in floating_ips %}
-                {% if fip.floating_in_use == 'false' %}
-                <script>
-                    assignableFips.setItem(
-                            "{{fip.floating_ip_id}}",
-                            { value: "{{fip.floating_ip_id}}", option: "{{fip.floating_ip}}" });
-                </script>
-                {% endif %}
+                    <script>
+                        fips.setItem("{{ fip.floating_ip_id }}", {
+                            id: "{{ fip.floating_ip_id }}",
+                            ip: "{{ fip.floating_ip }}"
+                        });
+                    </script>
+                    {% if fip.floating_in_use == 'false' %}
+                        <script>
+                            assignableFips.setItem("{{fip.floating_ip_id}}", {
+                                value: "{{fip.floating_ip_id}}",
+                                option: "{{fip.floating_ip}}"
+                            });
+                        </script>
+                    {% endif %}
                 {% endfor %}
                 <script>
                     refreshSelect($("#assign_floating_ip"), assignableFips);
@@ -98,13 +106,13 @@
             <select name="assign_instance" id="assign_instance">
                 <script>assignableInstances.clear();</script>
                 {% for server in instances %}
-                {% if server.public_ip == "None" or server.public_ip == None %}
-                <script>
-                    assignableInstances.setItem(
-                            "{{server.server_id}}",
-                            { value: "{{server.server_id}}", option: "{{server.server_name}}" });
-                </script>
-                {% endif %}
+                    {% if server.public_ip == "None" or server.public_ip == None %}
+                        <script>
+                            assignableInstances.setItem(
+                                    "{{server.server_id}}",
+                                    {value: "{{server.server_id}}", option: "{{server.server_name}}"});
+                        </script>
+                    {% endif %}
                 {% endfor %}
                 <script>
                     refreshSelect($("#assign_instance"), assignableInstances);
