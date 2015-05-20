@@ -369,7 +369,7 @@
 
         function getCeilometerResults(guage, meterType, calcType)
         {
-            var endDate = new Date();
+            var endDate = new Date.UTC();
             var startDate = new Date(endDate);
             var durationInMinutes = 1440;
             startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
