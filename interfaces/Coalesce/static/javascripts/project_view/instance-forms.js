@@ -308,9 +308,6 @@ $(function () {
                                     $(ipActionsCell).empty().fadeOut();
                                     var newIpAction = '<a id="' + data.floating_ip_id[j] + '" class="deallocate_ip" href="#">deallocate</a>';
                                     $(ipActionsCell).append(newIpAction).fadeIn();
-
-                                    console.log(fips);
-                                    console.log(data.floating_ip_id[j]);
                                     assignableFips.setItem(data.floating_ip_id[j], { value: data.floating_ip_id[j], option: fips.getItem(data.floating_ip_id[j]).ip })
                                 }
 
