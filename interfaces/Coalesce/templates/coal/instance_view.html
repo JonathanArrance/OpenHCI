@@ -355,12 +355,12 @@
 
     function getCeilometerResults(guage, meterType, calcType)
     {
-        var endDate = new Date.UTC();
+        var endDate = new Date();
         var startDate = new Date(endDate);
         var durationInMinutes = 1440;
         startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
-        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
-        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
+        var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
+        var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
         var url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/" + getInstanceID() + "/"
         console.log(url);
         return $.getJSON(url).done(function(data) {
