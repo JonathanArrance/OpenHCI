@@ -57,6 +57,11 @@ $(function () {
                     // Append new row
                     $(table).append(newRow).fadeIn();
 
+                    fips.setItem(data.ip_info.floating_ip_id, {
+                        id: data.ip_info.floating_ip_id,
+                        ip: data.ip_info.floating_ip
+                    });
+
                     // Add option to assign_ip select
                     addToSelect(data.ip_info.floating_ip_id, data.ip_info.floating_ip, $("#assign_floating_ip"), assignableFips);
                     refreshSelect($("#bam-security-ip"), assignableFips);
@@ -180,6 +185,8 @@ $(function () {
                                     $(table).append(placeholder).fadeIn();
                                 }
 
+                                fips.removeItem(confId);
+
                                 // Remove ip from assign_ip select
                                 removeFromSelect(confId, $("#assign_floating_ip"), assignableFips);
                                 refreshSelect($("#bam-security-ip"), assignableFips);
@@ -204,6 +211,7 @@ $(function () {
                             setVisible('#assign_ip', true);
                             setVisibleInLineBlock('#assign_ip', true);
                             disableLinks(false);
+                            disableActions("deallocate_ip", false);
                         });
 
                     $(this).dialog("close");

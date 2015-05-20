@@ -80,13 +80,30 @@ $(function () {
         $("#bam-back-button").click(function (event) {
 
             event.preventDefault();
-            changeBamSection("back");
+            if ($(this).attr('disabled') == undefined) {
+                changeBamSection("back");
+            }
         });
 
         $("#bam-create-button").click(function (event) {
 
             event.preventDefault();
-            buildInstance();
+            if ($(this).attr('disabled') == undefined) {
+                $("#bam-create-button").attr('disabled', true);
+                $("#bam-back-button").attr('disabled', true);
+                disableUiButtons(".ui-button", true);
+                buildInstance();
+            }
+        });
+
+        $("#bam-finish-button").click(function (event) {
+
+            event.preventDefault();
+            $(bamParams["confirm"].section).hide(0);
+            currentSection = "initialize";
+            resetBamInputs();
+            $("#build-instance-form").dialog("close");
+
         });
 
         $("#bam-image-location").change(function () {
@@ -350,9 +367,21 @@ $(function () {
 function initializeBamSection() {
     changeBamSection();
     getStorage(PROJECT_ID);
+    bamParams.group.inputs.ports.element.val("443,80,22");
     $(".bam-overall-progress-bar").progressbar({value: 0});
     $(".bam-image-upload-bar").progressbar({value: 0});
+    $(".bam-overall-progress-label").html("");
+    $(".bam-image-upload-label").html("");
     $("#build-instance-form").dialog("close");
+}
+
+function resetBamInputs() {
+    for (var section in bamParams) {
+        for (var input in bamParams[section].inputs) {
+            bamParams[section].inputs[input].value = "";
+            resetUiValidation(bamParams[section].inputs[input].element);
+        }
+    }
 }
 
 function changeBamSection(button) {
@@ -479,6 +508,7 @@ function switchSections(current, next) {
     // -- Handle Dom Manipulation
     switch (currentSection) {
         case "instance":
+            nextBtn.show(0);
             backBtn.hide(0);
             createBtn.hide(0);
             finishBtn.hide(0);
@@ -513,7 +543,7 @@ function switchSections(current, next) {
             createBtn.hide();
             backBtn.hide();
             finishBtn.show();
-            form.dialog({height: 610});
+            form.dialog({height: 600});
             break;
     }
 }
@@ -584,7 +614,8 @@ function checkSecurityInputs(self) {
 function buildInstance() {
 
     // local variables
-    var uploadedImage,
+    var uploading = false,
+        uploadedImage,
         secGroup,
         key,
         keyId,
@@ -606,6 +637,7 @@ function buildInstance() {
     updateProgress(step, steps, "Initializing");
 
     if (bamParams.instance.inputs.image.value == "upload") {
+        uploading = true;
         uploadedImage = bamParams.image.inputs.name.value;
         updateProgress(step, steps, "Uploading Image");
         var imageType = bamParams.image.inputs.type.value,
@@ -657,6 +689,7 @@ function buildInstance() {
             }
         })
             .done(function (data) {
+                data = JSON.parse(data);
                 if (data.status == 'error') {
                     message.showMessage('error', data.message);
                     error = true;
@@ -744,51 +777,92 @@ function buildInstance() {
         createKey.resolve();
     }
 
-    $.when(uploadImage, createSecGroup, createKey)
-        .done(function () {
-            $(".bam-confirm-key").prop("href", '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
-            updateProgress(step, steps, "Creating Instance");
-            createInstance = $.getJSON(
-                '/create_image/' +
-                bamParams.instance.inputs.name.value + '/' +
-                secGroup +
-                '/nova/' +
-                bamParams.instance.inputs.flavor.value + '/' +
-                key + '/' +
-                uploadedImage + '/' +
-                bamParams.instance.inputs.network.value + '/' +
-                PROJECT_ID + '/')
-                .done(function (data) {
-                    if (data.status == 'error') {
-                        message.showMessage('error', data.message);
-                        error = true;
-                        return false;
-                    }
-                    if (data.status == 'success') {
-                        // Initialize empty string for new router row
-                        addInstance(data);
-                        step++;
-                        updateProgress(step, steps, "Instance Created");
-                        $(".bam-confirm-name").html(bamParams.instance.inputs.name.value.toString());
-                        instanceName = data.server_info.server_name.toString();
-                        instanceId = data.server_info.server_id.toString();
-                    }
-                })
-                .fail(function () {
-                    message.showMessage("error", "Error: Could not create instance");
+    $.when(createSecGroup, createKey).done(function () {
+        if (uploading) {
+            updateProgress(step, steps, "Uploading Image");
+        }
+    });
+
+    $.when(uploadImage, createSecGroup, createKey).done(function () {
+        $(".bam-confirm-key").prop("href", '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
+        updateProgress(step, steps, "Creating Instance");
+        createInstance = $.getJSON(
+            '/create_image/' +
+            bamParams.instance.inputs.name.value + '/' +
+            secGroup +
+            '/nova/' +
+            bamParams.instance.inputs.flavor.value + '/' +
+            key + '/' +
+            uploadedImage + '/' +
+            bamParams.instance.inputs.network.value + '/' +
+            PROJECT_ID + '/')
+            .done(function (data) {
+                if (data.status == 'error') {
+                    message.showMessage('error', data.message);
                     error = true;
                     return false;
-                });
+                }
+                if (data.status == 'success') {
+                    addInstance(data);
+                    step++;
+                    updateProgress(step, steps, "Instance Created");
+                    $(".bam-confirm-name").html(bamParams.instance.inputs.name.value.toString());
+                    instanceName = data.server_info.server_name.toString();
+                    instanceId = data.server_info.server_id.toString();
+                }
+            })
+            .fail(function () {
+                message.showMessage("error", "Error: Could not create instance");
+                error = true;
+                return false;
+            });
 
-            $.when(createInstance).done(function () {
-                if (bamParams.volume.inputs.select.value == "create") {
-                    updateProgress(step, steps, "Creating Volume");
-                    createVolume = $.getJSON(
-                        '/create_volume/' +
-                        bamParams.volume.inputs.name.value + '/' +
-                        bamParams.volume.inputs.size.value + '/' +
-                        bamParams.volume.inputs.type.value + '/' +
-                        PROJECT_ID + '/')
+        $.when(createInstance).done(function () {
+            if (bamParams.volume.inputs.select.value == "create") {
+                updateProgress(step, steps, "Creating Volume");
+                createVolume = $.getJSON(
+                    '/create_volume/' +
+                    bamParams.volume.inputs.name.value + '/' +
+                    bamParams.volume.inputs.size.value + '/' +
+                    bamParams.volume.inputs.type.value + '/' +
+                    PROJECT_ID + '/')
+                    .done(function (data) {
+
+                        if (data.status == 'error') {
+                            message.showMessage('error', data.message);
+                            error = true;
+                            return false;
+                        }
+
+                        if (data.status == 'success') {
+                            addVolume(data, instanceName);
+                            step++;
+                            updateProgress(step, steps, "Volume Created");
+                            volume = data.volume_id.toString();
+                        }
+                    })
+                    .fail(function () {
+                        message.showMessage("error", "Error: Could not create volume");
+                        error = true;
+                        return false;
+                    });
+            } else if (bamParams.volume.inputs.select.value == "none") {
+                volume = "skip";
+                step++;
+                updateProgress(step, steps, "Skipping Volume");
+                createVolume.resolve();
+            } else {
+                volume = bamParams.volume.inputs.select.value;
+                step++;
+                updateProgress(step, steps, "Volume Selected");
+                createVolume.resolve();
+            }
+
+            $.when(createVolume).done(function () {
+                if (volume != "skip") {
+                    updateProgress(step, steps, "Attaching Volume");
+                    attachVolume = $.getJSON(
+                        '/attach_volume/' + PROJECT_ID + '/' + instanceId + '/' + volume + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {
@@ -798,34 +872,43 @@ function buildInstance() {
                             }
 
                             if (data.status == 'success') {
-                                addVolume(data, instanceName);
+
+                                var volumeRowSelector = "#" + volume;
                                 step++;
-                                updateProgress(step, steps, "Volume Created");
-                                volume = data.volume_id.toString();
+                                snapshotVolumes.removeItem(volume);
+                                refreshSelect($("#snap_volume"), snapshotVolumes);
+                                refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
+                                updateProgress(step, steps, "Volume Attached");
+                                $(volumeRowSelector).addClass("volume-attached");
                             }
                         })
                         .fail(function () {
-                            message.showMessage("error", "Error: Could not create volume");
+                            message.showMessage("error", "Error: Could not attach volume");
                             error = true;
                             return false;
                         });
-                } else if (bamParams.volume.inputs.select.value == "none") {
-                    volume = "skip";
-                    step++;
-                    updateProgress(step, steps, "Skipping Volume");
-                    createVolume.resolve();
                 } else {
-                    volume = bamParams.volume.inputs.select.value;
+                    attachVolume.resolve();
                     step++;
-                    updateProgress(step, steps, "Volume Selected");
-                    createVolume.resolve();
                 }
 
-                $.when(createVolume).done(function () {
-                    if (volume != "skip") {
-                        updateProgress(step, steps, "Attaching Volume");
-                        attachVolume = $.getJSON(
-                            '/attach_volume/' + PROJECT_ID + '/' + instanceId + '/' + volume + '/')
+                $.when(attachVolume).done(function () {
+                    if (bamParams.security.inputs.ip.value != "none") {
+                        updateProgress(step, steps, "Assigning IP");
+                        assignIp = $.getJSON(
+                            '/assign_floating_ip/' +
+                            assignableFips.getItem(bamParams["security"].inputs["ip"].value).option + '/' +
+                            instanceId + '/' +
+                            PROJECT_ID + '/')
                             .done(function (data) {
 
                                 if (data.status == 'error') {
@@ -835,68 +918,37 @@ function buildInstance() {
                                 }
 
                                 if (data.status == 'success') {
-
-                                    var volumeRowSelector = "#" + volume;
+                                    addIp(data, instanceId, instanceName);
                                     step++;
-                                    updateProgress(step, steps, "Volume Attached");
-                                    $(volumeRowSelector).addClass("volume-attached");
+                                    updateProgress(step, steps, "IP Assigned");
+                                    $(".bam-confirm-ip").html(fips.getItem(bamParams["security"].inputs["ip"].value).ip);
                                 }
                             })
                             .fail(function () {
-                                message.showMessage("error", "Error: Could not attach volume");
+                                message.showMessage("error", "Error: Could not assign ip");
                                 error = true;
                                 return false;
-                            });
+                            })
                     } else {
-                        attachVolume.resolve();
+                        assignIp.resolve();
                         step++;
                     }
 
-                    $.when(attachVolume).done(function () {
-                        if (bamParams.security.inputs.ip.value != "none") {
-                            updateProgress(step, steps, "Assigning IP");
-                            assignIp = $.getJSON(
-                                '/assign_floating_ip/' +
-                                assignableFips.getItem(bamParams["security"].inputs["ip"].value).option + '/' +
-                                instanceId + '/' +
-                                PROJECT_ID + '/')
-                                .done(function (data) {
-
-                                    if (data.status == 'error') {
-                                        message.showMessage('error', data.message);
-                                        error = true;
-                                        return false;
-                                    }
-
-                                    if (data.status == 'success') {
-                                        addIp(data, instanceId, instanceName);
-                                        step++;
-                                        updateProgress(step, steps, "IP Assigned");
-                                        $(".bam-confirm-ip").html(fips.getItem(bamParams["security"].inputs["ip"].value).ip);
-                                    }
-                                })
-                                .fail(function () {
-                                    message.showMessage("error", "Error: Could not assign ip");
-                                    error = true;
-                                    return false;
-                                })
+                    $.when(assignIp).done(function () {
+                        if (!error) {
+                            updateProgress(steps, steps, "Complete");
+                            switchSections(currentSection, "confirm");
                         } else {
-                            assignIp.resolve();
-                            step++;
+                            updateProgress(steps, steps, "Error");
                         }
-
-                        $.when(assignIp).done(function () {
-                            if (!error) {
-                                updateProgress(steps, steps, "Complete");
-                                switchSections(currentSection, "confirm");
-                            } else {
-                                updateProgress(steps, steps, "Error");
-                            }
-                        });
+                        $("#bam-create-button").removeAttr("disabled");
+                        $("#bam-back-button").removeAttr("disabled");
+                        disableUiButtons(".ui-button", false);
                     });
                 });
             });
         });
+    });
 }
 
 function updateProgress(stepCount, steps, stepLabel) {
@@ -919,10 +971,13 @@ function addImage(data) {
                 .prop("href", "#")
                 .prop("class", "delete-image")
                 .html("delete")))
-        .appendTo($('#image_list'));
+        .appendTo($('#image_list').fadeIn());
     // Update selects
     addToSelect(bamParams.image.inputs.name.value, bamParams.image.inputs.name.value, $("#image_name"), imageInstOpts);
     refreshSelect($("#bam-instance-image"), imageInstOpts);
+    $("#bam-instance-image").append($('<option></option>')
+        .val("upload")
+        .html("Upload Image"));
 }
 
 function addSecGroup(data) {
@@ -957,7 +1012,10 @@ function addSecGroup(data) {
 
     // Update selects
     addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), secGroupInstOpts);
-    refreshSelect($("#bam-security-group"), secGroupInstOpts)
+    refreshSelect($("#bam-security-group"), secGroupInstOpts);
+    $("#bam-security-group").append($('<option></option>')
+        .val("create")
+        .html("Create Group"));
 }
 
 function addKey(data) {
@@ -983,15 +1041,16 @@ function addKey(data) {
                 .html("delete")))
         .appendTo($("#keypair_list")).fadeIn();
 
-    // Check to see if this is the first router to be generated, if so remove placeholder and reveal delete-router button
     var rowCount = $("#keypair_list tr").length;
     if (rowCount >= 2) {
         $("#keypair_placeholder").remove().fadeOut();
     }
 
-    // Update Selects
     addToSelect(data.key_name, data.key_name, $("#sec_key_name"), secKeyInstOpts);
     refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
+    $("#bam-security-select-key").append($('<option></option>')
+        .val("create")
+        .html("Create Key"));
 }
 
 function addInstance(data) {
@@ -1049,7 +1108,6 @@ function addInstance(data) {
         setVisible("#create-instance-snapshot", true);
     }
 
-    // Add to instances
     instances.setItem(
         data.server_info.server_id,
         {
@@ -1068,8 +1126,6 @@ function addInstance(data) {
             html: '<a href=\"' + data.server_info.novnc_console + '\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>'
         }
     );
-
-    // Update selects
     addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
     addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
     addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance_to_snap"), instanceOpts);
@@ -1130,15 +1186,23 @@ function addVolume(data, instanceName) {
         setVisible('#create-snapshot', true);
     }
 
-    // Add to volumes
-    volumes.setItem(data.volume_id, {
-        size: data.volume_size,
-        name: data.volume_name
+    volumes.setItem(data.volume_id, {size: data.volume_size, name: data.volume_name});
+    snapshotVolumes.setItem(data.volume_id, {
+        value: data.volume_id,
+        option: data.volume_name
     });
 
-    // Update usedStorage
-    updateUsedStorage();
-    updateStorageBar();
+    refreshSelect($("#snap_volume"), snapshotVolumes);
+    refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+    $('<option></option>')
+        .val("none")
+        .html("Skip Adding Storage")
+        .prop("selected", "selected")
+        .prependTo($("#bam-volume-select-existing"));
+    $('<option></option>')
+        .val("create")
+        .html("Create Volume")
+        .appendTo($("#bam-volume-select-existing"));
 }
 
 function addIp(data, instanceId, instanceName) {
@@ -1157,8 +1221,13 @@ function addIp(data, instanceId, instanceName) {
 
     // Update assign_ip selects
     removeFromSelect(data.floating_ip_id, data.floating_ip, assignableFips);
-    refreshSelect($("#bam-security-fip"), assignableFips);
-    removeFromSelect(instanceId, instanceName, assignableInstances);
+    refreshSelect($("#bam-security-ip"), assignableFips);
+    $('<option></option>')
+        .val("none")
+        .html("Skip Attaching IP")
+        .prop("selected", "selected")
+        .prependTo($("#bam-security-ip"));
+    removeFromSelect(instanceId, instanceId, assignableInstances);
 
     // Add assigned class
     $(document.getElementById(data.floating_ip_id)).addClass("fip-assigned");
