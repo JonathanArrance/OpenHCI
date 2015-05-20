@@ -128,6 +128,7 @@ $(function () {
                                         // Update selects
                                         addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
                                         refreshSelect($("#bam-instance-image"), imageInstOpts);
+                                        $("#bam-instance-image").append("<option></option>").val("upload").html("Upload Image");
 
                                         message.showMessage("success", ret_data.message);
 
@@ -220,6 +221,9 @@ $(function () {
                                         // Update selects
                                         addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
                                         refreshSelect($("#bam-instance-image"), imageInstOpts);
+                                        $("#bam-instance-image").append($('<option></option>')
+                                            .val("upload")
+                                            .html("Upload Image"));
 
                                         message.showMessage("success", ret_data.message);
 
@@ -342,7 +346,10 @@ $(function () {
 
                                 // Update selects
                                 removeFromSelect(confImage, $("#image_name"), imageInstOpts);
-                                refreshSelect($("#bam-image-name"), imageInstOpts);
+                                refreshSelect($("#bam-instance-image"), imageInstOpts);
+                                $("#bam-instance-image").append($('<option></option>')
+                                    .val("upload")
+                                    .html("Upload Image"));
                             }
 
                             // If last image, reveal placeholder

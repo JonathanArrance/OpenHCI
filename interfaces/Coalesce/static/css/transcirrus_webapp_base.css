@@ -5117,9 +5117,8 @@ th > small {
 }
 
 .progressbar-text {
-    position: absolute;
     display: inline;
-    margin-left: -57px;
+    margin-left: -65px;
     text-shadow: -1px 1px #ffffff;
     margin-top: -1px;
 }

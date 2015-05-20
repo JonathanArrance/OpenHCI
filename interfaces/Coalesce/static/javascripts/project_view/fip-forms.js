@@ -59,7 +59,12 @@ $(function () {
 
                     // Add option to assign_ip select
                     addToSelect(data.ip_info.floating_ip_id, data.ip_info.floating_ip, $("#assign_floating_ip"), assignableFips);
-                    refreshSelect("#bam-security-ip", assignableFips);
+                    refreshSelect($("#bam-security-ip"), assignableFips);
+                    $('<option></option>')
+                        .val("none")
+                        .html("Skip Attaching IP")
+                        .prop("selected", "selected")
+                        .prependTo($("#bam-security-ip"));
                 }
             })
             .fail(function () {
@@ -177,7 +182,12 @@ $(function () {
 
                                 // Remove ip from assign_ip select
                                 removeFromSelect(confId, $("#assign_floating_ip"), assignableFips);
-                                refreshSelect($("#bam-security-fip"), assignableFips);
+                                refreshSelect($("#bam-security-ip"), assignableFips);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Attaching IP")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-security-ip"));
                             }
                         })
                         .fail(function () {
@@ -190,8 +200,9 @@ $(function () {
                             checkAssignFip();
                             disableProgressbar(progressbar, "fips", true);
                             setVisible('#allocate_ip', true);
-                            setVisibleInLineBlock('#allocate_ip', false);
-                            disableActions("deallocate_ip", false);
+                            setVisibleInLineBlock('#allocate_ip', true);
+                            setVisible('#assign_ip', true);
+                            setVisibleInLineBlock('#assign_ip', true);
                             disableLinks(false);
                         });
 
@@ -279,7 +290,12 @@ $(function () {
 
                                 // Update assign_ip selects
                                 removeFromSelect(data.floating_ip_id, floating_ip, assignableFips);
-                                refreshSelect($("#bam-security-fip"), assignableFips);
+                                refreshSelect($("#bam-security-ip"), assignableFips);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Attaching IP")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-security-ip"));
                                 removeFromSelect(confInstanceId, instance, assignableInstances);
 
                                 // Add assigned class
@@ -415,7 +431,12 @@ $(function () {
 
                                 // Update assign_ip selects
                                 addToSelect(data.floating_ip_id, data.floating_ip, $("#assign_floating_ip"), assignableFips);
-                                refreshSelect($("#bam-security-fip"), assignableFips);
+                                refreshSelect($("#bam-security-ip"), assignableFips);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Attaching IP")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-security-ip"));
                                 addToSelect(confInstanceId, confInstanceName, $("#assign_instance"), assignableInstances);
 
                                 // Remove assigned class

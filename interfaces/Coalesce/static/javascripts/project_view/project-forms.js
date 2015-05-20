@@ -505,7 +505,7 @@ function switchSections(current, next) {
             break;
         case "progress":
             updateProgressSection();
-            form.dialog({height: 440});
+            form.dialog({height: 445});
             nextBtn.hide(0);
             createBtn.show(0);
             break;
@@ -513,7 +513,7 @@ function switchSections(current, next) {
             createBtn.hide();
             backBtn.hide();
             finishBtn.show();
-            form.dialog({height: 605});
+            form.dialog({height: 610});
             break;
     }
 }
@@ -591,7 +591,9 @@ function buildInstance() {
         instanceName,
         instanceId,
         volume,
-        steps = 7;
+        step = 0,
+        steps = 7,
+        error = false;
 
     var uploadImage = $.Deferred(),
         createSecGroup = $.Deferred(),
@@ -601,10 +603,11 @@ function buildInstance() {
         attachVolume = $.Deferred(),
         assignIp = $.Deferred();
 
-    updateProgress(0, steps, "Initializing");
+    updateProgress(step, steps, "Initializing");
 
     if (bamParams.instance.inputs.image.value == "upload") {
-        updateProgress(0, steps, "Uploading Image");
+        uploadedImage = bamParams.image.inputs.name.value;
+        updateProgress(step, steps, "Uploading Image");
         var imageType = bamParams.image.inputs.type.value,
             imageProgressId = guid(),
             url = "";
@@ -654,22 +657,31 @@ function buildInstance() {
             }
         })
             .done(function (data) {
-                addImage(data);
-                uploadedImage = bamParams.image.inputs.name.value;
+                if (data.status == 'error') {
+                    message.showMessage('error', data.message);
+                    error = true;
+                    return false;
+                }
+                if (data.status == 'success') {
+                    addImage(data);
+                    step++;
+                }
             })
             .fail(function () {
                 message.showMessage("error", "Error: Could not upload image");
+                error = true;
                 return false;
             });
     }
     else {
+        step++;
         uploadedImage = bamParams.instance.inputs.image.value;
         uploadImage.resolve();
     }
 
     if (bamParams.security.inputs.group.value == "create") {
 
-        updateProgress(1, steps, "Creating Group");
+        updateProgress(step, steps, "Creating Group");
         createSecGroup = $.getJSON(
             '/create_security_group/' +
             bamParams.group.inputs.name.value + '/' +
@@ -681,44 +693,52 @@ function buildInstance() {
 
                 if (data.status == 'error') {
                     message.showMessage('error', data.message);
+                    error = true;
                     return false;
                 }
                 if (data.status == 'success') {
                     // Initialize empty string for new router row
                     addSecGroup(data);
-                    updateProgress(2, steps, "Group Created");
+                    step++;
+                    updateProgress(step, steps, "Group Created");
                     secGroup = bamParams["group"].inputs["name"].value;
                 }
             }).fail(function () {
                 message.showMessage("error", "Error: Could not create security group");
+                error = true;
                 return false;
             });
     } else {
+        step++;
         secGroup = bamParams.security.inputs.group.value;
         createSecGroup.resolve();
     }
 
     if (bamParams.security.inputs.key.value == "create") {
-        updateProgress(2, steps, "Creating Key");
+        updateProgress(step, steps, "Creating Key");
         createKey = $.getJSON('/create_sec_keys/' + bamParams.security.inputs.newKey.value + '/' + PROJECT_ID + '/')
             .done(function (data) {
                 if (data.status == 'error') {
                     message.showMessage('error', data.message);
+                    error = true;
                     return false;
                 }
                 if (data.status == 'success') {
                     // Initialize empty string for new router row
                     addKey(data);
-                    updateProgress(3, steps, "Key Created");
+                    step++;
+                    updateProgress(step, steps, "Key Created");
                     key = data.key_name;
                     keyId = data.key_id;
                 }
             })
             .fail(function () {
                 message.showMessage("error", "Error: Could not create security key");
+                error = true;
                 return false;
             });
     } else {
+        step++;
         key = bamParams.security.inputs.key.value;
         keyId = secKeyInstOpts.items[key].id;
         createKey.resolve();
@@ -726,9 +746,8 @@ function buildInstance() {
 
     $.when(uploadImage, createSecGroup, createKey)
         .done(function () {
-            console.log("key link = " + '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
             $(".bam-confirm-key").prop("href", '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
-            updateProgress(3, steps, "Creating Instance");
+            updateProgress(step, steps, "Creating Instance");
             createInstance = $.getJSON(
                 '/create_image/' +
                 bamParams.instance.inputs.name.value + '/' +
@@ -742,12 +761,14 @@ function buildInstance() {
                 .done(function (data) {
                     if (data.status == 'error') {
                         message.showMessage('error', data.message);
+                        error = true;
                         return false;
                     }
                     if (data.status == 'success') {
                         // Initialize empty string for new router row
                         addInstance(data);
-                        updateProgress(4, steps, "Instance Created");
+                        step++;
+                        updateProgress(step, steps, "Instance Created");
                         $(".bam-confirm-name").html(bamParams.instance.inputs.name.value.toString());
                         instanceName = data.server_info.server_name.toString();
                         instanceId = data.server_info.server_id.toString();
@@ -755,12 +776,13 @@ function buildInstance() {
                 })
                 .fail(function () {
                     message.showMessage("error", "Error: Could not create instance");
+                    error = true;
                     return false;
                 });
 
             $.when(createInstance).done(function () {
                 if (bamParams.volume.inputs.select.value == "create") {
-                    updateProgress(4, steps, "Creating Volume");
+                    updateProgress(step, steps, "Creating Volume");
                     createVolume = $.getJSON(
                         '/create_volume/' +
                         bamParams.volume.inputs.name.value + '/' +
@@ -771,59 +793,68 @@ function buildInstance() {
 
                             if (data.status == 'error') {
                                 message.showMessage('error', data.message);
+                                error = true;
                                 return false;
                             }
 
                             if (data.status == 'success') {
                                 addVolume(data, instanceName);
-                                updateProgress(5, steps, "Volume Created");
+                                step++;
+                                updateProgress(step, steps, "Volume Created");
                                 volume = data.volume_id.toString();
                             }
                         })
                         .fail(function () {
                             message.showMessage("error", "Error: Could not create volume");
+                            error = true;
                             return false;
                         });
                 } else if (bamParams.volume.inputs.select.value == "none") {
                     volume = "skip";
-                    updateProgress(5, steps, "Skipping Volume");
+                    step++;
+                    updateProgress(step, steps, "Skipping Volume");
                     createVolume.resolve();
                 } else {
                     volume = bamParams.volume.inputs.select.value;
-                    updateProgress(5, steps, "Volume Selected");
+                    step++;
+                    updateProgress(step, steps, "Volume Selected");
                     createVolume.resolve();
                 }
 
                 $.when(createVolume).done(function () {
                     if (volume != "skip") {
-                        updateProgress(5, steps, "Attaching Volume");
+                        updateProgress(step, steps, "Attaching Volume");
                         attachVolume = $.getJSON(
                             '/attach_volume/' + PROJECT_ID + '/' + instanceId + '/' + volume + '/')
                             .done(function (data) {
 
                                 if (data.status == 'error') {
                                     message.showMessage('error', data.message);
+                                    error = true;
                                     return false;
                                 }
 
                                 if (data.status == 'success') {
 
                                     var volumeRowSelector = "#" + volume;
-                                    updateProgress(6, steps, "Volume Attached");
+                                    step++;
+                                    updateProgress(step, steps, "Volume Attached");
                                     $(volumeRowSelector).addClass("volume-attached");
                                 }
                             })
                             .fail(function () {
                                 message.showMessage("error", "Error: Could not attach volume");
+                                error = true;
                                 return false;
                             });
                     } else {
                         attachVolume.resolve();
+                        step++;
                     }
 
                     $.when(attachVolume).done(function () {
                         if (bamParams.security.inputs.ip.value != "none") {
-                            updateProgress(6, steps, "Assigning IP");
+                            updateProgress(step, steps, "Assigning IP");
                             assignIp = $.getJSON(
                                 '/assign_floating_ip/' +
                                 assignableFips.getItem(bamParams["security"].inputs["ip"].value).option + '/' +
@@ -833,33 +864,39 @@ function buildInstance() {
 
                                     if (data.status == 'error') {
                                         message.showMessage('error', data.message);
+                                        error = true;
                                         return false;
                                     }
 
                                     if (data.status == 'success') {
                                         addIp(data, instanceId, instanceName);
-                                        updateProgress(7, steps, "IP Assigned");
-                                        $(".bam-confirm-ip").html(assignableFips.getItem(bamParams["security"].inputs["ip"].value).option.toString());
+                                        step++;
+                                        updateProgress(step, steps, "IP Assigned");
+                                        $(".bam-confirm-ip").html(fips.getItem(bamParams["security"].inputs["ip"].value).ip);
                                     }
                                 })
                                 .fail(function () {
                                     message.showMessage("error", "Error: Could not assign ip");
+                                    error = true;
                                     return false;
                                 })
                         } else {
                             assignIp.resolve();
+                            step++;
                         }
 
                         $.when(assignIp).done(function () {
-                            updateProgress(7, steps, "Complete");
-                            switchSections(currentSection, "confirm");
+                            if (!error) {
+                                updateProgress(steps, steps, "Complete");
+                                switchSections(currentSection, "confirm");
+                            } else {
+                                updateProgress(steps, steps, "Error");
+                            }
                         });
                     });
                 });
             });
-        }
-    )
-    ;
+        });
 }
 
 function updateProgress(stepCount, steps, stepLabel) {

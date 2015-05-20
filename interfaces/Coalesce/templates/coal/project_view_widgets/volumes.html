@@ -31,7 +31,8 @@
                                 name: "{{v.volume_name}}",
                                 type: "{{ v.volume_type }}",
                                 value: "{{v.volume_id}}",
-                                option: "{{v.volume_name}}"
+                                option: "{{v.volume_name}}",
+                                attached: "{{ v.volume_attached }}"
                             });
                             usedStorage += Number("{{v.volume_size}}");
                         </script>
