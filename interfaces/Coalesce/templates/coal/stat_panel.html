@@ -371,7 +371,7 @@
         {
             var endDate = new Date();
             var startDate = new Date(endDate);
-            var durationInMinutes = 2880;
+            var durationInMinutes = 4320;
             startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
             var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
             var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
