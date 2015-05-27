@@ -34,11 +34,16 @@ $(function () {
 
                     disableUiButtons('.ui-button', true);
 
+                    // Initialize progressbar and make it visible
+                    $($("#project-delete-progressbar")).progressbar({value: false});
+                    setVisible($("#project-delete-progressbar"), true);
+
                     $.getJSON('/projects/' + PROJECT_ID + '/' + PROJECT + '/delete/')
                         .done(function (data) {
                             if (data.status == "error") {
                                 message.showMessage('error', data.message);
                                 disableUiButtons('.ui-button', false);
+                                setVisible($("#project-delete-progressbar"), false);
                             }
                             if (data.status == "success") {
                                 message.showMessage('success', data.message);
@@ -46,7 +51,9 @@ $(function () {
                             }
                         })
                         .fail(function () {
+                            message.showMessage('error', "Server Fault");
                             disableUiButtons('.ui-button', false);
+                            setVisible($("#project-delete-progressbar"), false);
                         })
                 }
             },
@@ -1052,7 +1059,6 @@ function addKey(data) {
         .val("create")
         .html("Create Key"));
 }
-
 
 
 function addVolume(data, instanceName) {

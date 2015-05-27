@@ -5273,6 +5273,25 @@ th > small {
     position: absolute;
 }
 
+/* PROJECT */
+#project-delete-progressbar {
+    width: 195px;
+    margin-top: 5px;
+}
+
+#project-delete-progressbar > .progressbar-text {
+    display: inline;
+    font-weight: bold;
+    margin-left: -145px;
+    position: absolute;
+    text-shadow: -1px 1px #ffffff;
+    z-index: 100000;
+}
+
+#project-delete-progressbar > .ui-widget-header {
+    background-color: #FF8617 !important;
+}
+
 /* INSTANCE WIDGET */
 
 #instance_progressbar > .ui-widget-header,
