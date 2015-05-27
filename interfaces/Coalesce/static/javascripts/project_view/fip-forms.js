@@ -45,7 +45,7 @@ $(function () {
                         '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
                         '<span id="' + data.ip_info.floating_ip_id + '-ip-address">' + data.ip_info.floating_ip + '</span></a></td>' +
                         '<td id="' + data.ip_info.floating_ip_id + '-instance-cell"><span id="' + data.ip_info.floating_ip_id + '-instance-name">None</span></td>' +
-                        '<td id="' + data.ip_info.floating_ip_id + '-actions-cell"><a href="#" " class="deallocate_ip">deallocate</a></td>' +
+                        '<td id="' + data.ip_info.floating_ip_id + '-actions-cell"><a href="#" " class="deallocate-ip">deallocate</a></td>' +
                         '</tr>';
 
                     // If first fip, remove placeholder
@@ -96,7 +96,7 @@ $(function () {
             fip,
             targetRow;
 
-        $(document).on('click', '.deallocate_ip', function (event) {
+        $(document).on('click', '.deallocate-ip', function (event) {
 
             // Prevent scrolling to top of page on click
             event.preventDefault();
@@ -138,11 +138,11 @@ $(function () {
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
-                    var actionsHtml = '<a class="deallocate_ip" href="#">deallocate</a></td>';
+                    var actionsHtml = '<a class="deallocate-ip" href="#">deallocate</a></td>';
 
                     // Disable widget view links, disable deallocate actions and hide allocate and assign buttons
                     disableLinks(true);
-                    disableActions("deallocate_ip", true);
+                    disableActions("deallocate-ip", true);
                     setVisible('#allocate_ip', false);
                     setVisibleInLineBlock('#allocate_ip', false);
                     setVisible('#assign_ip', false);
@@ -211,7 +211,7 @@ $(function () {
                             setVisible('#assign_ip', true);
                             setVisibleInLineBlock('#assign_ip', true);
                             disableLinks(false);
-                            disableActions("deallocate_ip", false);
+                            disableActions("deallocate-ip", false);
                         });
 
                     $(this).dialog("close");
@@ -429,7 +429,7 @@ $(function () {
                                 // Update instance and action cells
                                 var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
                                 var instanceNameHtml = '<span id="' + data.floating_ip_id + '-instance-name">None</span>';
-                                var newActions = '<a href="#" class="deallocate_ip">deallocate</a>';
+                                var newActions = '<a href="#" class="deallocate-ip">deallocate</a>';
 
                                 $(instanceCell).empty().fadeOut();
                                 $(actionsCell).empty().fadeOut();
