@@ -3,11 +3,11 @@
     <div class="well {% if user_level > 1 %} advanced-group-well {% else %} storage-well{% endif %}">
         <div class="legend">
 
+            Volume Snapshots
+
             <div id="snapshot_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
-
-            Volume Snapshots
 
             <a href="#" id="create-snapshot" class="btn" style="float:right">Create</a>
         </div>
@@ -20,32 +20,41 @@
                     <th>Actions</th>
                 </tr>
                 {% if snapshots %}
-                {% for snapshot in snapshots %}
+                    {% for snapshot in snapshots %}
 
-                <script>
-                    snapshots.setItem("{{snapshot.snapshot_id}}",
-                            { id: "{{snapshot.snapshot_id}}", name: "{{snapshot.snapshot_name}}", volumeId: "{{snapshot.volume_id}}", volumeName: "{{snapshot.volume_name}}", value: "{{snapshot.snapshot_id}}", option: "{{snapshot.snapshot_name}}" });
-                </script>
+                        <script>
+                            snapshots.setItem("{{snapshot.snapshot_id}}",
+                                    {
+                                        id: "{{snapshot.snapshot_id}}",
+                                        name: "{{snapshot.snapshot_name}}",
+                                        volumeId: "{{snapshot.volume_id}}",
+                                        volumeName: "{{snapshot.volume_name}}",
+                                        value: "{{snapshot.snapshot_id}}",
+                                        option: "{{snapshot.snapshot_name}}"
+                                    });
+                        </script>
 
-                <tr id="{{snapshot.snapshot_id}}">
-                    <td id="{{snapshot.snapshot_id}}-name-cell"><a href="/snapshot/{{snapshot.snapshot_id}}/view/" class="disable-link">
-                        <span id="{{snapshot.snapshot_id}}-name-text">{{snapshot.snapshot_name}}</span></a>
-                    </td>
-                    <td id="{{snapshot.snapshot_id}}-volume-cell"><span id="{{snapshot.snapshot_id}}-volume-text">{{snapshot.volume_name}}</span>
-                    </td>
-                    <td id="{{snapshot.snapshot_id}}-actions-cell">
-                        <a href="#" class="delete-snapshot">delete</a>
-                        <span> | </span>
-                        <a href="#" class="create-volume-from-snapshot">create volume</a>
-                    </td>
-                </tr>
-                {% endfor %}
+                        <tr id="{{ snapshot.snapshot_id }}">
+                            <td id="{{ snapshot.snapshot_id }}-name-cell"><a
+                                    href="/snapshot/{{ snapshot.snapshot_id }}/view/" class="disable-link">
+                                <span id="{{ snapshot.snapshot_id }}-name-text">{{ snapshot.snapshot_name }}</span></a>
+                            </td>
+                            <td id="{{ snapshot.snapshot_id }}-volume-cell"><span
+                                    id="{{ snapshot.snapshot_id }}-volume-text">{{ snapshot.volume_name }}</span>
+                            </td>
+                            <td id="{{ snapshot.snapshot_id }}-actions-cell">
+                                <a href="#" class="delete-snapshot">delete</a>
+                                <span> | </span>
+                                <a href="#" class="create-volume-from-snapshot">create volume</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 {% else %}
-                <tr id="snapshot_placeholder">
-                    <td><p><i>This project has no snapshots</i></p></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                    <tr id="snapshot_placeholder">
+                        <td><p><i>This project has no snapshots</i></p></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endif %}
             </table>
         </div>
@@ -63,11 +72,16 @@
             <label for="snap_volume">Volume</label>
             <select name="snap_volume" id="snap_volume">
                 {% for k,v in volume_info.items %}
-                {% if v.volume_instance_name == None %}
-                <script>snapshotVolumes.setItem("{{v.volume_id}}", { value: "{{v.volume_id}}", option: "{{v.volume_name}}"});</script>
-                {% endif %}
+                    {% if v.volume_instance_name == None %}
+                        <script>snapshotVolumes.setItem("{{v.volume_id}}", {
+                            value: "{{v.volume_id}}",
+                            option: "{{v.volume_name}}"
+                        });</script>
+                    {% endif %}
                 {% endfor %}
-                <script>$(function() { refreshSelect($("#snap_volume"), snapshotVolumes); });</script>
+                <script>$(function () {
+                    refreshSelect($("#snap_volume"), snapshotVolumes);
+                });</script>
             </select>
             <label for="snap_desc">Description</label>
             <textarea name="snap_desc" id="snap_desc" class="text ui-widget-content ui-corner-all"

@@ -70,8 +70,8 @@ $(function () {
                         disableLinks(true);
 
                         // Initialize progressbar and make it visible if hidden
-                        $(progressbar).progressbar({value: false});
-                        setVisible(progressbar, true);
+                        progressbar.progressbar({value: false});
+                        disableProgressbar(progressbar, "groups", false);
 
                         $.getJSON('/create_security_group/' + confName + '/' + confDesc + '/' + confPorts + '/' + confTransport + '/' + PROJECT_ID + '/')
                             .done(function (data) {
@@ -120,7 +120,7 @@ $(function () {
                             })
                             .always(function () {
 
-                                setVisible(progressbar, false);
+                                disableProgressbar(progressbar, "groups", true);
                                 setVisible("#create-security-group", true);
                                 disableLinks(false);
                                 resetUiValidation(allFields);
@@ -195,8 +195,8 @@ $(function () {
                     disableActions("delete-secGroup", true);
 
                     // Initialize progressbar and make it visible if hidden
-                    $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    progressbar.progressbar({value: false});
+                    disableProgressbar(progressbar, "groups", false);
 
                     // Create loader
                     var loaderId = confId + '-loader';
@@ -248,7 +248,7 @@ $(function () {
 
                             disableLinks(false);
                             disableActions("delete-secGroup", false);
-                            setVisible(progressbar, false);
+                            disableProgressbar(progressbar, "groups", true);
                         });
 
                     $(this).dialog("close");
