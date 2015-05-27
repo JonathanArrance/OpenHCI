@@ -329,14 +329,14 @@ function checkSize(o, n, min, max) {
 }
 
 function clearUiValidation(fields) {
-    fields.removeClass("ui-state-error");
+    $(fields).removeClass("ui-state-error");
     $('.error').each(function () {
         $(this).fadeOut().remove();
     });
 }
 
 function resetUiValidation(fields) {
-    fields.val("").removeClass("ui-state-error");
+    $(fields).val("").removeClass("ui-state-error");
     $('.error').each(function () {
         $(this).fadeOut().remove();
     });

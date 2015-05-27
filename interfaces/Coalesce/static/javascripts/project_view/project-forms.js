@@ -918,7 +918,7 @@ function buildInstance() {
                                 }
 
                                 if (data.status == 'success') {
-                                    addIp(data, instanceId, instanceName);
+                                    addIp(data, instanceId);
                                     step++;
                                     updateProgress(step, steps, "IP Assigned");
                                     $(".bam-confirm-ip").html(fips.getItem(bamParams["security"].inputs["ip"].value).ip);
@@ -1053,83 +1053,7 @@ function addKey(data) {
         .html("Create Key"));
 }
 
-function addInstance(data) {
-    $("<tr></tr>")
-        .prop("id", data.server_info.server_id)
-        .append($("<td></td>")
-            .prop("id", data.server_info.server_id + '-name-cell')
-            .append($("<a></a>")
-                .prop("href", '/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/')
-                .append($("<span></span>")
-                    .prop("id", data.server_info.server_id + '-name-text')
-                    .html(data.server_info.server_name.toString()))))
-        .append($("<td></td>")
-            .prop("id", data.server_info.server_id + '-status-cell')
-            .html("ACTIVE"))
-        .append($("<td></td>")
-            .prop("id", data.server_info.server_id + '-os-cell')
-            .html(data.server_info.server_os.toString() + ' / ' + data.server_info.server_flavor.toString()))
-        .append($("<td></td>")
-            .prop("id", data.server_info.server_id + '-actions-cell')
-            .append($("<a></a>")
-                .prop("href", data.server_info.novnc_console)
-                .prop("class", "open-instance-console")
-                .on("click", function () {
-                    window.open(this.href, "_blank", "toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435")
-                })
-                .html("console"))
-            .append($("<span></span>")
-                .prop("class", "instance-actions-pipe")
-                .html(" | "))
-            .append($("<a></a>")
-                .prop("href", "#")
-                .prop("class", 'pause-instance ' + data.server_info.server_id + '-disable-action')
-                .html("pause"))
-            .append($("<span></span>")
-                .prop("class", "instance-actions-pipe")
-                .html(" | "))
-            .append($("<a></a>")
-                .prop("href", "#")
-                .prop("class", 'suspend-instance ' + data.server_info.server_id + '-disable-action')
-                .html("suspend"))
-            .append($("<span></span>")
-                .prop("class", "instance-actions-pipe")
-                .html(" | "))
-            .append($("<a></a>")
-                .prop("href", "#")
-                .prop("class", 'delete-instance ' + data.server_info.server_id + '-disable-action')
-                .html("delete"))
-    ).appendTo($("#instance_list")).fadeIn();
 
-    // Check table length, remove placeholder if necessary
-    var rowCount = $('#instance_list tr').length;
-    if (rowCount >= 2) {
-        $('#instance_placeholder').remove().fadeOut();
-        setVisible("#create-instance-snapshot", true);
-    }
-
-    instances.setItem(
-        data.server_info.server_id,
-        {
-            id: data.server_info.server_id,
-            name: data.server_info.server_name,
-            status: data.server_info.server_status,
-            flavor: data.server_info.server_flavor,
-            os: data.server_info.server_os,
-            console: data.server_info.novnc_console
-        }
-    );
-    consoleLinks.setItem(
-        data.server_info.server_id,
-        {
-            link: data.server_info.novnc_console,
-            html: '<a href=\"' + data.server_info.novnc_console + '\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>'
-        }
-    );
-    addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance"), attachableInstances);
-    addToSelect(data.server_info.server_id, data.server_info.server_name, $("#assign_instance"), assignableInstances);
-    addToSelect(data.server_info.server_id, data.server_info.server_name, $("#instance_to_snap"), instanceOpts);
-}
 
 function addVolume(data, instanceName) {
     $("<tr></tr>")
@@ -1205,7 +1129,7 @@ function addVolume(data, instanceName) {
         .appendTo($("#bam-volume-select-existing"));
 }
 
-function addIp(data, instanceId, instanceName) {
+function addIp(data, instanceId) {
 
     // Update instance and action cells
     var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
