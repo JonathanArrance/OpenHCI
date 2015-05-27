@@ -3,11 +3,11 @@
     <div class="well {% if user_level > 1 %} advanced-group-well {% else %} instance-management-well{% endif %}">
         <div class="legend">
 
+            Images
+
             <div id="image_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
-
-            Images
 
             <a href="#" id="import-image" class="btn" style="float:right">Import</a>
         </div>
@@ -20,23 +20,23 @@
                 </tr>
 
                 {% if images %}
-                {% for image in images %}
+                    {% for image in images %}
 
-                <tr id="{{ image.image_id }}">
-                    <td id="{{ image.image_id }}-name-cell">
-                        <span id="{{ image.image_id }}-name-text">{{image.image_name}}</span>
-                    </td>
-                    <td id="{{ image.image_id }}-actions-cell">
-                        <a href="#" class="delete-image">delete</a>
-                    </td>
-                </tr>
+                        <tr id="{{ image.image_id }}">
+                            <td id="{{ image.image_id }}-name-cell">
+                                <span id="{{ image.image_id }}-name-text">{{ image.image_name }}</span>
+                            </td>
+                            <td id="{{ image.image_id }}-actions-cell">
+                                <a href="#" class="delete-image">delete</a>
+                            </td>
+                        </tr>
 
-                {% endfor %}
+                    {% endfor %}
                 {% else %}
-                <div id="image_placeholder">
-                    <td><p><i>This project has no images.</i></p></td>
-                    <td></td>
-                </div>
+                    <div id="image_placeholder">
+                        <td><p><i>This project has no images.</i></p></td>
+                        <td></td>
+                    </div>
                 {% endif %}
             </table>
         </div>
@@ -84,7 +84,8 @@
 
             <label for="import_local">Local Image Location</label>
             <input type="file" name="import_local" id="import_local"
-                   class="file ui-widget-content ui-corner-all image-file" style="width: 185px; height: 20px; line-height: 20px"/>
+                   class="file ui-widget-content ui-corner-all image-file"
+                   style="width: 185px; height: 20px; line-height: 20px"/>
 
             <label for="os_type">OS Type <span
                     title="When booting a Windows instance, OS Type must be specified. Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">(help)</span></label>

@@ -3,11 +3,12 @@
     <div class="well user-well">
         <div class="legend">
 
+            Security Groups
+
             <div id="secGroup_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
 
-            Security Groups
             <a href="#" id="create-security-group" class="btn" style="float:right">Create</a>
         </div>
 
@@ -19,35 +20,35 @@
                     <th>Actions</th>
                 </tr>
                 {% if sec_groups %}
-                {% for sg in sec_groups %}
+                    {% for sg in sec_groups %}
 
-                <script>
-                    securityGroups.setItem("{{ sg.sec_group_id }}",
-                            { id: "{{ sg.sec_group_id }}", name: "{{sg.sec_group_name}}" })
-                </script>
+                        <script>
+                            securityGroups.setItem("{{ sg.sec_group_id }}",
+                                    {id: "{{ sg.sec_group_id }}", name: "{{sg.sec_group_name}}"})
+                        </script>
 
-                <tr id="{{ sg.sec_group_id }}">
-                    <td id="{{ sg.sec_group_id }}-name-cell">
-                        <a href="/security_group/{{sg.sec_group_id}}/{{sg.project_id}}/view/">
-                            <span id="{{ sg.sec_group_id }}-name-text">{{sg.sec_group_name}}</span>
-                        </a>
-                    </td>
-                    <td id="{{ sg.sec_group_id }}-username-cell">
-                        <span id="{{ sg.sec_group_id }}-username-text">{{sg.username}}</span>
-                    </td>
-                    <td id="{{ sg.sec_group_id }}-actions-cell">
-                        <a href="#" class="delete-secGroup">delete</a>
-                        <!--<span> | </span>-->
-                        <!--<a href="#" class="update-secGroup">update</a>-->
-                    </td>
-                </tr>
-                {% endfor %}
+                        <tr id="{{ sg.sec_group_id }}">
+                            <td id="{{ sg.sec_group_id }}-name-cell">
+                                <a href="/security_group/{{ sg.sec_group_id }}/{{ sg.project_id }}/view/">
+                                    <span id="{{ sg.sec_group_id }}-name-text">{{ sg.sec_group_name }}</span>
+                                </a>
+                            </td>
+                            <td id="{{ sg.sec_group_id }}-username-cell">
+                                <span id="{{ sg.sec_group_id }}-username-text">{{ sg.username }}</span>
+                            </td>
+                            <td id="{{ sg.sec_group_id }}-actions-cell">
+                                <a href="#" class="delete-secGroup">delete</a>
+                                <!--<span> | </span>-->
+                                <!--<a href="#" class="update-secGroup">update</a>-->
+                            </td>
+                        </tr>
+                    {% endfor %}
                 {% else %}
-                <tr id="secGroup_placeholder">
-                    <td><p><i>This project has no security groups</i></p></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                    <tr id="secGroup_placeholder">
+                        <td><p><i>This project has no security groups</i></p></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endif %}
             </table>
         </div>

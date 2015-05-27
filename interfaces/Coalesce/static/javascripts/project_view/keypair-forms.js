@@ -56,8 +56,8 @@ $(function () {
                         disableLinks(true);
 
                         // Initialize progressbar and make it visible if hidden
-                        $(progressbar).progressbar({value: false});
-                        setVisible(progressbar, true);
+                        progressbar.progressbar({value: false});
+                        disableProgressbar(progressbar, "keys", false);
 
                         $.getJSON('/create_sec_keys/' + confKeypair + '/' + PROJECT_ID + '/')
                             .done(function (data) {
@@ -106,7 +106,7 @@ $(function () {
                             })
                             .always(function () {
 
-                                setVisible(progressbar, false);
+                                disableProgressbar(progressbar, "keys", true);
                                 setVisible('#create-keypair', true);
                                 disableLinks(false);
                                 resetUiValidation(allFields);
@@ -175,8 +175,8 @@ $(function () {
                     disableLinks(true);
 
                     // Initialize progressbar and make it visible if hidden
-                    $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    progressbar.progressbar({value: false});
+                    disableProgressbar(progressbar, "keys", false);
 
                     // Create loader
                     var loaderId = confId + '-loader';
@@ -228,7 +228,7 @@ $(function () {
                         .always(function () {
 
                             disableLinks(false);
-                            setVisible(progressbar, false);
+                            disableProgressbar(progressbar, "keys", true);
                         });
 
                     $(this).dialog("close");

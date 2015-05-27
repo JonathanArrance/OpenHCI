@@ -3,16 +3,16 @@
     <div class="well sdn-well">
         <div class="legend">
 
+            Routers
+
             <div id="router_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
 
-            Routers
-
             {% if private_networks %}
-            <a href="#" id="create-router" class="btn" style="float:right;">Create</a>
+                <a href="#" id="create-router" class="btn" style="float:right;">Create</a>
             {% else %}
-            <a href="#" id="create-router" class="btn" style="float:right; display: none;">Create</a>
+                <a href="#" id="create-router" class="btn" style="float:right; display: none;">Create</a>
             {% endif %}
         </div>
 
@@ -27,34 +27,34 @@
 
                 <script>routers.clear();</script>
                 {% if routers %}
-                {% for router in routers %}
-                <script>
-                    routers.setItem(
-                            "{{ router.router_id}}",
-                            { name: "{{ router.router_name }}", network: "{{ router.network_id }}"}
-                    );
-                </script>
-                <tr id="{{ router.router_id }}">
-                    <td id="{{ router.router_id }}-name-cell">
-                        <a href="/router/{{ router.router_id }}/view/" class="disable-link">
-                            <span id="{{ router.router_id}}-name-text">{{router.router_name}}</span>
-                        </a>
-                    </td>
-                    <td id="{{ router.router_id }}-status-cell">
-                        <span id="{{ router.router_id }}-status-text">{{router.router_status}}</span>
-                    </td>
-                    <td id="{{ router.router_id }}-actions-cell">
-                        <a href="#" class="delete-router">delete</a>
-                    </td>
-                </tr>
+                    {% for router in routers %}
+                        <script>
+                            routers.setItem(
+                                    "{{ router.router_id}}",
+                                    {name: "{{ router.router_name }}", network: "{{ router.network_id }}"}
+                            );
+                        </script>
+                        <tr id="{{ router.router_id }}">
+                            <td id="{{ router.router_id }}-name-cell">
+                                <a href="/router/{{ router.router_id }}/view/" class="disable-link">
+                                    <span id="{{ router.router_id }}-name-text">{{ router.router_name }}</span>
+                                </a>
+                            </td>
+                            <td id="{{ router.router_id }}-status-cell">
+                                <span id="{{ router.router_id }}-status-text">{{ router.router_status }}</span>
+                            </td>
+                            <td id="{{ router.router_id }}-actions-cell">
+                                <a href="#" class="delete-router">delete</a>
+                            </td>
+                        </tr>
 
-                {% endfor %}
+                    {% endfor %}
                 {% else %}
-                <tr id="router_placeholder">
-                    <td><p><i>This project has no routers</i></p></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                    <tr id="router_placeholder">
+                        <td><p><i>This project has no routers</i></p></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endif %}
             </table>
         </div>
@@ -74,14 +74,14 @@
             <select name="priv_net" id="priv_net">
                 <script>privNetRoutOpts.clear();</script>
                 {% for net in priv_net_list %}
-                {% if net.in_use == 'false' %}
-                <script>
-                    privNetRoutOpts.setItem(
-                            "{{net.net_id}}",
-                            { value: "{{net.net_id}}", option: "{{net.net_name}}" }
-                    )
-                </script>
-                {% endif %}
+                    {% if net.in_use == 'false' %}
+                        <script>
+                            privNetRoutOpts.setItem(
+                                    "{{net.net_id}}",
+                                    {value: "{{net.net_id}}", option: "{{net.net_name}}"}
+                            )
+                        </script>
+                    {% endif %}
                 {% endfor %}
                 <script>refreshSelect($("#priv_net"), privNetRoutOpts);</script>
             </select>

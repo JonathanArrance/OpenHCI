@@ -130,7 +130,7 @@ function convertUrl47(url) {
 // ---------------- //
 
 function flagError(input, t) {
-    input.before('<p class="error">' + t + '</p>');
+    input.after('<p class="error">' + t + '</p>');
     $(input).animate(function () {
         $(input).addClass("ui-state-error");
     }, 1500);
@@ -433,7 +433,7 @@ var disabledProgressbars = {
     instances: 0, images: 0, fips: 0,
     volumes: 0, snapshots: 0, containers: 0,
     extNets: 0, routers: 0, privateNets: 0,
-    users: 0, secGroups: 0, keys: 0
+    users: 0, groups: 0, keys: 0
 };
 
 function disableProgressbar(id, widget, bool) {
@@ -448,7 +448,7 @@ function disableProgressbar(id, widget, bool) {
         }
     } else {
         if ($(id).is(":hidden")) {
-            $(id).fadeIn('fast');
+            $(id).fadeIn('fast').css("display", "inline-block");
         }
 
         disabledProgressbars[widget]++;
@@ -612,7 +612,8 @@ var instances = new HashTable(),
     secKeyInstOpts = new HashTable(),
     privNetInstOpts = new HashTable(),
     imageInstOpts = new HashTable(),
-    fips = new HashTable();
+    flavors = new HashTable(),
+    fips = new HashTable(),
     assignableFips = new HashTable(),
     assignableInstances = new HashTable();
 

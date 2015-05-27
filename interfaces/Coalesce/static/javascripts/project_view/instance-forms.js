@@ -8,8 +8,63 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
+        // Create Form
+        var form = $("<div></div>")
+            .prop("id", "instance-dialog-form")
+            .prop("title", "Create Instance")
+            .css("display", "none")
+            .append($("<p></p>")
+                .prop("class", "validateTips")
+                .html("Create a new instance. All form fields are required."))
+            .append($("<form></form>")
+                .append($("<fieldset></fieldset>")
+                    .append($("<label></label>")
+                        .prop("for", "name")
+                        .html("Instance Name"))
+                    .append($("<input></input>")
+                        .prop("id", "name")
+                        .prop("name", "name")
+                        .prop("type", "text"))
+                    .append($("<label></label>")
+                        .prop("for", "group")
+                        .html("Security Group"))
+                    .append($("<select></select>")
+                        .prop("id", "group")
+                        .prop("name", "group"))
+                    .append($("<label></label>")
+                        .prop("for", "key")
+                        .html("Security Key"))
+                    .append($("<select></select>")
+                        .prop("id", "key")
+                        .prop("name", "key"))
+                    .append($("<label></label>")
+                        .prop("for", "network")
+                        .html("Private Network"))
+                    .append($("<select></select>")
+                        .prop("id", "network")
+                        .prop("name", "network"))
+                    .append($("<label></label>")
+                        .prop("for", "image")
+                        .html("Image"))
+                    .append($("<select></select>")
+                        .prop("id", "image")
+                        .prop("name", "image"))
+                    .append($("<label></label>")
+                        .prop("for", "flavor")
+                        .html("Flavor"))
+                    .append($("<select></select>")
+                        .prop("id", "flavor")
+                        .prop("name", "flavor"))));
+
+        // Populate selects
+        refreshSelect(form.find("#group"), secGroupInstOpts);
+        refreshSelect(form.find("#key"), secKeyInstOpts);
+        refreshSelect(form.find("#network"), privNetInstOpts);
+        refreshSelect(form.find("#image"), imageInstOpts);
+        refreshSelect(form.find("#flavor"), flavors);
+
         // Open dialog form
-        $("#instance-dialog-form").dialog({
+        form.dialog({
             autoOpen: true,
             height: 505,
             width: 235,
@@ -27,16 +82,16 @@ $(function () {
                 "Create Instance": function () {
 
                     // Create Instance
-                    createInstance($("#name"), $("#sec_group_name"), $("#sec_key_name"), $("#image_name"), $("#network_name"), $("#flavor_name"), $("#instance_progressbar"));
-
-                    // Close Dialog form
-                    $(this).dialog("close");
+                    createInstance($("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"));
                 }
             },
             close: function () {
 
                 // Reset form validation
-                resetUiValidation([$("#name"), $("#sec_group_name"), $("#sec_key_name"), $("#network_name"), $("#image_name"), $("#flavor_name")]);
+                resetUiValidation([$("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor")]);
+
+                // Remove dialog form
+                $(this).remove();
             }
         });
     });
@@ -53,35 +108,39 @@ $(function () {
             id = $(targetRow).attr("id"),
             instance = $(document.getElementById(id + "-name-text"));
 
-        // Add name-text to form
-        $('div#instance-delete-confirm-form > p > span.instance-name').empty().append(instance.text());
+        // Create form
+        $("<div></div>")
+            .prop("id", "instance-delete-confirm-form")
+            .prop("title", "Delete Instance")
+            .css("display", "none")
+            .append($("<p></p>")
+                .css("text-align", "center")
+                .html("Delete " + instance.text() + "?"))
+            .dialog({
+                autoOpen: true,
+                height: 125,
+                width: 235,
+                modal: true,
+                resizable: false,
+                closeOnEscape: true,
+                draggable: true,
+                show: "fade",
+                position: {
+                    my: "center",
+                    at: "center",
+                    of: $('#page-content')
+                },
+                buttons: {
+                    "Confirm": function () {
 
-        // Open dialog form
-        $("#instance-delete-confirm-form").dialog({
-            autoOpen: true,
-            height: 125,
-            width: 235,
-            modal: true,
-            resizable: false,
-            closeOnEscape: true,
-            draggable: true,
-            show: "fade",
-            position: {
-                my: "center",
-                at: "center",
-                of: $('#page-content')
-            },
-            buttons: {
-                "Confirm": function () {
+                        // Delete instance
+                        deleteInstance(id, instance, targetRow);
 
-                    // Delete instance
-                    deleteInstance(id, instance, targetRow);
-
-                    // Close Dialog form
-                    $(this).dialog("close");
+                        // Close Dialog form
+                        $(this).remove();
+                    }
                 }
-            }
-        });
+            });
     });
 
     // --- Pause ---
@@ -96,35 +155,39 @@ $(function () {
             id = $(targetRow).attr("id"),
             instance = $(document.getElementById(id + "-name-text"));
 
-        // Add instance-name-text to confirm-form
-        $('div#instance-pause-confirm-form > p > span.instance-name').empty().append(instance.text());
+        // Create form
+        $("<div></div>")
+            .prop("id", "instance-pause-confirm-form")
+            .prop("title", "Pause Instance")
+            .css("display", "none")
+            .append($("<p></p>")
+                .css("text-align", "center")
+                .html("Pause " + instance.text() + "?"))
+            .dialog({
+                autoOpen: true,
+                height: 125,
+                width: 235,
+                modal: true,
+                resizable: false,
+                closeOnEscape: true,
+                draggable: true,
+                show: "fade",
+                position: {
+                    my: "center",
+                    at: "center",
+                    of: $('#page-content')
+                },
+                buttons: {
+                    "Confirm": function () {
 
-        // Open dialog form
-        $("#instance-pause-confirm-form").dialog({
-            autoOpen: true,
-            height: 125,
-            width: 235,
-            modal: true,
-            resizable: false,
-            closeOnEscape: true,
-            draggable: true,
-            show: "fade",
-            position: {
-                my: "center",
-                at: "center",
-                of: $('#page-content')
-            },
-            buttons: {
-                "Confirm": function () {
+                        // Pause instance
+                        pauseInstance(id, instance, targetRow);
 
-                    // Pause instance
-                    pauseInstance(id, instance, targetRow);
-
-                    // Close Dialog form
-                    $(this).dialog("close");
+                        // Close Dialog form
+                        $(this).remove();
+                    }
                 }
-            }
-        });
+            });
     });
 
     // --- Unpause ---
@@ -142,32 +205,39 @@ $(function () {
         // Add instance-name-text to delete-confirm-form
         $('div#instance-unpause-confirm-form > p > span.instance-name').empty().append(instance.text());
 
-        // Open dialog form
-        $("#instance-unpause-confirm-form").dialog({
-            autoOpen: true,
-            height: 125,
-            width: 235,
-            modal: true,
-            resizable: false,
-            closeOnEscape: true,
-            draggable: true,
-            show: "fade",
-            position: {
-                my: "center",
-                at: "center",
-                of: $('#page-content')
-            },
-            buttons: {
-                "Confirm": function () {
+        // Create form
+        $("<div></div>")
+            .prop("id", "instance-unpause-confirm-form")
+            .prop("title", "Unpause Instance")
+            .css("display", "none")
+            .append($("<p></p>")
+                .css("text-align", "center")
+                .html("Unpause " + instance.text() + "?"))
+            .dialog({
+                autoOpen: true,
+                height: 125,
+                width: 235,
+                modal: true,
+                resizable: false,
+                closeOnEscape: true,
+                draggable: true,
+                show: "fade",
+                position: {
+                    my: "center",
+                    at: "center",
+                    of: $('#page-content')
+                },
+                buttons: {
+                    "Confirm": function () {
 
-                    // Unpause Instance
-                    unpauseInstance(id, instance, targetRow);
+                        // Unpause Instance
+                        unpauseInstance(id, instance, targetRow);
 
-                    // Close dialog form
-                    $(this).dialog("close");
+                        // Close dialog form
+                        $(this).remove();
+                    }
                 }
-            }
-        });
+            });
     });
 
     // --- Suspend ---
@@ -182,35 +252,39 @@ $(function () {
             id = $(targetRow).attr("id"),
             instance = $(document.getElementById(id + "-name-text"));
 
-        // Add instance-name-text to confirm-form
-        $('div#instance-suspend-confirm-form > p > span.instance-name').empty().append(instance.text());
+        // Create form
+        $("<div></div>")
+            .prop("id", "instance-suspend-confirm-form")
+            .prop("title", "Suspend Instance")
+            .css("display", "none")
+            .append($("<p></p>")
+                .css("text-align", "center")
+                .html("Suspend " + instance.text() + "?"))
+            .dialog({
+                autoOpen: true,
+                height: 125,
+                width: 235,
+                modal: true,
+                resizable: false,
+                closeOnEscape: true,
+                draggable: true,
+                show: "fade",
+                position: {
+                    my: "center",
+                    at: "center",
+                    of: $('#page-content')
+                },
+                buttons: {
+                    "Confirm": function () {
 
-        // Open dialog form
-        $("#instance-suspend-confirm-form").dialog({
-            autoOpen: true,
-            height: 125,
-            width: 235,
-            modal: true,
-            resizable: false,
-            closeOnEscape: true,
-            draggable: true,
-            show: "fade",
-            position: {
-                my: "center",
-                at: "center",
-                of: $('#page-content')
-            },
-            buttons: {
-                "Confirm": function () {
+                        // Suspend instance
+                        suspendInstance(id, instance, targetRow);
 
-                    // Suspend instance
-                    suspendInstance(id, instance, targetRow);
-
-                    // Close dialog form
-                    $(this).dialog("close");
+                        // Close dialog form
+                        $(this).remove();
+                    }
                 }
-            }
-        });
+            });
     });
 });
 
@@ -226,41 +300,45 @@ $(document).on('click', '.resume-instance', function (event) {
         id = $(targetRow).attr("id"),
         instance = $(document.getElementById(id + "-name-text"));
 
-    // Add instance-name-text to confirm-form
-    $('div#instance-resume-confirm-form > p > span.instance-name').empty().append(instance.text());
+    // Create form
+    $("<div></div>")
+        .prop("id", "instance-resume-confirm-form")
+        .prop("title", "Resume Instance")
+        .css("display", "none")
+        .append($("<p></p>")
+            .css("text-align", "center")
+            .html("Resume " + instance.text() + "?"))
+        .dialog({
+            autoOpen: true,
+            height: 125,
+            width: 235,
+            modal: true,
+            resizable: false,
+            closeOnEscape: true,
+            draggable: true,
+            show: "fade",
+            position: {
+                my: "center",
+                at: "center",
+                of: $('#page-content')
+            },
+            buttons: {
+                "Confirm": function () {
 
-    // Open dialog form
-    $("#instance-resume-confirm-form").dialog({
-        autoOpen: true,
-        height: 125,
-        width: 235,
-        modal: true,
-        resizable: false,
-        closeOnEscape: true,
-        draggable: true,
-        show: "fade",
-        position: {
-            my: "center",
-            at: "center",
-            of: $('#page-content')
-        },
-        buttons: {
-            "Confirm": function () {
+                    // Resume instance
+                    resumeInstance(id, instance, targetRow);
 
-                // Resume instance
-                resumeInstance(id, instance, targetRow);
-
-                // Close dialog form
-                $(this).dialog("close");
+                    // Close dialog form
+                    $(this).remove();
+                }
             }
-        }
-    });
+        });
 });
 
-function createInstance(name, secGroup, secKey, image, network, flavor) {
+function createInstance(name, secGroup, secKey, network, image, flavor) {
 
     // Gather inputs
-    var allFields = $([]).add(name).add(secGroup).add(secKey).add(image).add(network).add(flavor);
+    var allFields = $([]).add(name).add(secGroup).add(secKey).add(network).add(image).add(flavor);
 
     // Remove UI validation flags
     clearUiValidation(allFields);
@@ -272,6 +350,9 @@ function createInstance(name, secGroup, secKey, image, network, flavor) {
 
     // If Valid, create instance
     if (isValid) {
+
+        // Remove dialog form
+        $("#instance-dialog-form").remove();
 
         // Confirmed Selections
         var confName = name.val(),
