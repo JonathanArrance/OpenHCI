@@ -5273,6 +5273,13 @@ th > small {
     position: absolute;
 }
 
+.version-label {
+    float: right;
+    font-weight: bold;
+    color: rgb(28, 60, 119);
+    margin: -15px 5px 0 0;
+}
+
 /* PROJECT */
 #project-delete-progressbar {
     width: 195px;

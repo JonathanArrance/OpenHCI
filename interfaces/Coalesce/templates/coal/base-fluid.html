@@ -61,30 +61,33 @@
         </header>
 
         <!-- Navbar ================================================== -->
+        <div class="version-container">
+            <span class="version-label">version: 2.1.9-0</span>
+        </div>
         <div class="navbar-inner" style="padding:0!important">
             <div class="container-fluid" style="height: 30px!important">
                 <div class="nav" id="main-menu">
                     <ul class="nav" id="main-menu-left">
-                        <li><a href={% url 'home' %}>{{username}}</a></li>
+                        <li><a href={% url 'home' %}>{{ username }}</a></li>
 
                         {% block navigation %}
-                        {% if project_id %}
-                        {% if user_level == 0 %}
-                        {% if first_time == 'TRUE' %}
-                        <li><a href="/setup">Run Setup</a></li>
-                        {% else %}
-                        <li><a href="/cloud/manage">Cloud Management</a></li>
-                        {% endif %}
-                        {% elif user_level == 1 %}
-                        <li><a href="/projects/{{project_id}}/pu_project_view">My Project</a></li>
-                        {% else %}
-                        <li><a href="/projects/{{project_id}}/basic_project_view">My Project</a></li>
-                        {% endif %}
-                        {% endif %}
+                            {% if project_id %}
+                                {% if user_level == 0 %}
+                                    {% if first_time == 'TRUE' %}
+                                        <li><a href="/setup">Run Setup</a></li>
+                                    {% else %}
+                                        <li><a href="/cloud/manage">Cloud Management</a></li>
+                                    {% endif %}
+                                {% elif user_level == 1 %}
+                                    <li><a href="/projects/{{ project_id }}/pu_project_view">My Project</a></li>
+                                {% else %}
+                                    <li><a href="/projects/{{ project_id }}/basic_project_view">My Project</a></li>
+                                {% endif %}
+                            {% endif %}
                         {% endblock %}
 
                         {% if token %}
-                        <li><a href={% url 'logout' %}>Log Out</a></li>
+                            <li><a href={% url 'logout' %}>Log Out</a></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -96,13 +99,15 @@
     <div class="push"></div>
 
     {% if messages %}
-    <p></p>
-    <ul class="messages" id="warning-messages" onclick="clearMessage()">
-        {% for message in messages %}
-        <li
-        {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide message)</li>
-        {% endfor %}
-    </ul>
+        <p></p>
+        <ul class="messages" id="warning-messages" onclick="clearMessage()">
+            {% for message in messages %}
+                <li
+                        {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide
+                    message)
+                </li>
+            {% endfor %}
+        </ul>
     {% endif %}
     <div class="container-fluid">
         <section id="page-content">
@@ -110,7 +115,7 @@
             </div>
             <div class="row-fluid">
                 {% block content %}
-                PAGE CONTENT GOES HERE
+                    PAGE CONTENT GOES HERE
                 {% endblock %}
             </div>
         </section>
@@ -144,11 +149,11 @@
 
                     <p class="small">
                         {% if token %}
-                        <small>Welcome,{{ user.username }} <br>
-                            <a href={% url 'logout' %}> Log out</a><br>
-                        </small>
+                            <small>Welcome,{{ user.username }} <br>
+                                <a href={% url 'logout' %}> Log out</a><br>
+                            </small>
                         {% else %}
-                        <a href={% url 'login_page' %}> Log in</a><br>
+                            <a href={% url 'login_page' %}> Log in</a><br>
                         {% endif %}
                         <a href={% url 'terms-of-use' %}>Terms of Use</a><br>
                         <a href={% url 'privacy-policy' %}>Privacy Policy</a><br>
