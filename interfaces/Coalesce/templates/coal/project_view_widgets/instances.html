@@ -2,7 +2,7 @@
 <div class="span4">
     <div class="well instance-management-well">
         <div class="legend">
-            
+
             Instances
 
             <div id="instance_progressbar" class="ui-progressbar progressbar">
@@ -48,8 +48,12 @@
                                 {% if v.server_status == "SUSPENDED" %}
                                     <a href="#" class="resume-instance">resume</a>
                                 {% endif %}
-                                <span class="instance-actions-pipe"> | </span>
-                                <a href="#" class="delete-instance">delete</a>
+                                {% if v.server_status == "ERROR" %}
+                                    <a href="#" class="delete-instance">delete</a>
+                                {% else %}
+                                    <span class="instance-actions-pipe"> | </span>
+                                    <a href="#" class="delete-instance">delete</a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
