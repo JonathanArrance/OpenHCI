@@ -31,13 +31,13 @@ $(function () {
 
                 var confirmedFlavor = $(flavor).find("option:selected").val();
 
-                message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + flavor.text() + "." );
+                message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + flavor.text() + ".");
 
                 actions.slideUp();
 
                 // Initialize progressbar and make it visible if hidden
                 progressbar.progressbar({value: false});
-                setVisible(progressbar, true);
+                disableProgressbar(progressbar, "instances", false);
 
                 emptyAndAppend(status, "RESIZE");
 
@@ -62,7 +62,7 @@ $(function () {
                         message.showMessage('error', "Server Fault");
                         emptyAndAppend(status, "ERROR");
                     })
-                    .always(function() {
+                    .always(function () {
 
                         $('#instance-console-refresh-confirm-form').dialog({
                             resizable: false,
@@ -71,27 +71,31 @@ $(function () {
                             width: 235,
                             modal: true,
                             buttons: {
-                                "Yes": function(){
+                                "Yes": function () {
 
-                                    $( consoleWindow ).attr( 'src', function ( i, val ) { return val; });
+                                    $(consoleWindow).attr('src', function (i, val) {
+                                        return val;
+                                    });
                                     $(this).dialog("close");
                                 },
-                                "No": function(){
+                                "No": function () {
 
                                     $(this).dialog("close");
                                 }
                             },
-                            close: function() { }
+                            close: function () {
+                            }
                         });
 
                         actions.slideDown();
-                        setVisible(progressbar, false);
+                        disableProgressbar(progressbar, "instances", true);
                     });
 
                 $(this).dialog("close");
             }
         },
-        close: function () {  }
+        close: function () {
+        }
     });
 
     $("#resize-server")
