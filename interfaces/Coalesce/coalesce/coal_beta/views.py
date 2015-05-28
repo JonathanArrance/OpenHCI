@@ -55,6 +55,7 @@ import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
 import transcirrus.common.logger as logger
+import transcirrus.common.version as ver
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -2689,6 +2690,19 @@ def nimble_stats (request):
         out = {'status' : "error", 'message' : "Not implemented yet"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting Nimble statistics: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# --- Version info ----
+def get_version (request):
+    data = {}
+    data['major']     = ver.VERSION_MAJOR
+    data['minor']     = ver.VERSION_MINOR
+    data['release']   = ver.VERSION_RELEASE
+    data['full_str']  = ver.VERSION_FULL_STR
+    data['short_str'] = ver.VERSION_SHORT_STR
+    out = {'status' : "success", 'data' : data}
+    return HttpResponse(simplejson.dumps(out))
 
 
 # ---Ceilometer Statistics ----

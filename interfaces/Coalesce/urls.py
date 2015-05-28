@@ -504,6 +504,11 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_statistics_for_instance',
             name='get_statistics_for_instance'),
 
+        # --- Version info ----
+        url(r'^version/$',
+            'coalesce.coal_beta.views.get_version',
+            name='get_version'),
+
         # --- Setup ----
         url(r'^setup/$',
             'coalesce.coal_beta.views.setup',
