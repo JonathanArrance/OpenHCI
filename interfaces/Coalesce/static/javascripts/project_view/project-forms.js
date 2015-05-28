@@ -62,6 +62,73 @@ $(function () {
         });
     });
 
+    // --- Project Quotas ---
+
+    $(function () {
+        $("#set-quotas").click(function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
+            // Switch buttons
+            $(this).hide(0);
+            $("#update-quotas").show(0);
+
+            var spans = [
+                $("#project-quotas-cores").find("span"),
+                $("#project-quotas-ram").find("span"),
+                $("#project-quotas-instances").find("span"),
+                $("#project-quotas-volumes").find("span"),
+                $("#project-quotas-gigabytes").find("span")];
+
+            $.each(spans, function (index, element) {
+                var value = $(element).html();
+                $(element)
+                    .empty()
+                    .append($("<input></input>")
+                        .prop("type", "text")
+                        .prop("value", value.toString())
+                        .addClass("project-quotas-input"));
+            });
+        });
+
+        $("#update-quotas").click(function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
+            // Disable button
+            $(this).attr("disabled", true);
+
+            var spans = [
+                    $("#project-quotas-cores").find("span"),
+                    $("#project-quotas-ram").find("span"),
+                    $("#project-quotas-instances").find("span"),
+                    $("#project-quotas-volumes").find("span"),
+                    $("#project-quotas-gigabytes").find("span")],
+                valueString = "";
+
+            $.each(spans, function (index, element) {
+                $(element).attr("disabled", true);
+                valueString += $(element).find("input").val();
+                if (index + 1 != spans.length) {
+                    valueString += ",";
+                }
+            });
+
+            // Enable and switch buttons
+            $(this).attr("disabled", false).hide(0);
+            $("#set-quotas").show(0);
+
+            $.each(spans, function(index, element) {
+                var value = $(element).find("input").val();
+                $(element).empty().append(value)
+            });
+
+            console.log(valueString);
+        });
+    });
+
     // --- Build Instance ---
 
     $(function () {

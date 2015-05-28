@@ -422,6 +422,8 @@ def project_view(request, project_id):
         else:
             fip['instance_name']=''
 
+    quota = qo.get_project_quotas(project_id)
+
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
                                                         'users': users,
@@ -446,6 +448,7 @@ def project_view(request, project_id):
                                                         'instances': instances,
                                                         'instance_info': instance_info,
                                                         'flavors': flavors,
+                                                        'quota': quota,
                                                         }))
 
 def pu_project_view(request, project_id):
