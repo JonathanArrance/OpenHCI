@@ -69,11 +69,11 @@ urlpatterns = patterns('',
         # --- Quotas ----
         url(r'^projects/(?P<project_id>\w+)/get_project_quota/$',
             'coalesce.coal_beta.views.get_project_quota',
-            name='project_quota'),
+            name='get_project_quota'),
 
-        url(r'^projects/(?P<project_id>\w+)/set_project_quota/$',
+        url(r'^projects/(?P<project_id>\w+)/(?P<quota_settings>[^/]+)/set_project_quota/$',
             'coalesce.coal_beta.views.set_project_quota',
-            name='project_quota'),
+            name='set_project_quota'),
 
         url(r'^projects/(?P<project_id>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',

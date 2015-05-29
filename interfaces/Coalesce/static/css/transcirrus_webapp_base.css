@@ -5178,7 +5178,7 @@ th > small {
 }
 
 .widget-section-top {
-    margin-top: -5px;
+    margin-top: 10px;
 }
 
 .widget-section-icon {
@@ -5349,9 +5349,15 @@ th > small {
     font-weight: bold;
 }
 
-#project-quotas-container > div > button {
+#set-quotas {
     margin: -9px 0 -5px;
-    width: 80px;
+    width: 75px;
+}
+
+#update-quotas,
+#cancel-quotas {
+    margin: -9px 0 -5px;
+    width: 50px;
 }
 
 .project-quotas-input {

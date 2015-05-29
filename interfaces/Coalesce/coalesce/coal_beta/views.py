@@ -248,18 +248,28 @@ def manage_nodes(request):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
 
-def set_project_quota(request,quota_settings):
+def set_project_quota(request, project_id, quota_settings):
     """
-    quota_settings - dictionary conating all of the settings to be updated.
+    quota_settings - Comma separated string of key:value pairs
     """
     auth = request.session['auth']
     ao = admin_ops(auth)
     qo = quota_ops(auth)
-    proj = qo.get_project_quotas(quota_settings['project_id'])
+
+    settings_dict = {}
+    settings_strings = quota_settings.split(',')
+    for string in settings_strings:
+        setting = string.split(':')
+        settings_dict[setting[0]] = setting[1]
+
+    proj = qo.get_project_quotas(project_id)
+    settings_dict['project_id'] = project_id
     try:
-        proj_out = qo.update_project_quotas(quota_settings)
-        net_out = ao.update_net_quota(quota_settings)
-        out = dict(proj_out.items() + net_out.items())
+        proj_out = qo.update_project_quotas(settings_dict)
+        net_out = ao.update_net_quota(settings_dict)
+        out = {}
+        out['project'] = proj_out
+        out['net'] = net_out
         out['status'] = 'success'
         out['message'] = "Quotas updated for %s."%(proj['project_name'])
     except Exception, e:
