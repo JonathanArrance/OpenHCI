@@ -79,9 +79,9 @@
                                         <li><a href="/cloud/manage">Cloud Management</a></li>
                                     {% endif %}
                                 {% elif user_level == 1 %}
-                                    <li><a href="/projects/{{ project_id }}/pu_project_view">My Project</a></li>
+                                    <li><a href="/projects/{{ project_id }}/pu_project_view/">My Project</a></li>
                                 {% else %}
-                                    <li><a href="/projects/{{ project_id }}/basic_project_view">My Project</a></li>
+                                    <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
                                 {% endif %}
                             {% endif %}
                         {% endblock %}
