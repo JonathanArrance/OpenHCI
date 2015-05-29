@@ -62,7 +62,8 @@ DEBUG -->
             <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
         </div>
 
-        <div id="project-quotas-container">
+        {% if user_level == 0 %}
+            <div id="project-quotas-container">
             <div id="project-quotas-legend" class="first">Project Quotas</div>
             <div id="project-quotas-cores"><label>vCPUs: </label><span>{{ quota.cores }}</span></div>
             <div id="project-quotas-ram"><label>Ram (mb): </label><span>{{ quota.ram }}</span></div>
@@ -75,9 +76,9 @@ DEBUG -->
                 <button id="update-quotas" class="btn" style="display: none;">Update</button>
                 <button id="cancel-quotas" class="btn" style="display: none;">Cancel</button>
             </div>
+        {% endif %}
         </div>
     </div>
-
 
     <h4 id="instance-management" class="widget-section-header widget-section-top">
         <div id="instance-management-icon" class="widget-section-icon">-</div>
