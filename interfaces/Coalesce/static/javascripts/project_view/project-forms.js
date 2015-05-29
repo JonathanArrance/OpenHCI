@@ -62,7 +62,203 @@ $(function () {
         });
     });
 
-    // --- Build Instance ---
+    // --- Project Quotas ---
+
+    $(function () {
+
+        // Array of updateable settings
+        var settings = [
+                {
+                    "span": $("#project-quotas-cores").find("span"),
+                    "key": "cores"
+                },
+                {
+                    "span": $("#project-quotas-ram").find("span"),
+                    "key": "ram"
+                },
+                {
+                    "span": $("#project-quotas-instances").find("span"),
+                    "key": "instances"
+                },
+                {
+                    "span": $("#project-quotas-volumes").find("span"),
+                    "key": "volumes"
+                },
+                {
+                    "span": $("#project-quotas-gigabytes").find("span"),
+                    "key": "gigabytes"
+                }
+
+            ],
+            currentSettings = {};
+
+        $("#set-quotas").click(function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+            $("#set-quotas").prop("disabled", true);
+
+            $.getJSON("/projects/" + PROJECT_ID + "/get_project_quota/")
+                .done(function (data) {
+
+                    // Switch buttons
+                    $("#set-quotas").hide(0);
+                    $("#update-quotas").show(0);
+                    $("#cancel-quotas").show(0);
+
+                    $.each(Object.keys(data), function (i, quota) {
+                        $.each(settings, function (j, setting) {
+                            if (quota == setting.key) {
+                                currentSettings[setting.key] = data[quota];
+                                var value = $(setting.span).html();
+                                $(setting.span)
+                                    .empty()
+                                    .append($("<input></input>")
+                                        .prop("type", "text")
+                                        .prop("value", value.toString())
+                                        .addClass("project-quotas-input"));
+                            }
+                        });
+                    });
+                })
+                .fail(function () {
+                    message.showMessage('error', "Server Fault");
+                })
+                .always(function () {
+
+                    $("#set-quotas").prop("disabled", false);
+                });
+        });
+
+        $("#update-quotas").click(function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
+            var valueString = "",
+                isValid = true;
+
+            // Disable button
+            $(this).prop("disabled", true);
+            $("#cancel-quotas").prop("disabled", true);
+
+            // Disable inputs
+            $.each(settings, function (index, setting) {
+                $(setting.span).find("input").prop("disabled", true);
+                clearUiValidation($(setting.span).find("input"));
+            });
+
+            $.each(settings, function (index, setting) {
+                if (!parseInt($(setting.span).find("input").val())) {
+                    isValid = false;
+                    flagError($(setting.span).find("input"), "");
+                    return false;
+                }
+            });
+
+            if (isValid) {
+
+                $.getJSON("/projects/" + PROJECT_ID + "/get_project_quota/")
+                    .done(function (data) {
+                        $.each(Object.keys(data), function (i, quota) {
+                            $.each(settings, function (j, setting) {
+                                if (quota == setting.key) {
+                                    currentSettings[setting.key] = data[quota];
+                                }
+                            });
+                        });
+                    })
+                    .fail(function () {
+                        message.showMessage('error', "Server Fault");
+                    });
+
+                $.each(settings, function (index, setting) {
+                    $(setting.span).attr("disabled", true);
+                    valueString += setting.key + ":" + parseInt($(setting.span).find("input").val());
+                    if (index + 1 != settings.length) {
+                        valueString += ",";
+                    }
+                });
+
+                $.getJSON("/projects/" + PROJECT_ID + "/" + valueString + "/set_project_quota/")
+                    .done(function (data) {
+
+                        if (data.status == 'error') {
+                            message.showMessage('error', data.message);
+                            $.each(settings, function (i, setting) {
+                                $.each(Object.keys(currentSettings), function (j, current) {
+                                    if (setting.key == current) {
+                                        $(setting.span).empty().append(currentSettings[current])
+                                    }
+                                })
+                            })
+                        }
+                        if (data.status == 'success') {
+                            message.showMessage('success', data.message);
+                            $.each(settings, function (i, setting) {
+                                $.each(Object.keys(data.project), function (j, returned) {
+                                    if (setting.key == returned) {
+                                        $(setting.span).empty().append(data.project[returned]);
+                                    }
+                                })
+                            })
+                        }
+                    })
+                    .fail(function () {
+                        message.showMessage('error', "Server Fault");
+                        $.each(settings, function (i, setting) {
+                            $.each(Object.keys(currentSettings), function (j, current) {
+                                if (setting.key == current) {
+                                    $(setting.span).empty().append(currentSettings[current])
+                                }
+                            })
+                        })
+                    })
+                    .always(function () {
+                        // Switch buttons
+                        $("#update-quotas").prop("disabled", false).hide(0);
+                        $("#cancel-quotas").prop("disabled", false).hide(0);
+                        $("#set-quotas").show(0);
+
+                        // Enable inputs
+                        $.each(settings, function (index, setting) {
+                            $(setting.span).find("input").prop("disabled", false);
+                        });
+                    });
+            } else {
+
+                // Enable button
+                $("#update-quotas").prop("disabled", false);
+                $("#cancel-quotas").prop("disabled", false);
+
+                // Enable inputs
+                $.each(settings, function (index, setting) {
+                    $(setting.span).find("input").prop("disabled", false);
+                });
+            }
+        });
+
+        $("#cancel-quotas").click(function (event) {
+
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+
+            $.each(settings, function (i, setting) {
+                $.each(Object.keys(currentSettings), function (j, current) {
+                    if (setting.key == current) {
+                        $(setting.span).empty().append(currentSettings[current])
+                    }
+                })
+            });
+
+            // Switch buttons
+            $("#update-quotas").hide(0);
+            $("#cancel-quotas").hide(0);
+            $("#set-quotas").show(0);
+        })
+    });
+
+// --- Build Instance ---
 
     $(function () {
 
@@ -137,7 +333,8 @@ $(function () {
             }
         });
     });
-});
+})
+;
 
 // Declare and Initialize variables on document ready
 var currentSection,

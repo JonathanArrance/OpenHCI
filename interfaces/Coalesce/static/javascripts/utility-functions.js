@@ -130,10 +130,8 @@ function convertUrl47(url) {
 // ---------------- //
 
 function flagError(input, t) {
-    input.after('<p class="error">' + t + '</p>');
-    $(input).animate(function () {
-        $(input).addClass("ui-state-error");
-    }, 1500);
+    $(input).after('<p class="error">' + t + '</p>');
+    $(input).addClass("ui-state-error");
 }
 
 function checkRequired(o, n) {

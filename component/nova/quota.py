@@ -246,7 +246,7 @@ class quota_ops:
                           - ram(in megabytes) - op
                           - security_group_rules - op
                           - security_groups - op
-                          - storage(in gigabytes) - op
+                          - gigabytes(storage) - op
                           - snapshots - op
                           - volumes - op
         OUTPUT: r_dict - id
@@ -291,8 +291,8 @@ class quota_ops:
             current = self.get_project_quotas(input_dict['project_id'])
 
             #cinder updates
-            if(('storage' in input_dict) and (input_dict['storage'] is not None)):
-                self.gigabytes = int(input_dict['storage'])
+            if(('gigabytes' in input_dict) and (input_dict['gigabytes'] is not None)):
+                self.gigabytes = int(input_dict['gigabytes'])
             else:
                 self.gigabytes = int(current['gigabytes'])
 

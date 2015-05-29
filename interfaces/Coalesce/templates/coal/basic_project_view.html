@@ -2,83 +2,85 @@
 
 {% block title %}Project View{% endblock %}
 {% block javascripts %}
-<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
-<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
 
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
 
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
-<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-<!-- DEBUG
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+    <!-- DEBUG
 <script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
 DEBUG -->
-<!-- DEBUG -->
-<script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-<!-- DEBUG -->
-<script>
-    var PROJECT = "{{ project.project_name }}",
-            PROJECT_ID = "{{ project.project_id }}",
-            DEFAULT_PUBLIC = "{{ default_public }}";
-</script>
+    <!-- DEBUG -->
+    <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+    <!-- DEBUG -->
+    <script>
+        var PROJECT = "{{ project.project_name }}",
+                PROJECT_ID = "{{ project.project_id }}",
+                DEFAULT_PUBLIC = "{{ default_public }}";
+    </script>
 
 {% endblock %}
 
 {% block content %}
 
-<div class="span12 well legend-header">
-    {{ project.project_name}}
-    <a href="#" id="create-machine" class="btn btn-success" style="float:right">Build-A-Machine</a>
-</div>
+    <div class="span12 well legend-header">
+        {{ project.project_name }}
+        <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
+    </div>
 
-<h4 id="instance-management" class="widget-section-header">Instance Management</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/instances.html" %}
-    {% include "coal/project_view_widgets/volumes.html" %}
-    {% include "coal/project_view_widgets/floating_ips.html" %}
-</div>
+    <h4 id="instance-management" class="widget-section-header">Instance Management</h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/instances.html" %}
+        {% include "coal/project_view_widgets/volumes.html" %}
+        {% include "coal/project_view_widgets/floating_ips.html" %}
+    </div>
 
-<h4 id="access-management" class="widget-section-header">Access Management</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/key_pairs.html" %}
-    {% include "coal/project_view_widgets/security_groups.html" %}
-    {% include "coal/project_view_widgets/internal_networks.html" %}
-</div>
+    <h4 id="access-management" class="widget-section-header">Access Management</h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/key_pairs.html" %}
+        {% include "coal/project_view_widgets/security_groups.html" %}
+        {% include "coal/project_view_widgets/internal_networks.html" %}
+    </div>
 
-<h4 id="advanced-group" class="widget-section-header">
-    <div id="advanced-group-icon" class="widget-section-icon">-</div>
-    Advanced Menu
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/snapshots.html" %}
-    {% include "coal/project_view_widgets/images.html" %}
-</div>
+    <h4 id="advanced-group" class="widget-section-header">
+        <div id="advanced-group-icon" class="widget-section-icon">-</div>
+        Advanced Menu
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/snapshots.html" %}
+        {% include "coal/project_view_widgets/images.html" %}
+    </div>
 
-{% include "coal/project_view_widgets/build-instance.html" %}
+    {% include "coal/project_view_widgets/build-instance.html" %}
 
-<script>
-    hideSection(".advanced-group-table", ".advanced-group-well", "#advanced-group-icon");
-</script>
+    <script>
+        hideSection(".advanced-group-table", ".advanced-group-well", "#advanced-group-icon");
+    </script>
+
+    {% include "coal/project_view_widgets/build-instance.html" %}
 
 {% endblock %}

@@ -2928,6 +2928,12 @@ table [class*=span],
     -webkit-box-shadow: outset 0 1px 1px rgba(0, 0, 0, 0.05);
     -moz-box-shadow: outset 0 1px 1px rgba(0, 0, 0, 0.05);
     box-shadow: outset 0 1px 1px rgba(0, 0, 0, 0.05);
+    border: medium none;
+}
+
+div.legend-header a {
+    margin-bottom: 0;
+    margin-top: -2px;
 }
 
 .well .legend {
@@ -5171,6 +5177,10 @@ th > small {
     box-shadow: -1px 0 #696969, 0 0px #696969, 1px 0 #696969, 0 -1px #696969;
 }
 
+.widget-section-top {
+    margin-top: 10px;
+}
+
 .widget-section-icon {
     display: block;
     float: left;
@@ -5297,6 +5307,65 @@ th > small {
 
 #project-delete-progressbar > .ui-widget-header {
     background-color: #FF8617 !important;
+}
+
+#project-quotas-container {
+    text-align: center;
+}
+
+#project-quotas-container > div {
+    border-bottom: 1px solid #1c3c77;
+    border-right: 1px solid lightgrey;
+    display: inline-block;
+    margin: 0 -3px 0;
+    padding: 5px;
+    text-align: center;
+}
+
+#project-quotas-container > .first {
+    border-left: 1px solid #1c3c77;
+    border-bottom-left-radius: 4px;
+}
+
+#project-quotas-container > .last {
+    border-right: 1px solid #1c3c77;
+    border-bottom-right-radius: 4px;
+}
+
+#project-quotas-container > div > label {
+    display: inline;
+    font-weight: bold;
+    margin: 0;
+}
+
+#project-quotas-container > div > span {
+    display: inline-block;
+    min-width: 70px;
+}
+
+#project-quotas-legend {
+    background: #1c3c77 none repeat scroll 0 0;
+    color: white;
+    font-weight: bold;
+}
+
+#set-quotas {
+    margin: -9px 0 -5px;
+    width: 75px;
+}
+
+#update-quotas,
+#cancel-quotas {
+    margin: -9px 0 -5px;
+    width: 50px;
+}
+
+.project-quotas-input {
+    display: inline-block !important;
+    height: 16px !important;
+    margin: -4px 0 0 !important;
+    padding: 0 !important;
+    width: 68px !important;
 }
 
 /* INSTANCE WIDGET */
