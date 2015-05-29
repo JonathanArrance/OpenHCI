@@ -83,6 +83,8 @@
                                 {% else %}
                                     <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
                                 {% endif %}
+                            {% else %}
+                                <li><a href="{% url 'login_page' %}">Log In</a></li>
                             {% endif %}
                         {% endblock %}
 

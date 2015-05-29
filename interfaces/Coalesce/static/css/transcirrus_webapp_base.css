@@ -5065,21 +5065,26 @@ th > small {
 .learn-more {
     width: 100%;
     padding: 15px 15px 0;
+    text-align: center;
 }
 
 .learn-more > ul {
-    list-style: inside;
+    display: inline-block;
+    list-style: inside none disc;
+    margin: 0 !important;
+    text-align: center;
 }
 
 .learn-more > ul > li {
     list-style: outside none none;
     height: 40px;
+    display: inline;
 }
 
 .learn-more > ul > li > span {
     float: left;
+    margin-right: 15px;
     margin-top: 6px;
-    min-width: 100px;
 }
 
 .learn-more > ul > li > a {
