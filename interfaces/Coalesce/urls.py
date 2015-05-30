@@ -96,9 +96,9 @@ urlpatterns = patterns('',
             name='manage_projects'),
 
 	# --- Instances ----
-        url(r'^create_image/(?P<name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_name>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_name>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/$',
-	    'coalesce.coal_beta.views.create_image',
-            name='create_image'),
+        url(r'^create_instance/(?P<name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_name>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_name>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/$',
+	    'coalesce.coal_beta.views.create_instance',
+            name='create_instance'),
 
     url(r'^(?P<project_id>[^/]+)/list_servers/$',
         'coalesce.coal_beta.views.list_servers',
@@ -124,9 +124,9 @@ urlpatterns = patterns('',
 	    'coalesce.coal_beta.views.resume_server',
             name='resume_server'),
 
-	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/delete_server/$',
-	    'coalesce.coal_beta.views.delete_server',
-            name='delete_server'),
+	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/delete_instance/$',
+	    'coalesce.coal_beta.views.delete_instance',
+            name='delete_instance'),
 
     # url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/get_server/$',
     #     'coalesce.coal_beta.views.get_server',

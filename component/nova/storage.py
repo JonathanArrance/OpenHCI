@@ -264,7 +264,6 @@ class server_storage_ops:
             except:
                 logger.sys_error("The instance given does not exist. Can not detach.")
                 raise Exception("The instance given does not exist. Can not detach")
-
         try:
             #build an api connection
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}

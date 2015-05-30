@@ -72,7 +72,7 @@ $(function () {
                         $(progressbar).progressbar({value: false});
                         disableProgressbar(progressbar, "instances", false);
 
-                        $.getJSON('/create_image/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/')
+                        $.getJSON('/create_instance/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/')
                             .done(function (data) {
 
                                 if (data.status == 'error') {

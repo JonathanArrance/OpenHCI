@@ -84,19 +84,17 @@ def boot_instance(input_dict,auth_dict):
         input_dict['avail_zone'] = 'nova'
 
     if('boot_from_vol' not in input_dict):
-        input_dict['boot_from_vol'] == 'False'
+        input_dict['boot_from_vol'] = 'False'
 
     #initialize create_vol
     create_vol = {}
 
     if(input_dict['boot_from_vol'] == 'True'):
-        if('volume_type' in input_dict):
-            logger.sys_info('Booting the new instance from an %s volume'%(input_dict['volume_type']))
-        else:
+        if('volume_type' not in input_dict):
             input_dict['volume_type'] = 'spindle'
 
         if('volume_size' in input_dict):
-            logger.sys_info("Setting user select volume size to boot instace from.")
+            logger.sys_info("Setting user select volume size to boot instance from.")
         else:
             input_dict['volume_size'] = flavor_details['disk_space(GB)'] + flavor_details['swap(GB)']
             logger.sys_info("Creating a volume of %s to boot instance from"%(input_dict['volume_size']))
@@ -118,8 +116,10 @@ def boot_instance(input_dict,auth_dict):
     instance_vars = {'project_id': input_dict['project_id'], 'sec_group_name': input_dict['sec_group_name'],
                 'sec_key_name': input_dict['sec_key_name'], 'avail_zone': input_dict['avail_zone'], 
                 'network_name':input_dict['network_name'],'image_id':input_dict['image_id'],'image_name':image_details['image_name'],
-                'flavor_id':input_dict['flavor_id'],'flavor_name':flavor_details['flavor_name'],'instance_name':input_dict['instance_name'],
-                'volume_id':create_vol['volume_id']}
+                'flavor_id':input_dict['flavor_id'],'flavor_name':flavor_details['flavor_name'],'instance_name':input_dict['instance_name']}
+    if('volume_id' in create_vol):
+        instance_vars['volume_id'] = create_vol['volume_id']
+
     create_instance = instance.create_server(instance_vars)
     #set volume to attached for boot vol
     if('volume_id' in create_vol):
@@ -130,4 +130,3 @@ def boot_instance(input_dict,auth_dict):
     r_dict = {'instance':create_instance,'volume':create_vol}
 
     return r_dict
-

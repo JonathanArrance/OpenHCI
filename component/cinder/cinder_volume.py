@@ -248,7 +248,7 @@ class volume_ops:
                         break
                     elif(status['volume']['status'] == 'creating'):
                         logger.sys_info('Volume with ID %s creating.'%(volid))
-                        time.sleep(2)
+                        time.sleep(1)
                     elif(status['volume']['status'] == 'unknown'):
                         logger.sys_info('Volume with ID %s in unknown state.'%(volid))
                         raise Exception("Could not create a new volume. Unknown error occurred.")

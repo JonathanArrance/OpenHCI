@@ -33,6 +33,9 @@ def error_codes(rest):
     elif(rest['response'] == 503):
         logger.sys_error("%s ERROR: 503"%(str(load['serviceUnavailable']['message'])))
         raise Exception("%s ERROR: 503"%(str(load['serviceUnavailable']['message'])))
+    elif(rest['response'] == 500):
+        logger.sys_error("%s ERROR: 500"%(str(load['computeFault']['message'])))
+        raise Exception("%s ERROR: 500"%(str(load['computeFault']['message'])))
     else:
         logger.sys_error("An unknown error occured. ERROR:555")
         raise Exception("An unknown error occured. ERROR:555")
