@@ -154,6 +154,12 @@
                 <option value="{{flavor.flavor_name}}">{{flavor.flavor_name}}</option>
                 {% endfor %}
             </select>
+
+            <label for="boot_from_vol">Boot Option</label>
+            <select name="boot_from_vol" id="flavor_name">
+                <option value="False">Boot Ephemeral</option>
+                <option value="True">Boot From Volume</option>
+            </select>
         </fieldset>
     </form>
 </div>

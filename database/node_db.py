@@ -203,7 +203,8 @@ def insert_node(input_dict):
         insert_ceil_cworkers = {'parameter':'collector_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_nworkers = {'parameter':'notification_workers','param_value':"%s"%(proc_info['total_cores']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_virt = {'parameter':"libvirt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
-        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers,insert_ceil_virt]
+        insert_ceil_host = {"parameter":"host","param_value":"%s" %(input_dict['node_name']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        ceil_array = [insert_ceil_db,insert_ceil_rabbit,insert_ceil_auth_host_api,insert_ceil_auth_uri,insert_ceil_memcached,insert_ceil_osauth_uri,insert_ceil_cworkers,insert_ceil_nworkers,insert_ceil_virt,insert_ceil_host]
         for ceil in ceil_array:
             db.pg_transaction_begin()
             db.pg_insert('ceilometer_node',ceil)

@@ -49,11 +49,12 @@ yo = store.list_attached_vols(input_dict)
 
 print yo
 
-server_input = {'server_id':'d69170a7-a071-4311-86af-553a5aae378c','project_id':'6492cba476994153800c5220a2f51bc2'}
+'''
+server_input = {'server_id':'707b8c8d-3c1c-4bfc-9978-45c8e19c6010','project_id':'c417abbb61014f2a8d330a0f7c0210a1'}
 inst_info = nova.get_server(server_input)
 
 print inst_info
-
+'''
 
 back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
 yo = sa.create_instance_backup(back_image)
@@ -127,10 +128,11 @@ server = {'sec_group_name':'project1','avail_zone':'nova','amount':'1','sec_key_
 yo = nova.create_server(server)
 print yo
 
-
+'''
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
+'''
 print "---------------------------------------"
 time.sleep(2)
 
@@ -165,12 +167,12 @@ print "Createing a new user virtual instance"
 server = {'sec_group_name':'billsecgroup','avail_zone':'nova','sec_key_name':'usertestkey','network_name':'ffvctest','image_name':'CirrOS','flavor_name':'m1.tiny','name':'user-vm'}
 server3 = nova3.create_server(server)
 print server3
-'''
+
 print "Deleteing the virtual instance (admin)"
 delete_dict = {'server_id':"914395e9-5260-48ef-b4b7-b8c68683a000",'project_id':"29dd2759d3a442b595b63cdc2d6ef8c5"}
 delete = nova.delete_server(delete_dict)
 print delete
-'''
+
 print "Deleteing the virtual instance (admin)"
 delete_dict2 = {'server_id':"b96162ca-687a-4630-9027-8e00abbf69fd",'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
 delete2 = nova.delete_server(delete_dict2)

@@ -1382,26 +1382,12 @@ def delete_vm_spec(request,flavor_id):
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
 
-'''
-- project_id - REQ
-                       - instance_name - REQ
-                       - sec_group_name - REQ
-                       - sec_key_name - REQ
-                       - image_id - REQ
-                       - flavor_id - REQ
-                       - boot_from_vol - OP(True/False) - default False
-                       - volume_size - OP
-                       - volume_name - OP
-                       - volume_type - OP
-                       - avail_zone - default availability zone - nova
-                       - network_name - default project net used if none specified
-'''
-
-def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_id, sec_key_name, image_id, network_name, project_id, boot_from_vol ,volume_size, volume_name, volume_type):
+def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_id, sec_key_name, image_id, network_name, project_id, boot_from_vol, volume_size, volume_name, volume_type):
     #this is used to create new instance. Not sure why it is called create image
     try:
         auth = request.session['auth']
         no = neutron_net_ops(auth)
+
         instance = { 'project_id':project_id, 'sec_group_name':sec_group_name,
                      'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                      'network_name': network_name,'image_id': image_id,
@@ -1409,6 +1395,7 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
                      'boot_from_vol':boot_from_vol, 'volume_size':volume_size,
                      'volume_name': volume_name, 'volume_type':volume_type
                     }
+
         out = bni.boot_instance(instance,auth)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
@@ -1417,6 +1404,24 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
         out['server_info']= so.get_server(input_dict)
         out['status'] = 'success'
         out['message'] = "New server %s was created."%(out['vm_name'])
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def delete_instance(request, project_id, server_id, delete_boot_vol=None):
+    out = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        input_dict = {'project_id':project_id, 'server_id':server_id, 'delete_boot_vol':delete_boot_vol}
+        serv_info = so.get_server(input_dict)
+        del_serv = di.delete_instance(auth, input_dict)
+        if(del_serv['delete'] == 'OK'):
+            out['vols'] = del_serv['vols']
+            out['floating_ip_id'] = del_serv['floating_ip_id']
+            out['floating_ip'] = del_serv['floating_ip']
+            out['status'] = 'success'
+            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1454,6 +1459,7 @@ def list_servers(request,project_id):
         out = so.list_servers(project_id)
         out['status'] = 'success'
         out['message'] = "Server list returned for %s."%(project_id)
+        print out
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1519,24 +1525,6 @@ def resume_server(request, project_id, instance_id):
         if(resume == 'OK'):
             out['status'] = 'success'
             out['message'] = 'Successfully resumed instance %s.'%(serv_info['server_name'])
-    except Exception as e:
-        out = {"status":"error","message":"%s"%(e)}
-    return HttpResponse(simplejson.dumps(out))
-
-def delete_instance(request, project_id, server_id):
-    out = {}
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        input_dict = {'project_id':project_id, 'server_id':server_id}
-        serv_info = so.get_server(input_dict)
-        del_serv = ds.delete_instance(auth, input_dict)
-        if(del_serv['delete'] == 'OK'):
-            out['vols'] = del_serv['vols']
-            out['floating_ip_id'] = del_serv['floating_ip_id']
-            out['floating_ip'] = del_serv['floating_ip']
-            out['status'] = 'success'
-            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1818,6 +1806,7 @@ def instance_view(request, project_id, server_id):
     server = so.get_server(i_dict)
     flavors = fo.list_flavors()
     snapshots = sa.list_instance_snaps(server_id)
+    print i_dict
 
     return render_to_response('coal/instance_view.html',
                                RequestContext(request, {
