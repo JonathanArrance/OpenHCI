@@ -5289,10 +5289,45 @@ th > small {
 }
 
 .version-label {
+    color: #ff790c;
     float: right;
+    font-family: sans-serif;
+    font-weight: lighter;
+    margin: -14px 0 0;
+}
+
+.welcome-container {
+    margin: 20px auto;
+    width: 90%;
+}
+
+.welcome-title {
+    text-align: center;
+    font-size: 22px;
+    border-bottom: 1px dotted dimgrey;
+    width: 700px;
+    margin: 10px auto;
+}
+
+.disclaimer {
+    border: 1px dotted lightgrey;
+    padding: 10px;
+    display: inline-table;
+    position: relative;
+    bottom: 0;
+    margin: 10px auto;
+}
+
+.trans {
+    font-weight: lighter;
+    color: dimgrey;
+    font-family: sans-serif;
+}
+
+.cirrus {
+    font-family: sans-serif;
     font-weight: bold;
     color: rgb(28, 60, 119);
-    margin: -15px 5px 0 0;
 }
 
 /* PROJECT */
