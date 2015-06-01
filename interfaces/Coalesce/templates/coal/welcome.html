@@ -1,6 +1,6 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %} Welcome to Trans<span style="color: rgb(255,111,15)">Cirrus</span> {% endblock %}
+{% block title %}{% endblock %}
 
 {% block content %}
 
@@ -16,8 +16,9 @@
                     {% if token %}
 
                         <p style="text-align: center;">Welcome, {{ username }} to the Coalesce cloud management
-                            interface by Trans<span
-                                    style="color: rgb(255,111,15)">Cirrus</span>.</p>
+                            interface by <span style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
+                                    style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>.
+                        </p>
 
                         <p style="text-align: center;">You can manage your account by going to your
                             {% if user_level == 0 %}
@@ -30,14 +31,18 @@
                     {% else %}
 
                         <p style="text-align: center;">
-                            Welcome to the Coalesce cloud management interface by Trans<span
-                                style="color: rgb(255,111,15)">Cirrus</span>. You are not currently logged in, please
+                            Welcome to the Coalesce cloud management interface by <span
+                                style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
+                                style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>.
+                            You are not currently logged in, please
                             <a href="{% url 'login_page' %}" class="btn btn-primary">Log In</a>
                         </p>
 
                         <p style="text-align: center;">
-                            If you don't have or have forgotten your logon credentials, please contact your Trans<span
-                                style="color: rgb(255,111,15)">Cirrus</span> Cloud Administrator to gain access to this
+                            If you don't have or have forgotten your logon credentials, please contact your <span
+                                style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
+                                style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>
+                            Cloud Administrator to gain access to this
                             site.
                         </p>
 
@@ -47,8 +52,10 @@
                         <p style="font-weight: bold; text-align: left">Disclaimer:</p>
 
                         <p style="text-align: center; font-size: 10px;">
-                            This solution has a Copyright 2015 for Trans<span
-                                style="color: rgb(255,111,15)">Cirrus</span>. By using this website, the user
+                            This solution has a Copyright 2015 for <span
+                                style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
+                                style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>.
+                            By using this website, the user
                             ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
                             If you do not agree to these terms of use, you should exit the website. By entering logon
                             information and accessing the website contents, you are stating full acceptance of the
@@ -67,7 +74,10 @@
                     </div>
 
                     <p style="text-align: center;">
-                        Find out more about Trans<span style="color: rgb(255, 111, 15)">Cirrus</span> by exploring our
+                        Find out more about <span
+                            style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
+                            style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>
+                        by exploring our
                         website, or by following us on Facebook, Twitter and LinkedIn.
                     </p>
 
