@@ -4,118 +4,84 @@
 
 {% block content %}
 
-    <div class="row-fluid offset1">
-        <div class="row">
-            <div class="span10">
-                <div class="well">
+    <div style="" class="welcome-container">
+        <div class="welcome-title">
+            Welcome to the cloud management interface by <span class="trans">trans</span><span class="cirrus">cirrus</span>
+        </div>
 
-                    <div class="legend">
-                        Welcome
-                    </div>
+        {% if token %}
 
-                    {% if token %}
+            <p style="text-align: center;">You can manage your account by going to your
+                {% if user_level == 0 %}
+                    <a href={% url 'home' %}>admin panel</a>.
+                {% else %}
+                    <a href={% url 'home' %}>user panel</a>.
+                {% endif %}
+            </p>
 
-                        <p style="text-align: center;">Welcome, {{ username }} to the Coalesce cloud management
-                            interface by <span style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
-                                    style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>.
-                        </p>
+        {% else %}
 
-                        <p style="text-align: center;">You can manage your account by going to your
-                            {% if user_level == 0 %}
-                                <a href={% url 'home' %}>admin panel</a>.
-                            {% else %}
-                                <a href={% url 'home' %}>user panel</a>.
-                            {% endif %}
-                        </p>
+            <p style="text-align: center;">
+                You are not currently logged in, please
+                <a class="btn btn-primary" href="/coal/login_page/">Log In</a> If you don't have or have forgotten your
+                logon credentials, please contact your <span class="trans">trans</span><span
+                    class="cirrus">cirrus</span>
+                Cloud Administrator to gain access to this
+                site.
+            </p>
 
-                    {% else %}
+        {% endif %}
 
-                        <p style="text-align: center;">
-                            Welcome to the Coalesce cloud management interface by <span
-                                style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
-                                style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>.
-                            You are not currently logged in, please
-                            <a href="{% url 'login_page' %}" class="btn btn-primary">Log In</a>
-                        </p>
+        <div class="well span12" style="margin: 20px auto;">
+            <div class="legend">Learn More</div>
+            <p style="text-align: center;">
+                Find out more about <span class="trans">trans</span><span class="cirrus">cirrus</span> by exploring our
+                website, or by following us on Facebook, Twitter and LinkedIn.
+            </p>
 
-                        <p style="text-align: center;">
-                            If you don't have or have forgotten your logon credentials, please contact your <span
-                                style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
-                                style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>
-                            Cloud Administrator to gain access to this
-                            site.
-                        </p>
+            <div class="learn-more">
+                <ul>
+                    <li>
+                        <span>Website: </span><a href="http://www.transcirrus.com"><img
+                            src="{{ STATIC_URL }}images/transcirrus-icon.png"
+                            style="width: 32px; height: 32px; background-color: #FFFFFF;"></a>
+                    </li>
 
-                    {% endif %}
+                    <li>
+                        <span>Email: </span><a href="mailto:info@transcirrus.com"><img
+                            src="{{ STATIC_URL }}images/email-icon.png"
+                            style="width: 32px; height: 32px; background-color: #FF6F0F"></a>
+                    </li>
 
-                    <div style="border: 1px dotted lightgrey; padding: 10px;">
-                        <p style="font-weight: bold; text-align: left">Disclaimer:</p>
+                    <li>
+                        <span>Facebook: </span><a href="https://www.facebook.com/transcirrus"><img
+                            src="{{ STATIC_URL }}images/facebook-32.png" style="background-color: #3B5998"></a>
+                    </li>
 
-                        <p style="text-align: center; font-size: 10px;">
-                            This solution has a Copyright 2015 for <span
-                                style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
-                                style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>.
-                            By using this website, the user
-                            ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
-                            If you do not agree to these terms of use, you should exit the website. By entering logon
-                            information and accessing the website contents, you are stating full acceptance of the
-                            terms. Please take the time to review the <a href="/privacy-policy">Privacy Policy</a>.
-                        </p>
-                    </div>
-                </div>
+                    <li>
+                        <span>Twitter: </span><a href="https://www.twitter.com/transcirrus"><img
+                            src="{{ STATIC_URL }}images/twitter-32.png" style="background-color: #00ACED"></a>
+                    </li>
+
+                    <li>
+                        <span>LinkedIn: </span><a href="https://www.linkedin.com/company/transcirrus"><img
+                            src="{{ STATIC_URL }}images/linkedin-32.png" style="background-color: #007FB1"></a>
+                    </li>
+                </ul>
             </div>
         </div>
 
-        <div class="row">
-            <div class="span10">
-                <div class="well" style="overflow-y: auto; overflow-x: hidden;">
-                    <div class="legend">
-                        Learn More
-                    </div>
+        <div class="disclaimer">
+            <p style="font-weight: bold; text-align: left">Disclaimer:</p>
 
-                    <p style="text-align: center;">
-                        Find out more about <span
-                            style="font-weight: lighter; color: dimgrey; font-family: sans-serif;">trans</span><span
-                            style="font-family: sans-serif; font-weight: bold; color: rgb(28, 60, 119);">cirrus</span>
-                        by exploring our
-                        website, or by following us on Facebook, Twitter and LinkedIn.
-                    </p>
-
-                    <div class="learn-more">
-                        <ul>
-                            <li>
-                                <span>Website: </span><a href="http://www.transcirrus.com"><img
-                                    src="{{ STATIC_URL }}images/transcirrus-icon.png"
-                                    style="width: 32px; height: 32px; background-color: #FFFFFF;"></a>
-                            </li>
-
-                            <li>
-                                <span>Email: </span><a href="mailto:info@transcirrus.com"><img
-                                    src="{{ STATIC_URL }}images/email-icon.png"
-                                    style="width: 32px; height: 32px; background-color: #FF6F0F"></a>
-                            </li>
-
-                            <li>
-                                <span>Facebook: </span><a href="https://www.facebook.com/transcirrus"><img
-                                    src="{{ STATIC_URL }}images/facebook-32.png"
-                                    style="background-color: #3B5998"></a>
-                            </li>
-
-                            <li>
-                                <span>Twitter: </span><a href="https://www.twitter.com/transcirrus"><img
-                                    src="{{ STATIC_URL }}images/twitter-32.png"
-                                    style="background-color: #00ACED"></a>
-                            </li>
-
-                            <li>
-                                <span>LinkedIn: </span><a href="https://www.linkedin.com/company/transcirrus"><img
-                                    src="{{ STATIC_URL }}images/linkedin-32.png"
-                                    style="background-color: #007FB1"></a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <p style="text-align: center; font-size: 10px;">
+                This solution has a Copyright 2015 for <span class="trans">trans</span><span
+                    class="cirrus">cirrus</span>. By using this website, the user
+                ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
+                If you do not agree to these terms of use, you should exit the website. By entering logon
+                information and accessing the website contents, you are stating full acceptance of the
+                terms. Please take the time to review the <a href="/privacy-policy">Privacy Policy</a>.
+            </p>
         </div>
     </div>
 
