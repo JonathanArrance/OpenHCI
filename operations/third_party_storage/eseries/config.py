@@ -15,6 +15,13 @@ def add_eseries_to_cinder (data):
     return (True)
 
 
+def update_eseries_in_cinder (data):
+    if not common.delete_stanza (ESERIES_NAME):
+        return (False)
+    add_eseries_stanza (data)
+    return (True)
+
+
 def add_eseries_stanza (data):
     curr_file = common.CINDER_CONF
     outfile = open (curr_file, 'a')

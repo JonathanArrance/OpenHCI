@@ -1,29 +1,64 @@
+$(function () {
+    initializeUtilities();
+});
+
+function initializeUtilities() {
+
+    // Call click events
+
+    $('#refresh-console').click(function () {
+        $('.widget-console').attr('src', function (i, val) {
+            return val;
+        });
+    });
+
+    $("#instance-management-icon").click(function (event) {
+        event.preventDefault();
+        hideSection(".instance-management-table", ".instance-management-well", "#instance-management-icon");
+    });
+
+    $("#import_img_type").change(function () {
+        changeImageLocation($(this), $("#import_local"), $("#import_remote"));
+    });
+
+    $("#storage-icon").click(function (event) {
+        event.preventDefault();
+        hideSection(".storage-table", ".storage-well", "#storage-icon");
+    });
+
+    $("#sdn-icon").click(function (event) {
+        event.preventDefault();
+        hideSection(".sdn-table", ".sdn-well", "#sdn-icon");
+    });
+
+    $("#users-security-icon").click(function (event) {
+        event.preventDefault();
+        hideSection(".user-table", ".user-well", "#users-security-icon");
+    });
+
+    $("#advanced-group-icon").click(function (event) {
+        event.preventDefault();
+        hideSection(".advanced-group-table", ".advanced-group-well", "#advanced-group-icon");
+    });
+
+    // Call functions
+    checkAssignFip();
+    changeImageLocation($("#import_img_type"), $("#import_local"), $("#import_remote"));
+    checkCreateRouter();
+    checkAddUser();
+}
+
 // ---------------- //
 // MESSAGE HANDLING
 // ---------------- //
 
 var message = new message_handle();
 
-
 // ---------------- //
 // CONSOLE ACTIONS
 // ---------------- //
 
 var consoleLinks = new HashTable();
-
-$(document).on('click', '.open-instance-console', function (event) {
-
-    // Prevent scrolling to top of page on click
-    event.preventDefault();
-});
-
-$(document).on('click', '#refresh-console', function () {
-
-    $('.widget-console').attr('src', function (i, val) {
-        return val;
-    });
-});
-
 
 // ---------------- //
 // CSRF
@@ -60,7 +95,6 @@ function csrfSafeMethod(method) {
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 
-
 // ---------------- //
 // GUID
 // ---------------- //
@@ -74,7 +108,6 @@ function guid() {
     // Generate a guid without the dashes.
     return (S4() + S4() + S4() + "4" + S4().substr(0, 3) + S4() + S4() + S4() + S4()).toLowerCase();
 }
-
 
 // ---------------- //
 // URL MANIPULATION
@@ -97,11 +130,18 @@ function convertUrl47(url) {
 // ---------------- //
 
 function flagError(input, t) {
-    input.before('<div class="error">' + t + '</div>');
-    $('error').addClass("ui-state-highlight").fadeIn();
-    setTimeout(function () {
-        $('error').removeClass("ui-state-highlight", 1500);
-    }, 500);
+    $(input).after('<p class="error">' + t + '</p>');
+    $(input).addClass("ui-state-error");
+}
+
+function checkRequired(o, n) {
+    if (o.val() == "" || o.val() == undefined || o.val() == "None") {
+        o.addClass("ui-state-error");
+        flagError(o, n + " is required.");
+        return false;
+    } else {
+        return true;
+    }
 }
 
 function checkLength(o, n, min, max) {
@@ -214,7 +254,7 @@ function checkStorage(o) {
         o.addClass("ui-state-error");
         flagError(
             o,
-                "There is only " + availableStorage + "gbs of available storage.");
+            "There is only " + availableStorage + "gbs of available storage.");
         return false;
     } else {
         return true;
@@ -223,14 +263,15 @@ function checkStorage(o) {
 
 function checkUrl(url) {
     var urlregex = new RegExp("^(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))*$");
-    if (urlregex.test(url.val())) {
-        return (true);
+    if (!urlregex.test(url.val())) {
+        url.addClass("ui-state-error");
+        flagError(
+            url,
+            "Invalid remote URL.");
+        return false;
+    } else {
+        return true
     }
-    url.addClass("ui-state-error");
-    flagError(
-        url,
-        "Invalid remote URL.");
-    return (false);
 }
 
 function checkFile(file) {
@@ -286,14 +327,14 @@ function checkSize(o, n, min, max) {
 }
 
 function clearUiValidation(fields) {
-    fields.removeClass("ui-state-error");
+    $(fields).removeClass("ui-state-error");
     $('.error').each(function () {
         $(this).fadeOut().remove();
     });
 }
 
 function resetUiValidation(fields) {
-    fields.val("").removeClass("ui-state-error");
+    $(fields).val("").removeClass("ui-state-error");
     $('.error').each(function () {
         $(this).fadeOut().remove();
     });
@@ -390,7 +431,7 @@ var disabledProgressbars = {
     instances: 0, images: 0, fips: 0,
     volumes: 0, snapshots: 0, containers: 0,
     extNets: 0, routers: 0, privateNets: 0,
-    users: 0, secGroups: 0, keys: 0
+    users: 0, groups: 0, keys: 0
 };
 
 function disableProgressbar(id, widget, bool) {
@@ -405,7 +446,7 @@ function disableProgressbar(id, widget, bool) {
         }
     } else {
         if ($(id).is(":hidden")) {
-            $(id).fadeIn('fast');
+            $(id).fadeIn('fast').css("display", "inline-block");
         }
 
         disabledProgressbars[widget]++;
@@ -438,7 +479,7 @@ function disableActions(id, bool) {
         if (disabledActions.hasItem(actions)) {
             disabledActions.items[actions].count++;
         } else {
-            disabledActions.setItem(actions, { count: 1 });
+            disabledActions.setItem(actions, {count: 1});
             $(actions).bind('click', false);
             $(actions).css('color', disabledColor);
         }
@@ -516,7 +557,7 @@ function refreshSelect(select, hashTable) {
     $(select).empty();
     for (var item in hashTable.items) {
         $(select).append(
-                '<option value="' + hashTable.items[item].value + '">' + hashTable.items[item].option + '</option>'
+            '<option value="' + hashTable.items[item].value + '">' + hashTable.items[item].option + '</option>'
         );
     }
 }
@@ -527,7 +568,7 @@ function removeFromSelect(value, select, hashTable) {
 }
 
 function addToSelect(value, option, select, hashTable) {
-    hashTable.setItem(value, { value: value, option: option });
+    hashTable.setItem(value, {value: value, option: option});
     refreshSelect(select, hashTable);
 }
 
@@ -562,16 +603,6 @@ function hideSection(tableSelector, wellSelector, iconSelector) {
 
 // --- INSTANCE MANAGEMENT
 
-$(function () {
-    $("#instance-management-icon").click(function (event) {
-
-        // Prevent scrolling to top of page on click
-        event.preventDefault();
-
-        hideSection(".instance-management-table", ".instance-management-well", "#instance-management-icon");
-    });
-});
-
 var instances = new HashTable(),
     instanceSnaps = new HashTable(),
     instanceOpts = new HashTable(),
@@ -579,6 +610,8 @@ var instances = new HashTable(),
     secKeyInstOpts = new HashTable(),
     privNetInstOpts = new HashTable(),
     imageInstOpts = new HashTable(),
+    flavors = new HashTable(),
+    fips = new HashTable(),
     assignableFips = new HashTable(),
     assignableInstances = new HashTable();
 
@@ -591,22 +624,80 @@ function checkAssignFip() {
     }
 }
 
-$(function () {
-    checkAssignFip();
-});
+function changeImageLocation(input, local, remote) {
+    var localLabel = $('label[for="' + local.attr('id') + '"]'),
+        remoteLabel = $('label[for="' + remote.attr('id') + '"]');
+
+    if (input.val() == "image_url") {
+        local.hide(0);
+        localLabel.hide(0);
+        remote.show(0);
+        remoteLabel.show(0);
+    }
+    else {
+        remote.hide(0);
+        remoteLabel.hide(0);
+        local.show(0);
+        localLabel.show(0);
+    }
+    return true;
+}
+
+function startProgressBarUpdate(upload_id, form) {
+    // This function will update the progress bar every second with the progress of the remote upload.
+    // The progress is determined by querying the server for the current progress.
+
+    var g_progress_intv = 0,
+        bar = form.find('.upload-bar'),
+        percent = form.find('.upload-percent');
+
+    if (g_progress_intv != 0)
+        clearInterval(g_progress_intv);
+
+    g_progress_intv = setInterval(function () {
+        $.getJSON("/get_upload_progress/" + upload_id, function (data) {
+            if (data.status == "error") {
+
+                // We got an error back so display the message and stop updating the progress bar.
+                message.showMessage("error", data.message);
+                clearInterval(g_progress_intv);
+                g_progress_intv = 0;
+                return;
+            }
+
+            if (data.length == -1) {
+
+                percentage = "100%";
+                bar.width(percentage);
+                percent.html(percentage);
+                clearInterval(g_progress_intv);
+                g_progress_intv = 0;
+                return;
+            }
+
+            length = parseInt(data.length);
+            if (length > 0)
+                var percentage = Math.floor(100 * parseInt(data.uploaded) / length);
+            else
+                var percentage = 0;
+
+            percentage = percentage + "%";
+            bar.width(percentage);
+            percent.html(percentage);
+        });
+    }, 1000);
+}
+
+function resetProgressBar(form) {
+    var bar = form.find('.upload-bar'),
+        percent = form.find('.upload-percent');
+
+    var percentage = "0%";
+    bar.width(percentage);
+    percent.html(percentage);
+}
 
 // --- STORAGE
-
-
-$(function () {
-    $("#storage-icon").click(function (event) {
-
-        // Prevent scrolling to top of page on click
-        event.preventDefault();
-
-        hideSection(".storage-table", ".storage-well", "#storage-icon");
-    });
-});
 
 var volumes = new HashTable(),
     totalStorage = 0,
@@ -616,8 +707,8 @@ var volumes = new HashTable(),
     snapshots = new HashTable(),
     snapshotVolumes = new HashTable();
 
-function getStorage() {
-    $.getJSON('/projects/' + PROJECT_ID + '/get_project_quota/')
+function getStorage(projectId) {
+    $.getJSON('/projects/' + projectId + '/get_project_quota/')
         .done(function (data) {
             totalStorage = data.gigabytes;
             updateUsedStorage();
@@ -639,16 +730,14 @@ function updateUsedStorage() {
 
 function updateStorageBar() {
 
-    var volume_available_storage_bar = $(".volume-available-storage-bar"),
-        volume_available_storage_label = $(".volume-available-storage-label"),
-        percent = 0;
+    var bar = $(".volume-available-storage-bar"),
+        label = $(".volume-available-storage-label");
 
     // Initialize storage bar
-    volume_available_storage_bar.progressbar({value: 0});
-    percent = (usedStorage / totalStorage) * 100;
-    volume_available_storage_bar.progressbar({value: percent});
-    volume_available_storage_label.empty();
-    volume_available_storage_label.append(usedStorage + "/" + totalStorage);
+    var percent = (usedStorage / totalStorage) * 100;
+    bar.progressbar({value: percent});
+    label.empty();
+    label.append(usedStorage + "/" + totalStorage);
 }
 
 function updateRevertVolumeSnapshots(volumeId) {
@@ -659,23 +748,13 @@ function updateRevertVolumeSnapshots(volumeId) {
     for (var snap in snapshots.items) {
         if (snapshots.items[snap].volumeId == volumeId) {
             select.append(
-                    '<option value="' + snap + '">' + snapshots.getItem(snap).name + '</option>'
+                '<option value="' + snap + '">' + snapshots.getItem(snap).name + '</option>'
             );
         }
     }
 }
 
 // --- SOFTWARE DEFINED NETWORKS
-
-$(function () {
-    $("#sdn-icon").click(function (event) {
-
-        // Prevent scrolling to top of page on click
-        event.preventDefault();
-
-        hideSection(".sdn-table", ".sdn-well", "#sdn-icon");
-    });
-});
 
 var routers = new HashTable(),
     privNetRoutOpts = new HashTable(),
@@ -690,21 +769,7 @@ function checkCreateRouter() {
     }
 }
 
-$(function () {
-    checkCreateRouter();
-});
-
 // --- USERS/SECURITY
-
-$(function () {
-    $("#users-security-icon").click(function (event) {
-
-        // Prevent scrolling to top of page on click
-        event.preventDefault();
-
-        hideSection(".user-table", ".user-well", "#users-security-icon");
-    });
-});
 
 var users = new HashTable(),
     usernames = new HashTable(),
@@ -765,7 +830,8 @@ function updateSecGroupPorts(newPorts) {
         secGroupPorts[i] = {
             from_port: newPorts[i].from_port,
             to_port: newPorts[i].to_port,
-            transport: newPorts[i].transport };
+            transport: newPorts[i].transport
+        };
     }
 
     getSecGroupPorts();
@@ -794,22 +860,6 @@ function updateUdpString() {
         }
     }
 }
-
-$(function () {
-    checkAddUser();
-});
-
-// --- Advanced Group
-
-$(function () {
-    $("#advanced-group-icon").click(function (event) {
-
-        // Prevent scrolling to top of page on click
-        event.preventDefault();
-
-        hideSection(".advanced-group-table", ".advanced-group-well", "#advanced-group-icon");
-    });
-});
 
 // --- BUG FIXER: Add <div id="delete-check></div> before TEXT NODES needing to be deleted on page load
 function deleteCheck(containerId) {

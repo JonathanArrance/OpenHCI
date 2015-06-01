@@ -70,8 +70,8 @@ $(function () {
                         disableLinks(true);
 
                         // Initialize progressbar and make it visible if hidden
-                        $(progressbar).progressbar({value: false});
-                        setVisible(progressbar, true);
+                        progressbar.progressbar({value: false});
+                        disableProgressbar(progressbar, "groups", false);
 
                         $.getJSON('/create_security_group/' + confName + '/' + confDesc + '/' + confPorts + '/' + confTransport + '/' + PROJECT_ID + '/')
                             .done(function (data) {
@@ -94,7 +94,7 @@ $(function () {
                                         '<td id="' + data.sec_group_id + '-username-cell">' +
                                         '<span id="' + data.sec_group_id + '-username-text">' + data.username + '</span></td>' +
                                         '<td id="' + data.sec_group_id + '-actions-cell"><a href="#" class="delete-secGroup">delete</a>' +
-                                        // '<span> | </span><a href="#" class="update-secGroup">update</a></td>' +
+                                            // '<span> | </span><a href="#" class="update-secGroup">update</a></td>' +
                                         '</tr>';
 
                                     // Check to see if this is the first sec group to be generated
@@ -108,6 +108,10 @@ $(function () {
 
                                     // Update selects
                                     addToSelect(data.sec_group_name, data.sec_group_name, $("#sec_group_name"), secGroupInstOpts);
+                                    refreshSelect($("#bam-security-group"), secGroupInstOpts);
+                                    $("#bam-security-group").append($('<option></option>')
+                                        .val("create")
+                                        .html("Create Group"));
                                 }
                             })
                             .fail(function () {
@@ -116,7 +120,7 @@ $(function () {
                             })
                             .always(function () {
 
-                                setVisible(progressbar, false);
+                                disableProgressbar(progressbar, "groups", true);
                                 setVisible("#create-security-group", true);
                                 disableLinks(false);
                                 resetUiValidation(allFields);
@@ -191,8 +195,8 @@ $(function () {
                     disableActions("delete-secGroup", true);
 
                     // Initialize progressbar and make it visible if hidden
-                    $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    progressbar.progressbar({value: false});
+                    disableProgressbar(progressbar, "groups", false);
 
                     // Create loader
                     var loaderId = confId + '-loader';
@@ -228,6 +232,10 @@ $(function () {
 
                             // Update selects
                             removeFromSelect(confSecGroup, $("#sec_group_name"), secGroupInstOpts);
+                            refreshSelect($("#bam-security-group"), secGroupInstOpts);
+                            $("#bam-security-group").append($('<option></option>')
+                                .val("create")
+                                .html("Create Group"));
                         })
                         .fail(function () {
 
@@ -240,7 +248,7 @@ $(function () {
 
                             disableLinks(false);
                             disableActions("delete-secGroup", false);
-                            setVisible(progressbar, false);
+                            disableProgressbar(progressbar, "groups", true);
                         });
 
                     $(this).dialog("close");

@@ -22,6 +22,7 @@ $(function () {
             // Prevent scrolling to top of page on click
             event.preventDefault();
 
+            getStorage(PROJECT_ID);
             $("#volume-dialog-form").dialog("open");
         });
 
@@ -104,11 +105,24 @@ $(function () {
                                     table.append(newRow).fadeIn();
 
                                     // Add to volumes
-                                    volumes.setItem(data.volume_id, { size: data.volume_size, name: data.volume_name });
-                                    snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+                                    volumes.setItem(data.volume_id, {size: data.volume_size, name: data.volume_name});
+                                    snapshotVolumes.setItem(data.volume_id, {
+                                        value: data.volume_id,
+                                        option: data.volume_name
+                                    });
 
                                     // Update select
                                     refreshSelect($("#snap_volume"), snapshotVolumes);
+                                    refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                    $('<option></option>')
+                                        .val("none")
+                                        .html("Skip Adding Storage")
+                                        .prop("selected", "selected")
+                                        .prependTo($("#bam-volume-select-existing"));
+                                    $('<option></option>')
+                                        .val("create")
+                                        .html("Create Volume")
+                                        .appendTo($("#bam-volume-select-existing"));
 
                                     // Update usedStorage
                                     updateUsedStorage();
@@ -246,6 +260,16 @@ $(function () {
 
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
+                                refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                                 // Update usedStorage
                                 updateUsedStorage();
@@ -393,11 +417,24 @@ $(function () {
                                 table.append(newRow).fadeIn();
 
                                 // Add to volumes
-                                volumes.setItem(data.volume_id, { size: data.volume_size, name: data.volume_name });
-                                snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+                                volumes.setItem(data.volume_id, {size: data.volume_size, name: data.volume_name});
+                                snapshotVolumes.setItem(data.volume_id, {
+                                    value: data.volume_id,
+                                    option: data.volume_name
+                                });
 
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
+                                refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                                 // Update usedStorage
                                 updateUsedStorage();
@@ -539,6 +576,16 @@ $(function () {
 
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
+                                refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
 
                             }
                         })
@@ -674,10 +721,23 @@ $(function () {
                                 confRow.removeClass("volume-attached");
 
                                 // Add to volumes
-                                snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+                                snapshotVolumes.setItem(data.volume_id, {
+                                    value: data.volume_id,
+                                    option: data.volume_name
+                                });
 
                                 // Update select
                                 refreshSelect($("#snap_volume"), snapshotVolumes);
+                                refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                $('<option></option>')
+                                    .val("none")
+                                    .html("Skip Adding Storage")
+                                    .prop("selected", "selected")
+                                    .prependTo($("#bam-volume-select-existing"));
+                                $('<option></option>')
+                                    .val("create")
+                                    .html("Create Volume")
+                                    .appendTo($("#bam-volume-select-existing"));
                             }
                         })
                         .fail(function () {
@@ -842,11 +902,24 @@ $(function () {
                                     table.append(newRow).fadeIn();
 
                                     // Add to volumes
-                                    volumes.setItem(data.volume_id, { size: data.volume_size, name: data.volume_name });
-                                    snapshotVolumes.setItem(data.volume_id, { value: data.volume_id, option: data.volume_name });
+                                    volumes.setItem(data.volume_id, {size: data.volume_size, name: data.volume_name});
+                                    snapshotVolumes.setItem(data.volume_id, {
+                                        value: data.volume_id,
+                                        option: data.volume_name
+                                    });
 
                                     // Update select
                                     refreshSelect($("#snap_volume"), snapshotVolumes);
+                                    refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+                                    $('<option></option>')
+                                        .val("none")
+                                        .html("Skip Adding Storage")
+                                        .prop("selected", "selected")
+                                        .prependTo($("#bam-volume-select-existing"));
+                                    $('<option></option>')
+                                        .val("create")
+                                        .html("Create Volume")
+                                        .appendTo($("#bam-volume-select-existing"));
 
                                     // Update usedStorage
                                     updateUsedStorage();

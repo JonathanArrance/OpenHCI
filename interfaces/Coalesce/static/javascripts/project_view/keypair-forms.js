@@ -56,8 +56,8 @@ $(function () {
                         disableLinks(true);
 
                         // Initialize progressbar and make it visible if hidden
-                        $(progressbar).progressbar({value: false});
-                        setVisible(progressbar, true);
+                        progressbar.progressbar({value: false});
+                        disableProgressbar(progressbar, "keys", false);
 
                         $.getJSON('/create_sec_keys/' + confKeypair + '/' + PROJECT_ID + '/')
                             .done(function (data) {
@@ -94,6 +94,10 @@ $(function () {
 
                                     // Update Selects
                                     addToSelect(data.key_name, data.key_name, $("#sec_key_name"), secKeyInstOpts);
+                                    refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
+                                    $("#bam-security-select-key").append($('<option></option>')
+                                        .val("create")
+                                        .html("Create Key"));
                                 }
                             })
                             .fail(function () {
@@ -102,7 +106,7 @@ $(function () {
                             })
                             .always(function () {
 
-                                setVisible(progressbar, false);
+                                disableProgressbar(progressbar, "keys", true);
                                 setVisible('#create-keypair', true);
                                 disableLinks(false);
                                 resetUiValidation(allFields);
@@ -171,8 +175,8 @@ $(function () {
                     disableLinks(true);
 
                     // Initialize progressbar and make it visible if hidden
-                    $(progressbar).progressbar({value: false});
-                    setVisible(progressbar, true);
+                    progressbar.progressbar({value: false});
+                    disableProgressbar(progressbar, "keys", false);
 
                     // Create loader
                     var loaderId = confId + '-loader';
@@ -201,7 +205,11 @@ $(function () {
                                 $(targetRow).fadeOut().remove();
 
                                 // Update selects
-                                removeFromSelect(confKeypair, $("#sec_key_name"), secKeyInstOpts)
+                                removeFromSelect(confKeypair, $("#sec_key_name"), secKeyInstOpts);
+                                refreshSelect($("#bam-security-select-key"), secKeyInstOpts);
+                                $("#bam-security-select-key").append($('<option></option>')
+                                    .val("create")
+                                    .html("Create Key"));
                             }
 
                             // If last keypair, reveal placeholder
@@ -220,7 +228,7 @@ $(function () {
                         .always(function () {
 
                             disableLinks(false);
-                            setVisible(progressbar, false);
+                            disableProgressbar(progressbar, "keys", true);
                         });
 
                     $(this).dialog("close");

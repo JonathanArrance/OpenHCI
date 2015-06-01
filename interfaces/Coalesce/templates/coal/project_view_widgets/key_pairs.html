@@ -3,11 +3,11 @@
     <div class="well user-well">
         <div class="legend">
 
+            Key Pairs
+
             <div id="keypair_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
-
-            Key Pairs
 
             <a href="#" id="create-keypair" class="btn" style="float:right">Create</a>
         </div>
@@ -20,26 +20,27 @@
                     <th>Actions</th>
                 </tr>
                 {% if sec_keys %}
-                {% for key in sec_keys %}
-                <tr id="{{ key.key_id }}">
-                    <td id="{{ key.key_id }}-name-cell">
-                        <a href="/key_pair/{{ key.key_id }}/{{ project.project_id }}/view/" class="disable-link">
-                            <span id="{{ key.key_id }}-name-text">{{ key.key_name }}</span></a>
-                    </td>
-                    <td id="{{ key.key_id }}-user-cell">
-                        <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
-                    </td>
-                    <td id="{{ key.key_id }}-actions-cell">
-                        <a href="#" class="delete-keypair">delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
+                    {% for key in sec_keys %}
+                        <tr id="{{ key.key_id }}">
+                            <td id="{{ key.key_id }}-name-cell">
+                                <a href="/key_pair/{{ key.key_id }}/{{ project.project_id }}/view/"
+                                   class="disable-link">
+                                    <span id="{{ key.key_id }}-name-text">{{ key.key_name }}</span></a>
+                            </td>
+                            <td id="{{ key.key_id }}-user-cell">
+                                <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
+                            </td>
+                            <td id="{{ key.key_id }}-actions-cell">
+                                <a href="#" class="delete-keypair">delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 {% else %}
-                <tr id="keypair_placeholder">
-                    <td><p><i>You have no keys defined</i></p></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                    <tr id="keypair_placeholder">
+                        <td><p><i>You have no keys defined</i></p></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endif %}
             </table>
         </div>

@@ -42,6 +42,20 @@ from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
+
+#<<<<<<< HEAD
+#=======
+#from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
+#from transcirrus.operations.initial_setup import run_setup
+#import transcirrus.operations.build_complete_project as bcp
+#import transcirrus.operations.delete_server as ds
+#from transcirrus.operations.change_adminuser_password import change_admin_password
+#from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
+#from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
+#import transcirrus.common.util as util
+#import transcirrus.common.wget as wget
+#>>>>>>> 79f03bf9f98154ba5c618a6b6a6c4fa3c78a2709
+
 from transcirrus.database.node_db import list_nodes, get_node
 import transcirrus.common.logger as logger
 
@@ -52,11 +66,16 @@ import transcirrus.operations.boot_new_instance as bni
 import transcirrus.operations.destroy_project as destroy
 import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
+#<<<<<<< HEAD
 
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
 from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
+#=======
+#import transcirrus.common.logger as logger
+import transcirrus.common.version as ver
+#>>>>>>> 79f03bf9f98154ba5c618a6b6a6c4fa3c78a2709
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -140,6 +159,7 @@ def stats(request):
 
                 users = to.list_tenant_users(tenant['project_id'])
                 num_users = len(users)
+
 
                 tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
@@ -248,18 +268,28 @@ def manage_nodes(request):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
 
-def set_project_quota(request,quota_settings):
+def set_project_quota(request, project_id, quota_settings):
     """
-    quota_settings - dictionary conating all of the settings to be updated.
+    quota_settings - Comma separated string of key:value pairs
     """
     auth = request.session['auth']
     ao = admin_ops(auth)
     qo = quota_ops(auth)
-    proj = qo.get_project_quotas(quota_settings['project_id'])
+
+    settings_dict = {}
+    settings_strings = quota_settings.split(',')
+    for string in settings_strings:
+        setting = string.split(':')
+        settings_dict[setting[0]] = setting[1]
+
+    proj = qo.get_project_quotas(project_id)
+    settings_dict['project_id'] = project_id
     try:
-        proj_out = qo.update_project_quotas(quota_settings)
-        net_out = ao.update_net_quota(quota_settings)
-        out = dict(proj_out.items() + net_out.items())
+        proj_out = qo.update_project_quotas(settings_dict)
+        net_out = ao.update_net_quota(settings_dict)
+        out = {}
+        out['project'] = proj_out
+        out['net'] = net_out
         out['status'] = 'success'
         out['message'] = "Quotas updated for %s."%(proj['project_name'])
     except Exception, e:
@@ -422,6 +452,8 @@ def project_view(request, project_id):
         else:
             fip['instance_name']=''
 
+    quota = qo.get_project_quotas(project_id)
+
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
                                                         'users': users,
@@ -446,6 +478,7 @@ def project_view(request, project_id):
                                                         'instances': instances,
                                                         'instance_info': instance_info,
                                                         'flavors': flavors,
+                                                        'quota': quota,
                                                         }))
 
 def pu_project_view(request, project_id):
@@ -2185,7 +2218,8 @@ def eseries_get (request):
             status:
                 success
                     data: dict {'enabled':      "0/1",           "0" not enabled or "1" is enabled
-                                'pre_existing': "0/1",            "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
+                                'licensed':     "0/1",           "0" - not licensed; "1" - is licensed
+                                'pre_existing': "0/1",           "0" - not using pre-existing server; "1" - using pre-existing web proxy srv
                                 'server':  "server hostname/IP",  web proxy server IP address/hostname
                                 'srv_port': "listen port",        normally 8080 or 8443
                                 'transport': "transport",         http/https
@@ -2351,7 +2385,7 @@ def eseries_set_config (request, disk_pools):
 
 # Update the E-Series web proxy server and cinder with the given data.
 # If we are using a pre-existing web proxy then the web proxy server data is ignored.
-def eseries_update (request, pre_existing, server, srv_port, transport, login, pwd, ctrl_pwd, ctrl_ips, disk_pools):
+def eseries_update (request, pre_existing, server, srv_port, transport, login, pwd, ctrl_ips, disk_pools, ctrl_pwd=None):
     '''
         input:
             pre_existing: "0/1"                 0 - not using pre-existing web proxy; 1 using pre-existy web proxy
@@ -2383,9 +2417,13 @@ def eseries_update (request, pre_existing, server, srv_port, transport, login, p
         ips = ctrl_ips.split(",")
         storage_pools = disk_pools.split(",")
 
-        data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_pwd, 'disk_pools': storage_pools, 'ctrl_ips': ips}
-        tpc.update_eseries (data, existing)
+        if (ctrl_pwd == None):
+            ctrl_password = ""
+        else:
+            ctrl_password = ctrl_pwd
 
+        data = {'server': server, 'srv_port': srv_port, 'transport': transport,  'login': login, 'pwd': pwd, 'ctrl_pwd': ctrl_password, 'disk_pools': storage_pools, 'ctrl_ips': ips}
+        tpc.update_eseries (data, existing)
         out = {'status' : "success", 'message' : "NetApp E-Series storage has been successfully updated"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NetApp E-Series configuration: %s" % e}
@@ -2473,7 +2511,6 @@ def eseries_stats (request):
 
         stats['data'] = data
         out = {'status' : "success", 'stats' : stats}
-
     except Exception, e:
         out = {'status' : "error", 'message' : "Error getting NetApp E-Series statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2510,7 +2547,9 @@ def nfs_get (request):
             status:
                 success
                     data: dict {'enabled':    "0/1",                "0" not enabled or "1" is enabled
+                                'licensed':     "0/1",              "0" - not licensed; "1" - is licensed
                                 'mountpoint': ["mntpt1", "mntpt2"]  array of mountpoints
+                               }
                 error
                     message: error message
     '''
@@ -2555,7 +2594,7 @@ def nfs_set (request, mountpoints):
     '''
     try:
         auth = request.session['auth']
-        mntpts = mountpoints.split(",")
+        mntpts = mountpoints.replace("!","/").split(",")
         tpc.add_nfs (mntpts, auth)
         out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
     except Exception, e:
@@ -2576,11 +2615,205 @@ def nfs_update (request, mountpoints):
                     message: error message
     '''
     try:
-        mntpts = mountpoints.split(",")
+        mntpts = mountpoints.replace("!","/").split(",")
         tpc.update_nfs (mntpts)
         out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# --- Routines for Nimble ---
+
+# Return Nimble configuration data.
+def nimble_get (request):
+    '''
+        returns json:
+            status:
+                success
+                    data: dict {'enabled':  "0/1",         "0" not enabled or "1" is enabled
+                                'licensed': "0/1",         "0" - not licensed; "1" - is licensed
+                                'server':   "ip-address",  hostname or ip address of the nimble storage
+                                'login':    "username",    username to login with
+                                'pwd':      "password"     password to login with
+                               }
+                error
+                    message: error message
+    '''
+    try:
+        data = tpc.get_nimble()
+        out = {'status' : "success", 'data' : data}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting Nimble configuration data: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Delete Nimble configuration.
+def nimble_delete (request):
+    '''
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        tpc.delete_nimble (auth)
+        out = {'status' : "success", 'message' : "Nimble configuration has been deleted."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting Nimble configuration: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Setup Nimble in cinder with the given server, login, password.
+def nimble_set (request, server, login, pwd):
+    '''
+        input:
+            server: hostname or ip address of the nimble storage
+            login:  username to login with
+            pwd:    password to login with
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        auth = request.session['auth']
+        data = {'server': server, 'login': login, 'pwd': pwd}
+        tpc.add_nimble (data, auth)
+        out = {'status' : "success", 'message' : "Nimble storage has been successfully added"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding Nimble storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Update Nimble in cinder with the given server, login, password.
+def nimble_update (request, server, login, pwd):
+    '''
+        input:
+            server: hostname or ip address of the nimble storage
+            login:  username to login with
+            pwd:    password to login with
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        data = {'server': server, 'login': login, 'pwd': pwd}
+        tpc.update_nimble (data)
+        out = {'status' : "success", 'message' : "Nimble storage has been successfully updated"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating Nimble storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get Nimble statistics for disk pools.
+def nimble_add_license (request, license_key):
+    '''
+        input:
+            license_key - a valid Nimble license key
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        if tpc.add_nimble_license (license_key):
+            out = {'status' : "success", 'message' : "Nimble storage license has been added."}
+        else:
+            out = {'status' : "error", 'message' : "Error: Invalid Nimble storage license key."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding Nimble storage license: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Get Nimble statistics for disk pools.
+def nimble_stats (request):
+    '''
+        input:
+        returns json:
+            status:
+                success
+                    stats: dict - defination TBD
+                error
+                    message: error message
+    '''
+    try:
+        out = {'status' : "success", 'stats' : stats}
+        out = {'status' : "error", 'message' : "Not implemented yet"}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting Nimble statistics: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# --- Version info ----
+def get_version (request):
+    data = {}
+    data['major']     = ver.VERSION_MAJOR
+    data['minor']     = ver.VERSION_MINOR
+    data['release']   = ver.VERSION_RELEASE
+    data['full_str']  = ver.VERSION_FULL_STR
+    data['short_str'] = ver.VERSION_SHORT_STR
+    out = {'status' : "success", 'data' : data}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# ---Ceilometer Statistics ----
+def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id=None, ceil_resource_id=None):
+    try:
+        out = {}
+        auth = request.session['auth']
+        ceil = meter_ops(auth)
+
+        # Meter Overview for environment
+        if ((ceil_tenant_id == None) and (ceil_resource_id == None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type)
+        # Meter for instance/resource
+        elif ((ceil_tenant_id == None) and (ceil_resource_id != None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_resource_id)
+        # Meter Overview for tenant
+        elif ((ceil_tenant_id != None) and (ceil_resource_id == None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id)
+        # Meter Overview for resource in tenant
+        elif ((ceil_tenant_id != None) and (ceil_resource_id != None)):
+            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id)
+
+        if result == []:
+            # No data was provided for this meter.
+            out = {'status': "success", 'message' : "empty dataset"}
+        else:
+            out = {'status': "success", 'statistics' : result}
+
+    except Exception as e:
+        out = {'status': "error", 'message' : "Error getting statistics: %s" %e}
+    return HttpResponse(simplejson.dumps(out))
+
+def get_statistics_for_instance(request, project_id, instance_id, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id):
+    try:
+        out = {}
+        auth = request.session['auth']
+        ceil = meter_ops(auth)
+
+        # Meter Overview for resource in tenant
+        result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id)
+
+        if result == []:
+            # No data was provided for this meter.
+            out = {'status': "success", 'message' : "empty dataset"}
+        else:
+            out = {'status': "success", 'statistics' : result}
+
+    except Exception as e:
+        out = {'status': "error", 'message' : "Error getting statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 # ---
@@ -2822,18 +3055,3 @@ def handle_uploaded_file(f):
 @never_cache
 def password_change(request):
     return render_to_response('coal/change-password.html', RequestContext(request, {  }))
-
-#HTTP Status Codes
-#
-# def handler404(request):
-#     response = render_to_response('404/', {},
-#                                   context_instance=RequestContext(request))
-#     response.status_code = 404
-#     return response
-#
-#
-# def handler500(request):
-#     response = render_to_response('500/', {},
-#                                   context_instance=RequestContext(request))
-#     response.status_code = 500
-#     return response

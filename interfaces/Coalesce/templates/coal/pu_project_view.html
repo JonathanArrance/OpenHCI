@@ -2,96 +2,98 @@
 
 {% block title %}Project View{% endblock %}
 {% block javascripts %}
-<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
 
-<link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
-<script src="//code.jquery.com/jquery-1.10.2.js"></script>
-<script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
 
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
-<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-<!-- DEBUG
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+    <!-- DEBUG
 <script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
 DEBUG -->
-<!-- DEBUG -->
-<script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-<!-- DEBUG -->
-<script>
-    var PROJECT = "{{ project.project_name }}",
-            PROJECT_ID = "{{ project.project_id }}",
-            DEFAULT_PUBLIC = "{{ default_public }}";
-</script>
+    <!-- DEBUG -->
+    <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+    <!-- DEBUG -->
+    <script>
+        var PROJECT = "{{ project.project_name }}",
+                PROJECT_ID = "{{ project.project_id }}",
+                DEFAULT_PUBLIC = "{{ default_public }}";
+    </script>
 
 {% endblock %}
 
 {% block content %}
 
-<div class="span12 well legend-header">
-    {{ project.project_name}}
-    
-    <a href="#" id="create-machine" class="btn btn-success" style="float:right">Build-A-Machine</a>
-</div>
+    <div class="span12 well legend-header">
+        {{ project.project_name }}
 
-<h4 id="instance-management" class="widget-section-header">
-    <div id="instance-management-icon" class="widget-section-icon">-</div>
-    Instance Management
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/instances.html" %}
-    {% include "coal/project_view_widgets/images.html" %}
-    {% include "coal/project_view_widgets/floating_ips.html" %}
-</div>
+        <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
+    </div>
 
-<h4 id="storage" class="widget-section-header">
-    <div id="storage-icon" class="widget-section-icon">-</div>
-    Storage
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/volumes.html" %}
-    {% include "coal/project_view_widgets/snapshots.html" %}
-    {% include "coal/project_view_widgets/object_containers.html" %}
-</div>
+    <h4 id="instance-management" class="widget-section-header">
+        <div id="instance-management-icon" class="widget-section-icon">-</div>
+        Instance Management
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/instances.html" %}
+        {% include "coal/project_view_widgets/images.html" %}
+        {% include "coal/project_view_widgets/floating_ips.html" %}
+    </div>
 
-<h4 id="software-defined-networking" class="widget-section-header">
-    <div id="sdn-icon" class="widget-section-icon">-</div>
-    Software Defined Networking
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/external_networks.html" %}
-    {% include "coal/project_view_widgets/routers.html" %}
-    {% include "coal/project_view_widgets/internal_networks.html" %}
-</div>
+    <h4 id="storage" class="widget-section-header">
+        <div id="storage-icon" class="widget-section-icon">-</div>
+        Storage
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/volumes.html" %}
+        {% include "coal/project_view_widgets/snapshots.html" %}
+        {% include "coal/project_view_widgets/object_containers.html" %}
+    </div>
 
-<h4 id="users-security" class="widget-section-header">
-    <div id="users-security-icon" class="widget-section-icon">-</div>
-    Users/Security
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/users.html" %}
-    {% include "coal/project_view_widgets/security_groups.html" %}
-    {% include "coal/project_view_widgets/key_pairs.html" %}
-</div>
+    <h4 id="software-defined-networking" class="widget-section-header">
+        <div id="sdn-icon" class="widget-section-icon">-</div>
+        Software Defined Networking
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/external_networks.html" %}
+        {% include "coal/project_view_widgets/routers.html" %}
+        {% include "coal/project_view_widgets/internal_networks.html" %}
+    </div>
+
+    <h4 id="users-security" class="widget-section-header">
+        <div id="users-security-icon" class="widget-section-icon">-</div>
+        Users/Security
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/users.html" %}
+        {% include "coal/project_view_widgets/security_groups.html" %}
+        {% include "coal/project_view_widgets/key_pairs.html" %}
+    </div>
+
+    {% include "coal/project_view_widgets/build-instance.html" %}
 
 {% endblock %}

@@ -4,11 +4,11 @@
     <div class="well sdn-well">
         <div class="legend">
 
+            Private Networks
+
             <div id="privateNet_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
-
-            Private Networks
 
             <a href="#" id="create-private-network" class="btn" style="float:right">Create</a>
         </div>
@@ -25,43 +25,47 @@
 
                 <script>privateNetworks.clear();</script>
                 {% if private_networks %}
-                {% for net in priv_net_list %}
-                <script>
-                    privateNetworks.setItem(
-                            "{{net.net_id}}",
-                            { id: "{{net.net_id}}", name: "{{net.net_name}}", router: "{% if net.router_id == '' %}None{% else %}{{net.router_id}}{% endif %}" }
-                    );
-                </script>
-                {% endfor %}
-                {% for key,value in private_networks.items %}
-                <tr id="{{ value.net_id}}">
-                    <td id="{{ value.net_id }}-name-cell">
-                        <a href="/network/{{value.net_id}}/view/" class="disable-link">
-                            <span id="{{ value.net_id }}-name-text">{{key}}</span>
-                        </a>
-                    </td>
-                    <td id="{{ value.net_id }}-status-cell">
-                        shared: <span id="{{ value.net_id }}-shared-text">{{value.net_shared}}</span>
-                        <span id="{{ value.net_id }}-status-pipe"> | </span>
-                        admin state: <span id="{{ value.net_id }}-admin-text">{{value.net_admin_state}}</span>
-                    </td>
-                    <td id="{{ value.net_id }}-subnet-cell">
-                        {% for subnet in value.net_subnet_id %}
-                        <span id="{{ subnet }}">{{subnet.subnet_name}}</span><br>
-                        {% endfor %}
-                    </td>
-                    <td id="{{ value.net_id }}-actions-cell">
-                        <a href="#" class="delete-privateNet">delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
+                    {% for net in priv_net_list %}
+                        <script>
+                            privateNetworks.setItem(
+                                    "{{net.net_id}}",
+                                    {
+                                        id: "{{net.net_id}}",
+                                        name: "{{net.net_name}}",
+                                        router: "{% if net.router_id == '' %}None{% else %}{{net.router_id}}{% endif %}"
+                                    }
+                            );
+                        </script>
+                    {% endfor %}
+                    {% for key,value in private_networks.items %}
+                        <tr id="{{ value.net_id }}">
+                            <td id="{{ value.net_id }}-name-cell">
+                                <a href="/network/{{ value.net_id }}/view/" class="disable-link">
+                                    <span id="{{ value.net_id }}-name-text">{{ key }}</span>
+                                </a>
+                            </td>
+                            <td id="{{ value.net_id }}-status-cell">
+                                shared: <span id="{{ value.net_id }}-shared-text">{{ value.net_shared }}</span>
+                                <span id="{{ value.net_id }}-status-pipe"> | </span>
+                                admin state: <span id="{{ value.net_id }}-admin-text">{{ value.net_admin_state }}</span>
+                            </td>
+                            <td id="{{ value.net_id }}-subnet-cell">
+                                {% for subnet in value.net_subnet_id %}
+                                    <span id="{{ subnet }}">{{ subnet.subnet_name }}</span><br>
+                                {% endfor %}
+                            </td>
+                            <td id="{{ value.net_id }}-actions-cell">
+                                <a href="#" class="delete-privateNet">delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 {% else %}
-                <tr id="privateNet_placeholder">
-                    <td><p><i>This project has no private networks</i></p></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                    <tr id="privateNet_placeholder">
+                        <td><p><i>This project has no private networks</i></p></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endif %}
             </table>
         </div>

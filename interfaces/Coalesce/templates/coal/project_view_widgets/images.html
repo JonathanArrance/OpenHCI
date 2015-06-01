@@ -3,11 +3,11 @@
     <div class="well {% if user_level > 1 %} advanced-group-well {% else %} instance-management-well{% endif %}">
         <div class="legend">
 
+            Images
+
             <div id="image_progressbar" class="ui-progressbar progressbar">
                 <span class="progressbar-text">Working</span>
             </div>
-
-            Images
 
             <a href="#" id="import-image" class="btn" style="float:right">Import</a>
         </div>
@@ -20,23 +20,23 @@
                 </tr>
 
                 {% if images %}
-                {% for image in images %}
+                    {% for image in images %}
 
-                <tr id="{{ image.image_id }}">
-                    <td id="{{ image.image_id }}-name-cell">
-                        <span id="{{ image.image_id }}-name-text">{{image.image_name}}</span>
-                    </td>
-                    <td id="{{ image.image_id }}-actions-cell">
-                        <a href="#" class="delete-image">delete</a>
-                    </td>
-                </tr>
+                        <tr id="{{ image.image_id }}">
+                            <td id="{{ image.image_id }}-name-cell">
+                                <span id="{{ image.image_id }}-name-text">{{ image.image_name }}</span>
+                            </td>
+                            <td id="{{ image.image_id }}-actions-cell">
+                                <a href="#" class="delete-image">delete</a>
+                            </td>
+                        </tr>
 
-                {% endfor %}
+                    {% endfor %}
                 {% else %}
-                <div id="image_placeholder">
-                    <td><p><i>This project has no images.</i></p></td>
-                    <td></td>
-                </div>
+                    <div id="image_placeholder">
+                        <td><p><i>This project has no images.</i></p></td>
+                        <td></td>
+                    </div>
                 {% endif %}
             </table>
         </div>
@@ -74,18 +74,18 @@
                 <option value="ami">ami</option>
             </select>
             <label for="import_img_type">Local/Remote</label>
-            <select name="import_img_type" id="import_img_type" class="image-select"
-                    onchange="import_location(this)">
-                <option value="image_file">local</option>
+            <select name="import_img_type" id="import_img_type" class="image-select">
+                <option value="image_file" selected>local</option>
                 <option value="image_url">remote</option>
             </select>
-            <label for="import_remote" id="import_remote_label">Remote Image Location (URL)</label>
+            <label for="import_remote">Remote Image Location (URL)</label>
             <input type="text" name="import_remote" id="import_remote"
                    class="text ui-widget-content ui-corner-all image-text"/>
 
-            <label for="import_local" id="import_local_label">Local Image Location</label>
+            <label for="import_local">Local Image Location</label>
             <input type="file" name="import_local" id="import_local"
-                   class="file ui-widget-content ui-corner-all image-file" style="width: 200px;"/>
+                   class="file ui-widget-content ui-corner-all image-file"
+                   style="width: 185px; height: 20px; line-height: 20px"/>
 
             <label for="os_type">OS Type <span
                     title="When booting a Windows instance, OS Type must be specified. Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">(help)</span></label>
@@ -102,34 +102,12 @@
             </select>
         </fieldset>
     </form>
-    <div class="progress" id="upload_progress">
-        <div class="bar" id="upload_bar"></div>
-        <div class="percent" align="center" id="upload_percent">0%</div>
+    <div class="progress" id="upload-progress">
+        <div class="bar upload-bar"></div>
+        <div class="percent upload-percent" align="center">0%</div>
     </div>
 </div>
 
 <div id="image-delete-confirm-form" title="Delete Image">
     <p style="text-align:center;">Delete <span class="image-name"></span>?</p>
 </div>
-
-<script type="text/javascript">
-    function import_location(box) {
-        if (box.value == "image_url") {
-            document.getElementById('import_local').style.display = "none";
-            document.getElementById('import_local_label').style.display = "none";
-            document.getElementById('import_remote').style.display = "inline-block";
-            document.getElementById('import_remote_label').style.display = "inline-block";
-        }
-        else {
-            document.getElementById('import_local').style.display = "inline-block";
-            document.getElementById('import_local_label').style.display = "inline-block";
-            document.getElementById('import_remote').style.display = "none";
-            document.getElementById('import_remote_label').style.display = "none";
-        }
-        return true;
-    }
-
-    $(function () {
-        import_location(document.getElementById('import_img_type'));
-    })
-</script>

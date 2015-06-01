@@ -54,11 +54,13 @@
 import transcirrus.operations.third_party_storage.common as common
 import transcirrus.operations.third_party_storage.eseries.config as eseries
 import transcirrus.operations.third_party_storage.nfs.config as nfs
+import transcirrus.operations.third_party_storage.nimble.config as nimble
 
 
 # Storage vendor numbers used for licensing.
 NFS_VENDOR     = 0
 ESERIES_VENDOR = 1
+NIMBLE_VENDOR  = 2
 
 # Return a list of supported 3rd party storage systems and
 # if that system is currently configured and licensed.
@@ -71,11 +73,17 @@ def get_supported_third_party_storage():
              'in_use':     get_eseries()['in_use'], 
              'id':         "eseries"
             },
-            {'name':       "nfs",
+            {'name':       "NFS",
              'configured': get_nfs()['enabled'],
              'licensed':   get_nfs()['licensed'],
              'in_use':     get_nfs()['in_use'],
              'id':         "nfs"
+            },
+            {'name':       "Nimble Storage",
+             'configured': get_nimble()['enabled'],
+             'licensed':   get_nimble()['licensed'],
+             'in_use':     get_nimble()['in_use'],
+             'id':         "nimble"
             }
            ]
     return (list)
@@ -91,16 +99,16 @@ def add_nfs (mountpoints, auth):
         nfs.add_base_mountpoint()
         common.add_voltype (auth, nfs.NFS_NAME)
     except Exception as e:
+        msg = "%s" % e
         delete_nfs (auth)       # try to clean up anything that was already done.
-        raise e
+        raise Exception (msg)
     common.restart_cinder_volume_proc()
     return (True)
 
 
 # Update the mountpoints in the nfs config.
 def update_nfs (mountpoints):
-    nfs.delete_nfs_conf()
-    nfs.add_nfs_conf (mountpoints)
+    nfs.update_nfs_conf (mountpoints)
     common.restart_cinder_volume_proc()
     return (True)
 
@@ -110,11 +118,10 @@ def get_nfs():
     '''
     return data = {'enabled':    "0/1",       "0" not enabled or "1" is enabled
                    'licensed':   "0/1",       "0" not licensed or "1" is licensed
-                   'in_use':     "0/1",       "0" not in use or "1" volume type is in use
+                   'in_use':     "0/1",       "0" no volumes created or the number of volumes of this type that exist
                    'mountpoint': ["host1/ip-addr1:mountpoint", "host2/ip-addr2:mountpoint"]
                   }
     '''
-
     mountpoints = []
     if common.backend_configured (nfs.NFS_NAME):
         enabled = "1"
@@ -122,10 +129,7 @@ def get_nfs():
     else:
         enabled = "0"
 
-    if common.backend_in_use (nfs.NFS_NAME):
-        in_use = "1"
-    else:
-        in_use = "0"
+    in_use = common.backend_in_use (nfs.NFS_NAME)
 
     # Since we give away NFS, it will always be licensed.
     data = {'enabled': enabled, 'licensed': "1", 'in_use': in_use, 'mountpoint': mountpoints}
@@ -165,8 +169,9 @@ def add_eseries (data, auth, pre_existing=True):
             return (False)
         common.add_voltype (auth, eseries.ESERIES_NAME)
     except Exception as e:
+        msg = "%s" % e
         delete_eseries (auth)       # try to clean up anything that was already done.
-        raise e
+        raise Exception (msg)
     common.restart_cinder_volume_proc()
     return (True)
 
@@ -175,9 +180,7 @@ def add_eseries (data, auth, pre_existing=True):
 def update_eseries (data, pre_existing=True):
     if not pre_existing:
         data = eseries.get_eseries_pre_existing_data (data)
-    if not common.delete_stanza (eseries.ESERIES_NAME):
-        return (False)
-    eseries.add_eseries_stanza (data)
+    eseries.update_eseries_in_cinder (data)
     common.restart_cinder_volume_proc()
     return (True)
 
@@ -187,7 +190,7 @@ def get_eseries():
     '''
     return data = {'enabled':      "0/1",        "0" not enabled or "1" is enabled
                    'licensed':     "0/1",        "0" not licensed or "1" is licensed
-                   'in_use':       "0/1",        "0" not in use or "1" volume type is in use
+                   'in_use':       "0/1",        "0" no volumes created or the number of volumes of this type that exist
                    'pre_existing': "0/1"         "0" not using pre-existing web proxy server or "1" using pre-existing web proxy server
                    'server':       "ip-addr",
                    'srv_port':     "port_num",
@@ -199,7 +202,6 @@ def get_eseries():
                    'ctrl_ips':     ["ip-addr1", "ip-addr2"]
                   }
     '''
-
     data = {}
     if common.backend_configured (eseries.ESERIES_NAME):
         enabled = "1"
@@ -216,10 +218,7 @@ def get_eseries():
     else:
         licensed = "0"
 
-    if common.backend_in_use (eseries.ESERIES_NAME):
-        in_use = "1"
-    else:
-        in_use = "0"
+    in_use = common.backend_in_use (eseries.ESERIES_NAME)
 
     data['enabled'] = enabled
     data['licensed'] = licensed
@@ -267,3 +266,81 @@ def add_eseries_license (key):
         return (False)
 
     return (common.add_license (eseries.ESERIES_NAME, key))
+
+
+# Add/Update/Get/Delete Nimble data to cinder.
+def add_nimble (data, auth):
+    '''
+    data = {'server':  "192.168.10.24",
+            'login':   "admin",
+            'pwd':     "password"
+           }
+    '''
+    try:
+        if not nimble.add_nimble_to_cinder (data):
+            return (False)
+        common.add_voltype (auth, nimble.NIMBLE_NAME)
+    except Exception as e:
+        print "exception %s" % e
+        msg = "%s" % e
+        delete_nimble (auth)       # try to clean up anything that was already done.
+        raise Exception (msg)
+    common.restart_cinder_volume_proc()
+    return (True)
+
+
+# Update the parameters in the nimble config.
+def update_nimble (data):
+    nimble.update_nimble_in_cinder (data)
+    common.restart_cinder_volume_proc()
+    return (True)
+
+
+# Get nimble data from the nimble config.
+def get_nimble():
+    '''
+    return data = {'enabled':    "0/1",       "0" not enabled or "1" is enabled
+                   'licensed':   "0/1",       "0" not licensed or "1" is licensed
+                   'in_use':     "0/1",       "0" no volumes created or the number of volumes of this type that exist
+                   'server':     "ip-addr",
+                   'login':      "username",
+                   'pwd':        "password"
+                  }
+    '''
+    data = {}
+    if common.backend_configured (nimble.NIMBLE_NAME):
+        enabled = "1"
+        data = nimble.get_nimble_data()
+    else:
+        enabled = "0"
+
+    if common.is_licensed (nimble.NIMBLE_NAME):
+        licensed = "1"
+    else:
+        licensed = "0"
+
+    in_use = common.backend_in_use (nimble.NIMBLE_NAME)
+
+    data['enabled'] = enabled
+    data['licensed'] = licensed
+    data['in_use'] = in_use
+    return (data)
+
+
+# Delete nimble data from cinder.
+def delete_nimble (auth):
+    common.delete_backend (nimble.NIMBLE_NAME)
+    common.delete_stanza (nimble.NIMBLE_NAME)
+    common.delete_voltype (auth, nimble.NIMBLE_NAME)
+    common.restart_cinder_volume_proc()
+    return
+
+
+# Add the Nimble license key to the database.
+def add_nimble_license (key):
+    key_valid, cust_num, date, capacity, vendor = common.decode_license_key (key)
+
+    if not key_valid or vendor != NIMBLE_VENDOR:
+        return (False)
+
+    return (common.add_license (nimble.NIMBLE_NAME, key))

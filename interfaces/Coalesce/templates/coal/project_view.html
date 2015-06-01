@@ -2,102 +2,124 @@
 
 {% block title %}Project View{% endblock %}
 {% block javascripts %}
-<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
-<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
 
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
 
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
-<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-<!-- DEBUG
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+    <!-- DEBUG
 <script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
 DEBUG -->
-<!-- DEBUG -->
-<script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
-<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-<!-- DEBUG -->
-<script>
-    var PROJECT = "{{ project.project_name }}",
-            PROJECT_ID = "{{ project.project_id }}",
-            DEFAULT_PUBLIC = "{{ default_public }}";
-</script>
+    <!-- DEBUG -->
+    <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+    <!-- DEBUG -->
+    <script>
+        var PROJECT = "{{ project.project_name }}",
+                PROJECT_ID = "{{ project.project_id }}",
+                DEFAULT_PUBLIC = "{{ default_public }}";
+    </script>
 
 {% endblock %}
 
 {% block content %}
 
-<div id="project-delete-confirm-form" title="Delete Project?"></div>
+    <div id="project-delete-confirm-form" title="Delete Project?">
+        <div id="project-delete-progressbar" class="ui-progressbar progressbar">
+            <span class="progressbar-text">Deleting Project</span>
+        </div>
+    </div>
 
-<div class="span12 well legend-header">
-    {{ project.project_name}}
-    {% if user_level == 0 %}
-    <a href="#" id="delete-project" class="btn btn-danger" style="float:right">Delete Project</a>
-    {% endif %}
-    <!-- <a href="#" id="create-machine" class="btn btn-success" style="float:right">Build-A-Machine</a> -->
-</div>
+    <div>
+        <div class="span12 well legend-header">
+            {{ project.project_name }}
+            {% if user_level == 0 %}
+                <a href="#" id="delete-project" class="btn btn-danger" style="float:right">Delete Project</a>
+            {% endif %}
+            <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
+        </div>
 
+        {% if user_level == 0 %}
+            <div id="project-quotas-container">
+            <div id="project-quotas-legend" class="first">Project Quotas</div>
+            <div id="project-quotas-cores"><label>vCPUs: </label><span>{{ quota.cores }}</span></div>
+            <div id="project-quotas-ram"><label>Ram (mb): </label><span>{{ quota.ram }}</span></div>
+            <div id="project-quotas-instances"><label>Max Instances: </label><span>{{ quota.instances }}</span></div>
+            <div id="project-quotas-volumes"><label>Max Volumes: </label><span>{{ quota.volumes }}</span></div>
+            <div id="project-quotas-gigabytes"><label>Total Storage (gb): </label><span>{{ quota.gigabytes }}</span>
+            </div>
+            <div id="project-quotas-actions" class="last">
+                <button id="set-quotas" class="btn">Set Quotas</button>
+                <button id="update-quotas" class="btn" style="display: none;">Update</button>
+                <button id="cancel-quotas" class="btn" style="display: none;">Cancel</button>
+            </div>
+        {% endif %}
+        </div>
+    </div>
 
-<h4 id="instance-management" class="widget-section-header">
-    <div id="instance-management-icon" class="widget-section-icon">-</div>
-    Instance Management
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/instances.html" %}
-    {% include "coal/project_view_widgets/images.html" %}
-    {% include "coal/project_view_widgets/floating_ips.html" %}
-</div>
+    <h4 id="instance-management" class="widget-section-header widget-section-top">
+        <div id="instance-management-icon" class="widget-section-icon">-</div>
+        Instance Management
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/instances.html" %}
+        {% include "coal/project_view_widgets/images.html" %}
+        {% include "coal/project_view_widgets/floating_ips.html" %}
+    </div>
 
-<h4 id="storage" class="widget-section-header">
-    <div id="storage-icon" class="widget-section-icon">-</div>
-    Storage
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/volumes.html" %}
-    {% include "coal/project_view_widgets/snapshots.html" %}
-    {% include "coal/project_view_widgets/object_containers.html" %}
-</div>
+    <h4 id="storage" class="widget-section-header">
+        <div id="storage-icon" class="widget-section-icon">-</div>
+        Storage
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/volumes.html" %}
+        {% include "coal/project_view_widgets/snapshots.html" %}
+        {% include "coal/project_view_widgets/object_containers.html" %}
+    </div>
 
-<h4 id="software-defined-networking" class="widget-section-header">
-    <div id="sdn-icon" class="widget-section-icon">-</div>
-    Software Defined Networking
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/external_networks.html" %}
-    {% include "coal/project_view_widgets/routers.html" %}
-    {% include "coal/project_view_widgets/internal_networks.html" %}
-</div>
+    <h4 id="software-defined-networking" class="widget-section-header">
+        <div id="sdn-icon" class="widget-section-icon">-</div>
+        Software Defined Networking
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/external_networks.html" %}
+        {% include "coal/project_view_widgets/routers.html" %}
+        {% include "coal/project_view_widgets/internal_networks.html" %}
+    </div>
 
-<h4 id="users-security" class="widget-section-header">
-    <div id="users-security-icon" class="widget-section-icon">-</div>
-    Users/Security
-</h4>
-<div class="row-fluid widget-section">
-    {% include "coal/project_view_widgets/users.html" %}
-    {% include "coal/project_view_widgets/security_groups.html" %}
-    {% include "coal/project_view_widgets/key_pairs.html" %}
-</div>
+    <h4 id="users-security" class="widget-section-header">
+        <div id="users-security-icon" class="widget-section-icon">-</div>
+        Users/Security
+    </h4>
+    <div class="row-fluid widget-section">
+        {% include "coal/project_view_widgets/users.html" %}
+        {% include "coal/project_view_widgets/security_groups.html" %}
+        {% include "coal/project_view_widgets/key_pairs.html" %}
+    </div>
 
-{% include "coal/project_view_widgets/build-a-machine.html" %}
+    {% include "coal/project_view_widgets/build-instance.html" %}
 
 {% endblock %}
