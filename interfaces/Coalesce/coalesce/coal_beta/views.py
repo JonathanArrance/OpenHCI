@@ -1,4 +1,3 @@
-
 # Django imports
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
@@ -16,8 +15,6 @@ from django.views.decorators.cache import never_cache
 from django.core import serializers
 from django.utils import simplejson
 from django.core.cache import cache
-import transcirrus.common.util as util
-import transcirrus.common.wget as wget
 
 import time
 import os
@@ -25,6 +22,7 @@ import sys
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
+import transcirrus.common.node_stats as node_stats
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.nova.server import server_ops
@@ -42,40 +40,21 @@ from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
-
-#<<<<<<< HEAD
-#=======
-#from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
-#from transcirrus.operations.initial_setup import run_setup
-#import transcirrus.operations.build_complete_project as bcp
-#import transcirrus.operations.delete_server as ds
-#from transcirrus.operations.change_adminuser_password import change_admin_password
-#from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
-#from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
-#import transcirrus.common.util as util
-#import transcirrus.common.wget as wget
-#>>>>>>> 79f03bf9f98154ba5c618a6b6a6c4fa3c78a2709
-
-from transcirrus.database.node_db import list_nodes, get_node
-import transcirrus.common.logger as logger
-
-import transcirrus.common.node_stats as node_stats
-import transcirrus.operations.build_complete_project as bcp
-import transcirrus.operations.delete_instance as di
-import transcirrus.operations.boot_new_instance as bni
-import transcirrus.operations.destroy_project as destroy
-import transcirrus.operations.resize_server as rs_server
-import transcirrus.operations.migrate_server as migration
-#<<<<<<< HEAD
-
+from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 from transcirrus.operations.initial_setup import run_setup
+import transcirrus.operations.build_complete_project as bcp
+import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
 from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
-#=======
-#import transcirrus.common.logger as logger
+import transcirrus.common.util as util
+import transcirrus.common.wget as wget
+from transcirrus.database.node_db import list_nodes, get_node
+import transcirrus.operations.destroy_project as destroy
+import transcirrus.operations.resize_server as rs_server
+import transcirrus.operations.migrate_server as migration
+import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
-#>>>>>>> 79f03bf9f98154ba5c618a6b6a6c4fa3c78a2709
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
@@ -86,7 +65,8 @@ from django.contrib.sites.models import get_current_site
 from django.template.response import TemplateResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib import messages
-
+import transcirrus.operations.delete_instance as di
+import transcirrus.operations.boot_new_instance as bni
 
 # Python imports
 from datetime import datetime

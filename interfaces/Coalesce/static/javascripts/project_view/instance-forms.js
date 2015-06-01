@@ -4,6 +4,7 @@ $(function () {
     // --- Create ---
 
     $("#create-instance").click(function (event) {
+        console.log("click");
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
@@ -54,7 +55,19 @@ $(function () {
                         .html("Flavor"))
                     .append($("<select></select>")
                         .prop("id", "flavor")
-                        .prop("name", "flavor"))));
+                        .prop("name", "flavor"))
+                    .append($("<label></label>")
+                        .prop("for", "Boot Options")
+                        .html("Boot Options"))
+                    .append($("<select></select>")
+                        .prop("id", "boot_option")
+                        .prop("name", "boot_option")
+                        .append($("<option></option>")
+                                .prop("value", "False")
+                                .html("Boot Ephemeral"))
+                        .append($("<option></option>")
+                                .prop("value", "True")
+                                .html("Boot From Volume")))));
 
         // Populate selects
         refreshSelect(form.find("#group"), secGroupInstOpts);
@@ -81,13 +94,13 @@ $(function () {
             buttons: {
                 "Create Instance": function () {
                     // Create Instance
-                    createInstance($("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"));
+                    createInstance($("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"), $("#boot_option"));
                 }
             },
             close: function () {
 
                 // Reset form validation
-                resetUiValidation([$("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor")]);
+                resetUiValidation([$("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"), $("#boot_option")]);
 
                 // Remove dialog form
                 $(this).remove();
@@ -334,10 +347,10 @@ $(document).on('click', '.resume-instance', function (event) {
         });
 });
 
-function createInstance(name, secGroup, secKey, network, image, flavor) {
+function createInstance(name, secGroup, secKey, network, image, flavor, bootOption) {
 
     // Gather inputs
-    var allFields = $([]).add(name).add(secGroup).add(secKey).add(network).add(image).add(flavor);
+    var allFields = $([]).add(name).add(secGroup).add(secKey).add(network).add(image).add(flavor).add(bootOption);
 
     // Remove UI validation flags
     clearUiValidation(allFields);
@@ -359,7 +372,8 @@ function createInstance(name, secGroup, secKey, network, image, flavor) {
             confSecKey = secKey.val(),
             confNetwork = network.val(),
             confImage = image.val(),
-            confFlavor = flavor.val();
+            confFlavor = flavor.val(),
+            confBoot = bootOption.val();
 
         // Show toast message
         message.showMessage('notice', 'Creating New Instance ' + confName);
@@ -373,7 +387,7 @@ function createInstance(name, secGroup, secKey, network, image, flavor) {
         disableProgressbar($("#instance_progressbar"), "instances", false);
 
         // Make AJAX call and handle response
-        $.getJSON('/create_image/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/')
+        $.getJSON('/create_instance/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/' + confBoot + '/')
             .done(function (data) {
 
                 if (data.status == 'error') {
