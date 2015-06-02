@@ -61,6 +61,51 @@ class meter_ops:
             logger.sys_error("Invalid status level passed for user: %s" % self.username)
             raise Exception("Invalid status level passed for user: %s" % self.username)
 
+    def post_meter(self, project_id, counter_type, counter_name, counter_volume, counter_unit, resource_id):
+
+        try:
+            api_dict = {"username": self.username, "password": self.password, "project_id": project_id}
+            if project_id != self.project_id:
+                self.token = get_token(self.username, self.password, self.project_id)
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the Keystone API")
+            raise Exception("Could not connect to the Keystone API")
+
+        try:
+            body = '[{"counter_type": "%s", "counter_name": "%s", "counter_volume": "%f", "counter_unit": "%s", "resource_id": "%s"}]' % (counter_type, counter_name, counter_volume, counter_unit, resource_id)
+            header = {"X-Auth-Token": self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
+            function = 'POST'
+            api_path = '/v2/meters/' + counter_name
+            token = self.token
+            sec = 'FALSE'
+            rest_dict = {"body": body,
+                         "header": header,
+                         "function": function,
+                         "api_path": api_path,
+                         "token": token,
+                         "sec": sec,
+                         "port": 8777}
+            if self.api_ip:
+                rest_dict['api_ip'] = self.api_ip
+            rest = api.call_rest(rest_dict)
+            print "********"
+            print rest_dict
+            print "********"
+            print rest
+            print "********"
+        except:
+            logger.sys_error("Could not post meter.")
+            raise Exception("Could not post meter.")
+
+        if rest['response'] == 200:
+            # read the json that is returned.
+            logger.sys_info("Response %s with Reason %s" %(rest['response'], rest['reason']))
+            load = json.loads(rest['data'])
+            print load
+        else:
+            util.http_codes(rest['response'], rest['reason'])
+
     def list_meters(self, project_id):
         
         try:
