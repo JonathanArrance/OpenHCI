@@ -483,6 +483,11 @@ urlpatterns = patterns('',
 	        'coalesce.coal_beta.views.nimble_stats',
             name='nimble_stats'),
 
+        # --- Ceilometer Post Third Part Meter ----
+        url(r'^ceilometer/post/meter/(?P<counter_type>[^/]+)/(?P<counter_name>[^/]+)/(?P<counter_volume>[^/]+)/(?P<counter_unit>[^/]+)/(?P<resource_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_statistics',
+            name='get_statistics'),
+
         # --- Ceilometer Statistics ----
         url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics',
