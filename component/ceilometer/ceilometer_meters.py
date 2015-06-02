@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import sys
 import json
 
 import transcirrus.common.util as util
@@ -9,8 +8,6 @@ import transcirrus.common.config as config
 
 from transcirrus.common.auth import get_token
 from transcirrus.common.api_caller import caller
-
-from transcirrus.database.postgres import pgsql
 
 class meter_ops:
 
@@ -89,11 +86,6 @@ class meter_ops:
             if self.api_ip:
                 rest_dict['api_ip'] = self.api_ip
             rest = api.call_rest(rest_dict)
-            print "********"
-            print rest_dict
-            print "********"
-            print rest
-            print "********"
         except:
             logger.sys_error("Could not post meter.")
             raise Exception("Could not post meter.")

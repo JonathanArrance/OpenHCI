@@ -1,80 +1,74 @@
+import transcirrus.common.config as config
+import transcirrus.common.logger as logger
 
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-"""Implementation of Inspector abstraction for libvirt."""
-
-import six
-import sys
-
-# sys.path.append("/usr/lib/python2.6/site-packages")
-
-from ceilometer.compute.pollsters import util
-from ceilometer.compute.virt import inspector as virt_inspector
-from ceilometer.openstack.common.gettextutils import _
-from ceilometer.openstack.common import log as logging
-from oslo.config import cfg
+from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 
 libvirt = None
 
-LOG = logging.getLogger(__name__)
+class MemoryUtilization:
 
-libvirt_opts = [
-    cfg.StrOpt('libvirt_type',
-               default='kvm',
-               help='Libvirt domain type (valid options are: '
-                    'kvm, lxc, qemu, uml, xen).'),
-    cfg.StrOpt('libvirt_uri',
-               default='',
-               help='Override the default libvirt URI '
-                    '(which is dependent on libvirt_type).'),
-]
+    # per_type_uris = dict(uml='uml:///system', xen='xen:///', lxc='lxc:///')
 
-CONF = cfg.CONF
-CONF.register_opts(libvirt_opts)
-
-def retry_on_disconnect(function):
-    def decorator(self, *args, **kwargs):
-        try:
-            return function(self, *args, **kwargs)
-        except libvirt.libvirtError as e:
-            if (e.get_error_code() == libvirt.VIR_ERR_SYSTEM_ERROR and
-                e.get_error_domain() in (libvirt.VIR_FROM_REMOTE,
-                                         libvirt.VIR_FROM_RPC)):
-                LOG.debug(_('Connection to libvirt broken'))
-                self.connection = None
-                return function(self, *args, **kwargs)
+    def __init__(self, user_dict):
+        self.userdict = user_dict
+        if(not user_dict):
+            logger.sys_warning("No auth settings passed.")
+            raise Exception("No auth settings passed")
+        else:
+            self.username = user_dict['username']
+            self.password = user_dict['password']
+            self.project_id = user_dict['project_id']
+            if((self.project_id == 'NULL') or (not user_dict['project_id'])):
+                logger.sys_error("In order to perform user operations, Admin user must be assigned to project")
+                raise Exception("In order to perform user operations, Admin user must be assigned to project")
+            self.token = user_dict['token']
+            self.status_level = user_dict['status_level']
+            self.user_level = user_dict['user_level']
+            self.is_admin = user_dict['is_admin']
+            self.adm_token = user_dict['adm_token']
+            if 'sec' in user_dict:
+                self.sec = user_dict['sec']
             else:
-                raise
-    return decorator
+                self.sec = 'FALSE'
 
-class LibvirtInspector(virt_inspector.Inspector):
+            # used to overide the value in the DB, mostly used during setup or re init
+            if('api_ip' in user_dict):
+                # NOTE may have to add an IP check
+                self.api_ip = user_dict['api_ip']
+            else:
+                self.api_ip = config.API_IP
 
-    per_type_uris = dict(uml='uml:///system', xen='xen:///', lxc='lxc:///')
+            # get the default cloud controller info
+            self.controller = config.CLOUD_CONTROLLER
 
-    def __init__(self):
+        if((self.username == "") or (self.password == "")):
+            logger.sys_error("Credentials not properly passed.")
+            raise Exception("Credentials not properly passed.")
+
+        if(self.adm_token == ''):
+            logger.sys_error("No admin tokens passed.")
+
+        if((self.token == 'error') or (self.token == '')):
+            logger.sys_error("No tokens passed, or token was in error")
+            raise Exception("No tokens passed, or token was in error")
+
+        if((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" % self.username)
+            raise Exception("Invalid status level passed for user: %s" % self.username)
+
         self.uri = self._get_uri()
         self.connection = None
 
     def _get_uri(self):
-        return CONF.libvirt_uri or self.per_type_uris.get(CONF.libvirt_type,
-                                                          'qemu:///system')
+        # I know this is a statically assigned variable.  This will be resolved once we migrate to Openstack Kilo
+        return 'qemu:///system'
 
     def _get_connection(self):
         if not self.connection or not self._test_connection():
             global libvirt
             if libvirt is None:
                 libvirt = __import__('libvirt')
-
-            LOG.debug(_('Connecting to libvirt: %s'), self.uri)
+            logger.sys_error('Connecting to libvirt: %s' % self.uri)
             self.connection = libvirt.openReadOnly(self.uri)
 
         return self.connection
@@ -87,7 +81,7 @@ class LibvirtInspector(virt_inspector.Inspector):
             if (e.get_error_code() == libvirt.VIR_ERR_SYSTEM_ERROR and
                 e.get_error_domain() in (libvirt.VIR_FROM_REMOTE,
                                          libvirt.VIR_FROM_RPC)):
-                LOG.debug(_('Connection to libvirt broke'))
+                logger.sys_error('Connection to libvirt broke')
                 return False
             raise
 
@@ -96,71 +90,13 @@ class LibvirtInspector(virt_inspector.Inspector):
             return self._get_connection().lookupByName(instance_name)
         except Exception as ex:
             if not libvirt or not isinstance(ex, libvirt.libvirtError):
-                raise virt_inspector.InspectorException(unicode(ex))
-            error_code = ex.get_error_code()
-            msg = ("Error from libvirt while looking up %(instance_name)s: "
-                   "[Error Code %(error_code)s] "
-                   "%(ex)s" % {'instance_name': instance_name,
-                               'error_code': error_code,
-                               'ex': ex})
-            raise virt_inspector.InstanceNotFoundException(msg)
+                raise Exception(unicode(ex))
 
-    @retry_on_disconnect
-    def _lookup_by_uuid(self, instance):
-        instance_name = util.instance_name(instance)
-        try:
-            return self._get_connection().lookupByUUIDString(instance.id)
-        except Exception as ex:
-            if not libvirt or not isinstance(ex, libvirt.libvirtError):
-                raise virt_inspector.InspectorException(six.text_type(ex))
-            error_code = ex.get_error_code()
-            if (error_code == libvirt.VIR_ERR_SYSTEM_ERROR and
-                ex.get_error_domain() in (libvirt.VIR_FROM_REMOTE,
-                                          libvirt.VIR_FROM_RPC)):
-                raise
-            msg = _("Error from libvirt while looking up instance "
-                    "<name=%(name)s, id=%(id)s>: "
-                    "[Error Code %(error_code)s] "
-                    "%(ex)s") % {'name': instance_name,
-                                 'id': instance.id,
-                                 'error_code': error_code,
-                                 'ex': ex}
-            raise virt_inspector.InstanceNotFoundException(msg)
-# This method belongs in the /usr/lib/python2.6/site-packages/ceilometer/compute/virt/libvirt/inspector.py class
-    def inspect_memory_usage(self, instance):
-        instance_name = util.instance_name(instance)
-        domain = self._lookup_by_name(instance_name)
+            msg = ('Error from libvirt while looking up instance <name=%(name)s, '
+                   'can not get info from libvirt.') % {'name': instance_name}
+            raise Exception(msg)
 
-        try:
-            memory_stats = domain.memoryStats()
-            if (memory_stats and
-                    memory_stats.get('actual') and
-                    memory_stats.get('rss')):
-                memory_used = (memory_stats.get('actual') -
-                               memory_stats.get('rss'))
-                # Stat provided from libvirt is in KB, converting it to MB.
-                megabyte = float(0.000976562)
-                memory_used = megabyte * memory_used
-                LOG.error("LibvirtIF_USED: %s" % memory_used)
-                return virt_inspector.MemoryUsageStats(usage=memory_used)
-            else:
-                LOG.error("LibvirtELSE: %s" % memory_stats)
-                msg = _('Failed to inspect memory usage of instance '
-                        '<name=%(name)s, id=%(id)s>, '
-                        'can not get info from libvirt.') % {
-                    'name': instance_name, 'id': instance.id}
-                raise virt_inspector.NoDataException(msg)
-        # memoryStats might launch an exception if the method is not supported
-        # by the underlying hypervisor being used by libvirt.
-        except libvirt.libvirtError as e:
-
-            msg = _('Failed to inspect memory usage of %(instance_uuid)s, '
-                    'can not get info from libvirt: %(error)s') % {
-                'instance_uuid': instance.id, 'error': e}
-
-            raise virt_inspector.NoDataException(msg)
-
-    def inspect_memory_usage_by_virsh_name(self, instance_virsh_name, instance_op_uuid):
+    def manual_inspect_memory_usage_by_virsh_name_write_to_ceilometer(self, instance_virsh_name, project_id, instance_id):
         domain = self._lookup_by_name(instance_virsh_name)
 
         try:
@@ -172,54 +108,20 @@ class LibvirtInspector(virt_inspector.Inspector):
                                memory_stats.get('rss'))
                 # Stat provided from libvirt is in KB, converting it to MB.
                 megabyte = float(0.000976562)
-                memory_used = megabyte * memory_used
-                LOG.error("LibvirtIF_USED: %s" % memory_used)
-                return virt_inspector.MemoryUsageStats(usage=memory_used)
+                memory_used *= megabyte
+                mo = meter_ops(self.userdict)
+                mo.post_meter(project_id, "gauge", "memory.usage", memory_used, "MB", instance_id)
             else:
-                LOG.error("LibvirtELSE: %s" % memory_stats)
-                msg = _('Failed to inspect memory usage of instance '
-                        '<name=%(name)s, id=%(id)s>, '
-                        'can not get info from libvirt.') % {
-                    'name': instance_virsh_name, 'id': instance_op_uuid}
-                raise virt_inspector.NoDataException(msg)
+                msg = ('Failed to inspect memory usage of instance <name=%(name)s, id=%(id)s>, '
+                       'can not get info from libvirt.') % {
+                    'name': instance_virsh_name, 'instance-id': instance_id, 'project-id': project_id}
+                raise Exception(msg)
         # memoryStats might launch an exception if the method is not supported
         # by the underlying hypervisor being used by libvirt.
         except libvirt.libvirtError as e:
 
-            msg = _('Failed to inspect memory usage of %(instance_uuid)s, '
-                    'can not get info from libvirt: %(error)s') % {
-                'instance_uuid': instance_op_uuid, 'error': e}
+            msg = ('Failed to inspect memory usage of %(instance_uuid)s,'
+                   'can not get info from libvirt: %(error)s') % {
+                'instance_uuid': instance_id, 'error': e}
 
-            raise virt_inspector.NoDataException(msg)
-
-    def manual_inspect_memory_usage_by_virsh_name_write_to_ceilometer(self, instance_virsh_name, instance_op_uuid):
-        domain = self._lookup_by_name(instance_virsh_name)
-
-        try:
-            memory_stats = domain.memoryStats()
-            if (memory_stats and
-                    memory_stats.get('actual') and
-                    memory_stats.get('rss')):
-                memory_used = (memory_stats.get('actual') -
-                               memory_stats.get('rss'))
-                # Stat provided from libvirt is in KB, converting it to MB.
-                megabyte = float(0.000976562)
-                memory_used = megabyte * memory_used
-                LOG.error("LibvirtIF_USED: %s" % memory_used)
-                return virt_inspector.MemoryUsageStats(usage=memory_used)
-            else:
-                LOG.error("LibvirtELSE: %s" % memory_stats)
-                msg = _('Failed to inspect memory usage of instance '
-                        '<name=%(name)s, id=%(id)s>, '
-                        'can not get info from libvirt.') % {
-                    'name': instance_virsh_name, 'id': instance_op_uuid}
-                raise virt_inspector.NoDataException(msg)
-        # memoryStats might launch an exception if the method is not supported
-        # by the underlying hypervisor being used by libvirt.
-        except libvirt.libvirtError as e:
-
-            msg = _('Failed to inspect memory usage of %(instance_uuid)s, '
-                    'can not get info from libvirt: %(error)s') % {
-                'instance_uuid': instance_op_uuid, 'error': e}
-
-            raise virt_inspector.NoDataException(msg)
+            raise Exception(msg)
