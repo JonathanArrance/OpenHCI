@@ -96,7 +96,7 @@ class MemoryUtilization:
                    'can not get info from libvirt.') % {'name': instance_name}
             raise Exception(msg)
 
-    def manual_inspect_memory_usage_by_virsh_name_write_to_ceilometer(self, instance_virsh_name, project_id, instance_id):
+    def manual_inspect_memory_usage(self, instance_virsh_name, project_id, instance_id):
         domain = self._lookup_by_name(instance_virsh_name)
 
         try:
