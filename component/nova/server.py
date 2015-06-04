@@ -28,6 +28,7 @@ from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.nova.storage import server_storage_ops
+from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
 #######Special imports#######
 
@@ -96,6 +97,7 @@ class server_ops:
         self.glance = glance_ops(user_dict)
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
+        self.keystone = tenant_ops(user_dict)
 
         #random number used if sec group or key name taken
         self.rannum = random.randrange(1000,9000)
@@ -116,7 +118,7 @@ class server_ops:
                                 - project_id
                                 - zone
                                 - public_ip
-                                - os_ext_inst_name
+                                - os_ext_inst_name - admin only
                                 - status
                                 - tc_mgmt (True/False)
         ACCESS: Admins can list all servers in the cloud
@@ -129,8 +131,11 @@ class server_ops:
             logger.sys_error("Status level not sufficient to list virtual servers.")
             raise Exception("Status level not sufficient to list virtual servers.")
 
+        if(project_id is None):
+            project_id = self.project_id
+
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":project_id}
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(project_id != self.project_id):
                 self.token = get_token(self.username,self.password,project_id)
             api = caller(api_dict)
@@ -149,20 +154,20 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             raise e
-            print rest
-
 
         if(rest['response'] == 200):
             load = json.loads(rest['data'])
             self.inst_array = []
             for server in load['servers']:
                 floating_ip = None
-                for addr in server['addresses'][server['name']]:
-                    if(addr['OS-EXT-IPS:type'] == 'floating'):
-                        floating_ip = addr['addr']
+                addr = server['addresses']
+                for key,value in addr.items():
+                    for val in value:
+                        if(val['OS-EXT-IPS:type'] == 'floating'):
+                            floating_ip = val['addr']
                 #check if the instance is in the TC db
                 #users can not get OS-EXT-SRV-ATTR:instance_name openstack rules, looks like only admins can
-                r_dict = {'server_name':server['name'],'server_id':server['id'],'project_id':server['tenant_id'],'zone':'nova','public_ip':floating_ip,'os_ext_inst_name':server['OS-EXT-SRV-ATTR:instance_name'],'status':server['status']}
+                r_dict = {'server_name':server['name'],'server_id':server['id'],'project_id':server['tenant_id'],'zone':'nova','public_ip':floating_ip,'status':server['status']}
 
                 get_inst = {'select':"inst_name",'from':"trans_instances",'where':"inst_id='%s'" %(server['id'])}
                 instances = self.db.pg_select(get_inst)
@@ -172,12 +177,14 @@ class server_ops:
                 else:
                     r_dict['tc_mgmt'] = False
 
-                if(self.user_level == 2 and self.user_id == server['user_id'] and self.project_id == server['tenant_id']):
+                if((self.user_level == 2) and (self.user_id == server['user_id']) and (self.project_id == server['tenant_id'])):
+                    print "user"
                     self.inst_array.append(r_dict)
-                elif(self.user_level == 1 and self.project_id == server['tenant_id']):
+                elif(int(self.user_level) == 1 and self.project_id == server['tenant_id']):
                     self.inst_array.append(r_dict)
-                else:
+                elif(self.is_admin == 1):
                     #admins
+                    r_dict['os_ext_inst_name'] = server['OS-EXT-SRV-ATTR:instance_name']
                     self.inst_array.append(r_dict)
         else:
             ec.error_codes(rest)
@@ -203,18 +210,25 @@ class server_ops:
             logger.sys_error("Only admins can list all of the servers on the system")
             raise Exception("Only admins can list all of the servers on the system")
 
-        try:
-            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
-            instances = self.db.pg_select(get_inst)
-        except Exception as e:
-            logger.sql_error("%s"%(e))
-            raise e
+        #list the projects in the cloud
+        project_list = self.keystone.list_all_tenants()
+        self.inst_array = []
+        for project in project_list:
+            if(project['project_name'] != 'trans_default'):
+                self.inst_array = self.inst_array + self.list_servers(project['project_id'])
 
-        inst_array = []
-        for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
-            inst_array.append(r_dict)
-        return inst_array
+        #try:
+        #    get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
+        #    instances = self.db.pg_select(get_inst)
+        #except Exception as e:
+        #    logger.sql_error("%s"%(e))
+        #    raise e
+
+        #inst_array = []
+        #for inst in instances:
+        #    r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
+        #    inst_array.append(r_dict)
+        return self.inst_array
 
     def create_server(self,create_dict):
         """
