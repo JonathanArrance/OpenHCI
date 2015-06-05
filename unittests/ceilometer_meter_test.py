@@ -1,11 +1,4 @@
 #!/usr/bin/python
-
-import sys
-import time
-
-import transcirrus.common.logger as logger
-import transcirrus.common.config as config
-from transcirrus.database.postgres import pgsql
 from transcirrus.common.auth import authorization
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 
@@ -19,6 +12,16 @@ print b
 print "Instantiating meters object"
 mo = meter_ops(b)
 print mo
+
+print "Post meter memory.usage"
+project_id = "c69fb4f6feb2456bbbcb16a8f00d9ef3"
+counter_type = "gauge"
+counter_name = "memory.usage"
+counter_volume = 200.12345
+counter_unit = "MB"
+resource_id = "ea3eca10-32d6-4c82-b39e-bdd68a6b09ab"
+pm = mo.post_meter(project_id, counter_type, counter_name, counter_volume, counter_unit, resource_id)
+print pm
 
 print "Listing meters"
 project_id = "10796d79f7124e0f8c9505b64bd8819d"

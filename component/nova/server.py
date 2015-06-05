@@ -28,6 +28,7 @@ from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.nova.storage import server_storage_ops
+from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
 #######Special imports#######
 
@@ -96,6 +97,7 @@ class server_ops:
         self.glance = glance_ops(user_dict)
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
+        self.keystone = tenant_ops(user_dict)
 
         #random number used if sec group or key name taken
         self.rannum = random.randrange(1000,9000)
@@ -115,6 +117,10 @@ class server_ops:
                                 - server_id
                                 - project_id
                                 - zone
+                                - public_ip
+                                - os_ext_inst_name - admin only
+                                - status
+                                - tc_mgmt (True/False)
         ACCESS: Admins can list all servers in the cloud
                 Power users can list the servers in a project.
                 Users can list virtual servers in the project they own.
@@ -125,30 +131,64 @@ class server_ops:
             logger.sys_error("Status level not sufficient to list virtual servers.")
             raise Exception("Status level not sufficient to list virtual servers.")
 
-        #get the instances from the transcirrus DB for admins
-        get_inst = None
+        if(project_id is None):
+            project_id = self.project_id
+
         try:
-            if(self.user_level == 0):
-                if(project_id):
-                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip",'from':"trans_instances",'where':"proj_id='%s'" %(project_id)}
-                else:
-                    get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip",'from':"trans_instances"}
-            elif(self.user_level == 1):
-                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id)}
-            elif(self.user_level == 2):
-                get_inst = {'select':"inst_name,inst_id,proj_id,inst_zone,inst_floating_ip", 'from':"trans_instances", 'where':"proj_id='%s'" %(self.project_id), 'and':"inst_user_id='%s'" %(self.user_id)}
-            instances = self.db.pg_select(get_inst)
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,project_id)
+            api = caller(api_dict)
         except:
-            logger.sql_error('Could not retrieve the server instances for user %s.'%(self.username))
-            raise Exception('Could not retrieve the server instances for user %s.'%(self.username))
+            logger.sys_error("Could not connec to the REST api caller in list_servers operation.")
+            raise Exception("Could not connec to the REST api caller in list_servers operation.")
 
-        #build the array of r_dict
-        inst_array = []
-        for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'zone':inst[3],'public_ip':inst[4]}
-            inst_array.append(r_dict)
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/detail?tenant_id=%s' %(project_id,project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            raise e
 
-        return inst_array
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            self.inst_array = []
+            for server in load['servers']:
+                floating_ip = None
+                addr = server['addresses']
+                for key,value in addr.items():
+                    for val in value:
+                        if(val['OS-EXT-IPS:type'] == 'floating'):
+                            floating_ip = val['addr']
+                #check if the instance is in the TC db
+                #users can not get OS-EXT-SRV-ATTR:instance_name openstack rules, looks like only admins can
+                r_dict = {'server_name':server['name'],'server_id':server['id'],'project_id':server['tenant_id'],'zone':'nova','public_ip':floating_ip,'status':server['status']}
+
+                get_inst = {'select':"inst_name",'from':"trans_instances",'where':"inst_id='%s'" %(server['id'])}
+                instances = self.db.pg_select(get_inst)
+
+                if(len(instances) == 1):
+                    r_dict['tc_mgmt'] = True
+                else:
+                    r_dict['tc_mgmt'] = False
+
+                if((self.user_level == 2) and (self.user_id == server['user_id']) and (self.project_id == server['tenant_id'])):
+                    self.inst_array.append(r_dict)
+                elif(int(self.user_level) == 1 and self.project_id == server['tenant_id']):
+                    self.inst_array.append(r_dict)
+                elif(self.is_admin == 1):
+                    #admins
+                    r_dict['os_ext_inst_name'] = server['OS-EXT-SRV-ATTR:instance_name']
+                    self.inst_array.append(r_dict)
+        else:
+            ec.error_codes(rest)
+
+        return self.inst_array
 
     def list_all_servers(self):
         """
@@ -157,8 +197,11 @@ class server_ops:
         OUTPUT: array or r_dict - server_name
                                 - server_id
                                 - project_id
-                                - user_id
                                 - zone
+                                - public_ip
+                                - os_ext_inst_name
+                                - status
+                                - tc_mgmt (True/False)
         ACCESS: Only admins can use this function
         """
         #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
@@ -166,84 +209,25 @@ class server_ops:
             logger.sys_error("Only admins can list all of the servers on the system")
             raise Exception("Only admins can list all of the servers on the system")
 
-        try:
-            get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
-            instances = self.db.pg_select(get_inst)
-        except Exception as e:
-            logger.sql_error("%s"%(e))
-            raise e
+        #list the projects in the cloud
+        project_list = self.keystone.list_all_tenants()
+        self.inst_array = []
+        for project in project_list:
+            if(project['project_name'] != 'trans_default'):
+                self.inst_array = self.inst_array + self.list_servers(project['project_id'])
 
-        #build the array of r_dict
-        inst_array = []
-        for inst in instances:
-            r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
-            inst_array.append(r_dict)
-        return inst_array
+        #try:
+        #    get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
+        #    instances = self.db.pg_select(get_inst)
+        #except Exception as e:
+        #    logger.sql_error("%s"%(e))
+        #    raise e
 
-    '''
-    def create_server(self,create_dict):
-        """
-        DESC: Build a new virtual instance.
-        INPUT: create_dict - config_script - op
-                             project_id - req
-                             sec_group_name - default project security group if none specified
-                             sec_key_name - default project security key if none specified.
-                             avail_zone - default availability zone - nova
-                             network_name - default project net used if none specified
-                             image_name - default system image used if none specified
-                             flavor_name - default system flavor used if none specifed
-                             amount - op - how many vms should be provisioned
-                             name - req - name of the server
-        OUTPUT: r_dict of dictionaries  - vm_name - vm name
-                                        - vm_id - vm id
-                                        - sec_key_name - security key name
-                                        - sec_group_name - security group name
-                                        - created_by - name of creater
-                                        - project_id - id of project
-        ACCESS: Users can only build servers in the projects that they are members of includeing admin users.
-        NOTE: If no zone is specified then the zone defaults to zone.
-        """
-        if('amount' not in create_dict):
-            create_dict['amount'] = 1
-        else:
-            #check the quota
-            quota = self.qo.get_project_quotas(create_dict['project_id'])
-            #see how many vms in project
-            try:
-                instances = {'table':'trans_instances','where':"proj_id='%s'"%(create_dict['project_id'])}
-                self.num_instances = self.db.count_elements(instances)
-            except:
-                raise Exception('Could not get instance count for project %s'%(create_dict['project_id']))
-
-            logger.sys_info("HACK: this is projectID %s"%(self.num_instances))
-            if(int(self.num_instances) >= int(quota['instances'])):
-                raise Exception('Could not create Instance, quota Exceded.')
-
-            if(int(create_dict['amount']) >= int(quota['instances'])):
-                raise Exception('Could not create Instance, quota Exceded.')
-
-        #WE ARE GETTING DB ERRORS WHEN WE FORK. WE HAVE TO DO IT GHETTO AND NOT PARALLELIZE IT.
-        #THIS NEDS TO BE FIXED.
-
-        #total freaking HACK this needs to be multi-threaded
-        #children = []
-        #for i in range(int(create_dict['amount'])):
-        #    newpid = os.fork()
-        #    logger.sys_info("HACK: new PID %d"%(newpid))
-        #    if newpid:
-        #        logger.sys_info("HACK: create %s"%(create_dict))
-        #        self._create_server_sub(create_dict)
-        #        children.append(newpid)
-
-        #for child in children:
-        #    logger.sys_info("HACK: new PID2 %d"%(child))
-        #    os.waitpid(child,0)
-        r_dict = {}
-        for i in range(int(create_dict['amount'])):
-            out = self._create_server_sub(create_dict)
-            rdict[i] = out
-        return r_dict
-    '''
+        #inst_array = []
+        #for inst in instances:
+        #    r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
+        #    inst_array.append(r_dict)
+        return self.inst_array
 
     def create_server(self,create_dict):
         """
