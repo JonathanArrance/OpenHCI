@@ -178,7 +178,6 @@ class server_ops:
                     r_dict['tc_mgmt'] = False
 
                 if((self.user_level == 2) and (self.user_id == server['user_id']) and (self.project_id == server['tenant_id'])):
-                    print "user"
                     self.inst_array.append(r_dict)
                 elif(int(self.user_level) == 1 and self.project_id == server['tenant_id']):
                     self.inst_array.append(r_dict)
