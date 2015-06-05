@@ -114,7 +114,7 @@ class Daemon:
         """
 
 # Below is a sample that utilized the daemon class
-# #!/usr/bin/env python
+# #!/usr/local/bin/python2.7
 #
 # import sys, time
 # from daemon import Daemon
