@@ -7,7 +7,7 @@ import transcirrus.operations.obtain_memory_usage as memory_usage_ops
 class MyDaemon(Daemon):
     def run(self):
         while True:
-            memory_usage_ops.daemonize(auth_dict, True, 10)
+            memory_usage_ops.daemonize(True, 600)
 
 if __name__ == "__main__":
     daemon = MyDaemon(sys.argv[1])

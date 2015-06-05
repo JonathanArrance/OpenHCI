@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python2.7
 
 import sys, os, time, atexit
 from signal import SIGTERM

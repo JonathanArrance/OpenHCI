@@ -3,12 +3,19 @@ import time
 import transcirrus.common.logger as logger
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.ceilometer.ceilometer_mem_usage_patch import MemoryUtilization
+from transcirrus.common.auth import authorization
 
-def daemonize(auth_dict, daemon_status, query_interval=None):
+def daemonize(daemon_status, query_interval=None):
     if query_interval is None:
-        query_interval = 10
+        query_interval = 600
     while daemon_status:
         time.sleep(query_interval)
+        factory_creds = '/home/transuser/factory_creds'
+        with open(factory_creds) as f:
+            content = [x.strip('export ').strip('\n') for x in f.readlines()]
+        factory_creds_dict = dict(item.split("=") for item in content)
+        c = authorization(factory_creds_dict['OS_USERNAME'], factory_creds_dict['OS_PASSWORD'])
+        auth_dict = c.get_auth()
         get_mem_usage_for_instances(auth_dict)
 
 def get_mem_usage_for_instances(auth_dict):
