@@ -217,7 +217,7 @@ class volume_ops:
             else:
                 self.body = '{"volume":{"status": "creating", "availability_zone": null, "source_volid": null, "display_description": null, "snapshot_id": null, "user_id": null, "size": %s, "display_name": "%s", %s,"attach_status": "detached","volume_type": "%s", "project_id": null, "metadata": {}}}'%(create_vol['volume_size'],create_vol['volume_name'],create_vol['image_id'],voltype)
             try:
-                #add the new user to openstack 
+                #add the new user to openstack
                 body = self.body
                 token = self.token
                 #NOTE: if token is not converted python will pass unicode and not a string
@@ -742,7 +742,7 @@ class volume_ops:
             except Exception as e:
                 logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
 
-        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name, 'volume_mount_location': get_vol[0][9]}
+        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name, 'volume_mount_location': get_vol[0][9], 'volume_set_bootable':get_vol[0][6]}
         return r_dict
 
     def create_volume_type(self,volume_type_name):

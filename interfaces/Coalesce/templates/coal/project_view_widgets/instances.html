@@ -69,6 +69,7 @@
         </div>
     </div>
 </div>
+
 <!-- ---------- DECLARE GLOBAL VARIABLES ---------- -->
 
 {% if instances %}
@@ -124,18 +125,29 @@
 
 {% for image in images %}
     <script>
-        imageInstOpts.setItem("{{image.image_name}}", {
+        images.setItem("{{image.image_name}}", {
             value: "{{image.image_name}}",
-            option: "{{image.image_name}}"
+            option: "{{image.image_name}}",
+            name: "{{ image.image_name }}",
+            id: "{{ image.image_id }}"
         });
     </script>
 {% endfor %}
 
 {% for flavor in flavors %}
     <script>
-        flavors.setItem("{{flavor.flavor_name}}", {
-            value: "{{flavor.flavor_name}}",
-            option: "{{flavor.flavor_name}}"
+        flavors.setItem("{{flavor.name}}", {
+            value: "{{flavor.name}}",
+            option: "{{flavor.name}}",
+            name: "{{flavor.name}}",
+            id: "{{ flavor.id }}",
+            memory: "{{ flavor.memory }}",
+            disk_space: "{{ flavor.disk_space }}",
+            ephemeral: "{{ flavor.ephemeral }}",
+            swap: "{{ flavor.swap }}",
+            cpus: "{{ flavor.cpus }}",
+            link: "{{ flavor.link }}",
+            metadata: "{{ flavor.metadata }}"
         });
     </script>
 {% endfor %}

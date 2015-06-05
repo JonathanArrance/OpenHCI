@@ -64,7 +64,7 @@ def boot_instance(input_dict,auth_dict):
         raise Exception('Could not get instance count for project %s'%(input_dict['project_id']))
 
     if(int(num_instances) >= int(quotas['instances'])):
-        raise Exception('Could not create Instance, quota Exceded.')
+        raise Exception('Could not create Instance, quota Exceeded.')
 
     flavor_details = flavor.get_flavor(input_dict['flavor_id'])
     if('flavor_name' not in flavor_details):
@@ -89,17 +89,19 @@ def boot_instance(input_dict,auth_dict):
     #initialize create_vol
     create_vol = {}
 
-    if(input_dict['boot_from_vol'] == 'True'):
-        if('volume_type' not in input_dict):
+    if(input_dict['boot_from_vol'] == 'true' or input_dict['boot_from_vol'] == 'True'):
+        if('volume_type' not in input_dict or 'volume_type' == "none"):
             input_dict['volume_type'] = 'spindle'
 
-        if('volume_size' in input_dict):
+        if('volume_size' in input_dict and 'volume_size' != "none"):
             logger.sys_info("Setting user select volume size to boot instance from.")
         else:
             input_dict['volume_size'] = flavor_details['disk_space(GB)'] + flavor_details['swap(GB)']
             logger.sys_info("Creating a volume of %s to boot instance from"%(input_dict['volume_size']))
 
         if('volume_name' not in input_dict):
+            input_dict['volume_name'] = "%s_%s"%(input_dict['instance_name'],image_details['image_name'])
+        if(input_dict['volume_name'] == "none"):
             input_dict['volume_name'] = "%s_%s"%(input_dict['instance_name'],image_details['image_name'])
 
         #create a bootable volume

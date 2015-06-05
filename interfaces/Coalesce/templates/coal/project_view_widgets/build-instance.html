@@ -19,7 +19,7 @@
                 <select name="bam-select-image-name" id="bam-instance-image">
                     <script>
                         $(function () {
-                            refreshSelect($("#bam-instance-image"), imageInstOpts);
+                            refreshSelect($("#bam-instance-image"), images);
                             $("#bam-instance-image").append($('<option></option>')
                                     .val("upload")
                                     .html("Upload Image"));

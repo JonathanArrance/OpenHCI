@@ -362,7 +362,22 @@ def project_view(request, project_id):
     sec_keys      = so.list_sec_keys(project_id)
     instances     = so.list_servers(project_id)
     instance_info = {}
-    flavors       = fo.list_flavors()
+    flavors = fo.list_flavors()
+    flavor_info = []
+
+    for flavor in flavors:
+        flav = fo.get_flavor(flavor['flav_id'])
+        flav_dict = {
+            'name': flav['flavor_name'],
+            'id': flav['flav_id'],
+            'memory': flav['memory(MB)'],
+            'disk_space': flav['disk_space(GB)'],
+            'ephemeral': flav['ephemeral(GB)'],
+            'swap': flav['swap(GB)'],
+            'cpus': flav['cpus'],
+            'link': flav['link'],
+            'metadata': flav['metadata'] }
+        flavor_info.append(flav_dict)
 
     hosts=[]
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
@@ -457,7 +472,7 @@ def project_view(request, project_id):
                                                         'images': images,
                                                         'instances': instances,
                                                         'instance_info': instance_info,
-                                                        'flavors': flavors,
+                                                        'flavors': flavor_info,
                                                         'quota': quota,
                                                         }))
 
@@ -1400,7 +1415,7 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
     try:
         auth = request.session['auth']
         no = neutron_net_ops(auth)
-
+        so = server_ops(auth)
         instance = { 'project_id':project_id, 'sec_group_name':sec_group_name,
                      'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                      'network_name': network_name,'image_id': image_id,
@@ -1408,7 +1423,6 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
                      'boot_from_vol':boot_from_vol, 'volume_size':volume_size,
                      'volume_name': volume_name, 'volume_type':volume_type
                     }
-
         out = bni.boot_instance(instance,auth)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
@@ -1416,7 +1430,9 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
         #net_info = so.attach_server_to_network(input_dict)
         out['server_info']= so.get_server(input_dict)
         out['status'] = 'success'
-        out['message'] = "New server %s was created."%(out['vm_name'])
+        out['message'] = "New server %s was created."%(out['instance']['vm_name'])
+        if boot_from_vol:
+            out['message'] += " New boot volume %s was created for instance %s"%(out['volume']['volume_name'], out['instance']['vm_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))

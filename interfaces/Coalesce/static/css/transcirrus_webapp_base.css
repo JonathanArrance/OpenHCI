@@ -2985,6 +2985,10 @@ div.legend-header a {
     padding: 0px !important;
 }
 
+.no-overflow {
+    overflow: hidden!important;
+}
+
 .fade {
     opacity: 0;
     -webkit-transition: opacity 0.15s linear;
@@ -5277,7 +5281,6 @@ th > small {
 }
 
 .validateTips {
-    width: 200px;
     display: inline-block;
 }
 
@@ -5329,6 +5332,8 @@ th > small {
     font-weight: bold;
     color: rgb(28, 60, 119);
 }
+
+
 
 /* PROJECT */
 #project-delete-progressbar {
@@ -5423,6 +5428,70 @@ th > small {
     background-color: #F9D6CF
 }
 
+#instance-dialog-form fieldset.tall {
+    border: 1px solid #d3d3d3;
+    clear: none;
+    display: inline-block;
+    margin-right: 10px;
+    padding: 5px !important;
+    position: relative !important;
+    width: 200px;
+}
+
+#instance-dialog-form fieldset.wide {
+    border: 1px solid #d3d3d3;
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    width: 432px;
+}
+
+#instance-dialog-form fieldset.wide .error {
+    position: relative;
+}
+
+#instance-dialog-form fieldset:first-of-type {
+    border: medium none;
+    clear: both;
+    display: block;
+}
+
+#instance-dialog-form legend {
+    font-size: 16px !important;
+    border: 1px solid #d3d3d3 !important;
+    font-weight: bold !important;
+    display: block;
+    width: initial;
+    padding: 0 2px;
+    margin-bottom: initial;
+    line-height: initial;
+    color: #666;
+}
+
+#instance-dialog-form fieldset.wide > legend {
+    margin-left: 5px;
+}
+
+#instance-dialog-form h6 {
+    font-size: 12px;
+    line-height: 12px;
+}
+
+#instance-dialog-form label {
+    font-weight: bold;
+    display: inline-block;
+    padding: 0 5px 0 0;
+    color: #666;
+}
+
+#instance-dialog-form fieldset.wide > label {
+    width: 120px;
+}
+
+#instance-dialog-form .helper {
+    color: #696969;
+}
+
 /* IMAGES WIDGET */
 
 .upload-percent {
@@ -5482,6 +5551,10 @@ th > small {
 
 .volume-attached {
     background-color: #FFE8CC
+}
+
+.volume-mounted {
+    background-color: rgba(0, 0, 79, 0.20)
 }
 
 /* SNAPSHOT WIDGET */

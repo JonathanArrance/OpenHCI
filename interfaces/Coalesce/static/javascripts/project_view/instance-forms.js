@@ -4,83 +4,63 @@ $(function () {
     // --- Create ---
 
     $("#create-instance").click(function (event) {
-        console.log("click");
 
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
         // Create Form
-        var form = $("<div></div>")
-            .prop("id", "instance-dialog-form")
-            .prop("title", "Create Instance")
-            .css("display", "none")
-            .append($("<p></p>")
-                .prop("class", "validateTips")
-                .html("Create a new instance. All form fields are required."))
-            .append($("<form></form>")
-                .append($("<fieldset></fieldset>")
-                    .append($("<label></label>")
-                        .prop("for", "name")
-                        .html("Instance Name"))
-                    .append($("<input></input>")
-                        .prop("id", "name")
-                        .prop("name", "name")
-                        .prop("type", "text"))
-                    .append($("<label></label>")
-                        .prop("for", "group")
-                        .html("Security Group"))
-                    .append($("<select></select>")
-                        .prop("id", "group")
-                        .prop("name", "group"))
-                    .append($("<label></label>")
-                        .prop("for", "key")
-                        .html("Security Key"))
-                    .append($("<select></select>")
-                        .prop("id", "key")
-                        .prop("name", "key"))
-                    .append($("<label></label>")
-                        .prop("for", "network")
-                        .html("Private Network"))
-                    .append($("<select></select>")
-                        .prop("id", "network")
-                        .prop("name", "network"))
-                    .append($("<label></label>")
-                        .prop("for", "image")
-                        .html("Image"))
-                    .append($("<select></select>")
-                        .prop("id", "image")
-                        .prop("name", "image"))
-                    .append($("<label></label>")
-                        .prop("for", "flavor")
-                        .html("Flavor"))
-                    .append($("<select></select>")
-                        .prop("id", "flavor")
-                        .prop("name", "flavor"))
-                    .append($("<label></label>")
-                        .prop("for", "Boot Options")
-                        .html("Boot Options"))
-                    .append($("<select></select>")
-                        .prop("id", "boot_option")
-                        .prop("name", "boot_option")
-                        .append($("<option></option>")
-                                .prop("value", "False")
-                                .html("Boot Ephemeral"))
-                        .append($("<option></option>")
-                                .prop("value", "True")
-                                .html("Boot From Volume")))));
+        var form =
+            $("<div></div>").prop("id", "instance-dialog-form").prop("title", "Create Instance").css("display", "none")
+                .append($("<h6>Create a new instance. All form fields are required.</h6>").addClass("validateTips"))
+                .append($("<form></form>")
+                    .append($("<fieldset></fieldset>")
+                        .append($("<label>Instance Name</label>").prop("for", "name"))
+                        .append($("<input></input>").prop("id", "name").prop("name", "name").prop("type", "text")))
+                    .append($("<fieldset></fieldset>").addClass("tall")
+                        .append($("<legend>Instance Options</legend>"))
+                        .append($("<label>Image</label>").prop("for", "image"))
+                        .append($("<select></select>").prop("id", "image").prop("name", "image"))
+                        .append($("<label>Flavor</label>").prop("for", "flavor"))
+                        .append($("<select></select>").prop("id", "flavor").prop("name", "flavor"))
+                        .append($("<label>Boot Options</label>").prop("for", "Boot Options"))
+                        .append($("<span>(help)<span>").addClass("helper").prop("title", 'To store all instance data on a physical volume, choose "Boot From Volume"; otherwise, all instance data will be lost on instance deletion.'))
+                        .append($("<select></select>").prop("id", "boot-option").prop("name", "boot-option")
+                            .append($("<option>Boot Ephemeral</option>").prop("value", "false"))
+                            .append($("<option>Boot From Volume</option>").prop("value", "true"))
+                            .click(function (event) {
+                                event.preventDefault();
+                                toggleBootOptions($("#boot-option").val());
+                            })))
+                    .append($("<fieldset></fieldset>").addClass("tall")
+                        .append($("<legend>Network & Security</legend>"))
+                        .append($("<label>Private Network</label>").prop("for", "network"))
+                        .append($("<select></select>").prop("id", "network").prop("name", "network"))
+                        .append($("<label>Security Group</label>").prop("for", "group"))
+                        .append($("<select></select>").prop("id", "group").prop("name", "group"))
+                        .append($("<label>Security Key</label>").prop("for", "key"))
+                        .append($("<select></select>").prop("id", "key").prop("name", "key")))
+                    .append($("<fieldset></fieldset>").prop("id", "instance-boot-options").css("display", "None").addClass("wide")
+                        .append($("<legend>Boot Volume Options</legend>"))
+                        .append($("<label>Boot Volume Name</label>").prop("for", "boot-name"))
+                        .append($("<input></input>").prop("id", "boot-name").prop("name", "boot-name").prop("type", "text").prop("placeholder", "Optional"))
+                        .append($("<label>Boot Volume Type</label>").prop("for", "boot-type"))
+                        .append($("<select></select>").prop("id", "boot-type").prop("name", "boot-type"))
+                        .append($("<label>Boot Volume Size</label>").prop("for", "boot-size"))
+                        .append($("<input></input>").prop("id", "boot-size").prop("name", "boot-size").prop("type", "text"))));
 
         // Populate selects
         refreshSelect(form.find("#group"), secGroupInstOpts);
         refreshSelect(form.find("#key"), secKeyInstOpts);
         refreshSelect(form.find("#network"), privNetInstOpts);
-        refreshSelect(form.find("#image"), imageInstOpts);
+        refreshSelect(form.find("#image"), images);
         refreshSelect(form.find("#flavor"), flavors);
+        refreshSelect(form.find("#boot-type"), volumeTypes);
 
         // Open dialog form
         form.dialog({
             autoOpen: true,
-            height: 505,
-            width: 235,
+            height: 390,
+            width: 470,
             modal: true,
             resizable: false,
             closeOnEscape: true,
@@ -94,18 +74,18 @@ $(function () {
             buttons: {
                 "Create Instance": function () {
                     // Create Instance
-                    createInstance($("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"), $("#boot_option"));
+                    createInstance($("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"), $("#boot-option"), $("#boot-name"), $("#boot-type"), $("#boot-size"));
                 }
             },
             close: function () {
 
                 // Reset form validation
-                resetUiValidation([$("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"), $("#boot_option")]);
+                resetUiValidation([$("#name"), $("#group"), $("#key"), $("#network"), $("#image"), $("#flavor"), $("#boot-option"), $("#boot-name"), $("#boot-type"), $("#boot-size")]);
 
                 // Remove dialog form
                 $(this).remove();
             }
-        });
+        }).css("overflow", "hidden");
     });
 
     // --- Delete ---
@@ -347,10 +327,20 @@ $(document).on('click', '.resume-instance', function (event) {
         });
 });
 
-function createInstance(name, secGroup, secKey, network, image, flavor, bootOption) {
+function toggleBootOptions(option) {
+    if (option == "true") {
+        $("#instance-dialog-form").dialog({height: 540});
+        $("#instance-boot-options").show(0);
+    } else {
+        $("#instance-dialog-form").dialog({height: 390});
+        $("#instance-boot-options").hide(0);
+    }
+}
+
+function createInstance(name, secGroup, secKey, network, image, flavor, bootOption, bootName, bootType, bootSize) {
 
     // Gather inputs
-    var allFields = $([]).add(name).add(secGroup).add(secKey).add(network).add(image).add(flavor).add(bootOption);
+    var allFields = $([]).add(name).add(secGroup).add(secKey).add(network).add(image).add(flavor).add(bootOption).add(bootName).add(bootType).add(bootSize);
 
     // Remove UI validation flags
     clearUiValidation(allFields);
@@ -359,6 +349,14 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
     var isValid =
         checkLength(name, "Instance Name", 3, 16) &&
         checkDuplicateName(name, instanceOpts);
+
+    if (bootOption.val() == "true") {
+        isValid =
+            checkDuplicateName(bootName, volumes) &&
+            checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+            checkBootSize(bootSize, flavor.val()) &&
+            checkStorage(bootSize);
+    }
 
     // If Valid, create instance
     if (isValid) {
@@ -371,9 +369,23 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
             confSecGroup = secGroup.val(),
             confSecKey = secKey.val(),
             confNetwork = network.val(),
-            confImage = image.val(),
-            confFlavor = flavor.val(),
-            confBoot = bootOption.val();
+            confImage = images.items[image.val()].id,
+            confFlavor = flavors.items[flavor.val()].id,
+            confBoot = bootOption.val(),
+            confBootName,
+            confBootType,
+            confBootSize;
+
+        // Check boot options
+        if (confBoot == "true") {
+            confBootName = bootName.val() == "" ? "none" : bootName.val();
+            confBootType = bootType.val() == "" ? "none" : bootType.val();
+            confBootSize = bootSize.val();
+        } else {
+            confBootName = "none";
+            confBootType = "none";
+            confBootSize = "none";
+        }
 
         // Show toast message
         message.showMessage('notice', 'Creating New Instance ' + confName);
@@ -387,8 +399,9 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
         disableProgressbar($("#instance_progressbar"), "instances", false);
 
         // Make AJAX call and handle response
-        $.getJSON('/create_instance/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/' + confBoot + '/')
+        $.getJSON('/create_instance/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/' + confBoot + '/' + confBootSize + '/' + confBootName + '/' + confBootType + '/')
             .done(function (data) {
+                console.log(data);
 
                 if (data.status == 'error') {
 
@@ -476,6 +489,60 @@ function addInstance(data) {
         .appendTo($("#instance_list"))
         .fadeIn();
 
+    if (data.volume != undefined) {
+        $("<tr></tr>")
+            .prop("id", data.volume.volume_id.toString())
+            .addClass("volume-mounted")
+            .append(
+            $("<td></td>")
+                .prop("id", data.volume.volume_id + '-name-cell')
+                .append(
+                $("<a></a>")
+                    .prop("href", '/projects/' + PROJECT_ID + '/volumes/' + data.volume.volume_id + '/view/')
+                    .append(
+                    $("<span></span>")
+                        .prop("id", data.volume.volume_id + '-name-text')
+                        .html(data.volume.volume_name.toString()))))
+            .append(
+            $("<td></td>")
+                .prop("id", data.volume.volume_id + '-attached-cell')
+                .append(
+                $("<span></span>")
+                    .html(data.server_info.server_name)))
+            .append(
+            $("<td></td>")
+                .prop("id", data.volume.volume_id + '-actions-cell')
+                .append(
+                $("<a></a>")
+                    .prop("href", "#")
+                    .prop("class", "detach-volume")
+                    .html("detach"))
+                .append(
+                $("<span></span>")
+                    .prop("class", "volume-actions-pipe")
+                    .html(" | "))
+                .append(
+                $("<a></a>")
+                    .prop("href", "#")
+                    .prop("class", "clone-volume")
+                    .html("clone"))
+                .append(
+                $("<span></span>")
+                    .prop("class", "volume-actions-pipe")
+                    .html(" | "))
+                .append(
+                $("<a></a>")
+                    .prop("href", "#")
+                    .prop("class", "revert-volume")
+                    .html("revert")))
+            .appendTo($("#volume_list")).fadeIn();
+
+        snapshotVolumes.setItem(data.volume.volume_id, {
+            value: data.volume.volume_id,
+            option: data.volume.name
+        });
+    }
+
     // Check table length, remove placeholder if necessary
     if ($('#instance_list tr').length >= 2) {
         $('#instance_placeholder').remove().fadeOut();
@@ -539,7 +606,7 @@ function deleteInstance(id, name, row) {
             .prop("class", "ajax-loader")
             .fadeIn());
 
-    $.getJSON('/server/' + PROJECT_ID + '/' + confId + '/delete_server/')
+    $.getJSON('/server/' + PROJECT_ID + '/' + confId + '/delete_instance/')
         .done(function (data) {
 
             if (data.status == 'error') {
@@ -574,50 +641,53 @@ function deleteInstance(id, name, row) {
                 // Unattach volumes
                 for (var i = 0; i < data.vols.length; i++) {
 
-                    $(document.getElementById(data.vols[i] + '-attached-cell'))
-                        .empty()
-                        .fadeOut()
-                        .append($("<span></span>")
-                            .prop("id", data.vols[i] + '-attached-placeholder')
-                            .html("No Attached Instance")
-                            .fadeIn())
-                        .parent()
-                        .removeClass("volume-attached");
+                    if (volumes.items[data.vols[i]] != undefined) {
+                        $(document.getElementById(data.vols[i] + '-attached-cell'))
+                            .empty()
+                            .fadeOut()
+                            .append($("<span></span>")
+                                .prop("id", data.vols[i] + '-attached-placeholder')
+                                .html("No Attached Instance")
+                                .fadeIn())
+                            .parent()
+                            .removeClass("volume-attached");
 
-                    $(document.getElementById(data.vols[i] + '-actions-cell'))
-                        .empty()
-                        .fadeOut()
-                        .append($("<a></a>")
-                            .prop("href", "#")
-                            .prop("class", "attach-volume")
-                            .html("attach"))
-                        .append($("<span></span>")
-                            .prop("class", "volume-actions-pipe")
-                            .html(" | "))
-                        .append($("<a></a>")
-                            .prop("href", "#")
-                            .prop("class", "clone-volume")
-                            .html("clone"))
-                        .append($("<span></span>")
-                            .prop("class", "volume-actions-pipe")
-                            .html(" | "))
-                        .append($("<a></a>")
-                            .prop("href", "#")
-                            .prop("class", "revert-volume")
-                            .html("revert"))
-                        .append($("<span></span>")
-                            .prop("class", "volume-actions-pipe")
-                            .html(" | "))
-                        .append($("<a></a>")
-                            .prop("href", "#")
-                            .prop("class", "delete-volume")
-                            .html("delete"))
-                        .fadeIn();
+                        $(document.getElementById(data.vols[i] + '-actions-cell'))
+                            .empty()
+                            .fadeOut()
+                            .append($("<a></a>")
+                                .prop("href", "#")
+                                .prop("class", "attach-volume")
+                                .html("attach"))
+                            .append($("<span></span>")
+                                .prop("class", "volume-actions-pipe")
+                                .html(" | "))
+                            .append($("<a></a>")
+                                .prop("href", "#")
+                                .prop("class", "clone-volume")
+                                .html("clone"))
+                            .append($("<span></span>")
+                                .prop("class", "volume-actions-pipe")
+                                .html(" | "))
+                            .append($("<a></a>")
+                                .prop("href", "#")
+                                .prop("class", "revert-volume")
+                                .html("revert"))
+                            .append($("<span></span>")
+                                .prop("class", "volume-actions-pipe")
+                                .html(" | "))
+                            .append($("<a></a>")
+                                .prop("href", "#")
+                                .prop("class", "delete-volume")
+                                .html("delete"))
+                            .fadeIn();
 
-                    snapshotVolumes.setItem(data.vols[i], {
-                        value: data.vols[i],
-                        option: volumes.items[data.vols[i]].name
-                    })
+                        snapshotVolumes.setItem(data.vols[i], {
+                            value: data.vols[i],
+                            option: volumes.items[data.vols[i]].name
+                        })
+                    }
+
                 }
 
                 // Unassign floating IPs
