@@ -326,6 +326,19 @@ function checkSize(o, n, min, max) {
     }
 }
 
+function checkBootSize(o, f) {
+    var flavorSize = flavors.items[f].disk_space + flavors.items[f].swap;
+    if (o.val() < flavorSize) {
+        o.addClass("ui-state-error");
+        flagError(
+            o,
+            "Instance with flavor " + f + " boot volume must be " + flavorSize + "(gb) in size.");
+        return false;
+    } else {
+        return true;
+    }
+}
+
 function clearUiValidation(fields) {
     $(fields).removeClass("ui-state-error");
     $('.error').each(function () {
@@ -609,7 +622,7 @@ var instances = new HashTable(),
     secGroupInstOpts = new HashTable(),
     secKeyInstOpts = new HashTable(),
     privNetInstOpts = new HashTable(),
-    imageInstOpts = new HashTable(),
+    images = new HashTable(),
     flavors = new HashTable(),
     fips = new HashTable(),
     assignableFips = new HashTable(),
@@ -700,6 +713,7 @@ function resetProgressBar(form) {
 // --- STORAGE
 
 var volumes = new HashTable(),
+    volumeTypes = new HashTable(),
     totalStorage = 0,
     usedStorage = 0,
     availableStorage = 0,

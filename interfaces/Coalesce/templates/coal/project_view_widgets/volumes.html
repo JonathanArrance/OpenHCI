@@ -32,13 +32,14 @@
                                 type: "{{ v.volume_type }}",
                                 value: "{{v.volume_id}}",
                                 option: "{{v.volume_name}}",
-                                attached: "{{ v.volume_attached }}"
+                                attached: "{{ v.volume_attached }}",
+                                bootable: "{{ v.volume_set_bootable }}"
                             });
                             usedStorage += Number("{{v.volume_size}}");
                         </script>
 
                         <tr id="{{ v.volume_id }}"
-                            class="{% if v.volume_attached == 'true' %}volume-attached{% endif %}">
+                            class="{% if v.volume_set_bootable == 'true' %}volume-mounted{% elif v.volume_attached == 'true' %}volume-attached{% endif %}">
                             <td id="{{ v.volume_id }}-name-cell">
                                 <a href="/projects/{{ project.project_id }}/volumes/{{ v.volume_id }}/view/"
                                    class="disable-link"><span id="{{ v.volume_id }}-name-text">
@@ -66,8 +67,10 @@
                                 <a href="#" class="clone-volume">clone</a>
                                 <span class="volume-actions-pipe"> | </span>
                                 <a href="#" class="revert-volume">revert</a>
-                                <span class="volume-actions-pipe"> | </span>
-                                <a href="#" class="delete-volume">delete</a>
+                                {% if v.volume_set_bootable != 'true' %}
+                                    <span class="volume-actions-pipe"> | </span>
+                                    <a href="#" class="delete-volume">delete</a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
@@ -172,3 +175,19 @@
 <div id="volume-delete-confirm-form" title="Delete volume">
     <p class="validateTips" style="text-align:center;">Delete <span class="volume-name"></span>?</p>
 </div>
+
+<!-- ---------- DECLARE GLOBAL VARIABLES ---------- -->
+
+{% for voltypes in volume_types %}
+    <script>
+        volumeTypes.setItem("{{ voltypes.name }}", {"value": "{{ voltypes.name }}", "option": "{{ voltypes.name }}"})
+    </script>
+{% endfor %}
+
+<!-- ---------- FUNCTIONS TO FIRE ON PAGE LOAD ---------- -->
+
+<script>
+    getStorage(PROJECT_ID);
+</script>
+
+

@@ -126,8 +126,8 @@ $(function () {
                                         $('#image_list').append(newRow);
 
                                         // Update selects
-                                        addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
-                                        refreshSelect($("#bam-instance-image"), imageInstOpts);
+                                        addToSelect(display_name, display_name, $("#image_name"), images);
+                                        refreshSelect($("#bam-instance-image"), images);
                                         $("#bam-instance-image").append("<option></option>").val("upload").html("Upload Image");
 
                                         message.showMessage("success", ret_data.message);
@@ -219,8 +219,8 @@ $(function () {
                                         $('#image_list').append(newRow);
 
                                         // Update selects
-                                        addToSelect(display_name, display_name, $("#image_name"), imageInstOpts);
-                                        refreshSelect($("#bam-instance-image"), imageInstOpts);
+                                        addToSelect(display_name, display_name, $("#image_name"), images);
+                                        refreshSelect($("#bam-instance-image"), images);
                                         $("#bam-instance-image").append($('<option></option>')
                                             .val("upload")
                                             .html("Upload Image"));
@@ -345,8 +345,8 @@ $(function () {
                                 $(targetRow).fadeOut().remove();
 
                                 // Update selects
-                                removeFromSelect(confImage, $("#image_name"), imageInstOpts);
-                                refreshSelect($("#bam-instance-image"), imageInstOpts);
+                                removeFromSelect(confImage, $("#image_name"), images);
+                                refreshSelect($("#bam-instance-image"), images);
                                 $("#bam-instance-image").append($('<option></option>')
                                     .val("upload")
                                     .html("Upload Image"));

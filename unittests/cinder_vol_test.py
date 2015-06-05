@@ -5,25 +5,30 @@ import time
 import sys
 
 #sys.path.append('../common')
-import transcirrus.common.logger as logger
-import transcirrus.common.config as config
+#import transcirrus.common.logger as logger
+#import transcirrus.common.config as config
 from transcirrus.common.auth import authorization
 
 #sys.path.append('/home/jonathan/alpo.0/component/cinder')
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 
-a = authorization("test2","password")
+a = authorization("admin","password")
 #get the user dict
 d = a.get_auth()
 
 print "instantiating a volume abject."
 vol = volume_ops(d)
 snap = snapshot_ops(d)
+
+create = {'volume_name':'transcirrus4','volume_size':'8','project_id':"15e4192e67ab47ef928ffeb4d25c9648",'volume_type':'spindle','image_id':'32778bb7-e6ab-4568-a110-8e7573df0f3b'}
+create_vol = vol.create_bootable_volume(create)
+print create_vol
+
+'''
 s = snap.list_snapshots()
 print s
 
-'''
 types = vol.list_volume_types()
 print types
 

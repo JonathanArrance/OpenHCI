@@ -1177,8 +1177,8 @@ function addImage(data) {
                 .html("delete")))
         .appendTo($('#image_list').fadeIn());
     // Update selects
-    addToSelect(bamParams.image.inputs.name.value, bamParams.image.inputs.name.value, $("#image_name"), imageInstOpts);
-    refreshSelect($("#bam-instance-image"), imageInstOpts);
+    addToSelect(bamParams.image.inputs.name.value, bamParams.image.inputs.name.value, $("#image_name"), images);
+    refreshSelect($("#bam-instance-image"), images);
     $("#bam-instance-image").append($('<option></option>')
         .val("upload")
         .html("Upload Image"));

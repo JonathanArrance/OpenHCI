@@ -19,14 +19,14 @@ from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 #get the nova libs
-from transcirrus.component.nova.flavor import flavor_ops
+#from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.nova.image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 #from transcirrus.component.glance.glance_ops import glance_ops
 from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.server_action import server_actions
-from transcirrus.component.nova.quota import quota_ops
+#from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
@@ -87,11 +87,11 @@ class server_ops:
             raise Exception("Could not connect to db with error: %s" %(e))
 
         #build flavor object
-        self.flav = flavor_ops(user_dict)
-        self.qo = quota_ops(user_dict)
+        #self.flav = flavor_ops(user_dict)
+        #self.qo = quota_ops(user_dict)
 
         #build the nova image object
-        self.image = nova_image_ops(user_dict)
+        #self.image = nova_image_ops(user_dict)
         self.layer_three = layer_three_ops(user_dict)
         self.net = neutron_net_ops(user_dict)
         self.glance = glance_ops(user_dict)
@@ -232,16 +232,18 @@ class server_ops:
     def create_server(self,create_dict):
         """
         DESC: Build a new virtual instance.
-        INPUT: create_dict - config_script - op
-                             project_id - req
+        INPUT: create_dict - project_id - req
+                             instance_name - req - name of the instance
                              sec_group_name - default project security group if none specified
                              sec_key_name - default project security key if none specified.
                              avail_zone - default availability zone - nova
                              network_name - default project net used if none specified
-                             image_name - default system image used if none specified
-                             flavor_name - default system flavor used if none specifed
-                             amount - op - how many vms should be provisioned
-                             name - req - name of the server
+                             config_script - op
+                             image_name - op - default system image used if none specified
+                             image_id - REQ
+                             flavor_name - op
+                             flavor_id - REQ
+                             volume_id - op - volume to boot the vm from.
         OUTPUT: r_dict - vm_name - vm name
                        - vm_id - vm id
                        - sec_key_name - security key name
@@ -252,10 +254,11 @@ class server_ops:
         NOTE: If no zone is specified then the zone defaults to zone.
         """
         #do variable checks
+        
         if(not create_dict):
             logger.sys_error("No dictionary passed into create_server operation.")
             raise Exception("No dictionary passed into create_server operation.")
-        if(('image_name' not in create_dict) or ('flavor_name' not in create_dict) or ('name' not in create_dict)):
+        if(('flavor_id' not in create_dict) or ('instance_name' not in create_dict) or ('image_id' not in create_dict) or ('project_id' not in create_dict)):
             logger.sys_error("Required value not passed to create_server operation")
             raise Exception("Required value not passed to create_server operation")
         #account for optional params
@@ -265,24 +268,6 @@ class server_ops:
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to create virtual servers.")
             raise Exception("Status level not sufficient to create virtual servers.")
-
-        if('amount' not in create_dict):
-            create_dict['amount'] = 1
-        else:
-            #check the quota
-            quota = self.qo.get_project_quotas(create_dict['project_id'])
-            #see how many vms in project
-            try:
-                instances = {'table':'trans_instances','where':"proj_id='%s'"%(create_dict['project_id'])}
-                self.num_instances = self.db.count_elements(instances)
-            except:
-                raise Exception('Could not get instance count for project %s'%(create_dict['project_id']))
-
-            if(int(self.num_instances) >= int(quota['instances'])):
-                raise Exception('Could not create Instance, quota Exceded.')
-
-            if(int(create_dict['amount']) >= int(quota['instances'])):
-                raise Exception('Could not create Instance, quota Exceded.')
 
         #get the name of the project based on the id
         try:
@@ -354,53 +339,33 @@ class server_ops:
 
         #verify the availability zone
         #NOTE: for the prototype zone will always be nova
-        if('avail_zone' not in create_dict):
-            create_dict['avail_zone'] = 'nova'
-        else:
+        if('avail_zone' in create_dict):
             try:
                 select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(create_dict['avail_zone'])}
                 get_zone = self.db.pg_select(select_zone)
             except:
                 logger.sql_error('The specifed zone is not defined.')
                 raise Exception('The specifed zone is not defined.')
+        elif(create_dict['avail_zone'] is None):
+            create_dict['avail_zone'] = 'nova'
+        else:
+            #hack
+            create_dict['avail_zone'] = 'nova'
 
-        #verify that the flavor requested exists
-        #get the flavor from the list
-        flav_list = self.flav.list_flavors()
-        found_flav = False
-        for flav in flav_list:
-            if(flav['flavor_name'] == create_dict['flavor_name']):
-                #get the flavor_id
-                self.flav_id = flav['flav_id']
-                found_flav = True
-                # as soon as the value we want is found break out of the loop
-                break
-        if found_flav == False:
-            logger.sys_error("The flavor: %s was not found" %(create_dict['flavor_name']))
-            raise Exception("The flavor: %s was not found" %(create_dict['flavor_name']))
+        if('flavor_name' not in create_dict):
+            create_dict['flavor_name'] = "flavor_id_" + create_dict['flavor_id']
 
-        #verify the image requested exsists
-        image_list = self.glance.list_images()
-        img_flag = 0
-        for image in image_list:
-            if(image['image_name'] == 'None'):
-                continue
-            elif(image['image_name'] == create_dict['image_name']):
-                self.image_id = image['image_id']
-                img_flag = 1
-                break
-        if(img_flag == 0): 
-            logger.sys_error("The image: %s was not found" %(create_dict['image_name']))
-            raise Exception("The image: %s was not found" %(create_dict['image_name']))
+        if('image_name' not in create_dict):
+            create_dict['image_name'] = "image_id_" + create_dict['image_id']
 
         #check to see if the name is in the project
         servers = self.list_servers(create_dict['project_id'])
         for server in servers:
-            if(server['server_name'] == create_dict['name']):
+            if(server['server_name'] == create_dict['instance_name']):
                 random.seed()
                 #rand_id = random.randrange(0,100000)
-                create_dict['name'] = create_dict['name']+'_%s'%(str(self.rannum))
-        
+                create_dict['instance_name'] = create_dict['instance_name']+'_%s'%(str(self.rannum))
+
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":create_dict['project_id']}
@@ -412,13 +377,19 @@ class server_ops:
             raise Exception("Could not connec to the REST api caller in create_server operation.")
 
         try:
-            body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['name'],self.image_id,create_dict['sec_key_name'],self.flav_id,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+            self.body = None
+            if('volume_id' in create_dict):
+                self.body = '{"server": {"name": "%s", "imageRef": "%s", "block_device_mapping":[{"volume_id": "%s", "delete_on_termination": "1", "device_name": "vda"}], "flavorRef": "%s", "max_count": 1, "min_count": 1,"key_name": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}'%(create_dict['instance_name'],create_dict['image_id'],create_dict['volume_id'],
+                                                                                                                                                                                                                                                                                                                                            create_dict['flavor_id'],create_dict['sec_key_name'],self.net_id,create_dict['sec_group_name'],
+                                                                                                                                                                                                                                                                                                                                            create_dict['avail_zone'])
+            else:
+                self.body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['instance_name'],create_dict['image_id'],create_dict['sec_key_name'],create_dict['flavor_id'],self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
             api_path = '/v2/%s/servers' %(create_dict['project_id'])
             token = self.token
             sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest_dict = {"body": self.body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
             rest = api.call_rest(rest_dict)
         except Exception as e:
             raise e
@@ -444,7 +415,7 @@ class server_ops:
                 self.db.pg_transaction_begin()
                 #add the instance values to the transcirrus DB
                 # ALL NONE USED TO BE "NULL"
-                ins_dict = {'inst_name':create_dict['name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':create_dict['project_id'],
+                ins_dict = {'inst_name':create_dict['instance_name'],'inst_int_ip':None,'inst_floating_ip':None,'proj_id':create_dict['project_id'],
                             'in_use':"1",'floating_ip_id':None,'inst_id':self.load['server']['id'],'inst_port_id':None,'inst_key_name':create_dict['sec_key_name'],
                             'inst_sec_group_name':create_dict['sec_group_name'],'inst_username':self.username,'inst_user_id':self.user_id,'inst_int_net_id':self.net_id,
                             'inst_ext_net_id':None,'inst_flav_name':create_dict['flavor_name'],'inst_image_name':create_dict['image_name'],
@@ -457,7 +428,7 @@ class server_ops:
             else:
                 #commit the db transaction
                 self.db.pg_transaction_commit()
-                r_dict = {'vm_name':create_dict['name'],'vm_id':self.load['server']['id'],'sec_key_name':create_dict['sec_key_name'],
+                r_dict = {'vm_name':create_dict['instance_name'],'vm_id':self.load['server']['id'],'sec_key_name':create_dict['sec_key_name'],
                           'sec_group_name':create_dict['sec_group_name'],'created_by':self.username,'project_id':create_dict['project_id'],'response':'202'}
                 return r_dict
         else:
