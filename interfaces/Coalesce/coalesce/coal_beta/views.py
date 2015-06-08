@@ -97,6 +97,7 @@ nfs_config = None
 def stats(request):
     try:
         auth = request.session['auth']
+
         if(auth != None and auth['is_admin'] == 1):
             #Cloud/Node stats
             stats = stat_ops(auth)
@@ -140,7 +141,6 @@ def stats(request):
                 users = to.list_tenant_users(tenant['project_id'])
                 num_users = len(users)
 
-
                 tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
                                     'num_fips': num_fips,
@@ -154,7 +154,7 @@ def stats(request):
                                                                                        'tot_users': tot_users,
                                                                                        'tot_proj': tot_proj,
                                                                                        'tot_nodes': tot_nodes,
-                                                                                       'tenant_info': tenant_info,}))
+                                                                                       'tenant_info': tenant_info}))
         elif(auth != None and auth['is_admin'] == 0):
             uo = user_ops(auth)
             qo = quota_ops(auth)
@@ -165,15 +165,15 @@ def stats(request):
             username = auth['username']
             user_dict = {'username': username, 'project_name': project_name}
             user_info = uo.get_user_info(user_dict)
+
             return render_to_response('coal/user_view.html',
                                RequestContext(request, {'project_name': project_name,
                                                         'current_project_id': project_id,
-                                                        'user_info': user_info,}))
+                                                        'user_info': user_info}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
 
     except Exception as e:
-        print e
         return render_to_response('coal/welcome.html', RequestContext(request,))
 
 def privacy_policy(request):
@@ -198,7 +198,7 @@ def node_view(request, node_id):
             node['mgmt_ip_issue'] = True
         else:
             node['data_ip_issue'] = True
-    return render_to_response('coal/node_view.html', RequestContext(request, {'node': node, }))
+    return render_to_response('coal/node_view.html', RequestContext(request, {'node': node}))
 
 def manage_cloud(request):
     node_list = list_nodes()
@@ -246,7 +246,7 @@ def manage_nodes(request):
     except:
         messages.warning(request, "Unable to manage nodes.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
+    return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info}))
 
 def set_project_quota(request, project_id, quota_settings):
     """
@@ -305,7 +305,7 @@ def manage_projects(request):
     except:
         messages.warning(request, "Unable to manage projects.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
+    return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info}))
 
 def project_view(request, project_id):
     auth = request.session['auth']
@@ -1783,6 +1783,7 @@ def update_user_password(request, user_id, project_id, password):
         if(up == 'OK'):
             out['status'] = 'success'
             out['message'] = 'The password has been successfully updated.'
+            request.session['auth']['password'] = password
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not update the user password.: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1792,14 +1793,15 @@ def update_admin_password(request, password):
     try:
         auth = request.session['auth']
         if auth['user_level'] == 0:
-            ap = change_admin_password (auth, password)
+            ap = change_admin_password(auth, password)
             if(ap == 'OK'):
                 out['status'] = 'success'
                 out['message'] = 'The password has been successfully updated.'
+                request.session['auth']['password'] = password
         else:
-            out = {'status' : "error", 'message' : "Only admins can update admin password"}
+            out = {'status': "error", 'message': "Only admins can update admin password"}
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not update admin password.: %s"%(e)}
+        out = {'status': "error", 'message': "Could not update admin password.: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def network_view(request, net_id):
