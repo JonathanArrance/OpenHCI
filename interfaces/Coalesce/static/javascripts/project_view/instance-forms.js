@@ -74,7 +74,7 @@ $(function () {
         form.dialog({
             autoOpen: true,
             height: 390,
-            width: 470,
+            width: 475,
             modal: true,
             resizable: false,
             closeOnEscape: true,
