@@ -19,32 +19,46 @@ $(function () {
                     .append($("<fieldset></fieldset>").addClass("tall")
                         .append($("<legend>Instance Options</legend>"))
                         .append($("<label>Image</label>").prop("for", "image"))
-                        .append($("<select></select>").prop("id", "image").prop("name", "image"))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "image").prop("name", "image")))
                         .append($("<label>Flavor</label>").prop("for", "flavor"))
-                        .append($("<select></select>").prop("id", "flavor").prop("name", "flavor"))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "flavor").prop("name", "flavor")))
                         .append($("<label>Boot Options</label>").prop("for", "Boot Options"))
                         .append($("<span>(help)<span>").addClass("helper").prop("title", 'To store all instance data on a physical volume, choose "Boot From Volume"; otherwise, all instance data will be lost on instance deletion.'))
-                        .append($("<select></select>").prop("id", "boot-option").prop("name", "boot-option")
-                            .append($("<option>Boot Ephemeral</option>").prop("value", "false"))
-                            .append($("<option>Boot From Volume</option>").prop("value", "true"))
-                            .click(function (event) {
-                                event.preventDefault();
-                                toggleBootOptions($("#boot-option").val());
-                            })))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "boot-option").prop("name", "boot-option")
+                                .append($("<option>Boot Ephemeral</option>").prop("value", "false"))
+                                .append($("<option>Boot From Volume</option>").prop("value", "true"))
+                                .click(function (event) {
+                                    event.preventDefault();
+                                    toggleBootOptions($("#boot-option").val());
+                                }))))
                     .append($("<fieldset></fieldset>").addClass("tall")
                         .append($("<legend>Network & Security</legend>"))
                         .append($("<label>Private Network</label>").prop("for", "network"))
-                        .append($("<select></select>").prop("id", "network").prop("name", "network"))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "network").prop("name", "network")))
                         .append($("<label>Security Group</label>").prop("for", "group"))
-                        .append($("<select></select>").prop("id", "group").prop("name", "group"))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "group").prop("name", "group")))
                         .append($("<label>Security Key</label>").prop("for", "key"))
-                        .append($("<select></select>").prop("id", "key").prop("name", "key")))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "key").prop("name", "key"))))
                     .append($("<fieldset></fieldset>").prop("id", "instance-boot-options").css("display", "None").addClass("wide")
                         .append($("<legend>Boot Volume Options</legend>"))
-                        .append($("<label>Boot Volume Name</label>").prop("for", "boot-name"))
+                        .append($("<label>Boot Volume Name</label>").prop("for", "boot-name").css("margin-top", "15px"))
                         .append($("<input></input>").prop("id", "boot-name").prop("name", "boot-name").prop("type", "text").prop("placeholder", "Optional"))
-                        .append($("<label>Boot Volume Type</label>").prop("for", "boot-type"))
-                        .append($("<select></select>").prop("id", "boot-type").prop("name", "boot-type"))
+                        .append($("<label>Boot Volume Type</label>").prop("for", "boot-type").css("margin-top", "14px").css("vertical-align", "top"))
+                        .append($("<div></div")
+                            .addClass("styled-select")
+                            .append($("<select></select>").prop("id", "boot-type").prop("name", "boot-type")))
                         .append($("<label>Boot Volume Size</label>").prop("for", "boot-size"))
                         .append($("<input></input>").prop("id", "boot-size").prop("name", "boot-size").prop("type", "text"))));
 
@@ -329,7 +343,7 @@ $(document).on('click', '.resume-instance', function (event) {
 
 function toggleBootOptions(option) {
     if (option == "true") {
-        $("#instance-dialog-form").dialog({height: 540});
+        $("#instance-dialog-form").dialog({height: 550});
         $("#instance-boot-options").show(0);
     } else {
         $("#instance-dialog-form").dialog({height: 390});
@@ -401,7 +415,6 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
         // Make AJAX call and handle response
         $.getJSON('/create_instance/' + confName + '/' + confSecGroup + '/nova/' + confFlavor + '/' + confSecKey + '/' + confImage + '/' + confNetwork + '/' + PROJECT_ID + '/' + confBoot + '/' + confBootSize + '/' + confBootName + '/' + confBootType + '/')
             .done(function (data) {
-                console.log(data);
 
                 if (data.status == 'error') {
 
@@ -437,6 +450,8 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
 
 function addInstance(data) {
 
+    console.log(data);
+
     // Create new row element and append it to instance_list
     $("<tr></tr>")
         .prop("id", data.server_info.server_id)
@@ -444,6 +459,7 @@ function addInstance(data) {
             .prop("id", data.server_info.server_id + '-name-cell')
             .append($("<a></a>")
                 .prop("href", '/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/')
+                .addClass("disable-link")
                 .append($("<span></span>")
                     .prop("id", data.server_info.server_id + '-name-text')
                     .html(data.server_info.server_name.toString()))))
@@ -489,7 +505,7 @@ function addInstance(data) {
         .appendTo($("#instance_list"))
         .fadeIn();
 
-    if (data.volume != undefined) {
+    if (!data.volume.none) {
         $("<tr></tr>")
             .prop("id", data.volume.volume_id.toString())
             .addClass("volume-mounted")

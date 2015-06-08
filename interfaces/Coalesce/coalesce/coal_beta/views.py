@@ -1431,7 +1431,7 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
         out['server_info']= so.get_server(input_dict)
         out['status'] = 'success'
         out['message'] = "New server %s was created."%(out['instance']['vm_name'])
-        if boot_from_vol:
+        if boot_from_vol == 'true':
             out['message'] += " New boot volume %s was created for instance %s"%(out['volume']['volume_name'], out['instance']['vm_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
