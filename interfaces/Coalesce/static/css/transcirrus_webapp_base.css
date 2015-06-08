@@ -1113,12 +1113,12 @@ input[type="file"],
 input,
 textarea,
 .uneditable-input {
-    width: 186px;
+    width: 188px;
     display: inline-block;
 }
 
 input, textarea {
-    width: 186px;
+    width: 188px;
     display: inline-block;
 }
 
@@ -2986,7 +2986,7 @@ div.legend-header a {
 }
 
 .no-overflow {
-    overflow: hidden!important;
+    overflow: hidden !important;
 }
 
 .fade {
@@ -5111,6 +5111,31 @@ th > small {
     opacity: 0.8;
 }
 
+.styled-select {
+    background: #dddddd url("../images/down_arrow_select.jpg") no-repeat scroll right center;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    display: inline-block;
+    height: 34px;
+    line-height: 20px;
+    margin-bottom: 7px;
+    overflow: hidden;
+    width: 200px;
+}
+
+.styled-select select {
+    background: transparent;
+    width: 200px;
+    padding: 5px;
+    font-size: 16px;
+    line-height: 1;
+    border: 0;
+    border-radius: 0;
+    height: 34px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
 .ajax-loader {
     display: block;
     height: 16px;
@@ -5333,8 +5358,6 @@ th > small {
     color: rgb(28, 60, 119);
 }
 
-
-
 /* PROJECT */
 #project-delete-progressbar {
     width: 195px;
@@ -5435,7 +5458,8 @@ th > small {
     margin-right: 10px;
     padding: 5px !important;
     position: relative !important;
-    width: 200px;
+    width: 200px!important;
+    min-width: 200px !important
 }
 
 #instance-dialog-form fieldset.wide {
