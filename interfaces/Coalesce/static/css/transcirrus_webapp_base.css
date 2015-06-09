@@ -5112,7 +5112,7 @@ th > small {
 }
 
 .styled-select {
-    background: #dddddd url("../images/down_arrow_select.jpg") no-repeat scroll right center;
+    background: #dddddd url("../images/select-down-arrow.png") no-repeat scroll 172px center / 21px auto;
     border: 1px solid #cccccc;
     border-radius: 4px;
     display: inline-block;
@@ -5121,6 +5121,10 @@ th > small {
     margin-bottom: 7px;
     overflow: hidden;
     width: 200px;
+}
+
+.styled-select:hover {
+    background-color: rgba(1, 1, 1, .25);
 }
 
 .styled-select select {
@@ -5458,7 +5462,7 @@ th > small {
     margin-right: 10px;
     padding: 5px !important;
     position: relative !important;
-    width: 200px!important;
+    width: 200px !important;
     min-width: 200px !important
 }
 
@@ -5578,7 +5582,7 @@ th > small {
 }
 
 .volume-mounted {
-    background-color: rgba(0, 0, 79, 0.20)
+    background-color: rgba(28, 60, 119, 0.2);
 }
 
 /* SNAPSHOT WIDGET */

@@ -124,7 +124,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.resume_server',
             name='resume_server'),
 
-	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/delete_instance/$',
+	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<delete_boot_vol>[^/]+)/delete_instance/$',
 	    'coalesce.coal_beta.views.delete_instance',
             name='delete_instance'),
 
