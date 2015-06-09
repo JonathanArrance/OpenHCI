@@ -104,8 +104,6 @@ def delete_instance(auth_dict, delete_dict):
             cin.pg_transaction_commit()
             cin.pg_close_connection()
 
-        print("delete_boot_vol: %s"%delete_dict['delete_boot_vol'])
-
         if(delete_dict['delete_boot_vol'] == 'True'):
             #delete the volume
             delete_vol={'volume_id':boot_vol[0],'project_id':delete_dict['project_id']}
