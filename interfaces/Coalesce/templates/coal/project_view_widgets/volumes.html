@@ -53,6 +53,9 @@
                                     {% for server in instances %}
                                         {% if server.server_id == v.volume_instance %}
                                             <span id="{{ v.volume_id }}-attached-{{ server.server_name }}">{{ server.server_name }}</span>
+                                            <script>
+                                                instances.items["{{ server.server_id }}"]['bootVol'] = "{{ v.volume_id }}";
+                                            </script>
                                         {% endif %}
                                     {% endfor %}
                                 {% endif %}
