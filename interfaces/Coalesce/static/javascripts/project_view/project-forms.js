@@ -912,7 +912,7 @@ function buildInstance() {
     }
     else {
         step++;
-        uploadedImage = bamParams.instance.inputs.image.value;
+        uploadedImage = images.items[bamParams.instance.inputs.image.value].id;
         uploadImage.resolve();
     }
 
@@ -991,15 +991,15 @@ function buildInstance() {
         $(".bam-confirm-key").prop("href", '/download_public_key/' + keyId + '/' + key + '/' + PROJECT_ID + '/');
         updateProgress(step, steps, "Creating Instance");
         createInstance = $.getJSON(
-            '/create_image/' +
+            '/create_instance/' +
             bamParams.instance.inputs.name.value + '/' +
             secGroup +
             '/nova/' +
-            bamParams.instance.inputs.flavor.value + '/' +
+            flavors.items[bamParams.instance.inputs.flavor.value].id + '/' +
             key + '/' +
             uploadedImage + '/' +
             bamParams.instance.inputs.network.value + '/' +
-            PROJECT_ID + '/')
+            PROJECT_ID + '/false/none/none/none/')
             .done(function (data) {
                 if (data.status == 'error') {
                     message.showMessage('error', data.message);
