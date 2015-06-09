@@ -8,7 +8,7 @@ $(function () {
         event.preventDefault();
         // Create Form
         var form =
-            $("<div></div>").prop("id", "instance-dialog-form").prop("title", "Create Instance").css("display", "none")
+            $("<div></div>").prop("id", "instance-dialog-form").prop("title", "Create Instance")
                 .append($("<h6>Create a new instance. All form fields are required.</h6>").addClass("validateTips"))
                 .append($("<form></form>")
                     .append($("<fieldset></fieldset>")
@@ -257,7 +257,6 @@ $(function () {
         $("<div></div>")
             .prop("id", "instance-suspend-confirm-form")
             .prop("title", "Suspend Instance")
-            .css("display", "none")
             .append($("<p></p>")
                 .css("text-align", "center")
                 .html("Suspend " + instance.text() + "?"))
@@ -300,7 +299,6 @@ $(document).on('click', '.resume-instance', function (event) {
     $("<div></div>")
         .prop("id", "instance-resume-confirm-form")
         .prop("title", "Resume Instance")
-        .css("display", "none")
         .append($("<p></p>")
             .css("text-align", "center")
             .html("Resume " + instance.text() + "?"))
