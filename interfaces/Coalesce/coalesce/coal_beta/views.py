@@ -358,9 +358,15 @@ def project_view(request, project_id):
     #    containers = []
     containers = []
 
-    sec_groups    = so.list_sec_group(project_id)
-    sec_keys      = so.list_sec_keys(project_id)
-    instances     = so.list_servers(project_id)
+    print "---------------------"
+    print auth
+    print "---------------------"
+    print auth.keys()
+    print "---------------------"
+
+    sec_groups = so.list_sec_group(project_id)
+    sec_keys = so.list_sec_keys(project_id)
+    instances = so.list_servers(project_id)
     instance_info = {}
     flavors = fo.list_flavors()
     flavor_info = []
@@ -379,11 +385,14 @@ def project_view(request, project_id):
             'metadata': flav['metadata'] }
         flavor_info.append(flav_dict)
 
-    hosts=[]
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
 
-    volume_types = []
+    print "---------------------"
+    print auth
+    print "---------------------"
+    print request.session.keys()
+    print "---------------------"
     volume_types = vo.list_volume_types()
 
     for volume in volumes:
@@ -1488,7 +1497,6 @@ def list_servers(request,project_id):
         out = so.list_servers(project_id)
         out['status'] = 'success'
         out['message'] = "Server list returned for %s."%(project_id)
-        print out
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1784,6 +1792,11 @@ def update_user_password(request, user_id, project_id, password):
             out['status'] = 'success'
             out['message'] = 'The password has been successfully updated.'
             request.session['auth']['password'] = password
+            a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+            auth2 = a.get_auth()
+            request.session['auth']['token'] = auth2['token']
+            request.session.cycle_key()
+            request.session.save()
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not update the user password.: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1798,6 +1811,12 @@ def update_admin_password(request, password):
                 out['status'] = 'success'
                 out['message'] = 'The password has been successfully updated.'
                 request.session['auth']['password'] = password
+                a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                auth2 = a.get_auth()
+                request.session['auth']['token'] = auth2['token']
+                request.session.cycle_key()
+                request.session.save()
+
         else:
             out = {'status': "error", 'message': "Only admins can update admin password"}
     except Exception as e:
