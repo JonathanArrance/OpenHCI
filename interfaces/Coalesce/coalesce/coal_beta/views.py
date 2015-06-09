@@ -359,7 +359,7 @@ def project_view(request, project_id):
     flavor_info = []
 
     for flavor in flavors:
-        flav = fo.get_flavor(flavor['flav_id'])
+        flav = fo.get_flavor(flavor['id'])
         flav_dict = {
             'name': flav['flavor_name'],
             'id': flav['flav_id'],
