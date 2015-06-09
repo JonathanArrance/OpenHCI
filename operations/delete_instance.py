@@ -28,11 +28,11 @@ def delete_instance(auth_dict, delete_dict):
     db = util.db_connect()
     remove_server = {}
 
-    #if the flag not set default to False
+    #if the flag not set default to false
     if('delete_boot_vol' not in delete_dict):
-        delete_dict['delete_boot_vol'] = 'False'
+        delete_dict['delete_boot_vol'] = 'false'
     elif(delete_dict['delete_boot_vol'] == None):
-        delete_dict['delete_boot_vol'] = 'False'
+        delete_dict['delete_boot_vol'] = 'false'
 
     #remove the volumes attached to the instance.
     try:
@@ -104,11 +104,11 @@ def delete_instance(auth_dict, delete_dict):
             cin.pg_transaction_commit()
             cin.pg_close_connection()
 
-        if(delete_dict['delete_boot_vol'] == 'True'):
+        if(delete_dict['delete_boot_vol'] == 'True' or delete_dict['delete_boot_vol'] == 'true'):
             #delete the volume
             delete_vol={'volume_id':boot_vol[0],'project_id':delete_dict['project_id']}
             cinder.delete_volume(delete_vol)
-        elif(delete_dict['delete_boot_vol'] == 'False'):
+        elif(delete_dict['delete_boot_vol'] == 'False' or delete_dict['delete_boot_vol'] == 'false'):
             try:
                 update2 = {'table':"trans_system_vols",'set':"vol_attached='false',vol_attached_to_inst=NULL,vol_mount_location=NULL",'where':"vol_id='%s'" %(boot_vol[0])}
                 db.pg_transaction_begin()
