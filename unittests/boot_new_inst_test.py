@@ -35,15 +35,15 @@ b = auth.get_auth()
 
 #print server_no_vol_info
 
-server2 = {'sec_group_name':'test','sec_key_name':'test','network_name':'test','image_id':'615f30ee-7708-4a97-9c7d-d5b0c189780c',
-          'flavor_id':'1','instance_name':'server_no_vol','project_id':'c417abbb61014f2a8d330a0f7c0210a1','boot_from_vol':"False"}
+#server2 = {'sec_group_name':'test','sec_key_name':'test','network_name':'test','image_id':'860f9671-0562-4cb6-a5f8-2876fd2a65cb',
+#          'flavor_id':'1','instance_name':'server_no_vol','project_id':'ff8fbdc33d83419a8070d2e7577b3a3f','boot_from_vol':"False"}
 
-server_no_vol = boot_instance(server2,b)
+#server_no_vol = boot_instance(server2,b)
 
-print server_no_vol
+#print server_no_vol
 
-server3 = {'sec_group_name':'test','sec_key_name':'test','network_name':'test','image_id':'615f30ee-7708-4a97-9c7d-d5b0c189780c',
-          'flavor_id':'1','instance_name':'server_no_vol','project_id':'c417abbb61014f2a8d330a0f7c0210a1','volume_size':'8','volume_name':'volume_with_info','volume_type':'ssd','boot_from_vol':"True"}
+server3 = {'sec_group_name':'test','sec_key_name':'test','network_name':'test','image_id':'860f9671-0562-4cb6-a5f8-2876fd2a65cb',
+          'flavor_id':'1','instance_name':'server_no_vol','project_id':'ff8fbdc33d83419a8070d2e7577b3a3f','volume_size':'8','volume_name':'volume_with_info','volume_type':'ssd','boot_from_vol':"True"}#
 
 server_vol_info = boot_instance(server3,b)
 
