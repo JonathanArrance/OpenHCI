@@ -149,17 +149,24 @@
         </div>
         <!-- end span6 -->
 
-        <div class="span6">
+        <div class="span7">
             <div class="row-fluid">
                 <div id="widget-actions" class="well top">
                     <div class="legend">
-                        Last 24hrs: Average Instance Meters
+                        Last 24hrs: Average WAC units for project
                     </div>
                     <div style="text-align: center">
                         <body onload="initialize()" style="font: 10px arial">
-                        <span id="vcpusGaugeContainer"></span>
-                        <span id="memoryGaugeContainer"></span>
-                        <span id="diskrootsizeGaugeContainer"></span>
+                            <span id="cpuGaugeContainer"></span>
+                            <span id="memoryGaugeContainer"></span>
+                            <span id="storageGaugeContainer"></span>
+                            <span id="diskreadrateGaugeContainer"></span>
+                            <span id="diskwriterateGaugeContainer"></span>
+                            <br/>
+                            <span id="lanincomingrateGaugeContainer"></span>
+                            <span id="lanoutgoingrateGaugeContainer"></span>
+                            <span id="wanincomingrateGaugeContainer"></span>
+                            <span id="wanoutgoingrateGaugeContainer"></span>
                         </body>
                     </div>
                 </div>
@@ -338,9 +345,15 @@
         }
 
         function createGauges() {
-            createGauge("vcpus", "vCPU Count", "vcpus", "avg", 0, 64, 16);
-            createGauge("memory", "RAM Alloc MB", "memory", "avg", 0, 128000, 8);
-            createGauge("diskrootsize", "Disk Alloc GB", "disk.root.size", "avg", 0, 1000, 8);
+            createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);
+            createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);
+            createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);
+            createGauge("diskreadrate", "Disk Read B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("diskwriterate", "Disk Write B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanincomingrate", "Lan Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanoutgoingrate", "Lan Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanincomingrate", "Wan Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanoutgoingrate", "Wan Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
         }
 
         function updateGauges() {

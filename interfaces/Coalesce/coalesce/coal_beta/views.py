@@ -1,18 +1,9 @@
 # Django imports
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
-from django.http import Http404
 from django.conf import settings
-from django_tables2   import RequestConfig
-from django.core.exceptions import ValidationError
-from django.db.utils import DatabaseError
-from django.db import connection
 from django.views.decorators.cache import never_cache
-from django.core import serializers
 from django.utils import simplejson
 from django.core.cache import cache
 
@@ -57,13 +48,9 @@ import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
 
 # Avoid shadowing the login() and logout() views below.
-from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm, PasswordChangeForm
-from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
 from django.contrib.sites.models import get_current_site
 from django.template.response import TemplateResponse
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib import messages
 import transcirrus.operations.delete_instance as di
 import transcirrus.operations.boot_new_instance as bni
@@ -1786,7 +1773,7 @@ def update_user_password(request, user_id, project_id, password):
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
-        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password }
+        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password}
         up = uo.update_user_password(passwd_dict)
         if(up == 'OK'):
             out['status'] = 'success'
@@ -1798,7 +1785,7 @@ def update_user_password(request, user_id, project_id, password):
             request.session.cycle_key()
             request.session.save()
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not update the user password.: %s"%(e)}
+        out = {'status' : "error", 'message' : "Could not update the user password.: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def update_admin_password(request, password):
