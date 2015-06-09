@@ -53,23 +53,38 @@
                                     {% for server in instances %}
                                         {% if server.server_id == v.volume_instance %}
                                             <span id="{{ v.volume_id }}-attached-{{ server.server_name }}">{{ server.server_name }}</span>
+                                            <script>
+                                                instances.items["{{ server.server_id }}"]['bootVol'] = "{{ v.volume_id }}";
+                                            </script>
                                         {% endif %}
                                     {% endfor %}
                                 {% endif %}
                             </td>
                             <td id="{{ v.volume_id }}-actions-cell">
-                                {% if v.volume_attached == 'true' %}
-                                    <a href="#" class="detach-volume">detach</a>
+                                {% if v.volume_set_bootable == 'true' %}
+                                    {% if v.volume_attached == 'false' %}
+                                        <a href="#" class="attach-volume">attach</a>
+                                        <span class="volume-actions-pipe"> | </span>
+                                        <a href="#" class="clone-volume">clone</a>
+                                        <span class="volume-actions-pipe"> | </span>
+                                        <a href="#" class="revert-volume">revert</a>
+                                        <span class="volume-actions-pipe"> | </span>
+                                        <a href="#" class="delete-volume">delete</a>
+                                    {% endif %}
                                 {% else %}
-                                    <a href="#" class="attach-volume">attach</a>
-                                {% endif %}
-                                <span class="volume-actions-pipe"> | </span>
-                                <a href="#" class="clone-volume">clone</a>
-                                <span class="volume-actions-pipe"> | </span>
-                                <a href="#" class="revert-volume">revert</a>
-                                {% if v.volume_set_bootable != 'true' %}
+                                    {% if v.volume_attached == 'true' %}
+                                        <a href="#" class="detach-volume">detach</a>
+                                    {% else %}
+                                        <a href="#" class="attach-volume">attach</a>
+                                    {% endif %}
                                     <span class="volume-actions-pipe"> | </span>
-                                    <a href="#" class="delete-volume">delete</a>
+                                    <a href="#" class="clone-volume">clone</a>
+                                    <span class="volume-actions-pipe"> | </span>
+                                    <a href="#" class="revert-volume">revert</a>
+                                    {% if v.volume_set_bootable != 'true' %}
+                                        <span class="volume-actions-pipe"> | </span>
+                                        <a href="#" class="delete-volume">delete</a>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         </tr>

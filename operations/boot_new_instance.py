@@ -112,6 +112,8 @@ def boot_instance(input_dict,auth_dict):
                   'volume_name':input_dict['volume_name'],'volume_zone':input_dict['avail_zone']}
         create_vol = volume.create_bootable_volume(create)
         logger.sys_info("Building an instance to boot from volume %s"%(create_vol['volume_id']))
+    else:
+        create_vol = { 'none': "none" }
 
     #create the instance
     #nova boot --flavor 2 --image 32778bb7-e6ab-4568-a110-8e7573df0f3b --block_device_mapping vda=7315eb50-da9f-4e21-a308-10b6b921ae91:::0 myInstanceFromVolume
