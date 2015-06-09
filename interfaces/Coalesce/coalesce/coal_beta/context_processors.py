@@ -2,6 +2,7 @@ from django.conf import settings
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.database.node_db import list_nodes
 from transcirrus.common import node_util
+from transcirrus.common import version
 
 def global_vars(request):
     try:
@@ -22,10 +23,11 @@ def global_vars(request):
         user_level="3"
         first_time='FALSE'
 
-
+    ver = version.VERSION_FULL_STR
 
     return {'username': username,
             'user_level': user_level,
             'project_id': project_id,
             'token': token,
-            'first_time': first_time}
+            'first_time': first_time,
+            'version': ver}
