@@ -50,7 +50,7 @@ yo = store.list_attached_vols(input_dict)
 print yo
 
 '''
-server_input = {'server_id':'707b8c8d-3c1c-4bfc-9978-45c8e19c6010','project_id':'c417abbb61014f2a8d330a0f7c0210a1'}
+server_input = {'server_id':'8c7cddd9-32d2-48e9-9578-e03c61c4438f','project_id':'ff8fbdc33d83419a8070d2e7577b3a3f'}
 inst_info = nova.get_server(server_input)
 
 print inst_info
@@ -128,11 +128,11 @@ server = {'sec_group_name':'project1','avail_zone':'nova','amount':'1','sec_key_
 yo = nova.create_server(server)
 print yo
 
-'''
+
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
-'''
+
 print "---------------------------------------"
 time.sleep(2)
 

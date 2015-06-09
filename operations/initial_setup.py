@@ -302,7 +302,7 @@ def run_setup(new_system_variables,auth_dict):
 
     #enable ceilometer
     logger.sys_info('SETUP30:Adding ceilometer to mongo DB...')
-    os.system('sudo mongo --host 172.24.24.10 ceilometer /transcirrus/mongo.js > dev/null')
+    os.system('sudo mongo --host 172.24.24.10 ceilometer /transcirrus/mongo.js')
     logger.sys_info('SETUP31:Writing the Ceilometer Config files...')
     ceil_configs = node_db.get_node_ceilometer_config(node_id)
     #take the array of cinder file decriptors and write the files

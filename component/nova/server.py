@@ -5,8 +5,6 @@ import os
 import json
 import time
 import random
-#import thread
-#from multiprocessing.pool import ThreadPool
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -19,29 +17,20 @@ from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 #get the nova libs
-#from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.nova.image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
-#from transcirrus.component.glance.glance_ops import glance_ops
-from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.server_action import server_actions
-#from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
 #######Special imports#######
 
 class server_ops:
-    #UPDATED/UNIT TESTED
-    #DESC:
-    #INPUT:
-    #OUTPUT:
     def __init__(self,user_dict):
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
-        # user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token}
         else:
             self.username = user_dict['username']
             self.user_id = user_dict['user_id']
@@ -78,23 +67,9 @@ class server_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-        #attach to the DB
-        try:
-            #Try to connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sys_error("Could not connect to db with error: %s" %(e))
-            raise Exception("Could not connect to db with error: %s" %(e))
-
-        #build flavor object
-        #self.flav = flavor_ops(user_dict)
-        #self.qo = quota_ops(user_dict)
-
-        #build the nova image object
-        #self.image = nova_image_ops(user_dict)
+        self.db = util.db_connect()
         self.layer_three = layer_three_ops(user_dict)
         self.net = neutron_net_ops(user_dict)
-        self.glance = glance_ops(user_dict)
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
         self.keystone = tenant_ops(user_dict)
@@ -102,9 +77,6 @@ class server_ops:
         #random number used if sec group or key name taken
         self.rannum = random.randrange(1000,9000)
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
     def destructor(self):
         #close any open db connections
         self.db.pg_close_connection()
@@ -216,17 +188,6 @@ class server_ops:
             if(project['project_name'] != 'trans_default'):
                 self.inst_array = self.inst_array + self.list_servers(project['project_id'])
 
-        #try:
-        #    get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
-        #    instances = self.db.pg_select(get_inst)
-        #except Exception as e:
-        #    logger.sql_error("%s"%(e))
-        #    raise e
-
-        #inst_array = []
-        #for inst in instances:
-        #    r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
-        #    inst_array.append(r_dict)
         return self.inst_array
 
     def create_server(self,create_dict):
@@ -450,6 +411,7 @@ class server_ops:
                        - server_int_net - dict of int net info
                        - server_zone
                        - server_status
+                       - server_state
                        - server_node
                        - server_public_ips
                        - floating_ip_id
@@ -532,14 +494,14 @@ class server_ops:
             novnc = self.server_actions.get_instance_console(input_dict)
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'flavor_id':load['server']['flavor']['id'],
-                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
+                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],'server_state':load['server']['OS-EXT-STS:vm_state'],
                       'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc,'date_created':load['server']['created'],'fault':self.fault}
             return r_dict
         elif(rest['response'] == 409):
             #logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
             logger.sys_error("%s ERROR: 409"%(str(load['itemNotFound']['message'])))
-        #else:
-        #    ec.error_codes(rest)
+        else:
+            ec.error_codes(rest)
 
     def detach_all_servers_from_network(self,input_dict):
         """

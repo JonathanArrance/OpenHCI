@@ -40,9 +40,11 @@
 
                 <label for="bam-instance-flavor">Flavor</label>
                 <select name="bam-flavor-name" id="bam-instance-flavor">
-                    {% for flavor in flavors %}
-                        <option value="{{ flavor.flavor_name }}">{{ flavor.flavor_name }}</option>
-                    {% endfor %}
+                    <script>
+                        $(function () {
+                            refreshSelect($("#bam-instance-flavor"), flavors);
+                        });
+                    </script>
                 </select>
 
             </div>
