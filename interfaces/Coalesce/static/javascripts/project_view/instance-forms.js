@@ -450,8 +450,6 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
 
 function addInstance(data) {
 
-    console.log(data);
-
     // Create new row element and append it to instance_list
     $("<tr></tr>")
         .prop("id", data.server_info.server_id)
@@ -502,8 +500,7 @@ function addInstance(data) {
                 .prop("href", "#")
                 .prop("class", 'delete-instance ' + data.server_info.server_id + '-disable-action')
                 .html("delete")))
-        .appendTo($("#instance_list"))
-        .fadeIn();
+        .appendTo($("#instance_list")).fadeIn();
 
     if (!data.volume.none) {
         $("<tr></tr>")
@@ -515,6 +512,7 @@ function addInstance(data) {
                 .append(
                 $("<a></a>")
                     .prop("href", '/projects/' + PROJECT_ID + '/volumes/' + data.volume.volume_id + '/view/')
+                    .addClass("disable-link")
                     .append(
                     $("<span></span>")
                         .prop("id", data.volume.volume_id + '-name-text')
@@ -527,41 +525,50 @@ function addInstance(data) {
                     .html(data.server_info.server_name)))
             .append(
             $("<td></td>")
-                .prop("id", data.volume.volume_id + '-actions-cell')
-                .append(
-                $("<a></a>")
-                    .prop("href", "#")
-                    .prop("class", "detach-volume")
-                    .html("detach"))
-                .append(
-                $("<span></span>")
-                    .prop("class", "volume-actions-pipe")
-                    .html(" | "))
-                .append(
-                $("<a></a>")
-                    .prop("href", "#")
-                    .prop("class", "clone-volume")
-                    .html("clone"))
-                .append(
-                $("<span></span>")
-                    .prop("class", "volume-actions-pipe")
-                    .html(" | "))
-                .append(
-                $("<a></a>")
-                    .prop("href", "#")
-                    .prop("class", "revert-volume")
-                    .html("revert")))
+                .prop("id", data.volume.volume_id + '-actions-cell'))
             .appendTo($("#volume_list")).fadeIn();
+
+        if ($("#volume_list tr").length >= 2) {
+            $("#volume_placeholder").fadeOut().remove();
+            setVisible('#create-snapshot', true);
+        }
+
+        volumes.setItem(data.volume.volume_id, {
+            size: data.volume.volume_size,
+            name: data.volume.volume_name,
+            type: data.volume.volume_type,
+            value: data.volume.volume_id,
+            option: data.volume.volume_name,
+            attached: "true",
+            bootable: "true"
+        });
 
         snapshotVolumes.setItem(data.volume.volume_id, {
             value: data.volume.volume_id,
-            option: data.volume.name
+            option: data.volume.volume_name
         });
+
+        // Update select
+        refreshSelect($("#snap_volume"), snapshotVolumes);
+        refreshSelect("#bam-volume-select-existing", snapshotVolumes);
+        $('<option></option>')
+            .val("none")
+            .html("Skip Adding Storage")
+            .prop("selected", "selected")
+            .prependTo($("#bam-volume-select-existing"));
+        $('<option></option>')
+            .val("create")
+            .html("Create Volume")
+            .appendTo($("#bam-volume-select-existing"));
+
+        // Update usedStorage
+        updateUsedStorage();
+        updateStorageBar();
     }
 
     // Check table length, remove placeholder if necessary
     if ($('#instance_list tr').length >= 2) {
-        $('#instance_placeholder').remove().fadeOut();
+        $('#instance_placeholder').fadeOut().remove();
         setVisible("#create-instance-snapshot", true);
     }
 
@@ -657,50 +664,54 @@ function deleteInstance(id, name, row) {
                 // Unattach volumes
                 for (var i = 0; i < data.vols.length; i++) {
 
-                    if (volumes.items[data.vols[i]] != undefined) {
-                        $(document.getElementById(data.vols[i] + '-attached-cell'))
+                    if (volumes.items[data.vols[i][0]] != undefined) {
+                        $(document.getElementById(data.vols[i][0] + '-attached-cell'))
                             .empty()
-                            .fadeOut()
                             .append($("<span></span>")
-                                .prop("id", data.vols[i] + '-attached-placeholder')
+                                .prop("id", data.vols[i][0] + '-attached-placeholder')
                                 .html("No Attached Instance")
                                 .fadeIn())
                             .parent()
                             .removeClass("volume-attached");
 
-                        $(document.getElementById(data.vols[i] + '-actions-cell'))
+                        $(document.getElementById(data.vols[i][0] + '-actions-cell'))
                             .empty()
-                            .fadeOut()
                             .append($("<a></a>")
                                 .prop("href", "#")
                                 .prop("class", "attach-volume")
-                                .html("attach"))
+                                .html("attach")
+                                .fadeIn())
                             .append($("<span></span>")
                                 .prop("class", "volume-actions-pipe")
-                                .html(" | "))
+                                .html(" | ")
+                                .fadeIn())
                             .append($("<a></a>")
                                 .prop("href", "#")
                                 .prop("class", "clone-volume")
-                                .html("clone"))
+                                .html("clone")
+                                .fadeIn())
                             .append($("<span></span>")
                                 .prop("class", "volume-actions-pipe")
-                                .html(" | "))
+                                .html(" | ")
+                                .fadeIn())
                             .append($("<a></a>")
                                 .prop("href", "#")
                                 .prop("class", "revert-volume")
-                                .html("revert"))
+                                .html("revert")
+                                .fadeIn())
                             .append($("<span></span>")
                                 .prop("class", "volume-actions-pipe")
-                                .html(" | "))
+                                .html(" | ")
+                                .fadeIn())
                             .append($("<a></a>")
                                 .prop("href", "#")
                                 .prop("class", "delete-volume")
-                                .html("delete"))
-                            .fadeIn();
+                                .html("delete")
+                                .fadeIn());
 
-                        snapshotVolumes.setItem(data.vols[i], {
-                            value: data.vols[i],
-                            option: volumes.items[data.vols[i]].name
+                        snapshotVolumes.setItem(data.vols[i][0], {
+                            value: data.vols[i][0],
+                            option: volumes.items[data.vols[i][0]].name
                         })
                     }
 
@@ -709,29 +720,27 @@ function deleteInstance(id, name, row) {
                 // Unassign floating IPs
                 for (var j = 0; j < data.floating_ip.length; j++) {
 
-                    $(document.getElementById(data.floating_ip_id[j] + '-instance-cell'))
+                    $(document.getElementById(data.floating_ip_id[j][0] + '-instance-cell'))
                         .empty()
-                        .fadeOut()
                         .append($("<span></span>")
-                            .prop("id", data.floating_ip[j] + '-instance-name')
-                            .html("None"))
+                            .prop("id", data.floating_ip[j][0] + '-instance-name')
+                            .html("None")
+                            .fadeIn())
                         .parent()
-                        .removeClass("fip-assigned")
-                        .fadeIn();
+                        .removeClass("fip-assigned");
 
-                    $(document.getElementById(data.floating_ip_id[j] + '-actions-cell'))
+                    $(document.getElementById(data.floating_ip_id[j][0] + '-actions-cell'))
                         .empty()
-                        .fadeOut()
                         .append($("<a></a>")
-                            .prop("id", data.floating_ip_id[j])
+                            .prop("id", data.floating_ip_id[j][0])
                             .prop("class", "deallocate-ip")
                             .prop("href", "#")
-                            .html("deallocate"))
-                        .fadeIn();
+                            .html("deallocate")
+                            .fadeIn());
 
-                    assignableFips.setItem(data.floating_ip_id[j], {
-                        value: data.floating_ip_id[j],
-                        option: fips.getItem(data.floating_ip_id[j]).ip
+                    assignableFips.setItem(data.floating_ip_id[j][0], {
+                        value: data.floating_ip_id[j][0],
+                        option: fips.getItem(data.floating_ip_id[j][0]).ip
                     })
                 }
 
