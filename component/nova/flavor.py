@@ -91,7 +91,7 @@ class flavor_ops:
             load = json.loads(rest['data'])
             flav_array = []
             for flavor in load['flavors']:
-                line = {"flavor_name": str(flavor['name']), "flav_id": str(flavor['id'])}
+                line = {"name": str(flavor['name']), "id": str(flavor['id'])}
                 flav_array.append(line)
             return flav_array
         else:

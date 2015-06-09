@@ -473,7 +473,7 @@ def project_view(request, project_id):
                                                         'instances': instances,
                                                         'instance_info': instance_info,
                                                         'flavors': flavor_info,
-                                                        'quota': quota,
+                                                        'quota': quota
                                                         }))
 
 def pu_project_view(request, project_id):
