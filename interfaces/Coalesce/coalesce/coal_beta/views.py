@@ -302,6 +302,7 @@ def project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
@@ -391,6 +392,7 @@ def project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -406,7 +408,8 @@ def project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -480,6 +483,7 @@ def pu_project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
     #do not use until version2
@@ -538,6 +542,7 @@ def pu_project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -553,7 +558,8 @@ def pu_project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -619,6 +625,7 @@ def basic_project_view(request, project_id):
     project = to.get_tenant(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     so = server_ops(auth)
     l3o = layer_three_ops(auth)
     no = neutron_net_ops(auth)
@@ -648,13 +655,12 @@ def basic_project_view(request, project_id):
         except:
             pass
 
-
-
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -670,7 +676,8 @@ def basic_project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -1079,15 +1086,23 @@ def get_upload_progress (request, progress_id):
 # Delete an image by it's image id.
 def delete_image (request, image_id):
     out = {}
+    # check to make sure you are not deleting an instance snapshot
     try:
         auth = request.session['auth']
-        go = glance_ops(auth)
-        go.delete_image(image_id)
-        #if(del_image == 'OK'):
+        sa = server_actions(auth)
+        sa.delete_instance_snapshot(image_id)
         out['status'] = "success"
-        out['message'] = "Image was deleted."
-    except Exception, e:
-        out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
+        out['message'] = "Snapshot was deleted."
+    except:
+        try:
+            auth = request.session['auth']
+            go = glance_ops(auth)
+            go.delete_image(image_id)
+            #if(del_image == 'OK'):
+            out['status'] = "success"
+            out['message'] = "Image was deleted."
+        except Exception, e:
+            out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description=None):
@@ -1114,6 +1129,19 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         out['message'] = "Instance has been reverted."
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def delete_instance_snapshot(request, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        sa.delete_instance_snapshot(snapshot_id)
+        out['status'] = "success"
+        out['message'] = "Snapshot was deleted."
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting snapshot: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot_id):
