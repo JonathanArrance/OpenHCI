@@ -52,6 +52,7 @@ def printmsg (msg):
         NumMessages = int(Data['num_messages'])
         Data['num_messages'] = NumMessages + 1
         Data['msg%s' % NumMessages] = msg
+        Cache.set (CacheKey, Data)
     return
 
 # Turn on caching of messages to memcached.
@@ -131,16 +132,16 @@ def GetRemoteVersion (Host, Handle):
     try:
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand ("rpm -qa transcirrus", Host, Handle)
         if ExitStatus != 0:
-            printmsg ("Error retrieving current version on remote node, exit status:  %d" % ExitStatus)
+            printmsg ("Error retrieving current version on remote node, exit status: %d" % ExitStatus)
             printmsg ("stdout text: %s" % STDout)
             printmsg ("stderr text: %s" % STDerr)
-            raise Exception ("GetRemoteVersion error")
+            raise Exception ("Error retrieving current version on remote node, exit status: %d" % ExitStatus)
         if STDout == "":
             return ("0.0-0")                    # No version installed so we default to this.
         return (ExtractVersion (STDout))
     except Exception, e:
         printmsg ("Error retrieving current version on remote node, exception: %s" % e)
-        raise
+        raise Exception ("Error retrieving current version on remote node, exception: %s" % e)
 
 # Copies the given rpm to the remote host.
 # Returns the full path to the retrieved file.
@@ -150,7 +151,7 @@ def CopyRPM (RPMFile, Host, Handle):
         ssh_utils.PutFile (RPMFile, RemoteRPMFile, Host, Handle)
     except Exception, e:
         printmsg ("Error copying rpm file to remote node, exception: %s" % e)
-        raise
+        raise Exception ("Error copying rpm file to remote node, exception: %s" % e)
     return (RemoteRPMFile)
 
 # Makes a tar file of the current transcirrus software.
@@ -159,14 +160,14 @@ def BackupFiles (Version, Host, Handle):
         TarCommand = "tar czf " + RemoteInstallPath + "/transcirrus-" + Version + ".bck.tar.gz -C " + RemoteInstallPath + " transcirrus"
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (TarCommand, Host, Handle)
         if ExitStatus != 0:
-            printmsg ("Error backing up remote transcirrus directory, exit status:  %d" % ExitStatus)
+            printmsg ("Error backing up remote transcirrus directory, exit status: %d" % ExitStatus)
             printmsg ("stdout text: %s" % STDout)
             printmsg ("stderr text: %s" % STDerr)
-            raise Exception ("BackupFiles error")
+            raise Exception ("Error backing up remote transcirrus directory, exit status: %d" % ExitStatus)
         return
     except Exception, e:
         printmsg ("Error retrieving current version on remote node, exception: %s" % e)
-        raise
+        raise Exception ("Error retrieving current version on remote node, exception: %s" % e)
 
 # Installs the rpm that was placed on the remote host.
 def InstallRPM (RPMFile, Host, Handle):
@@ -175,14 +176,14 @@ def InstallRPM (RPMFile, Host, Handle):
         RPMCommand = "rpm -Uvh --force " + RemoteRPMFile
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (RPMCommand, Host, Handle)
         if ExitStatus != 0:
-            printmsg ("Error installing rpm package %s on remote host, exit status:  %d" % (ExtractFilename(RPMFile), ExitStatus))
+            printmsg ("Error installing rpm package %s on remote host, exit status: %d" % (ExtractFilename(RPMFile), ExitStatus))
             printmsg ("stdout text: %s" % STDout)
             printmsg ("stderr text: %s" % STDerr)
-            raise Exception ("InstallRPM error")
+            raise Exception ("Error installing rpm package %s on remote host, exit status: %d" % (ExtractFilename(RPMFile), ExitStatus))
         return
     except Exception, e:
         printmsg ("Error installing rpm package on remote host, exception: %s" % e)
-        raise
+        raise Exception ("Error installing rpm package on remote host, exception: %s" % e)
 
 # Goes through the database and returns a dict of all nodes with the node's name and data IP address.
 def FindNodesToUpgrade (Nodename=None):

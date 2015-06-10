@@ -45,6 +45,7 @@ import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
 import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
+import transcirrus.common.memcache as memcache
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -77,6 +78,8 @@ from coalesce.coal_beta.forms import *
 
 # Globals
 cache_key = None
+phonehome_cache = None
+upgrade_cache = None
 eseries_config = None
 nfs_config = None
 
@@ -2156,22 +2159,68 @@ def delete_object (request, container, filename, project_id, project_name):
 
 # Call the routine that will collect all the data from all nodes and send it back to us.
 def phonehome (request):
+    global phonehome_cache
     try:
+        phonehome_cache = None
+        support_create.EnableCaching()
         support_create.DoCreate()
+        support_create.DisableCaching()
+        phonehome_cache = None
         out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error collecting/sending support data: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
+# Call the routine that will return the cached support messages.
+def phonehome_msgs (request):
+    global phonehome_cache
+    try:
+        if phonehome_cache == None:
+            phonehome_cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+        data = phonehome_cache.get(support_create.CacheKey)
+        num_messages = int(data['num_messages'])
+        if num_messages == 0:
+            msg = ""
+        else:
+            msg = data['msg%s' % (num_messages-1)]
+        out = {'status' : "success", 'message' : msg}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting support messages: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
 # Call the routine that will upgrade all nodes to the given version of software.
 def upgrade (request, version="stable"):
+    global upgrade_cache
     try:
-        ug.ReleaseToDownload = version
-        ug.DoUpgrade()
+        upgrade.ReleaseToDownload = version
+        upgrade_cache = None
+        upgrade.EnableCaching()
+        upgrade.DoUpgrade()
+        upgrade.DisableCaching()
+        upgrade_cache = None
         out = {'status' : "success", 'message' : "Nodes have been upgraded."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Call the routine that will return the cached upgrade messages.
+def upgrade_msgs (request):
+    global upgrade_cache
+    try:
+        if upgrade_cache == None:
+            upgrade_cache = cache.Client(['127.0.0.1:11211'], debug=0)
+        data = cache.get(upgrade.CacheKey)
+        num_messages = int(data['num_messages'])
+        if num_messages == 0:
+            msg = ""
+        else:
+            msg = data['msg%s' % (num_messages-1)]
+        out = {'status' : "success", 'message' : msg}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting upgrade messages: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
