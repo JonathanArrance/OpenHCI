@@ -23,11 +23,15 @@ $(function () {
                 },
                 buttons: {
                     "Confirm": function () {
+                        var phonehome = $.Deferred();
+
                         message.showMessage('notice', "Phoning Home ...");
                         disableUiButtons('.ui-button', true);
                         $("#phonehome-confirm-form").empty()
-                            .append($("<div></div>").prop("id", 'loader').prop("class", "ajax-loader").fadeIn());
-                        $.getJSON('/phonehome/')
+                            .append($("<div></div>").prop("id", 'loader').prop("class", "ajax-loader").fadeIn())
+                            .append($("<p></p>").prop("id", "status"));
+
+                        phonehome = $.getJSON('/phonehome/')
                             .done(function (data) {
                                 if (data.status == "error") {
                                     message.showMessage('error', data.message);
@@ -45,9 +49,24 @@ $(function () {
                                 disableUiButtons('.ui-button', false);
                                 $("#phonehome-confirm-form").empty()
                                     .append($("<p></p>").css("text-align", "center").html("Send support data to TransCirrus?").fadeIn());
-                            })
+                            });
+
+                        var phonehomeMsg = setInterval(getMsg(), 5000);
+
+                        $.when(phonehome).done(function(){
+                            clearInterval(phonehomeMsg);
+                        });
                     }
                 }
             });
     });
+
+    function getMsg() {
+        $.getJSON('/phonehome/getmsg/')
+            .done(function (data) {
+                console.log(data);
+                $("#status").empty()
+                    .append(data.msg)
+            });
+    }
 });
