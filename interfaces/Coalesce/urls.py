@@ -168,6 +168,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.evacuate_server',
             name='evacuate_server'),
 
+        url(r'^server/(?P<snapshot_id>[^/]+)/delete_instance_snapshot/$',
+            'coalesce.coal_beta.views.delete_instance_snapshot',
+            name='delete_instance_snapshot'),
+
         # --- Images ----
         url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
             'coalesce.coal_beta.views.import_local',

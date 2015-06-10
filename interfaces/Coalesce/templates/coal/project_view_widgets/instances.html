@@ -81,6 +81,7 @@
                 status: "{{v.server_status}}",
                 flavor: "{{v.server_flavor}}",
                 os: "{{v.server_os}}",
+                snapshots: [],
                 console: "{{v.novnc_console}}"
             });
             instanceOpts.setItem("{{v.server_id}}", {
@@ -92,6 +93,16 @@
                 html: '<a href=\"{{v.novnc_console}}\" class=\"open-instance-console\" onClick=\"window.open(this.href,\'_blank\',\'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435\'); return false;\">console</a>'
             });
         </script>
+        {% for snap in v.snapshots %}
+            <script>snapshot = [];</script>
+            {% for key,value in snap.items %}
+                <script>
+                    snapshot[snapshot.length] = {"{{ key }}": "{{ value }}"};
+                </script>
+            {% endfor %}
+            <script>instances.items["{{ v.server_id }}"]['snapshots'][instances.items["{{ v.server_id }}"]['snapshots'].length] = snapshot;
+            delete snapshot;</script>
+        {% endfor %}
     {% endfor %}
 {% endif %}
 

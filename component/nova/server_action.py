@@ -670,7 +670,7 @@ class server_actions:
             logger.sys_error('The current user can not perform the backup operation.')
             raise Exception('The current user can not perform the backup operation.')
 
-        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == '')):
+        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == 'none')):
             snap_dict['snapshot_name'] = server[0][0] + '_snapshot'
 
         if (('snapshot_description' not in snap_dict) or (snap_dict['snapshot_description'] == 'none')):
@@ -775,7 +775,6 @@ class server_actions:
 
         r_array = []
         for snap in snapshots:
-            print snap
             r_dict ={'snapshot_id':snap[0],'snapshot_name':snap[1], 'instance_id': instance_id, 'project_id':snap[2]}
             r_array.append(r_dict)
 
