@@ -185,7 +185,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_upload_progress',
             name='get_upload_progress'),
 
-        url(r'^delete_image/(?P<image_id>[^/]+)/$',
+        url(r'^delete_image/(?P<project_id>[^/]+)/(?P<image_id>[^/]+)/$',
             'coalesce.coal_beta.views.delete_image',
             name='delete_image'),
 

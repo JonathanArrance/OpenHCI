@@ -325,7 +325,7 @@ $(function () {
                     $(actionsCell).empty().fadeOut();
                     $(actionsCell).append(loaderHtml).fadeIn();
 
-                    $.getJSON('/delete_image/' + confId + '/')
+                    $.getJSON('/delete_image/' + PROJECT_ID + '/' + confId + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {

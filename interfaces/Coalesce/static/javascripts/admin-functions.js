@@ -1,4 +1,7 @@
 $(function () {
+
+    // --
+    var gettingPhonehomeMsg;
     $("#phonehome").click(function (event) {
         event.preventDefault();
         $("<div></div>")
@@ -23,21 +26,22 @@ $(function () {
                 },
                 buttons: {
                     "Confirm": function () {
-                        var phonehome = $.Deferred();
-
+                        var form = $("#phonehome-confirm-form");
                         message.showMessage('notice', "Phoning Home ...");
                         disableUiButtons('.ui-button', true);
-                        $("#phonehome-confirm-form").empty()
-                            .append($("<div></div>").prop("id", 'loader').prop("class", "ajax-loader").fadeIn())
-                            .append($("<p></p>").prop("id", "status"));
-
-                        phonehome = $.getJSON('/phonehome/')
+                        form.empty()
+                            .append($("<span></span>").addClass("ajax-loader-label").html("Working: ").fadeIn())
+                            .append($("<div></div>").prop("id", 'loader').addClass("ajax-loader").fadeIn())
+                            .append($("<p></p>").prop("id", "status").css("text-align", "center").html("Initializing Phone Home"));
+                        form.dialog({height: 225});
+                        var phonehome = $.getJSON('/phonehome/')
                             .done(function (data) {
                                 if (data.status == "error") {
                                     message.showMessage('error', data.message);
                                     disableUiButtons('.ui-button', false);
                                     $("#phonehome-confirm-form").empty()
                                         .append($("<p></p>").css("text-align", "center").html("Send support data to TransCirrus?").fadeIn());
+                                    form.dialog({height: 125});
                                 }
                                 if (data.status == "success") {
                                     message.showMessage('success', data.message);
@@ -49,11 +53,16 @@ $(function () {
                                 disableUiButtons('.ui-button', false);
                                 $("#phonehome-confirm-form").empty()
                                     .append($("<p></p>").css("text-align", "center").html("Send support data to TransCirrus?").fadeIn());
+                                form.dialog({height: 125});
                             });
-
-                        var phonehomeMsg = setInterval(getMsg(), 5000);
-
-                        $.when(phonehome).done(function(){
+                        gettingPhonehomeMsg = false;
+                        var phonehomeMsg = window.setInterval(function () {
+                            if (!gettingPhonehomeMsg) {
+                                gettingPhonehomeMsg = true;
+                                getMsg();
+                            }
+                        }, 5000);
+                        $.when(phonehome).done(function () {
                             clearInterval(phonehomeMsg);
                         });
                     }
@@ -62,11 +71,12 @@ $(function () {
     });
 
     function getMsg() {
-        $.getJSON('/phonehome/getmsg/')
+        var getMsg = $.getJSON('/phonehome/getmsg/')
             .done(function (data) {
-                console.log(data);
-                $("#status").empty()
-                    .append(data.msg)
+                $("#status").html(data.message);
             });
+        $.when(getMsg).always(function () {
+            gettingPhonehomeMsg = false;
+        });
     }
 });

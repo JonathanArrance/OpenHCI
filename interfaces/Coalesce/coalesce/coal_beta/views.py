@@ -1076,13 +1076,15 @@ def get_upload_progress (request, progress_id):
 
 
 # Delete an image by it's image id.
-def delete_image (request, image_id):
+def delete_image (request, image_id, project_id):
     out = {}
     # check to make sure you are not deleting an instance snapshot
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
-        sa.delete_instance_snapshot(image_id)
+        snap = { 'snapshot_id':image_id, 'project_id':project_id}
+        snapshot = sa.get_instance_snap_info(snap)
+        sa.delete_instance_snapshot(snapshot['snapshot_id'])
         out['status'] = "success"
         out['message'] = "Snapshot was deleted."
     except:
