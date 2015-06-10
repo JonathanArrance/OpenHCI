@@ -248,7 +248,7 @@
                 <label for="flavor">Select new flavor</label>
                 <select name="flavor" id="flavor">
                     {% for flav in flavors %}
-                        <option value="{{ flav.flav_id }}">{{ flav.flavor_name }}</option>
+                        <option value="{{ flav.id }}">{{ flav.name }}</option>
                     {% endfor %}
                 </select>
             </fieldset>

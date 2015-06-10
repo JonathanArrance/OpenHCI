@@ -23,7 +23,7 @@ $(function () {
 
     $("#instance-view-resize-dialog-form").dialog({
         autoOpen: false,
-        height: 125,
+        height: 175,
         width: 235,
         modal: true,
         buttons: {
