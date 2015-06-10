@@ -64,9 +64,9 @@ from urlparse import urlsplit
 from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
-#import transcirrus.operations.support_create as support_create
-#import transcirrus.operations.upgrade as upgrade
-#sys.path.append("/usr/lib/python2.6/site-packages/")
+import transcirrus.operations.support_create as support_create
+import transcirrus.operations.upgrade as ug
+sys.path.append("/usr/lib/python2.6/site-packages/")
 
 import transcirrus.operations.third_party_storage.third_party_config as tpc
 from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
@@ -2178,8 +2178,8 @@ def phonehome (request):
 # Call the routine that will upgrade all nodes to the given version of software.
 def upgrade (request, version="stable"):
     try:
-        upgrade.ReleaseToDownload = version
-        upgrade.DoUpgrade()
+        ug.ReleaseToDownload = version
+        ug.DoUpgrade()
         out = {'status' : "success", 'message' : "Nodes have been upgraded."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
