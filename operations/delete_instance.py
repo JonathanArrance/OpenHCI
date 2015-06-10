@@ -34,6 +34,10 @@ def delete_instance(auth_dict, delete_dict):
     elif(delete_dict['delete_boot_vol'] == None):
         delete_dict['delete_boot_vol'] = 'false'
 
+    #normalize input
+    raw = delete_dict['delete_boot_vol']
+    delete_boot_vol = raw.lower()
+
     #remove the volumes attached to the instance.
     try:
         get_vols = {'select':'vol_id,vol_set_bootable','from':'trans_system_vols','where':"vol_attached_to_inst='%s'"%(delete_dict['server_id'])}
@@ -104,11 +108,11 @@ def delete_instance(auth_dict, delete_dict):
             cin.pg_transaction_commit()
             cin.pg_close_connection()
 
-        if(delete_dict['delete_boot_vol'] == 'True' or delete_dict['delete_boot_vol'] == 'true'):
+        if(delete_boot_vol == 'true'):
             #delete the volume
             delete_vol={'volume_id':boot_vol[0],'project_id':delete_dict['project_id']}
             cinder.delete_volume(delete_vol)
-        elif(delete_dict['delete_boot_vol'] == 'False' or delete_dict['delete_boot_vol'] == 'false'):
+        elif(delete_boot_vol == 'false'):
             try:
                 update2 = {'table':"trans_system_vols",'set':"vol_attached='false',vol_attached_to_inst=NULL,vol_mount_location=NULL",'where':"vol_id='%s'" %(boot_vol[0])}
                 db.pg_transaction_begin()
