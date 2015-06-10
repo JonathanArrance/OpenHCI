@@ -66,7 +66,7 @@ from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
 import transcirrus.operations.support_create as support_create
-import transcirrus.operations.upgrade as ug
+import transcirrus.operations.upgrade as upgrade
 sys.path.append("/usr/lib/python2.6/site-packages/")
 
 import transcirrus.operations.third_party_storage.third_party_config as tpc

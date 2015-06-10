@@ -1,6 +1,7 @@
 #!/usr/local/bin/python2.7
 
 import os
+os.environ['PYTHON_EGG_CACHE'] = '/tmp'
 import sys
 import getopt
 import ssh_utils
