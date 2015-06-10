@@ -344,12 +344,6 @@ def project_view(request, project_id):
     #    containers = []
     containers = []
 
-    print "---------------------"
-    print auth
-    print "---------------------"
-    print auth.keys()
-    print "---------------------"
-
     sec_groups = so.list_sec_group(project_id)
     sec_keys = so.list_sec_keys(project_id)
     instances = so.list_servers(project_id)
@@ -374,11 +368,6 @@ def project_view(request, project_id):
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
 
-    print "---------------------"
-    print auth
-    print "---------------------"
-    print request.session.keys()
-    print "---------------------"
     volume_types = vo.list_volume_types()
 
     for volume in volumes:
