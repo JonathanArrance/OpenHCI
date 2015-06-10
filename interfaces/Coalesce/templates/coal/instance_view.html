@@ -248,7 +248,6 @@
                 <label for="flavor">Select new flavor</label>
                 <select name="flavor" id="flavor">
                     {% for flav in flavors %}
-                        <script>console.log("{{ flav }}");</script>
                         <option value="{{ flav.id }}">{{ flav.name }}</option>
                     {% endfor %}
                 </select>
