@@ -76,6 +76,14 @@ def boot_instance(input_dict,auth_dict):
         logger.sys_error('The flavor %s could not be found.'%(input_dict['image_id']))
         raise Exception('The flavor %s could not be found.'%(input_dict['image_id']))
 
+    if(image_details['size'] > flavor_details['disk_space(GB)']):
+        logger.sys_error('The image disk size is to large for flavor %s. Please choose a flavor with a disk size greater than or equal to %s.'%(flavor_details['flavor_name'],image_details['size']))
+        raise Exception('The image disk size is to large for flavor %s. Please choose a flavor with a disk size greater than or equal to %s.'%(flavor_details['flavor_name'],image_details['size']))
+
+    if(image_details['size'] > flavor_details['disk_space(GB)']):
+        logger.sys_error('The image ephemeral disk size is to large for flavor %s. Please choose a flavor with an ephemeral disk size greater than or equal to %s.'%(flavor_details['flavor_name'],image_details['size']))
+        raise Exception('The image ephemeral disk size is to large for flavor %s. Please choose a flavor with an ephemeral disk size greater than or equal to %s.'%(flavor_details['flavor_name'],image_details['size']))
+
     if('avail_zone' not in input_dict):
         input_dict['avail_zone'] = 'nova'
 

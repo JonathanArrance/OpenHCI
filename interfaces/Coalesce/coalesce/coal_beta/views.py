@@ -34,7 +34,6 @@ from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
-import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
 from transcirrus.operations.revert_volume_snapshot import revert_vol_snap

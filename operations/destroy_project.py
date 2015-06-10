@@ -2,7 +2,8 @@ import transcirrus.common.logger as logger
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.component.neutron.network import neutron_net_ops
-import transcirrus.operations.delete_server as ds
+#import transcirrus.operations.delete_server as ds
+import transcirrus.operations.delete_instance as ds
 from transcirrus.component.nova.server import server_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
@@ -38,8 +39,8 @@ def destroy_project(auth_dict, project_dict):
     #instances
     server_list = nova.list_servers(project_dict['project_id'])
     for server in server_list:
-        input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id']}
-        remove_server = ds.delete_server(auth_dict, input_dict)
+        input_dict = {'project_id': project_dict['project_id'], 'server_id': server['server_id'], 'delete_boot_vol': 'true'}
+        remove_server = ds.delete_instance(auth_dict, input_dict)
         if(remove_server['delete'] == "OK"):
             logger.sys_info("Destroy project: Server %s removed." % server['server_id'])
         else:
