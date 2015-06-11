@@ -168,6 +168,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.evacuate_server',
             name='evacuate_server'),
 
+        url(r'^server/(?P<snapshot_id>[^/]+)/delete_instance_snapshot/$',
+            'coalesce.coal_beta.views.delete_instance_snapshot',
+            name='delete_instance_snapshot'),
+
         # --- Images ----
         url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
             'coalesce.coal_beta.views.import_local',
@@ -181,7 +185,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_upload_progress',
             name='get_upload_progress'),
 
-        url(r'^delete_image/(?P<image_id>[^/]+)/$',
+        url(r'^delete_image/(?P<project_id>[^/]+)/(?P<image_id>[^/]+)/$',
             'coalesce.coal_beta.views.delete_image',
             name='delete_image'),
 
@@ -524,9 +528,17 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.phonehome',
             name='phonehome'),
 
-        url(r'^upgrade/$',
+        url(r'^phonehome/getmsg/$',
+            'coalesce.coal_beta.views.phonehome_msgs',
+            name='phonehome_msgs'),
+
+        url(r'^upgrade/(?P<version>[^/]+)/$',
             'coalesce.coal_beta.views.upgrade',
             name='upgrade'),
+
+        url(r'^upgrade/getmsg/$',
+            'coalesce.coal_beta.views.upgrade_msgs',
+            name='upgrade_msgs'),
 
         # --- User Account Views ----
         url(r'^coal/login_page/$',

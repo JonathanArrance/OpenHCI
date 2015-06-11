@@ -176,11 +176,11 @@
             <div id="snapshot-details" class="well well-wide">
                 <div class="legend">
 
+                    Snapshot Details
+
                     <div id="snapshot_progressbar" class="ui-progressbar progressbar">
                         <span class="progressbar-text">Working</span>
                     </div>
-
-                    Snapshot Details
 
                     <a href="#" id="create-instance-snapshot" class="btn" style="float:right">Snapshot</a>
                 </div>
@@ -248,7 +248,7 @@
                 <label for="flavor">Select new flavor</label>
                 <select name="flavor" id="flavor">
                     {% for flav in flavors %}
-                        <option value="{{ flav.flav_id }}">{{ flav.flavor_name }}</option>
+                        <option value="{{ flav.id }}">{{ flav.name }}</option>
                     {% endfor %}
                 </select>
             </fieldset>
@@ -263,7 +263,7 @@
             <fieldset>
                 <label for="instance_snap_name">Snapshot Name</label>
                 <input type="text" name="instance_snap_name" id="instance_snap_name"
-                       class="text ui-widget-content ui-corner-all"/>
+                       class="text ui-widget-content ui-corner-all" placeholder="Optional"/>
                 <label for="instance_snap_desc">Description</label>
             <textarea name="instance_snap_desc" id="instance_snap_desc" class="text ui-widget-content ui-corner-all"
                       maxlength="80" placeholder="enter a description for the snapshot (optional)"
@@ -321,7 +321,9 @@
     </script>
 
     <script>
-        var gauges = [];
+        var gauges = [],
+                calls = [],
+                calls_complete = true;
 
         function createGauge(name, label, meterType, calcType, min, max, minorTicks) {
             var config =
@@ -356,9 +358,16 @@
         }
 
         function updateGauges() {
-            for (var key in gauges) {
-                getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
-            }
+             if (calls_complete) {
+                 calls_complete = false;
+                 for (var key in gauges) {
+                     calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
+                 }
+
+                 $.when.apply(null, calls).done(function () {
+                     calls_complete = true;
+                 });
+             }
         }
 
         function getCeilometerResults(guage, meterType, calcType) {
@@ -370,7 +379,7 @@
             var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
             var url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/" + getInstanceID() + "/"
             console.log(url);
-            return $.getJSON(url).done(function (data) {
+            call_complete = $.getJSON(url).done(function (data) {
                 if (data.status == "success") {
                     if (data.message != "empty dataset") {
                         var result = data.statistics[0][calcType];
@@ -383,6 +392,7 @@
                     got_data = false;
                 }
             });
+            return call_complete;
         }
 
         var got_data = true;

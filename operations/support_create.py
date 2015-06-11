@@ -1,6 +1,7 @@
 #!/usr/local/bin/python2.7
 
 import os
+os.environ['PYTHON_EGG_CACHE'] = '/tmp'
 import sys
 import getopt
 import ssh_utils
@@ -18,7 +19,7 @@ Username = "root"                                                               
 Password = config.TRAN_DB_PASS                                                          # Default password to login in with, transuser and root have same pwd
 RemotePath = "/tmp"                                                                     # Location on the remote host that has the support data
 LocalPath = "/tmp"                                                                      # Location on the local host to store the support data
-WputURL = "http://www.transcirrus.com/cgi-bin/upload.cgi"                               # URL for uploading files
+WputURL = "http://upload.transcirrus.com/cgi-bin/upload.cgi"                               # URL for uploading files
 DefScriptFile = "/usr/local/lib/python2.7/transcirrus/operations/support-collect.sh"    # Default script file for collecting support data
 ExpiredProcFileTimeMinutes = 15                                                         # If a proc file is older than this value in minutes then its expired
 SubProcTimeoutSecs = 10 * 60                                                            # Max time in seconds we should wait for the subprocess that is collecting data before we kill it
@@ -53,6 +54,7 @@ def printmsg (msg):
         NumMessages = int(Data['num_messages'])
         Data['num_messages'] = NumMessages + 1
         Data['msg%s' % NumMessages] = msg
+        Cache.set (CacheKey, Data)
     return
 
 # Turn on caching of messages to memcached.
@@ -88,7 +90,7 @@ def PutRemoteFile (File, Host, Handle):
         ssh_utils.PutFile (File, RemoteFile, Host, Handle)
     except Exception, e:
         printmsg ("Error copying file to remote node, exception: %s" % e)
-        raise
+        raise Exception ("Error copying file to remote node, exception: %s" % e)
     return
 
 # Copies the given file from the remote host.
@@ -99,7 +101,7 @@ def GetRemoteFile (File, Host, Handle):
         ssh_utils.GetFile (RemoteFile, LocalFile, Host, Handle)
     except Exception, e:
         printmsg ("Error copying file from remote node, exception: %s" % e)
-        raise
+        raise Exception ("Error copying file from remote node, exception: %s" % e)
     return
 
 # Determine if the remote host is already in the process of collecting support data.
@@ -128,7 +130,7 @@ def HostAlreadyCollecting (Host, Handle):
                 return (True)
     except Exception, e:
         printmsg ("Error detecting support process on remote host, exception: %s" % e)
-        raise
+        raise Exception ("Error detecting support process on remote host, exception: %s" % e)
 
 # Get the nodeid of the remote node.
 def GetRemoteNodeID (Host, Handle):
@@ -143,7 +145,7 @@ def GetRemoteNodeID (Host, Handle):
             return (NodeID)
     except Exception, e:
         printmsg ("Error getting nodeid on remote host, exception: %s" % e)
-        raise
+        raise Exception ("Error getting nodeid on remote host, exception: %s" % e)
 
 # Run the support collect script on the remote host.
 def StartCollecting (Script, TimeStamp, Host, Handle):
@@ -153,14 +155,14 @@ def StartCollecting (Script, TimeStamp, Host, Handle):
         Command = Command + " >>" + RemotePath + "/ph_" + TimeStamp + ".log 2>&1"
         STDout, STDerr, ExitStatus = ssh_utils.ExecRemoteCommand (Command, Host, Handle)
         if ExitStatus != 0:
-            printmsg ("Error collecting support data on remote host, exit status:  %d" % ExitStatus)
+            printmsg ("Error collecting support data on remote host, exit status: %d" % ExitStatus)
             printmsg ("stdout: %s" % STDout)
             printmsg ("stderr: %s" % STDerr)
-            raise Exception ("CollectSupport error")
+            raise Exception (("Error collecting support data on remote host, exit status: %d" % ExitStatus))
         return
     except Exception, e:
         printmsg ("Error collecting support data on remote host, exception: %s" % e)
-        raise
+        raise Exception ("Error collecting support data on remote host, exception: %s" % e)
 
 # Goes through the database and returns a dict of all nodes with the node's name and data IP address.
 def FindNodes (Nodename=None):
@@ -211,7 +213,7 @@ def TarSupportFiles (TimeStamp):
             raise Exception ("Tar error")
     except Exception, e:
         printmsg ("Error tarring support files, exception: %s" % e)
-        raise Exception ("Tar error")
+        raise Exception ("Error tarring support files, exception: %s" % e)
     return (TarFile)
 
 # Puts (pushes) the given file to the webserver.
@@ -224,7 +226,7 @@ def WputFile (File):
         if Subproc.returncode != 0:
             printmsg ("Error uploading support file to %s, exit status: %d" % (WputURL, Subproc.returncode))
             printmsg ("Error message: %s" % StdErr)
-            raise Exception ("Upload error")
+            raise Exception ("Error uploading support file to %s, exit status: %d" % (WputURL, Subproc.returncode))
         else:
             # Even though we got a successful return status, there could have been an
             # error in the cgi script that would show up in the htlm output. So we
@@ -234,10 +236,10 @@ def WputFile (File):
                 MsgEnd = StdOut.find("^", Pos)
                 printmsg ("Error uploading support file to %s" % WputURL)
                 printmsg ("Error message: %s" % StdOut[Pos:MsgEnd])
-                raise Exception ("Upload error")
+                raise Exception ("Error uploading support file to %s (%)" % (WputURL, StdOut[Pos:MsgEnd]))
     except Exception, e:
         printmsg ("Error uploading support file to %s, exception: %s" % (WputURL, e))
-        raise Exception ("Upload error")
+        raise Exception ("Error uploading support file to %s, exception: %s" % (WputURL, e))
     return
 
 # Create a file that contains the data for why we could not get data for a remote host.
@@ -256,6 +258,7 @@ def DoCreate():
 
     # Get all the nodes from the DB or just use the one given on the command line.
     if AllNodes:
+        printmsg ("Collecting support data from all nodes in the cloud")
         Nodes = FindNodes()
     else:
         # Determine if we were given a name or IP address.
@@ -323,6 +326,9 @@ def DoCreate():
                     ssh_utils.SSHDisconnect (Handle)
                 if ExitStatus != 0:
                     IndidateNoDataFromNode (TimeStamp, Hostname, ExitStatus, ExitMsg)
+                    printmsg ("No support data from node %s (%s) due to error" % (Hostname, HostIP))
+                else:
+                    printmsg ("Collection of support data from node %s (%s) completed successfully" % (Hostname, HostIP))
                 os._exit (ExitStatus)                                       # Child process has to exit now.
 
         # The parent process continues from here so add the PID to the list.

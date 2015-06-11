@@ -99,67 +99,72 @@ $(function () {
             id = $(targetRow).attr("id"),
             instance = $(document.getElementById(id + "-name-text")),
             boot = instances.items[id].bootVol != undefined;
-        if (boot) {
-            // Create form
-            $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
-                .append($("<p></p>").css("text-align", "center").html("The instance " + instance.text() + " has a boot volume, do you want to delete it along with the instance? All instance data will be lost."))
-                .append($("<label></label>").prop("for", "delete-boot").html("Delete boot volume:"))
-                .append($("<input></input>").prop("id", "delete-boot").prop("type", "checkbox"))
-                .dialog({
-                    autoOpen: true,
-                    height: 200,
-                    width: 235,
-                    modal: true,
-                    resizable: false,
-                    closeOnEscape: true,
-                    draggable: true,
-                    show: "fade",
-                    position: {
-                        my: "center",
-                        at: "center",
-                        of: $('#page-content')
-                    },
-                    buttons: {
-                        "Confirm": function () {
 
-                            // Delete instance
-                            var deleteBootVol = $("#delete-boot").prop('checked');
-                            deleteInstance(id, instance, targetRow, deleteBootVol);
-
-                            // Close Dialog form
-                            $(this).remove();
-                        }
-                    }
-                });
+        if (instances.items[id].snapshots.length > 0) {
+            message.showMessage('error', 'Cannot delete instance with existing snapshots.')
         } else {
-            // Create form
-            $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
-                .append($("<p></p>").css("text-align", "center").html("Delete " + instance.text() + "?"))
-                .dialog({
-                    autoOpen: true,
-                    height: 125,
-                    width: 235,
-                    modal: true,
-                    resizable: false,
-                    closeOnEscape: true,
-                    draggable: true,
-                    show: "fade",
-                    position: {
-                        my: "center",
-                        at: "center",
-                        of: $('#page-content')
-                    },
-                    buttons: {
-                        "Confirm": function () {
+            if (boot) {
+                // Create form
+                $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
+                    .append($("<p></p>").css("text-align", "center").html("The instance " + instance.text() + " has a boot volume, do you want to delete it along with the instance? All instance data will be lost."))
+                    .append($("<label></label>").prop("for", "delete-boot").html("Delete boot volume:"))
+                    .append($("<input></input>").prop("id", "delete-boot").prop("type", "checkbox"))
+                    .dialog({
+                        autoOpen: true,
+                        height: 200,
+                        width: 235,
+                        modal: true,
+                        resizable: false,
+                        closeOnEscape: true,
+                        draggable: true,
+                        show: "fade",
+                        position: {
+                            my: "center",
+                            at: "center",
+                            of: $('#page-content')
+                        },
+                        buttons: {
+                            "Confirm": function () {
 
-                            // Delete instance
-                            deleteInstance(id, instance, targetRow, false);
+                                // Delete instance
+                                var deleteBootVol = $("#delete-boot").prop('checked');
+                                deleteInstance(id, instance, targetRow, deleteBootVol);
 
-                            // Close Dialog form
-                            $(this).remove();
+                                // Close Dialog form
+                                $(this).remove();
+                            }
                         }
-                    }
-                });
+                    });
+            } else {
+                // Create form
+                $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
+                    .append($("<p></p>").css("text-align", "center").html("Delete " + instance.text() + "?"))
+                    .dialog({
+                        autoOpen: true,
+                        height: 125,
+                        width: 235,
+                        modal: true,
+                        resizable: false,
+                        closeOnEscape: true,
+                        draggable: true,
+                        show: "fade",
+                        position: {
+                            my: "center",
+                            at: "center",
+                            of: $('#page-content')
+                        },
+                        buttons: {
+                            "Confirm": function () {
+
+                                // Delete instance
+                                deleteInstance(id, instance, targetRow, false);
+
+                                // Close Dialog form
+                                $(this).remove();
+                            }
+                        }
+                    });
+            }
         }
     });
 
@@ -440,7 +445,6 @@ function addInstance(data) {
     // Check table length, remove placeholder if necessary
     if ($('#instance_list tr').length >= 2) {
         $('#instance_placeholder').fadeOut().remove();
-        setVisible("#create-instance-snapshot", true);
     }
     // Add to instances and consoleLinks
     instances.setItem(data.server_info.server_id, {
@@ -508,7 +512,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
     message.showMessage('notice', "Deleting " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("delete-instance", true);
@@ -525,7 +529,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -610,7 +614,6 @@ function deleteInstance(id, name, row, deleteBootVol) {
                                 .append($("<i></i>").html("This project has no instances"))))
                         .append($("<td></td>"))
                         .append($("<td></td>")).appendTo($("#instance_list")).fadeIn();
-                    setVisible("#create-instance-snapshot", false);
                 }
             }
         })
@@ -618,7 +621,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
             message.showMessage('error', 'Server Fault');
             // Restore actions cell html
             actionsCell.empty()
-                .append(actionsHtml.fadeIn());
+                .append(actionsHtml);
         })
         .always(function () {
             // Hide progressbar and enable widget view links
@@ -638,7 +641,7 @@ function pauseInstance(id, name, row) {
     message.showMessage('notice', "Pausing " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("pause-instance", true);
@@ -655,7 +658,7 @@ function pauseInstance(id, name, row) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -680,7 +683,7 @@ function pauseInstance(id, name, row) {
             message.showMessage('error', 'Server Fault');
             // Restore actions cell html
             actionsCell.empty()
-                .append(actionsHtml.fadeIn());
+                .append(actionsHtml);
         })
         .always(function () {
             // Hide progressbar, enabled instance actions and widget view links
@@ -699,7 +702,7 @@ function unpauseInstance(id, name, row) {
     message.showMessage('notice', "Unpausing " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("unpause-instance", true);
@@ -716,7 +719,7 @@ function unpauseInstance(id, name, row) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -767,7 +770,7 @@ function suspendInstance(id, name, row) {
     message.showMessage('notice', "Suspending " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("suspend-instance", true);
@@ -784,7 +787,7 @@ function suspendInstance(id, name, row) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -829,7 +832,7 @@ function resumeInstance(id, name, row) {
     message.showMessage('notice', "Resuming " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("resume-instance", true);
@@ -845,7 +848,7 @@ function resumeInstance(id, name, row) {
                 // Show toast message
                 message.showMessage('error', data.message);
                 // Restore actions cell html
-                actionsCell.empty().append(actionsHtml.fadeIn());
+                actionsCell.empty().append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message

@@ -4,6 +4,7 @@ import transcirrus.common.util as util
 import transcirrus.common.config as config
 
 from transcirrus.component.nova.server import server_ops
+from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
@@ -22,11 +23,16 @@ def delete_instance(auth_dict, delete_dict):
     """
     logger.sys_info('\n**Deleteing an instance. Component: Operations: delete_instance**\n')
     nova = server_ops(auth_dict)
+    sa = server_actions(auth_dict)
     layer_three = layer_three_ops(auth_dict)
     server_storage = server_storage_ops(auth_dict)
     cinder = volume_ops(auth_dict)
     db = util.db_connect()
     remove_server = {}
+
+    snaps = sa.list_instance_snaps(delete_dict['server_id'])
+    if(len(snaps) > 0):
+        raise Exception("Instance snapshots must be deleted.")
 
     #if the flag not set default to false
     if('delete_boot_vol' not in delete_dict):

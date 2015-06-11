@@ -45,6 +45,7 @@ import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
 import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
+import transcirrus.common.memcache as memcache
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -64,9 +65,10 @@ from urlparse import urlsplit
 from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
-#mport transcirrus.operations.support_create as support_create
-#import transcirrus.operations.upgrade as ug
-#sys.path.append("/usr/lib/python2.6/site-packages/")
+import transcirrus.operations.support_create as support_create
+import transcirrus.operations.upgrade as upgrade
+sys.path.append("/usr/lib/python2.6/site-packages/")
+
 
 import transcirrus.operations.third_party_storage.third_party_config as tpc
 from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
@@ -77,6 +79,8 @@ from coalesce.coal_beta.forms import *
 
 # Globals
 cache_key = None
+phonehome_cache = None
+upgrade_cache = None
 eseries_config = None
 nfs_config = None
 
@@ -302,6 +306,7 @@ def project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
@@ -344,12 +349,6 @@ def project_view(request, project_id):
     #    containers = []
     containers = []
 
-    print "---------------------"
-    print auth
-    print "---------------------"
-    print auth.keys()
-    print "---------------------"
-
     sec_groups = so.list_sec_group(project_id)
     sec_keys = so.list_sec_keys(project_id)
     instances = so.list_servers(project_id)
@@ -374,11 +373,6 @@ def project_view(request, project_id):
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
 
-    print "---------------------"
-    print auth
-    print "---------------------"
-    print request.session.keys()
-    print "---------------------"
     volume_types = vo.list_volume_types()
 
     for volume in volumes:
@@ -391,6 +385,7 @@ def project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -406,7 +401,8 @@ def project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -480,6 +476,7 @@ def pu_project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
     #do not use until version2
@@ -538,6 +535,7 @@ def pu_project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -553,7 +551,8 @@ def pu_project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -619,6 +618,7 @@ def basic_project_view(request, project_id):
     project = to.get_tenant(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     so = server_ops(auth)
     l3o = layer_three_ops(auth)
     no = neutron_net_ops(auth)
@@ -648,13 +648,12 @@ def basic_project_view(request, project_id):
         except:
             pass
 
-
-
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -670,7 +669,8 @@ def basic_project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -1077,17 +1077,27 @@ def get_upload_progress (request, progress_id):
 
 
 # Delete an image by it's image id.
-def delete_image (request, image_id):
+def delete_image (request, image_id, project_id):
     out = {}
+    # check to make sure you are not deleting an instance snapshot
     try:
         auth = request.session['auth']
-        go = glance_ops(auth)
-        go.delete_image(image_id)
-        #if(del_image == 'OK'):
+        sa = server_actions(auth)
+        snap = { 'snapshot_id':image_id, 'project_id':project_id}
+        snapshot = sa.get_instance_snap_info(snap)
+        sa.delete_instance_snapshot(snapshot['snapshot_id'])
         out['status'] = "success"
-        out['message'] = "Image was deleted."
-    except Exception, e:
-        out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
+        out['message'] = "Snapshot was deleted."
+    except:
+        try:
+            auth = request.session['auth']
+            go = glance_ops(auth)
+            go.delete_image(image_id)
+            #if(del_image == 'OK'):
+            out['status'] = "success"
+            out['message'] = "Image was deleted."
+        except Exception, e:
+            out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description=None):
@@ -1114,6 +1124,19 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         out['message'] = "Instance has been reverted."
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def delete_instance_snapshot(request, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        sa.delete_instance_snapshot(snapshot_id)
+        out['status'] = "success"
+        out['message'] = "Snapshot was deleted."
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting snapshot: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot_id):
@@ -2167,22 +2190,68 @@ def delete_object (request, container, filename, project_id, project_name):
 
 # Call the routine that will collect all the data from all nodes and send it back to us.
 def phonehome (request):
+    global phonehome_cache
     try:
+        phonehome_cache = None
+        support_create.EnableCaching()
         support_create.DoCreate()
+        support_create.DisableCaching()
+        phonehome_cache = None
         out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error collecting/sending support data: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
+# Call the routine that will return the cached support messages.
+def phonehome_msgs (request):
+    global phonehome_cache
+    try:
+        if phonehome_cache == None:
+            phonehome_cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+        data = phonehome_cache.get(support_create.CacheKey)
+        num_messages = int(data['num_messages'])
+        if num_messages == 0:
+            msg = ""
+        else:
+            msg = data['msg%s' % (num_messages-1)]
+        out = {'status' : "success", 'message' : msg}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting support messages: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
 # Call the routine that will upgrade all nodes to the given version of software.
 def upgrade (request, version="stable"):
+    global upgrade_cache
     try:
-        ug.ReleaseToDownload = version
-        ug.DoUpgrade()
+        upgrade.ReleaseToDownload = version
+        upgrade_cache = None
+        upgrade.EnableCaching()
+        upgrade.DoUpgrade()
+        upgrade.DisableCaching()
+        upgrade_cache = None
         out = {'status' : "success", 'message' : "Nodes have been upgraded."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Call the routine that will return the cached upgrade messages.
+def upgrade_msgs (request):
+    global upgrade_cache
+    try:
+        if upgrade_cache == None:
+            upgrade_cache = cache.Client(['127.0.0.1:11211'], debug=0)
+        data = cache.get(upgrade.CacheKey)
+        num_messages = int(data['num_messages'])
+        if num_messages == 0:
+            msg = ""
+        else:
+            msg = data['msg%s' % (num_messages-1)]
+        out = {'status' : "success", 'message' : msg}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting upgrade messages: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
