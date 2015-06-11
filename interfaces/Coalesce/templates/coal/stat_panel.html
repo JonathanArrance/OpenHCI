@@ -417,22 +417,15 @@
                         guage.redraw(result);
                     }
                 }
-{#                else {#}
-{#                    if (got_data)#}
-{#                        message.showMessage('error', data.message);#}
-{#                    got_data = false;#}
-{#                }#}
             });
 
             return call_complete;
         }
 
-{#        var got_data = true;#}
-
         function initialize() {
             createGauges();
-            {#5000 = 5 seconds#}
-            setInterval(updateGauges, 5000);
+            updateGauges();
+            window.setInterval(updateGauges, 100000);
         }
     </script>
 {% endblock %}
