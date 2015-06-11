@@ -16,14 +16,14 @@ test -e $DAEMON || exit 0
 
 case "$1" in
   start)
-     log_success_msg "Starting Zero Connect Server"
+     log_success_msg "Starting Ceilometer Memory Patch"
      /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/daemons/daemon_obtain_memory_usage.py $PIDFILE start
 #     start_daemon -p $PIDFILE $DAEMON
 #     PID=`ps x |grep '/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/core/ciac_server.py' | head -1 | awk '{print $1}'`
 #     echo $PID > $PIDFILE
    ;;
   stop)
-     log_success_msg "Stopping Zero Connect Server"
+     log_success_msg "Stopping Ceilometer Memory Patch"
      /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/daemons/daemon_obtain_memory_usage.py $PIDFILE stop
 #     killproc -p $PIDFILE $DAEMON
 #     PID=`ps x |grep '/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/core/ciac_server.py' | head -1 | awk '{print $1}'`
@@ -37,15 +37,15 @@ case "$1" in
 #  status)
 #     PID=`ps x |grep '/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/core/ciac_server.py' | head -1 | awk '{print $1}'`
 #     if [[ `pidof -x /usr/local/bin/python2.7 ciac_server.py` -eq $PID ]]; then
-#         echo 'Zero Connect Server is running' $PID
+#         echo 'Ceilometer Memory Patch is running' $PID
 #     else
 #         if [[ `pidof -x /usr/local/bin/python2.7 ciac_server.py` -ne $PID ]]; then
-#             echo 'Zero Connect Server is dead'
+#             echo 'Ceilometer Memory Patch is dead'
 #         fi
 #     fi
 #   ;;
  *)
-   echo "Usage: /etc/init.d/zero_connect {start|stop|restart|force-reload}"
+   echo "Usage: /etc/init.d/ceilometer_memory_patch {start|stop|restart|force-reload}"
    exit 1
   ;;
 esac

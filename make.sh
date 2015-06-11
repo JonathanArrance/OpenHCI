@@ -12,6 +12,8 @@ echo 'Adding database to Transcirrus dir'
 cp -Rf database /usr/local/lib/python2.7/transcirrus/
 echo 'Adding operations to Transcirrus dir'
 cp -Rf operations /usr/local/lib/python2.7/transcirrus/
+echo 'Adding daemons to Transcirrus dir'
+cp -Rf daemons /usr/local/lib/python2.7/transcirrus/
 echo 'Adding Interfaces to Transcirrus dir'
 cp -Rf interfaces /usr/local/lib/python2.7/transcirrus/
 echo 'Adding ha to Transcirrus dir'
