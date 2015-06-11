@@ -275,7 +275,10 @@ def DoUpgrade():
         File = WgetDownloadToDir + "/" + ReleaseToDownload
         if os.path.exists (File):
             os.remove (File)
-        printmsg ("Downloading %s from %s" % (ReleaseToDownload, WgetURL))
+        display_name = ReleaseToDownload
+        if display_name == "stable":
+            display_name = "latest version"
+        printmsg ("Downloading %s from %s" % (display_name, WgetURL))
         RPMFileToInstall = WgetFile (ReleaseToDownload)
         if RPMFileToInstall == "":
             if CmdLine:

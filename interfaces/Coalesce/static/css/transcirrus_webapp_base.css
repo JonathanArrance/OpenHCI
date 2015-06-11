@@ -5377,7 +5377,24 @@ th > small {
 
 #phonehome-confirm-form > .ajax-loader-label {
     display: inline-block !important;
-    margin: 18px 5px 0px 60px;
+    margin: 18px 5px 0 60px;
+    vertical-align: top;
+}
+
+#upgrade-confirm-form > .ajax-loader {
+    background-size: 20px auto!important;
+    background-position: center;
+    border: 1px dashed rgb(225, 225, 225)!important;
+    display: inline-block!important;
+    height: 20px!important;
+    margin: 10px auto!important;
+    padding: 5px!important;
+    width: 20px;
+}
+
+#upgrade-confirm-form > .ajax-loader-label {
+    display: inline-block !important;
+    margin: 18px 5px 0 60px;
     vertical-align: top;
 }
 
