@@ -410,7 +410,6 @@
                 if (data.status == "success") {
                     if (data.message != "empty dataset") {
                         var result = data.statistics[0][calcType];
-                        console.log("console: " + result);
                         guage.redraw(result);
                     }
                 }
