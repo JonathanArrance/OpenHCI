@@ -410,20 +410,21 @@
                 if (data.status == "success") {
                     if (data.message != "empty dataset") {
                         var result = data.statistics[0][calcType];
+                        console.log("console: " + result);
                         guage.redraw(result);
                     }
                 }
-                else {
-                    if (got_data)
-                        message.showMessage('error', data.message);
-                    got_data = false;
-                }
+{#                else {#}
+{#                    if (got_data)#}
+{#                        message.showMessage('error', data.message);#}
+{#                    got_data = false;#}
+{#                }#}
             });
 
             return call_complete;
         }
 
-        var got_data = true;
+{#        var got_data = true;#}
 
         function initialize() {
             createGauges();

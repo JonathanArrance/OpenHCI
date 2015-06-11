@@ -216,7 +216,15 @@ function Gauge(placeholderName, configuration)
     {
         var pointerContainer = this.body.select(".pointerContainer");
 
-        pointerContainer.selectAll("text").text(Math.round(value));
+        //console.log("Ricardo: " + value + " : " + pointerContainer);
+
+        if (value > 0 && value < 1) {
+            pointerContainer.selectAll("text").text("< 1");
+        } else if (value == 0) {
+            pointerContainer.selectAll("text").text("No Data");
+        } else {
+            pointerContainer.selectAll("text").text(Math.round(value));
+        }
 
         var pointer = pointerContainer.selectAll("path");
         pointer.transition()
