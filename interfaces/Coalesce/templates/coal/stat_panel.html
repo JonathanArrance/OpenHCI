@@ -369,19 +369,19 @@
             createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);
             createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);
             createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);
-            createGauge("diskreadrate", "Disk Read B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
-            createGauge("diskwriterate", "Disk Write B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
-            createGauge("lanincomingrate", "Lan Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
-            createGauge("lanoutgoingrate", "Lan Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
-            createGauge("wanincomingrate", "Wan Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
-            createGauge("wanoutgoingrate", "Wan Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("diskreadrate", "Disk Reads B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("diskwriterate", "Disk Writes B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanincomingrate", "LAN Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanoutgoingrate", "LAN Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanincomingrate", "WAN Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanoutgoingrate", "WAN Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
 
             {#            Core & Compute Meters#}
-            createGauge("cpupercent", "CPU as %", "compute.node.cpu.percent", "avg", 0, 100, 5);
-            createGauge("cpuuserpercent", "CPU User as %", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
-            createGauge("cpuidlepercent", "CPU Idle as %", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
-            createGauge("cpuiowaitpercent", "CPU I/O Wait as %", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
-            createGauge("cpukernelpercent", "CPU Kernel as %", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
+            createGauge("cpupercent", "% CPU", "compute.node.cpu.percent", "avg", 0, 100, 5);
+            createGauge("cpuuserpercent", "% CPU User", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
+            createGauge("cpuidlepercent", "% CPU Idle", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
+            createGauge("cpuiowaitpercent", "% CPU I/O Wait", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
+            createGauge("cpukernelpercent", "% CPU Kernel", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
         }
 
         function updateGauges() {
