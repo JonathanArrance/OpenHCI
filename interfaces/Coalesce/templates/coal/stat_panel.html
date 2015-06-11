@@ -35,6 +35,7 @@
             <div class="legend-header">
                 Admin Panel
 
+                <a href="#" id="upgrade" class="btn" style="float:right">Upgrade</a>
                 <a href="#" id="phonehome" class="btn" style="float:right">Phone Home</a>
                 <a href="#" id="config-third-party-storage" class="btn" style="float:right">Configure 3PS</a>
                 <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
@@ -63,7 +64,7 @@
                     Last 24hrs: Average WAC
                 </div>
                 <div style="text-align: center">
-                    <body onload="initialize()" style="font: 10px arial">
+                    <body style="font: 10px arial">
                     <span id="cpuGaugeContainer"></span>
                     <span id="memoryGaugeContainer"></span>
                     <span id="storageGaugeContainer"></span>
@@ -83,7 +84,7 @@
                     Last 24hrs: Average Cloud Meters
                 </div>
                 <div style="text-align: center;">
-                    <body onload="initialize()" style="font: 10px arial">
+                    <body style="font: 10px arial">
                     <span id="cpupercentGaugeContainer"></span>
                     <span id="cpuuserpercentGaugeContainer"></span>
                     <span id="cpuidlepercentGaugeContainer"></span>
@@ -337,8 +338,11 @@
             </fieldset>
         </fieldset>
     </div><!-- end row-fluid-->
-
     <script>
+        $(function () {
+            initialize();
+        });
+
         var gauges = [],
                 calls = [],
                 calls_complete = true;
@@ -353,7 +357,7 @@
                 min: undefined != min ? min : 0,
                 max: undefined != max ? max : 1000,
                 minorTicks: minorTicks
-            }
+            };
 
             var range = config.max - config.min;
             config.yellowZones = [{from: config.min + range * 0.75, to: config.min + range * 0.9}];
@@ -430,7 +434,5 @@
             {#5000 = 5 seconds#}
             setInterval(updateGauges, 5000);
         }
-
     </script>
-
 {% endblock %}
