@@ -33,7 +33,7 @@
     <div class="span12">
         <div class="well no-padding">
             <div class="legend-header">
-                Admin Panel
+                Admin Panel || Nodes: {{ tot_nodes }} Projects: {{ tot_proj }} Users: {{ tot_users }}
 
                 <a href="#" id="upgrade" class="btn" style="float:right">Upgrade</a>
                 <a href="#" id="phonehome" class="btn" style="float:right">Phone Home</a>
@@ -41,23 +41,23 @@
                 <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
             </div>
 
-            <div class="well" style="display: block">
-                <div class="legend">
-                    Cloud Stats
-                </div>
-                <table class="paleblue widget-table-third" style="display: inline-table">
-                    <tr>
-                        <th>Nodes</th>
-                        <th>Projects</th>
-                        <th>Users</th>
-                    </tr>
-                    <tr>
-                        <td>{{ tot_nodes }}</td>
-                        <td>{{ tot_proj }}</td>
-                        <td>{{ tot_users }}</td>
-                    </tr>
-                </table>
-            </div>
+{#            <div class="well" style="display: block">#}
+{#                <div class="legend">#}
+{#                    Cloud Stats#}
+{#                </div>#}
+{#                <table class="paleblue widget-table-third" style="display: inline-table">#}
+{#                    <tr>#}
+{#                        <th>Nodes</th>#}
+{#                        <th>Projects</th>#}
+{#                        <th>Users</th>#}
+{#                    </tr>#}
+{#                    <tr>#}
+{#                        <td>{{ tot_nodes }}</td>#}
+{#                        <td>{{ tot_proj }}</td>#}
+{#                        <td>{{ tot_users }}</td>#}
+{#                    </tr>#}
+{#                </table>#}
+{#            </div>#}
 
             <div class="well" id="widget-actions" style="display: block;">
                 <div class="legend">
