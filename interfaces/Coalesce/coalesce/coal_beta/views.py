@@ -66,7 +66,7 @@ from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
 import transcirrus.operations.support_create as support_create
-import transcirrus.operations.upgrade as upgrade
+import transcirrus.operations.upgrade as ug
 sys.path.append("/usr/lib/python2.6/site-packages/")
 
 
@@ -2225,13 +2225,14 @@ def phonehome_msgs (request):
 def upgrade (request, version="stable"):
     global upgrade_cache
     try:
-        upgrade.ReleaseToDownload = version
+        ug.ReleaseToDownload = version
         upgrade_cache = None
-        upgrade.EnableCaching()
-        upgrade.DoUpgrade()
-        upgrade.DisableCaching()
+        ug.EnableCaching()
+        ug.DoUpgrade()
+        ug.DisableCaching()
         upgrade_cache = None
         out = {'status' : "success", 'message' : "Nodes have been upgraded."}
+        auth_logout(request)
     except Exception, e:
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2242,8 +2243,8 @@ def upgrade_msgs (request):
     global upgrade_cache
     try:
         if upgrade_cache == None:
-            upgrade_cache = cache.Client(['127.0.0.1:11211'], debug=0)
-        data = cache.get(upgrade.CacheKey)
+            upgrade_cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+        data = upgrade_cache.get(ug.CacheKey)
         num_messages = int(data['num_messages'])
         if num_messages == 0:
             msg = ""

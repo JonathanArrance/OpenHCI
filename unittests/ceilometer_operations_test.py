@@ -6,8 +6,8 @@ print "Instantiating authorization object for an default admin"
 c = authorization("admin", "password")
 
 print "Get admin authorization dictionary"
-b = c.get_auth()
+b = c.get_auth
 
 print "Check elements of list"
-memory_usage_ops.daemonize(b, True)
+memory_usage_ops.daemonize(True, 600)
 
