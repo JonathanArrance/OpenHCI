@@ -532,7 +532,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.phonehome_msgs',
             name='phonehome_msgs'),
 
-        url(r'^upgrade/(?P<version>[^/]+)/$',
+        url(r'^upgrade/$',
             'coalesce.coal_beta.views.upgrade',
             name='upgrade'),
 
