@@ -110,22 +110,6 @@ function guid() {
 }
 
 // ---------------- //
-// URL MANIPULATION
-// ---------------- //
-
-function convertUrl47(url) {
-    // Convert a URL from having /s to %47.
-    for (var i = 0; i < url.length; i++) {
-        if (url[i] == '/') {
-            url = url.substr(0, i) + "%47" + url.substr(i, url.length + 1);
-            i = i + 2;
-        }
-    }
-    return url;
-}
-
-
-// ---------------- //
 // UI VALIDATION
 // ---------------- //
 
