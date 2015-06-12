@@ -734,8 +734,8 @@ class server_actions:
             else:
                 nova_ec.error_codes(rest)
         else:
-            logger.sys_error("Could retrieve the instance snapshots for %s"%(snap_dict['server_id']))
-            raise Exception("Could retrieve the instance snapshots for %s"%(snap_dict['server_id']))
+            logger.sys_error("Could not retrieve the instance snapshots for %s"%(snap_dict['server_id']))
+            raise Exception("Could not retrieve the instance snapshots for %s"%(snap_dict['server_id']))
 
     def delete_instance_snapshot(self,image_id):
         """
