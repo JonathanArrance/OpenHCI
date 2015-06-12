@@ -660,8 +660,12 @@ class server_actions:
         #check to make sure non admins can perofrm the task
         self.get_server = None
         self.run_flag = 0
-        self.get_server = {'select':'inst_name,inst_user_id','from':'trans_instances','where':"proj_id='%s'"%(snap_dict['project_id']),'and':"inst_id='%s'"%(snap_dict['server_id'])}
-        server = self.db.pg_select(self.get_server)
+        try:
+            self.get_server = {'select':'inst_name,inst_user_id','from':'trans_instances','where':"proj_id='%s'"%(snap_dict['project_id']),'and':"inst_id='%s'"%(snap_dict['server_id'])}
+            server = self.db.pg_select(self.get_server)
+        except:
+            logger.sql_error("Could not find instance %s in project %s"%(snap_dict['server_id'],snap_dict['project_id']))
+            raise Exception("Could not find instance %s in project %s"%(snap_dict['server_id'],snap_dict['project_id']))
 
         if(self.user_level == 0):
             self.run_flag = 1

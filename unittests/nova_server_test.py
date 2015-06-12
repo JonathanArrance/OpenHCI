@@ -21,7 +21,7 @@ perms = auth.get_auth()
 store = server_storage_ops(perms)
 nova = server_ops(perms)
 #action = server_admin_actions(perms)
-#sa = server_actions(perms)
+sa = server_actions(perms)
 
 '''
 input_dict = {'host_name':'ciac-10176','project_id':'157a34897e8246b4871676c5feb64ab8'}
@@ -49,22 +49,22 @@ yo = store.list_attached_vols(input_dict)
 
 print yo
 
-'''
+
 server_input = {'server_id':'8c7cddd9-32d2-48e9-9578-e03c61c4438f','project_id':'ff8fbdc33d83419a8070d2e7577b3a3f'}
 inst_info = nova.get_server(server_input)
 
 print inst_info
-'''
+
 
 back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
 yo = sa.create_instance_backup(back_image)
 print yo
 
-
-snap_image = {'server_id':'99e85016-4f7d-43cf-b28e-ebca2d0fadda','project_id':'27e633859b2b46db9b0fc0cbece206ea','snapshot_description':'This a test1'}
+'''
+snap_image = {'server_id':'151eff51-7f60-45ad-ba28-3b612b27702f','project_id':'c4ebc93ee8b448c286d6029e3e2b3b98','snapshot_description':'yoyo'}
 yo = sa.create_instance_snapshot(snap_image)
 print yo
-
+'''
 time.sleep(30)
 
 doop = sa.delete_instance_snapshot('a2eb26d0-ac42-4a9d-a131-ad65fc70093f')
