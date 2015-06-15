@@ -137,17 +137,16 @@ class volume_ops:
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
         #This needs to be fixed, it is broken for some reason all of the sudden.
-        vol_type_found = True
-        #voltype_list = self.list_volume_types(input_dict['project_id'])
+        #voltype_list = self.list_volume_types()
         #vol_type_found = False
-        #for vol_type in voltype_list:
-        #    name = vol_type['name']
-        #    if name.lower() == voltype.lower():
+        #for v_type in vol_type_list:
+        #    raw = vol_type['name']
+        #    if raw.lower() == voltype.lower():
         #        vol_type_found = True
         #        break
 
-        if not vol_type_found:
-            raise Exception ("Volume Type %s was not found for volume creation" % voltype)
+        #if not vol_type_found:
+        #    raise Exception ("Volume Type %s was not found for volume creation" % voltype)
 
         #get the name of the project based on the id
         try:
@@ -831,12 +830,13 @@ class volume_ops:
                 logger.sys_error ("Could not connect to the API")
                 raise Exception ("Could not connect to the API")
 
-            vol_list = self.list_volume_types()
-            vol_type_id = None
-            for vol_type in vol_list:
-                if vol_type['name'].lower() == volume_type_name.lower():
-                    vol_type_id = vol_type['id']
-                    break
+            #raw = vol_type['name']
+            #vol_type_list = self.list_volume_types()
+            #vol_type_id = None
+            #for v_type in vol_type_list:
+            #    if raw.lower() == volume_type_name.lower():
+            #        vol_type_id = vol_type['id']
+            #        break
 
             if vol_type_id == None:
                 raise Exception ("Volume Type %s was not found for deletion" % volume_type_name)
@@ -915,7 +915,7 @@ class volume_ops:
             #get list of volume types
             body = ''
             token = self.token
-            header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+            header = {"Content-Type": "application/json", "X-Auth-Token": token}
             function = 'GET'
             api_path = '/v1/%s/types' %(self.project_id)
             sec = self.sec
@@ -932,18 +932,12 @@ class volume_ops:
             r_dict = []
             for vtype in load['volume_types']:
                 name = vtype['name']
-                id = vtype['id']
+                vid = vtype['id']
                 extra_specs = vtype['extra_specs']
-                r_dict.append({'name': name, 'id': id, 'extra_specs': extra_specs})
+                r_dict.append({'name': name, 'id': vid, 'extra_specs': extra_specs})
             return r_dict
         else:
-            #util.http_codes(rest['response'],rest['reason'],rest['data'])
-            #ec.error_codes(rest)
-            logger.sys_error("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
-            raise Exception ("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
-        #else:
-        #    logger.sys_error("Could not get volume type list.")
-        #    raise ("Could not get volume type list.")
+            ec.error_codes(rest)
 
     def list_volume_backends(self):
         """

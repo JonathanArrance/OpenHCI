@@ -737,7 +737,7 @@ class server_actions:
             logger.sys_error("Could not retrieve the instance snapshots for %s"%(snap_dict['server_id']))
             raise Exception("Could not retrieve the instance snapshots for %s"%(snap_dict['server_id']))
 
-    def delete_instance_snapshot(self,image_id):
+    def delete_instance_snapshot(self,snapshot_id):
         """
         DESC: This will create a new instance snapshot.
         INPUT: snap_dict - image_id - REQ
@@ -749,18 +749,19 @@ class server_actions:
         NOTE: Any volumes that are attached to the instance will not be snapped,
               you will have to snapshot the environment in order to capture it.
         """
-        delete = self.glance.delete_image(image_id)
+        delete = self.glance.delete_image(snapshot_id)
 
         try:
             self.db.pg_transaction_begin()
-            del_dict = {"table":'trans_inst_snaps',"where":"snap_id='%s'" %(image_id)}
+            del_dict = {"table":'trans_inst_snaps',"where":"snap_id='%s'" %(snapshot_id)}
             self.db.pg_delete(del_dict)
         except:
             self.db.pg_transaction_rollback()
-            logger.sql_error('Could not remove image %s from Transcirrus DB.'%(image_id))
-            raise Exception('Could not remove image %s from Transcirrus DB.'%(image_id))
+            logger.sql_error('Could not remove image %s from Transcirrus DB.'%(snapshot_id))
+            raise Exception('Could not remove image %s from Transcirrus DB.'%(snapshot_id))
         else:
             self.db.pg_transaction_commit()
+
         return delete
 
     def list_instance_snaps(self,instance_id):
@@ -784,7 +785,6 @@ class server_actions:
         elif(self.user_level == 0):
             self.get_inst_snap = {'select':'snap_id,name,project_id','from':'trans_inst_snaps','where':"inst_id='%s'"%(instance_id)}
 
-        # try:
         snapshots = self.db.pg_select(self.get_inst_snap)
 
         r_array = []
