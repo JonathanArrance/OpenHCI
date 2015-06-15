@@ -61,8 +61,8 @@ cp /etc/nodeid ${DUMP_DIR}
 # Get the caclogs.
 cp -r /var/log/caclogs ${DUMP_DIR}/caclogs
 
-# Get the swift-startup logs.
-cp /var/log/swift-startup.log ${DUMP_DIR}
+# Get the ceilometer.
+cp -r /var/log/ceilometer ${DUMP_DIR}/ceilometer
 
 # Get the cinder logs.
 cp -r /var/log/cinder ${DUMP_DIR}/cinder
@@ -70,17 +70,29 @@ cp -r /var/log/cinder ${DUMP_DIR}/cinder
 # Get the glance logs.
 cp -r /var/log/glance ${DUMP_DIR}/glance
 
+# Get the keystone logs.
+cp -r /var/log/keystone ${DUMP_DIR}/keystone
+
+# Get the libvirt logs.
+cp -r /var/log/libvirt ${DUMP_DIR}/libvirt
+
 # Get the monit logs.
 cp -r /var/log/monit ${DUMP_DIR}/monit
+
+# Get the neutron logs.
+cp -r /var/log/neutron ${DUMP_DIR}/neutron
 
 # Get the nova logs.
 cp -r /var/log/nova ${DUMP_DIR}/nova
 
-# Get the keystone logs.
-cp -r /var/log/keystone ${DUMP_DIR}/keystone
+# Get the rabbitmq logs.
+cp -r /var/log/rabbitmq ${DUMP_DIR}/rabbitmq
 
 # Get the openvswitch logs.
 cp -r /var/log/openvswitch ${DUMP_DIR}/openvswitch
+
+# Get the swift-startup logs.
+cp /var/log/swift-startup.log ${DUMP_DIR}
 
 #
 # Put anything here that needs to happen after we have completed collecting data.
