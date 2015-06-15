@@ -32,7 +32,8 @@ def delete_instance(auth_dict, delete_dict):
 
     snaps = sa.list_instance_snaps(delete_dict['server_id'])
     if(len(snaps) > 0):
-        raise Exception("Instance snapshots must be deleted.")
+        for snap in snaps:
+            sa.delete_instance_snapshot(snap['snapshot_id'])
 
     #if the flag not set default to false
     if('delete_boot_vol' not in delete_dict):

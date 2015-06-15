@@ -40,15 +40,18 @@ print "-------------------------------------------------"
 time.sleep(2)
 
 print "deleteing the security group"
-d3 = {'sec_group_id':"dfb42f01-f22a-44bc-bf62-130363724dc5", 'project_id':"523e5098be6c4438b428d7f3f94b3a2d"}
+d3 = {'sec_group_id':"dfb42f01-f22a-44bc-bf62-130363724dc5", 'project_id':"ff8fbdc33d83419a8070d2e7577b3a3f"}
 del_group3 = nova2.delete_sec_group(d3)
 print del_group3
+
 print "-------------------------------------------------"
 time.sleep(2)
-print "deleteing the security key"
-yo = {'project_id':"7cc5c176398d43708e9e66e5b80b4a40",'sec_key_name':'jonkey2'}
+'''
+#print "deleteing the security key"
+yo = {'project_id':"1f713657ef714155a1b1379d082c8ac4",'sec_key_name':'saturn'}
 del_key = nova.delete_sec_keys(yo)
 print del_key
+'''
 print "-------------------------------------------------"
 time.sleep(1)
 print "deleteing the default security key"
@@ -96,9 +99,11 @@ sec_group2 = nova.create_sec_group(create_group2)
 print sec_group2
 print "------------------------------------------------"
 time.sleep(1)
-'''
+
 print "listing the security keys"
-list_key = nova.list_sec_keys()
+list_key = nova.list_sec_keys('ff8fbdc33d83419a8070d2e7577b3a3f')
+print list_key
+
 print "listing the security groups"
 list_group = nova.list_sec_group('2760d1bee4af4fd99f6cc6edbd083721')
 print list_group
@@ -117,7 +122,7 @@ for lg in list_group:
 time.sleep(1)
 
 print "-----------------------------------------------------------------"
-'''
+
 
 print "creating a new default security key"
 key3 = {'project_id':"523e5098be6c4438b428d7f3f94b3a2d",'key_name':'ffvcuserkey'}

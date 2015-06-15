@@ -1261,7 +1261,7 @@ class server_ops:
                 r_dict = {"key_name":str(seckey['keypair']['name']), "key_id":str(seckey['keypair']['fingerprint'])}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def delete_sec_group(self,sec_dict):
         """
@@ -1361,7 +1361,7 @@ class server_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def delete_sec_group_rules (self, rule_dict, delete_icmp=False, delete_all=False):
         """
@@ -1512,16 +1512,15 @@ class server_ops:
                 logger.sys_error("Users can only create security groups in their project.")
                 raise Exception("Users can only create security groups in their project.")
 
-        #get the security group info from the db.
         try:
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"sec_key_name='%s'" %(delete_dict['sec_key_name']),"and":"proj_id='%s'" %(delete_dict['project_id'])}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"sec_key_name='%s'" %(delete_dict['sec_key_name']),"and":"user_id='%s'" %(self.user_id)}
             get_key = self.db.pg_select(get_key_dict)
         except:
             logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
             raise Exception("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
 
-        #if the group does not belong to the user raise exception
-        if(get_key[0][1] != self.username):
+        print get_key
+        if(get_key[0][2] != self.user_id):
             logger.sys_error("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
             raise Exception("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
 
@@ -1579,7 +1578,7 @@ class server_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def list_sec_group(self,project_id=None):
         """
@@ -1634,32 +1633,40 @@ class server_ops:
                 keys in the project, users can only list their keys.
         """
 
-        #This only queries the transcirrus db
-        #get the security group info from the db.
-        get_key_dict = None
-        if(self.user_level == 0):
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(project_id)}
-        elif(self.user_level == 1):
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'"%(self.user_id)}
-        else:
-            #HACK: this is temporary until we make it so that the defaults are shown as of now nothing is shown unti the user makes a key
-            #get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'"%(self.user_id)}
-
         try:
-            keys = self.db.pg_select(get_key_dict)
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,project_id)
+            api = caller(api_dict)
         except:
-            logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(get_key_dict[0][3],self.project_id))
-            raise("Could not get the security key info for sec_key: %s in project: %s" %(get_key_dict[0][3],self.project_id))
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
 
-        key_array = []
-        #build an array of r_dict
-        for key in keys:
-            r_dict = {"key_name":key[4],"key_id":key[3],"username":key[1]}
-            key_array.append(r_dict)
+        #create a new security group in the project
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/os-keypairs' %(project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not list the security key.")
+            raise e
 
-        #return the array
-        return key_array
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            key_array = []
+            #build an array of r_dict
+            for key in load['keypairs']:
+                r_dict = {"key_name":key['keypair']['name'],"key_id":key['keypair']['fingerprint'],"username":self.username}
+                key_array.append(r_dict)
+            return key_array
+        else:
+            ec.error_codes(rest)
 
     def get_sec_group(self,sec_dict):
         """
