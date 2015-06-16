@@ -36,3 +36,17 @@ if [ ! -f /usr/local/lib/python2.7/site-packages/libvirtmod.so ]
 then
     ln -s /usr/lib64/python2.6/site-packages/libvirtmod.so /usr/local/lib/python2.7/site-packages/libvirtmod.so
 fi
+
+# Delete obsolete monit config files.
+if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/openstack.conf ]
+then
+    rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/openstack.conf 
+fi
+if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/quantum.conf ]
+then
+    rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/quantum.conf
+fi
+if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf ]
+then
+    rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf
+fi
