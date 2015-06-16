@@ -86,8 +86,8 @@ $(function () {
                             image_location = import_remote;
 
                             var loc = image_location.val();
-                            image_location = convertUrl47(image_location);
                             loc = loc.replace(/\//g, '&47');
+                            loc = loc.replace(/\?/g, '&63');
 
                             var os = os_type.val();
 
@@ -113,6 +113,11 @@ $(function () {
                                         if (ret_data.status == "error") {
                                             // There was an error on the server uploading the file so display the error message.
                                             message.showMessage("error", ret_data.message);
+                                            disableFormInputs('image', ['text', 'select', 'file'], false);
+                                            disableLinks(false);
+                                            uploading = false;
+                                            clearUiValidation(allFields);
+                                            resetProgressBar(form);
                                             return;
                                         }
 
@@ -137,6 +142,7 @@ $(function () {
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     },
                                     error: function () {
 
@@ -148,6 +154,7 @@ $(function () {
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     }
                                 });
                         }
@@ -206,6 +213,11 @@ $(function () {
                                         if (ret_data.status == "error") {
                                             // There was an error on the server uploading the file so display the error message.
                                             message.showMessage("error", ret_data.message);
+                                            disableFormInputs('image', ['text', 'select', 'file'], false);
+                                            disableLinks(false);
+                                            uploading = false;
+                                            clearUiValidation(allFields);
+                                            resetProgressBar(form);
                                             return;
                                         }
 
@@ -244,6 +256,7 @@ $(function () {
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     }
                                 });
                         }

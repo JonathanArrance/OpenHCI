@@ -252,8 +252,8 @@ class volume_ops:
                         logger.sys_info('Volume with ID %s in unknown state.'%(volid))
                         raise Exception("Could not create a new volume. Unknown error occurred.")
                     elif(status['volume']['status'] == 'error'):
-                        logger.sys_info('Volume with ID %s failed to provision.'%(volid))
-                        raise Exception("Could not create a new volume. ERROR: 555")
+                        logger.sys_info('Volume with ID %s was created but is in an error state.'%(volid))
+                        raise Exception("Volume was created but is not available because it is in an error state.")
 
                 try:
                     #insert the volume info into the DB

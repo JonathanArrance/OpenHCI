@@ -982,8 +982,10 @@ def import_local (request, image_name, container_format, disk_format, image_type
         auth = request.session['auth']
         go = glance_ops(auth)
 
+        content_type = request.FILES['import_local'].content_type
+
         # Create a temp file to hold the image contents until we give it to glance.
-        download_dir   = "/var/lib/glance/images/"
+        download_dir   = "/tmp/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
         download_file  = download_dir + download_fname
 
@@ -997,7 +999,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
             return HttpResponse(simplejson.dumps(out))
 
         # Add the image to glance.
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type}
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
         out['status'] = "success"
@@ -1027,7 +1029,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type}
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
 
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
@@ -1037,19 +1039,20 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
 
         # Use wget to download the file.
-        download_dir   = "/var/lib/glance/images/"
+        download_dir   = "/tmp/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
         download_file  = download_dir + download_fname
 
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
-        filename, content_type = wget.download (image_location,download_file, download_progress)
+        filename, content_type = wget.download (image_location, download_file, download_progress)
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
 
         # Add the image to glance.
         import_dict['image_location'] = download_file
+        import_dict['content_type'] = content_type
         out = go.import_image(import_dict)
         out['status'] = "success"
         out['message'] = "Remote image %s was uploaded." % image_name
@@ -2011,8 +2014,6 @@ def upload_local_object (request, container, filename, project_id, project_name,
 
         object_con = SwiftConnection (args)
 
-        print "content filename: %s" % request.FILES['import_local'].name
-        print "sent filename: %s" % filename
         content_type = request.FILES['import_local'].content_type
         if request.FILES['import_local'].size >= 5 * 1024 ** 3:     # is the file >= 5GB
             large_file = True
@@ -3118,11 +3119,9 @@ def logout(request, next_page=None,
 
 
 def handle_uploaded_file(f):
-    print ("Uploading local file: " + f)
     with open('/tmp/upload.img', 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
-    print ("Uploaded local file done")
     return
 
 @never_cache
