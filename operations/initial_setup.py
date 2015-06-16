@@ -561,7 +561,7 @@ def run_setup(new_system_variables,auth_dict):
                     'os_type':"linux"
                     }
     import_cirros = glance.import_image(cirros_input)
-    if(import_cirros != 'OK'):
+    if('image_id' not in import_cirros):
         logger.sys_warning('Could not import the default cirros image.')
     else:
         logger.sys_info("SETUP:Added the cirros image...")
@@ -577,7 +577,7 @@ def run_setup(new_system_variables,auth_dict):
                     'os_type':"linux"
                     }
     import_ubuntu = glance.import_image(ubuntu_input)
-    if(import_ubuntu != 'OK'):
+    if('image_id' not in import_ubuntu):
         logger.sys_warning('Could not import the default Ubuntu Precise image.')
     else:
         logger.sys_info("SETUP:Added the Ubuntu 12.04 image...")
@@ -593,7 +593,7 @@ def run_setup(new_system_variables,auth_dict):
                     'os_type':"linux"
                     }
     import_fedora = glance.import_image(fedora_input)
-    if(import_fedora != 'OK'):
+    if('image_id' not in import_fedora):
         logger.sys_warning('Could not import the default Fedora image.')
     else:
         logger.sys_info("SETUP:Added the CentOS 6.5 image...")
@@ -613,6 +613,7 @@ def run_setup(new_system_variables,auth_dict):
     #print checkpoint
     #logger.sys_info("Service status: %s"%(checkpoint))
     os.system('sudo chmod 775 /var/lib/glance/images')
+    os.system('source /home/transuser/factory_creds;openstack-status >> /home/transuser/first_time_status.txt')
     logger.sys_info("SETUP54:END")
     
     # restore file descriptors so I can print the results
