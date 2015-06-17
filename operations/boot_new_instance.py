@@ -101,10 +101,13 @@ def boot_instance(input_dict,auth_dict):
         if('volume_type' not in input_dict or 'volume_type' == "none"):
             input_dict['volume_type'] = 'spindle'
 
+        disk_size_needed = flavor_details['disk_space(GB)'] + flavor_details['swap(GB)']
         if('volume_size' in input_dict and 'volume_size' != "none"):
             logger.sys_info("Setting user select volume size to boot instance from.")
+            if(disk_size_needed >= input_dict['volume_size']):
+                input_dict['volume_size'] = disk_size_needed
         else:
-            input_dict['volume_size'] = flavor_details['disk_space(GB)'] + flavor_details['swap(GB)']
+            input_dict['volume_size'] = disk_size_needed
             logger.sys_info("Creating a volume of %s to boot instance from"%(input_dict['volume_size']))
 
         if('volume_name' not in input_dict):

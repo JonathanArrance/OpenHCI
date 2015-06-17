@@ -260,7 +260,7 @@ def sendComputeConfig(conn, node_id):
         if config:
 
             '''
-            here we are sending the complete neutron config structure,
+            here we are sending the complete ceilometer config structure,
             the receiving compute node should extract necessary config
             structure
             '''
