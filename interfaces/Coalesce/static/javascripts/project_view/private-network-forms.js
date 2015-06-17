@@ -51,7 +51,8 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(privateNet, "Network Name", 3, 16) &&
+                        checkLength(privateNet, "Network name", 8, 16) &&
+                        checkCharfield(privateNet, "Network name") &&
                         checkDuplicateName(privateNet, privateNetworks);
 
                     if (isValid) {

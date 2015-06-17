@@ -42,7 +42,7 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(name, "Snapshot Name", 0, 16) &&
+                        checkLength(name, "Snapshot Name", 0, standardStringMax) &&
                         checkLength(description, "Snapshot Description", 0, 80);
 
                     if (isValid) {

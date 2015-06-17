@@ -99,72 +99,67 @@ $(function () {
             id = $(targetRow).attr("id"),
             instance = $(document.getElementById(id + "-name-text")),
             boot = instances.items[id].bootVol != undefined;
+        if (boot) {
+            // Create form
+            $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
+                .append($("<p></p>").css("text-align", "center").html("The instance " + instance.text() + " has a boot volume, do you want to delete it along with the instance? All instance data will be lost."))
+                .append($("<label></label>").prop("for", "delete-boot").html("Delete boot volume:"))
+                .append($("<input></input>").prop("id", "delete-boot").prop("type", "checkbox"))
+                .dialog({
+                    autoOpen: true,
+                    height: 200,
+                    width: 235,
+                    modal: true,
+                    resizable: false,
+                    closeOnEscape: true,
+                    draggable: true,
+                    show: "fade",
+                    position: {
+                        my: "center",
+                        at: "center",
+                        of: $('#page-content')
+                    },
+                    buttons: {
+                        "Confirm": function () {
 
-        if (instances.items[id].snapshots.length > 0) {
-            message.showMessage('error', 'Cannot delete instance with existing snapshots.')
+                            // Delete instance
+                            var deleteBootVol = $("#delete-boot").prop('checked');
+                            deleteInstance(id, instance, targetRow, deleteBootVol);
+
+                            // Close Dialog form
+                            $(this).remove();
+                        }
+                    }
+                });
         } else {
-            if (boot) {
-                // Create form
-                $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
-                    .append($("<p></p>").css("text-align", "center").html("The instance " + instance.text() + " has a boot volume, do you want to delete it along with the instance? All instance data will be lost."))
-                    .append($("<label></label>").prop("for", "delete-boot").html("Delete boot volume:"))
-                    .append($("<input></input>").prop("id", "delete-boot").prop("type", "checkbox"))
-                    .dialog({
-                        autoOpen: true,
-                        height: 200,
-                        width: 235,
-                        modal: true,
-                        resizable: false,
-                        closeOnEscape: true,
-                        draggable: true,
-                        show: "fade",
-                        position: {
-                            my: "center",
-                            at: "center",
-                            of: $('#page-content')
-                        },
-                        buttons: {
-                            "Confirm": function () {
+            // Create form
+            $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
+                .append($("<p></p>").css("text-align", "center").html("Delete " + instance.text() + "?"))
+                .dialog({
+                    autoOpen: true,
+                    height: 125,
+                    width: 235,
+                    modal: true,
+                    resizable: false,
+                    closeOnEscape: true,
+                    draggable: true,
+                    show: "fade",
+                    position: {
+                        my: "center",
+                        at: "center",
+                        of: $('#page-content')
+                    },
+                    buttons: {
+                        "Confirm": function () {
 
-                                // Delete instance
-                                var deleteBootVol = $("#delete-boot").prop('checked');
-                                deleteInstance(id, instance, targetRow, deleteBootVol);
+                            // Delete instance
+                            deleteInstance(id, instance, targetRow, false);
 
-                                // Close Dialog form
-                                $(this).remove();
-                            }
+                            // Close Dialog form
+                            $(this).remove();
                         }
-                    });
-            } else {
-                // Create form
-                $("<div></div>").prop("id", "instance-delete-confirm-form").prop("title", "Delete Instance")
-                    .append($("<p></p>").css("text-align", "center").html("Delete " + instance.text() + "?"))
-                    .dialog({
-                        autoOpen: true,
-                        height: 125,
-                        width: 235,
-                        modal: true,
-                        resizable: false,
-                        closeOnEscape: true,
-                        draggable: true,
-                        show: "fade",
-                        position: {
-                            my: "center",
-                            at: "center",
-                            of: $('#page-content')
-                        },
-                        buttons: {
-                            "Confirm": function () {
-
-                                // Delete instance
-                                deleteInstance(id, instance, targetRow, false);
-
-                                // Close Dialog form
-                                $(this).remove();
-                            }
-                        }
-                    });
-            }
+                    }
+                });
         }
     });
 
@@ -349,14 +344,24 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
     clearUiValidation(allFields);
     // Validate form inputs
     var isValid =
-        checkLength(name, "Instance Name", 3, 16) &&
+        checkLength(name, "Instance Name", standardStringMin, standardStringMax) &&
+        checkCharfield(name, "Instance name") &&
         checkDuplicateName(name, instanceOpts);
     if (bootOption.val() == "true") {
-        isValid =
-            checkDuplicateName(bootName, volumes) &&
-            checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
-            checkBootSize(bootSize, flavor.val()) &&
-            checkStorage(bootSize);
+        if (bootName.val() != "") {
+            isValid =
+                checkCharfield(bootName, "Instance name") &&
+                checkDuplicateName(bootName, volumes) &&
+                checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+                checkBootSize(bootSize, flavor.val()) &&
+                checkStorage(bootSize);
+        } else {
+            isValid =
+                checkDuplicateName(bootName, volumes) &&
+                checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+                checkBootSize(bootSize, flavor.val()) &&
+                checkStorage(bootSize);
+        }
     }
     // If Valid, create instance
     if (isValid) {

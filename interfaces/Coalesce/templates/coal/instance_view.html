@@ -35,7 +35,6 @@
 
         deleteCheck("#instance-details");
     </script>
-
 {% endblock %}
 
 
@@ -157,15 +156,15 @@
                     </div>
                     <div style="text-align: center">
                         <body onload="initialize()" style="font: 10px arial">
-                            <span id="cpuGaugeContainer"></span>
-                            <span id="memoryGaugeContainer"></span>
-                            <span id="storageGaugeContainer"></span>
-                            <span id="diskreadrateGaugeContainer"></span>
-                            <span id="diskwriterateGaugeContainer"></span>
-                            <span id="lanincomingrateGaugeContainer"></span>
-                            <span id="lanoutgoingrateGaugeContainer"></span>
-                            <span id="wanincomingrateGaugeContainer"></span>
-                            <span id="wanoutgoingrateGaugeContainer"></span>
+                        <span id="cpuGaugeContainer"></span>
+                        <span id="memoryGaugeContainer"></span>
+                        <span id="storageGaugeContainer"></span>
+                        <span id="diskreadrateGaugeContainer"></span>
+                        <span id="diskwriterateGaugeContainer"></span>
+                        <span id="lanincomingrateGaugeContainer"></span>
+                        <span id="lanoutgoingrateGaugeContainer"></span>
+                        <span id="wanincomingrateGaugeContainer"></span>
+                        <span id="wanoutgoingrateGaugeContainer"></span>
                         </body>
                     </div>
                 </div>
@@ -175,14 +174,16 @@
         <div class="span6">
             <div id="snapshot-details" class="well well-wide">
                 <div class="legend">
-
-                    Snapshot Details
+                    Snapshot Details {% if server.boot_from_vol == 'true' %}(Not supported for Instances booted from
+                    Volumes){% endif %}
 
                     <div id="snapshot_progressbar" class="ui-progressbar progressbar">
                         <span class="progressbar-text">Working</span>
                     </div>
 
-                    <a href="#" id="create-instance-snapshot" class="btn" style="float:right">Snapshot</a>
+                    <a href="#" id="create-instance-snapshot{% if server.boot_from_vol == 'true' %}-disabled{% endif %}"
+                       class="btn" style="float:right"{% if server.boot_from_vol == 'true' %}
+                       disabled="disabled"{% endif %}>Snapshot</a>
                 </div>
                 <table id="snapshot_list" class="paleblue widget-table table-wide">
                     <tr>
@@ -358,16 +359,16 @@
         }
 
         function updateGauges() {
-             if (calls_complete) {
-                 calls_complete = false;
-                 for (var key in gauges) {
-                     calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
-                 }
+            if (calls_complete) {
+                calls_complete = false;
+                for (var key in gauges) {
+                    calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
+                }
 
-                 $.when.apply(null, calls).done(function () {
-                     calls_complete = true;
-                 });
-             }
+                $.when.apply(null, calls).done(function () {
+                    calls_complete = true;
+                });
+            }
         }
 
         function getCeilometerResults(guage, meterType, calcType) {
