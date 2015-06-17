@@ -7,6 +7,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import *
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from django.utils.safestring import mark_safe
+from validators import validate_charfield
 
 BOOLEAN_CHOICES = (('False', 'No',), ('True', 'Yes',))
 
@@ -73,18 +74,18 @@ class SetupForm(forms.Form):
         )
 
 class BuildProjectForm(forms.Form):
-    proj_name = forms.SlugField(min_length = 1, max_length = 64, label='Project Name')
-    username = forms.SlugField(min_length = 1, max_length = 64, label='Power User Name')
-    password = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password')
+    proj_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Project Name')
+    username = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Power User Name')
+    password = forms.CharField(min_length = 8, widget=forms.PasswordInput(),  label='Power User Password')
     password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password Confirm')
     email = forms.EmailField( label='Power User email')
-    net_name = forms.SlugField(min_length = 1, max_length = 64, label='Network Name')
+    net_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Network Name')
     subnet_dns = forms.IPAddressField(label = 'Subnet DNS IP Address')
     #ports[] - op
-    group_name = forms.SlugField(min_length = 1, max_length = 64, label='Security Group Name')
-    group_desc = forms.CharField(min_length = 1, max_length = 64, label='Security Group Description')
-    sec_keys_name = forms.SlugField(min_length = 1, max_length = 64, label='Security Key Name')
-    router_name = forms.SlugField(min_length = 1, max_length = 64, label='Router Name')
+    group_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Security Group Name')
+    group_desc = forms.CharField(min_length = 6, max_length = 80, label='Security Group Description')
+    sec_keys_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Security Key Name')
+    router_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Router Name')
 
     def __init__(self, *args, **kwargs):
         super(BuildProjectForm, self).__init__(*args, **kwargs)

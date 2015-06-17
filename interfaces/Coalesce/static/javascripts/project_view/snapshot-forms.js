@@ -51,8 +51,9 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(name, "Snapshot Name", 3, 16) &&
-                        checkLength(description, "Snapshot Name", 1, 80);
+                        checkLength(name, "Snapshot name", standardStringMin, standardStringMax) &&
+                        checkCharfield(name, "Snapshot name") &&
+                        checkLength(description, "Snapshot description", 1, 80);
 
                     if (isValid) {
 
@@ -312,7 +313,8 @@ $(function () {
 
                     // Validate form inputs
                     var isValid =
-                        checkLength(volume_name, "Volume Name", 0, 16) &&
+                        checkLength(volume_name, "Volume name", 0, 16) &&
+                        checkCharfield(volume_name, "Volume name") &&
                         checkDuplicateName(volume_name, volumes) &&
                         checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0);
 

@@ -1911,7 +1911,7 @@ legend + .control-group {
 .form-horizontal input + .help-block,
 .form-horizontal select + .help-block,
 .form-horizontal textarea + .help-block {
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 div.input-append {
@@ -5318,6 +5318,10 @@ th > small {
     color: #BD0000;
     margin-top: -10px;
     position: absolute;
+}
+
+form.form-horizontal div.error {
+    position: inherit !important;
 }
 
 .version-label {

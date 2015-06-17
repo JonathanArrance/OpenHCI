@@ -45,8 +45,9 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(groupName, "Group Name", 3, 16) &&
-                        checkLength(groupDesc, "Group Description", 6, 80);
+                        checkLength(groupName, "Group name", standardStringMin, standardStringMax) &&
+                        checkCharfield(groupName, "Group name") &&
+                        checkLength(groupDesc, "Group description", 6, 80);
 
                     if (!isValid) {
                     } else {
