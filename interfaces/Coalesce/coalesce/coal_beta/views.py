@@ -1513,6 +1513,18 @@ def list_servers(request,project_id):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
+def list_servers_status(request, project_id):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        out = {}
+        out['servers'] = so.list_servers_status(project_id)
+        out['status'] = 'success'
+        out['message'] = "Server list returned for %s."%(project_id)
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
 def pause_server(request, project_id, instance_id):
     out = {}
     try:
