@@ -113,6 +113,9 @@ function guid() {
 // UI VALIDATION
 // ---------------- //
 
+var standardStringMin = 3;
+var standardStringMax = 32;
+
 function flagError(input, t) {
     $(input).after('<p class="error">' + t + '</p>');
     $(input).addClass("ui-state-error");
@@ -158,13 +161,12 @@ function checkRegexp(o, regexp, n) {
     }
 }
 
-function checkUsername(o) {
+function checkCharfield(o, n) {
     var regexp = /^[a-z]([0-9a-z_])+$/i;
     if (!( regexp.test(o.val()))) {
         o.addClass("ui-state-error");
         flagError(
-            o,
-            "Username may consist of a-z, 0-9 and underscores, and must being with a letter.");
+            o, n + " may consist of a-z, 0-9 and underscores, and must being with a letter.");
         return false;
     } else {
         return true

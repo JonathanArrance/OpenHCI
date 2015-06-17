@@ -349,7 +349,7 @@ $(function () {
                 "name": {
                     "element": $("#bam-instance-name"),
                     "validation": function () {
-                        return checkLength(this.element, "Instance Name", 3, 16) && checkDuplicateName(this.element, instanceOpts);
+                        return checkLength(this.element, "Instance Name", standardStringMin, standardStringMax) && checkDuplicateName(this.element, instanceOpts) && checkCharfield(this.element, "Instance name");
                     },
                     "value": ""
                 },
@@ -382,7 +382,7 @@ $(function () {
                 "name": {
                     "element": $("#bam-image-name"),
                     "validation": function () {
-                        return checkLength(this.element, "Image Name", 3, 20);
+                        return checkLength(this.element, "Image Name", standardStringMin, standardStringMax) && checkCharfield(this.element, "Image name");
                     },
                     "value": ""
                 },
@@ -459,7 +459,7 @@ $(function () {
                     "element": $("#bam-volume-name"),
                     "validation": function () {
                         if ($("#bam-volume-select-existing").val() == "create") {
-                            return checkLength(this.element, "Volume Name", 3, 16) && checkDuplicateName(this.element, volumes);
+                            return checkLength(this.element, "Volume Name", standardStringMin, standardStringMax) && checkDuplicateName(this.element, volumes) && checkCharfield(this.element, "Volume name");
                         } else {
                             return true;
                         }
@@ -507,7 +507,7 @@ $(function () {
                     "element": $("#bam-security-create-key"),
                     "validation": function () {
                         if ($("#bam-security-select-key").val() == "create") {
-                            return checkLength(this.element, "Key Pair Name", 3, 16);
+                            return checkLength(this.element, "Key Pair Name", standardStringMin, standardStringMax) && checkCharfield(this.element, "Security Key name");
                         } else {
                             return true;
                         }
@@ -529,14 +529,14 @@ $(function () {
                 "name": {
                     "element": $("#bam-group-name"),
                     "validation": function () {
-                        return checkLength(this.element, "Security Group Name", 3, 16);
+                        return checkLength(this.element, "Security Group name", standardStringMin, standardStringMax) && checkCharfield(this.element, "Security Group name");
                     },
                     "value": ""
                 },
                 "description": {
                     "element": $("#bam-group-description"),
                     "validation": function () {
-                        return checkLength(this.element, "Security Group Description", 0, 80);
+                        return checkLength(this.element, "Security Group description", 0, 80);
                     },
                     "value": ""
                 },

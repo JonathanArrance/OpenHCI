@@ -35,7 +35,6 @@ $(function () {
                 clearUiValidation(allFields);
 
                 var bValid =
-                    checkLength(password1, "New Password", 5, 16) &&
                     checkPassword(password1) &&
                     checkPasswordMatch(password1, password2);
 

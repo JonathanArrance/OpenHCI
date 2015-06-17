@@ -344,14 +344,24 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
     clearUiValidation(allFields);
     // Validate form inputs
     var isValid =
-        checkLength(name, "Instance Name", 3, 16) &&
+        checkLength(name, "Instance Name", standardStringMin, standardStringMax) &&
+        checkCharfield(name, "Instance name") &&
         checkDuplicateName(name, instanceOpts);
     if (bootOption.val() == "true") {
-        isValid =
-            checkDuplicateName(bootName, volumes) &&
-            checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
-            checkBootSize(bootSize, flavor.val()) &&
-            checkStorage(bootSize);
+        if (bootName.val() != "") {
+            isValid =
+                checkCharfield(bootName, "Instance name") &&
+                checkDuplicateName(bootName, volumes) &&
+                checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+                checkBootSize(bootSize, flavor.val()) &&
+                checkStorage(bootSize);
+        } else {
+            isValid =
+                checkDuplicateName(bootName, volumes) &&
+                checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+                checkBootSize(bootSize, flavor.val()) &&
+                checkStorage(bootSize);
+        }
     }
     // If Valid, create instance
     if (isValid) {

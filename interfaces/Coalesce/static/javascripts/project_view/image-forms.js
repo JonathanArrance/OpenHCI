@@ -63,7 +63,7 @@ $(function () {
                         // Make sure the image name is of the proper size of 3 to 20 characters.
                         // TODO: Need to see why there is a 3 - 20 size limit!!!
                         // This is the name of the image to be shown in the UI; not the one being uploaded.
-                        if (!checkLength(image_name, "image_name", 3, 20))
+                        if (!checkLength(image_name, "Image name", standardStringMin, standardStringMax) && checkCharfield(image_name, "Image name"))
                             return;
 
                         var progress_id = guid();
