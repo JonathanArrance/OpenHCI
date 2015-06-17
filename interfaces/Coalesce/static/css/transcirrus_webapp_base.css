@@ -5362,16 +5362,22 @@ th > small {
     color: rgb(28, 60, 119);
 }
 
+.legend-stats {
+    font-size: 14px;
+    font-weight: normal;
+    vertical-align: middle;
+}
+
 /* ADMIN */
 
 #phonehome-confirm-form > .ajax-loader {
-    background-size: 20px auto!important;
+    background-size: 20px auto !important;
     background-position: center;
-    border: 1px dashed rgb(225, 225, 225)!important;
-    display: inline-block!important;
-    height: 20px!important;
-    margin: 10px auto!important;
-    padding: 5px!important;
+    border: 1px dashed rgb(225, 225, 225) !important;
+    display: inline-block !important;
+    height: 20px !important;
+    margin: 10px auto !important;
+    padding: 5px !important;
     width: 20px;
 }
 
@@ -5382,13 +5388,13 @@ th > small {
 }
 
 #upgrade-confirm-form > .ajax-loader {
-    background-size: 20px auto!important;
+    background-size: 20px auto !important;
     background-position: center;
-    border: 1px dashed rgb(225, 225, 225)!important;
-    display: inline-block!important;
-    height: 20px!important;
-    margin: 10px auto!important;
-    padding: 5px!important;
+    border: 1px dashed rgb(225, 225, 225) !important;
+    display: inline-block !important;
+    height: 20px !important;
+    margin: 10px auto !important;
+    padding: 5px !important;
     width: 20px;
 }
 
