@@ -28,8 +28,8 @@ b = auth.get_auth()
 #                       - volume_type - OP
 #                       - boot_from_vol - OP(True/False) - default False
 
-server = {'sec_group_name':'test','sec_key_name':'test','network_name':'test','image_id':'a4d8e5bf-19ae-4017-8f2b-730b7ceb475c',
-          'flavor_id':'1','instance_name':'server_no_vol_info','project_id':'ff8fbdc33d83419a8070d2e7577b3a3f','boot_from_vol':"False"}
+server = {'sec_group_name':'test','sec_key_name':'test','network_name':'test','image_id':'00afa8ca-103e-47eb-8bba-7a80e77819a8',
+          'flavor_id':'1','instance_name':'server_no_vol_info','project_id':'660c9b42c2d945c0a79b32589b16a6bd','boot_from_vol':"False"}
 
 server_no_vol_info = boot_instance(server,b)
 
