@@ -92,6 +92,7 @@ class volume_ops:
                         source_vol_id - Optional used if creating volume clone
                         volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
+                        volume_bootable - Optional true/false
                         image_id - Optional os image
                         description - Optional
                             # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
@@ -184,6 +185,16 @@ class volume_ops:
         else:
             create_vol['image_id'] = '"imageRef": "%s"'%(create_vol['image_id'])
 
+        if('volume_bootable' not in create_vol):
+            create_vol['volume_bootable'] = 'false'
+        elif(create_vol['volume_bootable'] == None):
+            create_vol['volume_bootable'] = 'false'
+
+        #normalize input
+        if('volume_bootable' in create_vol):
+            raw = create_vol['volume_bootable']
+            volume_bootable = raw.lower()
+
         # if('description' not in create_vol) or (create_vol['description'] == 'none'):
         #     logger.sys_warning("Did not pass in a volume description setting the default description.")
         #     if('snapshot_id' in create_vol):
@@ -258,7 +269,8 @@ class volume_ops:
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":voltype,"vol_attached_to_inst":"NONE"}
+                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,
+                                  "vol_type":voltype,"vol_set_bootable":volume_bootable}
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except Exception, e:
                     self.db.pg_transaction_rollback()
@@ -392,11 +404,11 @@ class volume_ops:
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
-                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+                self.select_vol = {'select':'proj_id,vol_size,vol_type,vol_set_bootable','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
             elif(self.user_level == 2):
-                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
+                self.select_vol = {'select':'proj_id,vol_size,vol_type,vol_set_bootable','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
         else:
-            self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
+            self.select_vol = {'select':'proj_id,vol_size,vol_type,vol_set_bootable','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
 
         #check if the snapshot exists in the project and that the user can use it
         try:
@@ -410,7 +422,7 @@ class volume_ops:
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
                       'volume_zone':input_dict['volume_zone'],'volume_id':input_dict['volume_id'],'volume_type':get_vol[0][2],
-                      'source_vol_id':input_dict['volume_id']}
+                      'source_vol_id':input_dict['volume_id'],'volume_bootable':get_vol[0][3]}
 
         output = self.create_volume(input_dict)
 

@@ -48,9 +48,10 @@ $(function () {
 
                     // Validate form inputs
                     var isValid =
-                        checkLength(volume_name, "Volume Name", 3, 16) &&
+                        checkLength(volume_name, "Volume name", standardStringMin, standardStringMax) &&
+                        checkCharfield(volume_name, "Volume name") &&
                         checkDuplicateName(volume_name, volumes) &&
-                        checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
+                        checkSize(volume_size, "Volume size must be greater than 0.", 1, 0) &&
                         checkStorage(volume_size);
 
                     if (isValid) {
@@ -820,7 +821,8 @@ $(function () {
 
                     // Validate form inputs
                     var isValid =
-                        checkLength(name, "Volume Name", 3, 16) &&
+                        checkLength(name, "Volume name", standardStringMin, standardStringMax) &&
+                        checkCharfield(name, "Volume name") &&
                         checkDuplicateName(name, volumes);
 
                     if (isValid) {

@@ -46,12 +46,11 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(name, "username", 3, 16) &&
-                        checkUsername(name) &&
+                        checkLength(name, "Username", standardStringMin, standardStringMax) &&
+                        checkCharfield(name, "Username") &&
                         checkDuplicateName(name, users) &&
-                        checkLength(email, "email", 6, 80) &&
+                        checkLength(email, "Email", 5, 80) &&
                         checkEmail(email) &&
-                        checkLength(password, "password", 5, 16) &&
                         checkPassword(password) &&
                         checkPasswordMatch(password, confirm);
 

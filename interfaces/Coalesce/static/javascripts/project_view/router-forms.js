@@ -43,7 +43,8 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(router_name, "Router Name", 3, 16) &&
+                        checkLength(router_name, "Router name", standardStringMin, standardStringMax) &&
+                        checkCharfield(router_name, "Router name") &&
                         checkDuplicateName(router_name, routers);
 
                     if (isValid) {

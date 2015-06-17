@@ -417,6 +417,7 @@ class server_ops:
                        - floating_ip_id
                        - novnc_console
                        - date_created
+                       - boot_from_vol
                        - fault
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
@@ -455,8 +456,6 @@ class server_ops:
             logger.sys_error('Could not get server info: get_server %s'%(e))
             raise Exception('Could not get server info: get_server %s'%(e))
 
-        #this is a HACK to get the server internal IP - I want to have all this info in the DB, need a polling mechanisim to poll until the
-        #server is up and then get the ip
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(input_dict['project_id'] != self.project_id):
@@ -496,6 +495,16 @@ class server_ops:
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'flavor_id':load['server']['flavor']['id'],
                       'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],'server_state':load['server']['OS-EXT-STS:vm_state'],
                       'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc,'date_created':load['server']['created'],'fault':self.fault}
+
+            #HACK - need to figure out how to get this from API
+            #get if boot from vol
+            get_boot = {'select':"vol_set_bootable,vol_attached",'from':"trans_system_vols",'where':"vol_attached_to_inst='%s'"%(server[0][1])}
+            boot_from_vol = self.db.pg_select(get_boot)
+            r_dict['boot_from_vol'] = 'false'
+            if(len(boot_from_vol) >= 1):
+                if(boot_from_vol[0][0] == 'true' and boot_from_vol[0][1] == 'true'):
+                    r_dict['boot_from_vol'] = 'true'
+
             return r_dict
         elif(rest['response'] == 409):
             #logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
