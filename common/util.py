@@ -515,7 +515,7 @@ def get_cloud_controller_uplink_ip():
 def get_cloud_controller_mgmt_ip():
     """
     DESC: Get the mgmt_ip of the cloud controller
-    INPUT: node_type
+    INPUT: none
     OUTPUT: controller_mgmt_ip
     ACCESS: Wide open
     NOTE:

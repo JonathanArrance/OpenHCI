@@ -5,7 +5,7 @@ import time
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 from transcirrus.common.auth import authorization
-from transcirrus.operations.delete_server import delete_server
+from transcirrus.operations.delete_instance import delete_instance
 
 auth = authorization("admin","password")
 b = auth.get_auth()
@@ -28,14 +28,13 @@ b = auth.get_auth()
 #                       - volume_type - OP
 #                       - boot_from_vol - OP(True/False) - default False
 
-#server = {'project_id':'c417abbb61014f2a8d330a0f7c0210a1','server_id':'a9e66e59-3f85-48d3-94a5-74308461123e','delete_boot_vol':'True'}
+#server = {'project_id':'660c9b42c2d945c0a79b32589b16a6bd','server_id':'70aabf53-ad48-40d6-a877-37a40b0f6b83','delete_boot_vol':'False'}
 
-#delete = delete_server(b,server)
+#delete = delete_instance(b,server)
 
 #print delete
 
-server = {'project_id':'c417abbb61014f2a8d330a0f7c0210a1','server_id':'e06ba0ed-58da-425b-9212-f2195ad192e5'}
-
-delete = delete_server(b,server)
+server = {'project_id':'660c9b42c2d945c0a79b32589b16a6bd','server_id':'6f2d9650-46d9-4150-8bce-95bde366611d'}
+delete = delete_instance(b,server)
 
 print delete
