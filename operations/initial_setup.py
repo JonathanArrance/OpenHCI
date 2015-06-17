@@ -448,6 +448,16 @@ def run_setup(new_system_variables,auth_dict):
         #fire off revert
         return heat_start
     time.sleep(10)
+    
+    glance_start = service.glance('restart')
+    if(glance_start != 'OK'):
+        #fire off revert
+        return glance_start
+    
+    nova_start = service.nova('restart')
+    if(nova_start != 'OK'):
+        #fire off revert
+        return nova_start
 
     logger.sys_info('SETUP43:Creating Neutron Default Public Connection...')
     neu_net = neutron_net_ops(auth_dict)
