@@ -30,10 +30,10 @@ def delete_instance(auth_dict, delete_dict):
     db = util.db_connect()
     remove_server = {}
 
-    snaps = sa.list_instance_snaps(delete_dict['server_id'])
-    if(len(snaps) > 0):
-        for snap in snaps:
-            sa.delete_instance_snapshot(snap['snapshot_id'])
+    #snaps = sa.list_instance_snaps(delete_dict['server_id'])
+    #if(len(snaps) > 0):
+    #    for snap in snaps:
+    #        sa.delete_instance_snapshot(snap['snapshot_id'])
 
     #if the flag not set default to false
     if('delete_boot_vol' not in delete_dict):
@@ -42,8 +42,9 @@ def delete_instance(auth_dict, delete_dict):
         delete_dict['delete_boot_vol'] = 'false'
 
     #normalize input
-    raw = delete_dict['delete_boot_vol']
-    delete_boot_vol = raw.lower()
+    if('delete_boot_vol' in delete_dict):
+        raw = delete_dict['delete_boot_vol']
+        delete_boot_vol = raw.lower()
 
     #remove the volumes attached to the instance.
     try:
@@ -119,6 +120,7 @@ def delete_instance(auth_dict, delete_dict):
             #delete the volume
             delete_vol={'volume_id':boot_vol[0],'project_id':delete_dict['project_id']}
             cinder.delete_volume(delete_vol)
+
         elif(delete_boot_vol == 'false'):
             try:
                 update2 = {'table':"trans_system_vols",'set':"vol_attached='false',vol_attached_to_inst=NULL,vol_mount_location=NULL",'where':"vol_id='%s'" %(boot_vol[0])}
