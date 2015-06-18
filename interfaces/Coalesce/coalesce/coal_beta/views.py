@@ -1805,41 +1805,50 @@ def add_existing_user(request, username, user_role, project_id):
         out = {'status' : "error", 'message' : "Could not add the user %s to the project: %s"%(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-def update_user_password(request, user_id, project_id, password):
+def update_user_password(request, user_id, project_id, current_password, new_password):
     out = {}
     try:
         auth = request.session['auth']
-        uo = user_ops(auth)
-        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password}
-        up = uo.update_user_password(passwd_dict)
-        if(up == 'OK'):
-            out['status'] = 'success'
-            out['message'] = 'The password has been successfully updated.'
-            request.session['auth']['password'] = password
-            a = authorization(request.session['auth']['username'], request.session['auth']['password'])
-            auth2 = a.get_auth()
-            request.session['auth']['token'] = auth2['token']
-            request.session.cycle_key()
-            request.session.save()
+        if auth['user_level'] != 0:
+            if current_password != auth['password']:
+                out = {'status' : "error", 'message' : "Could not validate user password, please re-enter current password."}
+                return HttpResponse(simplejson.dumps(out))
+            else:
+                uo = user_ops(auth)
+                passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': new_password}
+                up = uo.update_user_password(passwd_dict)
+                if(up == 'OK'):
+                    out['status'] = 'success'
+                    out['message'] = 'The password has been successfully updated.'
+                    request.session['auth']['password'] = new_password
+                    a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                    auth2 = a.get_auth()
+                    request.session['auth']['token'] = auth2['token']
+                    request.session.cycle_key()
+                    request.session.save()
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not update the user password.: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-def update_admin_password(request, password):
+def update_admin_password(request, current_password, new_password):
     out = {}
     try:
         auth = request.session['auth']
         if auth['user_level'] == 0:
-            ap = change_admin_password(auth, password)
-            if(ap == 'OK'):
-                out['status'] = 'success'
-                out['message'] = 'The password has been successfully updated.'
-                request.session['auth']['password'] = password
-                a = authorization(request.session['auth']['username'], request.session['auth']['password'])
-                auth2 = a.get_auth()
-                request.session['auth']['token'] = auth2['token']
-                request.session.cycle_key()
-                request.session.save()
+            if current_password != auth['password']:
+                out = {'status' : "error", 'message' : "Could not validate user password, please re-enter current password."}
+                return HttpResponse(simplejson.dumps(out))
+            else:
+                ap = change_admin_password(auth, new_password)
+                if(ap == 'OK'):
+                    out['status'] = 'success'
+                    out['message'] = 'The password has been successfully updated.'
+                    request.session['auth']['password'] = new_password
+                    a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                    auth2 = a.get_auth()
+                    request.session['auth']['token'] = auth2['token']
+                    request.session.cycle_key()
+                    request.session.save()
 
         else:
             out = {'status': "error", 'message': "Only admins can update admin password"}
@@ -2986,7 +2995,7 @@ def build_project(request):
             project_var_array = {'project_name': proj_name,
                                  'user_dict': { 'username': username,
                                                 'password': password,
-                                                'user_role': 'pu',
+                                                'user_role': 'admin',
                                                 'email': email,
                                                 'project_id': ''},
 
