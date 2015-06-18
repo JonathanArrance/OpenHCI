@@ -16,7 +16,7 @@ def build_project(auth_dict, project_dict):
            project_dict - project_name - req
                      - user_dict - username - req
                                  - password - req
-                                 - user_role - must be "pu"
+                                 - user_role - must be "admin"
                                  - email - req
                                  - project_id - leave NULL
                      - net_name - req
@@ -66,18 +66,18 @@ def build_project(auth_dict, project_dict):
     #If the user specifed already exists and is not attached to another project just add him to the project as power user.
     if('%s'%(project_dict['user_dict']['username']) in userset):
         try:
-            user_dict = {'username': project_dict['user_dict']['username'],'user_role': 'pu','project_id': proj}
+            user_dict = {'username': project_dict['user_dict']['username'],'user_role': 'admin','project_id': proj}
             add_user = user.add_user_to_project(user_dict)
         except Exception as e:
-            logger.sys_error("Couldn't add an existing power user to the project, %s" %(str(e)))
+            logger.sys_error("Couldn't add an existing project admin to the project, %s" %(str(e)))
     else:
         #If the user does not exist create a new project power user.
         try:
             project_dict['user_dict']['project_id'] = proj
             pu = user.create_user(project_dict['user_dict'])
-            logger.sys_info("Created power user named %s for project named %s " % (project_dict['user_dict']['username'], project_dict['project_name']))
+            logger.sys_info("Created project admin named %s for project named %s " % (project_dict['user_dict']['username'], project_dict['project_name']))
         except Exception as e:
-            logger.sys_error("Couldn't create a power user for the project, %s" %(str(e)))
+            logger.sys_error("Couldn't create a project admin for the project, %s" %(str(e)))
 
     try:
         net_dict = {'net_name': project_dict['net_name'],'admin_state':"true", 'shared':"false",'project_id':proj}

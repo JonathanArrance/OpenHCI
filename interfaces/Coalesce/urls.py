@@ -365,7 +365,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.remove_user_from_project',
             name='remove_user_from_project'),
 
-        url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<password>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<current_password>[^/]+)/(?P<new_password>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.update_user_password',
             name='update_user_password'),
 
@@ -559,7 +559,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.password_change',
             name='change-password'),
 
-        url(r'^update_admin_password/(?P<password>[^/]+)/$',
+        url(r'^update_admin_password/(?P<current_password>[^/]+)/(?P<new_password>[^/]+)/$',
             'coalesce.coal_beta.views.update_admin_password',
             name='update_admin_password'),
 

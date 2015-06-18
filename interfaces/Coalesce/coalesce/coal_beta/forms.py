@@ -75,10 +75,10 @@ class SetupForm(forms.Form):
 
 class BuildProjectForm(forms.Form):
     proj_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Project Name')
-    username = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Power User Name')
-    password = forms.CharField(min_length = 8, widget=forms.PasswordInput(),  label='Power User Password')
-    password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Power User Password Confirm')
-    email = forms.EmailField( label='Power User email')
+    username = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Project Admin Name')
+    password = forms.CharField(min_length = 8, widget=forms.PasswordInput(),  label='Project Admin Password')
+    password_confirm = forms.CharField(widget=forms.PasswordInput(),  label='Project Admin Password Confirm')
+    email = forms.EmailField( label='Project Admin email')
     net_name = forms.CharField(min_length = 3, max_length = 32, validators = [validate_charfield], label='Network Name')
     subnet_dns = forms.IPAddressField(label = 'Subnet DNS IP Address')
     #ports[] - op
@@ -104,7 +104,7 @@ class BuildProjectForm(forms.Form):
                 'sec_keys_name',
             HTML('</div>'),
             
-            HTML('<div class="well span5"><div class="legend">Power User Settings</div>'),
+            HTML('<div class="well span5"><div class="legend">Project Admin Settings</div>'),
                 'username',
                 'email',
                 'password',
