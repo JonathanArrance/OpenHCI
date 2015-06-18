@@ -185,8 +185,6 @@ class server_ops:
                 self.token = get_token(self.username,self.password,project_id)
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id": project_id}
-            print "self: %s"%self
-            print "api_dict: %s"%api_dict
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the REST api caller in list_servers_status operation.")
@@ -208,13 +206,10 @@ class server_ops:
             load = json.loads(rest['data'])
             for server in load['servers']:
                 r_dict = {'server_id':server['id'], 'status':server['status']}
-                print "r_dict: %s"%r_dict
                 inst_array.append(r_dict)
-                print "inst_array: %s"%inst_array
         else:
             ec.error_codes(rest)
 
-        print "final inst_array: %s"%inst_array
         return inst_array
 
     def list_all_servers(self):
