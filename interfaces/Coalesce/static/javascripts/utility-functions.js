@@ -6,7 +6,8 @@ function initializeUtilities() {
 
     // Call click events
 
-    $('#refresh-console').click(function () {
+    $('#refresh-console').click(function (event) {
+        event.preventDefault();
         $('.widget-console').attr('src', function (i, val) {
             return val;
         });
