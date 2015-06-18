@@ -70,6 +70,66 @@
     </div>
 </div>
 
+<!-- ---------- TABLE FUNCTIONS ---------- -->
+
+<script>
+    $(function () {
+        refreshInstStatus();
+    });
+
+    function refreshInstStatus() {
+        window.setInterval(function () {
+            var status = [];
+            var instStatus = $.getJSON('/' + PROJECT_ID + '/list_servers_status/')
+                    .done(function (data) {
+                        $.each(data.servers, function (index, value) {
+                            status.push(value);
+                        })
+                    });
+            $.when(instStatus).done(function () {
+                $.each(status, function (index, value) {
+                    var statusCell = $(document.getElementById(value.server_id + '-status-cell')),
+                            actionsCell = $(document.getElementById(value.server_id + '-actions-cell'));
+                    if (statusCell.html() != value.status) {
+                        var timeCheck;
+                        window.setTimeout(function () {
+                            timeCheck = statusCell.html() != value.status;
+                        }, 3000);
+                        if (timeCheck) {
+                            statusCell.html(value.status);
+                            actionsCell.empty();
+                            if (value.status == "ACTIVE") {
+                                actionsCell
+                                        .append($("<a></a>").prop("href", instances.items[value.server_id].console).addClass("open-instance-console").html("console")
+                                                .prop("onClick", "window.open(this.href,'','toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');"))
+                                        .append($("<span></span>").addClass("instance-actions-pipe").html(" | "))
+                                        .append($("<a></a>").prop("href", "#").addClass("pause-instance").html("pause"))
+                                        .append($("<span></span>").addClass("instance-actions-pipe").html(" | "))
+                                        .append($("<a></a>").prop("href", "#").addClass("suspend-instance").html("suspend"))
+                                        .append($("<span></span>").addClass("instance-actions-pipe").html(" | "))
+                                        .append($("<a></a>").prop("href", "#").addClass("delete-instance").html("delete"));
+                            } else if (value.status == "PAUSED") {
+                                actionsCell
+                                        .append($("<a></a>").prop("href", "#").addClass("unpause-instance").html("unpause"))
+                                        .append($("<span></span>").addClass("instance-actions-pipe").html(" | "))
+                                        .append($("<a></a>").prop("href", "#").addClass("delete-instance").html("delete"));
+                            } else if (value.status == "SUSPENDED") {
+                                actionsCell
+                                        .append($("<a></a>").prop("href", "#").addClass("resume-instance").html("resume"))
+                                        .append($("<span></span>").addClass("instance-actions-pipe").html(" | "))
+                                        .append($("<a></a>").prop("href", "#").addClass("delete-instance").html("delete"));
+                            } else {
+                                actionsCell
+                                        .append($("<a></a>").prop("href", "#").addClass("delete-instance").html("delete"));
+                            }
+                        }
+                    }
+                });
+            });
+        }, 60000);
+    }
+</script>
+
 <!-- ---------- DECLARE GLOBAL VARIABLES ---------- -->
 
 {% if instances %}

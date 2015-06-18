@@ -40,17 +40,17 @@ class server_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            
+
             if(self.is_admin == 1):
                 self.adm_token = user_dict['adm_token']
             else:
                 self.adm_token = 'NULL'
-            
+
             if('sec' in user_dict):
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
-                
+
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
@@ -162,6 +162,56 @@ class server_ops:
 
         return self.inst_array
 
+    def list_servers_status(self, project_id):
+        """
+        DESC: List the status of all virtual servers in a given project.
+        INPUT: project_id
+        OUTPUT: array or r_dict - server_id
+                                - status
+        ACCESS: Admins and Power users can list the servers in a project.
+                Users can list virtual servers in the project they own.
+        NOTE:
+        """
+        #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
+
+
+        inst_array = []
+        if (self.user_level > 0):
+            if(project_id != self.project_id):
+                logger.sys_error("Could not connect to the REST api caller in list_servers_status operation.")
+                raise Exception("Could not connect to the REST api caller in list_servers_status operation.")
+        else:
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,project_id)
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id": project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the REST api caller in list_servers_status operation.")
+            raise Exception("Could not connect to the REST api caller in list_servers_status operation.")
+
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/detail?tenant_id=%s' %(project_id,project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            raise e
+
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            for server in load['servers']:
+                r_dict = {'server_id':server['id'], 'status':server['status']}
+                inst_array.append(r_dict)
+        else:
+            ec.error_codes(rest)
+
+        return inst_array
+
     def list_all_servers(self):
         """
         DESC: List all virtual servers in the system.
@@ -215,7 +265,7 @@ class server_ops:
         NOTE: If no zone is specified then the zone defaults to zone.
         """
         #do variable checks
-        
+
         if(not create_dict):
             logger.sys_error("No dictionary passed into create_server operation.")
             raise Exception("No dictionary passed into create_server operation.")
@@ -743,7 +793,7 @@ class server_ops:
                 self.db.pg_transaction_rollback()
                 logger.sys_error("Could not attach server to network %s" %(e))
                 raise e
-    
+
             if(rest['response'] == 200):
                 #NOTE: need to add in a polling mechanism to report back status of the creation
                 load = json.loads(rest['data'])
@@ -1493,7 +1543,7 @@ class server_ops:
 
     def delete_sec_keys(self,delete_dict):
         """
-        DESC: Delete the specified key 
+        DESC: Delete the specified key
         INPUT: delete_dict - sec_key_name
                            - project_id
         OUTPUT: OK if deleted

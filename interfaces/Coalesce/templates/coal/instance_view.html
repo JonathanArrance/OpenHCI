@@ -34,6 +34,7 @@
                 attachedIp = "{{server.server_public_ips}}";
 
         deleteCheck("#instance-details");
+        console.log("{{ server }}");
     </script>
 {% endblock %}
 
@@ -140,6 +141,9 @@
                             {% if server.server_status == "ACTIVE" %}
                                 <a href="#" class="btn" id="revert-server"> Revert </a>
                             {% endif %}
+                            <a href="{{ server.novnc_console }}" class="open-instance-console btn"
+                               onClick="window.open(this.href,'','toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;"
+                                    > Console </a>
                         </td>
                     </tr>
                 </table>
@@ -220,26 +224,6 @@
             </div>
         </div>
         <!-- end span6 -->
-    </div> <!-- end row-fluid -->
-
-    <div class="row-fluid">
-        <div class="span12">
-            <div class="well top well-wide">
-                <div class="legend">
-                    <div id="widget-console-icon" class="widget-section-icon" style="float:left; margin-top: -3px;">-
-                    </div>
-
-                    Console
-
-                    <a href="#" id="refresh-console" class="btn" style="float: right;">Refresh</a>
-                </div>
-                <div class="widget-console-well">
-                    <iframe id="instance-console" class="widget-console" name="noVNCConsole"
-                            src="{{ server.novnc_console }}"></iframe>
-                </div>
-            </div>
-        </div>
-        <!-- end span12 -->
     </div> <!-- end row-fluid -->
 
     <div id="instance-view-resize-dialog-form" title="Resize server?">

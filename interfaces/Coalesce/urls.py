@@ -104,6 +104,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.list_servers',
             name='list_servers'),
 
+        url(r'^(?P<project_id>[^/]+)/list_servers_status/$',
+            'coalesce.coal_beta.views.list_servers_status',
+            name='list_servers'),
+
         url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
             'coalesce.coal_beta.views.instance_view',
             name='instance_view'),
