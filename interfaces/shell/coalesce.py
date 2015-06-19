@@ -5,7 +5,7 @@
 """Setup for Transcirrus CiaC"""
 
 from __future__ import nested_scopes, division
-import sys, os, time, getopt, subprocess, dialog
+import sys, os, time, getopt, subprocess, dialog, ast
 from multiprocessing import Process
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
@@ -254,10 +254,10 @@ def setup(d):
             # Verify credentials
             # if cloud admin, continue setup
             # else re-prompt for credentials
-            if (user_dict['is_admin'] == 1):
+            if user_dict['is_admin'] == 1 and user_dict['token'] is not None:
                 break
             else:
-                d.msgbox("Admin only, try again.", width=60, height=10)
+                d.msgbox("Authentication failed, try again.", width=60, height=10)
         except:
             d.msgbox("Invalid credentials, try again.", width=60, height=10)
 
