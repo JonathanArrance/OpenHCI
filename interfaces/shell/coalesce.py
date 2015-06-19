@@ -470,14 +470,23 @@ def valid_ip(address):
     Validate IP address using IPy library
     """
     try:
-        IP(address)
-        return True
+        if check_ip_format(address):
+            IP(address)
+            return True
+        else:
+            return False
     except ValueError:
         return False
     except Exception:
         return False
     else:
         return False
+
+def check_ip_format(address):
+    host_bytes = address.split('.')
+    valid = [int(b) for b in host_bytes]
+    valid = [b for b in valid if b >= 0 and b <= 255]
+    return len(host_bytes) == 4 and len(valid) == 4
 
 
 def valid_ip_vm(uplink, vm, mask):
