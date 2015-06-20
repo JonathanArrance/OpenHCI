@@ -41,24 +41,6 @@
                 <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
             </div>
 
-{#            <div class="well" style="display: block">#}
-{#                <div class="legend">#}
-{#                    Cloud Stats#}
-{#                </div>#}
-{#                <table class="paleblue widget-table-third" style="display: inline-table">#}
-{#                    <tr>#}
-{#                        <th>Nodes</th>#}
-{#                        <th>Projects</th>#}
-{#                        <th>Users</th>#}
-{#                    </tr>#}
-{#                    <tr>#}
-{#                        <td>{{ tot_nodes }}</td>#}
-{#                        <td>{{ tot_proj }}</td>#}
-{#                        <td>{{ tot_users }}</td>#}
-{#                    </tr>#}
-{#                </table>#}
-{#            </div>#}
-
             <div class="well" id="widget-actions" style="display: block;">
                 <div class="legend">
                     Last 24hrs: Average WAC
@@ -193,22 +175,6 @@
             </div>
         </div>
         <!-- end span6-->
-    </div>
-
-    <div id="dialog-form-update-password" title="Update Password">
-        <p class="validateTips">All form fields are required.</p>
-
-        <form>
-            {% csrf_token %}
-            <fieldset>
-                <label for="password1">Password</label>
-                <input type="password" name="password1" id="password1" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-                <label for="password2">Confirm Password</label>
-                <input type="password" name="password2" id="password2" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-            </fieldset>
-        </form>
     </div>
 
     <div id="tps-config-form" title="Configure Third Party Storage">

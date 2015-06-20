@@ -123,23 +123,6 @@ var PROJECT = "{{ project_name}}",
             </div>
         </div>
     </div>
-
-
-    <div id="dialog-form-update-password" title="Update Password">
-        <p class="validateTips">All form fields are required.</p>
-
-        <form>
-            {% csrf_token %}
-            <fieldset>
-                <label for="password1">Password</label>
-                <input type="password" name="password1" id="password1" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-                <label for="password2">Confirm Password</label>
-                <input type="password" name="password2" id="password2" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-            </fieldset>
-        </form>
-    </div>
 </div>
 <!-- end row-fluid-->
 
@@ -214,12 +197,6 @@ var PROJECT = "{{ project_name}}",
                     var result = data.statistics[0][calcType];
                     guage.redraw(result);
                 }
-            }
-            else
-            {
-                if (got_data)
-                    message.showMessage('error', data.message);
-                got_data = false;
             }
         });
 

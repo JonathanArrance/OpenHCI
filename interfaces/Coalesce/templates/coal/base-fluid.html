@@ -37,8 +37,9 @@
             document.getElementById("warning-messages").remove();
         }
 
-        var USERNAME = "{{ username }}";
-        var STATIC_URL = "{{ STATIC_URL }}";
+        var USERNAME = "{{ username }}",
+                USER_LEVEL = "{{ user_level }}",
+                STATIC_URL = "{{ STATIC_URL }}";
     </script>
     {% block javascripts %}{% endblock %}
 </head>
