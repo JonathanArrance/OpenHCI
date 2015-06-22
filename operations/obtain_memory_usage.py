@@ -41,7 +41,7 @@ def get_mem_usage_for_instances(auth_dict):
                 try:
                     mu = MemoryUtilization(auth_dict)
                     mu.manual_inspect_memory_usage(entry['os_ext_inst_name'], entry['project_id'], entry['server_id'])
-                    print entry['os_ext_inst_name'] + " || " + entry['project_id'] + " || " + entry['server_id']
+                    # print entry['os_ext_inst_name'] + " || " + entry['project_id'] + " || " + entry['server_id']
                 except Exception as e:
                     print ('Connection to mem patch failed: %s' % e)
                     logger.sys_error('Connection to mem patch failed: %s' % e)
