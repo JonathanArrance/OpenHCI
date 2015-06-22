@@ -2,113 +2,113 @@
 
 {% block javascripts %}
 
-<link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
-<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
 
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
-<script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
-<script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-<script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-<script src="{{ STATIC_URL }}javascripts/user_view/update-user-password.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
-<script>
-var PROJECT = "{{ project_name}}",
-        PROJECT_ID = "{{ current_project_id}}",
-        USER_ID = "{{ user_info.user_id }}";
-</script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/user_view/update-user-password.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
+    <script>
+        var PROJECT = "{{ project_name}}",
+                PROJECT_ID = "{{ current_project_id}}",
+                USER_ID = "{{ user_info.user_id }}";
+    </script>
 
 {% endblock %}
 
-{% block title %} Details for {{user_info.username}}{% endblock %}
+{% block title %} Details for {{ user_info.username }}{% endblock %}
 
 {% block content %}
 
-<div class="row-fluid">
-    <div class="span5">
-        <div class="row-fluid">
-            <div id="user-details" class="well">
-                <div class="legend">
-                    User Details
+    <div class="row-fluid">
+        <div class="span5">
+            <div class="row-fluid">
+                <div id="user-details" class="well">
+                    <div class="legend">
+                        User Details
 
-                    {% if user_level == 0 %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/view/" class="btn"
-                       style="float: right;">Return To Project</a>
-                    {% elif user_level == 1 %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/pu_project_view/"
-                       class="btn"
-                       style="float: right;">Return To Project</a>
-                    {% else %}
-                    <a href="{{ default_public }}/projects/{{current_project_id}}/basic_project_view/"
-                       class="btn" style="float: right;">Return To Project</a>
-                    {% endif %}
-                </div>
-                <table class="paleblue widget-table">
-                    <tr>
-                        <th>Name</th>
-                        <td id="username">{{user_info.username}}</td>
-                    </tr>
-                    <tr>
-                        <th>Id</th>
-                        <td id="user-id">{{user_info.user_id}}</td>
-                    </tr>
-                    <tr>
-                        <th>Role</th>
-                        <td id="user-role">{{user_info.user_role}}</td>
-                    </tr>
-                    <tr>
-                        <th>Enabled</th>
-                        <td id="user-enabled">{{user_info.user_enabled}}</td>
-                    </tr>
-                    <tr>
-                        <th>Email</th>
-                        <td id="user-email"><a href="mailto:{{user_info.email}}">{{user_info.email}}</a></td>
-                    </tr>
-                    <tr>
-                        <th>Project Id</th>
-                        <td id="user-project">{{user_info.project_id}}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-
-        <div class="row-fluid">
-            <div id="widget-actions" class="well top">
-                <div class="legend">
-                    Actions
-                </div>
-
-                <div class="center-buttons">
-                    <a href="#" id="update-user-password" class="btn">Update Password</a>
+                        {% if user_level == 0 %}
+                            <a href="{{ default_public }}/projects/{{ current_project_id }}/view/" class="btn"
+                               style="float: right;">Return To Project</a>
+                        {% elif user_level == 1 %}
+                            <a href="{{ default_public }}/projects/{{ current_project_id }}/pu_project_view/"
+                               class="btn"
+                               style="float: right;">Return To Project</a>
+                        {% else %}
+                            <a href="{{ default_public }}/projects/{{ current_project_id }}/basic_project_view/"
+                               class="btn" style="float: right;">Return To Project</a>
+                        {% endif %}
+                    </div>
+                    <table class="paleblue widget-table">
+                        <tr>
+                            <th>Name</th>
+                            <td id="username">{{ user_info.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Id</th>
+                            <td id="user-id">{{ user_info.user_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Role</th>
+                            <td id="user-role">{{ user_info.user_role }}</td>
+                        </tr>
+                        <tr>
+                            <th>Enabled</th>
+                            <td id="user-enabled">{{ user_info.user_enabled }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td id="user-email"><a href="mailto:{{ user_info.email }}">{{ user_info.email }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Project Id</th>
+                            <td id="user-project">{{ user_info.project_id }}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
-        </div>
-        <!-- end inner row -->
 
-        <div id="user-progressbar" class="ui-progressbar"
-             style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
+            <div class="row-fluid">
+                <div id="widget-actions" class="well top">
+                    <div class="legend">
+                        Actions
+                    </div>
 
-    </div>
-    <!-- end span5-->
-
-    <div class="span7">
-        <div class="row-fluid">
-            <div id="widget-actions" class="well top">
-                <div class="legend">
-                    Last 24hrs: Average WAC units for project
+                    <div class="center-buttons">
+                        <a href="#" id="update-user-password" class="btn">Update Password</a>
+                    </div>
                 </div>
-                <div style="text-align: center">
-                    <body onload="initialize()" style="font: 10px arial">
+            </div>
+            <!-- end inner row -->
+
+            <div id="user-progressbar" class="ui-progressbar"
+                 style="height: 1em; margin: .3em; padding: .2em; display: none;"></div>
+
+        </div>
+        <!-- end span5-->
+
+        <div class="span7">
+            <div class="row-fluid">
+                <div id="widget-actions" class="well top">
+                    <div class="legend">
+                        Last 24hrs: Average WAC units for project
+                    </div>
+                    <div style="text-align: center">
+                        <body style="font: 10px arial">
                         <span id="cpuGaugeContainer"></span>
                         <span id="memoryGaugeContainer"></span>
                         <span id="storageGaugeContainer"></span>
@@ -118,104 +118,101 @@ var PROJECT = "{{ project_name}}",
                         <span id="lanoutgoingrateGaugeContainer"></span>
                         <span id="wanincomingrateGaugeContainer"></span>
                         <span id="wanoutgoingrateGaugeContainer"></span>
-                    </body>
+                        </body>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<!-- end row-fluid-->
+    <!-- end row-fluid-->
 
-<script>
-    var gauges = [],
-            calls = [],
-            calls_complete = true;
-
-    function createGauge(name, label, meterType, calcType, min, max, minorTicks)
-    {
-        var config =
-        {
-            size: 120,
-            label: label,
-            meterType: meterType,
-            calcType: calcType,
-            min: undefined != min ? min : 0,
-            max: undefined != max ? max : 1000,
-            minorTicks: minorTicks
-        }
-
-        var range = config.max - config.min;
-        config.yellowZones = [{ from: config.min + range*0.75, to: config.min + range*0.9 }];
-        config.redZones = [{ from: config.min + range*0.9, to: config.max }];
-
-        gauges[name] = new Gauge(name + "GaugeContainer", config);
-        gauges[name].render();
-    }
-
-    function createGauges()
-    {
-        createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);
-        createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);
-        createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);
-        createGauge("diskreadrate", "Disk Read B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
-        createGauge("diskwriterate", "Disk Write B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
-        createGauge("lanincomingrate", "Lan Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
-        createGauge("lanoutgoingrate", "Lan Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
-        createGauge("wanincomingrate", "Wan Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
-        createGauge("wanoutgoingrate", "Wan Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
-    }
-
-    function updateGauges()
-    {
-        if (calls_complete) {
-            calls_complete = false;
-            for (var key in gauges) {
-                calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
-            }
-
-            $.when.apply(null, calls).done(function () {
-                calls_complete = true;
-            });
-        }
-    }
-
-    function getCeilometerResults(guage, meterType, calcType)
-    {
-        var endDate = new Date();
-        var startDate = new Date(endDate);
-        var durationInMinutes = 4320;
-        startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
-        var startTimeString = startDate.getUTCFullYear() + "-" + (startDate.getUTCMonth() + 1 )+ "-" + startDate.getUTCDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getUTCMinutes()).slice(-2);
-        var endTimeString = endDate.getUTCFullYear() + "-" + (endDate.getUTCMonth() + 1) + "-" + endDate.getUTCDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getUTCMinutes()).slice(-2);
-        url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/"
-
-        call_complete = $.getJSON(url).done(function(data) {
-            if (data.status == "success")
-            {
-                if (data.message != "empty dataset")
-                {
-                    var result = data.statistics[0][calcType];
-                    guage.redraw(result);
-                }
-            }
+    <script>
+        $(function () {
+            initialize()
         });
+        var gauges = [],
+                calls = [],
+                calls_complete = true;
 
-        return call_complete;
-    }
+        function createGauge(name, label, meterType, calcType, min, max, minorTicks) {
+            var config =
+            {
+                size: 120,
+                label: label,
+                meterType: meterType,
+                calcType: calcType,
+                min: undefined != min ? min : 0,
+                max: undefined != max ? max : 1000,
+                minorTicks: minorTicks
+            };
 
-    var got_data = true;
+            var range = config.max - config.min;
+            config.yellowZones = [{from: config.min + range * 0.75, to: config.min + range * 0.9}];
+            config.redZones = [{from: config.min + range * 0.9, to: config.max}];
 
-    function getProjectID() {
-        return $("#user-project").html();
-    }
+            gauges[name] = new Gauge(name + "GaugeContainer", config);
+            gauges[name].render();
+        }
 
-    function initialize()
-    {
-        createGauges();
-        {#5000 = 5 seconds#}
-        setInterval(updateGauges, 60000);
-    }
+        function createGauges() {
+            createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);
+            createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);
+            createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);
+            createGauge("diskreadrate", "Disk Read B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("diskwriterate", "Disk Write B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanincomingrate", "Lan Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanoutgoingrate", "Lan Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanincomingrate", "Wan Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanoutgoingrate", "Wan Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
+        }
 
-</script>
+        function updateGauges() {
+            if (calls_complete) {
+                calls_complete = false;
+                calls = [];
+                for (var key in gauges) {
+                    calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
+                }
+
+                $.when.apply(null, calls).done(function () {
+                    calls_complete = true;
+                });
+            }
+        }
+
+        function getCeilometerResults(guage, meterType, calcType) {
+            var endDate = new Date();
+            var startDate = new Date(endDate);
+            var durationInMinutes = 4320;
+            startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
+            var startTimeString = startDate.getUTCFullYear() + "-" + (startDate.getUTCMonth() + 1 ) + "-" + startDate.getUTCDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getUTCMinutes()).slice(-2);
+            var endTimeString = endDate.getUTCFullYear() + "-" + (endDate.getUTCMonth() + 1) + "-" + endDate.getUTCDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getUTCMinutes()).slice(-2);
+            url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/"
+
+            call_complete = $.getJSON(url).done(function (data) {
+                if (data.status == "success") {
+                    if (data.message != "empty dataset") {
+                        var result = data.statistics[0][calcType];
+                        guage.redraw(result);
+                    }
+                }
+            });
+
+            return call_complete;
+        }
+
+        var got_data = true;
+
+        function getProjectID() {
+            return $("#user-project").html();
+        }
+
+        function initialize() {
+            createGauges();
+            updateGauges();
+            window.setInterval(updateGauges, 60000);
+        }
+
+    </script>
 
 {% endblock %}
