@@ -888,7 +888,8 @@ $(function () {
                                     // Initialize empty string for new volume row
                                     var newRow =
                                         '<tr id="' + data.volume_info.volume_id + '" class="';
-                                    if (boot) {
+                                    if (boot == "true") {
+                                        console.log(boot);
                                         newRow += "volume-mounted";
                                     } else if (attached) {
                                         newRow += "volume-attached";
