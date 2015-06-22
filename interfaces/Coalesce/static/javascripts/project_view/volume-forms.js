@@ -804,7 +804,9 @@ $(function () {
             // element and use that to get the name-text
             targetRow = $(this).parent().parent();
             attached = targetRow.hasClass("volume-attached");
-            boot = targetRow.hasClass("volume-mounted");
+            //boot = targetRow.hasClass("volume-mounted");
+            boot = "false";
+
 
             id = $(targetRow).attr("id");
             volume = document.getElementById(id + "-name-text");
@@ -886,10 +888,10 @@ $(function () {
                                     // Initialize empty string for new volume row
                                     var newRow =
                                         '<tr id="' + data.volume_info.volume_id + '" class="';
-                                    if (attached) {
-                                        newRow += "volume-attached";
-                                    } else if (boot) {
+                                    if (boot) {
                                         newRow += "volume-mounted";
+                                    } else if (attached) {
+                                        newRow += "volume-attached";
                                     }
                                     newRow +=
                                         '"><td id="' + data.volume_info.volume_id + '-name-cell">' +
