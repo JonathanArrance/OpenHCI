@@ -127,10 +127,6 @@ class glance_ops:
             logger.sys_error('OS type not specified, defaulting to Other')
             input_dict['os_type'] = "other"
 
-        if(('content_type' not in input_dict) or (input_dict['content_type'] == '')):
-            logger.sys_error('Content_type type not specified, defaulting to application/octet-stream')
-            input_dict['content_type'] = "application/octet-stream"
-
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}

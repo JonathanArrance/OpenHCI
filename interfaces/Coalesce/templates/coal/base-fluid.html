@@ -44,33 +44,28 @@
     {% block javascripts %}{% endblock %}
 </head>
 
-<body style="min-width: 800px; padding: 0;">
-<div class="wrapper">
-    <div class="navbar navbar-fixed-top" style="min-width: 445px; padding: 0;">
-        <!-- Masthead ================================================== -->
-        <header id="overview">
-            <div class="row-fluid">
-                <a href="/welcome"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png"
-                                        alt="TransCirrus"
-                                        width="205px!important" height="110px!important"
-                                        style="float:left; margin-left: 20px;"></a>
-
-                <div class="span5">
-                    <h1 class="page-header">{% block title %}OVERRIDE THIS{% endblock %}</h1>
-                </div>
-            </div>
-        </header>
-
-        <!-- Navbar ================================================== -->
-        <div class="version-container">
-            <span class="version-label">version: {{ version }}</span>
+<body style="min-width: 1024px; padding: 0;">
+<div class="navbar navbar-fixed-top" style="min-width: 445px; padding: 0;">
+    <!-- Masthead ================================================== -->
+    <header id="overview">
+        <div class="row-fluid">
+            <a href="/welcome"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png"
+                                    alt="TransCirrus"
+                                    width="205px!important" height="110px!important"
+                                    style="float:left; margin-left: 20px;"></a>
         </div>
-        <div class="navbar-inner" style="padding:0!important">
-            <div class="container-fluid" style="height: 30px!important">
-                <div class="nav" id="main-menu">
-                    <ul class="nav" id="main-menu-left">
-                        <li><a href={% url 'home' %}>{{ username }}</a></li>
+    </header>
 
+    <!-- Navbar ================================================== -->
+    <div class="version-container">
+        <span class="version-label">version: {{ version }}</span>
+    </div>
+    <div class="navbar-inner" style="padding:0!important">
+        <div class="container-fluid" style="height: 30px!important">
+            <div class="nav" id="main-menu">
+                <ul class="nav" id="main-menu-left">
+                    {% if token %}
+                        <li><a href={% url 'home' %}>{{ username }}</a></li>
                         {% block navigation %}
                             {% if project_id %}
                                 {% if user_level == 0 %}
@@ -84,22 +79,18 @@
                                 {% else %}
                                     <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
                                 {% endif %}
-                            {% else %}
-                                <li><a href="{% url 'login_page' %}">Log In</a></li>
                             {% endif %}
                         {% endblock %}
-
-                        {% if token %}
-                            <li><a href={% url 'logout' %}>Log Out</a></li>
-                        {% endif %}
-                    </ul>
-                </div>
+                        <li><a href={% url 'logout' %}>Log Out</a></li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
-        {% block secondary-nav %}{% endblock %}  <!-- use this slot in templates that need subnav.-->
     </div>
-    <!-- =================  MAIN CONTENT WELL  ================= -->
-    <div class="push"></div>
+    {% block secondary-nav %}{% endblock %}  <!-- use this slot in templates that need subnav.-->
+</div>
+<!-- =================  MAIN CONTENT WELL  ================= -->
+<div class="wrapper">
 
     {% if messages %}
         <p></p>
@@ -113,9 +104,10 @@
         </ul>
     {% endif %}
     <div class="container-fluid">
+        <div class="title-legend"
+                >{% block title %}OVERRIDE THIS{% endblock %}
+        </div>
         <section id="page-content">
-            <div class="page-divider">
-            </div>
             <div class="row-fluid">
                 {% block content %}
                     PAGE CONTENT GOES HERE
@@ -123,51 +115,46 @@
             </div>
         </section>
     </div>
-    <div class="push"></div>
 </div>
 <!-- end wrapper-->
 
 <div class="footer-wrapper">
-    <footer>
-        <div class="container-fluid">
-            <div class="row-fluid nav-header">
-                <div class="span9">
-                    <br>
+    <div class="disclaimer">
+        <p class="small">
+            <b><span class="trans">trans</span><span class="cirrus">cirrus</span></b>
+        </p>
 
-                    <p class="small">
-                        <b><span class="trans">trans</span><span class="cirrus">cirrus</span></b>
-                    </p>
-
-                    <p class="small"><i>
-                        The information contained in this website is for general information purposes only.
-                        The information is provided by <span class="trans">trans</span><span
-                            class="cirrus">cirrus</span>, Inc. and while we endeavour to keep the
-                        information up to date and correct, we make no representations or warranties of any
-                        kind, express or implied, about the completeness, accuracy, reliability, suitability
-                        or availability with respect to the website or the information, products, services,
-                        or related graphics contained on the website for any purpose. Any reliance you place
-                        on such information is therefore strictly at your own risk.
-                    </i></p>
-                </div>
-                <div class="span2 offset1">
-                    <br><br>
-
-                    <p class="small">
-                        {% if token %}
-                            <small>Welcome,{{ user.username }} <br>
-                                <a href={% url 'logout' %}> Log out</a><br>
-                            </small>
-                        {% else %}
-                            <a href={% url 'login_page' %}> Log in</a><br>
-                        {% endif %}
-                        <a href={% url 'terms-of-use' %}>Terms of Use</a><br>
-                        <a href={% url 'privacy-policy' %}>Privacy Policy</a><br>
-                        <a href="#">Back to top</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+        <p class="small"><i>
+            This solution has a Copyright 2015 for <span class="trans">trans</span><span
+                class="cirrus">cirrus</span>. By using this website, the user
+            ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
+            If you do not agree to these terms of use, you should exit the website. By entering logon
+            information and accessing the website contents, you are stating full acceptance of the
+            terms. Please take the time to review the <a href="/privacy-policy">Privacy Policy</a>.
+            The information contained in this website is for general information purposes only.The
+            information is provided by <span class="trans">trans</span><span
+                class="cirrus">cirrus</span>, Inc. and while we endeavour to keep the
+            information up to date and correct, we make no representations or warranties of any
+            kind, express or implied, about the completeness, accuracy, reliability, suitability
+            or availability with respect to the website or the information, products, services,
+            or related graphics contained on the website for any purpose. Any reliance you place
+            on such information is therefore strictly at your own risk.
+        </i></p>
+    </div>
+    <div class="footer-links">
+        <p class="small">
+            {% if token %}
+                <small>Welcome,{{ user.username }} <br>
+                    <a href={% url 'logout' %}> Log out</a><br>
+                </small>
+            {% else %}
+                <br>
+            {% endif %}
+            <a href={% url 'terms-of-use' %}>Terms of Use</a><br>
+            <a href={% url 'privacy-policy' %}>Privacy Policy</a><br>
+            <a href="#">Back to top</a>
+        </p>
+    </div>
 </div>
 </body>
 </html>

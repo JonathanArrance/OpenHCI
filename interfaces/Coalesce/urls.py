@@ -545,6 +545,10 @@ urlpatterns = patterns('',
             name='upgrade_msgs'),
 
         # --- User Account Views ----
+        url(r'^login/$',
+            'coalesce.coal_beta.views.login',
+            name='login'),
+
         url(r'^coal/login_page/$',
             'coalesce.coal_beta.views.login_page',
             {'template_name': 'coal/login.html'},
@@ -552,7 +556,7 @@ urlpatterns = patterns('',
 
         url(r'^coal/logout/$',
             'coalesce.coal_beta.views.logout',
-            {'template_name': 'coal/logged_out.html'},
+            {'template_name': 'coal/welcome.html'},
             name='logout'),
 
         url(r'^coal/change-password/$',
