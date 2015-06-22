@@ -4893,7 +4893,7 @@ html, body, .container, .content {
 
 .wrapper {
     display: block;
-    height: calc(100% - 120px);
+    height: 100%;
     position: relative;
 }
 
@@ -4906,8 +4906,7 @@ html, body, .container, .content {
     background-color: rgb(245, 245, 245);
     border-top: 1px solid rgb(227, 227, 227);
     color: rgb(153, 153, 153);
-    float: left;
-    margin: 20px 0 0;
+    margin: 120px 0 0;
     min-height: 120px;
     text-transform: uppercase;
     width: 100%;
@@ -5067,16 +5066,13 @@ th > small {
 }
 
 .learn-more {
-    padding: 15px 15px 0;
     text-align: center;
-    margin: 20px auto;
-    float: none;
 }
 
 .learn-more > ul {
     display: inline-block;
     list-style: inside none disc;
-    margin: 0 !important;
+    margin: 20px 0 !important;
     text-align: center;
 }
 
@@ -5330,12 +5326,28 @@ form.form-horizontal div.error {
     float: right;
     font-family: sans-serif;
     font-weight: lighter;
-    margin: -14px 0 0;
+    margin: -14px 10px 0;
+}
+
+.title-legend {
+    background: rgb(28, 60, 119) none repeat scroll 0 0;
+    color: rgb(255, 255, 255);
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0 auto;
+    padding: 10px;
+    text-align: center;
+}
+
+.title-button {
+    float: right;
+    margin-top: 3px;
 }
 
 .welcome-container {
     display: block;
     margin: 20px auto;
+    max-width: 1024px;
     text-align: center;
 }
 
@@ -5347,30 +5359,75 @@ form.form-horizontal div.error {
 }
 
 .login-container fieldset {
-    border: 1px solid rgb(211, 211, 211);
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 5px;
     clear: none;
     display: inline-block;
-    padding: 55px 0;
+    padding: 40px 0;
+    width: 398px;
 }
 
-.login-container legend {
-    border: 1px solid rgb(211, 211, 211) !important;
-    color: rgb(102, 102, 102);
+.login-container fieldset button {
+    clear: both;
     display: block;
-    font-size: 16px;
-    font-weight: bold !important;
-    margin: 0 0 0 5px;
-    padding: 0 2px;
+    margin-left: 301px;
 }
 
-.welcome-title {
-    background: rgb(28, 60, 119) none repeat scroll 0 0;
-    color: rgb(255, 255, 255);
-    font-size: 22px;
+.login-container fieldset label {
+    color: rgb(105, 105, 105);
+    display: inline-block;
     font-weight: bold;
+    width: 95px;
+}
+
+#login-form p {
+    padding: 0 10px;
+    margin-top: 20px;
+}
+
+.login-legend {
+    border-bottom: 1px solid rgb(232, 232, 232);
+    color: rgb(41, 47, 51);
+    font-family: "Helvetica Neue", Roboto, "Segoe UI", Calibri, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    height: 18px;
+    margin: -41px 0 0;
+    padding: 12px;
+    width: 374px;
+}
+
+.login-legend > span {
+    float: left;
+    line-height: 18px;
+}
+
+.help-container {
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 5px;
     margin: 0 auto;
-    padding: 10px;
-    text-align: center;
+    width: 398px;
+}
+
+.help-legend {
+    border-bottom: 1px solid rgb(232, 232, 232);
+    color: rgb(41, 47, 51);
+    font-family: "Helvetica Neue", Roboto, "Segoe UI", Calibri, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    height: 18px;
+    margin: 0;
+    padding: 12px;
+    width: 374px;
+}
+
+.help-legend > span {
+    float: left;
+    line-height: 18px;
+}
+
+.help-text {
+    padding: 85px 19px 86px;
 }
 
 .disclaimer {
@@ -5402,6 +5459,7 @@ form.form-horizontal div.error {
 .legend-stats {
     font-size: 14px;
     font-weight: normal;
+    padding-bottom: 5px;
     vertical-align: middle;
 }
 

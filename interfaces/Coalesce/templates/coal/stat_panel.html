@@ -26,156 +26,150 @@
     <script src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
 {% endblock %}
 
-{% block title %}{% endblock %}
+{% block title %}
+    Admin Panel -
+    <span class="legend-stats">Nodes: {{ tot_nodes }} Projects: {{ tot_proj }} Users: {{ tot_users }}</span>
+
+    <a href="#" id="upgrade" class="btn title-button">Upgrade</a>
+    <a href="#" id="phonehome" class="btn title-button">Phone Home</a>
+    <a href="#" id="config-third-party-storage" class="btn title-button">Configure 3PS</a>
+    <a href="#" id="update-admin-password" class="btn title-button">Update Password</a>
+{% endblock %}
 
 {% block content %}
+    <div class="well" id="widget-actions" style="display: block;">
+        <div class="legend">
+            Last 24hrs: Average WAC
+        </div>
+        <div style="text-align: center">
+            <body style="font: 10px arial">
+            <span id="cpuGaugeContainer"></span>
+            <span id="memoryGaugeContainer"></span>
+            <span id="storageGaugeContainer"></span>
+            <span id="diskreadrateGaugeContainer"></span>
+            <span id="diskwriterateGaugeContainer"></span>
+            <span id="lanincomingrateGaugeContainer"></span>
+            <span id="lanoutgoingrateGaugeContainer"></span>
+            <span id="wanincomingrateGaugeContainer"></span>
+            <span id="wanoutgoingrateGaugeContainer"></span>
+            </body>
+        </div>
+    </div>
 
-    <div class="span12">
-        <div class="well no-padding">
-            <div class="legend-header">
-                Admin Panel || <span class="legend-stats">Nodes: {{ tot_nodes }} Projects: {{ tot_proj }} Users: {{ tot_users }}</span>
+    <div class="well" id="widget-actions" style="display: block;">
+        <div class="legend">
+            Last 24hrs: Average Cloud Meters
+        </div>
+        <div style="text-align: center;">
+            <body style="font: 10px arial">
+            <span id="cpupercentGaugeContainer"></span>
+            <span id="cpuuserpercentGaugeContainer"></span>
+            <span id="cpuidlepercentGaugeContainer"></span>
+            <span id="cpuiowaitpercentGaugeContainer"></span>
+            <span id="cpukernelpercentGaugeContainer"></span>
+            </body>
+        </div>
+    </div>
 
-                <a href="#" id="upgrade" class="btn" style="float:right">Upgrade</a>
-                <a href="#" id="phonehome" class="btn" style="float:right">Phone Home</a>
-                <a href="#" id="config-third-party-storage" class="btn" style="float:right">Configure 3PS</a>
-                <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
-            </div>
+    <div class="well" id="widget-actions" style="display: block">
+        <div class="legend">
+            Third Party Storage
+        </div>
+        <div id="graph-container"
+             style="display:block; margin: 10px; border: 1px solid #696969">
+            <h6 id="graph-title" style="margin: 10px 10px;">E-Series Storage (gb)</h6>
 
-            <div class="well" id="widget-actions" style="display: block;">
-                <div class="legend">
-                    Last 24hrs: Average WAC
-                </div>
-                <div style="text-align: center">
-                    <body style="font: 10px arial">
-                    <span id="cpuGaugeContainer"></span>
-                    <span id="memoryGaugeContainer"></span>
-                    <span id="storageGaugeContainer"></span>
-                    <span id="diskreadrateGaugeContainer"></span>
-                    <span id="diskwriterateGaugeContainer"></span>
-                    <span id="lanincomingrateGaugeContainer"></span>
-                    <span id="lanoutgoingrateGaugeContainer"></span>
-                    <span id="wanincomingrateGaugeContainer"></span>
-                    <span id="wanoutgoingrateGaugeContainer"></span>
-                    </body>
-                </div>
-            </div>
+            <div id="graph">
+                <style scoped>
 
-            <div class="well" id="widget-actions" style="display: block;">
-                <div class="legend">
-                    Last 24hrs: Average Cloud Meters
-                </div>
-                <div style="text-align: center;">
-                    <body style="font: 10px arial">
-                    <span id="cpupercentGaugeContainer"></span>
-                    <span id="cpuuserpercentGaugeContainer"></span>
-                    <span id="cpuidlepercentGaugeContainer"></span>
-                    <span id="cpuiowaitpercentGaugeContainer"></span>
-                    <span id="cpukernelpercentGaugeContainer"></span>
-                    </body>
-                </div>
-            </div>
+                    #graph {
+                        font: 10px sans-serif;
+                    }
 
-            <div class="well" id="widget-actions" style="display: block">
-                <div class="legend">
-                    Third Party Storage
-                </div>
-                <div id="graph-container"
-                     style="display:block; margin: 10px; border: 1px solid #696969">
-                    <h6 id="graph-title" style="margin: 10px 10px;">E-Series Storage (gb)</h6>
+                    .arc path {
+                        stroke: #fff;
+                    }
 
-                    <div id="graph">
-                        <style>
-
-                            #graph {
-                                font: 10px sans-serif;
-                            }
-
-                            .arc path {
-                                stroke: #fff;
-                            }
-
-                        </style>
-                    </div>
-                </div>
-            </div>
-
-            <div class="well well-wide">
-                <div class="legend">
-                    Node Stats
-                </div>
-
-                {% for node in full_stats %}
-                    <table class="paleblue widget-table table-wide" style="margin-bottom: 3em">
-                        <tr>
-                            <th>Node Name</th>
-                            <th>Type</th>
-                            <th>CPU Usage</th>
-                            <th>Memory Usage</th>
-                            <th>Swap Usage</th>
-                        </tr>
-                        <tr>
-                            <td>{{ node.name }}</td>
-                            <td>{{ node.type }}</td>
-                            <td>{{ node.cpu_system }}%</td>
-                            <td>{{ node.mem_used_percent }}%</td>
-                            <td>{{ node.swap_used_percent }}%</td>
-                        </tr>
-                    </table>
-                    <div class="legend sub-legend">
-                        Disk Stats for {{ node.name }}
-                    </div>
-                    <table class="paleblue widget-table table-wide">
-                        <tr>
-                            <th>Disk Name</th>
-                            <th>Total Space</th>
-                            <th>Disk Usage</th>
-                        </tr>
-                        {% for disk in node.disks %}
-                            <tr>
-                                <td>{{ disk.name }}</td>
-                                <td>{{ disk.total_space }}MB</td>
-                                <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                {% endfor %}
-            </div>
-            <!-- end span6-->
-
-            <div class="well well-wide">
-                <div class="legend">
-                    Project Stats
-                </div>
-                <table class="paleblue widget-table table-wide">
-                    <tr>
-                        <th>Project Name</th>
-                        <th>Instances</th>
-                        <th>Floating IPs</th>
-                        <th>Volumes</th>
-                        <th>Containers</th>
-                        <th>Routers</th>
-                        <th>Internal Networks</th>
-                        <th>Users</th>
-                    </tr>
-                    {% for tenant in tenant_info %}
-                        {% if tenant.project_name != "trans_default" %}
-                            <tr>
-                                <td>{{ tenant.project_name }}</td>
-                                <td>{{ tenant.num_servers }}</td>
-                                <td>{{ tenant.num_fips }}</td>
-                                <td>{{ tenant.num_vol }}</td>
-                                <td>{{ tenant.num_cont }}</td>
-                                <td>{{ tenant.num_rout }}</td>
-                                <td>{{ tenant.num_net }}</td>
-                                <td>{{ tenant.num_users }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </table>
+                </style>
             </div>
         </div>
-        <!-- end span6-->
     </div>
+
+    <div class="well well-wide">
+        <div class="legend">
+            Node Stats
+        </div>
+
+        {% for node in full_stats %}
+            <table class="paleblue widget-table table-wide" style="margin-bottom: 3em">
+                <tr>
+                    <th>Node Name</th>
+                    <th>Type</th>
+                    <th>CPU Usage</th>
+                    <th>Memory Usage</th>
+                    <th>Swap Usage</th>
+                </tr>
+                <tr>
+                    <td>{{ node.name }}</td>
+                    <td>{{ node.type }}</td>
+                    <td>{{ node.cpu_system }}%</td>
+                    <td>{{ node.mem_used_percent }}%</td>
+                    <td>{{ node.swap_used_percent }}%</td>
+                </tr>
+            </table>
+            <div class="legend sub-legend">
+                Disk Stats for {{ node.name }}
+            </div>
+            <table class="paleblue widget-table table-wide">
+                <tr>
+                    <th>Disk Name</th>
+                    <th>Total Space</th>
+                    <th>Disk Usage</th>
+                </tr>
+                {% for disk in node.disks %}
+                    <tr>
+                        <td>{{ disk.name }}</td>
+                        <td>{{ disk.total_space }}MB</td>
+                        <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endfor %}
+    </div>
+    <!-- end span6-->
+
+    <div class="well well-wide">
+        <div class="legend">
+            Project Stats
+        </div>
+        <table class="paleblue widget-table table-wide">
+            <tr>
+                <th>Project Name</th>
+                <th>Instances</th>
+                <th>Floating IPs</th>
+                <th>Volumes</th>
+                <th>Containers</th>
+                <th>Routers</th>
+                <th>Internal Networks</th>
+                <th>Users</th>
+            </tr>
+            {% for tenant in tenant_info %}
+                {% if tenant.project_name != "trans_default" %}
+                    <tr>
+                        <td>{{ tenant.project_name }}</td>
+                        <td>{{ tenant.num_servers }}</td>
+                        <td>{{ tenant.num_fips }}</td>
+                        <td>{{ tenant.num_vol }}</td>
+                        <td>{{ tenant.num_cont }}</td>
+                        <td>{{ tenant.num_rout }}</td>
+                        <td>{{ tenant.num_net }}</td>
+                        <td>{{ tenant.num_users }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </table>
+    </div>
+    <!-- end span6-->
 
     <div id="tps-config-form" title="Configure Third Party Storage">
 
@@ -356,11 +350,12 @@
         function updateGauges() {
             if (calls_complete) {
                 calls_complete = false;
+                calls = [];
                 for (var key in gauges) {
                     calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
                 }
 
-                $.when.apply(null, calls).done(function() {
+                $.when.apply(null, calls).done(function () {
                     calls_complete = true;
                 });
             }

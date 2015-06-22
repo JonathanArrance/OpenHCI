@@ -44,7 +44,7 @@
     {% block javascripts %}{% endblock %}
 </head>
 
-<body style="min-width: 800px; padding: 0;">
+<body style="min-width: 1024px; padding: 0;">
 <div class="navbar navbar-fixed-top" style="min-width: 445px; padding: 0;">
     <!-- Masthead ================================================== -->
     <header id="overview">
@@ -53,10 +53,6 @@
                                     alt="TransCirrus"
                                     width="205px!important" height="110px!important"
                                     style="float:left; margin-left: 20px;"></a>
-
-            <div class="span5">
-                <h1 class="page-header">{% block title %}OVERRIDE THIS{% endblock %}</h1>
-            </div>
         </div>
     </header>
 
@@ -68,27 +64,23 @@
         <div class="container-fluid" style="height: 30px!important">
             <div class="nav" id="main-menu">
                 <ul class="nav" id="main-menu-left">
-                    <li><a href={% url 'home' %}>{{ username }}</a></li>
-
-                    {% block navigation %}
-                        {% if project_id %}
-                            {% if user_level == 0 %}
-                                {% if first_time == 'TRUE' %}
-                                    <li><a href="/setup">Run Setup</a></li>
-                                {% else %}
-                                    <li><a href="/cloud/manage">Cloud Management</a></li>
-                                {% endif %}
-                            {% elif user_level == 1 %}
-                                <li><a href="/projects/{{ project_id }}/pu_project_view/">My Project</a></li>
-                            {% else %}
-                                <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
-                            {% endif %}
-                        {% else %}
-                            <li><a href="{% url 'login_page' %}">Log In</a></li>
-                        {% endif %}
-                    {% endblock %}
-
                     {% if token %}
+                        <li><a href={% url 'home' %}>{{ username }}</a></li>
+                        {% block navigation %}
+                            {% if project_id %}
+                                {% if user_level == 0 %}
+                                    {% if first_time == 'TRUE' %}
+                                        <li><a href="/setup">Run Setup</a></li>
+                                    {% else %}
+                                        <li><a href="/cloud/manage">Cloud Management</a></li>
+                                    {% endif %}
+                                {% elif user_level == 1 %}
+                                    <li><a href="/projects/{{ project_id }}/pu_project_view/">My Project</a></li>
+                                {% else %}
+                                    <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
+                                {% endif %}
+                            {% endif %}
+                        {% endblock %}
                         <li><a href={% url 'logout' %}>Log Out</a></li>
                     {% endif %}
                 </ul>
@@ -112,6 +104,9 @@
         </ul>
     {% endif %}
     <div class="container-fluid">
+        <div class="title-legend"
+                >{% block title %}OVERRIDE THIS{% endblock %}
+        </div>
         <section id="page-content">
             <div class="row-fluid">
                 {% block content %}
@@ -153,7 +148,7 @@
                     <a href={% url 'logout' %}> Log out</a><br>
                 </small>
             {% else %}
-                <a href={% url 'login_page' %}> Log in</a><br>
+                <br>
             {% endif %}
             <a href={% url 'terms-of-use' %}>Terms of Use</a><br>
             <a href={% url 'privacy-policy' %}>Privacy Policy</a><br>

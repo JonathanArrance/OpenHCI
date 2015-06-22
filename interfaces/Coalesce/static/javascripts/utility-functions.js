@@ -50,12 +50,6 @@ function initializeUtilities() {
 }
 
 // ---------------- //
-// MESSAGE HANDLING
-// ---------------- //
-
-var message = new message_handle();
-
-// ---------------- //
 // CONSOLE ACTIONS
 // ---------------- //
 

@@ -1,6 +1,13 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}Project View{% endblock %}
+{% block title %}
+    {{ project.project_name }}
+    {% if user_level == 0 %}
+        <a href="#" id="delete-project" class="btn btn-danger title-button">Delete Project</a>
+    {% endif %}
+    <a href="#" id="create-machine" class="btn title-button">Build Instance</a>
+{% endblock %}
+
 {% block javascripts %}
     <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
@@ -46,17 +53,8 @@
         </div>
     </div>
 
-    <div>
-        <div class="span12 well legend-header">
-            {{ project.project_name }}
-            {% if user_level == 0 %}
-                <a href="#" id="delete-project" class="btn btn-danger" style="float:right">Delete Project</a>
-            {% endif %}
-            <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
-        </div>
-
-        {% if user_level == 0 %}
-            <div id="project-quotas-container">
+    {% if user_level == 0 %}
+        <div id="project-quotas-container">
             <div id="project-quotas-legend" class="first">Project Quotas</div>
             <div id="project-quotas-cores"><label>vCPUs: </label><span>{{ quota.cores }}</span></div>
             <div id="project-quotas-ram"><label>Ram (mb): </label><span>{{ quota.ram }}</span></div>
@@ -69,9 +67,8 @@
                 <button id="update-quotas" class="btn" style="display: none;">Update</button>
                 <button id="cancel-quotas" class="btn" style="display: none;">Cancel</button>
             </div>
-        {% endif %}
         </div>
-    </div>
+    {% endif %}
 
     <h4 id="instance-management" class="widget-section-header widget-section-top">
         <div id="instance-management-icon" class="widget-section-icon">-</div>

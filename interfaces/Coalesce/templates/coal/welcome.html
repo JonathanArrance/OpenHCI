@@ -1,53 +1,61 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}{% endblock %}
+{% block javascripts %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+{% endblock %}
+
+{% block title %}
+    TRANSCIRRUS CLOUD MANAGEMENT INTERFACE
+{% endblock %}
 
 {% block content %}
-
-    <div class="welcome-title">
-        TRANSCIRRUS CLOUD MANAGEMENT INTERFACE
-    </div>
-
     <div class="welcome-container">
         <div class="token-container">
             {% if token %}
-                Welcome to the <span class="trans">trans</span><span class="cirrus">cirrus</span> cloud management
-                interface
-                <p style="text-align: center;">You can manage your account by going to your
-                    {% if user_level == 0 %}
-                        <a href={% url 'home' %}>admin panel</a>.
-                    {% else %}
-                        <a href={% url 'home' %}>user panel</a>.
-                    {% endif %}
-                </p>
-                <p style="text-align: center;">
-                    {% if user_level == 0 %}
-                        To manage projects in your cloud, follow the <a href="/cloud/manage">Cloud Management</a> link.
-                    {% else %}
-                        {% if user_level == 1 %}
-                            To manage your project, follow the
-                            <a href="/projects/{{ project_id }}/pu_project_view/">My Project</a> link.
-                        {% else %}
-                            To manage your project, follow the
-                            <a href="/projects/{{ project_id }}/basic_project_view/">My Project</a> link.
-                        {% endif %}
-                    {% endif %}
-                </p>
-                <p style="text-align: center;">
-                    {% if user_level == 0 %}
-                        For technical support, please go to our
-                        <a href="http://www.transcirrus.com/support.html">support page</a>.
-                    {% else %}
-                        If you need help with your project, contact your project's admin:
-                        <a href="mailto:{{ project_admin.admin_email }}">{{ project_admin.admin_name }}</a>
-                    {% endif %}
-                </p>
+                <div class="help-container">
+                    <div class="help-legend"><span>Help</span></div>
+                    <div class="help-text">
+                        <p style="text-align: center;">Manage your account by going to your
+                            {% if user_level == 0 %}
+                                <a href={% url 'home' %}>admin panel</a>.
+                            {% else %}
+                                <a href={% url 'home' %}>user panel</a>.
+                            {% endif %}
+                        </p>
+
+                        <p style="text-align: center;">
+                            {% if user_level == 0 %}
+                                Manage projects in your cloud with <a href="/cloud/manage">Cloud Management</a>.
+                            {% else %}
+                                {% if user_level == 1 %}
+                                    To manage your project, follow the
+                                    <a href="/projects/{{ project_id }}/pu_project_view/">My Project</a> link.
+                                {% else %}
+                                    To manage your project, follow the
+                                    <a href="/projects/{{ project_id }}/basic_project_view/">My Project</a> link.
+                                {% endif %}
+                            {% endif %}
+                        </p>
+
+                        <p style="text-align: center;">
+                            {% if user_level == 0 %}
+                                For technical support, please go to our
+                                <a href="http://www.transcirrus.com/support.html">support page</a>.
+                            {% else %}
+                                For help, contact:
+                                <a href="mailto:{{ project_admin.admin_email }}">{{ project_admin.admin_name }}</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             {% else %}
                 <div class="login-container">
                     <form id="login-form" method="post">
                         {% csrf_token %}
                         <fieldset>
-                            <legend>Log In</legend>
+                            <div class="login-legend"><span>Log In</span></div>
                             <p>
                                 By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
                                     href="/terms-of-use">Terms of Use</a>.
@@ -56,11 +64,11 @@
                                 information and accessing the website contents, you are stating full acceptance of the
                                 terms.
                             </p>
-                            <label for="username">Username</label>
+                            <label for="username">Username:</label>
                             <input type="text" name="username" id="username"/>
-                            <label for="password">Username</label>
+                            <label for="password">Password:</label>
                             <input type="password" name="password" id="password"/>
-                            <button class="btn" id="log-in">Log In</button>
+                            <button class="btn" id="log-in" type="submit" form="login-form">Log In</button>
                             <script>
                                 $(function () {
                                     var form = $('#login-form');
@@ -91,10 +99,10 @@
                                                             location.replace("/projects/" + data.project_id + "/basic_project_view/");
                                                         }
                                                     }
-                                                    if (data.status == "error") {
-                                                        message.showMessage('error', data.message);
-                                                        $("#log-in").prop("disabled", false);
-                                                    }
+                                                }
+                                                if (data.status == "error") {
+                                                    message.showMessage('error', data.message);
+                                                    $("#log-in").removeProp("disabled");
                                                 }
                                             },
                                             error: function () {
@@ -104,7 +112,7 @@
                                         });
                                         return false;
                                     });
-                                })
+                                });
                             </script>
                         </fieldset>
                     </form>
@@ -113,7 +121,7 @@
         </div>
         <div class="twitter-container">
             <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/TransCirrus_UI"
-               data-widget-id="611965173478334464" data-chrome="nofooter noscrollbar" height="300">Tweets by
+               data-widget-id="611965173478334464" data-chrome="nofooter noscrollbar" width="400" height="300">Tweets by
                 @TransCirrus_UI</a>
             <script>!function (d, s, id) {
                 var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
