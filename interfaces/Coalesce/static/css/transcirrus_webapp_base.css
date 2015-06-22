@@ -5337,11 +5337,13 @@ form.form-horizontal div.error {
     margin: 0 auto;
     padding: 10px;
     text-align: center;
+    text-transform: uppercase;
 }
 
 .title-button {
     float: right;
     margin-top: 3px;
+    text-transform: none;
 }
 
 .welcome-container {
