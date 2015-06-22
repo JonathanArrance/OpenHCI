@@ -276,7 +276,7 @@
     <div id="instance-view-poweron-confirm-form" title="Power server On?"></div>
     <div id="instance-console-refresh-confirm-form" title="Refresh console?"></div>
 
-    </div><!-- end row-fluid-->
+    <!-- end row-fluid-->
 
     <script>
         var consoleHidden = false;
@@ -308,6 +308,7 @@
         $(function () {
             initialize()
         });
+
         var gauges = [],
                 calls = [],
                 calls_complete = true;
@@ -322,7 +323,7 @@
                 min: undefined != min ? min : 0,
                 max: undefined != max ? max : 1000,
                 minorTicks: minorTicks
-            }
+            };
 
             var range = config.max - config.min;
             config.yellowZones = [{from: config.min + range * 0.75, to: config.min + range * 0.9}];
@@ -358,7 +359,7 @@
             }
         }
 
-        function getCeilometerResults(guage, meterType, calcType) {
+        function getCeilometerResults(gauge, meterType, calcType) {
             var endDate = new Date();
             var startDate = new Date(endDate);
             var durationInMinutes = 4320;
@@ -370,14 +371,12 @@
                 if (data.status == "success") {
                     if (data.message != "empty dataset") {
                         var result = data.statistics[0][calcType];
-                        guage.redraw(result);
+                        gauge.redraw(result);
                     }
                 }
             });
             return call_complete;
         }
-
-        var got_data = true;
 
         function getProjectID() {
             return PROJECT_ID;
