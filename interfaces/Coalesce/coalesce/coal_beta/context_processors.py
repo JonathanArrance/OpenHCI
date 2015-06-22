@@ -9,7 +9,7 @@ def global_vars(request):
         auth = request.session['auth']
         if not auth:
             form = authentication_form()
-            return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
+            return render_to_response('coal/welcome.html', RequestContext(request, { 'form':form, }))
         token = auth['token']
         username = auth['username']
         user_level = auth['user_level']

@@ -687,8 +687,6 @@ a:hover {
 }
 
 .container-fluid {
-    padding-right: 20px;
-    padding-left: 20px;
     *zoom: 1;
 }
 
@@ -829,9 +827,9 @@ header {
 }
 
 .page-divider {
-    padding-bottom: 9px;
-    margin: 20px 0px 0px 0px;
-    border-bottom: 0px solid #f5f5f5;
+    padding-bottom: 10px;
+    margin: 20px 0 0 0;
+    border-bottom: 0 solid #f5f5f5;
 }
 
 ul,
@@ -4894,10 +4892,9 @@ html, body, .container, .content {
 }
 
 .wrapper {
-    min-height: 100%;
-    height: auto !important;
-    height: 100%;
-    margin: 0 auto -110px; /* same as the footer */
+    display: block;
+    height: calc(100% - 120px);
+    position: relative;
 }
 
 .push {
@@ -4906,11 +4903,14 @@ html, body, .container, .content {
 }
 
 .footer-wrapper {
-    position: relative;
-    height: 110px;
-    background-color: #f5f5f5;
-    border-top: 1px solid #e3e3e3;
-    margin-top: 10px;
+    background-color: rgb(245, 245, 245);
+    border-top: 1px solid rgb(227, 227, 227);
+    color: rgb(153, 153, 153);
+    float: left;
+    margin: 20px 0 0;
+    min-height: 120px;
+    text-transform: uppercase;
+    width: 100%;
 }
 
 /* ---------------------- */
@@ -5067,9 +5067,10 @@ th > small {
 }
 
 .learn-more {
-    width: 100%;
     padding: 15px 15px 0;
     text-align: center;
+    margin: 20px auto;
+    float: none;
 }
 
 .learn-more > ul {
@@ -5333,25 +5334,57 @@ form.form-horizontal div.error {
 }
 
 .welcome-container {
+    display: block;
     margin: 20px auto;
-    width: 90%;
+    text-align: center;
+}
+
+.welcome-container > div {
+    display: inline-block;
+    width: 50%;
+    float: left;
+    height: 300px;
+}
+
+.login-container fieldset {
+    border: 1px solid rgb(211, 211, 211);
+    clear: none;
+    display: inline-block;
+    padding: 55px 0;
+}
+
+.login-container legend {
+    border: 1px solid rgb(211, 211, 211) !important;
+    color: rgb(102, 102, 102);
+    display: block;
+    font-size: 16px;
+    font-weight: bold !important;
+    margin: 0 0 0 5px;
+    padding: 0 2px;
 }
 
 .welcome-title {
-    text-align: center;
+    background: rgb(28, 60, 119) none repeat scroll 0 0;
+    color: rgb(255, 255, 255);
     font-size: 22px;
-    border-bottom: 1px dotted dimgrey;
-    width: 600px;
-    margin: 10px auto;
+    font-weight: bold;
+    margin: 0 auto;
+    padding: 10px;
+    text-align: center;
 }
 
 .disclaimer {
-    border: 1px dotted lightgrey;
-    padding: 10px;
-    display: inline-table;
-    position: relative;
-    bottom: 0;
-    margin: 10px auto;
+    display: inline-block;
+    float: left;
+    margin: 0;
+    padding: 10px 0 0 20px;
+    width: 80%;
+}
+
+.footer-links {
+    float: right;
+    padding: 10px 20px 0 10px;
+    width: 10%;
 }
 
 .trans {

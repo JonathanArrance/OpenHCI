@@ -13,6 +13,7 @@ import sys
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
+from transcirrus.common import node_util
 import transcirrus.common.node_stats as node_stats
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
@@ -176,7 +177,17 @@ def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
 
 def welcome(request):
-    return render_to_response('coal/welcome.html', RequestContext(request,))
+    try:
+        auth = request.session['auth']
+        if auth['token'] != None:
+            if auth['user_level'] > 0:
+                project_id = auth['project_id']
+                project_admin = util.get_project_admin(project_id)
+            return render_to_response('coal/welcome.html', RequestContext(request, { "project_admin": project_admin}))
+        else:
+            return render_to_response('coal/welcome.html', RequestContext(request,))
+    except:
+        return render_to_response('coal/welcome.html', RequestContext(request,))
 
 def node_view(request, node_id):
     node=get_node(node_id)
@@ -483,6 +494,7 @@ def pu_project_view(request, project_id):
     #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
+    project_admin = util.get_project_admin(project_id)
     users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
@@ -590,6 +602,7 @@ def pu_project_view(request, project_id):
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
+                                                        'project_admin': project_admin,
                                                         'users': users,
                                                         'ouserinfo': ouserinfo,
                                                         'userinfo':userinfo,
@@ -616,6 +629,7 @@ def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_id)
+    project_admin = util.get_project_admin(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
     sa = server_actions(auth)
@@ -779,6 +793,7 @@ we need to build a function to request a vm resize
 
     return render_to_response('coal/basic_project_view.html',
                                RequestContext(request, {'project': project,
+                                                        'project_admin': project_admin,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
@@ -3079,8 +3094,35 @@ def jq(request):
 
 # ---- Authentication ---
 @never_cache
-def login_page(request, template_name):
+def login(request):
+    out = {}
+    try:
+        username = request.POST['username']
+        password = request.POST['password']
+        a = authorization(username, password)
+        auth = a.get_auth()
+        if auth['token'] == None:
+            out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+            return HttpResponse(simplejson.dumps(out))
+        else:
+            request.session['auth'] = auth
+            out = {}
+            out['status'] = "success"
+            out['message'] = "Successfully logged in."
+            out['user_level'] = auth['user_level']
+            if auth['user_level'] > 0:
+                out['project_id'] = auth['project_id']
+            else:
+                boot = node_util.check_first_time_boot()
+                first_time = boot['first_time_boot']
+                out['first_time'] = first_time
+            return HttpResponse(simplejson.dumps(out))
+    except:
+        out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+        return HttpResponse(simplejson.dumps(out))
 
+@never_cache
+def login_page(request, template_name):
     if request.method == "POST":
         form = authentication_form(request.POST)
         if form.is_valid():
@@ -3109,7 +3151,7 @@ def login_page(request, template_name):
 
 @never_cache
 def logout(request, next_page=None,
-           template_name='coal/logged_out.html',
+           template_name='coal/welcome.html',
            redirect_field_name=REDIRECT_FIELD_NAME,
            current_app=None, extra_context=None):
     """
