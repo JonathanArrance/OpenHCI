@@ -1,88 +1,168 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}{% endblock %}
+{% block javascripts %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
+    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
+{% endblock %}
+
+{% block title %}
+    TRANSCIRRUS CLOUD MANAGEMENT INTERFACE
+{% endblock %}
 
 {% block content %}
+    <div class="welcome-container">
+        <div class="token-container">
+            {% if token %}
+                <div class="help-container">
+                    <div class="help-legend"><span>Help</span></div>
+                    <div class="help-text">
+                        <p style="text-align: center;">Manage your account by going to your
+                            {% if user_level == 0 %}
+                                <a href={% url 'home' %}>admin panel</a>.
+                            {% else %}
+                                <a href={% url 'home' %}>user panel</a>.
+                            {% endif %}
+                        </p>
 
-    <div style="" class="welcome-container">
-        <div class="welcome-title">
-            Welcome to the cloud management interface by <span class="trans">trans</span><span class="cirrus">cirrus</span>
+                        <p style="text-align: center;">
+                            {% if user_level == 0 %}
+                                Manage projects in your cloud with <a href="/cloud/manage">Cloud Management</a>.
+                            {% else %}
+                                {% if user_level == 1 %}
+                                    To manage your project, follow the
+                                    <a href="/projects/{{ project_id }}/pu_project_view/">My Project</a> link.
+                                {% else %}
+                                    To manage your project, follow the
+                                    <a href="/projects/{{ project_id }}/basic_project_view/">My Project</a> link.
+                                {% endif %}
+                            {% endif %}
+                        </p>
+
+                        <p style="text-align: center;">
+                            {% if user_level == 0 %}
+                                For technical support, please go to our
+                                <a href="http://www.transcirrus.com/support.html">support page</a>.
+                            {% else %}
+                                For help, contact:
+                                <a href="mailto:{{ project_admin.admin_email }}">{{ project_admin.admin_name }}</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="login-container">
+                    <form id="login-form" method="post">
+                        {% csrf_token %}
+                        <fieldset>
+                            <div class="login-legend"><span>Log In</span></div>
+                            <p>
+                                By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
+                                    href="/terms-of-use">Terms of Use</a>.
+                                If you do not agree to these terms of use, you should exit the website. By entering
+                                logon
+                                information and accessing the website contents, you are stating full acceptance of the
+                                terms.
+                            </p>
+                            <label for="username">Username:</label>
+                            <input type="text" name="username" id="username"/>
+                            <label for="password">Password:</label>
+                            <input type="password" name="password" id="password"/>
+                            <button class="btn" id="log-in" type="submit" form="login-form">Log In</button>
+                            <script>
+                                $(function () {
+                                    var form = $('#login-form');
+                                    form.submit(function () {
+                                        $("#log-in").prop("disabled", true);
+                                        $.ajax({
+                                            type: form.attr('method'),
+                                            url: "/login/",
+                                            data: form.serialize(),
+                                            success: function (data) {
+                                                data = $.parseJSON(data);
+                                                console.log(data);
+                                                if (data.status == "success") {
+                                                    console.log(data.user_level);
+                                                    if (data.user_level == 0) {
+                                                        if (data.first_time == "TRUE") {
+                                                            location.reload()
+                                                        } else {
+                                                            location.replace("/cloud/manage/");
+                                                        }
+                                                    } else {
+                                                        console.log(data.user_level);
+                                                        if (data.user_level == 1) {
+                                                            console.log("/projects/" + data.project_id + "/pu_project_view/");
+                                                            location.replace("/projects/" + data.project_id + "/pu_project_view/");
+                                                        } else {
+                                                            console.log("/projects/" + data.project_id + "/basic_project_view/");
+                                                            location.replace("/projects/" + data.project_id + "/basic_project_view/");
+                                                        }
+                                                    }
+                                                }
+                                                if (data.status == "error") {
+                                                    message.showMessage('error', data.message);
+                                                    $("#log-in").removeProp("disabled");
+                                                }
+                                            },
+                                            error: function () {
+                                                message.showMessage('error', "Server Fault");
+                                                $("#log-in").prop("disabled", false);
+                                            }
+                                        });
+                                        return false;
+                                    });
+                                });
+                            </script>
+                        </fieldset>
+                    </form>
+                </div>
+            {% endif %}
         </div>
-
-        {% if token %}
-
-            <p style="text-align: center;">You can manage your account by going to your
-                {% if user_level == 0 %}
-                    <a href={% url 'home' %}>admin panel</a>.
-                {% else %}
-                    <a href={% url 'home' %}>user panel</a>.
-                {% endif %}
-            </p>
-
-        {% else %}
-
-            <p style="text-align: center;">
-                You are not currently logged in, please
-                <a class="btn btn-primary" href="/coal/login_page/">Log In</a> If you don't have or have forgotten your
-                logon credentials, please contact your <span class="trans">trans</span><span
-                    class="cirrus">cirrus</span>
-                Cloud Administrator to gain access to this
-                site.
-            </p>
-
-        {% endif %}
-
-        <div class="well span12" style="margin: 20px auto;">
-            <div class="legend">Learn More</div>
-            <p style="text-align: center;">
-                Find out more about <span class="trans">trans</span><span class="cirrus">cirrus</span> by exploring our
-                website, or by following us on Facebook, Twitter and LinkedIn.
-            </p>
-
-            <div class="learn-more">
-                <ul>
-                    <li>
-                        <span>Website: </span><a href="http://www.transcirrus.com"><img
-                            src="{{ STATIC_URL }}images/transcirrus-icon.png"
-                            style="width: 32px; height: 32px; background-color: #FFFFFF;"></a>
-                    </li>
-
-                    <li>
-                        <span>Email: </span><a href="mailto:info@transcirrus.com"><img
-                            src="{{ STATIC_URL }}images/email-icon.png"
-                            style="width: 32px; height: 32px; background-color: #FF6F0F"></a>
-                    </li>
-
-                    <li>
-                        <span>Facebook: </span><a href="https://www.facebook.com/transcirrus"><img
-                            src="{{ STATIC_URL }}images/facebook-32.png" style="background-color: #3B5998"></a>
-                    </li>
-
-                    <li>
-                        <span>Twitter: </span><a href="https://www.twitter.com/transcirrus"><img
-                            src="{{ STATIC_URL }}images/twitter-32.png" style="background-color: #00ACED"></a>
-                    </li>
-
-                    <li>
-                        <span>LinkedIn: </span><a href="https://www.linkedin.com/company/transcirrus"><img
-                            src="{{ STATIC_URL }}images/linkedin-32.png" style="background-color: #007FB1"></a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="disclaimer">
-            <p style="font-weight: bold; text-align: left">Disclaimer:</p>
-
-            <p style="text-align: center; font-size: 10px;">
-                This solution has a Copyright 2015 for <span class="trans">trans</span><span
-                    class="cirrus">cirrus</span>. By using this website, the user
-                ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
-                If you do not agree to these terms of use, you should exit the website. By entering logon
-                information and accessing the website contents, you are stating full acceptance of the
-                terms. Please take the time to review the <a href="/privacy-policy">Privacy Policy</a>.
-            </p>
+        <div class="twitter-container">
+            <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/TransCirrus_UI"
+               data-widget-id="611965173478334464" data-chrome="nofooter noscrollbar" width="400" height="300">Tweets by
+                @TransCirrus_UI</a>
+            <script>!function (d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
+                if (!d.getElementById(id)) {
+                    js = d.createElement(s);
+                    js.id = id;
+                    js.src = p + "://platform.twitter.com/widgets.js";
+                    fjs.parentNode.insertBefore(js, fjs);
+                }
+            }(document, "script", "twitter-wjs");</script>
         </div>
     </div>
 
+    <div class="learn-more">
+        <ul>
+            <li>
+                <span>Website: </span><a href="http://www.transcirrus.com"><img
+                    src="{{ STATIC_URL }}images/transcirrus-icon.png"
+                    style="width: 32px; height: 32px; background-color: #FFFFFF;"></a>
+            </li>
+
+            <li>
+                <span>Email: </span><a href="mailto:info@transcirrus.com"><img
+                    src="{{ STATIC_URL }}images/email-icon.png"
+                    style="width: 32px; height: 32px; background-color: #FF6F0F"></a>
+            </li>
+
+            <li>
+                <span>Facebook: </span><a href="https://www.facebook.com/transcirrus"><img
+                    src="{{ STATIC_URL }}images/facebook-32.png" style="background-color: #3B5998"></a>
+            </li>
+
+            <li>
+                <span>Twitter: </span><a href="https://www.twitter.com/transcirrus"><img
+                    src="{{ STATIC_URL }}images/twitter-32.png" style="background-color: #00ACED"></a>
+            </li>
+
+            <li>
+                <span>LinkedIn: </span><a href="https://www.linkedin.com/company/transcirrus"><img
+                    src="{{ STATIC_URL }}images/linkedin-32.png" style="background-color: #007FB1"></a>
+            </li>
+        </ul>
+    </div>
 {% endblock %}

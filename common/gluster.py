@@ -199,6 +199,7 @@ class gluster_ops:
                 input_dict['mount_node'] = '172.24.24.10'
 
             out4 = subprocess.Popen('sudo mount.glusterfs %s:/%s /mnt/gluster-vols/%s'%(input_dict['mount_node'],input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            #out4 = subprocess.Popen('sudo mount -t nfs %s:/%s /mnt/gluster-vols/%s'%(input_dict['mount_node'],input_dict['volume_name'],input_dict['volume_name']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             mount = out4.stdout.readlines()
             #print mount
             if(len(mount) != 0):

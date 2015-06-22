@@ -104,6 +104,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.list_servers',
             name='list_servers'),
 
+        url(r'^(?P<project_id>[^/]+)/list_servers_status/$',
+            'coalesce.coal_beta.views.list_servers_status',
+            name='list_servers'),
+
         url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
             'coalesce.coal_beta.views.instance_view',
             name='instance_view'),
@@ -361,7 +365,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.remove_user_from_project',
             name='remove_user_from_project'),
 
-        url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<password>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<current_password>[^/]+)/(?P<new_password>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.update_user_password',
             name='update_user_password'),
 
@@ -541,6 +545,10 @@ urlpatterns = patterns('',
             name='upgrade_msgs'),
 
         # --- User Account Views ----
+        url(r'^login/$',
+            'coalesce.coal_beta.views.login',
+            name='login'),
+
         url(r'^coal/login_page/$',
             'coalesce.coal_beta.views.login_page',
             {'template_name': 'coal/login.html'},
@@ -548,14 +556,14 @@ urlpatterns = patterns('',
 
         url(r'^coal/logout/$',
             'coalesce.coal_beta.views.logout',
-            {'template_name': 'coal/logged_out.html'},
+            {'template_name': 'coal/welcome.html'},
             name='logout'),
 
         url(r'^coal/change-password/$',
             'coalesce.coal_beta.views.password_change',
             name='change-password'),
 
-        url(r'^update_admin_password/(?P<password>[^/]+)/$',
+        url(r'^update_admin_password/(?P<current_password>[^/]+)/(?P<new_password>[^/]+)/$',
             'coalesce.coal_beta.views.update_admin_password',
             name='update_admin_password'),
 

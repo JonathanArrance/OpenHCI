@@ -25,9 +25,4 @@ var message_handle = function () {
     }
 };
 
-/*
- var message = new message_handle();
-
- message.showMessage('success', 'this is a success 1');
-
- */
+var message = new message_handle();

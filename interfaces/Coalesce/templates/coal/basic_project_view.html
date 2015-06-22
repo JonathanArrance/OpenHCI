@@ -1,6 +1,9 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}Project View{% endblock %}
+{% block title %}
+    {{ project.project_name }}
+    <a href="#" id="create-machine" class="btn title-button">Build Instance</a>
+{% endblock %}
 {% block javascripts %}
     <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
@@ -39,12 +42,6 @@
 {% endblock %}
 
 {% block content %}
-
-    <div class="span12 well legend-header">
-        {{ project.project_name }}
-        <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
-    </div>
-
     <h4 id="instance-management" class="widget-section-header">Instance Management</h4>
     <div class="row-fluid widget-section">
         {% include "coal/project_view_widgets/instances.html" %}

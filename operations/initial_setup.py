@@ -613,7 +613,7 @@ def run_setup(new_system_variables,auth_dict):
     #print checkpoint
     #logger.sys_info("Service status: %s"%(checkpoint))
     os.system('sudo chmod 775 /var/lib/glance/images')
-    os.system('source /home/transuser/factory_creds;openstack-status >> /home/transuser/first_time_status.txt')
+    os.system('source /home/transuser/factory_creds;openstack-status >> /transcirrus/first_time_status.txt')
     logger.sys_info("SETUP54:END")
     
     # restore file descriptors so I can print the results
