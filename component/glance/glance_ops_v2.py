@@ -127,6 +127,10 @@ class glance_ops:
             logger.sys_error('OS type not specified, defaulting to Other')
             input_dict['os_type'] = "other"
 
+        if(('content_type' not in input_dict) or (input_dict['content_type'] == '')):
+            logger.sys_error('Content_type type not specified, defaulting to application/octet-stream')
+            input_dict['content_type'] = "application/octet-stream"
+
         #connect to the rest api caller.
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
@@ -135,17 +139,7 @@ class glance_ops:
             logger.sys_error("Could not connect to the API caller")
             raise Exception("Could not connect to the API caller")
 
-        file_open = None
-        if(input_dict['image_type'] == 'image_file'):
-            try:
-                # Open the downloaded file.
-                download_file  = input_dict['image_location']
-                file_open = open(download_file, 'rb')
-            except Exception as e:
-                logger.sys_error("Could not open image file: %s" % e)
-                raise Exception("Could not open image file: %s" % e)
-        elif(input_dict['image_type'] == 'image_url'):
-            file_open = input_dict['image_location']
+        filename = self._uncompress_file(input_dict['image_location'], input_dict['content_type'])
 
         if('visibility' in input_dict):
             body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility'],
@@ -175,7 +169,14 @@ class glance_ops:
             ret_dict = {'image_id':image_id, 'image_name':input_dict['image_name']}
 
             try:
-                body = file_open
+                # Open the downloaded file.
+                file_handle = open(filename, 'rb')
+            except Exception as e:
+                logger.sys_error("Could not open downloaded image file: %s" % e)
+                raise Exception("Could not open downloaded image file: %s" % e)
+
+            try:
+                body = file_handle
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/octet-stream"}
                 function = 'PUT'
                 api_path = '/v2/images/%s/file' %(image_id)
@@ -186,22 +187,20 @@ class glance_ops:
             except Exception as e:
                 logger.sys_error("Could not upload image file to glance: %s" % e)
                 raise Exception("Could not upload image file to glance: %s" % e)
-    
+            finally:
+                file_handle.close()
+
             if((rest['response'] == 201 or rest['response'] == 204)):
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                if(input_dict['image_type'] == 'image_file'):
-                    file_open.close()
 
-                    command = "sudo rm -f " + download_file
-
-                    subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                    std_out, std_err = subproc.communicate()
+                command = "sudo rm -f %s;sudo rm -f %s" % (input_dict['image_location'], filename)
+                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                std_out, std_err = subproc.communicate()
     
-                    # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
-                    if subproc.returncode != 0:
-                        logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
-                        logger.sys_error("Error message: %s" % std_err)
-
+                # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
+                if subproc.returncode != 0:
+                    logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
+                    logger.sys_error("Error message: %s" % std_err)
                 return ret_dict
             else:
                 logger.sys_error("Uploaded image data via glance - bad status: %s" % rest['reason'])
@@ -209,6 +208,34 @@ class glance_ops:
         else:
             logger.sys_error("Add image to glance - bad status: %s (%s)" % (rest['response'], rest['reason']))
             raise Exception("Add image to glance - bad status: %s (%s)" % (rest['response'], rest['reason']))
+
+
+    def _uncompress_file(self, filename, content_type):
+        new_filename = "/tmp/" + str(time.time()) + ".img"
+
+        if content_type == "application/x-bzip" or content_type == "application/x-bzip2":
+            command = "sudo bzcat %s -k -c >> %s" % (filename, new_filename)
+        elif content_type == "application/x-gtar" or content_type == "application/x-tar":
+            command = "sudo tar -xOf %s >> %s" % (filename, new_filename)
+        elif content_type == "application/zip":
+            command = "sudo unzip -p %s >> %s" % (filename, new_filename)
+        elif content_type == "application/x-gzip":
+            command = "sudo gunzip -c %s >> %s" % (filename, new_filename)
+        else:
+            logger.sys_info("Unknown content_type (%s) for uncompressing file %s" % (content_type, filename))
+            return (filename)
+
+        try:
+            subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            std_out, std_err = subproc.communicate()
+            if subproc.returncode != 0:
+                logger.sys_error("Error uncompressing file %s with content_type %s, exit status: %d" % (filename, content_type, subproc.returncode))
+                logger.sys_error("Error message: %s" % std_err)
+                raise Exception("Error uncompressing file %s with content_type %s, exit status: %d" % (filename, content_type, subproc.returncode))
+            return (new_filename)
+        except Exception as e:
+            logger.sys_error("Error uncompressing file %s with content_type %s, exception: %s" % (filename, content_type, e))
+            raise Exception("Error uncompressing file %s with content_type %s, exception: %s" % (filename, content_type, e))
 
     
     def delete_image(self, image_id):

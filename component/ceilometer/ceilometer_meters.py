@@ -70,7 +70,7 @@ class meter_ops:
             raise Exception("Could not connect to the Keystone API")
 
         try:
-            body = '[{"counter_type": "%s", "counter_name": "%s", "counter_volume": "%f", "counter_unit": "%s", "resource_id": "%s"}]' % (counter_type, counter_name, counter_volume, counter_unit, resource_id)
+            body = '[{"counter_type": "%s", "counter_name": "%s", "counter_volume": "%f", "counter_unit": "%s", "resource_id": "%s", "tenant_id": "%s"}]' % (counter_type, counter_name, counter_volume, counter_unit, resource_id, project_id)
             header = {"X-Auth-Token": self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'POST'
             api_path = '/v2/meters/' + counter_name

@@ -43,7 +43,8 @@ $(function () {
                     clearUiValidation(allFields);
 
                     var isValid =
-                        checkLength(key_name, "key name", 3, 16);
+                        checkLength(key_name, "Key name", standardStringMin, standardStringMax) &&
+                        checkCharfield(key_name, "Key name");
 
                     if (isValid) {
 

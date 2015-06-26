@@ -687,8 +687,6 @@ a:hover {
 }
 
 .container-fluid {
-    padding-right: 20px;
-    padding-left: 20px;
     *zoom: 1;
 }
 
@@ -829,9 +827,9 @@ header {
 }
 
 .page-divider {
-    padding-bottom: 9px;
-    margin: 20px 0px 0px 0px;
-    border-bottom: 0px solid #f5f5f5;
+    padding-bottom: 10px;
+    margin: 20px 0 0 0;
+    border-bottom: 0 solid #f5f5f5;
 }
 
 ul,
@@ -1911,7 +1909,7 @@ legend + .control-group {
 .form-horizontal input + .help-block,
 .form-horizontal select + .help-block,
 .form-horizontal textarea + .help-block {
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 div.input-append {
@@ -4894,10 +4892,9 @@ html, body, .container, .content {
 }
 
 .wrapper {
-    min-height: 100%;
-    height: auto !important;
+    display: block;
     height: 100%;
-    margin: 0 auto -110px; /* same as the footer */
+    position: relative;
 }
 
 .push {
@@ -4906,11 +4903,13 @@ html, body, .container, .content {
 }
 
 .footer-wrapper {
-    position: relative;
-    height: 110px;
-    background-color: #f5f5f5;
-    border-top: 1px solid #e3e3e3;
-    margin-top: 10px;
+    background-color: rgb(245, 245, 245);
+    border-top: 1px solid rgb(227, 227, 227);
+    color: rgb(153, 153, 153);
+    margin: 120px 0 0;
+    min-height: 120px;
+    text-transform: uppercase;
+    width: 100%;
 }
 
 /* ---------------------- */
@@ -5067,15 +5066,13 @@ th > small {
 }
 
 .learn-more {
-    width: 100%;
-    padding: 15px 15px 0;
     text-align: center;
 }
 
 .learn-more > ul {
     display: inline-block;
     list-style: inside none disc;
-    margin: 0 !important;
+    margin: 20px 0 !important;
     text-align: center;
 }
 
@@ -5320,34 +5317,133 @@ th > small {
     position: absolute;
 }
 
+form.form-horizontal div.error {
+    position: inherit !important;
+}
+
 .version-label {
     color: #ff790c;
     float: right;
     font-family: sans-serif;
     font-weight: lighter;
-    margin: -14px 0 0;
+    margin: -14px 10px 0;
+}
+
+.title-legend {
+    background: rgb(28, 60, 119) none repeat scroll 0 0;
+    color: rgb(255, 255, 255);
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0 auto;
+    padding: 10px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.title-button {
+    float: right;
+    margin-top: 3px;
+    text-transform: none;
 }
 
 .welcome-container {
+    display: block;
     margin: 20px auto;
-    width: 90%;
+    max-width: 1024px;
+    text-align: center;
 }
 
-.welcome-title {
-    text-align: center;
-    font-size: 22px;
-    border-bottom: 1px dotted dimgrey;
-    width: 600px;
-    margin: 10px auto;
+.welcome-container > div {
+    display: inline-block;
+    width: 50%;
+    float: left;
+    height: 300px;
+}
+
+.login-container fieldset {
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 5px;
+    clear: none;
+    display: inline-block;
+    padding: 40px 0;
+    width: 398px;
+}
+
+.login-container fieldset button {
+    clear: both;
+    display: block;
+    margin-left: 301px;
+}
+
+.login-container fieldset label {
+    color: rgb(105, 105, 105);
+    display: inline-block;
+    font-weight: bold;
+    width: 95px;
+}
+
+#login-form p {
+    padding: 0 10px;
+    margin-top: 20px;
+}
+
+.login-legend {
+    border-bottom: 1px solid rgb(232, 232, 232);
+    color: rgb(41, 47, 51);
+    font-family: "Helvetica Neue", Roboto, "Segoe UI", Calibri, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    height: 18px;
+    margin: -41px 0 0;
+    padding: 12px;
+    width: 374px;
+}
+
+.login-legend > span {
+    float: left;
+    line-height: 18px;
+}
+
+.help-container {
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 5px;
+    margin: 0 auto;
+    width: 398px;
+}
+
+.help-legend {
+    border-bottom: 1px solid rgb(232, 232, 232);
+    color: rgb(41, 47, 51);
+    font-family: "Helvetica Neue", Roboto, "Segoe UI", Calibri, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    height: 18px;
+    margin: 0;
+    padding: 12px;
+    width: 374px;
+}
+
+.help-legend > span {
+    float: left;
+    line-height: 18px;
+}
+
+.help-text {
+    padding: 85px 19px 86px;
 }
 
 .disclaimer {
-    border: 1px dotted lightgrey;
-    padding: 10px;
-    display: inline-table;
-    position: relative;
-    bottom: 0;
-    margin: 10px auto;
+    display: inline-block;
+    float: left;
+    margin: 0;
+    padding: 10px 0 0 20px;
+    width: 80%;
+}
+
+.footer-links {
+    float: right;
+    padding: 10px 20px 0 10px;
+    width: 10%;
 }
 
 .trans {
@@ -5362,7 +5458,51 @@ th > small {
     color: rgb(28, 60, 119);
 }
 
+.legend-stats {
+    font-size: 14px;
+    font-weight: normal;
+    padding-bottom: 5px;
+    vertical-align: middle;
+}
+
+/* ADMIN */
+
+#phonehome-confirm-form > .ajax-loader {
+    background-size: 20px auto !important;
+    background-position: center;
+    border: 1px dashed rgb(225, 225, 225) !important;
+    display: inline-block !important;
+    height: 20px !important;
+    margin: 10px auto !important;
+    padding: 5px !important;
+    width: 20px;
+}
+
+#phonehome-confirm-form > .ajax-loader-label {
+    display: inline-block !important;
+    margin: 18px 5px 0 60px;
+    vertical-align: top;
+}
+
+#upgrade-confirm-form > .ajax-loader {
+    background-size: 20px auto !important;
+    background-position: center;
+    border: 1px dashed rgb(225, 225, 225) !important;
+    display: inline-block !important;
+    height: 20px !important;
+    margin: 10px auto !important;
+    padding: 5px !important;
+    width: 20px;
+}
+
+#upgrade-confirm-form > .ajax-loader-label {
+    display: inline-block !important;
+    margin: 18px 5px 0 60px;
+    vertical-align: top;
+}
+
 /* PROJECT */
+
 #project-delete-progressbar {
     width: 195px;
     margin-top: 5px;
@@ -5423,7 +5563,7 @@ th > small {
 
 #set-quotas {
     margin: -9px 0 -5px;
-    width: 75px;
+    width: 80px;
 }
 
 #update-quotas,

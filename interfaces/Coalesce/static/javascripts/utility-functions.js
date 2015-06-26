@@ -6,7 +6,8 @@ function initializeUtilities() {
 
     // Call click events
 
-    $('#refresh-console').click(function () {
+    $('#refresh-console').click(function (event) {
+        event.preventDefault();
         $('.widget-console').attr('src', function (i, val) {
             return val;
         });
@@ -47,12 +48,6 @@ function initializeUtilities() {
     checkCreateRouter();
     checkAddUser();
 }
-
-// ---------------- //
-// MESSAGE HANDLING
-// ---------------- //
-
-var message = new message_handle();
 
 // ---------------- //
 // CONSOLE ACTIONS
@@ -110,24 +105,11 @@ function guid() {
 }
 
 // ---------------- //
-// URL MANIPULATION
-// ---------------- //
-
-function convertUrl47(url) {
-    // Convert a URL from having /s to %47.
-    for (var i = 0; i < url.length; i++) {
-        if (url[i] == '/') {
-            url = url.substr(0, i) + "%47" + url.substr(i, url.length + 1);
-            i = i + 2;
-        }
-    }
-    return url;
-}
-
-
-// ---------------- //
 // UI VALIDATION
 // ---------------- //
+
+var standardStringMin = 3;
+var standardStringMax = 32;
 
 function flagError(input, t) {
     $(input).after('<p class="error">' + t + '</p>');
@@ -174,13 +156,12 @@ function checkRegexp(o, regexp, n) {
     }
 }
 
-function checkUsername(o) {
+function checkCharfield(o, n) {
     var regexp = /^[a-z]([0-9a-z_])+$/i;
     if (!( regexp.test(o.val()))) {
         o.addClass("ui-state-error");
         flagError(
-            o,
-            "Username may consist of a-z, 0-9 and underscores, and must being with a letter.");
+            o, n + " may consist of a-z, 0-9 and underscores, and must being with a letter.");
         return false;
     } else {
         return true

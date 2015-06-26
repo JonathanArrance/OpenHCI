@@ -573,12 +573,19 @@ def processComputeConfig(sock, node_id):
     if ret == "ERROR" or ret == "NA":
         logger.sys_error("error in writing ceilometer conf, exiting!!!")
         if __debug__ :
-            print "error in writing net conf, exiting!!!"
+            print "error in writing ceilometer conf, exiting!!!"
         sys.exit()
     else:
         logger.sys_info("write success, ceilometer_conf")
         if __debug__ :
             print "write success, ceilometer_conf"
+
+    print "******Adding Core Node******"
+    contname = util.get_cloud_controller_name()
+    if(contname):
+        with open("/usr/local/lib/python2.7/transcirrus/common/config.py", "a") as f: f.write("CLOUD_CONTROLLER='%s'"%(contname))
+    else:
+        logger.sys_error('Could not add CLOUD_CONTROLLER to config.py')
 
     post_install_status = True
 

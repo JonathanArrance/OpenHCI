@@ -1,29 +1,31 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}Project View{% endblock %}
+{% block title %}
+    {{ project.project_name }}
+    {% if user_level == 0 %}
+        <a href="#" id="delete-project" class="btn btn-danger title-button">Delete Project</a>
+    {% endif %}
+    <a href="#" id="create-machine" class="btn title-button">Build Instance</a>
+{% endblock %}
+
 {% block javascripts %}
     <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
 
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery-ui.js"></script>
-
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery-ui.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.core.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.widget.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.mouse.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.button.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.draggable.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.position.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.resizable.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.button.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.dialog.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.effect.min.js"></script>
     <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
     <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-    <!-- DEBUG
-<script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
-DEBUG -->
-    <!-- DEBUG -->
+    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
@@ -35,8 +37,6 @@ DEBUG -->
     <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-    <!-- DEBUG -->
     <script>
         var PROJECT = "{{ project.project_name }}",
                 PROJECT_ID = "{{ project.project_id }}",
@@ -53,17 +53,8 @@ DEBUG -->
         </div>
     </div>
 
-    <div>
-        <div class="span12 well legend-header">
-            {{ project.project_name }}
-            {% if user_level == 0 %}
-                <a href="#" id="delete-project" class="btn btn-danger" style="float:right">Delete Project</a>
-            {% endif %}
-            <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
-        </div>
-
-        {% if user_level == 0 %}
-            <div id="project-quotas-container">
+    {% if user_level == 0 %}
+        <div id="project-quotas-container">
             <div id="project-quotas-legend" class="first">Project Quotas</div>
             <div id="project-quotas-cores"><label>vCPUs: </label><span>{{ quota.cores }}</span></div>
             <div id="project-quotas-ram"><label>Ram (mb): </label><span>{{ quota.ram }}</span></div>
@@ -76,9 +67,8 @@ DEBUG -->
                 <button id="update-quotas" class="btn" style="display: none;">Update</button>
                 <button id="cancel-quotas" class="btn" style="display: none;">Cancel</button>
             </div>
-        {% endif %}
         </div>
-    </div>
+    {% endif %}
 
     <h4 id="instance-management" class="widget-section-header widget-section-top">
         <div id="instance-management-icon" class="widget-section-icon">-</div>

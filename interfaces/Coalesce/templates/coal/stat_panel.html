@@ -19,188 +19,157 @@
     <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
     <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
     <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/admin-functions.js"></script>
     <script src="{{ STATIC_URL }}javascripts/update-admin-password.js"></script>
     <script src="{{ STATIC_URL }}javascripts/third-party-storage.js"></script>
     <script src="{{ STATIC_URL }}javascripts/d3.js"></script>
     <script src="{{ STATIC_URL }}javascripts/d3_charts/gauge.js"></script>
 {% endblock %}
 
-{% block title %}{% endblock %}
+{% block title %}
+    Admin Panel -
+    <span class="legend-stats">Nodes: {{ tot_nodes }} Projects: {{ tot_proj }} Users: {{ tot_users }}</span>
+
+    <a href="#" id="upgrade" class="btn title-button">Upgrade</a>
+    <a href="#" id="phonehome" class="btn title-button">Phone Home</a>
+    <a href="#" id="config-third-party-storage" class="btn title-button">Configure 3PS</a>
+    <a href="#" id="update-admin-password" class="btn title-button">Update Password</a>
+{% endblock %}
 
 {% block content %}
+    <div class="well" id="widget-actions" style="display: block;">
+        <div class="legend">
+            Last 24hrs: Average WAC
+        </div>
+        <div style="text-align: center">
+            <body style="font: 10px arial">
+            <span id="cpuGaugeContainer"></span>
+            <span id="memoryGaugeContainer"></span>
+            <span id="storageGaugeContainer"></span>
+            <span id="diskreadrateGaugeContainer"></span>
+            <span id="diskwriterateGaugeContainer"></span>
+            <span id="lanincomingrateGaugeContainer"></span>
+            <span id="lanoutgoingrateGaugeContainer"></span>
+            <span id="wanincomingrateGaugeContainer"></span>
+            <span id="wanoutgoingrateGaugeContainer"></span>
+            </body>
+        </div>
+    </div>
 
-    <div class="span10 offset1">
-        <div class="well no-padding">
-            <div class="legend-header">
-                Admin Panel
+    <div class="well" id="widget-actions" style="display: block;">
+        <div class="legend">
+            Last 24hrs: Average Cloud Meters
+        </div>
+        <div style="text-align: center;">
+            <body style="font: 10px arial">
+            <span id="cpupercentGaugeContainer"></span>
+            <span id="cpuuserpercentGaugeContainer"></span>
+            <span id="cpuidlepercentGaugeContainer"></span>
+            <span id="cpuiowaitpercentGaugeContainer"></span>
+            <span id="cpukernelpercentGaugeContainer"></span>
+            </body>
+        </div>
+    </div>
 
-                <a href="#" id="config-third-party-storage" class="btn" style="float:right">Configure 3PS</a>
-                <a href="#" id="update-admin-password" class="btn" style="float:right">Update Password</a>
-            </div>
+    <div class="well" id="widget-actions" style="display: block">
+        <div class="legend">
+            Third Party Storage
+        </div>
+        <div id="graph-container"
+             style="display:block; margin: 10px; border: 1px solid #696969">
+            <h6 id="graph-title" style="margin: 10px 10px;">E-Series Storage (gb)</h6>
 
-            <div class="well" style="display: block">
-                <div class="legend">
-                    Cloud Stats
-                </div>
-                <table class="paleblue widget-table-third" style="display: inline-table">
-                    <tr>
-                        <th>Nodes</th>
-                        <th>Projects</th>
-                        <th>Users</th>
-                    </tr>
-                    <tr>
-                        <td>{{ tot_nodes }}</td>
-                        <td>{{ tot_proj }}</td>
-                        <td>{{ tot_users }}</td>
-                    </tr>
-                </table>
-            </div>
+            <div id="graph">
+                <style scoped>
 
-            <div class="well" id="widget-actions" style="display: inline-block; margin-right: 5px" >
-                <div class="legend">
-                    Last 24hrs: Average Instance Meters
-                </div>
-                <div style="text-align: center">
-                    <body onload="initialize()" style="font: 10px arial">
-                        <span id="vcpusGaugeContainer"></span>
-                        <span id="memoryGaugeContainer"></span>
-                        <span id="diskrootsizeGaugeContainer"></span>
-                    </body>
-                </div>
-            </div>
+                    #graph {
+                        font: 10px sans-serif;
+                    }
 
-            <div class="well" id="widget-actions" style="display: inline-block; margin-left: 5px">
-                <div class="legend">
-                    Last 24hrs: Average Cloud Meters
-                </div>
-                <div style="text-align: center;">
-                    <body onload="initialize()" style="font: 10px arial">
-                        <span id="cpupercentGaugeContainer"></span>
-                        <span id="cpuuserpercentGaugeContainer"></span>
-                        <span id="cpuidlepercentGaugeContainer"></span>
-                        <span id="cpuiowaitpercentGaugeContainer"></span>
-                        <span id="cpukernelpercentGaugeContainer"></span>
-                    </body>
-                </div>
-            </div>
+                    .arc path {
+                        stroke: #fff;
+                    }
 
-            <div class="well"id="widget-actions" style="display: block">
-                <div class="legend">
-                    Third Party Storage
-                </div>
-                <div id="graph-container"
-                     style="display:inline-table; width: 59%; margin: 10px; border: 1px solid #696969">
-                    <h6 id="graph-title" style="margin: 10px 10px;">E-Series Storage (gb)</h6>
-
-                    <div id="graph">
-                        <style>
-
-                            #graph {
-                                font: 10px sans-serif;
-                            }
-
-                            .arc path {
-                                stroke: #fff;
-                            }
-
-                        </style>
-                    </div>
-                </div>
-            </div>
-
-            <div class="well well-wide">
-                <div class="legend">
-                    Node Stats
-                </div>
-
-                {% for node in full_stats %}
-                    <table class="paleblue widget-table table-wide" style="margin-bottom: 3em">
-                        <tr>
-                            <th>Node Name</th>
-                            <th>Type</th>
-                            <th>CPU Usage</th>
-                            <th>Memory Usage</th>
-                            <th>Swap Usage</th>
-                        </tr>
-                        <tr>
-                            <td>{{ node.name }}</td>
-                            <td>{{ node.type }}</td>
-                            <td>{{ node.cpu_system }}%</td>
-                            <td>{{ node.mem_used_percent }}%</td>
-                            <td>{{ node.swap_used_percent }}%</td>
-                        </tr>
-                    </table>
-                    <div class="legend sub-legend">
-                        Disk Stats for {{ node.name }}
-                    </div>
-                    <table class="paleblue widget-table table-wide">
-                        <tr>
-                            <th>Disk Name</th>
-                            <th>Total Space</th>
-                            <th>Disk Usage</th>
-                        </tr>
-                        {% for disk in node.disks %}
-                            <tr>
-                                <td>{{ disk.name }}</td>
-                                <td>{{ disk.total_space }}MB</td>
-                                <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                {% endfor %}
-            </div>
-            <!-- end span6-->
-
-            <div class="well well-wide">
-                <div class="legend">
-                    Project Stats
-                </div>
-                <table class="paleblue widget-table table-wide">
-                    <tr>
-                        <th>Project Name</th>
-                        <th>Instances</th>
-                        <th>Floating IPs</th>
-                        <th>Volumes</th>
-                        <th>Containers</th>
-                        <th>Routers</th>
-                        <th>Internal Networks</th>
-                        <th>Users</th>
-                    </tr>
-                    {% for tenant in tenant_info %}
-                        {% if tenant.project_name != "trans_default" %}
-                            <tr>
-                                <td>{{ tenant.project_name }}</td>
-                                <td>{{ tenant.num_servers }}</td>
-                                <td>{{ tenant.num_fips }}</td>
-                                <td>{{ tenant.num_vol }}</td>
-                                <td>{{ tenant.num_cont }}</td>
-                                <td>{{ tenant.num_rout }}</td>
-                                <td>{{ tenant.num_net }}</td>
-                                <td>{{ tenant.num_users }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </table>
+                </style>
             </div>
         </div>
-        <!-- end span6-->
     </div>
 
-    <div id="dialog-form-update-password" title="Update Password">
-        <p class="validateTips">All form fields are required.</p>
+    <div class="well well-wide">
+        <div class="legend">
+            Node Stats
+        </div>
 
-        <form>
-            {% csrf_token %}
-            <fieldset>
-                <label for="password1">Password</label>
-                <input type="password" name="password1" id="password1" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-                <label for="password2">Confirm Password</label>
-                <input type="password" name="password2" id="password2" value=""
-                       class="text ui-widget-content ui-corner-all"/>
-            </fieldset>
-        </form>
+        {% for node in full_stats %}
+            <table class="paleblue widget-table table-wide" style="margin-bottom: 3em">
+                <tr>
+                    <th>Node Name</th>
+                    <th>Type</th>
+                    <th>CPU Usage</th>
+                    <th>Memory Usage</th>
+                    <th>Swap Usage</th>
+                </tr>
+                <tr>
+                    <td>{{ node.name }}</td>
+                    <td>{{ node.type }}</td>
+                    <td>{{ node.cpu_system }}%</td>
+                    <td>{{ node.mem_used_percent }}%</td>
+                    <td>{{ node.swap_used_percent }}%</td>
+                </tr>
+            </table>
+            <div class="legend sub-legend">
+                Disk Stats for {{ node.name }}
+            </div>
+            <table class="paleblue widget-table table-wide">
+                <tr>
+                    <th>Disk Name</th>
+                    <th>Total Space</th>
+                    <th>Disk Usage</th>
+                </tr>
+                {% for disk in node.disks %}
+                    <tr>
+                        <td>{{ disk.name }}</td>
+                        <td>{{ disk.total_space }}MB</td>
+                        <td>{{ disk.space_usage_mb }}MB / {{ disk.space_usage_precent }}%</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endfor %}
     </div>
+    <!-- end span6-->
+
+    <div class="well well-wide">
+        <div class="legend">
+            Project Stats
+        </div>
+        <table class="paleblue widget-table table-wide">
+            <tr>
+                <th>Project Name</th>
+                <th>Instances</th>
+                <th>Floating IPs</th>
+                <th>Volumes</th>
+                <th>Containers</th>
+                <th>Routers</th>
+                <th>Internal Networks</th>
+                <th>Users</th>
+            </tr>
+            {% for tenant in tenant_info %}
+                {% if tenant.project_name != "trans_default" %}
+                    <tr>
+                        <td>{{ tenant.project_name }}</td>
+                        <td>{{ tenant.num_servers }}</td>
+                        <td>{{ tenant.num_fips }}</td>
+                        <td>{{ tenant.num_vol }}</td>
+                        <td>{{ tenant.num_cont }}</td>
+                        <td>{{ tenant.num_rout }}</td>
+                        <td>{{ tenant.num_net }}</td>
+                        <td>{{ tenant.num_users }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </table>
+    </div>
+    <!-- end span6-->
 
     <div id="tps-config-form" title="Configure Third Party Storage">
 
@@ -289,7 +258,9 @@
             <fieldset id="eseries-disk-pools" style="display:none;">
                 <label for="eseries-storage-disk-pools"></label>
                 <select name="eseries-storage-disk-pools" id="eseries-storage-disk-pools" multiple size="0"></select>
-                <button class="configure-tps block-center" id="eseries-button" data-provider="eseries">Configure E-Series Storage</button>
+                <button class="configure-tps block-center" id="eseries-button" data-provider="eseries">Configure
+                    E-Series Storage
+                </button>
             </fieldset>
 
             <fieldset id="nfs-config-data" style="display: none;">
@@ -298,7 +269,9 @@
                        type="text">
                 <button id="add-mountpoint">+</button>
                 <div id="mountpoints"></div>
-                <button class="configure-tps block-center" id="nfs-button" data-provider="nfs" style="margin-top: 10px;">Configure NFS</button>
+                <button class="configure-tps block-center" id="nfs-button" data-provider="nfs"
+                        style="margin-top: 10px;">Configure NFS
+                </button>
             </fieldset>
 
             <fieldset id="nimble-config-data" style="display: none;">
@@ -318,16 +291,22 @@
                        class="text ui-widget-content ui-corner-all"
                        type="password">
 
-                <button class="configure-tps block-center" id="nimble-button" data-provider="nimble">Configure Nimble Storage</button>
+                <button class="configure-tps block-center" id="nimble-button" data-provider="nimble">Configure Nimble
+                    Storage
+                </button>
             </fieldset>
         </fieldset>
     </div><!-- end row-fluid-->
-
     <script>
-        var gauges = [];
+        $(function () {
+            initialize();
+        });
 
-        function createGauge(name, label, meterType, calcType, min, max, minorTicks)
-        {
+        var gauges = [],
+                calls = [],
+                calls_complete = true;
+
+        function createGauge(name, label, meterType, calcType, min, max, minorTicks) {
             var config =
             {
                 size: 120,
@@ -337,73 +316,76 @@
                 min: undefined != min ? min : 0,
                 max: undefined != max ? max : 1000,
                 minorTicks: minorTicks
-            }
+            };
 
             var range = config.max - config.min;
-            config.yellowZones = [{ from: config.min + range*0.75, to: config.min + range*0.9 }];
-            config.redZones = [{ from: config.min + range*0.9, to: config.max }];
+            config.yellowZones = [{from: config.min + range * 0.75, to: config.min + range * 0.9}];
+            config.redZones = [{from: config.min + range * 0.9, to: config.max}];
 
             gauges[name] = new Gauge(name + "GaugeContainer", config);
             gauges[name].render();
         }
 
-        function createGauges()
-        {
-            createGauge("vcpus", "vCPU Count", "vcpus", "avg", 0, 64, 16);
-            createGauge("memory", "RAM Alloc MB", "memory", "avg", 0, 128000, 8);
-            createGauge("diskrootsize", "Disk Alloc GB", "disk.root.size", "avg", 0, 1000, 8);
-            createGauge("cpupercent", "CPU as %", "compute.node.cpu.percent", "avg", 0, 100, 5);
-            createGauge("cpuuserpercent", "CPU User as %", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
-            createGauge("cpuidlepercent", "CPU Idle as %", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
-            createGauge("cpuiowaitpercent", "CPU I/O Wait as %", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
-            createGauge("cpukernelpercent", "CPU Kernel as %", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
+        function createGauges() {
+
+            {#            6Fusion Meters#}
+            createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);
+            createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);
+            createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);
+            createGauge("diskreadrate", "Disk Reads B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("diskwriterate", "Disk Writes B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanincomingrate", "LAN Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("lanoutgoingrate", "LAN Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanincomingrate", "WAN Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
+            createGauge("wanoutgoingrate", "WAN Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
+
+            {#            Core & Compute Meters#}
+            createGauge("cpupercent", "% CPU", "compute.node.cpu.percent", "avg", 0, 100, 5);
+            createGauge("cpuuserpercent", "% CPU User", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
+            createGauge("cpuidlepercent", "% CPU Idle", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
+            createGauge("cpuiowaitpercent", "% CPU I/O Wait", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
+            createGauge("cpukernelpercent", "% CPU Kernel", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
         }
 
-        function updateGauges()
-        {
-            for (var key in gauges)
-            {
-                getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
+        function updateGauges() {
+            if (calls_complete) {
+                calls_complete = false;
+                calls = [];
+                for (var key in gauges) {
+                    calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
+                }
+
+                $.when.apply(null, calls).done(function () {
+                    calls_complete = true;
+                });
             }
         }
 
-        function getCeilometerResults(guage, meterType, calcType)
-        {
+        function getCeilometerResults(guage, meterType, calcType) {
             var endDate = new Date();
             var startDate = new Date(endDate);
             var durationInMinutes = 4320;
-            startDate.setMinutes(endDate.getMinutes() - durationInMinutes);
-            var startTimeString = startDate.getFullYear() + "-" + (startDate.getMonth() + 1 )+ "-" + startDate.getDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getMinutes()).slice(-2);
-            var endTimeString = endDate.getFullYear() + "-" + (endDate.getMonth() + 1) + "-" + endDate.getDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getMinutes()).slice(-2);
-            url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/"
+            startDate.setUTCMinutes(endDate.getUTCMinutes() - durationInMinutes);
+            var startTimeString = startDate.getUTCFullYear() + "-" + (startDate.getUTCMonth() + 1 ) + "-" + startDate.getUTCDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getUTCMinutes()).slice(-2);
+            var endTimeString = endDate.getUTCFullYear() + "-" + (endDate.getUTCMonth() + 1) + "-" + endDate.getUTCDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getUTCMinutes()).slice(-2);
+            var url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/";
 
-            return $.getJSON(url).done(function(data) {
-                if (data.status == "success")
-                {
-                    if (data.message != "empty dataset")
-                    {
+            call_complete = $.getJSON(url).done(function (data) {
+                if (data.status == "success") {
+                    if (data.message != "empty dataset") {
                         var result = data.statistics[0][calcType];
                         guage.redraw(result);
                     }
                 }
-                else
-                {
-                    if (got_data)
-                        message.showMessage('error', data.message);
-                    got_data = false;
-                }
             });
+
+            return call_complete;
         }
 
-        var got_data = true;
-
-        function initialize()
-        {
+        function initialize() {
             createGauges();
-            {#5000 = 5 seconds#}
-            setInterval(updateGauges, 5000);
+            updateGauges();
+            window.setInterval(updateGauges, 60000);
         }
-
     </script>
-
 {% endblock %}

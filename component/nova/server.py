@@ -5,8 +5,6 @@ import os
 import json
 import time
 import random
-#import thread
-#from multiprocessing.pool import ThreadPool
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -19,29 +17,20 @@ from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 #get the nova libs
-#from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.nova.image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
-#from transcirrus.component.glance.glance_ops import glance_ops
-from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.nova.server_action import server_actions
-#from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
 #######Special imports#######
 
 class server_ops:
-    #UPDATED/UNIT TESTED
-    #DESC:
-    #INPUT:
-    #OUTPUT:
     def __init__(self,user_dict):
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
-        # user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token}
         else:
             self.username = user_dict['username']
             self.user_id = user_dict['user_id']
@@ -51,17 +40,17 @@ class server_ops:
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
             self.is_admin = user_dict['is_admin']
-            
+
             if(self.is_admin == 1):
                 self.adm_token = user_dict['adm_token']
             else:
                 self.adm_token = 'NULL'
-            
+
             if('sec' in user_dict):
                 self.sec = user_dict['sec']
             else:
                 self.sec = 'FALSE'
-                
+
             #get the default cloud controller info
             self.controller = config.CLOUD_CONTROLLER
             self.api_ip = config.API_IP
@@ -78,23 +67,9 @@ class server_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
-        #attach to the DB
-        try:
-            #Try to connect to the transcirrus db
-            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
-        except Exception as e:
-            logger.sys_error("Could not connect to db with error: %s" %(e))
-            raise Exception("Could not connect to db with error: %s" %(e))
-
-        #build flavor object
-        #self.flav = flavor_ops(user_dict)
-        #self.qo = quota_ops(user_dict)
-
-        #build the nova image object
-        #self.image = nova_image_ops(user_dict)
+        self.db = util.db_connect()
         self.layer_three = layer_three_ops(user_dict)
         self.net = neutron_net_ops(user_dict)
-        self.glance = glance_ops(user_dict)
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
         self.keystone = tenant_ops(user_dict)
@@ -102,9 +77,6 @@ class server_ops:
         #random number used if sec group or key name taken
         self.rannum = random.randrange(1000,9000)
 
-    #DESC: used to clean up after the server class
-    #INPUT: self object
-    #OUTPUT: void
     def destructor(self):
         #close any open db connections
         self.db.pg_close_connection()
@@ -190,6 +162,56 @@ class server_ops:
 
         return self.inst_array
 
+    def list_servers_status(self, project_id):
+        """
+        DESC: List the status of all virtual servers in a given project.
+        INPUT: project_id
+        OUTPUT: array or r_dict - server_id
+                                - status
+        ACCESS: Admins and Power users can list the servers in a project.
+                Users can list virtual servers in the project they own.
+        NOTE:
+        """
+        #check the user status in the system, if they are not valid in the transcirrus system or enabeld openstack do not allow this operation
+
+
+        inst_array = []
+        if (self.user_level > 0):
+            if(project_id != self.project_id):
+                logger.sys_error("Could not connect to the REST api caller in list_servers_status operation.")
+                raise Exception("Could not connect to the REST api caller in list_servers_status operation.")
+        else:
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,project_id)
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id": project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the REST api caller in list_servers_status operation.")
+            raise Exception("Could not connect to the REST api caller in list_servers_status operation.")
+
+        try:
+            body = ''
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/servers/detail?tenant_id=%s' %(project_id,project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            raise e
+
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            for server in load['servers']:
+                r_dict = {'server_id':server['id'], 'status':server['status']}
+                inst_array.append(r_dict)
+        else:
+            ec.error_codes(rest)
+
+        return inst_array
+
     def list_all_servers(self):
         """
         DESC: List all virtual servers in the system.
@@ -216,17 +238,6 @@ class server_ops:
             if(project['project_name'] != 'trans_default'):
                 self.inst_array = self.inst_array + self.list_servers(project['project_id'])
 
-        #try:
-        #    get_inst = {'select':"inst_name,inst_id,proj_id,inst_user_id,inst_zone,inst_floating_ip", 'from':"trans_instances"}
-        #    instances = self.db.pg_select(get_inst)
-        #except Exception as e:
-        #    logger.sql_error("%s"%(e))
-        #    raise e
-
-        #inst_array = []
-        #for inst in instances:
-        #    r_dict = {'server_name':inst[0],'server_id':inst[1],'project_id':inst[2],'user_id':inst[3],'zone':inst[4],'public_ip':inst[5]}
-        #    inst_array.append(r_dict)
         return self.inst_array
 
     def create_server(self,create_dict):
@@ -254,7 +265,7 @@ class server_ops:
         NOTE: If no zone is specified then the zone defaults to zone.
         """
         #do variable checks
-        
+
         if(not create_dict):
             logger.sys_error("No dictionary passed into create_server operation.")
             raise Exception("No dictionary passed into create_server operation.")
@@ -450,11 +461,13 @@ class server_ops:
                        - server_int_net - dict of int net info
                        - server_zone
                        - server_status
+                       - server_state
                        - server_node
                        - server_public_ips
                        - floating_ip_id
                        - novnc_console
                        - date_created
+                       - boot_from_vol
                        - fault
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
@@ -493,8 +506,6 @@ class server_ops:
             logger.sys_error('Could not get server info: get_server %s'%(e))
             raise Exception('Could not get server info: get_server %s'%(e))
 
-        #this is a HACK to get the server internal IP - I want to have all this info in the DB, need a polling mechanisim to poll until the
-        #server is up and then get the ip
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             if(input_dict['project_id'] != self.project_id):
@@ -532,14 +543,24 @@ class server_ops:
             novnc = self.server_actions.get_instance_console(input_dict)
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'flavor_id':load['server']['flavor']['id'],
-                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],
+                      'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],'server_state':load['server']['OS-EXT-STS:vm_state'],
                       'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc,'date_created':load['server']['created'],'fault':self.fault}
+
+            #HACK - need to figure out how to get this from API
+            #get if boot from vol
+            get_boot = {'select':"vol_set_bootable,vol_attached",'from':"trans_system_vols",'where':"vol_attached_to_inst='%s'"%(server[0][1])}
+            boot_from_vol = self.db.pg_select(get_boot)
+            r_dict['boot_from_vol'] = 'false'
+            if(len(boot_from_vol) >= 1):
+                if(boot_from_vol[0][0] == 'true' and boot_from_vol[0][1] == 'true'):
+                    r_dict['boot_from_vol'] = 'true'
+
             return r_dict
         elif(rest['response'] == 409):
             #logger.sys_error("Could not get server status %s"%(input_dict['server_id']))
             logger.sys_error("%s ERROR: 409"%(str(load['itemNotFound']['message'])))
-        #else:
-        #    ec.error_codes(rest)
+        else:
+            ec.error_codes(rest)
 
     def detach_all_servers_from_network(self,input_dict):
         """
@@ -772,7 +793,7 @@ class server_ops:
                 self.db.pg_transaction_rollback()
                 logger.sys_error("Could not attach server to network %s" %(e))
                 raise e
-    
+
             if(rest['response'] == 200):
                 #NOTE: need to add in a polling mechanism to report back status of the creation
                 load = json.loads(rest['data'])
@@ -1299,7 +1320,7 @@ class server_ops:
                 r_dict = {"key_name":str(seckey['keypair']['name']), "key_id":str(seckey['keypair']['fingerprint'])}
                 return r_dict
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def delete_sec_group(self,sec_dict):
         """
@@ -1399,7 +1420,7 @@ class server_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def delete_sec_group_rules (self, rule_dict, delete_icmp=False, delete_all=False):
         """
@@ -1522,7 +1543,7 @@ class server_ops:
 
     def delete_sec_keys(self,delete_dict):
         """
-        DESC: Delete the specified key 
+        DESC: Delete the specified key
         INPUT: delete_dict - sec_key_name
                            - project_id
         OUTPUT: OK if deleted
@@ -1550,16 +1571,15 @@ class server_ops:
                 logger.sys_error("Users can only create security groups in their project.")
                 raise Exception("Users can only create security groups in their project.")
 
-        #get the security group info from the db.
         try:
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"sec_key_name='%s'" %(delete_dict['sec_key_name']),"and":"proj_id='%s'" %(delete_dict['project_id'])}
+            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"sec_key_name='%s'" %(delete_dict['sec_key_name']),"and":"user_id='%s'" %(self.user_id)}
             get_key = self.db.pg_select(get_key_dict)
         except:
             logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
             raise Exception("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
 
-        #if the group does not belong to the user raise exception
-        if(get_key[0][1] != self.username):
+        print get_key
+        if(get_key[0][2] != self.user_id):
             logger.sys_error("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
             raise Exception("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
 
@@ -1617,7 +1637,7 @@ class server_ops:
                 self.db.pg_transaction_commit()
                 return "OK"
         else:
-            util.http_codes(rest['response'],rest['reason'])
+            ec.error_codes(rest)
 
     def list_sec_group(self,project_id=None):
         """
@@ -1672,32 +1692,40 @@ class server_ops:
                 keys in the project, users can only list their keys.
         """
 
-        #This only queries the transcirrus db
-        #get the security group info from the db.
-        get_key_dict = None
-        if(self.user_level == 0):
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'" %(project_id)}
-        elif(self.user_level == 1):
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'"%(self.user_id)}
-        else:
-            #HACK: this is temporary until we make it so that the defaults are shown as of now nothing is shown unti the user makes a key
-            #get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
-            get_key_dict = {"select":'*',"from":'trans_security_keys',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'"%(self.user_id)}
-
         try:
-            keys = self.db.pg_select(get_key_dict)
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(project_id != self.project_id):
+                self.token = get_token(self.username,self.password,project_id)
+            api = caller(api_dict)
         except:
-            logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(get_key_dict[0][3],self.project_id))
-            raise("Could not get the security key info for sec_key: %s in project: %s" %(get_key_dict[0][3],self.project_id))
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
 
-        key_array = []
-        #build an array of r_dict
-        for key in keys:
-            r_dict = {"key_name":key[4],"key_id":key[3],"username":key[1]}
-            key_array.append(r_dict)
+        #create a new security group in the project
+        try:
+            body = ""
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'GET'
+            api_path = '/v2/%s/os-keypairs' %(project_id)
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            self.db.pg_transaction_rollback()
+            logger.sys_error("Could not list the security key.")
+            raise e
 
-        #return the array
-        return key_array
+        if(rest['response'] == 200):
+            load = json.loads(rest['data'])
+            key_array = []
+            #build an array of r_dict
+            for key in load['keypairs']:
+                r_dict = {"key_name":key['keypair']['name'],"key_id":key['keypair']['fingerprint'],"username":self.username}
+                key_array.append(r_dict)
+            return key_array
+        else:
+            ec.error_codes(rest)
 
     def get_sec_group(self,sec_dict):
         """

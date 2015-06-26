@@ -48,9 +48,10 @@ $(function () {
 
                     // Validate form inputs
                     var isValid =
-                        checkLength(volume_name, "Volume Name", 3, 16) &&
+                        checkLength(volume_name, "Volume name", standardStringMin, standardStringMax) &&
+                        checkCharfield(volume_name, "Volume name") &&
                         checkDuplicateName(volume_name, volumes) &&
-                        checkSize(volume_size, "Volume Size must be greater than 0.", 1, 0) &&
+                        checkSize(volume_size, "Volume size must be greater than 0.", 1, 0) &&
                         checkStorage(volume_size);
 
                     if (isValid) {
@@ -396,15 +397,29 @@ $(function () {
                                 message.showMessage('success', "Volume " + confVol + " cloned from volume " + $(volume).text() + ".");
 
                                 // Initialize empty string for new volume row
-                                var newRow =
-                                    '<tr id="' + data.volume_id + '"><td id="' + data.volume_id + '-name-cell">' +
-                                    '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
-                                    '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
-                                    '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instance</span></td>' +
-                                    '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
-                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
-                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
-                                    '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
+                                var isBoot = volumes.items[confId].bootable == "true",
+                                    newRow;
+                                if (isBoot) {
+                                    newRow =
+                                        '<tr id="' + data.volume_id + '" class="volume-mounted"><td id="' + data.volume_id + '-name-cell">' +
+                                        '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                        '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
+                                        '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instance</span></td>' +
+                                        '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
+                                } else {
+                                    newRow =
+                                        '<tr id="' + data.volume_id + '"><td id="' + data.volume_id + '-name-cell">' +
+                                        '<a href="/projects/' + PROJECT_ID + '/volumes/' + data.volume_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                                        '<span id="' + data.volume_id + '-name-text">' + data.volume_name + '</span>' + '</a></td>' +
+                                        '<td id="' + data.volume_id + '-attached-cell"><span id="' + data.volume_id + '-attached-placeholder">No Attached Instance</span></td>' +
+                                        '<td id="' + data.volume_id + '-actions-cell"><a href="#" class="attach-volume">attach</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="clone-volume">clone</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="revert-volume">revert</a>' +
+                                        '<span class="volume-actions-pipe"> | </span><a href="#" class="delete-volume">delete</a></td></tr>';
+                                }
 
                                 // Check to see if this is the first volume to be generated, if so remove placeholder and reveal create-snapshot buttons
                                 var rowCount = $("#volume_list tr").length;
@@ -777,7 +792,8 @@ $(function () {
         var id,
             volume,
             targetRow,
-            attached;
+            attached,
+            boot;
 
         $(document).on('click', '.revert-volume', function (event) {
 
@@ -787,7 +803,11 @@ $(function () {
             // Get target row element, get id from that
             // element and use that to get the name-text
             targetRow = $(this).parent().parent();
-            attached = !!targetRow.hasClass("volume-attached");
+            attached = targetRow.hasClass("volume-attached");
+            //boot = targetRow.hasClass("volume-mounted");
+            boot = "false";
+
+
             id = $(targetRow).attr("id");
             volume = document.getElementById(id + "-name-text");
 
@@ -820,7 +840,8 @@ $(function () {
 
                     // Validate form inputs
                     var isValid =
-                        checkLength(name, "Volume Name", 3, 16) &&
+                        checkLength(name, "Volume name", standardStringMin, standardStringMax) &&
+                        checkCharfield(name, "Volume name") &&
                         checkDuplicateName(name, volumes);
 
                     if (isValid) {
@@ -867,8 +888,11 @@ $(function () {
                                     // Initialize empty string for new volume row
                                     var newRow =
                                         '<tr id="' + data.volume_info.volume_id + '" class="';
-                                    if (attached) {
-                                        newRow += "volume-attached"
+                                    if (boot == "true") {
+                                        console.log(boot);
+                                        newRow += "volume-mounted";
+                                    } else if (attached) {
+                                        newRow += "volume-attached";
                                     }
                                     newRow +=
                                         '"><td id="' + data.volume_info.volume_id + '-name-cell">' +

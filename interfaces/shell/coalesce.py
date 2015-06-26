@@ -16,6 +16,7 @@ from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
 import transcirrus.interfaces.shell.dashboard as dashboard
 from transcirrus.operations.restart_all_services import restart_services
+from IPy import IP
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -253,10 +254,10 @@ def setup(d):
             # Verify credentials
             # if cloud admin, continue setup
             # else re-prompt for credentials
-            if (user_dict['is_admin'] == 1):
+            if user_dict['is_admin'] == 1 and user_dict['token'] is not None:
                 break
             else:
-                d.msgbox("Admin only, try again.", width=60, height=10)
+                d.msgbox("Authentication failed, try again.", width=60, height=10)
         except:
             d.msgbox("Invalid credentials, try again.", width=60, height=10)
 
@@ -304,7 +305,9 @@ def setup(d):
         info_dict['cnfrm'] = cnfrm
         
         # Confirm all entries exist
-        if(uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm == ""):
+        if(uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or
+                   uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or
+                   mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm == ""):
             d.msgbox("Please fill out all fields, try again.", width=60, height=10)
             continue
         # Validate uplink ip
@@ -320,7 +323,7 @@ def setup(d):
             d.msgbox("Invalid Uplink Gateway, try again.", width=60, height=10)
             continue
         # Validate gateway has same subnet as uplink
-        if(valid_ip_vm(uplink_ip, uplink_gateway) is False):
+        if(valid_ip_vm(uplink_ip, uplink_gateway, uplink_subnet) is False):
             d.msgbox("Invalid Uplink Gateway, Uplink and Gateway must be on the same subnet, try again.", width=60, height=10)
             continue
         # Validate uplink dns
@@ -340,15 +343,15 @@ def setup(d):
             d.msgbox("Invalid Management DNS, try again.", width=60, height=10)
             continue
         # Validate start point not equal to uplink
-        if(valid_ip_vm(uplink_ip, vm_ip_min) is False):
+        if(valid_ip_vm(uplink_ip, vm_ip_min, uplink_subnet) is False):
             d.msgbox("Invalid VM Range Start-Point, try again.", width=60, height=10)
             continue
         # Validate end point greater than start point
-        if(valid_ip_max(vm_ip_min, vm_ip_max) is False):
+        if(valid_ip_max(vm_ip_min, vm_ip_max, uplink_subnet) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
         # Validate end point not equal to uplink
-        if(valid_ip_vm(uplink_ip, vm_ip_max) is False):
+        if(valid_ip_vm(uplink_ip, vm_ip_max, uplink_subnet) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
         # Validate new password
@@ -464,64 +467,52 @@ def setup(d):
 
 def valid_ip(address):
     """
-    Validate IP address's format:
-        (only numbers and periods)
-        (numbers between 0 and 255)
-        (must have exactly 4 numbers)
-        (must have exactly 3 periods)
-        (must be the form #.#.#.#)
+    Validate IP address using IPy library
     """
     try:
-        host_bytes = address.split('.')
-        valid = [int(b) for b in host_bytes]
-        valid = [b for b in valid if b >= 0 and b <= 255]
-        return len(host_bytes) == 4 and len(valid) == 4
-    except:
-        return False
-
-
-def valid_ip_vm(uplink, vm):
-    """
-    Validate that the vm IP address has the same network prefix of the uplink IP address
-    and that the host part of the vm IP address is not equal to that of the
-    uplink IP address
-    """
-    try:
-        uplink_bytes = uplink.split('.')
-        vm_bytes = vm.split('.')
-        valid_uplink = [int(b) for b in uplink_bytes]
-        valid_vm = [int(b) for b in vm_bytes]
-        if (valid_uplink[0] == valid_vm[0] and
-        valid_uplink[1] == valid_vm[1] and
-        valid_uplink[2] == valid_vm[2] and
-        valid_uplink[3] != valid_vm[3] and
-        valid_vm[3] != 0):
+        if check_ip_format(address):
+            IP(address)
             return True
         else:
             return False
-    except:
+    except ValueError:
+        return False
+    except Exception:
+        return False
+    else:
+        return False
+
+def check_ip_format(address):
+    host_bytes = address.split('.')
+    valid = [int(b) for b in host_bytes]
+    valid = [b for b in valid if b >= 0 and b <= 255]
+    return len(host_bytes) == 4 and len(valid) == 4
+
+
+def valid_ip_vm(uplink, vm, mask):
+    """
+    Validate uplinkIP and vmIPs range are in a valid subnet using IPy
+    """
+    try:
+        if IP(uplink).make_net(mask) == IP(vm).make_net(mask):
+            return True
+        else:
+            return False
+    except Exception:
         return False
 
 
-def valid_ip_max(min_ip, max_ip):
+def valid_ip_max(min_ip, max_ip, mask):
     """
     Validate that the max_ip IP address has the same network prefix of the min_ip IP address
-    and that the host part of the max_ip IP address is greater than or equal to that of the
-    min_ip IP address
+    and that they both exist in the same subnet
     """
     try:
-        min_ip_bytes = min_ip.split('.')
-        max_ip_bytes = max_ip.split('.')
-        valid_min_ip = [int(b) for b in min_ip_bytes]
-        valid_max_ip = [int(b) for b in max_ip_bytes]
-        if (valid_min_ip[0] == valid_max_ip[0] and
-        valid_min_ip[1] == valid_max_ip[1] and
-        valid_min_ip[2] == valid_max_ip[2] and
-        valid_min_ip[3] <= valid_max_ip[3]):
+        if IP(min_ip).make_net(mask) == IP(max_ip).make_net(mask):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
 
 

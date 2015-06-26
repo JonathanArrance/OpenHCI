@@ -63,7 +63,7 @@ $(function () {
                         // Make sure the image name is of the proper size of 3 to 20 characters.
                         // TODO: Need to see why there is a 3 - 20 size limit!!!
                         // This is the name of the image to be shown in the UI; not the one being uploaded.
-                        if (!checkLength(image_name, "image_name", 3, 20))
+                        if (!checkLength(image_name, "Image name", standardStringMin, standardStringMax) && checkCharfield(image_name, "Image name"))
                             return;
 
                         var progress_id = guid();
@@ -86,8 +86,8 @@ $(function () {
                             image_location = import_remote;
 
                             var loc = image_location.val();
-                            image_location = convertUrl47(image_location);
                             loc = loc.replace(/\//g, '&47');
+                            loc = loc.replace(/\?/g, '&63');
 
                             var os = os_type.val();
 
@@ -113,6 +113,11 @@ $(function () {
                                         if (ret_data.status == "error") {
                                             // There was an error on the server uploading the file so display the error message.
                                             message.showMessage("error", ret_data.message);
+                                            disableFormInputs('image', ['text', 'select', 'file'], false);
+                                            disableLinks(false);
+                                            uploading = false;
+                                            clearUiValidation(allFields);
+                                            resetProgressBar(form);
                                             return;
                                         }
 
@@ -137,6 +142,7 @@ $(function () {
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     },
                                     error: function () {
 
@@ -148,6 +154,7 @@ $(function () {
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     }
                                 });
                         }
@@ -206,6 +213,11 @@ $(function () {
                                         if (ret_data.status == "error") {
                                             // There was an error on the server uploading the file so display the error message.
                                             message.showMessage("error", ret_data.message);
+                                            disableFormInputs('image', ['text', 'select', 'file'], false);
+                                            disableLinks(false);
+                                            uploading = false;
+                                            clearUiValidation(allFields);
+                                            resetProgressBar(form);
                                             return;
                                         }
 
@@ -244,6 +256,7 @@ $(function () {
                                         disableLinks(false);
                                         uploading = false;
                                         resetUiValidation(allFields);
+                                        resetProgressBar(form);
                                     }
                                 });
                         }
@@ -325,7 +338,7 @@ $(function () {
                     $(actionsCell).empty().fadeOut();
                     $(actionsCell).append(loaderHtml).fadeIn();
 
-                    $.getJSON('/delete_image/' + confId + '/')
+                    $.getJSON('/delete_image/' + PROJECT_ID + '/' + confId + '/')
                         .done(function (data) {
 
                             if (data.status == 'error') {

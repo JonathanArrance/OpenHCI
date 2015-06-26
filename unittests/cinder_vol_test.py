@@ -21,24 +21,38 @@ print "instantiating a volume abject."
 vol = volume_ops(d)
 snap = snapshot_ops(d)
 
+'''
 create = {'volume_name':'transcirrus4','volume_size':'8','project_id':"15e4192e67ab47ef928ffeb4d25c9648",'volume_type':'spindle','image_id':'32778bb7-e6ab-4568-a110-8e7573df0f3b'}
 create_vol = vol.create_bootable_volume(create)
 print create_vol
 
-'''
 s = snap.list_snapshots()
 print s
-
+'''
 types = vol.list_volume_types()
 print types
 
 
 print "createing a new volume"
-create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"6492cba476994153800c5220a2f51bc2",'volume_type':'spindle'}
+create = {'volume_name':'transcirrus4','volume_size':'1','project_id':"ff8fbdc33d83419a8070d2e7577b3a3f",'volume_type':'spindle'}
 create_vol = vol.create_volume(create)
 print create_vol
 time.sleep(5)
 
+
+print "createing a new volume"
+create = {'volume_name':'transcirrus5','volume_size':'1','project_id':"ff8fbdc33d83419a8070d2e7577b3a3f",'volume_type':'ssd'}
+create_vol = vol.create_volume(create)
+print create_vol
+time.sleep(5)
+
+
+print "createing a new volume"
+create = {'volume_name':'transcirrus5','volume_size':'1','project_id':"ff8fbdc33d83419a8070d2e7577b3a3f",'volume_type':'blah'}
+create_vol = vol.create_volume(create)
+print create_vol
+time.sleep(5)
+'''
 print "createing a new volume snap"
 create = {'snapshot_name':'trans_snap4','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
 create_snap = snap.create_snapshot(create)

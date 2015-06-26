@@ -659,71 +659,85 @@ class server_actions:
 
         #check to make sure non admins can perofrm the task
         self.get_server = None
-        if(self.is_admin == 0):
-            if(self.user_level == 1):
-                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(self.project_id)}
-            elif(self.user_level == 2):
-                self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(self.project_id),'and':"inst_user_id='%s'"%(self.user_id)}
-        self.get_server = {'select':'inst_name','from':'trans_instances','where':"proj_id='%s'"%(snap_dict['project_id'])}
-        server = self.db.pg_select(self.get_server)
-        if(server[0][0] == ''):
-            logger.sys_error('The current user can not perform the backup operation.')
-            raise Exception('The current user can not perform the backup operation.')
-
-        if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == '')):
-            snap_dict['snapshot_name'] = server[0][0] + '_snapshot'
-
-        if (('snapshot_description' not in snap_dict) or (snap_dict['snapshot_description'] == 'none')):
-            snap_dict['snapshot_description'] = 'None'
-
-        # Create an API connection with the Admin
+        self.run_flag = 0
         try:
-            # build an API connection for the admin user
-            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
-            if(snap_dict['project_id'] != self.project_id):
-                self.token = get_token(self.username,self.password,snap_dict['project_id'])
-            api = caller(api_dict)
+            self.get_server = {'select':'inst_name,inst_user_id','from':'trans_instances','where':"proj_id='%s'"%(snap_dict['project_id']),'and':"inst_id='%s'"%(snap_dict['server_id'])}
+            server = self.db.pg_select(self.get_server)
         except:
-            logger.sys_error("Could not connect to the API")
-            raise Exception("Could not connect to the API")
+            logger.sql_error("Could not find instance %s in project %s"%(snap_dict['server_id'],snap_dict['project_id']))
+            raise Exception("Could not find instance %s in project %s"%(snap_dict['server_id'],snap_dict['project_id']))
 
-        try:
-            # construct request header and body
-            body='{"createImage": {"name": "%s", "metadata": {}}}'%(snap_dict['snapshot_name'])
-            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
-            function = 'POST'
-            api_path = '/v2/%s/servers/%s/action' % (snap_dict['project_id'],snap_dict['server_id'])
-            token = self.token
-            sec = self.sec
-            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
-            rest = api.call_rest(rest_dict)
-        except:
-            logger.sys_error("Error in snapshoting instance.")
-            raise Exception("Error in snapshoting instance.")
+        if(self.user_level == 0):
+            self.run_flag = 1
+        elif(self.user_level == 1):
+            if(self.project_id == snap_dict['project_id']):
+                self.run_flag = 1
+        elif(self.user_level == 2):
+            if(self.user_id == server[0][1]):
+                self.run_flag = 1
 
-        if(rest['response'] == 202):
-            snap_id = None
-            headers = rest['headers']
-            for header in headers:
-                if(header[0] == 'location'):
-                    snap_id = header[1].split('/')
+        if(self.run_flag == 1):
+            if(server[0][0] == ''):
+                logger.sys_error('The current user can not perform the backup operation.')
+                raise Exception('The current user can not perform the backup operation.')
+    
+            if (('snapshot_name' not in snap_dict) or (snap_dict['snapshot_name'] == 'none')):
+                snap_dict['snapshot_name'] = server[0][0] + '_snapshot'
+    
+            if (('snapshot_description' not in snap_dict) or (snap_dict['snapshot_description'] == 'none')):
+                snap_dict['snapshot_description'] = 'None'
+    
+            # Create an API connection with the Admin
             try:
-                #insert the volume info into the DB
-                self.db.pg_transaction_begin()
-                insert_snap = {"name": snap_dict['snapshot_name'],"type": 'snapshot',"inst_id": snap_dict['server_id'],"create_date":datetime.date.today(),"snap_id": snap_id[6],"project_id": snap_dict['project_id'],'description':snap_dict['snapshot_description'],'user_id':self.user_id}
-                self.db.pg_insert("trans_inst_snaps",insert_snap)
+                # build an API connection for the admin user
+                api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+                if(snap_dict['project_id'] != self.project_id):
+                    self.token = get_token(self.username,self.password,snap_dict['project_id'])
+                api = caller(api_dict)
             except:
-                self.db.pg_transaction_rollback()
-                self.db.pg_close_connection()
+                logger.sys_error("Could not connect to the API")
+                raise Exception("Could not connect to the API")
+    
+            try:
+                # construct request header and body
+                body='{"createImage": {"name": "%s", "metadata": {}}}'%(snap_dict['snapshot_name'])
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+                function = 'POST'
+                api_path = '/v2/%s/servers/%s/action' % (snap_dict['project_id'],snap_dict['server_id'])
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+                rest = api.call_rest(rest_dict)
+            except:
+                logger.sys_error("Error in snapshoting instance.")
+                raise Exception("Error in snapshoting instance.")
+    
+            if(rest['response'] == 202):
+                snap_id = None
+                headers = rest['headers']
+                for header in headers:
+                    if(header[0] == 'location'):
+                        snap_id = header[1].split('/')
+                try:
+                    #insert the volume info into the DB
+                    self.db.pg_transaction_begin()
+                    insert_snap = {"name": snap_dict['snapshot_name'],"type": 'snapshot',"inst_id": snap_dict['server_id'],"create_date":datetime.date.today(),"snap_id": snap_id[6],"project_id": snap_dict['project_id'],'description':snap_dict['snapshot_description'],'user_id':self.user_id}
+                    self.db.pg_insert("trans_inst_snaps",insert_snap)
+                except:
+                    self.db.pg_transaction_rollback()
+                    self.db.pg_close_connection()
+                else:
+                    self.db.pg_transaction_commit()
+                    self.db.pg_close_connection()
+                    r_dict = {"snapshot_name": snap_dict['snapshot_name'],"snapshot_id": snap_id[6], "instance_id": snap_dict['server_id']}
+                    return r_dict
             else:
-                self.db.pg_transaction_commit()
-                self.db.pg_close_connection()
-                r_dict = {"snapshot_name": snap_dict['snapshot_name'],"snapshot_id": snap_id[6], "instance_id": snap_dict['server_id']}
-                return r_dict
+                nova_ec.error_codes(rest)
         else:
-            nova_ec.error_codes(rest)
+            logger.sys_error("Could not retrieve the instance snapshots for %s"%(snap_dict['server_id']))
+            raise Exception("Could not retrieve the instance snapshots for %s"%(snap_dict['server_id']))
 
-    def delete_instance_snapshot(self,image_id):
+    def delete_instance_snapshot(self,snapshot_id):
         """
         DESC: This will create a new instance snapshot.
         INPUT: snap_dict - image_id - REQ
@@ -735,18 +749,19 @@ class server_actions:
         NOTE: Any volumes that are attached to the instance will not be snapped,
               you will have to snapshot the environment in order to capture it.
         """
-        delete = self.glance.delete_image(image_id)
+        delete = self.glance.delete_image(snapshot_id)
 
         try:
             self.db.pg_transaction_begin()
-            del_dict = {"table":'trans_inst_snaps',"where":"snap_id='%s'" %(image_id)}
+            del_dict = {"table":'trans_inst_snaps',"where":"snap_id='%s'" %(snapshot_id)}
             self.db.pg_delete(del_dict)
         except:
             self.db.pg_transaction_rollback()
-            logger.sql_error('Could not remove image %s from Transcirrus DB.'%(image_id))
-            raise Exception('Could not remove image %s from Transcirrus DB.'%(image_id))
+            logger.sql_error('Could not remove image %s from Transcirrus DB.'%(snapshot_id))
+            raise Exception('Could not remove image %s from Transcirrus DB.'%(snapshot_id))
         else:
             self.db.pg_transaction_commit()
+
         return delete
 
     def list_instance_snaps(self,instance_id):
@@ -770,12 +785,10 @@ class server_actions:
         elif(self.user_level == 0):
             self.get_inst_snap = {'select':'snap_id,name,project_id','from':'trans_inst_snaps','where':"inst_id='%s'"%(instance_id)}
 
-        # try:
         snapshots = self.db.pg_select(self.get_inst_snap)
 
         r_array = []
         for snap in snapshots:
-            print snap
             r_dict ={'snapshot_id':snap[0],'snapshot_name':snap[1], 'instance_id': instance_id, 'project_id':snap[2]}
             r_array.append(r_dict)
 

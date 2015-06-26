@@ -198,7 +198,6 @@ grunt.initConfig({
 	copy: {
 		dist: {
 			src: [
-				"AUTHORS.txt",
 				"jquery-*.js",
 				"MIT-LICENSE.txt",
 				"README.md",
@@ -244,7 +243,6 @@ grunt.initConfig({
 		},
 		cdn: {
 			src: [
-				"AUTHORS.txt",
 				"MIT-LICENSE.txt",
 				"ui/*.js",
 				"package.json"
@@ -279,7 +277,6 @@ grunt.initConfig({
 		},
 		themes: {
 			src: [
-				"AUTHORS.txt",
 				"MIT-LICENSE.txt",
 				"package.json"
 			],

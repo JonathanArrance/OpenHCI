@@ -19,7 +19,7 @@ d = a.get_auth()
 
 #instantiate a flavor_ops object
 img = nova_image_ops(d)
-
+'''
 #list the availabe images
 listimg = img.nova_list_images("523e5098be6c4438b428d7f3f94b3a2d")
 print listimg
@@ -30,19 +30,19 @@ for image in listimg:
     getimg = img.nova_get_image(dic)
     print getimg
 
-
+'''
 #list the availabe images
-listimg3 = img.nova_list_images("0ce0b37cb8284291b571949a8f028b14")
+listimg3 = img.nova_list_images("ff8fbdc33d83419a8070d2e7577b3a3f")
 print listimg3
 
 #list the availabe images
 for image in listimg3:
-    dic = {'image_id':image['image_id'],'project_id':"0ce0b37cb8284291b571949a8f028b14"}
+    dic = {'image_id':image['image_id'],'project_id':"ff8fbdc33d83419a8070d2e7577b3a3f"}
     getimg3 = img.nova_get_image(dic)
     print getimg3
 
 
-
+'''
 print "Loggin in as a power user"
 #onlyt an admin can create a new user
 e = authorization("bill","test")
@@ -71,3 +71,4 @@ for image in listimg4:
     dic = {'image_id':image['image_id'],'project_id':"0ce0b37cb8284291b571949a8f028b14"}
     getimg4 = img2.nova_get_image(dic)
     print getimg4
+'''

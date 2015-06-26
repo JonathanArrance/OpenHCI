@@ -1,18 +1,9 @@
 # Django imports
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
-from django.http import Http404
 from django.conf import settings
-from django_tables2   import RequestConfig
-from django.core.exceptions import ValidationError
-from django.db.utils import DatabaseError
-from django.db import connection
 from django.views.decorators.cache import never_cache
-from django.core import serializers
 from django.utils import simplejson
 from django.core.cache import cache
 
@@ -22,6 +13,7 @@ import sys
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
+from transcirrus.common import node_util
 import transcirrus.common.node_stats as node_stats
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
@@ -43,7 +35,6 @@ from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
-import transcirrus.operations.delete_server as ds
 from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
 from transcirrus.operations.revert_volume_snapshot import revert_vol_snap
@@ -55,15 +46,12 @@ import transcirrus.operations.resize_server as rs_server
 import transcirrus.operations.migrate_server as migration
 import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
+import transcirrus.common.memcache as memcache
 
 # Avoid shadowing the login() and logout() views below.
-from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, get_user_model
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm, PasswordChangeForm
-from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
 from django.contrib.sites.models import get_current_site
 from django.template.response import TemplateResponse
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib import messages
 import transcirrus.operations.delete_instance as di
 import transcirrus.operations.boot_new_instance as bni
@@ -78,9 +66,10 @@ from urlparse import urlsplit
 from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
-#import transcirrus.operations.support_create as support_create
-#import transcirrus.operations.upgrade as upgrade
-#sys.path.append("/usr/lib/python2.6/site-packages/")
+import transcirrus.operations.support_create as support_create
+import transcirrus.operations.upgrade as ug
+sys.path.append("/usr/lib/python2.6/site-packages/")
+
 
 import transcirrus.operations.third_party_storage.third_party_config as tpc
 from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
@@ -91,12 +80,15 @@ from coalesce.coal_beta.forms import *
 
 # Globals
 cache_key = None
+phonehome_cache = None
+upgrade_cache = None
 eseries_config = None
 nfs_config = None
 
 def stats(request):
     try:
         auth = request.session['auth']
+
         if(auth != None and auth['is_admin'] == 1):
             #Cloud/Node stats
             stats = stat_ops(auth)
@@ -140,7 +132,6 @@ def stats(request):
                 users = to.list_tenant_users(tenant['project_id'])
                 num_users = len(users)
 
-
                 tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
                                     'num_fips': num_fips,
@@ -154,7 +145,7 @@ def stats(request):
                                                                                        'tot_users': tot_users,
                                                                                        'tot_proj': tot_proj,
                                                                                        'tot_nodes': tot_nodes,
-                                                                                       'tenant_info': tenant_info,}))
+                                                                                       'tenant_info': tenant_info}))
         elif(auth != None and auth['is_admin'] == 0):
             uo = user_ops(auth)
             qo = quota_ops(auth)
@@ -165,15 +156,15 @@ def stats(request):
             username = auth['username']
             user_dict = {'username': username, 'project_name': project_name}
             user_info = uo.get_user_info(user_dict)
+
             return render_to_response('coal/user_view.html',
                                RequestContext(request, {'project_name': project_name,
                                                         'current_project_id': project_id,
-                                                        'user_info': user_info,}))
+                                                        'user_info': user_info}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
 
     except Exception as e:
-        print e
         return render_to_response('coal/welcome.html', RequestContext(request,))
 
 def privacy_policy(request):
@@ -186,7 +177,17 @@ def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
 
 def welcome(request):
-    return render_to_response('coal/welcome.html', RequestContext(request,))
+    try:
+        auth = request.session['auth']
+        if auth['token'] != None:
+            if auth['user_level'] > 0:
+                project_id = auth['project_id']
+                project_admin = util.get_project_admin(project_id)
+            return render_to_response('coal/welcome.html', RequestContext(request, { "project_admin": project_admin}))
+        else:
+            return render_to_response('coal/welcome.html', RequestContext(request,))
+    except:
+        return render_to_response('coal/welcome.html', RequestContext(request,))
 
 def node_view(request, node_id):
     node=get_node(node_id)
@@ -198,7 +199,7 @@ def node_view(request, node_id):
             node['mgmt_ip_issue'] = True
         else:
             node['data_ip_issue'] = True
-    return render_to_response('coal/node_view.html', RequestContext(request, {'node': node, }))
+    return render_to_response('coal/node_view.html', RequestContext(request, {'node': node}))
 
 def manage_cloud(request):
     node_list = list_nodes()
@@ -246,7 +247,7 @@ def manage_nodes(request):
     except:
         messages.warning(request, "Unable to manage nodes.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info,}))
+    return render_to_response('coal/manage_nodes.html', RequestContext(request, {'node_info': node_info}))
 
 def set_project_quota(request, project_id, quota_settings):
     """
@@ -305,7 +306,7 @@ def manage_projects(request):
     except:
         messages.warning(request, "Unable to manage projects.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info,}))
+    return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info}))
 
 def project_view(request, project_id):
     auth = request.session['auth']
@@ -316,6 +317,7 @@ def project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     ssa = server_admin_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
@@ -358,15 +360,15 @@ def project_view(request, project_id):
     #    containers = []
     containers = []
 
-    sec_groups    = so.list_sec_group(project_id)
-    sec_keys      = so.list_sec_keys(project_id)
-    instances     = so.list_servers(project_id)
+    sec_groups = so.list_sec_group(project_id)
+    sec_keys = so.list_sec_keys(project_id)
+    instances = so.list_servers(project_id)
     instance_info = {}
     flavors = fo.list_flavors()
     flavor_info = []
 
     for flavor in flavors:
-        flav = fo.get_flavor(flavor['flav_id'])
+        flav = fo.get_flavor(flavor['id'])
         flav_dict = {
             'name': flav['flavor_name'],
             'id': flav['flav_id'],
@@ -379,11 +381,9 @@ def project_view(request, project_id):
             'metadata': flav['metadata'] }
         flavor_info.append(flav_dict)
 
-    hosts=[]
     host_dict     = {'project_id': project_id, 'zone': 'nova'}
     hosts         = ssa.list_compute_hosts(host_dict)
 
-    volume_types = []
     volume_types = vo.list_volume_types()
 
     for volume in volumes:
@@ -396,6 +396,7 @@ def project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -411,7 +412,8 @@ def project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -473,7 +475,7 @@ def project_view(request, project_id):
                                                         'instances': instances,
                                                         'instance_info': instance_info,
                                                         'flavors': flavor_info,
-                                                        'quota': quota,
+                                                        'quota': quota
                                                         }))
 
 def pu_project_view(request, project_id):
@@ -485,12 +487,14 @@ def pu_project_view(request, project_id):
     vo = volume_ops(auth)
     sno = snapshot_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
     #do not use until version2
     #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
+    project_admin = util.get_project_admin(project_id)
     users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
@@ -543,6 +547,7 @@ def pu_project_view(request, project_id):
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -558,7 +563,8 @@ def pu_project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -596,6 +602,7 @@ def pu_project_view(request, project_id):
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
+                                                        'project_admin': project_admin,
                                                         'users': users,
                                                         'ouserinfo': ouserinfo,
                                                         'userinfo':userinfo,
@@ -622,8 +629,10 @@ def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_id)
+    project_admin = util.get_project_admin(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
+    sa = server_actions(auth)
     so = server_ops(auth)
     l3o = layer_three_ops(auth)
     no = neutron_net_ops(auth)
@@ -653,13 +662,12 @@ def basic_project_view(request, project_id):
         except:
             pass
 
-
-
     instance_info={}
     for instance in instances:
         i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
         try:
             i_info = so.get_server(i_dict)
+            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
             sname  = instance['server_name']
             instance_info[sname] = i_info
         except Exception:
@@ -675,7 +683,8 @@ def basic_project_view(request, project_id):
                       'server_node': '',
                       'server_int_net': {},
                       'server_net_id': '',
-                      'server_flavor': ''}
+                      'server_flavor': '',
+                      'snapshots': []}
             sname = instance['server_name']
             instance_info[sname] = i_info
 
@@ -784,6 +793,7 @@ we need to build a function to request a vm resize
 
     return render_to_response('coal/basic_project_view.html',
                                RequestContext(request, {'project': project,
+                                                        'project_admin': project_admin,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
@@ -987,8 +997,10 @@ def import_local (request, image_name, container_format, disk_format, image_type
         auth = request.session['auth']
         go = glance_ops(auth)
 
+        content_type = request.FILES['import_local'].content_type
+
         # Create a temp file to hold the image contents until we give it to glance.
-        download_dir   = "/var/lib/glance/images/"
+        download_dir   = "/tmp/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
         download_file  = download_dir + download_fname
 
@@ -1002,7 +1014,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
             return HttpResponse(simplejson.dumps(out))
 
         # Add the image to glance.
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type}
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
         import_dict['image_location'] = download_file
         out = go.import_image(import_dict)
         out['status'] = "success"
@@ -1032,7 +1044,7 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type}
+        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
 
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
@@ -1042,19 +1054,20 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
 
         # Use wget to download the file.
-        download_dir   = "/var/lib/glance/images/"
+        download_dir   = "/tmp/"
         download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
         download_file  = download_dir + download_fname
 
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
-        filename, content_type = wget.download (image_location,download_file, download_progress)
+        filename, content_type = wget.download (image_location, download_file, download_progress)
         # Delete our cached progress.
         cache.delete(cache_key)
         cache_key = None
 
         # Add the image to glance.
         import_dict['image_location'] = download_file
+        import_dict['content_type'] = content_type
         out = go.import_image(import_dict)
         out['status'] = "success"
         out['message'] = "Remote image %s was uploaded." % image_name
@@ -1082,17 +1095,27 @@ def get_upload_progress (request, progress_id):
 
 
 # Delete an image by it's image id.
-def delete_image (request, image_id):
+def delete_image (request, image_id, project_id):
     out = {}
+    # check to make sure you are not deleting an instance snapshot
     try:
         auth = request.session['auth']
-        go = glance_ops(auth)
-        go.delete_image(image_id)
-        #if(del_image == 'OK'):
+        sa = server_actions(auth)
+        snap = { 'snapshot_id':image_id, 'project_id':project_id}
+        snapshot = sa.get_instance_snap_info(snap)
+        sa.delete_instance_snapshot(snapshot['snapshot_id'])
         out['status'] = "success"
-        out['message'] = "Image was deleted."
-    except Exception, e:
-        out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
+        out['message'] = "Snapshot was deleted."
+    except:
+        try:
+            auth = request.session['auth']
+            go = glance_ops(auth)
+            go.delete_image(image_id)
+            #if(del_image == 'OK'):
+            out['status'] = "success"
+            out['message'] = "Image was deleted."
+        except Exception, e:
+            out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description=None):
@@ -1119,6 +1142,19 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         out['message'] = "Instance has been reverted."
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def delete_instance_snapshot(request, snapshot_id):
+    out = {}
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        sa.delete_instance_snapshot(snapshot_id)
+        out['status'] = "success"
+        out['message'] = "Snapshot was deleted."
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error deleting snapshot: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def revert_volume_snapshot(request, project_id, volume_id, volume_name, snapshot_id):
@@ -1488,7 +1524,18 @@ def list_servers(request,project_id):
         out = so.list_servers(project_id)
         out['status'] = 'success'
         out['message'] = "Server list returned for %s."%(project_id)
-        print out
+    except Exception as e:
+        out = {"status":"error","message":"%s"%(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def list_servers_status(request, project_id):
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        out = {}
+        out['servers'] = so.list_servers_status(project_id)
+        out['status'] = 'success'
+        out['message'] = "Server list returned for %s."%(project_id)
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1773,33 +1820,55 @@ def add_existing_user(request, username, user_role, project_id):
         out = {'status' : "error", 'message' : "Could not add the user %s to the project: %s"%(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-def update_user_password(request, user_id, project_id, password):
+def update_user_password(request, user_id, project_id, current_password, new_password):
     out = {}
     try:
         auth = request.session['auth']
-        uo = user_ops(auth)
-        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': password }
-        up = uo.update_user_password(passwd_dict)
-        if(up == 'OK'):
-            out['status'] = 'success'
-            out['message'] = 'The password has been successfully updated.'
+        if auth['user_level'] != 0:
+            if current_password != auth['password']:
+                out = {'status' : "error", 'message' : "Could not validate user password, please re-enter current password."}
+                return HttpResponse(simplejson.dumps(out))
+            else:
+                uo = user_ops(auth)
+                passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': new_password}
+                up = uo.update_user_password(passwd_dict)
+                if(up == 'OK'):
+                    out['status'] = 'success'
+                    out['message'] = 'The password has been successfully updated.'
+                    request.session['auth']['password'] = new_password
+                    a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                    auth2 = a.get_auth()
+                    request.session['auth']['token'] = auth2['token']
+                    request.session.cycle_key()
+                    request.session.save()
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not update the user password.: %s"%(e)}
+        out = {'status' : "error", 'message' : "Could not update the user password.: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-def update_admin_password(request, password):
+def update_admin_password(request, current_password, new_password):
     out = {}
     try:
         auth = request.session['auth']
         if auth['user_level'] == 0:
-            ap = change_admin_password (auth, password)
-            if(ap == 'OK'):
-                out['status'] = 'success'
-                out['message'] = 'The password has been successfully updated.'
+            if current_password != auth['password']:
+                out = {'status' : "error", 'message' : "Could not validate user password, please re-enter current password."}
+                return HttpResponse(simplejson.dumps(out))
+            else:
+                ap = change_admin_password(auth, new_password)
+                if(ap == 'OK'):
+                    out['status'] = 'success'
+                    out['message'] = 'The password has been successfully updated.'
+                    request.session['auth']['password'] = new_password
+                    a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                    auth2 = a.get_auth()
+                    request.session['auth']['token'] = auth2['token']
+                    request.session.cycle_key()
+                    request.session.save()
+
         else:
-            out = {'status' : "error", 'message' : "Only admins can update admin password"}
+            out = {'status': "error", 'message': "Only admins can update admin password"}
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not update admin password.: %s"%(e)}
+        out = {'status': "error", 'message': "Could not update admin password.: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 def network_view(request, net_id):
@@ -1981,8 +2050,6 @@ def upload_local_object (request, container, filename, project_id, project_name,
 
         object_con = SwiftConnection (args)
 
-        print "content filename: %s" % request.FILES['import_local'].name
-        print "sent filename: %s" % filename
         content_type = request.FILES['import_local'].content_type
         if request.FILES['import_local'].size >= 5 * 1024 ** 3:     # is the file >= 5GB
             large_file = True
@@ -2160,22 +2227,69 @@ def delete_object (request, container, filename, project_id, project_name):
 
 # Call the routine that will collect all the data from all nodes and send it back to us.
 def phonehome (request):
+    global phonehome_cache
     try:
+        phonehome_cache = None
+        support_create.EnableCaching()
         support_create.DoCreate()
+        support_create.DisableCaching()
+        phonehome_cache = None
         out = {'status' : "success", 'message' : "Support data has been sent to TransCirrus."}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error collecting/sending support data: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
+# Call the routine that will return the cached support messages.
+def phonehome_msgs (request):
+    global phonehome_cache
+    try:
+        if phonehome_cache == None:
+            phonehome_cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+        data = phonehome_cache.get(support_create.CacheKey)
+        num_messages = int(data['num_messages'])
+        if num_messages == 0:
+            msg = ""
+        else:
+            msg = data['msg%s' % (num_messages-1)]
+        out = {'status' : "success", 'message' : msg}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting support messages: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
 # Call the routine that will upgrade all nodes to the given version of software.
 def upgrade (request, version="stable"):
+    global upgrade_cache
     try:
-        upgrade.ReleaseToDownload = version
-        upgrade.DoUpgrade()
+        ug.ReleaseToDownload = version
+        upgrade_cache = None
+        ug.EnableCaching()
+        ug.DoUpgrade()
+        ug.DisableCaching()
+        upgrade_cache = None
         out = {'status' : "success", 'message' : "Nodes have been upgraded."}
+        auth_logout(request)
     except Exception, e:
         out = {'status' : "error", 'message' : "Error upgrading nodes: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Call the routine that will return the cached upgrade messages.
+def upgrade_msgs (request):
+    global upgrade_cache
+    try:
+        if upgrade_cache == None:
+            upgrade_cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+        data = upgrade_cache.get(ug.CacheKey)
+        num_messages = int(data['num_messages'])
+        if num_messages == 0:
+            msg = ""
+        else:
+            msg = data['msg%s' % (num_messages-1)]
+        out = {'status' : "success", 'message' : msg}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error getting upgrade messages: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -2896,7 +3010,7 @@ def build_project(request):
             project_var_array = {'project_name': proj_name,
                                  'user_dict': { 'username': username,
                                                 'password': password,
-                                                'user_role': 'pu',
+                                                'user_role': 'admin',
                                                 'email': email,
                                                 'project_id': ''},
 
@@ -2980,8 +3094,35 @@ def jq(request):
 
 # ---- Authentication ---
 @never_cache
-def login_page(request, template_name):
+def login(request):
+    out = {}
+    try:
+        username = request.POST['username']
+        password = request.POST['password']
+        a = authorization(username, password)
+        auth = a.get_auth()
+        if auth['token'] == None:
+            out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+            return HttpResponse(simplejson.dumps(out))
+        else:
+            request.session['auth'] = auth
+            out = {}
+            out['status'] = "success"
+            out['message'] = "Successfully logged in."
+            out['user_level'] = auth['user_level']
+            if auth['user_level'] > 0:
+                out['project_id'] = auth['project_id']
+            else:
+                boot = node_util.check_first_time_boot()
+                first_time = boot['first_time_boot']
+                out['first_time'] = first_time
+            return HttpResponse(simplejson.dumps(out))
+    except:
+        out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+        return HttpResponse(simplejson.dumps(out))
 
+@never_cache
+def login_page(request, template_name):
     if request.method == "POST":
         form = authentication_form(request.POST)
         if form.is_valid():
@@ -3010,7 +3151,7 @@ def login_page(request, template_name):
 
 @never_cache
 def logout(request, next_page=None,
-           template_name='coal/logged_out.html',
+           template_name='coal/welcome.html',
            redirect_field_name=REDIRECT_FIELD_NAME,
            current_app=None, extra_context=None):
     """
@@ -3041,11 +3182,9 @@ def logout(request, next_page=None,
 
 
 def handle_uploaded_file(f):
-    print ("Uploading local file: " + f)
     with open('/tmp/upload.img', 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
-    print ("Uploaded local file done")
     return
 
 @never_cache

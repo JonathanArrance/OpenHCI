@@ -45,27 +45,28 @@
 }
 
 .remove-mountpoint {
-   line-height: 16px !important;
-   margin: -1px 0px 0px 5px;
+    line-height: 16px !important;
+    float: right;
+    display: inline-block;
+    margin: -1px -1px 0 0 !important;
 }
 
 .mountpoint {
     border: 1px dashed #D3D3D3;
     width: 225px;
-    padding: 2px;
+    padding: 4px;
     max-width: 225px;
     margin: 5px auto;
     text-align: left;
-    max-height: 20px;
 }
 
 .mountpoint-text {
-    overflow: hidden;
     max-width: 195px;
     width: 195px;
     height: 15px;
     max-height: 15px;
     display: inline-block;
+    word-wrap: break-word;
 }
 
 #tps-config-form label {

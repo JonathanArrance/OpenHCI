@@ -1,35 +1,33 @@
-$(function ()
-{
+$(function () {
     var ESERIES_ID = "",
         ESERIES_NAME = "",
         ESERIES_CONFIG_WIDTH = 290,
-        ESERIES_CONFIG_HEIGHT = 530;
+        ESERIES_CONFIG_HEIGHT = 580;
 
     var ESERIES_CONTROLLER_DATA_WIDTH = 290,
-        ESERIES_CONTROLLER_DATA_HEIGHT = 290;
+        ESERIES_CONTROLLER_DATA_HEIGHT = 240;
 
     var ESERIES_DISK_POOLS_WIDTH = 350,
-        ESERIES_DISK_POOLS_HEIGHT = 279;
+        ESERIES_DISK_POOLS_HEIGHT = 230;
 
     var NFS_ID = "",
         NFS_NAME = "",
         NFS_CONFIG_WIDTH = 330,
-        NFS_CONFIG_HEIGHT = 350;
+        NFS_CONFIG_HEIGHT = 300;
 
     var NIMBLE_ID = "",
         NIMBLE_NAME = "",
         NIMBLE_CONFIG_WIDTH = 290,
-        NIMBLE_CONFIG_HEIGHT = 360;
+        NIMBLE_CONFIG_HEIGHT = 310;
 
     var TPS_FORM_WIDTH = 420,
-        TPS_FORM_HEIGHT = 228;
+        TPS_FORM_HEIGHT = 180;
 
     var LICENSE_WIDTH = 300,
-        LICENSE_HEIGHT = 250;
+        LICENSE_HEIGHT = 200;
 
     var third_party_storage,
         current_provider_id = "",
-        close_tps_form = true,
         mountpoints = {};
 
     // Form Elements
@@ -55,32 +53,22 @@ $(function ()
         diskPools = [];
 
     // On page load
-    $(function ()
-    {
-        refreshTps();
-        updateEseriesTransport(transport);
-    });
-
-    $('input[name=eseries-transport]').change(function ()
-    {
+    $('input[name=eseries-transport]').change(function () {
         updateEseriesTransport($('input[name=eseries-transport]:checked').val());
     });
 
-    $("#config-third-party-storage").click(function (event)
-    {
+    $("#config-third-party-storage").click(function (event) {
         // Prevent scrolling to top of page on click
         event.preventDefault();
         buildTpsDialog();
     });
 
-    $("#add-mountpoint").click(function ()
-    {
+    $("#add-mountpoint").click(function () {
         var input = $("#nfs-mountpoint").val().toString();
         addMountpoint(input);
     });
 
-    $(document).on("click", ".remove-mountpoint", function ()
-    {
+    $(document).on("click", ".remove-mountpoint", function () {
         var index = $(this).closest(".mountpoint").attr('id');
         //mountpoints[index] = undefined;
         delete mountpoints[index];
@@ -88,8 +76,7 @@ $(function ()
         $("#" + index).remove();
     });
 
-    $(".configure-tps").on('click', function ()
-    {
+    $(".configure-tps").on('click', function () {
         var provider = $(this).data("provider"),
             config3ps,
             configure = true,
@@ -98,11 +85,9 @@ $(function ()
         // Remove UI validation flags
         clearUiValidation(allFields);
 
-        for (var i = 0; i < third_party_storage.providers.length; i++)
-        {
+        for (var i = 0; i < third_party_storage.providers.length; i++) {
             var prov = third_party_storage.providers[i];
-            if (prov.id == provider)
-            {
+            if (prov.id == provider) {
                 if (prov.configured == 0)
                     configure = true;
                 else
@@ -111,10 +96,8 @@ $(function ()
             }
         }
 
-        if (provider == 'eseries')
-        {
-            if (diskPools.length > 0)
-            {
+        if (provider == 'eseries') {
+            if (diskPools.length > 0) {
                 isValid = true;
                 if (configure)
                     config3ps = $.getJSON('eseries/config/set/' + diskPools + '/');
@@ -123,11 +106,9 @@ $(function ()
             }
         }
 
-        else if (provider == 'nfs')
-        {
+        else if (provider == 'nfs') {
             var params = configureMountpoints();
-            if (params != "")
-            {
+            if (params != "") {
                 isValid = true;
                 if (configure)
                     config3ps = $.getJSON('nfs/set/' + params + '/');
@@ -136,11 +117,9 @@ $(function ()
             }
         }
 
-        else if (provider == 'nimble')
-        {
+        else if (provider == 'nimble') {
             var params = configureNimble();
-            if (params != "")
-            {
+            if (params != "") {
                 isValid = true;
                 if (configure)
                     config3ps = $.getJSON('nimble/set/' + params + '/');
@@ -149,33 +128,27 @@ $(function ()
             }
         }
 
-        if (isValid)
-        {
+        if (isValid) {
             config3ps
-                .done(function (data)
-                {
-                    if (data.status == "success")
-                    {
+                .done(function (data) {
+                    if (data.status == "success") {
                         message.showMessage("success", data.message);
 
                         hideFields();
                         $("#tps-config-form").dialog("close");
                     }
 
-                    else if (data.status == "error")
-                    {
+                    else if (data.status == "error") {
                         message.showMessage("error", data.message);
                     }
                 })
-                .fail(function ()
-                {
+                .fail(function () {
                     message.showMessage("error", "Server Fault");
                 })
         }
     });
 
-    $("#eseries-discover-controllers").click(function (event)
-    {
+    $("#eseries-discover-controllers").click(function (event) {
         event.preventDefault();
         controllers.empty();
         clearUiValidation(allFields);
@@ -194,20 +167,16 @@ $(function ()
             confTransport = $('input[name=eseries-transport]:checked').val(),
             confPort = $("#eseries-server-port").val();
 
-        if (isValid)
-        {
+        if (isValid) {
             disableLink("#eseries-discover-controllers", true);
             $("#tps-loader-2").show();
 
             $.getJSON('/eseries/web_proxy_srv/set/' + confUseExisting + '/' + confHostnameIp + '/' + confPort + '/' + confTransport + '/' + confLogin + '/' + confPassword + '/')
-                .done(function (data)
-                {
-                    if (data.status == "success")
-                    {
+                .done(function (data) {
+                    if (data.status == "success") {
                         var size = 0;
 
-                        for (var ip in data.ips)
-                        {
+                        for (var ip in data.ips) {
                             var option = '<option value="' + data.ips[ip] + '" selected>' + data.ips[ip] + '</option>';
                             controllers.append(option);
                             controllerIps.push(data.ips[ip]);
@@ -217,33 +186,32 @@ $(function ()
                         controllers.size = size;
 
                         $("#eseries-config-data").hide();
-                        $("#tps-config-form").dialog({ height: ESERIES_CONTROLLER_DATA_HEIGHT, width: ESERIES_CONTROLLER_DATA_WIDTH });
+                        $("#tps-config-form").dialog({
+                            height: ESERIES_CONTROLLER_DATA_HEIGHT,
+                            width: ESERIES_CONTROLLER_DATA_WIDTH
+                        });
                         $("#eseries-storage-controller-data").show();
                     }
 
-                    else if (data.status == "error")
-                    {
+                    else if (data.status == "error") {
                         message.showMessage("error", data.message);
                     }
                 })
-                .fail(function ()
-                {
+                .fail(function () {
                     message.showMessage("error", "Server Fault");
                 })
-                .always(function ()
-                {
+                .always(function () {
                     disableLink("#eseries-discover-controllers", false);
                     $("#tps-loader-2").hide();
                 });
         }
     });
 
-    $("#eseries-discover-disk-pools").click(function (event)
-    {
+    $("#eseries-discover-disk-pools").click(function (event) {
         event.preventDefault();
 
         $("#eseries-storage-controller-data").hide();
-        $("#tps-config-form").dialog({ height: ESERIES_DISK_POOLS_HEIGHT, width: ESERIES_DISK_POOLS_WIDTH });
+        $("#tps-config-form").dialog({height: ESERIES_DISK_POOLS_HEIGHT, width: ESERIES_DISK_POOLS_WIDTH});
         disableLink("#eseries-discover-disk-pools", true);
 
         // Confirmed Selections
@@ -256,14 +224,11 @@ $(function ()
             url = 'eseries/controller/set/' + controllerIps + '/';
 
         $.getJSON(url)
-            .done(function (data)
-            {
-                if (data.status == "success")
-                {
+            .done(function (data) {
+                if (data.status == "success") {
                     var size = 0;
 
-                    for (var disk in data.pools)
-                    {
+                    for (var disk in data.pools) {
                         var option = '<option value="' + data.pools[disk] + '" selected>' + data.pools[disk].name + ' (' + data.pools[disk].free + '/' + data.pools[disk].total + 'gb available)</option>';
                         disks.append(option);
                         diskPools.push(data.pools[disk].name);
@@ -272,130 +237,98 @@ $(function ()
                     disks.size = size;
                 }
 
-                else if (data.status == "error")
-                {
+                else if (data.status == "error") {
                     message.showMessage("error", data.message);
                 }
 
                 $("#eseries-disk-pools").show();
             })
-            .fail(function ()
-            {
+            .fail(function () {
                 message.showMessage("error", "Server Fault");
             })
-            .always(function ()
-            {
+            .always(function () {
                 disableLink("#eseries-discover-disk-pools", false);
                 $("#tps-loader-2").hide();
             });
     });
 
     $("#tps-config-form").dialog(
-    {
-        autoOpen: false,
-        height: TPS_FORM_HEIGHT,
-        width: TPS_FORM_WIDTH,
-        modal: true,
-        resizable: true,
-        closeOnEscape: true,
-        draggable: true,
-        show: "fade",
-        position: {
-            my: "center",
-            at: "center",
-            of: $('#page-content')
-        },
-        buttons:
         {
-            "Cancel": function ()
-            {
-                if (close_tps_form)
-                {
-                    // Reset form validation
-                    hideFields();
-                    $("#tps-config-form").dialog("close");
-                }
-                else
-                {
-                    hideFields();
-                    buildTpsDialog();
-                }
+            autoOpen: false,
+            height: TPS_FORM_HEIGHT,
+            width: TPS_FORM_WIDTH,
+            modal: true,
+            resizable: false,
+            closeOnEscape: true,
+            draggable: true,
+            show: "fade",
+            position: {
+                my: "center",
+                at: "center",
+                of: $('#page-content')
+            },
+            close: function () {
+                hideFields();
             }
-        }
-    });
+        });
 
-    $("#license-apply").click(function (event)
-    {
+    $("#license-apply").click(function (event) {
         var isValid = checkRequired($("#license-num"), "License Key");
 
-        if (isValid)
-        {
+        if (isValid) {
             var licenseNum = $("#license-num").val();
 
             $.getJSON('/' + current_provider_id + '/license/set/' + licenseNum + '/')
-            .done(function (data)
-            {
-                if (data.status == "success")
-                {
-                    message.showMessage("success", data.message);
-                    hideFields();
-                    buildTpsDialog();
-                }
+                .done(function (data) {
+                    if (data.status == "success") {
+                        message.showMessage("success", data.message);
+                        hideFields();
+                        buildTpsDialog();
+                    }
 
-                else if (data.status == "error")
-                {
-                    message.showMessage("error", data.message);
-                }
-            })
-            .fail(function ()
-            {
-                message.showMessage("error", "Server Fault");
-            })
+                    else if (data.status == "error") {
+                        message.showMessage("error", data.message);
+                    }
+                })
+                .fail(function () {
+                    message.showMessage("error", "Server Fault");
+                })
         }
-        return;
     });
 
-    function hideFields()
-    {
+    function hideFields() {
         var keys = Object.keys(mountpoints);
-        for (var i = 0; i < keys.length; i++)
-        {
+        for (var i = 0; i < keys.length; i++) {
             $("#mp" + i).remove();
         }
         mountpoints = {};
 
         resetUiValidation(allFields);
-        $("#tps-config-form fieldset").each(function ()
-        {
-            if ($(this).attr('id') != "tps-form")
-            {
+        $("#tps-config-form fieldset").each(function () {
+            if ($(this).attr('id') != "tps-form") {
                 $(this).hide();
             }
         });
     }
 
-    function buildTpsDialog()
-    {
+    function buildTpsDialog() {
         $("#tps-table-container").empty();
-        $("#tps-config-form").dialog({ height: TPS_FORM_HEIGHT, width: TPS_FORM_WIDTH }).dialog("open");
+        $("#tps-config-form").dialog({height: TPS_FORM_HEIGHT, width: TPS_FORM_WIDTH});
+        $("#tps-config-form").dialog("open");
         $("#tps-form-legend").html("Third Party Storage");
-
-        close_tps_form = true;
 
         var loader1 = $("#tps-loader-1");
         loader1.show();
         refreshTps();
         loader1.hide();
-        return;
+        updateEseriesTransport(transport);
     }
 
-    function buildTpsTable()
-    {
+    function buildTpsTable() {
         var configTable = '<table class="paleblue widget-table" id="tps-table"><tr><th>Name</th><th>Status</th><th>Actions</th></tr></table>';
         $("#tps-table-container").append(configTable);
 
-        for (var i = 0; i < third_party_storage.providers.length; i++)
-        {
+        for (var i = 0; i < third_party_storage.providers.length; i++) {
             var provider = third_party_storage.providers[i];
             var newRow = '<tr id="' + provider.id + '"><td>' + provider.name + '</td>';
 
@@ -412,8 +345,7 @@ $(function ()
 
             $("#tps-table").append(newRow);
 
-            if (provider.id == "eseries")
-            {
+            if (provider.id == "eseries") {
                 ESERIES_ID = provider.id;
                 ESERIES_NAME = provider.name;
 
@@ -423,8 +355,7 @@ $(function ()
                 deleteConfigure(ESERIES_ID, ESERIES_NAME);
             }
 
-            else if (provider.id == "nfs")
-            {
+            else if (provider.id == "nfs") {
                 NFS_ID = provider.id;
                 NFS_NAME = provider.name;
 
@@ -434,8 +365,7 @@ $(function ()
                 deleteConfigure(NFS_ID, NFS_NAME);
             }
 
-            else if (provider.id == "nimble")
-            {
+            else if (provider.id == "nimble") {
                 NIMBLE_ID = provider.id;
                 NIMBLE_NAME = provider.name;
 
@@ -447,93 +377,69 @@ $(function ()
         }
     }
 
-    function buildConfigureDetails(id, name, dialog_wd, dialog_ht, event)
-    {
+    function buildConfigureDetails(id, name, dialog_wd, dialog_ht, event) {
 
         var prov_name = name;
-        close_tps_form = false;
         if (event != undefined)
             event.preventDefault();
         $("#tps-table").hide();
-        $("#tps-config-form").dialog({ height: dialog_ht, width: dialog_wd });
+        $("#tps-config-form").dialog({height: dialog_ht, width: dialog_wd});
         $("#tps-form-legend").html(prov_name);
         $("#" + id + "-config-data").show();
-        return;
     }
 
-    function buildConfigure(id, name, dialog_wd, dialog_ht)
-    {
+    function buildConfigure(id, name, dialog_wd, dialog_ht) {
         var configId = "#configure-" + id;
-        $(configId).bind("click", function (event)
-        {
+        $(configId).bind("click", function (event) {
             buildConfigureDetails(id, name, dialog_wd, dialog_ht, event)
         });
-        return;
     }
 
-    function buildUpdate(id, name, dialog_wd, dialog_ht)
-    {
+    function buildUpdate(id, name, dialog_wd, dialog_ht) {
         var updateId = "#update-" + id;
-        $(updateId).bind("click", function (event)
-        {
-            close_tps_form = false;
+        $(updateId).bind("click", function (event) {
             event.preventDefault();
             updateTps(id, name, dialog_wd, dialog_ht);
         });
-        return;
     }
 
-    function deleteConfigure(id, name)
-    {
+    function deleteConfigure(id, name) {
         var prov_name = name;
         var deleteId = "#delete-" + id;
-        $(deleteId).bind("click", function (event)
-        {
-            close_tps_form = false;
+        $(deleteId).bind("click", function (event) {
             event.preventDefault();
             deleteTps(id);
         });
-        return;
     }
 
-    function buildLicense(id, name)
-    {
+    function buildLicense(id, name) {
         var prov_name = name + " License";
         var licenseConfirm = "#license-" + id;
-        $(licenseConfirm).bind("click", function (event)
-        {
-            close_tps_form = false;
+        $(licenseConfirm).bind("click", function (event) {
             current_provider_id = id;
             event.preventDefault();
             hideFields();
             $("#tps-table").hide();
-            $("#tps-config-form").dialog({ height: LICENSE_HEIGHT, width: LICENSE_WIDTH });
+            $("#tps-config-form").dialog({height: LICENSE_HEIGHT, width: LICENSE_WIDTH});
             $("#tps-form-legend").html(prov_name);
             $("#license-confirm").show();
         });
-        return;
     }
 
-    function updateTps(id, name, dialog_wd, dialog_ht)
-    {
+    function updateTps(id, name, dialog_wd, dialog_ht) {
         var url = "/" + id + "/get/";
 
         $.getJSON(url)
-            .done(function (ret_data)
-            {
-                if (ret_data.status == "success")
-                {
-                    if (id == "nfs")
-                    {
-                        $.each(ret_data.data.mountpoint, function (mp)
-                        {
+            .done(function (ret_data) {
+                if (ret_data.status == "success") {
+                    if (id == "nfs") {
+                        $.each(ret_data.data.mountpoint, function (mp) {
                             addMountpoint(ret_data.data.mountpoint[mp]);
                         });
                         $("#nfs-button").html("Update " + name);
                     }
 
-                    else if (id == "eseries")
-                    {
+                    else if (id == "eseries") {
                         $("#eseries-hostname-ip").val(ret_data.data.server);
                         $("#eseries-server-port").val(ret_data.data.srv_port);
                         $("#eseries-login").val(ret_data.data.login);
@@ -547,8 +453,7 @@ $(function ()
                         $("#eseries-button").html("Update " + name);
                     }
 
-                    else if (id == "nimble")
-                    {
+                    else if (id == "nimble") {
                         $("#nimble-hostname-ip").val(ret_data.data.server);
                         $("#nimble-login").val(ret_data.data.login);
                         $("#nimble-password").val(ret_data.data.pwd);
@@ -558,52 +463,41 @@ $(function ()
                     buildConfigureDetails(id, name, dialog_wd, dialog_ht)
                 }
 
-                else if (ret_data.status == "error")
-                {
+                else if (ret_data.status == "error") {
                     message.showMessage("error", ret_data.message);
                 }
             })
-            .fail(function ()
-            {
+            .fail(function () {
                 message.showMessage("error", "Server Fault");
-            })
-        return;
+            });
     }
 
-    function deleteTps(provider)
-    {
+    function deleteTps(provider) {
         var url = "/" + provider + "/delete/";
 
         $.getJSON(url)
-            .done(function (data)
-            {
-                if (data.status == "error")
-                {
+            .done(function (data) {
+                if (data.status == "error") {
                     message.showMessage("error", data.message);
                 }
 
-                if (data.status == "success")
-                {
+                if (data.status == "success") {
                     message.showMessage("success", data.message);
                 }
             })
-            .fail(function ()
-            {
+            .fail(function () {
                 message.showMessage("error", "Server Fault");
             })
-            .always(function ()
-            {
+            .always(function () {
                 hideFields();
                 buildTpsDialog();
                 //$("#tps-config-form").dialog("close");
             });
     }
 
-    function addMountpoint(mountpoint)
-    {
+    function addMountpoint(mountpoint) {
         var index = "mp" + Object.keys(mountpoints).length;
-        if ($("#" + index).length == 0)
-        {
+        if ($("#" + index).length == 0) {
             var mp = {
                 "index": index,
                 "mountpoint": mountpoint,
@@ -614,8 +508,7 @@ $(function ()
         }
     }
 
-    function configureEseries()
-    {
+    function configureEseries() {
         var confUseExisting = $('input[name=eseries-use-existing]:checked').val(),
             confHostnameIp = $("#eseries-hostname-ip").val(),
             confLogin = $("#eseries-login").val(),
@@ -631,32 +524,26 @@ $(function ()
         return (retString);
     }
 
-    function configureMountpoints()
-    {
+    function configureMountpoints() {
         var keys = Object.keys(mountpoints),
             validKeys = [],
             paramString = "";
 
-        for (var i = 0; i < keys.length; i++)
-        {
+        for (var i = 0; i < keys.length; i++) {
             validKeys[validKeys.length] = mountpoints[keys[i]];
         }
 
-        for (var j = 0; j < validKeys.length; j++)
-        {
+        for (var j = 0; j < validKeys.length; j++) {
             var mountString = validKeys[j].mountpoint.toString();
-            for (var k = 0; k < mountString.length; k++)
-            {
-                if (mountString[k] === '/')
-                {
+            for (var k = 0; k < mountString.length; k++) {
+                if (mountString[k] === '/') {
                     mountString = mountString.replace('/', '!');
                 }
             }
 
             paramString += mountString;
 
-            if (j + 1 != validKeys.length)
-            {
+            if (j + 1 != validKeys.length) {
                 paramString += ",";
             }
         }
@@ -667,95 +554,79 @@ $(function ()
         return paramString;
     }
 
-    function configureNimble()
-    {
+    function configureNimble() {
         var isValid =
-        checkRequired($("#nimble-hostname-ip"), "Hostname/IP") &&
-        checkRequired($("#nimble-login"), "Login") &&
-        checkRequired($("#nimble-password"), "Password");
+            checkRequired($("#nimble-hostname-ip"), "Hostname/IP") &&
+            checkRequired($("#nimble-login"), "Login") &&
+            checkRequired($("#nimble-password"), "Password");
 
         if (!isValid)
             return ("");
 
         // Confirmed Selections
         var confHostnameIp = $("#nimble-hostname-ip").val(),
-        confLogin = $("#nimble-login").val(),
-        confPassword = $("#nimble-password").val();
+            confLogin = $("#nimble-login").val(),
+            confPassword = $("#nimble-password").val();
 
-        retString = confHostnameIp + "/" + confLogin + "/" + confPassword;
+        var retString = confHostnameIp + "/" + confLogin + "/" + confPassword;
         return (retString);
     }
 
-    function refreshTps()
-    {
+    function refreshTps() {
         $.getJSON('/supported_third_party_storage/')
-            .done(function (data)
-            {
-                data.providers.forEach(function (provider)
-                {
-                    if (provider.id == "eseries")
-                    {
-                        if (provider.configured == 1)
-                        {
+            .done(function (data) {
+                data.providers.forEach(function (provider) {
+                    if (provider.id == "eseries") {
+                        if (provider.configured == 1) {
                             $("#graph-placeholder").hide();
                             $("#graph-title").html("E-Series Storage (GB)");
                             $("#graph").html(TpsGraph()).show();
                         }
-                        else
-                        {
+                        else {
                             $("#graph-title").html("E-Series Storage (Not Configured)");
                             $("#graph").hide();
                         }
                     }
                 });
 
-                third_party_storage = { 'status': data.status, 'providers': data.providers };
+                third_party_storage = {'status': data.status, 'providers': data.providers};
                 buildTpsTable();
             })
-            .fail(function (data)
-            {
+            .fail(function (data) {
                 message.showMessage('error', data.message);
 
                 var retry = '<p>Error getting supported 3rd Party Storage, <span><a href="#" id="retry">Retry?</a></span></p>';
                 $("#tps-table-container").append(retry);
 
-                third_party_storage = { 'status': data.status };
+                third_party_storage = {'status': data.status};
             });
     }
 
-    function updateEseriesTransport(checked)
-    {
-        if (checked == 'http')
-        {
+    function updateEseriesTransport(checked) {
+        if (checked == 'http') {
             $("#eseries-server-port").val("8080");
         }
-        else if (checked == 'https')
-        {
+        else if (checked == 'https') {
             $("#eseries-server-port").val("8443");
         }
-        else
-        {
+        else {
             $('input[id=http]').prop('checked', true);
             $("#eseries-server-port").val("8080");
         }
     }
 
-    function TpsGraph()
-    {
+    function TpsGraph() {
         var url = "/eseries/get/stats/";
 
-        d3.json(url, function (error, json)
-        {
+        d3.json(url, function (error, json) {
 
             var m = 10, r = 75, z = d3.scale.category20c();
 
             var pie = d3.layout.pie()
-                .value(function (d)
-                {
+                .value(function (d) {
                     return +d.usage;
                 })
-                .sort(function (a, b)
-                {
+                .sort(function (a, b) {
                     return b.usage - a.usage;
                 });
 
@@ -764,8 +635,7 @@ $(function ()
                 .outerRadius(r);
 
             var disks = d3.nest()
-                .key(function (d)
-                {
+                .key(function (d) {
                     return d.origin;
                 })
                 .entries(json.stats.data);
@@ -785,64 +655,53 @@ $(function ()
             svg.append("svg:text")
                 .attr("dy", ".35em")
                 .attr("text-anchor", "middle")
-                .text(function (d)
-                {
+                .text(function (d) {
                     return d.key;
                 });
 
 
             var g = svg.selectAll("g")
-                .data(function (d)
-                {
+                .data(function (d) {
                     return pie(d.values);
                 })
                 .enter().append("svg:g");
 
             g.append("svg:path")
                 .attr("d", arc)
-                .style("fill", function (d)
-                {
+                .style("fill", function (d) {
                     return z(d.data.volumeName);
                 })
                 .append("svg:title")
-                .text(function (d)
-                {
+                .text(function (d) {
                     return d.data.volumeName + ": " + d.data.usage;
                 });
 
-            g.filter(function (d)
-            {
+            g.filter(function (d) {
                 return d.endAngle - d.startAngle > .2;
             }).append("svg:text")
                 .attr("dy", ".35em")
                 .attr("text-anchor", "middle")
-                .attr("transform", function (d)
-                {
+                .attr("transform", function (d) {
                     return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
                 })
-                .text(function (d)
-                {
+                .text(function (d) {
                     return d.data.volumeName;
                 });
 
-            g.filter(function (d)
-            {
+            g.filter(function (d) {
                 return d.endAngle - d.startAngle > .2;
             }).append("svg:text")
                 .attr("dy", "15")
                 .attr("text-anchor", "middle")
-                .attr("transform", function (d)
-                {
+                .attr("transform", function (d) {
                     return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
                 })
-                .text(function (d)
-                {
+                .text(function (d) {
                     return d.data.usage;
                 });
         });
 
-        function angle(d)
-        {
+        function angle(d) {
             var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
             return a > 90 ? a - 180 : a;
         }

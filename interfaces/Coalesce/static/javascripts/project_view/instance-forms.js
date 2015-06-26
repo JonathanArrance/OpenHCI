@@ -8,7 +8,7 @@ $(function () {
         event.preventDefault();
         // Create Form
         var form =
-            $("<div></div>").prop("id", "instance-dialog-form").prop("title", "Create Instance").css("display", "none")
+            $("<div></div>").prop("id", "instance-dialog-form").prop("title", "Create Instance")
                 .append($("<h6>Create a new instance. All form fields are required.</h6>").addClass("validateTips"))
                 .append($("<form></form>")
                     .append($("<fieldset></fieldset>")
@@ -257,7 +257,6 @@ $(function () {
         $("<div></div>")
             .prop("id", "instance-suspend-confirm-form")
             .prop("title", "Suspend Instance")
-            .css("display", "none")
             .append($("<p></p>")
                 .css("text-align", "center")
                 .html("Suspend " + instance.text() + "?"))
@@ -300,7 +299,6 @@ $(document).on('click', '.resume-instance', function (event) {
     $("<div></div>")
         .prop("id", "instance-resume-confirm-form")
         .prop("title", "Resume Instance")
-        .css("display", "none")
         .append($("<p></p>")
             .css("text-align", "center")
             .html("Resume " + instance.text() + "?"))
@@ -346,14 +344,26 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
     clearUiValidation(allFields);
     // Validate form inputs
     var isValid =
-        checkLength(name, "Instance Name", 3, 16) &&
+        checkLength(name, "Instance Name", standardStringMin, standardStringMax) &&
+        checkCharfield(name, "Instance name") &&
         checkDuplicateName(name, instanceOpts);
-    if (bootOption.val() == "true") {
-        isValid =
-            checkDuplicateName(bootName, volumes) &&
-            checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
-            checkBootSize(bootSize, flavor.val()) &&
-            checkStorage(bootSize);
+    if (isValid) {
+        if (bootOption.val() == "true") {
+            if (bootName.val() != "") {
+                isValid =
+                    checkCharfield(bootName, "Volume name") &&
+                    checkDuplicateName(bootName, volumes) &&
+                    checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+                    checkBootSize(bootSize, flavor.val()) &&
+                    checkStorage(bootSize);
+            } else {
+                isValid =
+                    checkDuplicateName(bootName, volumes) &&
+                    checkSize(bootSize, "Volume Size must be greater than 0.", 1, 0) &&
+                    checkBootSize(bootSize, flavor.val()) &&
+                    checkStorage(bootSize);
+            }
+        }
     }
     // If Valid, create instance
     if (isValid) {
@@ -442,7 +452,6 @@ function addInstance(data) {
     // Check table length, remove placeholder if necessary
     if ($('#instance_list tr').length >= 2) {
         $('#instance_placeholder').fadeOut().remove();
-        setVisible("#create-instance-snapshot", true);
     }
     // Add to instances and consoleLinks
     instances.setItem(data.server_info.server_id, {
@@ -510,7 +519,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
     message.showMessage('notice', "Deleting " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("delete-instance", true);
@@ -527,7 +536,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -612,7 +621,6 @@ function deleteInstance(id, name, row, deleteBootVol) {
                                 .append($("<i></i>").html("This project has no instances"))))
                         .append($("<td></td>"))
                         .append($("<td></td>")).appendTo($("#instance_list")).fadeIn();
-                    setVisible("#create-instance-snapshot", false);
                 }
             }
         })
@@ -620,7 +628,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
             message.showMessage('error', 'Server Fault');
             // Restore actions cell html
             actionsCell.empty()
-                .append(actionsHtml.fadeIn());
+                .append(actionsHtml);
         })
         .always(function () {
             // Hide progressbar and enable widget view links
@@ -640,7 +648,7 @@ function pauseInstance(id, name, row) {
     message.showMessage('notice', "Pausing " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("pause-instance", true);
@@ -657,7 +665,7 @@ function pauseInstance(id, name, row) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -682,7 +690,7 @@ function pauseInstance(id, name, row) {
             message.showMessage('error', 'Server Fault');
             // Restore actions cell html
             actionsCell.empty()
-                .append(actionsHtml.fadeIn());
+                .append(actionsHtml);
         })
         .always(function () {
             // Hide progressbar, enabled instance actions and widget view links
@@ -701,7 +709,7 @@ function unpauseInstance(id, name, row) {
     message.showMessage('notice', "Unpausing " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("unpause-instance", true);
@@ -718,7 +726,7 @@ function unpauseInstance(id, name, row) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -769,7 +777,7 @@ function suspendInstance(id, name, row) {
     message.showMessage('notice', "Suspending " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("suspend-instance", true);
@@ -786,7 +794,7 @@ function suspendInstance(id, name, row) {
                 message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
-                    .append(actionsHtml.fadeIn());
+                    .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
@@ -831,7 +839,7 @@ function resumeInstance(id, name, row) {
     message.showMessage('notice', "Resuming " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
-    var actionsHtml = $(actionsCell.innerHTML);
+    var actionsHtml = actionsCell.html();
     // Disable widget view links and instance actions
     disableLinks(true);
     disableActions("resume-instance", true);
@@ -847,7 +855,7 @@ function resumeInstance(id, name, row) {
                 // Show toast message
                 message.showMessage('error', data.message);
                 // Restore actions cell html
-                actionsCell.empty().append(actionsHtml.fadeIn());
+                actionsCell.empty().append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message

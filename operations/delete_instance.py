@@ -4,6 +4,7 @@ import transcirrus.common.util as util
 import transcirrus.common.config as config
 
 from transcirrus.component.nova.server import server_ops
+from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.storage import server_storage_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
@@ -22,17 +23,28 @@ def delete_instance(auth_dict, delete_dict):
     """
     logger.sys_info('\n**Deleteing an instance. Component: Operations: delete_instance**\n')
     nova = server_ops(auth_dict)
+    sa = server_actions(auth_dict)
     layer_three = layer_three_ops(auth_dict)
     server_storage = server_storage_ops(auth_dict)
     cinder = volume_ops(auth_dict)
     db = util.db_connect()
     remove_server = {}
 
-    #if the flag not set default to False
+    #snaps = sa.list_instance_snaps(delete_dict['server_id'])
+    #if(len(snaps) > 0):
+    #    for snap in snaps:
+    #        sa.delete_instance_snapshot(snap['snapshot_id'])
+
+    #if the flag not set default to false
     if('delete_boot_vol' not in delete_dict):
-        delete_dict['delete_boot_vol'] = 'False'
+        delete_dict['delete_boot_vol'] = 'false'
     elif(delete_dict['delete_boot_vol'] == None):
-        delete_dict['delete_boot_vol'] = 'False'
+        delete_dict['delete_boot_vol'] = 'false'
+
+    #normalize input
+    if('delete_boot_vol' in delete_dict):
+        raw = delete_dict['delete_boot_vol']
+        delete_boot_vol = raw.lower()
 
     #remove the volumes attached to the instance.
     try:
@@ -104,11 +116,12 @@ def delete_instance(auth_dict, delete_dict):
             cin.pg_transaction_commit()
             cin.pg_close_connection()
 
-        if(delete_dict['delete_boot_vol'] == 'True'):
+        if(delete_boot_vol == 'true'):
             #delete the volume
             delete_vol={'volume_id':boot_vol[0],'project_id':delete_dict['project_id']}
             cinder.delete_volume(delete_vol)
-        elif(delete_dict['delete_boot_vol'] == 'False'):
+
+        elif(delete_boot_vol == 'false'):
             try:
                 update2 = {'table':"trans_system_vols",'set':"vol_attached='false',vol_attached_to_inst=NULL,vol_mount_location=NULL",'where':"vol_id='%s'" %(boot_vol[0])}
                 db.pg_transaction_begin()

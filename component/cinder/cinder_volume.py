@@ -92,6 +92,7 @@ class volume_ops:
                         source_vol_id - Optional used if creating volume clone
                         volume_type - Optional default is ssd
                         volume_zone - Optional default is nova
+                        volume_bootable - Optional true/false
                         image_id - Optional os image
                         description - Optional
                             # REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
@@ -137,17 +138,16 @@ class volume_ops:
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
         #This needs to be fixed, it is broken for some reason all of the sudden.
-        vol_type_found = True
-        #voltype_list = self.list_volume_types(input_dict['project_id'])
+        #voltype_list = self.list_volume_types()
         #vol_type_found = False
-        #for vol_type in voltype_list:
-        #    name = vol_type['name']
-        #    if name.lower() == voltype.lower():
+        #for v_type in vol_type_list:
+        #    raw = vol_type['name']
+        #    if raw.lower() == voltype.lower():
         #        vol_type_found = True
         #        break
 
-        if not vol_type_found:
-            raise Exception ("Volume Type %s was not found for volume creation" % voltype)
+        #if not vol_type_found:
+        #    raise Exception ("Volume Type %s was not found for volume creation" % voltype)
 
         #get the name of the project based on the id
         try:
@@ -184,6 +184,16 @@ class volume_ops:
             create_vol['image_id'] = '"imageRef": null'
         else:
             create_vol['image_id'] = '"imageRef": "%s"'%(create_vol['image_id'])
+
+        if('volume_bootable' not in create_vol):
+            create_vol['volume_bootable'] = 'false'
+        elif(create_vol['volume_bootable'] == None):
+            create_vol['volume_bootable'] = 'false'
+
+        #normalize input
+        if('volume_bootable' in create_vol):
+            raw = create_vol['volume_bootable']
+            volume_bootable = raw.lower()
 
         # if('description' not in create_vol) or (create_vol['description'] == 'none'):
         #     logger.sys_warning("Did not pass in a volume description setting the default description.")
@@ -253,13 +263,14 @@ class volume_ops:
                         logger.sys_info('Volume with ID %s in unknown state.'%(volid))
                         raise Exception("Could not create a new volume. Unknown error occurred.")
                     elif(status['volume']['status'] == 'error'):
-                        logger.sys_info('Volume with ID %s failed to provision.'%(volid))
-                        raise Exception("Could not create a new volume. ERROR: 555")
+                        logger.sys_info('Volume with ID %s was created but is in an error state.'%(volid))
+                        raise Exception("Volume was created but is not available because it is in an error state.")
 
                 try:
                     #insert the volume info into the DB
                     self.db.pg_transaction_begin()
-                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,"vol_type":voltype,"vol_attached_to_inst":"NONE"}
+                    insert_vol = {"vol_id": volid,"proj_id": create_vol['project_id'],"keystone_user_uuid": keystone_user[0][0],"vol_name": volname,"vol_size": volsize,
+                                  "vol_type":voltype,"vol_set_bootable":volume_bootable}
                     self.db.pg_insert("trans_system_vols",insert_vol)
                 except Exception, e:
                     self.db.pg_transaction_rollback()
@@ -393,11 +404,11 @@ class volume_ops:
 
         if(self.is_admin == 0):
             if(self.user_level == 1):
-                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
+                self.select_vol = {'select':'proj_id,vol_size,vol_type,vol_set_bootable','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"proj_id='%s'"%(input_dict['project_id'])}
             elif(self.user_level == 2):
-                self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
+                self.select_vol = {'select':'proj_id,vol_size,vol_type,vol_set_bootable','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id']),'and':"keystone_user_uuid='%s'"%(self.user_id)}
         else:
-            self.select_vol = {'select':'proj_id,vol_size,vol_type','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
+            self.select_vol = {'select':'proj_id,vol_size,vol_type,vol_set_bootable','from':'trans_system_vols','where':"vol_id='%s'"%(input_dict['volume_id'])}
 
         #check if the snapshot exists in the project and that the user can use it
         try:
@@ -411,7 +422,7 @@ class volume_ops:
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
                       'volume_zone':input_dict['volume_zone'],'volume_id':input_dict['volume_id'],'volume_type':get_vol[0][2],
-                      'source_vol_id':input_dict['volume_id']}
+                      'source_vol_id':input_dict['volume_id'],'volume_bootable':get_vol[0][3]}
 
         output = self.create_volume(input_dict)
 
@@ -831,12 +842,13 @@ class volume_ops:
                 logger.sys_error ("Could not connect to the API")
                 raise Exception ("Could not connect to the API")
 
-            vol_list = self.list_volume_types()
-            vol_type_id = None
-            for vol_type in vol_list:
-                if vol_type['name'].lower() == volume_type_name.lower():
-                    vol_type_id = vol_type['id']
-                    break
+            #raw = vol_type['name']
+            #vol_type_list = self.list_volume_types()
+            #vol_type_id = None
+            #for v_type in vol_type_list:
+            #    if raw.lower() == volume_type_name.lower():
+            #        vol_type_id = vol_type['id']
+            #        break
 
             if vol_type_id == None:
                 raise Exception ("Volume Type %s was not found for deletion" % volume_type_name)
@@ -915,7 +927,7 @@ class volume_ops:
             #get list of volume types
             body = ''
             token = self.token
-            header = {"Content-Type": "application/json", "X-Auth-Project-Id": self.project_id, "X-Auth-Token": token}
+            header = {"Content-Type": "application/json", "X-Auth-Token": token}
             function = 'GET'
             api_path = '/v1/%s/types' %(self.project_id)
             sec = self.sec
@@ -932,18 +944,12 @@ class volume_ops:
             r_dict = []
             for vtype in load['volume_types']:
                 name = vtype['name']
-                id = vtype['id']
+                vid = vtype['id']
                 extra_specs = vtype['extra_specs']
-                r_dict.append({'name': name, 'id': id, 'extra_specs': extra_specs})
+                r_dict.append({'name': name, 'id': vid, 'extra_specs': extra_specs})
             return r_dict
         else:
-            #util.http_codes(rest['response'],rest['reason'],rest['data'])
-            #ec.error_codes(rest)
-            logger.sys_error("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
-            raise Exception ("Error getting volume type list, %s - %s" % (rest['reason'], rest['response']))
-        #else:
-        #    logger.sys_error("Could not get volume type list.")
-        #    raise ("Could not get volume type list.")
+            ec.error_codes(rest)
 
     def list_volume_backends(self):
         """

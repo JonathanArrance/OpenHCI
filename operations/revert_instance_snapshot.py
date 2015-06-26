@@ -4,7 +4,7 @@ import json
 import time
 import random
 
-from delete_server import delete_server
+from delete_instance import delete_instance
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
@@ -72,7 +72,7 @@ def revert_inst_snap(input_dict,auth_dict):
 
     #remove the original vm
     del_input = {'project_id':input_dict['project_id'],'server_id':inst_info['server_id']}
-    del_instance = delete_server(auth_dict,del_input)
+    del_instance = delete_instance(auth_dict,del_input)
 
     time.sleep(5)
 

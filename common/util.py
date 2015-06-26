@@ -515,7 +515,7 @@ def get_cloud_controller_uplink_ip():
 def get_cloud_controller_mgmt_ip():
     """
     DESC: Get the mgmt_ip of the cloud controller
-    INPUT: node_type
+    INPUT: none
     OUTPUT: controller_mgmt_ip
     ACCESS: Wide open
     NOTE:
@@ -699,6 +699,21 @@ def get_cluster_ip():
         if(cluster['net_ip'] == cluster['net_mask']):
             return 'ERROR'
     return cluster['net_ip']
+
+def get_project_admin(project_id):
+    """
+    DESC: Get the admin for a specific project
+    INPUT: project_id
+    OUTPUT: r_dict - admin_name
+                   - admin_email
+    ACCESS: Wide open
+    NOTE: If multiple admins in a project returns the first one.
+    """
+    db = db_connect()
+    get_admin = {'select':'user_email,user_name','from':'trans_user_info','where':"user_project_id='%s'"%(project_id),'and':"user_group_id='0'"}
+    admin = db.pg_select(get_admin)
+    r_dict = {'admin_name':admin[0][1],'admin_email':admin[0][0]}
+    return r_dict
 
 def get_system_defaults(node_id):
     """

@@ -1,30 +1,27 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}Project View{% endblock %}
+{% block title %}
+    {{ project.project_name }}
+    <a href="#" id="create-machine" class="btn title-button">Build Instance</a>
+{% endblock %}
 {% block javascripts %}
     <link rel="stylesheet" href="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
 
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
-    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
-
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.core.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.widget.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.mouse.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.draggable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.position.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.resizable.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.button.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.dialog.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/jquery.ui.effect.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery-ui.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.core.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.widget.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.mouse.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.button.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.draggable.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.position.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.resizable.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.button.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.dialog.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/ui/minified/jquery.ui.effect.min.js"></script>
     <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
     <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
-    <!-- DEBUG
-<script src="{{ STATIC_URL }}javascripts/utility-functions.min.js"></script>
-<script src="{{ STATIC_URL }}javascripts/project_view/project_view.min.js"></script>
-DEBUG -->
-    <!-- DEBUG -->
+    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>
@@ -36,8 +33,6 @@ DEBUG -->
     <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/utility-functions.js"></script>
-    <!-- DEBUG -->
     <script>
         var PROJECT = "{{ project.project_name }}",
                 PROJECT_ID = "{{ project.project_id }}",
@@ -47,13 +42,6 @@ DEBUG -->
 {% endblock %}
 
 {% block content %}
-
-    <div class="span12 well legend-header">
-        {{ project.project_name }}
-
-        <a href="#" id="create-machine" class="btn" style="float:right">Build Instance</a>
-    </div>
-
     <h4 id="instance-management" class="widget-section-header">
         <div id="instance-management-icon" class="widget-section-icon">-</div>
         Instance Management

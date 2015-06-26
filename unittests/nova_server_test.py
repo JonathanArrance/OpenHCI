@@ -21,7 +21,7 @@ perms = auth.get_auth()
 store = server_storage_ops(perms)
 nova = server_ops(perms)
 #action = server_admin_actions(perms)
-#sa = server_actions(perms)
+sa = server_actions(perms)
 
 '''
 input_dict = {'host_name':'ciac-10176','project_id':'157a34897e8246b4871676c5feb64ab8'}
@@ -49,22 +49,22 @@ yo = store.list_attached_vols(input_dict)
 
 print yo
 
-'''
-server_input = {'server_id':'707b8c8d-3c1c-4bfc-9978-45c8e19c6010','project_id':'c417abbb61014f2a8d330a0f7c0210a1'}
+
+server_input = {'server_id':'86435b2e-8569-4d10-8f4f-9b97bf367b60','project_id':'660c9b42c2d945c0a79b32589b16a6bd'}
 inst_info = nova.get_server(server_input)
 
 print inst_info
-'''
+
 
 back_image = {'server_id':'c811007d-b26a-41f2-baf3-0a6a83738c28','project_id':'bf54175ff7594e23b8f320c74fb05d68','rotation':'1','backup_description':'This a test1'}
 yo = sa.create_instance_backup(back_image)
 print yo
 
-
-snap_image = {'server_id':'99e85016-4f7d-43cf-b28e-ebca2d0fadda','project_id':'27e633859b2b46db9b0fc0cbece206ea','snapshot_description':'This a test1'}
+'''
+snap_image = {'server_id':'47096acb-6fc4-41cd-9284-1f89b7330000','project_id':'8e0e13707a9b4cf19f8c75dbd4e53a34','snapshot_description':'yoyo'}
 yo = sa.create_instance_snapshot(snap_image)
 print yo
-
+'''
 time.sleep(30)
 
 doop = sa.delete_instance_snapshot('a2eb26d0-ac42-4a9d-a131-ad65fc70093f')
@@ -128,11 +128,11 @@ server = {'sec_group_name':'project1','avail_zone':'nova','amount':'1','sec_key_
 yo = nova.create_server(server)
 print yo
 
-'''
+
 print "List the virtual intances in the database"
 serv_list = nova.list_servers()
 print serv_list
-'''
+
 print "---------------------------------------"
 time.sleep(2)
 
