@@ -161,7 +161,7 @@ function checkCharfield(o, n) {
     if (!( regexp.test(o.val()))) {
         o.addClass("ui-state-error");
         flagError(
-            o, n + " may consist of a-z, 0-9 and underscores, and must being with a letter.");
+            o, n + " may consist of a-z, 0-9 and underscores, and must begin with a letter.");
         return false;
     } else {
         return true
