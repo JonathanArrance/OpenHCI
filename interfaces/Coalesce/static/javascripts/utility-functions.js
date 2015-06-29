@@ -157,11 +157,11 @@ function checkRegexp(o, regexp, n) {
 }
 
 function checkCharfield(o, n) {
-    var regexp = /^[a-z]([0-9a-z_])+$/i;
+    var regexp = /([0-9a-zA-Z_])+$/i;
     if (!( regexp.test(o.val()))) {
         o.addClass("ui-state-error");
         flagError(
-            o, n + " may consist of a-z, 0-9 and underscores, and must being with a letter.");
+            o, n + " may consist of letters, numbers and underscores.");
         return false;
     } else {
         return true
