@@ -20,15 +20,6 @@
 /bin/mkdir -p /mnt/nfs-vol/cinder-volume
 /bin/chown cinder:cinder /mnt/nfs-vol/cinder-volume
 
-# Commands to setup our ceilometer deamon.
-/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch /etc/init.d
-/bin/chmod 755 /etc/init.d/ceilometer_memory_patch
-/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
-/bin/chown root:root /etc/init.d/ceilometer_memory_patch
-/sbin/chkconfig --levels 235 ceilometer_memory_patch on
-/sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
-/sbin/service ceilometer_memory_patch start
-
 # Create the mongo db ceilometer user in case it was missing.
 /bin/echo 'db.addUser({user: "ceilometer",pwd: "transcirrus1",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
 /usr/bin/mongo --host 172.24.24.10 ceilometer /tmp/MongoCeilometerUser.js
@@ -70,3 +61,12 @@ if [ ! -f /usr/local/lib/python2.7/site-packages/IPy.py ]
 then
     /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/IPy-0.83.tar
 fi
+
+# Commands to setup our ceilometer deamon.
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch /etc/init.d
+/bin/chmod 755 /etc/init.d/ceilometer_memory_patch
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
+/bin/chown root:root /etc/init.d/ceilometer_memory_patch
+/sbin/chkconfig --levels 235 ceilometer_memory_patch on
+/sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
+/sbin/service ceilometer_memory_patch start
