@@ -26,7 +26,8 @@
 /bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
 /bin/chown root:root /etc/init.d/ceilometer_memory_patch
 /sbin/chkconfig --levels 235 ceilometer_memory_patch on
-/sbin/service /etc/init.d/ceilometer_memory_patch start
+/sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
+/sbin/service ceilometer_memory_patch start
 
 # Create the mongo db ceilometer user in case it was missing.
 /bin/echo 'db.addUser({user: "ceilometer",pwd: "transcirrus1",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
