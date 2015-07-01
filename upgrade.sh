@@ -69,4 +69,4 @@ fi
 /bin/chown root:root /etc/init.d/ceilometer_memory_patch
 /sbin/chkconfig --levels 235 ceilometer_memory_patch on
 /sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
-/sbin/service ceilometer_memory_patch start
+/sbin/service ceilometer_memory_patch restart
