@@ -14,7 +14,7 @@ def validate_ppm(value):
 
 def validate_charfield(value):
     try:
-        if not re.match("[a-z]([0-9a-z_])+$", value):
-            raise ValidationError(u'This field may consist of a-z, 0-9 and underscores, and must being with a letter.')
+        if not re.match("([0-9a-zA-Z_])+$", value):
+            raise ValidationError(u'This field may consist of letters, numbers and underscores.')
     except:
-        raise ValidationError(u'This field may consist of a-z, 0-9 and underscores, and must being with a letter.')
+        raise ValidationError(u'This field may consist of letters, numbers and underscores.')

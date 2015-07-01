@@ -80,9 +80,7 @@
                                             data: form.serialize(),
                                             success: function (data) {
                                                 data = $.parseJSON(data);
-                                                console.log(data);
                                                 if (data.status == "success") {
-                                                    console.log(data.user_level);
                                                     if (data.user_level == 0) {
                                                         if (data.first_time == "TRUE") {
                                                             location.reload()
@@ -92,10 +90,8 @@
                                                     } else {
                                                         console.log(data.user_level);
                                                         if (data.user_level == 1) {
-                                                            console.log("/projects/" + data.project_id + "/pu_project_view/");
                                                             location.replace("/projects/" + data.project_id + "/pu_project_view/");
                                                         } else {
-                                                            console.log("/projects/" + data.project_id + "/basic_project_view/");
                                                             location.replace("/projects/" + data.project_id + "/basic_project_view/");
                                                         }
                                                     }

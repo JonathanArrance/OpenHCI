@@ -26,6 +26,19 @@ chmod 755 /etc/init.d/ceilometer_memory_patch
 chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
 chown root:root /etc/init.d/ceilometer_memory_patch
 chkconfig --levels 235 ceilometer_memory_patch on
+service /etc/init.d/ceilometer_memory_patch start
+
+# Create the mongo db ceilometer user in case it was missing.
+echo 'db.addUser({user: "ceilometer",pwd: "transcirrus1",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
+mongo --host 172.24.24.10 ceilometer /tmp/MongoCeilometerUser.js
+
+# Fix any configs that may not have been setup for ceilometer meters
+openstack-config --set /etc/ceilometer/ceilometer.conf DEFAULT pipeline_cfg_file pipeline.yaml
+openstack-config --set /etc/ceilometer/ceilometer.conf DEFAULT host $HOSTNAME
+openstack-config --set /etc/nova/nova.conf DEFAULT notification_driver nova.openstack.common.notifier.rpc_notifier
+openstack-config --set /etc/nova/nova.conf DEFAULT notification_driver ceilometer.compute.nova_notifier
+openstack-config --set /etc/nova/nova.conf DEFAULT compute_available_monitors nova.compute.monitors.all_monitors
+openstack-config --set /etc/nova/nova.conf DEFAULT compute_monitors ComputeDriverCPUMonitor
 
 # Create the symlinks so that libvirt python 2.6 files are found in python 2.7.
 if [ ! -f /usr/local/lib/python2.7/site-packages/libvirt.py ]
