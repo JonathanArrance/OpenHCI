@@ -70,3 +70,12 @@ fi
 /sbin/chkconfig --levels 235 ceilometer_memory_patch on
 /sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
 /sbin/service ceilometer_memory_patch restart
+
+######################################################
+#
+#---------------------2.3 Patches---------------------
+#
+######################################################
+
+#Add time to live feilds to new records recorded in mongo db
+/usr/bin/openstack-config --set /etc/ceilometer/ceilometer.conf database time_to_live 604800
