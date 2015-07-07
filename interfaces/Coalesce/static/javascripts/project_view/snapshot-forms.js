@@ -53,14 +53,14 @@ $(function () {
                     var isValid =
                         checkLength(name, "Snapshot name", standardStringMin, standardStringMax) &&
                         checkCharfield(name, "Snapshot name") &&
-                        checkLength(description, "Snapshot description", 1, 80);
+                        checkLength(description, "Snapshot description", 0, 80);
 
                     if (isValid) {
 
                         // Confirmed Selections
                         var confName = name.val(),
                             confVolume = volume.val(),
-                            confDescription = description.val();
+                            confDescription = description.val() == "" ? "none" : description.val();
 
                         message.showMessage('notice', 'Creating new snapshot ' + confName);
 
