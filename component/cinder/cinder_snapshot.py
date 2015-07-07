@@ -29,6 +29,7 @@ class snapshot_ops:
     #           is_admin
     #           sec - optional - use HTTPS sec = TRUE defaults to FALSE
     def __init__(self,user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")

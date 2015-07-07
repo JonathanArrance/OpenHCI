@@ -12,6 +12,7 @@ from transcirrus.common.api_caller import caller
 class meter_ops:
 
     def __init__(self, user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")

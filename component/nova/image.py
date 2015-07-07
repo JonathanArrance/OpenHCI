@@ -15,6 +15,7 @@ from transcirrus.database.postgres import pgsql
 class nova_image_ops:
     #UPDATED and UNIT TESTED
     def __init__(self,user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")

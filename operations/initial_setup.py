@@ -14,12 +14,9 @@ import transcirrus.common.service_control as service
 import transcirrus.ha.ha_common as ha_common
 
 from transcirrus.component.neutron.network import neutron_net_ops
-# from transcirrus.component.neutron.layer_three import layer_three_ops
-from transcirrus.operations.change_adminuser_password import change_admin_password
 from transcirrus.component.keystone.keystone_endpoints import endpoint_ops
 from transcirrus.component.glance.glance_ops_v2 import glance_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
-from transcirrus.operations.restart_all_services import restart_services
 
 from transcirrus.database import node_db
 
@@ -55,8 +52,8 @@ def run_setup(new_system_variables, auth_dict):
 
     # retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
-    node_name = util.get_system_name()
-    auth_dict['api_ip'] = util.get_api_ip()
+    #node_name = util.get_system_name()
+    #auth_dict['api_ip'] = util.get_api_ip()
 
     # new_cloud_name = new_system_variables['cloud_name']
     # get the original system vars from the DB - used in case we need to rollback
@@ -65,6 +62,7 @@ def run_setup(new_system_variables, auth_dict):
     # add all of the new value from the interface into the db
     logger.sys_info('SETUP0:Updating system variables...')
     update_sys_vars = util.update_system_variables(new_system_variables)
+
     if ((update_sys_vars == 'ERROR') or (update_sys_vars == 'NA')):
         logger.sys_error("Could not update the system variables, Setup has failed.")
         raise Exception("Could not update the system variables, Setup has failed.")
@@ -79,6 +77,7 @@ def run_setup(new_system_variables, auth_dict):
         raise Exception("Could not retrieve the system_variables.")
 
     boot = node_util.check_first_time_boot()
+
     if (boot == 'FALSE'):
         return "System already set up."
 
@@ -100,6 +99,7 @@ def run_setup(new_system_variables, auth_dict):
                    }
 
     write_config = util.write_new_config_file(config_dict)
+
     if (write_config != 'OK'):
         logger.sys_error("Could not write the new config file.")
         # Perform the rollback to the original values
@@ -107,12 +107,15 @@ def run_setup(new_system_variables, auth_dict):
 
     # create an enpoint object
     endpoint = endpoint_ops(auth_dict)
+
     logger.sys_info('SETUP2:Re-building Swift endpoints...')
     # reset the swift
     del_swift = endpoint.delete_endpoint('swift')
+
     if (del_swift == 'OK'):
         input_dict = {'cloud_name': sys_vars['CLOUD_NAME'], 'service_name': 'swift'}
         create_swift = endpoint.create_endpoint(input_dict)
+
         if (create_swift['endpoint_id']):
             logger.sys_info("Swift endpoint set up complete.")
         else:
@@ -205,7 +208,7 @@ def run_setup(new_system_variables, auth_dict):
     logger.sys_info('SETUP23:Adding the core node to the trans_nodes table...')
     # insert the controller info into trans_nodes db table
     cc_insert_dict = {'node_id': node_id,
-                      'node_name': node_name,
+                      'node_name': sys_vars['NODE_NAME'],
                       'node_type': 'cc',
                       'node_mgmt_ip': sys_vars['MGMT_IP'],
                       'node_data_ip': '172.24.24.10',
@@ -307,7 +310,7 @@ def run_setup(new_system_variables, auth_dict):
     os.system('sudo mongo --host 172.24.24.10 ceilometer /transcirrus/mongo.js')
     logger.sys_info('SETUP31:Writing the Ceilometer Config files...')
     ceil_configs = node_db.get_node_ceilometer_config(node_id)
-    # take the array of cinder file decriptors and write the files
+    # take the array of ceilometer file decriptors and write the files
     for config in ceil_configs:
         write_ceil_config = util.write_new_config_file(config)
         if (write_ceil_config != 'OK'):
@@ -323,6 +326,7 @@ def run_setup(new_system_variables, auth_dict):
     # enable neutron
     logger.sys_info('SETUP32:Writing the Neutron Config files...')
     neu_configs = node_db.get_node_neutron_config(node_id)
+
     # take the array of cinder file decriptors and write the files
     for config in neu_configs:
         write_neutron_config = util.write_new_config_file(config)

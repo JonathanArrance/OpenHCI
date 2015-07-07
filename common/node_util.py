@@ -23,6 +23,7 @@ def check_config_type():
           order to enable the multi node functions. Conversely you must call disable_multi_node in
           order to set back to single node ciac set up.
     """
+    reload(config)
     db = util.db_connect()
 
     try:
@@ -57,7 +58,7 @@ def enable_multi_node():
           net is 100% controlled by Transcirrus, so all of the default info is in the Transcirrus DB to set up
           the adapter. This info will not change.
     """
-    
+    reload(config)
     check = check_config_type()
     if(check['config_type'] == 'SINGLE'):
         db = util.db_connect()
@@ -155,6 +156,7 @@ def check_first_time_boot():
     ACCESS: Wide open
     NOTE: FALSE - system has been booted and set up, TRUE - system is new or freshly reset.
     """
+    reload(config)
 
     db = util.db_connect()
 
@@ -186,6 +188,8 @@ def set_first_time_boot(set_flag):
     ACCESS: Wide open
     NOTE: SET - set the flag(new node/rollback) , UNSET - unset the flag(node already set up)
     """
+    reload(config)
+
     db = util.db_connect()
 
     r_dict = {}
@@ -222,6 +226,7 @@ def check_admin_pass_status():
     ACCESS: Wide open
     NOTE: TRUE - admin password has been set, FALSE - admin pass is still default
     """
+    reload(config)
     db = util.db_connect()
 
     r_dict = {}
@@ -252,6 +257,7 @@ def set_admin_pass_status(pass_flag):
     ACCESS: Wide open
     NOTE: OK - admin pass flag has been set, ERROR - password flag could not be set.
     """
+    reload(config)
     db = util.db_connect()
 
     value = None

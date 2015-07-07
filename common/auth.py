@@ -22,6 +22,7 @@ class authorization:
     #INPUT: Username in the form of an email address
     #OUTPUT: none
     def __init__(self,username,user_pass):
+        reload(config)
         # setting username in logger dict
         logger.sys_info ("Setting username in logger to %s" % username)
         logger.SetUserDict (username, "0")
