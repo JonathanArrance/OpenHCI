@@ -431,7 +431,7 @@ def get_cloud_controller_name():
         except:
             logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")
             raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
-        return conroller_name[0][0]
+        return controller_name[0][0]
 
 def get_spindle_node_enabled():
     """
