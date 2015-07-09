@@ -13,7 +13,7 @@ $(function () {
         // Prevent scrolling to top of page on click
         event.preventDefault();
 
-        message.showMessage('notice', "Allocating IP.");
+        messages.showMessage('notice', "Allocating IP.");
 
         // Disable links and widget buttons
         disableLinks(true);
@@ -31,12 +31,12 @@ $(function () {
 
                 if (data.status == 'error') {
 
-                    message.showMessage('error', "No available IPs.  If you just deallocated an IP, wait a few minutes and try again.");
+                    messages.showMessage('error', "No available IPs.  If you just deallocated an IP, wait a few minutes and try again.");
                 }
 
                 if (data.status == 'success') {
 
-                    message.showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
+                    messages.showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
 
                     // Generate new row html
                     var newRow =
@@ -74,7 +74,7 @@ $(function () {
             })
             .fail(function () {
 
-                message.showMessage('error', 'Server Fault');
+                messages.showMessage('error', 'Server Fault');
             })
             .always(function () {
 
@@ -134,7 +134,7 @@ $(function () {
                         confFip = fip,
                         confRow = targetRow;
 
-                    message.showMessage('notice', "Deallocating " + confFip + ".");
+                    messages.showMessage('notice', "Deallocating " + confFip + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -165,7 +165,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 // Reset actions cell
                                 $(actionsCell).empty().fadeOut();
@@ -174,7 +174,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Remove row
                                 $(confRow).fadeOut().remove();
@@ -199,7 +199,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
                         })
                         .always(function () {
 
@@ -277,12 +277,12 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
                             }
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Update instance and action cells
                                 var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
@@ -312,7 +312,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
                         })
                         .always(function () {
 
@@ -386,7 +386,7 @@ $(function () {
                         confInstanceId = instanceId,
                         confInstanceName = instanceName;
 
-                    message.showMessage('notice', "Unassigning " + confFip + ".");
+                    messages.showMessage('notice', "Unassigning " + confFip + ".");
 
                     // Store action cell html
                     var actionsCell = document.getElementById(confFipId + "-actions-cell");
@@ -415,7 +415,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 // Reset actions cell
                                 $(actionsCell).empty().fadeOut();
@@ -424,7 +424,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Update instance and action cells
                                 var instanceCell = document.getElementById(data.floating_ip_id + "-instance-cell");
@@ -453,7 +453,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
 
                             // Reset action cell
                             $(actionsCell).empty().fadeOut();

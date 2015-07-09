@@ -53,14 +53,14 @@ $(function () {
                             $.getJSON('/update_user_password/' + USER_ID + '/' + password0 + '/' + password1.val() + '/' + PROJECT_ID + '/')
                                 .done(function (data) {
                                     if (data.status == 'error') {
-                                        message.showMessage('error', data.message);
+                                        messages.showMessage('error', data.message);
                                     }
                                     if (data.status == 'success') {
-                                        message.showMessage('success', data.message);
+                                        messages.showMessage('success', data.message);
                                     }
                                 })
                                 .fail(function () {
-                                    message.showMessage('error', 'Server Fault');
+                                    messages.showMessage('error', 'Server Fault');
                                 });
                             $(this).remove();
                         }

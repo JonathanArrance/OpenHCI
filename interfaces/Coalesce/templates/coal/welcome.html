@@ -1,9 +1,5 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %}
-    TRANSCIRRUS CLOUD MANAGEMENT INTERFACE
-{% endblock %}
-
 {% block content %}
     <div class="row-fluid">
         <div class="col-md-6">
@@ -83,19 +79,22 @@
             {% endif %}
 
             <div class="well well-sm col-md-12">
-                <a href="https://www.twitter.com/transcirrus" class="btn btn-block btn-social btn-twitter">
+                <a href="https://www.twitter.com/transcirrus"
+                   class="btn btn-block btn-social btn-center btn-300 btn-twitter">
                     <i class="fa fa-twitter"></i> Find us on Twitter
                 </a>
-                <a href="https://www.facebook.com/transcirrus" class="btn btn-block btn-social btn-facebook">
+                <a href="https://www.facebook.com/transcirrus"
+                   class="btn btn-block btn-social btn-center btn-300 btn-facebook">
                     <i class="fa fa-facebook"></i> Find us on Facebook
                 </a>
-                <a href="https://www.linkedin.com/company/transcirrus" class="btn btn-block btn-social btn-linkedin">
+                <a href="https://www.linkedin.com/company/transcirrus"
+                   class="btn btn-block btn-social btn-center btn-300 btn-linkedin">
                     <i class="fa fa-linkedin"></i> Find us on Linked In
                 </a>
-                <a href="http://www.transcirrus.com" class="btn btn-primary btn-block btn-social">
+                <a href="http://www.transcirrus.com" class="btn btn-block btn-social btn-center btn-300 btn-primary">
                     <i class="fa fa-desktop"></i> View our Website
                 </a>
-                <a href="mailto:info@transcirrus.com" class="btn btn-block btn-social btn-warning">
+                <a href="mailto:info@transcirrus.com" class="btn btn-block btn-social btn-center btn-300 btn-warning">
                     <i class="fa fa-envelope"></i> Send us an E-Mail
                 </a>
             </div>
@@ -103,7 +102,8 @@
         <div class="col-md-6">
             <div class="panel center-text">
                 <a class="twitter-timeline" href="https://twitter.com/TransCirrus_UI"
-                   data-widget-id="618212245999362048" data-chrome="nofooter noscrollbar transparent" data-tweet-limit="4">
+                   data-widget-id="618212245999362048" data-chrome="nofooter noscrollbar transparent"
+                   data-tweet-limit="4">
                     Tweets by @TransCirrus_UI</a>
             </div>
         </div>
@@ -132,9 +132,6 @@
 {% endblock %}
 
 {% block javascripts %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css">
-    <script src="{{ STATIC_URL }}javascripts/jquery.toastmessage.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/message-handle.js"></script>
     <script>
         $(function () {
             var form = $('#login-form');
@@ -163,12 +160,12 @@
                             }
                         }
                         if (data.status == "error") {
-                            message.showMessage('error', data.message);
+                            showMessage('error', data.message);
                             $("#log-in").removeProp("disabled");
                         }
                     },
                     error: function () {
-                        message.showMessage('error', "Server Fault");
+                        showMessage('error', "Server Fault");
                         $("#log-in").prop("disabled", false);
                     }
                 });

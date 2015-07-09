@@ -7,16 +7,11 @@
     <meta name="description" content="Coalesce Cloud Manager">
     <meta name="author" content="Transcirrus, LLC">
 
-    <!--HTML5 shim, for IE6-8 support of HTML elements -->
-    <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
     <!-- CSS  ================================================ -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-social.css"/>
     <link rel="stylesheet" href="{{ STATIC_URL }}css/font-awesome.css"/>
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.toastmessage.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/toastr.min.css"/>
     <link rel="stylesheet" href="{{ STATIC_URL }}css/transcirrus.css"/>
 
     {% block stylesheets %}{% endblock %}
@@ -29,44 +24,59 @@
 </head>
 
 <body>
-<nav class="navbar navbar-inverse">
-    <!-- NAVBAR ================================================== -->
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-                    aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a href="/welcome" class="navbar-badge"><img class="navbar-logo" src="{{ STATIC_URL }}images/transcirrus-icon.png">
 
-                <p class="navbar-brand">Trans<span style="font-weight: bold">Cirrus</span></p></a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav navbar-right">
-                {% if token %}
-                    <li><a href={% url 'home' %}>Dashboard</a></li>
-                    {% if project_id %}
-                        {% if user_level == 0 %}
-                            {% if first_time == 'TRUE' %}
-                                <li><a href="/setup">Run Setup</a></li>
-                            {% else %}
-                                <li><a href="/cloud/manage">Cloud</a></li>
-                            {% endif %}
-                        {% elif user_level == 1 %}
-                            <li><a href="/projects/{{ project_id }}/pu_project_view/">My Project</a></li>
-                        {% else %}
-                            <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
-                        {% endif %}
-                    {% endif %}
-                    <li><a href={% url 'logout' %}>Log Out</a></li>
-                {% endif %}
-            </ul>
+<div id="confirm-modal" class="modal" role="dialog" aria-labelledby="modal-label"
+     data-controls-modal="confirm-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
         </div>
     </div>
-    {% block secondary-nav %}{% endblock %}  <!-- use this slot in templates that need subnav.-->
+</div>
+
+<nav class="navbar navbar-inverse" role="navigation">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"
+                aria-expanded="false"
+                aria-controls=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a href="/welcome" class="navbar-badge">
+            <img class="navbar-logo" src="{{ STATIC_URL }}images/transcirrus-icon.png">
+                <span class="navbar-brand">
+                    Trans<span style="font-weight: bold">Cirrus</span>{% block title %}{% endblock %}
+                </span>
+        </a>
+    </div>
+
+    <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
+            {% if token %}
+                <li><a href="{% url 'home' %}" data-toggle="collapse" data-target=".navbar-collapse">Dashboard</a></li>
+                {% if project_id %}
+                    {% if user_level == 0 %}
+                        {% if first_time == 'TRUE' %}
+                            <li><a href="/setup" data-toggle="collapse" data-target=".navbar-collapse">Run Setup</a>
+                            </li>
+                        {% else %}
+                            <li><a href="/cloud/manage" data-toggle="collapse" data-target=".navbar-collapse">Cloud</a>
+                            </li>
+                        {% endif %}
+                    {% elif user_level == 1 %}
+                        <li><a href="/projects/{{ project_id }}/pu_project_view/" data-toggle="collapse"
+                               data-target=".navbar-collapse">My Project</a></li>
+                    {% else %}
+                        <li><a href="/projects/{{ project_id }}/basic_project_view/" data-toggle="collapse"
+                               data-target=".navbar-collapse">My Project</a></li>
+                    {% endif %}
+                {% endif %}
+                <li><a href="{% url 'logout' %}" data-toggle="collapse" data-target=".navbar-collapse">Log Out</a></li>
+            {% endif %}
+        </ul>
+    </div>
+
 </nav>
 
 <!-- MAIN CONTENT WELL  ====================================== -->
@@ -79,7 +89,7 @@
 </section>
 
 <!-- FOOTER ================================================== -->
-<footer class="navbar navbar-fixed-bottom">
+<footer class="navbar-fixed-bottom">
     <div class="container-fluid">
         <ul class="footer-links small">
             <li>
@@ -100,14 +110,22 @@
 </footer>
 
 <!-- JAVASCRIPT ================================================== -->
-<script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/jquery-1.9.1.min.js"></script>
-<script src="{{ STATIC_URL }}javascripts/bootstrap.min.js"></script>
-<script src="{{ STATIC_URL }}javascripts/d3.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/jquery-1.11.3.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/bootstrap.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/toastr.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/messages.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/spin.min.js"></script>
+
+<!--HTML5 shim, for IE6-8 support of HTML elements -->
+<!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
 <script>
-    var USERNAME = "{{ username }}",
-            USER_LEVEL = "{{ user_level }}",
-            STATIC_URL = "{{ STATIC_URL }}";
+    USERNAME = "{{ username }}";
+    USER_ID = "{{ user_id }}";
+    USER_LEVEL = "{{ user_level }}";
+    STATIC_URL = "{{ STATIC_URL }}";
+    PROJECT_NAME = "{{ project_name }}";
+    PROJECT_ID = "{{ project_id }}";
 </script>
 
 {% block javascripts %}{% endblock %}
