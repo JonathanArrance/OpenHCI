@@ -195,8 +195,8 @@ $(function () {
                             if (data.status == 'success') {
 
                                 message.showMessage('success', data.message);
-
-                                window.location.assign(STATIC_URL + '/' + PROJECT_ID + '/' + SERVER_ID + '/instance_view/');
+                                var urlstring = '/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/'
+                                window.location.assign(urlstring);
                             }
                         })
                         .fail(function () {

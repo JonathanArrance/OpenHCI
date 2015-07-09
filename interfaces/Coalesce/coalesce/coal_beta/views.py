@@ -1136,12 +1136,15 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         auth = request.session['auth']
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
-        out = revert_inst_snap(create, auth)
-        out['server_info'] = so.get_server(out['instance']['vm_id'])
+        inst_dict = revert_inst_snap(create, auth)
+        print "inst_dict: %s" % inst_dict
+        srv_dict = {'server_id': inst_dict['instance']['vm_id'], 'project_id':project_id}
+        out['server_info'] = so.get_server(srv_dict)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
+        print "out: %s" % out
     except Exception as e:
-        out = {"status":"error","message":"%s"%(e)}
+        out = {"status": "error", "message": "%s" % (e)}
     return HttpResponse(simplejson.dumps(out))
 
 
