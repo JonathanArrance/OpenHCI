@@ -749,6 +749,18 @@ function updateRevertVolumeSnapshots(volumeId) {
     }
 }
 
+function changeSelectPreexistingVolume(select) {
+    if ($(select).val() != "create") {
+        $("#bam-volume-name").prop("disabled", "disabled");
+        $("#bam-volume-size").prop("disabled", "disabled");
+        $("#bam-volume-type").prop("disabled", "disabled");
+    } else {
+        $("#bam-volume-name").removeProp("disabled");
+        $("#bam-volume-size").removeProp("disabled");
+        $("#bam-volume-type").removeProp("disabled");
+    }
+}
+
 // --- SOFTWARE DEFINED NETWORKS
 
 var routers = new HashTable(),

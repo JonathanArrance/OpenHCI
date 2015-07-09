@@ -310,6 +310,72 @@ $(function () {
             changeImageLocation($(this), $("#bam-image-import-local"), $("#bam-image-import-remote"));
         });
 
+        $("#bam-volume-select-existing").change(function () {
+            changeSelectPreexistingVolume(this);
+        });
+
+        $("#bam-allocate-ip").click(function (event) {
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+            message.showMessage('notice', "Allocating IP.");
+
+            $.getJSON('/allocate_floating_ip/' + PROJECT_ID + '/' + extNet + '/')
+                .done(function (data) {
+
+                    if (data.status == 'error') {
+
+                        message.showMessage('error', "No available IPs.  If you just deallocated an IP, wait a few minutes and try again.");
+                    }
+
+                    if (data.status == 'success') {
+
+                        message.showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
+
+                        // Generate new row html
+                        var newRow =
+                            '<tr id="' + data.ip_info.floating_ip_id + '">' +
+                            '<td id="' + data.ip_info.floating_ip_id + '-ip-cell">' +
+                            '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                            '<span id="' + data.ip_info.floating_ip_id + '-ip-address">' + data.ip_info.floating_ip + '</span></a></td>' +
+                            '<td id="' + data.ip_info.floating_ip_id + '-instance-cell"><span id="' + data.ip_info.floating_ip_id + '-instance-name">None</span></td>' +
+                            '<td id="' + data.ip_info.floating_ip_id + '-actions-cell"><a href="#" " class="deallocate-ip">deallocate</a></td>' +
+                            '</tr>';
+
+                        // If first fip, remove placeholder
+                        var rowCount = $('#fip_list tr').length;
+                        if (rowCount <= 2) {
+                            $('#fip_placeholder').remove().fadeOut();
+                        }
+
+                        // Append new row
+                        $("#fip_list").append(newRow).fadeIn();
+
+                        fips.setItem(data.ip_info.floating_ip_id, {
+                            id: data.ip_info.floating_ip_id,
+                            ip: data.ip_info.floating_ip
+                        });
+
+                        // Add option to assign_ip select
+                        addToSelect(data.ip_info.floating_ip_id, data.ip_info.floating_ip, $("#assign_floating_ip"), assignableFips);
+                        refreshSelect($("#bam-security-ip"), assignableFips);
+                        $('<option></option>')
+                            .val("none")
+                            .html("Skip Attaching IP")
+                            .prop("selected", "selected")
+                            .prependTo($("#bam-security-ip"));
+                    }
+                })
+                .fail(function () {
+
+                    message.showMessage('error', 'Server Fault');
+                })
+                .always(function () {
+
+                    // Reset interface
+                    checkAssignFip();
+                });
+        });
+
         changeImageLocation($("#bam-image-location"), $("#bam-image-import-local"), $("#bam-image-import-remote"));
 
         $("#build-instance-form").dialog({
@@ -587,6 +653,8 @@ function resetBamInputs() {
             resetUiValidation(bamParams[section].inputs[input].element);
         }
     }
+    changeImageLocation($("#bam-image-location"), $("#bam-image-import-local"), $("#bam-image-import-remote"));
+    changeSelectPreexistingVolume($("#bam-volume-select-existing"));
 }
 
 function changeBamSection(button) {
