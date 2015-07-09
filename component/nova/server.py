@@ -28,6 +28,7 @@ from transcirrus.component.keystone.keystone_tenants import tenant_ops
 
 class server_ops:
     def __init__(self,user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")

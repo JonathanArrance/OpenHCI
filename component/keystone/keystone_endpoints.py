@@ -20,6 +20,8 @@ class endpoint_ops:
     #DESC: Constructor to build out the tokens object
     #INPUT: user_dict dictionary containing - built in auth.py
     def __init__(self,user_dict):
+        reload(config)
+
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
