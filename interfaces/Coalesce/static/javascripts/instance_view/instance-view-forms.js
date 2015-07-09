@@ -186,6 +186,7 @@ $(function () {
 
                     $.getJSON('/revert_instance_snapshot/' + PROJECT_ID + '/' + SERVER_ID + '/' + confSnap + '/')
                         .done(function (data) {
+                            console.log(data);
 
                             if (data.status == 'error') {
 
