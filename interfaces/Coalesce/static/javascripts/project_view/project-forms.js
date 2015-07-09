@@ -533,6 +533,9 @@ $(function () {
                 "description": {
                     "element": $("#bam-group-description"),
                     "validation": function () {
+                        if (this.element.val() == "") {
+                            this.element.val("none");
+                        }
                         return checkLength(this.element, "Security Group description", 0, 80);
                     },
                     "value": ""
@@ -566,7 +569,8 @@ $(function () {
 });
 
 function initializeBamSection() {
-    changeBamSection();
+    resetBamInputs();
+    switchSections(currentSection, "instance");
     getStorage(PROJECT_ID);
     bamParams.group.inputs.ports.element.val("443,80,22");
     $(".bam-overall-progress-bar").progressbar({value: 0});
@@ -713,30 +717,30 @@ function switchSections(current, next) {
             backBtn.hide(0);
             createBtn.hide(0);
             finishBtn.hide(0);
-            form.dialog({height: 455});
+            form.dialog({height: 475});
             break;
         case "image":
             backBtn.show(0);
-            form.dialog({height: 610});
+            form.dialog({height: 630});
             changeImageLocation($("#bam-image-location"), $("bam-image-import-local"), $("bam-image-import-remote"));
             break;
         case "volume":
             backBtn.show(0);
-            form.dialog({height: 560});
+            form.dialog({height: 580});
             break;
         case "security":
-            form.dialog({height: 605});
+            form.dialog({height: 635});
             nextBtn.show(0);
             createBtn.hide(0);
             break;
         case "group":
-            form.dialog({height: 505});
+            form.dialog({height: 525});
             nextBtn.show(0);
             createBtn.hide(0);
             break;
         case "progress":
             updateProgressSection();
-            form.dialog({height: 445});
+            form.dialog({height: 465});
             nextBtn.hide(0);
             createBtn.show(0);
             break;
@@ -744,7 +748,7 @@ function switchSections(current, next) {
             createBtn.hide();
             backBtn.hide();
             finishBtn.show();
-            form.dialog({height: 600});
+            form.dialog({height: 620});
             break;
     }
 }
@@ -846,24 +850,24 @@ function buildInstance() {
             url = "";
         if (imageType == "image_file") {
             url = '/import_local/' +
-            bamParams.image.inputs.name.value + '/' +
-            bamParams.image.inputs.container.value + '/' +
-            bamParams.image.inputs.disk.value + '/' +
-            bamParams.image.inputs.type.value + '/' +
-            "na" + '/' +
-            bamParams.image.inputs.visibility.value + '/' +
-            bamParams.image.inputs.os.value + '/' +
-            imageProgressId + '/';
+                bamParams.image.inputs.name.value + '/' +
+                bamParams.image.inputs.container.value + '/' +
+                bamParams.image.inputs.disk.value + '/' +
+                bamParams.image.inputs.type.value + '/' +
+                "na" + '/' +
+                bamParams.image.inputs.visibility.value + '/' +
+                bamParams.image.inputs.os.value + '/' +
+                imageProgressId + '/';
         } else {
             url = '/import_remote/' +
-            bamParams.image.inputs.name.value + '/' +
-            bamParams.image.inputs.container.value + '/' +
-            bamParams.image.inputs.disk.value + '/' +
-            bamParams.image.inputs.type.value + '/' +
-            bamParams.image.inputs.importRemote.value + '/' +
-            bamParams.image.inputs.visibility.value + '/' +
-            bamParams.image.inputs.os.value + '/' +
-            imageProgressId + '/';
+                bamParams.image.inputs.name.value + '/' +
+                bamParams.image.inputs.container.value + '/' +
+                bamParams.image.inputs.disk.value + '/' +
+                bamParams.image.inputs.type.value + '/' +
+                bamParams.image.inputs.importRemote.value + '/' +
+                bamParams.image.inputs.visibility.value + '/' +
+                bamParams.image.inputs.os.value + '/' +
+                imageProgressId + '/';
         }
 
         uploadImage = $.ajax({
@@ -996,7 +1000,8 @@ function buildInstance() {
             key + '/' +
             uploadedImage + '/' +
             bamParams.instance.inputs.network.value + '/' +
-            PROJECT_ID + '/false/none/none/none/')
+            PROJECT_ID +
+            '/false/none/none/none/')
             .done(function (data) {
                 if (data.status == 'error') {
                     message.showMessage('error', data.message);
