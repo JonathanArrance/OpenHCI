@@ -391,7 +391,7 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
             confBootSize = "none";
         }
         // Show toast message
-        messages.showMessage('notice', 'Creating New Instance ' + confName);
+        message.showMessage('notice', 'Creating New Instance ' + confName);
         // Hide widget buttons and disable widget view links
         setVisible('#create-instance', false);
         disableLinks(true);
@@ -403,18 +403,18 @@ function createInstance(name, secGroup, secKey, network, image, flavor, bootOpti
             .done(function (data) {
                 if (data.status == 'error') {
                     // Show toast message
-                    messages.showMessage('error', data.message);
+                    message.showMessage('error', data.message);
                 }
                 if (data.status == 'success') {
                     // Show toast message
-                    messages.showMessage('success', data.message);
+                    message.showMessage('success', data.message);
                     // Add new row
                     addInstance(data);
                 }
             })
             .fail(function () {
                 // Show toast message
-                messages.showMessage('error', 'Server Fault');
+                message.showMessage('error', 'Server Fault');
             })
             .always(function () {
                 // Reset interface
@@ -516,7 +516,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
         confInstance = name.text(),
         confRow = row;
     // Show toast message
-    messages.showMessage('notice', "Deleting " + confInstance + ".");
+    message.showMessage('notice', "Deleting " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
     var actionsHtml = actionsCell.html();
@@ -533,14 +533,14 @@ function deleteInstance(id, name, row, deleteBootVol) {
         .done(function (data) {
             if (data.status == 'error') {
                 // Show toast message
-                messages.showMessage('error', data.message);
+                message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
                     .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
-                messages.showMessage('success', data.message);
+                message.showMessage('success', data.message);
                 // Remove row
                 confRow.fadeOut().remove();
                 // Update selects
@@ -625,7 +625,7 @@ function deleteInstance(id, name, row, deleteBootVol) {
             }
         })
         .fail(function () {
-            messages.showMessage('error', 'Server Fault');
+            message.showMessage('error', 'Server Fault');
             // Restore actions cell html
             actionsCell.empty()
                 .append(actionsHtml);
@@ -645,7 +645,7 @@ function pauseInstance(id, name, row) {
         confInstance = name.text(),
         confRow = row;
     // Show toast message
-    messages.showMessage('notice', "Pausing " + confInstance + ".");
+    message.showMessage('notice', "Pausing " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
     var actionsHtml = actionsCell.html();
@@ -662,14 +662,14 @@ function pauseInstance(id, name, row) {
         .done(function (data) {
             if (data.status == 'error') {
                 // Show toast message
-                messages.showMessage('error', data.message);
+                message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
                     .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
-                messages.showMessage('success', data.message);
+                message.showMessage('success', data.message);
                 var statusCell = $(document.getElementById(confId + "-status-cell"));
                 // Update status cell
                 statusCell.empty()
@@ -687,7 +687,7 @@ function pauseInstance(id, name, row) {
         })
         .fail(function () {
             // Show toast message
-            messages.showMessage('error', 'Server Fault');
+            message.showMessage('error', 'Server Fault');
             // Restore actions cell html
             actionsCell.empty()
                 .append(actionsHtml);
@@ -706,7 +706,7 @@ function unpauseInstance(id, name, row) {
         confInstance = name.text(),
         confRow = row;
     // Show toast message
-    messages.showMessage('notice', "Unpausing " + confInstance + ".");
+    message.showMessage('notice', "Unpausing " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
     var actionsHtml = actionsCell.html();
@@ -723,14 +723,14 @@ function unpauseInstance(id, name, row) {
         .done(function (data) {
             if (data.status == 'error') {
                 // Show toast message
-                messages.showMessage('error', data.message);
+                message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
                     .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
-                messages.showMessage('success', data.message);
+                message.showMessage('success', data.message);
                 var statusCell = $(document.getElementById(confId + "-status-cell"));
                 // Update status cell
                 statusCell.empty()
@@ -755,7 +755,7 @@ function unpauseInstance(id, name, row) {
         })
         .fail(function () {
             // Show toast message
-            messages.showMessage('error', 'Server Fault');
+            message.showMessage('error', 'Server Fault');
             // Restore Actions html
             actionsCell.empty()
                 .append(actionsHtml).fadeIn();
@@ -774,7 +774,7 @@ function suspendInstance(id, name, row) {
         confInstance = name.text(),
         confRow = row;
     // Show toast message
-    messages.showMessage('notice', "Suspending " + confInstance + ".");
+    message.showMessage('notice', "Suspending " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
     var actionsHtml = actionsCell.html();
@@ -791,14 +791,14 @@ function suspendInstance(id, name, row) {
         .done(function (data) {
             if (data.status == 'error') {
                 // Show toast message
-                messages.showMessage('error', data.message);
+                message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty()
                     .append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
-                messages.showMessage('success', data.message);
+                message.showMessage('success', data.message);
                 var statusCell = $(document.getElementById(confId + "-status-cell"));
 
                 // Update status cell
@@ -817,7 +817,7 @@ function suspendInstance(id, name, row) {
         })
         .fail(function () {
             // Show toast message
-            messages.showMessage('error', 'Server Fault');
+            message.showMessage('error', 'Server Fault');
             // Restore Actions html
             actionsCell.empty()
                 .append(actionsHtml).fadeIn();
@@ -836,7 +836,7 @@ function resumeInstance(id, name, row) {
         confInstance = name.text(),
         confRow = row;
     // Show toast message
-    messages.showMessage('notice', "Resuming " + confInstance + ".");
+    message.showMessage('notice', "Resuming " + confInstance + ".");
     // Store actions cell html
     var actionsCell = $(document.getElementById(confId + "-actions-cell"));
     var actionsHtml = actionsCell.html();
@@ -853,13 +853,13 @@ function resumeInstance(id, name, row) {
         .done(function (data) {
             if (data.status == 'error') {
                 // Show toast message
-                messages.showMessage('error', data.message);
+                message.showMessage('error', data.message);
                 // Restore actions cell html
                 actionsCell.empty().append(actionsHtml);
             }
             if (data.status == 'success') {
                 // Show toast message
-                messages.showMessage('success', data.message);
+                message.showMessage('success', data.message);
                 var statusCell = $(document.getElementById(confId + "-status-cell"));
                 // Update status cell
                 statusCell.empty()
@@ -883,7 +883,7 @@ function resumeInstance(id, name, row) {
         })
         .fail(function () {
             // Show toast message
-            messages.showMessage('error', 'Server Fault');
+            message.showMessage('error', 'Server Fault');
             // Restore Actions html
             actionsCell.empty()
                 .append(actionsHtml).fadeIn();

@@ -35,7 +35,7 @@ $(function () {
                     confEnablePing = $('input[name=enable_ping]:checked').val(),
                     confTransport = $('input[name=update_transport]:checked').val();
 
-                messages.showMessage('notice', "Updating security group.");
+                message.showMessage('notice', "Updating security group.");
 
                 // Hide other actions
                 actions.slideUp();
@@ -49,12 +49,12 @@ $(function () {
 
                         if (data.status == 'error') {
 
-                            messages.showMessage('error', data.message);
+                            message.showMessage('error', data.message);
                         }
 
                         if (data.status == 'success') {
 
-                            messages.showMessage('success', data.message);
+                            message.showMessage('success', data.message);
 
                             updateSecGroupPorts(data.ports);
 
@@ -72,7 +72,7 @@ $(function () {
                     })
                     .fail(function () {
 
-                        messages.showMessage('error', 'Server Fault');
+                        message.showMessage('error', 'Server Fault');
                     })
                     .always(function () {
 

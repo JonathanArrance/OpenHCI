@@ -112,7 +112,7 @@ $(function () {
 
                                         if (ret_data.status == "error") {
                                             // There was an error on the server uploading the file so display the error message.
-                                            messages.showMessage("error", ret_data.message);
+                                            message.showMessage("error", ret_data.message);
                                             disableFormInputs('image', ['text', 'select', 'file'], false);
                                             disableLinks(false);
                                             uploading = false;
@@ -135,7 +135,7 @@ $(function () {
                                         refreshSelect($("#bam-instance-image"), images);
                                         $("#bam-instance-image").append("<option></option>").val("upload").html("Upload Image");
 
-                                        messages.showMessage("success", ret_data.message);
+                                        message.showMessage("success", ret_data.message);
 
                                         $("#image-import-dialog-form").dialog("close");
                                         disableFormInputs('image', ['text', 'select', 'file'], false);
@@ -147,7 +147,7 @@ $(function () {
                                     error: function () {
 
                                         // This function is called if there was an issue posting the data to the server.
-                                        messages.showMessage("error", "Server Fault");
+                                        message.showMessage("error", "Server Fault");
 
                                         $("#image-import-dialog-form").dialog("close");
                                         disableFormInputs('image', ['text', 'select', 'file'], false);
@@ -212,7 +212,7 @@ $(function () {
 
                                         if (ret_data.status == "error") {
                                             // There was an error on the server uploading the file so display the error message.
-                                            messages.showMessage("error", ret_data.message);
+                                            message.showMessage("error", ret_data.message);
                                             disableFormInputs('image', ['text', 'select', 'file'], false);
                                             disableLinks(false);
                                             uploading = false;
@@ -237,7 +237,7 @@ $(function () {
                                             .val("upload")
                                             .html("Upload Image"));
 
-                                        messages.showMessage("success", ret_data.message);
+                                        message.showMessage("success", ret_data.message);
 
                                         $("#image-import-dialog-form").dialog("close");
                                         disableFormInputs('image', ['text', 'select', 'file'], false);
@@ -249,7 +249,7 @@ $(function () {
                                     error: function () {
 
                                         // This function is called if there was an issue posting the data to the server.
-                                        messages.showMessage("error", "Server Fault");
+                                        message.showMessage("error", "Server Fault");
 
                                         $("#image-import-dialog-form").dialog("close");
                                         disableFormInputs('image', ['text', 'select', 'file'], false);
@@ -316,7 +316,7 @@ $(function () {
                     var confId = id,
                         confImage = $(image).text();
 
-                    messages.showMessage('notice', "Deleting " + confImage + ".");
+                    message.showMessage('notice', "Deleting " + confImage + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -343,7 +343,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -352,7 +352,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Remove row
                                 $(targetRow).fadeOut().remove();
@@ -374,7 +374,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();

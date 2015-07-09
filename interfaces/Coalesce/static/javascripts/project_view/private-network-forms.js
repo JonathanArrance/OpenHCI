@@ -62,7 +62,7 @@ $(function () {
                             confShared = shared.val(),
                             confAdminState = admin_state.val();
 
-                        messages.showMessage('notice', 'Creating new network ' + confPrivateNet);
+                        message.showMessage('notice', 'Creating new network ' + confPrivateNet);
 
                         // Disable widget view links and hide create button
                         disableLinks(true);
@@ -77,12 +77,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    messages.showMessage('error', data.message);
+                                    message.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    messages.showMessage('success', data.message);
+                                    message.showMessage('success', data.message);
 
                                     // Initialize empty string for new network row
                                     var newRow =
@@ -122,7 +122,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                messages.showMessage('error', 'Server Fault');	// Flag server fault message
+                                message.showMessage('error', 'Server Fault');	// Flag server fault message
                             })
                             .always(function () {
 
@@ -193,7 +193,7 @@ $(function () {
                         confPrivateNet = $(privateNet).text(),
                         confRow = targetRow;
 
-                    messages.showMessage('notice', "Deleting " + confPrivateNet + ".");
+                    message.showMessage('notice', "Deleting " + confPrivateNet + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -240,7 +240,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -258,7 +258,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Remove row
                                 confRow.fadeOut().remove();
@@ -280,12 +280,12 @@ $(function () {
 
                                             if (data.status == 'error') {
 
-                                                messages.showMessage('error', data.message);
+                                                message.showMessage('error', data.message);
                                             }
 
                                             if (data.status == 'success') {
 
-                                                messages.showMessage('success', data.message);
+                                                message.showMessage('success', data.message);
 
                                                 // Remove row
                                                 routerRow.fadeOut().remove();
@@ -304,7 +304,7 @@ $(function () {
                                         })
                                         .fail(function () {
 
-                                            messages.showMessage('error', 'Server Fault');
+                                            message.showMessage('error', 'Server Fault');
 
                                             // Add class to indicate router is being deleted
                                             routerRow.removeClass("router-deleted");
@@ -330,7 +330,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();

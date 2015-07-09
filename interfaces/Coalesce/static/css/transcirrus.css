@@ -8,14 +8,15 @@ section {
     margin-bottom: 60px;
 }
 
-.error {
-    font-size: 90%;
-    margin: 0;
-    padding: 0 15px;
-}
-
-.center-text {
-    text-align: center;
+.ajax-loader {
+    display: block;
+    height: 16px;
+    width: 16px;
+    min-height: 16px;
+    min-width: 16px;
+    background-image: url('../images/ajax-loader.gif');
+    background-repeat: no-repeat;
+    margin: 0 auto;
 }
 
 .trans {
@@ -30,30 +31,8 @@ section {
     color: rgb(28, 60, 119);
 }
 
-.page-header {
-    margin-top: 0;
-    border-bottom-color: rgb(78, 93, 108);
-}
-
-.progress {
-    position: relative;
-}
-
-.progress span {
-    position: absolute;
-    display: block;
-    width: 100%;
-    color: rgb(255, 255, 255);
-}
-
-/* BUTTONS */
-
-.btn-center {
-    margin: 0 auto;
-}
-
-.btn-300 {
-    max-width: 300px;
+.center-text {
+    text-align: center;
 }
 
 /* NAVIGATION */
@@ -97,24 +76,6 @@ footer {
     font-family: sans-serif;
     position: fixed;
     right: 5px;
-}
-
-.btn-group.actions-dropdown {
-    float: right;
-}
-
-.dropdown-menu.bg-primary {
-    background-color: rgb(223, 105, 26);
-    color: rgb(255, 255, 255)
-}
-
-.dropdown-menu.table-dropdown {
-    left: unset;
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 7px;
-    padding: 0;
-    right: -6px;
 }
 
 /* WELCOME PAGE */

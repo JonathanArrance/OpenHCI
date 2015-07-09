@@ -31,7 +31,7 @@ $(function () {
 
                 var confirmedFlavor = $(flavor).find("option:selected").val();
 
-                messages.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + flavor.text() + ".");
+                message.showMessage('notice', "Resizing " + $('#instance-name').text() + " to " + flavor.text() + ".");
 
                 actions.slideUp();
 
@@ -46,20 +46,20 @@ $(function () {
 
                         if (data.status == "error") {
 
-                            messages.showMessage('error', data.message);
+                            message.showMessage('error', data.message);
                             emptyAndAppend(status, "ACTIVE");
                         }
 
                         if (data.status == "success") {
 
-                            messages.showMessage('success', data.message);
+                            message.showMessage('success', data.message);
                             emptyAndAppend(status, "ACTIVE");
                             emptyAndAppend('#instance-flavor', confirmedFlavor);
                         }
                     })
                     .fail(function () {
 
-                        messages.showMessage('error', "Server Fault");
+                        message.showMessage('error', "Server Fault");
                         emptyAndAppend(status, "ERROR");
                     })
                     .always(function () {

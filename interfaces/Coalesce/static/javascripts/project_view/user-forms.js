@@ -62,7 +62,7 @@ $(function () {
                             confEmail = email.val(),
                             confRole = role.val();
 
-                        messages.showMessage('notice', 'Creating new user ' + name.val());
+                        message.showMessage('notice', 'Creating new user ' + name.val());
 
                         // Hide widget buttons and disable widget view links
                         setVisible("#create-user", false);
@@ -78,12 +78,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    messages.showMessage('error', data.message);
+                                    message.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    messages.showMessage('success', data.message);
+                                    message.showMessage('success', data.message);
 
                                     // Initialize empty string for new router row
                                     var newRow = '';
@@ -116,7 +116,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                messages.showMessage('error', 'Server Fault');
+                                message.showMessage('error', 'Server Fault');
                             })
                             .always(function () {
 
@@ -187,7 +187,7 @@ $(function () {
                         confId = id,
                         confUsername = $(user).text();
 
-                    messages.showMessage('notice', "Deleting " + confUsername + ".");
+                    message.showMessage('notice', "Deleting " + confUsername + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -214,7 +214,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -223,7 +223,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Remove row
                                 confRow.fadeOut().remove();
@@ -240,7 +240,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -299,7 +299,7 @@ $(function () {
                     var confUser = user.val(),
                         confRole = role.val();
 
-                    messages.showMessage('notice', 'Adding existing user ' + confUser + ".");
+                    message.showMessage('notice', 'Adding existing user ' + confUser + ".");
 
                     // Hide widget buttons and disable widget view links
                     setVisible("#create-user", false);
@@ -315,12 +315,12 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
                             }
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Update user
                                 users.items[confUser].removed = "FALSE";
@@ -372,7 +372,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
                         })
                         .always(function () {
 
@@ -437,7 +437,7 @@ $(function () {
                         confId = id,
                         confUsername = $(user).text();
 
-                    messages.showMessage('notice', "Removing " + confUsername + ".");
+                    message.showMessage('notice', "Removing " + confUsername + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -464,7 +464,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -473,7 +473,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Remove row
                                 confRow.fadeOut().remove();
@@ -494,7 +494,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -562,7 +562,7 @@ $(function () {
                         confId = id,
                         confUsername = $(user).text();
 
-                    messages.showMessage('notice', "Enabling " + confUsername + ".");
+                    message.showMessage('notice', "Enabling " + confUsername + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -589,7 +589,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Recall clicked action link on error
                                 $(actionsCell).empty().fadeOut();
@@ -598,7 +598,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Update status and actions cells
                                 var newActions =
@@ -616,7 +616,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -684,7 +684,7 @@ $(function () {
                         confId = id,
                         confUsername = $(user).text();
 
-                    messages.showMessage('notice', "Disabling " + confUsername + ".");
+                    message.showMessage('notice', "Disabling " + confUsername + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -711,7 +711,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Recall clicked action link on error
                                 $(actionsCell).empty().fadeOut();
@@ -720,7 +720,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Update status and actions cells
                                 var newActions =
@@ -738,7 +738,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();

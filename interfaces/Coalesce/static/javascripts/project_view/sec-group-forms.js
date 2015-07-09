@@ -65,7 +65,7 @@ $(function () {
                             confTransport = 'tcp';
                         }
 
-                        messages.showMessage('notice', 'Creating new Key ' + confName);
+                        message.showMessage('notice', 'Creating new Key ' + confName);
 
                         setVisible("#create-security-group", false);
                         disableLinks(true);
@@ -79,12 +79,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    messages.showMessage('error', data.message);
+                                    message.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    messages.showMessage('success', data.message);
+                                    message.showMessage('success', data.message);
 
                                     // Initialize empty string for new router row
                                     var newRow = '';
@@ -117,7 +117,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                messages.showMessage('error', 'Server Fault');
+                                message.showMessage('error', 'Server Fault');
                             })
                             .always(function () {
 
@@ -188,7 +188,7 @@ $(function () {
                     var actionsCell = document.getElementById(confId + "-actions-cell");
                     var actionsHtml = actionsCell.innerHTML;
 
-                    messages.showMessage('notice', "Deleting " + confSecGroup + ".");
+                    message.showMessage('notice', "Deleting " + confSecGroup + ".");
 
                     disableLinks(true);
 
@@ -212,7 +212,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 $(actionsCell).empty().fadeOut();
                                 $(actionsCell).append(actionsHtml).fadeIn();
@@ -220,7 +220,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 $(targetRow).fadeOut().remove();
                             }
@@ -240,7 +240,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();
