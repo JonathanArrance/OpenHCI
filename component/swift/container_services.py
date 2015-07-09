@@ -12,6 +12,7 @@ from transcirrus.database.postgres import pgsql
 
 class container_service_ops:
     def __init__(self,user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")

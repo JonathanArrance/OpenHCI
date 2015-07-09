@@ -33,6 +33,7 @@ from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
+from transcirrus.component.nova.absolute_limits import absolute_limits_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -2952,8 +2953,24 @@ def get_version (request):
     out = {'status' : "success", 'data' : data}
     return HttpResponse(simplejson.dumps(out))
 
+# ---- Get Quota Utilization ----
+def get_quota_utilization(request):
+    try:
+        auth = request.session['auth']
+        limits = absolute_limits_ops(auth)
+        result = limits.get_absolute_limit_for_tenant(auth['project_id'])
 
-# ---Ceilometer Statistics ----
+        if result == []:
+            # No data was provided for this meter.
+            out = {'status': "success", 'message' : "empty dataset"}
+        else:
+            out = {'status': "success", 'statistics' : result}
+
+    except Exception as e:
+        out = {'status': "error", 'message' : "Error getting statistics: %s" %e}
+    return HttpResponse(simplejson.dumps(out))
+
+# ---- Ceilometer Statistics ----
 def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id=None, ceil_resource_id=None):
     try:
         out = {}

@@ -37,6 +37,7 @@ class neutron_net_ops:
                is_admin
                sec - optional - use HTTPS sec = TRUE defaults to FALSE
         """
+        reload(config)
         logger.sys_info("\n**Creating Neutron Network Object**\n")
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")

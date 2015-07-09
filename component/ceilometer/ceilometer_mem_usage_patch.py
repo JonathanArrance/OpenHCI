@@ -10,6 +10,7 @@ class MemoryUtilization:
     # per_type_uris = dict(uml='uml:///system', xen='xen:///', lxc='lxc:///')
 
     def __init__(self, user_dict):
+        reload(config)
         self.userdict = user_dict
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")

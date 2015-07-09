@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 
 """Setup for Transcirrus CiaC"""
 
 from __future__ import nested_scopes, division
-import sys, os, time, getopt, subprocess, dialog, ast
+import sys, os, time, getopt, subprocess, dialog
 from multiprocessing import Process
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
-import transcirrus.common.logger as logger
+#import transcirrus.common.logger as logger
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -20,16 +19,16 @@ from IPy import IP
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
-version_blurb = """Setup for Transcirrus CiaC
+version_blurb = """Setup for TransCirrus Cloud
                    Version 0.1 2013"""
 
 usage = """Usage: %(progname)s [option ...]
-Setup for Transcirrus CiaC.
+Setup for TransCirrus Cloud.
 
 Options:
       --help                   display this message and exit
       --version                output version information and exit""" \
-  % { "progname": progname }
+        % {"progname": progname}
 
 # Global parameters
 params = {}
@@ -92,23 +91,6 @@ def userbox(d):
             break
     return answer
 
-def progbox(d):
-    d.guage_start()
-    count = 0
-    prog = 0
-    while (message != 'END'):
-        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        count = count + 1
-        stat_raw = out.stdout.readlines()
-        logger.sys_info("HACK 1 %s"%(stat_raw))
-        stat = stat_raw[0].split(':')
-        logger.sys_info("HACK 2 %s"%(stat))
-        message = stat[-1].strip()
-        logger.sys_info("HACK 3 %s"%(message))
-        if(message != 'END'):
-            d.gauge_update(count, message)
-            prog = prog + 1.6
-    d.guage_stop()
 
 def passwordbox(d):
     """Takes input of password"""
@@ -125,27 +107,28 @@ def firstTimeFlag(d):
     # Return the answer given to the question (also specifies if ESC was
     # pressed)
     return d.yesno("Would you like to perform Setup?",
-         yes_label="Yes, take me to Setup",
-         no_label="No, take me to Coalesce Dashboard", width=80)
+                   yes_label="Yes, take me to Setup",
+                   no_label="No, take me to Coalesce Dashboard", width=80)
 
 
 def info(d, info_dict):
     while True:
         HIDDEN = 0x1
         elements = [
-            ("Uplink IP:", 1, 1, info_dict['uplink_ip'], 1, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 2, 1, info_dict['uplink_subnet'], 2, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 3, 1, info_dict['uplink_gateway'], 3, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 4, 1, info_dict['uplink_dns'], 4, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 5, 1, info_dict['uplink_domain'], 5, 24, 40, 40, 0x0),
-            ("Management IP:", 6, 1, info_dict['mgmt_ip'], 6, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 7, 1, info_dict['mgmt_subnet'], 7, 24, 40, 40, 0x0),
-            ("Management DNS:", 8, 1, info_dict['mgmt_dns'], 8, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 9, 1, info_dict['mgmt_domain'], 9, 24, 40, 40, 0x0),
-            ("VM Range Start-Point:", 10, 1, info_dict['vm_ip_min'], 10, 24, 40, 40, 0x0),
-            ("VM Range End-Point:", 11, 1, info_dict['vm_ip_max'], 11, 24, 40, 40, 0x0),
-            ("New Admin password:", 12, 1, info_dict['pwd'], 12, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 13, 1, info_dict['cnfrm'], 13, 24, 40, 40, HIDDEN)]
+            ("Node Name:", 1, 1, info_dict['node_name'], 1, 24, 40, 40, 0x0),
+            ("Uplink IP:", 2, 1, info_dict['uplink_ip'], 2, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 3, 1, info_dict['uplink_subnet'], 3, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 4, 1, info_dict['uplink_gateway'], 4, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 5, 1, info_dict['uplink_dns'], 5, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 6, 1, info_dict['uplink_domain'], 6, 24, 40, 40, 0x0),
+            ("Management IP:", 7, 1, info_dict['mgmt_ip'], 7, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 8, 1, info_dict['mgmt_subnet'], 8, 24, 40, 40, 0x0),
+            ("Management DNS:", 9, 1, info_dict['mgmt_dns'], 9, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 10, 1, info_dict['mgmt_domain'], 10, 24, 40, 40, 0x0),
+            ("VM Range Start-Point:", 11, 1, info_dict['vm_ip_min'], 11, 24, 40, 40, 0x0),
+            ("VM Range End-Point:", 12, 1, info_dict['vm_ip_max'], 12, 24, 40, 40, 0x0),
+            ("New Admin password:", 13, 1, info_dict['pwd'], 13, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 14, 1, info_dict['cnfrm'], 14, 24, 40, 40, HIDDEN)]
 
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77, insecure=True)
@@ -160,8 +143,8 @@ def singleNode(d):
     # Return the answer given to the question (also specifies if ESC was
     # pressed)
     return d.yesno("Is this currently a single node system?",
-         yes_label="Yes",
-         no_label="No, it contains other nodes (enable DHCP)", width=100)
+                   yes_label="Yes",
+                   no_label="No, it contains other nodes (enable DHCP)", width=100)
 
 
 def dhcp(d):
@@ -174,13 +157,14 @@ def dhcp(d):
             d.gauge_update(i, "Over %d%%. Good." % i, update_text=1)
         elif i == 80:
             d.gauge_update(i, "Yeah, this boring crap will be over Really "
-                           "Soon Now.", update_text=1)
+                              "Soon Now.", update_text=1)
         else:
             d.gauge_update(i)
 
         time.sleep(0.01 if params["fast_mode"] else 0.1)
 
     d.gauge_stop()
+
 
 '''
 def success_msg(d, seconds):
@@ -191,19 +175,21 @@ Setup has completed successfully.  The system will now restart in %u seconds\
 % seconds, height=15, seconds=seconds)
 '''
 
+
 def success_msg(d, seconds):
     uplink = util.get_uplink_ip()
     d.pause("""\
 Setup has completed successfully. The system is now ready to use\
  and updated with the information you have entered.  To connect to this unit\
  use the newly created Uplink IP address, %s, and login credentials."""
-% uplink, height=15, seconds=seconds)
+            % uplink, height=15, seconds=seconds)
+
 
 def rollback_msg(d, seconds):
     d.pause("""\
 Setup has encountered an issue.  The system will now rollback in %u seconds\
  to factory defaults.  Attempt to rerun setup."""
-% seconds, height=15, seconds=seconds)
+            % seconds, height=15, seconds=seconds)
 
 
 def clear_screen(d):
@@ -230,21 +216,23 @@ def clear_screen(d):
     return -1
 
 
-def setup(d):   
+def setup(d):
     d.msgbox("Hello, and welcome to CoalesceShell, the command-line " +
-        "interface tool for your TransCirrus system.\n"
-        "\n"
-        "Node Name: %s\n"
-        "Node ID: %s\n"
-        "\n"
-        "Node Cluster IP: %s \n"
-        "Node Uplink IP: %s\n"
-        "Node MGMT IP: %s\n"
-        %(util.get_node_name(),util.get_node_id(),util.get_cluster_ip(),util.get_uplink_ip(),util.get_mgmt_ip()), width=60, height=15)
+             "interface tool for your TransCirrus system.\n"
+             "\n"
+             "Node Name: %s\n"
+             "Node ID: %s\n"
+             "\n"
+             "Node Cluster IP: %s \n"
+             "Node Uplink IP: %s\n"
+             "Node MGMT IP: %s\n"
+             % (
+                 util.get_node_name(), util.get_node_id(), util.get_cluster_ip(), util.get_uplink_ip(), util.get_mgmt_ip()),
+             width=60, height=15)
 
     controls(d)
     user_dict = None
-    while(True):
+    while (True):
         user = userbox(d)
         password = passwordbox(d)
         try:
@@ -272,8 +260,9 @@ def setup(d):
         return
     else:
         d.msgbox("Continue to first time setup.")
-    
-    info_dict = {'uplink_ip': "",
+
+    info_dict = {'node_name': util.get_node_name(),
+                 'uplink_ip': "",
                  'uplink_subnet': "",
                  'uplink_gateway': "",
                  'uplink_dns': "",
@@ -286,10 +275,12 @@ def setup(d):
                  'vm_ip_max': "",
                  'pwd': "",
                  'cnfrm': ""}
-    
-    while(True):
-        
-        uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(d, info_dict)
+
+    while (True):
+
+        node_name, uplink_ip, uplink_subnet, uplink_gateway, uplink_dns, uplink_domain, mgmt_ip, mgmt_subnet, mgmt_dns, mgmt_domain, vm_ip_min, vm_ip_max, pwd, cnfrm = info(
+            d, info_dict)
+        info_dict['node_name'] = node_name
         info_dict['uplink_ip'] = uplink_ip
         info_dict['uplink_subnet'] = uplink_subnet
         info_dict['uplink_gateway'] = uplink_gateway
@@ -303,128 +294,132 @@ def setup(d):
         info_dict['vm_ip_max'] = vm_ip_max
         info_dict['pwd'] = pwd
         info_dict['cnfrm'] = cnfrm
-        
+
         # Confirm all entries exist
-        if(uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or
-                   uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or
-                   mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm == ""):
+        if (node_name == "" or uplink_ip == "" or uplink_subnet == "" or uplink_gateway == "" or uplink_dns == "" or
+                    uplink_domain == "" or mgmt_ip == "" or mgmt_subnet == "" or mgmt_dns == "" or
+                    mgmt_domain == "" or vm_ip_min == "" or vm_ip_max == "" or pwd == "" or cnfrm == ""):
             d.msgbox("Please fill out all fields, try again.", width=60, height=10)
             continue
         # Validate uplink ip
-        if(valid_ip(uplink_ip) is False):
+        if (valid_ip(uplink_ip) is False):
             d.msgbox("Invalid Uplink IP, try again.", width=60, height=10)
             continue
         # Validate uplink subnet
-        if(valid_ip(uplink_subnet) is False):
+        if (valid_ip(uplink_subnet) is False):
             d.msgbox("Invalid Uplink Subnet, try again.", width=60, height=10)
             continue
         # Validate uplink gateway
-        if(valid_ip(uplink_gateway) is False):
+        if (valid_ip(uplink_gateway) is False):
             d.msgbox("Invalid Uplink Gateway, try again.", width=60, height=10)
             continue
         # Validate gateway has same subnet as uplink
-        if(valid_ip_vm(uplink_ip, uplink_gateway, uplink_subnet) is False):
-            d.msgbox("Invalid Uplink Gateway, Uplink and Gateway must be on the same subnet, try again.", width=60, height=10)
+        if (valid_ip_vm(uplink_ip, uplink_gateway, uplink_subnet) is False):
+            d.msgbox("Invalid Uplink Gateway, Uplink and Gateway must be on the same subnet, try again.", width=60,
+                     height=10)
             continue
         # Validate uplink dns
-        if(valid_ip(uplink_dns) is False):
+        if (valid_ip(uplink_dns) is False):
             d.msgbox("Invalid Uplink DNS, try again.", width=60, height=10)
             continue
         # Validate mgmt ip
-        if(valid_ip(mgmt_ip) is False):
+        if (valid_ip(mgmt_ip) is False):
             d.msgbox("Invalid Management IP, try again.", width=60, height=10)
             continue
         # Validate mgmt subnet
-        if(valid_ip(mgmt_subnet) is False):
+        if (valid_ip(mgmt_subnet) is False):
             d.msgbox("Invalid Management Subnet, try again.", width=60, height=10)
             continue
         # Validate mgmt dns
-        if(valid_ip(mgmt_dns) is False):
+        if (valid_ip(mgmt_dns) is False):
             d.msgbox("Invalid Management DNS, try again.", width=60, height=10)
             continue
         # Validate start point not equal to uplink
-        if(valid_ip_vm(uplink_ip, vm_ip_min, uplink_subnet) is False):
+        if (valid_ip_vm(uplink_ip, vm_ip_min, uplink_subnet) is False):
             d.msgbox("Invalid VM Range Start-Point, try again.", width=60, height=10)
             continue
         # Validate end point greater than start point
-        if(valid_ip_max(vm_ip_min, vm_ip_max, uplink_subnet) is False):
+        if (valid_ip_max(vm_ip_min, vm_ip_max, uplink_subnet) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
         # Validate end point not equal to uplink
-        if(valid_ip_vm(uplink_ip, vm_ip_max, uplink_subnet) is False):
+        if (valid_ip_vm(uplink_ip, vm_ip_max, uplink_subnet) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
         # Validate new password
-        if(pwd != cnfrm and len(pwd) != 0 and len(cnfrm) != 0):
+        if (pwd != cnfrm and len(pwd) != 0 and len(cnfrm) != 0):
             d.msgbox("Passwords did not match, try again.", width=60, height=10)
             continue
         # Make sure uplink and mgmt IPs don't match
-        if(uplink_ip == mgmt_ip):
+        if (uplink_ip == mgmt_ip):
             d.msgbox("Uplink IP and Management IP cannot match, try again.", width=60, height=10)
             continue
         break
 
-    #try:
-    system = util.get_cloud_controller_name()
+    name_dict = {'old_name': util.get_node_name(), 'new_name': node_name}
+    util.update_cloud_controller_name(name_dict)
+
+    # try:
     new_system_variables = [
-        {"system_name":system,"parameter":"api_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"mgmt_ip","param_value": mgmt_ip},
-        {"system_name":system,"parameter":"admin_api_ip","param_value": '172.24.24.10'},
-        {"system_name":system,"parameter":"int_api_ip","param_value": '172.24.24.10'},
-        {"system_name":system,"parameter":"uplink_ip","param_value": uplink_ip},
-        {"system_name":system,"parameter":"uplink_dns","param_value": uplink_dns},
-        {"system_name":system,"parameter":"uplink_gateway","param_value": uplink_gateway},
-        {"system_name":system,"parameter":"uplink_domain_name","param_value": uplink_domain},
-        {"system_name":system,"parameter":"uplink_subnet","param_value": uplink_subnet},
-        {"system_name":system,"parameter":"mgmt_domain_name","param_value": mgmt_domain},
-        {"system_name":system,"parameter":"mgmt_subnet","param_value": mgmt_subnet},
-        {"system_name":system,"parameter":"mgmt_dns","param_value": mgmt_dns},
-        {"system_name":system,"parameter":"vm_ip_min","param_value": vm_ip_min},
-        {"system_name":system,"parameter":"vm_ip_max","param_value": vm_ip_max}]
+        {"system_name": node_name, "parameter": "api_ip", "param_value": uplink_ip},
+        {"system_name": node_name, "parameter": "mgmt_ip", "param_value": mgmt_ip},
+        {"system_name": node_name, "parameter": "admin_api_ip", "param_value": '172.24.24.10'},
+        {"system_name": node_name, "parameter": "int_api_ip", "param_value": '172.24.24.10'},
+        {"system_name": node_name, "parameter": "uplink_ip", "param_value": uplink_ip},
+        {"system_name": node_name, "parameter": "uplink_dns", "param_value": uplink_dns},
+        {"system_name": node_name, "parameter": "uplink_gateway", "param_value": uplink_gateway},
+        {"system_name": node_name, "parameter": "uplink_domain_name", "param_value": uplink_domain},
+        {"system_name": node_name, "parameter": "uplink_subnet", "param_value": uplink_subnet},
+        {"system_name": node_name, "parameter": "mgmt_domain_name", "param_value": mgmt_domain},
+        {"system_name": node_name, "parameter": "mgmt_subnet", "param_value": mgmt_subnet},
+        {"system_name": node_name, "parameter": "mgmt_dns", "param_value": mgmt_dns},
+        {"system_name": node_name, "parameter": "vm_ip_min", "param_value": vm_ip_min},
+        {"system_name": node_name, "parameter": "vm_ip_max", "param_value": vm_ip_max}]
 
     p = Process(target=run_setup, args=(new_system_variables, user_dict))
     p.start()
-    
+
     fill_text = "Preparing your cloud..."
     d.gauge_start(text=fill_text)
     fill = 0
     status = None
     status1 = None
     count = 0
-    while(1):
-        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s'%(count), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while (1):
+        out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s' % (count), shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out.wait()
         time.sleep(1)
         stat_raw = out.stdout.readlines()
-        if(len(stat_raw) == 0):
+        if (len(stat_raw) == 0):
             continue
         count = count + 1
         fill = fill + 1.851
         stat = stat_raw[0].split(':')
         fill_text = stat[-1].strip()
-        if(fill_text == "END"):
+        if (fill_text == "END"):
             status = p.join()
-            fill = 0;
+            fill = 0
             o = Process(target=change_admin_password, args=(user_dict, pwd))
             o.start()
-            while(1):
+            while (1):
                 d.gauge_update(fill, text='Updating credentials...', update_text=1)
                 fill = fill + 10
                 time.sleep(1)
-                if(fill > 100):
+                if (fill > 100):
                     status1 = o.join()
                     break
             break
         else:
             d.gauge_update(fill, text=fill_text, update_text=1)
     d.gauge_stop()
-    
+
     timeout = 10
-    
-    if(p.exitcode == 0):
+
+    if (p.exitcode == 0):
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
-        if(flag_set['first_time_boot'] != 'OK'):
+        if (flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
         success_msg(d, timeout)
         clear_screen(d)
@@ -433,6 +428,8 @@ def setup(d):
         clear_screen(d)
         rollback(user_dict)
         util.reboot_system()
+
+
 """
     node = util.get_node_id()
     system_variables = util.get_system_variables(node)
@@ -465,6 +462,7 @@ def setup(d):
     clear_screen(d)
 """
 
+
 def valid_ip(address):
     """
     Validate IP address using IPy library
@@ -481,6 +479,7 @@ def valid_ip(address):
         return False
     else:
         return False
+
 
 def check_ip_format(address):
     host_bytes = address.split('.')
@@ -549,7 +548,7 @@ def process_command_line():
               "testsuite_mode": False}
 
     # Get the home directory, if any, and store it in params (often useful).
-    root_dir = os.sep           # This is OK for Unix-like systems
+    root_dir = os.sep  # This is OK for Unix-like systems
     params["home_dir"] = os.getenv("HOME", root_dir)
 
     # General option processing
@@ -566,7 +565,7 @@ def process_command_line():
             # Therefore, if we are here, it can't be due to any of these
             # options.
             assert False, "Unexpected option received from the " \
-                "getopt module: '%s'" % option
+                          "getopt module: '%s'" % option
 
     return ("continue", None)
 

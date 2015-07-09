@@ -111,7 +111,7 @@ def check_node_update(data):
                 update = 'OK'
             elif data['Value']['node_mgmt_ip'] != node['node_mgmt_ip']:
                 update = 'OK'
-            elif data['Value']['node_controller'] != node['node_controller']:
+            elif data['Value']['node_controller'] != node['er']:
                 update = 'OK'
             elif data['Value']['node_cloud_name'] != node['node_cloud_name']:
                 update = 'OK'
@@ -630,7 +630,7 @@ def client_thread(conn, client_addr):
                                     'node_type':data['Value']['node_type'],
                                     'node_data_ip':data['Value']['node_data_ip'],
                                     'node_mgmt_ip':data['Value']['node_mgmt_ip'],
-                                    'node_controller':data['Value']['node_controller'],
+                                    'node_controller':util.get_node_name(),
                                     'node_cloud_name':data['Value']['node_cloud_name'],
                                     'avail_zone':data['Value']['avail_zone']
                                     }
