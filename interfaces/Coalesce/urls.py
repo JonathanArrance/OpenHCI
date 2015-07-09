@@ -517,6 +517,11 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_statistics_for_instance',
             name='get_statistics_for_instance'),
 
+        # --- Quota Utilization ----
+        url(r'^quota_utilization/get/utilization/',
+            'coalesce.coal_beta.views.get_quota_utilization',
+            name='get_quota_utilization'),
+
         # --- Version info ----
         url(r'^version/$',
             'coalesce.coal_beta.views.get_version',
