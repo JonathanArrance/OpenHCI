@@ -95,6 +95,7 @@ $(function () {
                                     var rowCount = $("#snapshot_list tr").length;
                                     if (rowCount > 2) {
                                         $("#snapshot_placeholder").remove().fadeOut();
+                                        $("#revert-server").show();
                                     }
 
                                     // Update Selects
@@ -322,6 +323,7 @@ $(function () {
                             .append($("<td></td>"))
                             .append($("<td></td>"))
                             .appendTo($("#snapshot_list")).fadeIn();
+                        $("#revert-server").hide();
                     }
                 }
             })
