@@ -262,15 +262,12 @@ $(function () {
 
     $(function () {
 
-        // Open modal form when delete-project button clicked
+        // Open modal form when build-instane button clicked
         $("#create-machine").click(function (event) {
 
             // Prevent scrolling to top of page on click
             event.preventDefault();
-
-            if (currentSection == "initialize") {
-                initializeBamSection();
-            }
+            initializeBamSection();
             $("#build-instance-form").dialog("open");
         });
 

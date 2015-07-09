@@ -1029,7 +1029,7 @@ class server_ops:
             logger.sys_error("No dictionary passed into create_sec_group operation.")
             raise Exception("No dictionary passed into create_sec_group operation.")
         if(create_sec['update'] == 'false'):
-            if(('group_name' not in create_sec) or ('group_desc' not in create_sec)):
+            if('group_name' not in create_sec):
                 logger.sys_error("Required value not passed to create_sec_group operation")
                 raise Exception("Required value not passed to create_sec_group operation")
             #check if the group name exists, this is a huge hack
@@ -1043,6 +1043,8 @@ class server_ops:
             except:
                 logger.sql_error("Failed while checking security group.")
                 raise Exception("Failed while checking security group.")
+            if(('group_desc' not in create_sec) or (create_sec['group_desc'] == "")):
+                create_sec['group_desc'] = "none"
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(create_sec['project_id'])}

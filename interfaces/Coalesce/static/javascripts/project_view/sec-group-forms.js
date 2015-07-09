@@ -47,7 +47,7 @@ $(function () {
                     var isValid =
                         checkLength(groupName, "Group name", standardStringMin, standardStringMax) &&
                         checkCharfield(groupName, "Group name") &&
-                        checkLength(groupDesc, "Group description", 6, 80);
+                        checkLength(groupDesc, "Group description", 0, 80);
 
                     if (!isValid) {
                     } else {
@@ -63,6 +63,10 @@ $(function () {
 
                         if (confTransport == undefined) {
                             confTransport = 'tcp';
+                        }
+
+                        if (confDesc == "") {
+                            confDesc = "none";
                         }
 
                         message.showMessage('notice', 'Creating new Key ' + confName);
