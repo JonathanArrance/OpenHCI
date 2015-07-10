@@ -490,11 +490,11 @@ def pu_project_view(request, project_id):
     sa = server_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
+
     #do not use until version2
     #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
-    project_admin = util.get_project_admin(project_id)
     users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
@@ -602,7 +602,6 @@ def pu_project_view(request, project_id):
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
-                                                        'project_admin': project_admin,
                                                         'users': users,
                                                         'ouserinfo': ouserinfo,
                                                         'userinfo':userinfo,
