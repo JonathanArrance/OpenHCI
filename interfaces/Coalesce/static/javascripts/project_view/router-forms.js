@@ -53,7 +53,7 @@ $(function () {
                         var confRouter = router_name.val(),
                             confPrivateNet = priv_net.val();
 
-                        messages.showMessage('notice', 'Creating new router ' + confRouter);
+                        message.showMessage('notice', 'Creating new router ' + confRouter);
 
                         // Disable widget view links and hide create button
                         disableLinks(true);
@@ -68,12 +68,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    messages.showMessage('error', data.message);
+                                    message.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    messages.showMessage('success', data.message);
+                                    message.showMessage('success', data.message);
 
                                     // Initialize empty string for new router row
                                     var newRow =
@@ -105,7 +105,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                messages.showMessage('error', 'Server Fault');
+                                message.showMessage('error', 'Server Fault');
                             })
                             .always(function () {
 
@@ -174,7 +174,7 @@ $(function () {
                         confRouter = $(router).text(),
                         confRow = targetRow;
 
-                    messages.showMessage('notice', "Deleting " + confRouter + ".");
+                    message.showMessage('notice', "Deleting " + confRouter + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -201,7 +201,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                messages.showMessage('error', data.message);
+                                message.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -210,7 +210,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                messages.showMessage('success', data.message);
+                                message.showMessage('success', data.message);
 
                                 // Remove row
                                 confRow.fadeOut().remove();
@@ -236,7 +236,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            messages.showMessage('error', 'Server Fault');
+                            message.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();

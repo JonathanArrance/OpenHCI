@@ -21,7 +21,7 @@ $(function() {
             buttons: {
                 "Confirm": function() {
 
-                    messages.showMessage('notice', 'Toggling server power.');
+                    message.showMessage('notice', 'Toggling server power.');
 
                     $.getJSON();
 
