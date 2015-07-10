@@ -103,7 +103,7 @@ class server_actions:
 
     def server_power_control(self,input_dict):
         """
-        DESC: Power off a virtual server
+        DESC: Power on or off an instance
         INPUT: input_dict - server_id - req
                           - project_id - req
                           - power_state on/off - req

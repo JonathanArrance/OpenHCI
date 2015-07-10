@@ -95,6 +95,7 @@ $(function () {
                                     var rowCount = $("#snapshot_list tr").length;
                                     if (rowCount > 2) {
                                         $("#snapshot_placeholder").remove().fadeOut();
+                                        $("#revert-server").show();
                                     }
 
                                     // Update Selects
@@ -186,6 +187,7 @@ $(function () {
 
                     $.getJSON('/revert_instance_snapshot/' + PROJECT_ID + '/' + SERVER_ID + '/' + confSnap + '/')
                         .done(function (data) {
+                            console.log(data);
 
                             if (data.status == 'error') {
 
@@ -195,8 +197,8 @@ $(function () {
                             if (data.status == 'success') {
 
                                 message.showMessage('success', data.message);
-
-                                window.location.assign(STATIC_URL + '/' + PROJECT_ID + '/' + SERVER_ID + '/instance_view/');
+                                var urlstring = '/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/'
+                                window.location.assign(urlstring);
                             }
                         })
                         .fail(function () {
@@ -321,6 +323,7 @@ $(function () {
                             .append($("<td></td>"))
                             .append($("<td></td>"))
                             .appendTo($("#snapshot_list")).fadeIn();
+                        $("#revert-server").hide();
                     }
                 }
             })

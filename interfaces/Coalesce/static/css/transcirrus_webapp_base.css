@@ -1410,13 +1410,15 @@ input.span1, textarea.span1, .uneditable-input.span1 {
 }
 
 input[disabled],
+input:disabled,
 select[disabled],
 textarea[disabled],
+input[type="text"]:disabled,
 input[readonly],
 select[readonly],
 textarea[readonly] {
     cursor: not-allowed;
-    background-color: #f5f5f5;
+    background: rgb(200, 200, 200)!important;
 }
 
 input[type="radio"][disabled],
