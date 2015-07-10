@@ -1292,8 +1292,8 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             self.db.pg_transaction_rollback()
-            logger.sys_error("Could not create the keys %s in project %s: %s" % (key_dict['key_name'], key_dict['project_id'], e))
-            raise Exception("Could not create the keys %s in project %s: %s" % (key_dict['key_name'], key_dict['project_id'], e))
+            logger.sys_error("Could not create the keys pairs %s in project %s: %s" % (key_dict['key_name'], key_dict['project_id'], e))
+            raise Exception("Could not create the keys pairs %s in project %s: %s" % (key_dict['key_name'], key_dict['project_id'], e))
 
         if(rest['response'] == 200):
             #build up the return dictionary and return it if everythig is good to go

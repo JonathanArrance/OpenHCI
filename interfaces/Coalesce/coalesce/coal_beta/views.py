@@ -490,6 +490,7 @@ def pu_project_view(request, project_id):
     sa = server_actions(auth)
     fo = flavor_ops(auth)
     cso = container_service_ops(auth)
+
     #do not use until version2
     #aso = account_service_ops(auth)
 
