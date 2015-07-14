@@ -335,7 +335,7 @@ $(function () {
                         var newRow =
                             '<tr id="' + data.ip_info.floating_ip_id + '">' +
                             '<td id="' + data.ip_info.floating_ip_id + '-ip-cell">' +
-                            '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                            '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" style="color:#696969;">' +
                             '<span id="' + data.ip_info.floating_ip_id + '-ip-address">' + data.ip_info.floating_ip + '</span></a></td>' +
                             '<td id="' + data.ip_info.floating_ip_id + '-instance-cell"><span id="' + data.ip_info.floating_ip_id + '-instance-name">None</span></td>' +
                             '<td id="' + data.ip_info.floating_ip_id + '-actions-cell"><a href="#" " class="deallocate-ip">deallocate</a></td>' +
