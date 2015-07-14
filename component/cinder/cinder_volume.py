@@ -842,13 +842,12 @@ class volume_ops:
                 logger.sys_error ("Could not connect to the API")
                 raise Exception ("Could not connect to the API")
 
-            #raw = vol_type['name']
-            #vol_type_list = self.list_volume_types()
-            #vol_type_id = None
-            #for v_type in vol_type_list:
-            #    if raw.lower() == volume_type_name.lower():
-            #        vol_type_id = vol_type['id']
-            #        break
+            vol_type_list = self.list_volume_types()
+            vol_type_id = None
+            for v_type in vol_type_list:
+                if volume_type_name.lower() == v_type['name'].lower():
+                    vol_type_id = v_type['id']
+                    break
 
             if vol_type_id == None:
                 raise Exception ("Volume Type %s was not found for deletion" % volume_type_name)
