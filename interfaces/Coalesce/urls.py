@@ -497,23 +497,23 @@ urlpatterns = patterns('',
             name='get_statistics'),
 
         # --- Ceilometer Statistics ----
-        url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/$',
+        url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics',
             name='get_statistics'),
 
-        url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/(?P<ceil_tenant_id>[^/]+)/$',
+        url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_tenant_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics',
             name='get_statistics'),
 
-        url(r'^ceilometer/get/statistics/adminresource/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
+        url(r'^ceilometer/get/statistics/adminresource/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics',
             name='get_statistics'),
 
-        url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/(?P<ceil_tenant_id>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
+        url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_tenant_id>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics',
             name='get_statistics'),
 
-        url(r'^(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/instance_view/ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_type>[^/]+)/(?P<ceil_tenant_id>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
+        url(r'^(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/instance_view/ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_tenant_id>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics_for_instance',
             name='get_statistics_for_instance'),
 
