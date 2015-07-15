@@ -10,7 +10,7 @@ from transcirrus.operations.revert_instance_snapshot import revert_inst_snap
 auth = authorization("admin","password")
 b = auth.get_auth()
 
-input_dict = {'snapshot_id': 'c0a70c4a-f82d-410b-bc63-7f20b42c2f49','instance_id': 'c0cc70ea-ced0-4149-b4f2-dc413a052c7e','project_id':'57944987bd224ac497534f6c875553f9'}
+input_dict = {'snapshot_id': '85bd1140-ef6e-48b8-b944-fe91ee9236a3','instance_id': 'edd840c5-0714-4288-abbb-0150743e63ea','project_id':'ed9dbabaf2a54f13871d477d4a4f2d1e'}
 
 yo = revert_inst_snap(input_dict,b)
 

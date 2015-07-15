@@ -262,15 +262,12 @@ $(function () {
 
     $(function () {
 
-        // Open modal form when delete-project button clicked
+        // Open modal form when build-instane button clicked
         $("#create-machine").click(function (event) {
 
             // Prevent scrolling to top of page on click
             event.preventDefault();
-
-            if (currentSection == "initialize") {
-                initializeBamSection();
-            }
+            initializeBamSection();
             $("#build-instance-form").dialog("open");
         });
 
@@ -311,6 +308,72 @@ $(function () {
 
         $("#bam-image-location").change(function () {
             changeImageLocation($(this), $("#bam-image-import-local"), $("#bam-image-import-remote"));
+        });
+
+        $("#bam-volume-select-existing").change(function () {
+            changeSelectPreexistingVolume(this);
+        });
+
+        $("#bam-allocate-ip").click(function (event) {
+            // Prevent scrolling to top of page on click
+            event.preventDefault();
+            message.showMessage('notice', "Allocating IP.");
+
+            $.getJSON('/allocate_floating_ip/' + PROJECT_ID + '/' + extNet + '/')
+                .done(function (data) {
+
+                    if (data.status == 'error') {
+
+                        message.showMessage('error', "No available IPs.  If you just deallocated an IP, wait a few minutes and try again.");
+                    }
+
+                    if (data.status == 'success') {
+
+                        message.showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
+
+                        // Generate new row html
+                        var newRow =
+                            '<tr id="' + data.ip_info.floating_ip_id + '">' +
+                            '<td id="' + data.ip_info.floating_ip_id + '-ip-cell">' +
+                            '<a href="/floating_ip/' + data.ip_info.floating_ip_id + '/view/" class="disable-link disabled-link" style="color:#696969;">' +
+                            '<span id="' + data.ip_info.floating_ip_id + '-ip-address">' + data.ip_info.floating_ip + '</span></a></td>' +
+                            '<td id="' + data.ip_info.floating_ip_id + '-instance-cell"><span id="' + data.ip_info.floating_ip_id + '-instance-name">None</span></td>' +
+                            '<td id="' + data.ip_info.floating_ip_id + '-actions-cell"><a href="#" " class="deallocate-ip">deallocate</a></td>' +
+                            '</tr>';
+
+                        // If first fip, remove placeholder
+                        var rowCount = $('#fip_list tr').length;
+                        if (rowCount <= 2) {
+                            $('#fip_placeholder').remove().fadeOut();
+                        }
+
+                        // Append new row
+                        $("#fip_list").append(newRow).fadeIn();
+
+                        fips.setItem(data.ip_info.floating_ip_id, {
+                            id: data.ip_info.floating_ip_id,
+                            ip: data.ip_info.floating_ip
+                        });
+
+                        // Add option to assign_ip select
+                        addToSelect(data.ip_info.floating_ip_id, data.ip_info.floating_ip, $("#assign_floating_ip"), assignableFips);
+                        refreshSelect($("#bam-security-ip"), assignableFips);
+                        $('<option></option>')
+                            .val("none")
+                            .html("Skip Attaching IP")
+                            .prop("selected", "selected")
+                            .prependTo($("#bam-security-ip"));
+                    }
+                })
+                .fail(function () {
+
+                    message.showMessage('error', 'Server Fault');
+                })
+                .always(function () {
+
+                    // Reset interface
+                    checkAssignFip();
+                });
         });
 
         changeImageLocation($("#bam-image-location"), $("#bam-image-import-local"), $("#bam-image-import-remote"));
@@ -536,6 +599,9 @@ $(function () {
                 "description": {
                     "element": $("#bam-group-description"),
                     "validation": function () {
+                        if (this.element.val() == "") {
+                            this.element.val("none");
+                        }
                         return checkLength(this.element, "Security Group description", 0, 80);
                     },
                     "value": ""
@@ -569,7 +635,8 @@ $(function () {
 });
 
 function initializeBamSection() {
-    changeBamSection();
+    resetBamInputs();
+    switchSections(currentSection, "instance");
     getStorage(PROJECT_ID);
     bamParams.group.inputs.ports.element.val("443,80,22");
     $(".bam-overall-progress-bar").progressbar({value: 0});
@@ -586,6 +653,8 @@ function resetBamInputs() {
             resetUiValidation(bamParams[section].inputs[input].element);
         }
     }
+    changeImageLocation($("#bam-image-location"), $("#bam-image-import-local"), $("#bam-image-import-remote"));
+    changeSelectPreexistingVolume($("#bam-volume-select-existing"));
 }
 
 function changeBamSection(button) {
@@ -716,30 +785,30 @@ function switchSections(current, next) {
             backBtn.hide(0);
             createBtn.hide(0);
             finishBtn.hide(0);
-            form.dialog({height: 455});
+            form.dialog({height: 475});
             break;
         case "image":
             backBtn.show(0);
-            form.dialog({height: 610});
+            form.dialog({height: 630});
             changeImageLocation($("#bam-image-location"), $("bam-image-import-local"), $("bam-image-import-remote"));
             break;
         case "volume":
             backBtn.show(0);
-            form.dialog({height: 560});
+            form.dialog({height: 580});
             break;
         case "security":
-            form.dialog({height: 605});
+            form.dialog({height: 635});
             nextBtn.show(0);
             createBtn.hide(0);
             break;
         case "group":
-            form.dialog({height: 505});
+            form.dialog({height: 525});
             nextBtn.show(0);
             createBtn.hide(0);
             break;
         case "progress":
             updateProgressSection();
-            form.dialog({height: 445});
+            form.dialog({height: 465});
             nextBtn.hide(0);
             createBtn.show(0);
             break;
@@ -747,7 +816,7 @@ function switchSections(current, next) {
             createBtn.hide();
             backBtn.hide();
             finishBtn.show();
-            form.dialog({height: 600});
+            form.dialog({height: 620});
             break;
     }
 }
@@ -849,24 +918,24 @@ function buildInstance() {
             url = "";
         if (imageType == "image_file") {
             url = '/import_local/' +
-            bamParams.image.inputs.name.value + '/' +
-            bamParams.image.inputs.container.value + '/' +
-            bamParams.image.inputs.disk.value + '/' +
-            bamParams.image.inputs.type.value + '/' +
-            "na" + '/' +
-            bamParams.image.inputs.visibility.value + '/' +
-            bamParams.image.inputs.os.value + '/' +
-            imageProgressId + '/';
+                bamParams.image.inputs.name.value + '/' +
+                bamParams.image.inputs.container.value + '/' +
+                bamParams.image.inputs.disk.value + '/' +
+                bamParams.image.inputs.type.value + '/' +
+                "na" + '/' +
+                bamParams.image.inputs.visibility.value + '/' +
+                bamParams.image.inputs.os.value + '/' +
+                imageProgressId + '/';
         } else {
             url = '/import_remote/' +
-            bamParams.image.inputs.name.value + '/' +
-            bamParams.image.inputs.container.value + '/' +
-            bamParams.image.inputs.disk.value + '/' +
-            bamParams.image.inputs.type.value + '/' +
-            bamParams.image.inputs.importRemote.value + '/' +
-            bamParams.image.inputs.visibility.value + '/' +
-            bamParams.image.inputs.os.value + '/' +
-            imageProgressId + '/';
+                bamParams.image.inputs.name.value + '/' +
+                bamParams.image.inputs.container.value + '/' +
+                bamParams.image.inputs.disk.value + '/' +
+                bamParams.image.inputs.type.value + '/' +
+                bamParams.image.inputs.importRemote.value + '/' +
+                bamParams.image.inputs.visibility.value + '/' +
+                bamParams.image.inputs.os.value + '/' +
+                imageProgressId + '/';
         }
 
         uploadImage = $.ajax({
@@ -999,7 +1068,8 @@ function buildInstance() {
             key + '/' +
             uploadedImage + '/' +
             bamParams.instance.inputs.network.value + '/' +
-            PROJECT_ID + '/false/none/none/none/')
+            PROJECT_ID +
+            '/false/none/none/none/')
             .done(function (data) {
                 if (data.status == 'error') {
                     messages.showMessage('error', data.message);
