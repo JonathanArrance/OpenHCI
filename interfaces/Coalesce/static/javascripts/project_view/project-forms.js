@@ -30,7 +30,7 @@ $(function () {
             buttons: {
                 "Confirm": function () {
 
-                    message.showMessage('notice', "Deleting Project");
+                    messages.showMessage('notice', "Deleting Project");
 
                     disableUiButtons('.ui-button', true);
 
@@ -41,17 +41,17 @@ $(function () {
                     $.getJSON('/projects/' + PROJECT_ID + '/' + PROJECT + '/delete/')
                         .done(function (data) {
                             if (data.status == "error") {
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
                                 disableUiButtons('.ui-button', false);
                                 setVisible($("#project-delete-progressbar"), false);
                             }
                             if (data.status == "success") {
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
                                 location.replace('/cloud/manage');
                             }
                         })
                         .fail(function () {
-                            message.showMessage('error', "Server Fault");
+                            messages.showMessage('error', "Server Fault");
                             disableUiButtons('.ui-button', false);
                             setVisible($("#project-delete-progressbar"), false);
                         })
@@ -122,7 +122,7 @@ $(function () {
                     });
                 })
                 .fail(function () {
-                    message.showMessage('error', "Server Fault");
+                    messages.showMessage('error', "Server Fault");
                 })
                 .always(function () {
 
@@ -169,7 +169,7 @@ $(function () {
                         });
                     })
                     .fail(function () {
-                        message.showMessage('error', "Server Fault");
+                        messages.showMessage('error', "Server Fault");
                     });
 
                 $.each(settings, function (index, setting) {
@@ -184,7 +184,7 @@ $(function () {
                     .done(function (data) {
 
                         if (data.status == 'error') {
-                            message.showMessage('error', data.message);
+                            messages.showMessage('error', data.message);
                             $.each(settings, function (i, setting) {
                                 $.each(Object.keys(currentSettings), function (j, current) {
                                     if (setting.key == current) {
@@ -194,7 +194,7 @@ $(function () {
                             })
                         }
                         if (data.status == 'success') {
-                            message.showMessage('success', data.message);
+                            messages.showMessage('success', data.message);
                             $.each(settings, function (i, setting) {
                                 $.each(Object.keys(data.project), function (j, returned) {
                                     if (setting.key == returned) {
@@ -205,7 +205,7 @@ $(function () {
                         }
                     })
                     .fail(function () {
-                        message.showMessage('error', "Server Fault");
+                        messages.showMessage('error', "Server Fault");
                         $.each(settings, function (i, setting) {
                             $.each(Object.keys(currentSettings), function (j, current) {
                                 if (setting.key == current) {
@@ -895,7 +895,7 @@ function buildInstance() {
             .done(function (data) {
                 data = JSON.parse(data);
                 if (data.status == 'error') {
-                    message.showMessage('error', data.message);
+                    messages.showMessage('error', data.message);
                     error = true;
                     return false;
                 }
@@ -905,7 +905,7 @@ function buildInstance() {
                 }
             })
             .fail(function () {
-                message.showMessage("error", "Error: Could not upload image");
+                messages.showMessage("error", "Error: Could not upload image");
                 error = true;
                 return false;
             });
@@ -929,7 +929,7 @@ function buildInstance() {
             .done(function (data) {
 
                 if (data.status == 'error') {
-                    message.showMessage('error', data.message);
+                    messages.showMessage('error', data.message);
                     error = true;
                     return false;
                 }
@@ -941,7 +941,7 @@ function buildInstance() {
                     secGroup = bamParams["group"].inputs["name"].value;
                 }
             }).fail(function () {
-                message.showMessage("error", "Error: Could not create security group");
+                messages.showMessage("error", "Error: Could not create security group");
                 error = true;
                 return false;
             });
@@ -956,7 +956,7 @@ function buildInstance() {
         createKey = $.getJSON('/create_sec_keys/' + bamParams.security.inputs.newKey.value + '/' + PROJECT_ID + '/')
             .done(function (data) {
                 if (data.status == 'error') {
-                    message.showMessage('error', data.message);
+                    messages.showMessage('error', data.message);
                     error = true;
                     return false;
                 }
@@ -970,7 +970,7 @@ function buildInstance() {
                 }
             })
             .fail(function () {
-                message.showMessage("error", "Error: Could not create security key");
+                messages.showMessage("error", "Error: Could not create security key");
                 error = true;
                 return false;
             });
@@ -1002,7 +1002,7 @@ function buildInstance() {
             PROJECT_ID + '/false/none/none/none/')
             .done(function (data) {
                 if (data.status == 'error') {
-                    message.showMessage('error', data.message);
+                    messages.showMessage('error', data.message);
                     error = true;
                     return false;
                 }
@@ -1016,7 +1016,7 @@ function buildInstance() {
                 }
             })
             .fail(function () {
-                message.showMessage("error", "Error: Could not create instance");
+                messages.showMessage("error", "Error: Could not create instance");
                 error = true;
                 return false;
             });
@@ -1033,7 +1033,7 @@ function buildInstance() {
                     .done(function (data) {
 
                         if (data.status == 'error') {
-                            message.showMessage('error', data.message);
+                            messages.showMessage('error', data.message);
                             error = true;
                             return false;
                         }
@@ -1046,7 +1046,7 @@ function buildInstance() {
                         }
                     })
                     .fail(function () {
-                        message.showMessage("error", "Error: Could not create volume");
+                        messages.showMessage("error", "Error: Could not create volume");
                         error = true;
                         return false;
                     });
@@ -1070,7 +1070,7 @@ function buildInstance() {
                         .done(function (data) {
 
                             if (data.status == 'error') {
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
                                 error = true;
                                 return false;
                             }
@@ -1096,7 +1096,7 @@ function buildInstance() {
                             }
                         })
                         .fail(function () {
-                            message.showMessage("error", "Error: Could not attach volume");
+                            messages.showMessage("error", "Error: Could not attach volume");
                             error = true;
                             return false;
                         });
@@ -1116,7 +1116,7 @@ function buildInstance() {
                             .done(function (data) {
 
                                 if (data.status == 'error') {
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                     error = true;
                                     return false;
                                 }
@@ -1129,7 +1129,7 @@ function buildInstance() {
                                 }
                             })
                             .fail(function () {
-                                message.showMessage("error", "Error: Could not assign ip");
+                                messages.showMessage("error", "Error: Could not assign ip");
                                 error = true;
                                 return false;
                             })

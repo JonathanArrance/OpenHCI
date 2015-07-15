@@ -33,7 +33,6 @@ from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
-from transcirrus.component.nova.absolute_limits import absolute_limits_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -86,25 +85,46 @@ upgrade_cache = None
 eseries_config = None
 nfs_config = None
 
-def stats(request):
+def dashboard(request):
     try:
         auth = request.session['auth']
+        if auth:
+            return render_to_response('coal/dashboard.html', RequestContext(request,))
+        else:
+            return render_to_response('coal/welcome.html', RequestContext(request,))
+    except Exception as e:
+        return render_to_response('coal/welcome.html', RequestContext(request,))
 
+def get_confirm(request, title, message, call, notice, async):
+    t = title.replace('!', ' ')
+    m = message.replace('!', ' ')
+    m += "?"
+    c = call.replace('!', '/')
+    n = notice.replace('!', ' ')
+    n += " ..."
+    confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async}
+    return render_to_response('coal/confirm.html', RequestContext(request, {'confirm': confirm}))
+
+def get_node_stats(request):
+    try:
+        auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
             #Cloud/Node stats
-            stats = stat_ops(auth)
             ns = node_stats
-            tot_users = stats.get_total_cloud_users()
-            tot_proj = stats.get_num_project()
             full_stats = ns.node_stats()
-            tot_nodes = len(full_stats)
+            return render_to_response('coal/dashboard_widgets/node_stats.html', RequestContext(request, {'full_stats': full_stats}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/node_stats.html', RequestContext(request, {'full_stats': "error"}))
 
+def get_project_stats(request):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
             #Project stats
             to = tenant_ops(auth)
             so = server_ops(auth)
             l3 = layer_three_ops(auth)
             vo = volume_ops(auth)
-            ao = account_service_ops(auth)
             no = neutron_net_ops(auth)
 
             tl = to.list_all_tenants()
@@ -119,11 +139,6 @@ def stats(request):
                 volumes = vo.list_volumes(tenant['project_id'])
                 num_vol = len(volumes)
 
-                #containers = ao.get_account_info(tenant['project_id'])
-                #num_cont = len(containers)
-                #print num_cont
-                num_cont = 0
-
                 routers = l3.list_routers(tenant['project_id'])
                 num_rout = len(routers)
 
@@ -137,36 +152,100 @@ def stats(request):
                                     'num_servers': num_servers,
                                     'num_fips': num_fips,
                                     'num_vol': num_vol,
-                                    'num_cont': num_cont,
                                     'num_rout': num_rout,
                                     'num_net': num_net,
                                     'num_users': num_users})
-
-            return render_to_response('coal/stat_panel.html', RequestContext(request, {'full_stats': full_stats,
-                                                                                       'tot_users': tot_users,
-                                                                                       'tot_proj': tot_proj,
-                                                                                       'tot_nodes': tot_nodes,
-                                                                                       'tenant_info': tenant_info}))
-        elif(auth != None and auth['is_admin'] == 0):
-            uo = user_ops(auth)
-            qo = quota_ops(auth)
-
-            project_id = auth['project_id']
-            project = qo.get_project_quotas(project_id)
-            project_name = project['project_name']
-            username = auth['username']
-            user_dict = {'username': username, 'project_name': project_name}
-            user_info = uo.get_user_info(user_dict)
-
-            return render_to_response('coal/user_view.html',
-                               RequestContext(request, {'project_name': project_name,
-                                                        'current_project_id': project_id,
-                                                        'user_info': user_info}))
-        else:
-            return render_to_response('coal/welcome.html', RequestContext(request,))
-
+            return render_to_response('coal/dashboard_widgets/project_stats.html', RequestContext(request, {'tenant_info': tenant_info}))
     except Exception as e:
-        return render_to_response('coal/welcome.html', RequestContext(request,))
+        return render_to_response('coal/dashboard_widgets/project_stats.html', RequestContext(request, {'full_stats': "error"}))
+
+def get_third_party_storage(request):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            providers = tpc.get_supported_third_party_storage()
+            return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': providers}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': "error"}))
+
+def get_third_party_storage_license(request, provider):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            prov = {}
+            if provider == 'eseries':
+                prov = { 'id': provider, 'name':"E-Series" }
+            if provider == 'nfs':
+                prov = { 'id': provider, 'name':"NFS" }
+            if provider == 'nimble':
+                prov = { 'id': provider, 'name':"Nimble" }
+            return render_to_response('coal/dashboard_widgets/third_party_storage_license.html', RequestContext(request, { 'provider': prov}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_storage_license.html', RequestContext(request, { 'provider', "error"}))
+
+def get_third_party_storage_configure(request, provider):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            prov = {}
+            if provider == 'eseries':
+                prov = { 'id': provider, 'name':"E-Series" }
+            if provider == 'nfs':
+                prov = { 'id': provider, 'name':"NFS" }
+            if provider == 'nimble':
+                prov = { 'id': provider, 'name':"Nimble" }
+            return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': prov}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider', "error"}))
+
+def get_metering(request):
+    return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request))
+
+def user_account_view(request, project_name, project_id, user_name):
+    auth = request.session['auth']
+    uo = user_ops(auth)
+    to = tenant_ops(auth)
+    so = server_ops(auth)
+    l3 = layer_three_ops(auth)
+    vo = volume_ops(auth)
+    no = neutron_net_ops(auth)
+
+    user_dict = {'username': user_name, 'project_name': project_name}
+    user_info = uo.get_user_info(user_dict)
+    project_info = { 'project_name': project_name }
+
+    if auth['is_admin'] == 0:
+        servers = so.list_servers(project_id)
+        num_servers = len(servers)
+
+        fips = l3.list_floating_ips(project_id)
+        num_fips = len(fips)
+
+        volumes = vo.list_volumes(project_id)
+        num_vol = len(volumes)
+
+        routers = l3.list_routers(project_id)
+        num_rout = len(routers)
+
+        networks = no.list_internal_networks(project_id)
+        num_net = len(networks)
+
+        users = to.list_tenant_users(project_id)
+        num_users = len(users)
+
+        project_info = {'project_name': project_name,
+                        'num_servers': num_servers,
+                        'num_fips': num_fips,
+                        'num_vol': num_vol,
+                        'num_rout': num_rout,
+                        'num_net': num_net,
+                        'num_users': num_users}
+
+    return render_to_response('coal/dashboard_widgets/account_view.html', RequestContext(request, {'user_info': user_info, 'project_info': project_info}))
+
+def get_update_account_password(request):
+    return render_to_response('coal/dashboard_widgets/update_account_password.html', RequestContext(request))
+
 
 def privacy_policy(request):
     return render_to_response('coal/privacy-policy.html', RequestContext(request,))
@@ -495,7 +574,6 @@ def pu_project_view(request, project_id):
     #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
-    project_admin = util.get_project_admin(project_id)
     users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
@@ -603,7 +681,6 @@ def pu_project_view(request, project_id):
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
-                                                        'project_admin': project_admin,
                                                         'users': users,
                                                         'ouserinfo': ouserinfo,
                                                         'userinfo':userinfo,
@@ -630,7 +707,6 @@ def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_id)
-    project_admin = util.get_project_admin(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
     sa = server_actions(auth)
@@ -794,7 +870,6 @@ we need to build a function to request a vm resize
 
     return render_to_response('coal/basic_project_view.html',
                                RequestContext(request, {'project': project,
-                                                        'project_admin': project_admin,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
@@ -817,11 +892,7 @@ def user_view(request, project_name, project_id, user_name):
     user_dict = {'username': user_name, 'project_name': project_name}
     user_info = uo.get_user_info(user_dict)
 
-    return render_to_response('coal/user_view.html',
-                               RequestContext(request, {'project_name': project_name,
-                                                        'current_project_id': project_id,
-                                                        'user_info': user_info,
-                                                 }))
+    return render_to_response('coal/user_view.html', RequestContext(request, {'user_info': user_info,}))
 
 def key_view(request, sec_key_id, project_id):
     auth = request.session['auth']

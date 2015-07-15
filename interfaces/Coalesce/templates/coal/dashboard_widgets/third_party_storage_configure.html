@@ -1,0 +1,215 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title" id="modal-label">Configure {{ provider.name }}</h4>
+</div>
+<div class="modal-body">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form class="form-horizontal">
+                <!-- ===== E-SERIES ===== -->
+                {% if provider.id == 'eseries' %}
+                    <fieldset id="eseries-config">
+                        <div class="form-group form-inline">
+                            <label class="col-sm-6 control-label">Use existing E-Series Web Proxy Server:</label>
+
+                            <div class="col-sm-6">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="eseries-use-proxy" id="eseries-use-proxy-true"
+                                               value="1"
+                                               checked="">
+                                        Yes
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="eseries-use-proxy" id="eseries-use-proxy-false"
+                                               value="0"
+                                               disabled="disabled">
+                                        No (Under Construction)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eseries-hostname-ip" class="col-sm-2">Hostname/IP:</label>
+                            <input type="text" name="eseries-hostname-ip" id="eseries-hostname-ip"
+                                   placeholder="Your Hostname or IP Address"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eseries-login" class="col-sm-2">Login:</label>
+                            <input type="text" name="eseries-login" id="eseries-login" placeholder="Your Login"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eseries-password" class="col-sm-2">Password:</label>
+                            <input type="password" name="eseries-password" id="eseries-password" placeholder="Your Password"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group form-inline">
+                            <label class="col-sm-6 control-label">Transport Protocol:</label>
+
+                            <div class="col-sm-6">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="eseries-transport" id="eseries-transport-http"
+                                               value="http" checked="">
+                                        HTTP
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="eseries-transport" id="eseries-transport-https"
+                                               value="https">
+                                        HTTPS
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eseries-server-port" class="col-sm-2">Server Port:</label>
+                            <input type="text" name="eseries-server-port" id="eseries-server-port" value="8080"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group center-text">
+                            <button class="btn btn-primary" id="eseries-discover-controllers"
+                                    data-loading-text="Discover Controllers" disabled="disabled">
+                                Discover Controllers
+                            </button>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="eseries-storage-password" class="col-sm-2">Storage Password:</label>
+                            <input type="text" name="eseries-storage-password" id="eseries-storage-password"
+                                   placeholder="Your Storage Password" class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eseries-mgmt-hostnames-ips" class="control-label">
+                                Management Hostnames/IPs:
+                            </label>
+
+                            <div class="col-sm-12">
+                                <select name="eseries-mgmt-hostnames-ips" id="eseries-mgmt-hostnames-ips" multiple=""
+                                        class="form-control" disabled="disabled"></select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="center-text">
+                                <button class="btn btn-primary" id="eseries-discover-disk-pools"
+                                        data-loading-text="Discover Disk Pools" disabled="disabled">
+                                    Discover Disk Pools
+                                </button>
+                            </div>
+
+                            <label for="eseries-storage-disk-pools" class="control-label">
+                                Disk Pools:
+                            </label>
+
+                            <div class="col-sm-12">
+                                <select name="eseries-storage-disk-pools" id="eseries-storage-disk-pools" multiple=""
+                                        class="form-control" disabled="disabled"></select>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <!-- ===== NFS ===== -->
+                {% elif provider.id == 'nfs' %}
+                    {#                <fieldset id="nfs-config-data" style="display: none;">#}
+                    {#                    <label for="nfs-mountpoint">NFS Mountpoint</label>#}
+                    {#                    <input name="nfs-mountpoint" id="nfs-mountpoint" value=""#}
+                    {#                           class="text ui-widget-content ui-corner-all"#}
+                    {#                           type="text">#}
+                    {#                    <button id="add-mountpoint">+</button>#}
+                    {#                    <div id="mountpoints"></div>#}
+                    {#                    <button class="configure-tps block-center" id="nfs-button" data-provider="nfs"#}
+                    {#                            style="margin-top: 10px;">Configure NFS#}
+                    {#                    </button>#}
+                    {#                </fieldset>#}
+                    <!-- ===== NIMBLE ===== -->
+                {% elif provider.id == 'nimble' %}
+                    {#                <fieldset id="nimble-config-data" style="display: none;">#}
+                    {#                    <label for="nimble-hostname-ip">Hostname/IP:</label>#}
+                    {#                    <input name="nimble-hostname-ip" id="nimble-hostname-ip" value=""#}
+                    {#                           class="text ui-widget-content ui-corner-all"#}
+                    {#                           type="text">#}
+                    {##}
+                    {#                    <div id="nlogin"></div>#}
+                    {#                    <label for="nimble-login">Login:</label>#}
+                    {#                    <input name="nimble-login" id="nimble-login" value="" class="text ui-widget-content ui-corner-all"#}
+                    {#                           type="text">#}
+                    {##}
+                    {#                    <div id="npwd"></div>#}
+                    {#                    <label for="nimble-password">Password:</label>#}
+                    {#                    <input name="nimble-password" id="nimble-password" value=""#}
+                    {#                           class="text ui-widget-content ui-corner-all"#}
+                    {#                           type="password">#}
+                    {##}
+                    {#                    <button class="configure-tps block-center" id="nimble-button" data-provider="nimble">Configure#}
+                    {#                        Nimble#}
+                    {#                        Storage#}
+                    {#                    </button>#}
+                    {#                </fieldset>#}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="button" class="btn btn-primary" data-loading-text="Loading ..." data-provider="{{ provider.id }}"
+            id="confirm-configure">
+        Configure
+    </button>
+</div>
+
+<script>
+    $(function () {
+        var reqInputs = $('#eseries-hostname-ip, #eseries-login, #eseries-password, #eseries-server-port');
+        reqInputs.change(function () {
+            clearUiValidation(reqInputs);
+            var valid = isValid();
+            if (valid) {
+                $("#eseries-discover-controllers").removeProp("disabled").css("cursor", "pointer");
+            }
+
+            function isValid() {
+                var results = [];
+                reqInputs.each(function () {
+                    var result = $(this).val() != "";
+                    results.push(result);
+                });
+                return results.every(validate)
+            }
+
+            function validate(element) {
+                return element;
+            }
+        });
+
+        $("input[name='eseries-transport']").change(function(){
+            if($("input[name='eseries-transport']:checked").val() == "http") {
+                $("#eseries-server-port").val("8080");
+            } else{
+                $("#eseries-server-port").val("8443");
+            }
+        });
+
+        $("#eseries-mgmt-hostnames-ips").change(function(){
+            if ($(this).find('option').length == 0 || $(this).find('option:selected').length == 0) {
+                $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
+            } else {
+                $("#eseries-discover-disk-pools").removeProp("disabled").css("pointer", "initial");
+            }
+        });
+    });
+</script>

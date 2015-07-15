@@ -7,154 +7,127 @@
     <meta name="description" content="Coalesce Cloud Manager">
     <meta name="author" content="Transcirrus, LLC">
 
-    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
-    <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <!-- CSS  ================================================ -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-social.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/font-awesome.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/toastr.min.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/transcirrus.css"/>
 
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.responsive.min.css"/>
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/transcirrus_webapp_base.css"/>
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/transcirrus_navigation.css"/>
-    <link rel="stylesheet" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css"/>
+    {% block stylesheets %}{% endblock %}
 
-    <!-- Favicons  ================================================ -->
+    <!-- FAVICONS  ================================================ -->
     <link rel="shortcut icon" href="{{ STATIC_URL }}images/favicon.ico?v=2">
     <link rel="apple-touch-icon" href="{{ STATIC_URL }}images/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="72x72" href="{{ STATIC_URL }}images/apple-touch-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="114x114" href="{{ STATIC_URL }}images/apple-touch-icon-114x114.png">
-
-    <!-- Le javascript ================================================== -->
-    <!-- Placed at the beginning of the document so  programmers can find it -->
-
-    <script src="{{ STATIC_URL }}javascripts/jquery-ui-1.10.3/jquery-1.9.1.min.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/bootswatch.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/bootstrap.min.js"></script>
-    <script src="{{ STATIC_URL }}javascripts/d3.min.js"></script>
-
-
-    <script>
-        function clearMessage() {
-            document.getElementById("warning-messages").remove();
-        }
-
-        var USERNAME = "{{ username }}",
-                USER_LEVEL = "{{ user_level }}",
-                STATIC_URL = "{{ STATIC_URL }}";
-    </script>
-    {% block javascripts %}{% endblock %}
 </head>
 
-<body style="min-width: 1024px; padding: 0;">
-<div class="navbar navbar-fixed-top" style="min-width: 445px; padding: 0;">
-    <!-- Masthead ================================================== -->
-    <header id="overview">
-        <div class="row-fluid">
-            <a href="/welcome"><img border="0" src="{{ STATIC_URL }}images/transcirrus_weblogo.png"
-                                    alt="TransCirrus"
-                                    width="205px!important" height="110px!important"
-                                    style="float:left; margin-left: 20px;"></a>
-        </div>
-    </header>
+<body>
 
-    <!-- Navbar ================================================== -->
-    <div class="version-container">
-        <span class="version-label">version: {{ version }}</span>
-    </div>
-    <div class="navbar-inner" style="padding:0!important">
-        <div class="container-fluid" style="height: 30px!important">
-            <div class="nav" id="main-menu">
-                <ul class="nav" id="main-menu-left">
-                    {% if token %}
-                        <li><a href={% url 'home' %}>{{ username }}</a></li>
-                        {% block navigation %}
-                            {% if project_id %}
-                                {% if user_level == 0 %}
-                                    {% if first_time == 'TRUE' %}
-                                        <li><a href="/setup">Run Setup</a></li>
-                                    {% else %}
-                                        <li><a href="/cloud/manage">Cloud Management</a></li>
-                                    {% endif %}
-                                {% elif user_level == 1 %}
-                                    <li><a href="/projects/{{ project_id }}/pu_project_view/">My Project</a></li>
-                                {% else %}
-                                    <li><a href="/projects/{{ project_id }}/basic_project_view/">My Project</a></li>
-                                {% endif %}
-                            {% endif %}
-                        {% endblock %}
-                        <li><a href={% url 'logout' %}>Log Out</a></li>
-                    {% endif %}
-                </ul>
-            </div>
+<div id="confirm-modal" class="modal" role="dialog" aria-labelledby="modal-label"
+     data-controls-modal="confirm-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
         </div>
-    </div>
-    {% block secondary-nav %}{% endblock %}  <!-- use this slot in templates that need subnav.-->
-</div>
-<!-- =================  MAIN CONTENT WELL  ================= -->
-<div class="wrapper">
-
-    {% if messages %}
-        <p></p>
-        <ul class="messages" id="warning-messages" onclick="clearMessage()">
-            {% for message in messages %}
-                <li
-                        {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }} (click to hide
-                    message)
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <div class="container-fluid">
-        <div class="title-legend">
-            {% block title %}OVERRIDE THIS{% endblock %}
-        </div>
-        <section id="page-content">
-            <div class="row-fluid">
-                {% block content %}
-                    PAGE CONTENT GOES HERE
-                {% endblock %}
-            </div>
-        </section>
     </div>
 </div>
-<!-- end wrapper-->
 
-<div class="footer-wrapper">
-    <div class="disclaimer">
-        <p class="small">
-            <b><span class="trans">trans</span><span class="cirrus">cirrus</span></b>
-        </p>
-
-        <p class="small"><i>
-            This solution has a Copyright 2015 for <span class="trans">trans</span><span
-                class="cirrus">cirrus</span>. By using this website, the user
-            ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
-            If you do not agree to these terms of use, you should exit the website. By entering logon
-            information and accessing the website contents, you are stating full acceptance of the
-            terms. Please take the time to review the <a href="/privacy-policy">Privacy Policy</a>.
-            The information contained in this website is for general information purposes only.The
-            information is provided by <span class="trans">trans</span><span
-                class="cirrus">cirrus</span>, Inc. and while we endeavour to keep the
-            information up to date and correct, we make no representations or warranties of any
-            kind, express or implied, about the completeness, accuracy, reliability, suitability
-            or availability with respect to the website or the information, products, services,
-            or related graphics contained on the website for any purpose. Any reliance you place
-            on such information is therefore strictly at your own risk.
-        </i></p>
+<nav class="navbar navbar-inverse" role="navigation">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"
+                aria-expanded="false"
+                aria-controls=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a href="/welcome" class="navbar-badge">
+            <img class="navbar-logo" src="{{ STATIC_URL }}images/transcirrus-icon.png">
+                <span class="navbar-brand">
+                    Trans<span style="font-weight: bold">Cirrus</span>{% block title %}{% endblock %}
+                </span>
+        </a>
     </div>
-    <div class="footer-links">
-        <p class="small">
+
+    <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
             {% if token %}
-                <small>Welcome,{{ user.username }} <br>
-                    <a href={% url 'logout' %}> Log out</a><br>
-                </small>
-            {% else %}
-                <br>
+                <li><a href="{% url 'home' %}" data-toggle="collapse" data-target=".navbar-collapse">Dashboard</a></li>
+                {% if project_id %}
+                    {% if user_level == 0 %}
+                        {% if first_time == 'TRUE' %}
+                            <li><a href="/setup" data-toggle="collapse" data-target=".navbar-collapse">Run Setup</a>
+                            </li>
+                        {% else %}
+                            <li><a href="/cloud/manage" data-toggle="collapse" data-target=".navbar-collapse">Cloud</a>
+                            </li>
+                        {% endif %}
+                    {% elif user_level == 1 %}
+                        <li><a href="/projects/{{ project_id }}/pu_project_view/" data-toggle="collapse"
+                               data-target=".navbar-collapse">My Project</a></li>
+                    {% else %}
+                        <li><a href="/projects/{{ project_id }}/basic_project_view/" data-toggle="collapse"
+                               data-target=".navbar-collapse">My Project</a></li>
+                    {% endif %}
+                {% endif %}
+                <li><a href="{% url 'logout' %}" data-toggle="collapse" data-target=".navbar-collapse">Log Out</a></li>
             {% endif %}
-            <a href={% url 'terms-of-use' %}>Terms of Use</a><br>
-            <a href={% url 'privacy-policy' %}>Privacy Policy</a><br>
-            <a href="#">Back to top</a>
-        </p>
+        </ul>
     </div>
-</div>
+
+</nav>
+
+<!-- MAIN CONTENT WELL  ====================================== -->
+<section>
+    <div class="container-fluid">
+        {% block content %}
+            PAGE CONTENT GOES HERE
+        {% endblock %}
+    </div>
+</section>
+
+<!-- FOOTER ================================================== -->
+<footer class="navbar-fixed-bottom">
+    <div class="container-fluid">
+        <ul class="footer-links small">
+            <li>
+                <a href="#">Back to Top</a>
+            </li>
+            <li>
+                <a href={% url 'logout' %}>Log Out</a>
+            </li>
+            <li>
+                <a href={% url 'terms-of-use' %}>Terms of Use</a>
+            </li>
+            <li>
+                <a href={% url 'privacy-policy' %}>Privacy Policy</a>
+            </li>
+        </ul>
+    </div>
+    <span class="version-label small pull-right">version: {{ version }}</span>
+</footer>
+
+<!-- JAVASCRIPT ================================================== -->
+<script src="{{ STATIC_URL }}javascripts/external/jquery-1.11.3.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/bootstrap.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/toastr.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/messages.js"></script>
+<script src="{{ STATIC_URL }}javascripts/external/spin.min.js"></script>
+
+<!--HTML5 shim, for IE6-8 support of HTML elements -->
+<!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+<script>
+    USERNAME = "{{ username }}";
+    USER_ID = "{{ user_id }}";
+    USER_LEVEL = "{{ user_level }}";
+    STATIC_URL = "{{ STATIC_URL }}";
+    PROJECT_NAME = "{{ project_name }}";
+    PROJECT_ID = "{{ project_id }}";
+</script>
+
+{% block javascripts %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,157 @@
+/* GENERAL */
+
+html, body {
+    height: auto;
+}
+
+section {
+    margin-bottom: 60px;
+}
+
+.error {
+    font-size: 90%;
+    margin: 0;
+    padding: 0 15px;
+}
+
+.center-text {
+    text-align: center;
+}
+
+.trans {
+    font-weight: lighter;
+    color: dimgrey;
+    font-family: sans-serif;
+}
+
+.cirrus {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: rgb(28, 60, 119);
+}
+
+.page-header {
+    margin-top: 0;
+    border-bottom-color: rgb(78, 93, 108);
+}
+
+.progress {
+    position: relative;
+}
+
+.progress span {
+    position: absolute;
+    display: block;
+    width: 100%;
+    color: rgb(255, 255, 255);
+}
+
+/* FORM ELEMENTS */
+
+.form-inline .radio, .form-inline .checkbox {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+/* BUTTONS */
+
+.btn-center {
+    margin: 0 auto;
+}
+
+.btn-300 {
+    max-width: 300px;
+}
+
+/* NAVIGATION */
+
+.navbar-logo {
+    padding: 0;
+    width: 40px;
+    z-index: 100000;
+}
+
+.navbar-brand {
+    display: inline;
+    float: none;
+    margin-left: 0 !important;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.navbar-badge {
+    display: inline-block;
+    padding: 0 5px;
+}
+
+.navbar-badge:hover {
+    background-color: rgba(255, 255, 255, .5);
+    text-decoration: none;
+}
+
+footer {
+    background-color: rgb(214, 214, 214);
+}
+
+.footer-links {
+    list-style: none;
+    margin: 0;
+}
+
+.version-label {
+    bottom: 5px;
+    color: rgb(212, 85, 0);
+    font-family: sans-serif;
+    position: fixed;
+    right: 5px;
+}
+
+.btn-group.actions-dropdown {
+    float: right;
+}
+
+.dropdown-menu.bg-primary {
+    background-color: rgb(223, 105, 26);
+    color: rgb(255, 255, 255)
+}
+
+.dropdown-menu.table-dropdown {
+    left: unset;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 7px;
+    padding: 0;
+    right: -6px;
+}
+
+/* WELCOME PAGE */
+
+.learn-more {
+    margin: 0 auto 21px;
+    position: relative;
+}
+
+.help {
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 5px;
+    display: inline-block;
+    margin: 0 0 10px;
+    max-width: 100%;
+    min-width: 180px;
+    padding: 0;
+    position: static;
+    visibility: visible;
+    width: 520px;
+}
+
+.help-legend {
+    border-width: 0 0 1px;
+    box-shadow: 0 0 0 -3px rgba(0, 0, 0, 0);
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 18px;
+    padding: 12px;
+    position: relative;
+    transition: box-shadow 0.3s ease-out 0s;
+}

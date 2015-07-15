@@ -1,0 +1,64 @@
+<h1 class="page-header">Third Party Storage</h1>
+
+<table class="table table-striped table-hover table-responsive">
+    <thead>
+    <tr class="bg-primary">
+        <th>Provider</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for provider in providers %}
+        <tr>
+            <td>{{ provider.name }}</td>
+            {% if provider.configured == '0' and provider.licensed == '0' %}
+                <td>Unlicensed</td>
+                <td><a href="#" class="license" data-provider="{{ provider.id }}">license</a></td>
+            {% elif provider.configured == '0' and provider.licensed == '1' %}
+                <td>Not Configured</td>
+                <td><a href="#" class="configure" data-provider="{{ provider.id }}">configure</a></td>
+            {% elif provider.in_use == 0 %}
+                <td>Configured (no volumes)</td>
+                <td>
+                    <a href="#" class="update" data-provider="{{ provider.id }}">update</a>
+                    <span> | </span>
+                    <a href="#" class="delete" data-provider="{{ provider.id }}">delete</a>
+                </td>
+            {% else %}
+                <td>Configured ({{ provider.in_use }} volumes)</td>
+                <td><a href="#" class="update" data-provider="{{ provider.id }}">update</a></td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% for provider in providers %}
+    {% if provider.id == 'eseries' and provider.configured == '1' %}
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">E-Series Storage</h3>
+            </div>
+            <div class="panel-body">
+                <div id="eseries-graph">
+                    <style scoped>
+                        #eseries-graph {
+                            font: 10px sans-serif;
+                        }
+
+                        .arc path {
+                            stroke: #fff;
+                        }
+
+                    </style>
+                    <script>
+                        $(function () {
+                            $("#eseries-graph").html(eseriesGraph())
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
