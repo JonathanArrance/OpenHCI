@@ -93,8 +93,11 @@ def get_supported_third_party_storage():
 def add_nfs (mountpoints, auth):
     # mountpoints = ["hostname|ip-addr:/mountpoint", "hostname|ip-addr:/mountpoint"]
     try:
+        valid_mntpts, mntpt_msgs = nfs.validate_mountpoints (mountpoints)
+        if not valid_mntpts:
+            return (False, mntpt_msgs)
         if not nfs.add_nfs_to_cinder():
-            return (False)
+            return (False, None)
         nfs.add_nfs_conf (mountpoints)
         nfs.add_base_mountpoint()
         common.add_voltype (auth, nfs.NFS_NAME)
@@ -103,14 +106,17 @@ def add_nfs (mountpoints, auth):
         delete_nfs (auth)       # try to clean up anything that was already done.
         raise Exception (msg)
     common.restart_cinder_volume_proc()
-    return (True)
+    return (True, None)
 
 
 # Update the mountpoints in the nfs config.
 def update_nfs (mountpoints):
+    valid_mntpts, mntpt_msgs = nfs.validate_mountpoints (mountpoints)
+    if not valid_mntpts:
+        return (False, mntpt_msgs)
     nfs.update_nfs_conf (mountpoints)
     common.restart_cinder_volume_proc()
-    return (True)
+    return (True, None)
 
 
 # Get nfs data from the nfs config.
@@ -122,6 +128,7 @@ def get_nfs():
                    'mountpoint': ["host1/ip-addr1:mountpoint", "host2/ip-addr2:mountpoint"]
                   }
     '''
+    data = {}
     mountpoints = []
     if common.backend_configured (nfs.NFS_NAME):
         enabled = "1"
@@ -129,10 +136,17 @@ def get_nfs():
     else:
         enabled = "0"
 
+    if common.is_licensed (nfs.NFS_NAME):
+        licensed = "1"
+    else:
+        licensed = "0"
+
     in_use = common.backend_in_use (nfs.NFS_NAME)
 
-    # Since we give away NFS, it will always be licensed.
-    data = {'enabled': enabled, 'licensed': "1", 'in_use': in_use, 'mountpoint': mountpoints}
+    data['enabled'] = enabled
+    data['licensed'] = licensed
+    data['in_use'] = in_use
+    data['mountpoint'] = mountpoints
     return (data)
 
 
@@ -144,6 +158,16 @@ def delete_nfs (auth):
     common.delete_voltype (auth, nfs.NFS_NAME)
     common.restart_cinder_volume_proc()
     return
+
+
+# Add the NFS license key to the database.
+def add_nfs_license (key):
+    key_valid, cust_num, date, capacity, vendor = common.decode_license_key (key)
+
+    if not key_valid or vendor != NFS_VENDOR:
+        return (False)
+
+    return (common.add_license (nfs.NFS_NAME, key))
 
 
 # Add/Update/Get/Delete E-Series data to cinder.

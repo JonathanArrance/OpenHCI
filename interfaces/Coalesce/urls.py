@@ -500,6 +500,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.nfs_update',
             name='nfs_update'),
 
+        url(r'^nfs/license/set/(?P<license_key>[^/]+)/$',
+            'coalesce.coal_beta.views.nfs_add_license',
+            name='nfs_add_license'),
+
         # --- Nimble ---
 	    url(r'^nimble/get/$',
 	        'coalesce.coal_beta.views.nimble_get',
