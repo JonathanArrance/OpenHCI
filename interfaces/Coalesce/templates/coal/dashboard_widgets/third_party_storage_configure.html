@@ -49,7 +49,8 @@
 
                         <div class="form-group">
                             <label for="eseries-password" class="col-sm-2">Password:</label>
-                            <input type="password" name="eseries-password" id="eseries-password" placeholder="Your Password"
+                            <input type="password" name="eseries-password" id="eseries-password"
+                                   placeholder="Your Password"
                                    class="col-sm-9 col-sm-offset-1">
                         </div>
 
@@ -124,17 +125,11 @@
                     </fieldset>
                     <!-- ===== NFS ===== -->
                 {% elif provider.id == 'nfs' %}
-                    {#                <fieldset id="nfs-config-data" style="display: none;">#}
-                    {#                    <label for="nfs-mountpoint">NFS Mountpoint</label>#}
-                    {#                    <input name="nfs-mountpoint" id="nfs-mountpoint" value=""#}
-                    {#                           class="text ui-widget-content ui-corner-all"#}
-                    {#                           type="text">#}
-                    {#                    <button id="add-mountpoint">+</button>#}
-                    {#                    <div id="mountpoints"></div>#}
-                    {#                    <button class="configure-tps block-center" id="nfs-button" data-provider="nfs"#}
-                    {#                            style="margin-top: 10px;">Configure NFS#}
-                    {#                    </button>#}
-                    {#                </fieldset>#}
+                    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-tagsinput.css">
+                    <fieldset id="nfs-config-data">
+                        <label for="nfs-mountpoints">NFS Mount Points (comma separate)</label>
+                        <input name="nfs-mountpoints" id="nfs-mountpoints" value="" type="text" data-role="tagsinput">
+                    </fieldset>
                     <!-- ===== NIMBLE ===== -->
                 {% elif provider.id == 'nimble' %}
                     {#                <fieldset id="nimble-config-data" style="display: none;">#}
@@ -172,6 +167,7 @@
     </button>
 </div>
 
+<script src="{{ STATIC_URL }}javascripts/external/bootstrap-tagsinput.min.js"></script>
 <script>
     $(function () {
         var reqInputs = $('#eseries-hostname-ip, #eseries-login, #eseries-password, #eseries-server-port');
@@ -196,15 +192,15 @@
             }
         });
 
-        $("input[name='eseries-transport']").change(function(){
-            if($("input[name='eseries-transport']:checked").val() == "http") {
+        $("input[name='eseries-transport']").change(function () {
+            if ($("input[name='eseries-transport']:checked").val() == "http") {
                 $("#eseries-server-port").val("8080");
-            } else{
+            } else {
                 $("#eseries-server-port").val("8443");
             }
         });
 
-        $("#eseries-mgmt-hostnames-ips").change(function(){
+        $("#eseries-mgmt-hostnames-ips").change(function () {
             if ($(this).find('option').length == 0 || $(this).find('option:selected').length == 0) {
                 $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
             } else {

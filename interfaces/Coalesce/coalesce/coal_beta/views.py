@@ -574,7 +574,6 @@ def pu_project_view(request, project_id):
     #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
-    project_admin = util.get_project_admin(project_id)
     users = to.list_tenant_users(project_id)
     userinfo = {}
     uo = user_ops(auth)
@@ -708,7 +707,6 @@ def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_id)
-    # project_admin = util.get_project_admin(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
     sa = server_actions(auth)
@@ -872,7 +870,6 @@ we need to build a function to request a vm resize
 
     return render_to_response('coal/basic_project_view.html',
                                RequestContext(request, {'project': project,
-                                                        'project_admin': project_admin,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
@@ -1212,12 +1209,10 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         inst_dict = revert_inst_snap(create, auth)
-        print "inst_dict: %s" % inst_dict
         srv_dict = {'server_id': inst_dict['instance']['vm_id'], 'project_id':project_id}
         out['server_info'] = so.get_server(srv_dict)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
-        print "out: %s" % out
     except Exception as e:
         out = {"status": "error", "message": "%s" % (e)}
     return HttpResponse(simplejson.dumps(out))

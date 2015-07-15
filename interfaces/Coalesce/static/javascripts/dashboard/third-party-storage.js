@@ -57,47 +57,71 @@ $(function () {
     $(document).on('click', '#confirm-configure', function (event) {
         event.preventDefault();
         clearUiValidation();
-        var provider = $(this).data("provider");
+        var provider = $(this).data("provider"),
+            inputs,
+            name,
+            call,
+            buttons = $(this).parent().parent().find('button'),
+            isValid,
+            notValidMsg;
+
         if (provider == "eseries") {
-            var inputs = {
-                    'useProxy': $('input[name=eseries-use-proxy]:checked'),
-                    'hostnameIP': $("#eseries-hostname-ip"),
-                    'login': $("#eseries-login"),
-                    'password': $("#eseries-password"),
-                    'controllerIPs': $("#eseries-mgmt-hostnames-ips"),
-                    'transport': $('input[name=eseries-transport]:checked'),
-                    'port': $("#eseries-server-port"),
-                    'disks': $("#eseries-storage-disk-pools"),
-                    'storagePassword': $("#eseries-storage-password")
-                },
-                buttons = $(this).parent().parent().find('button'),
-                isValid =
-                    (inputs.disks.find("option").length > 0) &&
-                    (inputs.disks.find("option:selected").length > 0);
-            if (isValid) {
-                showMessage('info', "Configuring E-Series Storage ...");
-                setModalButtons(false, buttons);
-                var call = 'eseries/config/set/' + inputs.disks.val() + '/';
-                $.getJSON(call)
-                    .done(function (data) {
-                        if (data.status == 'error') {
-                            showMessage('error', data.message);
-                            setModalButtons(true, buttons);
-                        }
-                        if (data.status == 'success') {
-                            showMessage('success', "E-Series Storage Configured");
-                            setModalButtons(true, buttons);
-                            closeModal();
-                            refreshContent($("#page-content"), "/third_party_storage/get/");
-                        }
-                    })
-                    .fail(function () {
-                        showMessage('error', 'Server Fault');
-                        setModalButtons(true, buttons);
-                    })
-            } else {
-                showMessage('warning', "At least one Disk Pool must be selected to configure E-Series Storage");
+            inputs = {
+                'useProxy': $('input[name=eseries-use-proxy]:checked'),
+                'hostnameIP': $("#eseries-hostname-ip"),
+                'login': $("#eseries-login"),
+                'password': $("#eseries-password"),
+                'controllerIPs': $("#eseries-mgmt-hostnames-ips"),
+                'transport': $('input[name=eseries-transport]:checked'),
+                'port': $("#eseries-server-port"),
+                'disks': $("#eseries-storage-disk-pools"),
+                'storagePassword': $("#eseries-storage-password")
+            };
+            name = "E-Series";
+            isValid =
+                (inputs.disks.find("option").length > 0) &&
+                (inputs.disks.find("option:selected").length > 0);
+            notValidMsg = "At least one Disk Pool must be selected to configure E-Series Storage";
+        } else if (provider == "nfs") {
+            inputs = $("#nfs-mountpoints").val();
+            name = "NFS";
+            isValid = (inputs != "");
+            notValidMsg = "At least one Mount Point must be entered to configure NFS Storage";
+        } else if (provider == "nfs") {
+
+        } else {
+            isValid = false;
+            showMessage("error", "Cannot determine storage provider")
+        }
+
+        if (isValid) {
+            if (provider == "eseries") {
+                call = 'eseries/config/set/' + inputs.disks.val() + '/';
+            } else if (provider == "nfs") {
+                call = 'nfs/set/' + formatCall(inputs) + '/';
             }
+
+            showMessage('info', "Configuring " + name + " Storage ...");
+            setModalButtons(false, buttons);
+            $.getJSON(call)
+                .done(function (data) {
+                    if (data.status == 'error') {
+                        showMessage('error', data.message);
+                        setModalButtons(true, buttons);
+                    }
+                    if (data.status == 'success') {
+                        showMessage('success', name + " Storage Configured");
+                        setModalButtons(true, buttons);
+                        closeModal();
+                        refreshContent($("#page-content"), "/third_party_storage/get/");
+                    }
+                })
+                .fail(function () {
+                    showMessage('error', 'Server Fault');
+                    setModalButtons(true, buttons);
+                })
+        } else {
+            showMessage('warning', notValidMsg);
         }
     });
 
@@ -218,13 +242,26 @@ $(function () {
 
     $(document).on('click', '.delete', function (event) {
         event.preventDefault();
-        var provider = $(this).data("provider");
+        var provider = $(this).data("provider"),
+            title,
+            message,
+            call,
+            notice,
+            async;
+
         if (provider == "eseries") {
-            var title = formatString("Delete E-Series Storage"),
-                message = formatString("Remove E-Series Storage configuration"),
-                call = formatCall("/" + provider + "/delete/"),
-                notice = formatString("Deleting E-Series Configuration"),
-                async = refreshContent($("#page-content"), "/third_party_storage/get/");;
+            title = formatString("Delete E-Series Storage");
+            message = formatString("Remove E-Series Storage configuration");
+            call = formatCall("/" + provider + "/delete/");
+            notice = formatString("Deleting E-Series Configuration");
+            async = refreshContent($("#page-content"), "/third_party_storage/get/");
+            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
+        } else if (provider == "nfs") {
+            title = formatString("Delete NFS Storage");
+            message = formatString("Remove NFS Storage configuration");
+            call = formatCall("/" + provider + "/delete/");
+            notice = formatString("Deleting NFS Configuration");
+            async = refreshContent($("#page-content"), "/third_party_storage/get/");
             showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
         }
     });
