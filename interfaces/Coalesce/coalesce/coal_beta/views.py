@@ -2628,7 +2628,7 @@ def eseries_stats (request):
     return HttpResponse(simplejson.dumps(out))
 
 
-# Get E-Series statistics for disk pools.
+# Add E-Series license to the system.
 def eseries_add_license (request, license_key):
     '''
         input:
@@ -2703,12 +2703,20 @@ def nfs_set (request, mountpoints):
                     message: success message
                 error
                     message: error message
+                    or
+                    msgs: array of validation error messages
     '''
     try:
         auth = request.session['auth']
         mntpts = mountpoints.replace("!","/").split(",")
-        tpc.add_nfs (mntpts, auth)
-        out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
+        success, msgs = tpc.add_nfs (mntpts, auth)
+        if success:
+            out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
+        else:
+            if msgs == None:
+                out = {'status' : "error", 'message' : "Error adding NFS storage to OpenStack"}
+            else:
+                out = {'status' : "error", 'msgs' : msgs}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error adding NFS storage: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2725,13 +2733,43 @@ def nfs_update (request, mountpoints):
                     message: success message
                 error
                     message: error message
+                    or
+                    msgs: array of validation error messages
     '''
     try:
         mntpts = mountpoints.replace("!","/").split(",")
-        tpc.update_nfs (mntpts)
-        out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
+        success, msgs = tpc.update_nfs (mntpts)
+        if success:
+            out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
+        else:
+            if msgs == None:
+                out = {'status' : "error", 'message' : "Error updating NFS storage with OpenStack"}
+            else:
+                out = {'status' : "error", 'msgs' : msgs}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+# Add NFS license to the system.
+def nfs_add_license (request, license_key):
+    '''
+        input:
+            license_key - a valid NFS license key
+        returns json:
+            status:
+                success
+                    message: success message
+                error
+                    message: error message
+    '''
+    try:
+        if tpc.add_nfs_license (license_key):
+            out = {'status' : "success", 'message' : "NFS license has been added."}
+        else:
+            out = {'status' : "error", 'message' : "Error: Invalid NFS storage license key."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error adding NFS storage license: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -2826,7 +2864,7 @@ def nimble_update (request, server, login, pwd):
     return HttpResponse(simplejson.dumps(out))
 
 
-# Get Nimble statistics for disk pools.
+# Add Nimble license to the system.
 def nimble_add_license (request, license_key):
     '''
         input:

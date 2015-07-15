@@ -575,22 +575,28 @@ $(function () {
     function refreshTps() {
         $.getJSON('/supported_third_party_storage/')
             .done(function (data) {
-                data.providers.forEach(function (provider) {
-                    if (provider.id == "eseries") {
-                        if (provider.configured == 1) {
-                            $("#graph-placeholder").hide();
-                            $("#graph-title").html("E-Series Storage (GB)");
-                            $("#graph").html(TpsGraph()).show();
-                        }
-                        else {
-                            $("#graph-title").html("E-Series Storage (Not Configured)");
-                            $("#graph").hide();
-                        }
-                    }
-                });
+                if (data.status == "error") {
+                    message.showMessage("error", data.message);
+                }
 
-                third_party_storage = {'status': data.status, 'providers': data.providers};
-                buildTpsTable();
+                if (data.status == "success") {
+                    data.providers.forEach(function (provider) {
+                        if (provider.id == "eseries") {
+                            if (provider.configured == 1) {
+                                $("#graph-placeholder").hide();
+                                $("#graph-title").html("E-Series Storage (GB)");
+                                $("#graph").html(TpsGraph()).show();
+                            }
+                            else {
+                                $("#graph-title").html("E-Series Storage (Not Configured)");
+                                $("#graph").hide();
+                            }
+                        }
+                    });
+
+                    third_party_storage = { 'status': data.status, 'providers': data.providers };
+                    buildTpsTable();
+                }
             })
             .fail(function (data) {
                 message.showMessage('error', data.message);
