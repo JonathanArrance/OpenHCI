@@ -67,15 +67,11 @@
             <thead>
             <tr class="bg-primary">
                 <th>Project Name</th>
-                <th>Project Id</th>
                 <th>Host System Name</th>
                 <th>Host System IP</th>
                 <th>Security Group Name</th>
-                <th>Security Group ID</th>
                 <th>Security Key Name</th>
-                <th>Security Key ID</th>
                 <th>Network Name</th>
-                <th>Network ID</th>
             </tr>
             </thead>
             <tbody>
@@ -83,15 +79,11 @@
                 {% if proj.project_name != "trans_default" %}
                     <tr>
                         <td><a href="/projects/{{ proj.project_id }}/view">{{ proj.project_name }}</a></td>
-                        <td>{{ proj.project_id }}</td>
                         <td>{{ proj.host_system_name }}</td>
                         <td>{{ proj.host_system_ip }}</td>
                         <td>{{ proj.def_security_group_name }}</td>
-                        <td>{{ proj.def_security_group_id }}</td>
                         <td>{{ proj.def_security_key_name }}</td>
-                        <td>{{ proj.def_security_key_id }}</td>
                         <td>{{ proj.def_network_name }}</td>
-                        <td>{{ proj.def_network_id }}</td>
                     </tr>
                 {% endif %}
             {% endfor %}
