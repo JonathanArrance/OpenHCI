@@ -1,41 +1,46 @@
 {% extends "coal/base-fluid.html" %}
 
-{% block title %} Node Details{% endblock %}
+{% block title %}Node View{% endblock %}
 
 {% block content %}
 
-
-    <div class="row-fluid">
-      <div class="span6">
-        <div class="well">
-          <div class="legend">
-             {{ node.name }} Details
-          </div>
-          <table class="paleblue">
-
-                <tr><th>Name</th>                    <td>{{node.node_name}}</td></tr>
-                <tr class="odd"><th>Type</th>        <td>
-                                                      {% if node.node_type == "cc" %}
-                                                        core node
-                                                      {% elif node.node_type == "cn" %}
-                                                        compute node
-                                                      {% elif node.node_type == "sn" %}
-                                                        storage node
-                                                      {% endif %}
-                                                      </td></tr>
-                <tr><th>Data IP</th>                 <td {% if node.data_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_data_ip}}</td></tr>
-                <tr class="odd"><th>Mgmt IP</th>     <td {% if node.mgmt_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_mgmt_ip}}</td></tr>
-                <tr><th>Controller</th>              <td>{{node.node_controller}}</td></tr>
-                <tr class="odd"><th>Cloud Name</th>  <td>{{node.node_cloud_name}}</td></tr>
-                <tr><th>Zone</th>                    <td>{{node.node_nova_zone}}</td></tr>
-                <tr class="odd"><th>Status</th>      <td {% if node.status == "Down" %} bgcolor="#FF1919"  {% elif node.status == "Issue" %} bgcolor="#FFCC00" {% endif %}>{{node.status}}</td></tr>
-
-          </table>
-        </div>
-      </div><!-- end span5-->
-
-
-    </div><!-- end row-fluid-->
+    <div class="col-sm-12">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
+                <th>Name</th>
+                <th>Type</th>
+                <th>Data IP</th>
+                <th>Mgmt IP</th>
+                <th>Controller</th>
+                <th>Cloud Name</th>
+                <th>Zone</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>{{ node.node_name }}</td>
+                <td>
+                    {% if node.node_type == "cc" %}
+                        core node
+                    {% elif node.node_type == "cn" %}
+                        compute node
+                    {% elif node.node_type == "sn" %}
+                        storage node
+                    {% endif %}
+                </td>
+                <td {% if node.data_ip_issue %} bgcolor="#FF1919" {% endif %}>{{ node.node_data_ip }}</td>
+                <td {% if node.mgmt_ip_issue %} bgcolor="#FF1919" {% endif %}>{{ node.node_mgmt_ip }}</td>
+                <td>{{ node.node_controller }}</td>
+                <td>{{ node.node_cloud_name }}</td>
+                <th>Status</th>
+                <td {% if node.status == "Down" %} bgcolor="#FF1919"  {% elif node.status == "Issue" %}
+                                                   bgcolor="#FFCC00" {% endif %}>{{ node.status }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
 
 {% endblock %}

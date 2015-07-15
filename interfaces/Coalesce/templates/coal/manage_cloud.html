@@ -23,7 +23,7 @@
             <tbody>
             {% for node in node_info %}
                 <tr>
-                    <td><a href="/nodes/{{ node.node_id|urlencode }}/view/">{{ node.node_name }}</a></td>
+                    <td>{{ node.node_name }}</td>
                     <td>
                         {% if node.node_type == "cc" %}
                             core node
