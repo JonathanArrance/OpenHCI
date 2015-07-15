@@ -2701,12 +2701,20 @@ def nfs_set (request, mountpoints):
                     message: success message
                 error
                     message: error message
+                    or
+                    msgs: array of validation error messages
     '''
     try:
         auth = request.session['auth']
         mntpts = mountpoints.replace("!","/").split(",")
-        tpc.add_nfs (mntpts, auth)
-        out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
+        success, msgs = tpc.add_nfs (mntpts, auth)
+        if success:
+            out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
+        else:
+            if msgs == None:
+                out = {'status' : "error", 'message' : "Error adding NFS storage to OpenStack"}
+            else:
+                out = {'status' : "error", 'msgs' : msgs}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error adding NFS storage: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2723,11 +2731,19 @@ def nfs_update (request, mountpoints):
                     message: success message
                 error
                     message: error message
+                    or
+                    msgs: array of validation error messages
     '''
     try:
         mntpts = mountpoints.replace("!","/").split(",")
-        tpc.update_nfs (mntpts)
-        out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
+        success, msgs = tpc.update_nfs (mntpts)
+        if success:
+            out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
+        else:
+            if msgs == None:
+                out = {'status' : "error", 'message' : "Error updating NFS storage with OpenStack"}
+            else:
+                out = {'status' : "error", 'msgs' : msgs}
     except Exception, e:
         out = {'status' : "error", 'message' : "Error updating NFS storage: %s" % e}
     return HttpResponse(simplejson.dumps(out))
