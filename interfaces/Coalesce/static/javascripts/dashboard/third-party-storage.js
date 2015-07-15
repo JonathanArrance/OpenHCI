@@ -73,8 +73,6 @@ $(function () {
             notValidMsg,
             update = $(this).data("update");
 
-        console.log(update);
-
         if (provider == "eseries") {
             inputs = {
                 'useProxy': $('input[name=eseries-use-proxy]:checked'),
@@ -97,11 +95,22 @@ $(function () {
             name = "NFS";
             isValid = (inputs != "");
             notValidMsg = "At least one Mount Point must be entered to configure NFS Storage";
-        } else if (provider == "nfs") {
-
+        } else if (provider == "nimble") {
+            inputs = {
+                'hostnameIP': $("#nimble-hostname-ip"),
+                'login': $("#nimble-login"),
+                'password': $("#nimble-password")
+            };
+            name = "Nimble";
+            isValid =
+                checkRequired(inputs.hostnameIP, "Hostname/IP") &&
+                checkRequired(inputs.login, "Login") &&
+                checkRequired(inputs.password, "Password");
+            notValidMsg = "All fields are required to configure Nimble Storage";
         } else {
             isValid = false;
-            showMessage("error", "Cannot determine storage provider")
+            showMessage("error", "Cannot determine storage provider");
+            return;
         }
 
         if (isValid) {
@@ -113,6 +122,10 @@ $(function () {
                 call = update == true
                     ? 'nfs/update/' + formatCall(inputs)
                     : 'nfs/set/' + formatCall(inputs);
+            } else if (provider == "nimble") {
+                call = update == true
+                    ? 'nfs/update/' + configureNimble(inputs)
+                    : 'nfs/set/' + configureNimble(inputs);
             }
 
             showMessage('info', update == true ? "Updating " + name + " Storage ..." : "Configuring " + name + " Storage ...");
@@ -293,6 +306,9 @@ function configureEseriesUpdate(inputs) {
         return inputs.useProxy.val() + "/" + inputs.hostnameIP.val() + "/" + inputs.port.val() + "/" + inputs.transport.val() + "/" + inputs.login.val() + "/" + inputs.password.val() + "/" + inputs.controllerIPs.val() + "/" + inputs.disks.val() + "/";
 }
 
+function configureNimble(inputs) {
+    return inputs.hostnameIP.val() + "/" + inputs.login.val() + "/" + inputs.password.val();
+}
 
 function eseriesGraph() {
     d3.json("/eseries/get/stats/", function (error, json) {

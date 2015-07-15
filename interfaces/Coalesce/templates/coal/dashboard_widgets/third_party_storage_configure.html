@@ -132,28 +132,28 @@
                     </fieldset>
                     <!-- ===== NIMBLE ===== -->
                 {% elif provider.id == 'nimble' %}
-                    {#                <fieldset id="nimble-config-data" style="display: none;">#}
-                    {#                    <label for="nimble-hostname-ip">Hostname/IP:</label>#}
-                    {#                    <input name="nimble-hostname-ip" id="nimble-hostname-ip" value=""#}
-                    {#                           class="text ui-widget-content ui-corner-all"#}
-                    {#                           type="text">#}
-                    {##}
-                    {#                    <div id="nlogin"></div>#}
-                    {#                    <label for="nimble-login">Login:</label>#}
-                    {#                    <input name="nimble-login" id="nimble-login" value="" class="text ui-widget-content ui-corner-all"#}
-                    {#                           type="text">#}
-                    {##}
-                    {#                    <div id="npwd"></div>#}
-                    {#                    <label for="nimble-password">Password:</label>#}
-                    {#                    <input name="nimble-password" id="nimble-password" value=""#}
-                    {#                           class="text ui-widget-content ui-corner-all"#}
-                    {#                           type="password">#}
-                    {##}
-                    {#                    <button class="configure-tps block-center" id="nimble-button" data-provider="nimble">Configure#}
-                    {#                        Nimble#}
-                    {#                        Storage#}
-                    {#                    </button>#}
-                    {#                </fieldset>#}
+                    <fieldset id="nimble-config-data">
+                        <div class="form-group">
+                            <label for="nimble-hostname-ip" class="col-sm-2">Hostname/IP:</label>
+                            <input type="text" name="nimble-hostname-ip" id="nimble-hostname-ip" value=""
+                                   placeholder="Your Hostname/IP"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nimble-login" class="col-sm-2">Login:</label>
+                            <input type="text" name="nimble-login" id="nimble-login" value=""
+                                   placeholder="Your Nimble Login"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nimble-password" class="col-sm-2">Password:</label>
+                            <input type="password" name="nimble-password" id="nimble-password" value=""
+                                   placeholder="Your Nimble Password"
+                                   class="col-sm-9 col-sm-offset-1">
+                        </div>
+                    </fieldset>
                 {% endif %}
             </form>
         </div>
@@ -170,7 +170,6 @@
 <script src="{{ STATIC_URL }}javascripts/external/bootstrap-tagsinput.min.js"></script>
 <script>
     $(function () {
-        console.log("{{ update }}");
         var reqInputs = $('#eseries-hostname-ip, #eseries-login, #eseries-password, #eseries-server-port');
         reqInputs.change(function () {
             clearUiValidation(reqInputs);
