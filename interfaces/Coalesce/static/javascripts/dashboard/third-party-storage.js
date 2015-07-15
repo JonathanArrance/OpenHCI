@@ -46,11 +46,18 @@ $(function () {
         }
     });
 
-    // Configure
+    // Configure and Update
     $(document).on('click', '.configure', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_configure/' + provider + '/';
+        showModal(call);
+    });
+
+    $(document).on('click', '.update', function (event) {
+        event.preventDefault();
+        var provider = $(this).data("provider"),
+            call = '/third_party_storage/get_configure/' + provider + '/true/';
         showModal(call);
     });
 
@@ -63,7 +70,10 @@ $(function () {
             call,
             buttons = $(this).parent().parent().find('button'),
             isValid,
-            notValidMsg;
+            notValidMsg,
+            update = $(this).data("update");
+
+        console.log(update);
 
         if (provider == "eseries") {
             inputs = {
@@ -96,12 +106,16 @@ $(function () {
 
         if (isValid) {
             if (provider == "eseries") {
-                call = 'eseries/config/set/' + inputs.disks.val() + '/';
+                call = update == true
+                    ? 'eseries/config/update/' + configureEseriesUpdate(inputs) + '/'
+                    : 'eseries/config/set/' + inputs.disks.val() + '/';
             } else if (provider == "nfs") {
-                call = 'nfs/set/' + formatCall(inputs) + '/';
+                call = update == true
+                    ? 'nfs/update/' + formatCall(inputs)
+                    : 'nfs/set/' + formatCall(inputs);
             }
 
-            showMessage('info', "Configuring " + name + " Storage ...");
+            showMessage('info', update == true ? "Updating " + name + " Storage ..." : "Configuring " + name + " Storage ...");
             setModalButtons(false, buttons);
             $.getJSON(call)
                 .done(function (data) {
@@ -110,7 +124,7 @@ $(function () {
                         setModalButtons(true, buttons);
                     }
                     if (data.status == 'success') {
-                        showMessage('success', name + " Storage Configured");
+                        showMessage('success', update == true ? name + " Storage Updated" : name + " Storage Configured");
                         setModalButtons(true, buttons);
                         closeModal();
                         refreshContent($("#page-content"), "/third_party_storage/get/");
@@ -247,25 +261,38 @@ $(function () {
             message,
             call,
             notice,
-            async;
+            async = $(this).data("async");
 
         if (provider == "eseries") {
             title = formatString("Delete E-Series Storage");
             message = formatString("Remove E-Series Storage configuration");
             call = formatCall("/" + provider + "/delete/");
             notice = formatString("Deleting E-Series Configuration");
-            async = refreshContent($("#page-content"), "/third_party_storage/get/");
             showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
         } else if (provider == "nfs") {
             title = formatString("Delete NFS Storage");
             message = formatString("Remove NFS Storage configuration");
             call = formatCall("/" + provider + "/delete/");
             notice = formatString("Deleting NFS Configuration");
-            async = refreshContent($("#page-content"), "/third_party_storage/get/");
             showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
         }
     });
 });
+
+
+window.refreshTPS = (function (load) {
+    $.when(load).done(function () {
+        refreshContent($("#page-content"), "/third_party_storage/get/")
+    });
+});
+
+function configureEseriesUpdate(inputs) {
+    if (inputs.storagePassword.length > 0)
+        return inputs.useProxy.val() + "/" + inputs.hostnameIP.val() + "/" + inputs.port.val() + "/" + inputs.transport.val() + "/" + inputs.login.val() + "/" + inputs.password.val() + "/" + inputs.controllerIPs.val() + "/" + inputs.disks.val() + "/" + inputs.storagePassword.val();
+    else
+        return inputs.useProxy.val() + "/" + inputs.hostnameIP.val() + "/" + inputs.port.val() + "/" + inputs.transport.val() + "/" + inputs.login.val() + "/" + inputs.password.val() + "/" + inputs.controllerIPs.val() + "/" + inputs.disks.val() + "/";
+}
+
 
 function eseriesGraph() {
     d3.json("/eseries/get/stats/", function (error, json) {

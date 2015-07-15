@@ -162,7 +162,7 @@
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
     <button type="button" class="btn btn-primary" data-loading-text="Loading ..." data-provider="{{ provider.id }}"
-            id="confirm-configure">
+            data-update="{{ update }}" id="confirm-configure">
         Configure
     </button>
 </div>
@@ -170,6 +170,7 @@
 <script src="{{ STATIC_URL }}javascripts/external/bootstrap-tagsinput.min.js"></script>
 <script>
     $(function () {
+        console.log("{{ update }}");
         var reqInputs = $('#eseries-hostname-ip, #eseries-login, #eseries-password, #eseries-server-port');
         reqInputs.change(function () {
             clearUiValidation(reqInputs);

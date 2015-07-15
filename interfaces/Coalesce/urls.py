@@ -442,6 +442,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_third_party_storage_configure',
             name='get_third_party_storage_configure'),
 
+        url(r'^third_party_storage/get_configure/(?P<provider>[^/]+)/(?P<update>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_storage_configure',
+            name='get_third_party_storage_configure'),
+
         # --- E-Series ---
         url(r'^eseries/get/$',
             'coalesce.coal_beta.views.eseries_get',

@@ -23,7 +23,7 @@
                 <td>
                     <a href="#" class="update" data-provider="{{ provider.id }}">update</a>
                     <span> | </span>
-                    <a href="#" class="delete" data-provider="{{ provider.id }}">delete</a>
+                    <a href="#" class="delete" data-provider="{{ provider.id }}" data-async="refreshTPS">delete</a>
                 </td>
             {% else %}
                 <td>Configured ({{ provider.in_use }} volumes)</td>

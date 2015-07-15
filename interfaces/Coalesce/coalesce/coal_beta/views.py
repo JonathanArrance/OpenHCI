@@ -183,7 +183,7 @@ def get_third_party_storage_license(request, provider):
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_storage_license.html', RequestContext(request, { 'provider', "error"}))
 
-def get_third_party_storage_configure(request, provider):
+def get_third_party_storage_configure(request, provider, update=None):
     try:
         auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
@@ -194,7 +194,7 @@ def get_third_party_storage_configure(request, provider):
                 prov = { 'id': provider, 'name':"NFS" }
             if provider == 'nimble':
                 prov = { 'id': provider, 'name':"Nimble" }
-            return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': prov}))
+            return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': prov, 'update': update}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider', "error"}))
 

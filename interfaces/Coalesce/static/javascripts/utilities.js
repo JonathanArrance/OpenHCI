@@ -9,10 +9,11 @@ function initializeUtilities() {
         var call = $(this).data("call"),
             notice = $(this).data("notice"),
             async = $(this).data("async"),
-            buttons = $(this).parent().parent().find('button');
+            buttons = $(this).parent().parent().find('button'),
+            load = $.Deferred();
         showMessage('info', notice);
         setModalButtons(false, buttons);
-        var load = $.getJSON(call)
+        load = $.getJSON(call)
             .done(function (data) {
                 if (data.status == 'error') {
                     showMessage('error', data.message);
