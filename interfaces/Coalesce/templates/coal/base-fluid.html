@@ -46,7 +46,8 @@
         <a href="/welcome" class="navbar-badge">
             <img class="navbar-logo" src="{{ STATIC_URL }}images/transcirrus-icon.png">
                 <span class="navbar-brand">
-                    Trans<span style="font-weight: bold">Cirrus</span>{% block title %}{% endblock %}
+                    Trans<span style="font-weight: bold">Cirrus</span>
+                    <span class="small"> - {% block title %}{% endblock %}</span>
                 </span>
         </a>
     </div>

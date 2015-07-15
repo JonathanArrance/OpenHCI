@@ -1,41 +1,15 @@
 <h1 class="page-header">Metering</h1>
 
-<div class="well" id="widget-actions" style="display: block;">
-    <div class="legend">
-        Last 24hrs: Average WAC
-    </div>
-    <div style="text-align: center">
-        <body style="font: 10px arial; color:white;">
-        <span id="cpuGaugeContainer"></span>
-        <span id="memoryGaugeContainer"></span>
-        <span id="storageGaugeContainer"></span>
-        <span id="diskreadrateGaugeContainer"></span>
-        <span id="diskwriterateGaugeContainer"></span>
-        <span id="lanincomingrateGaugeContainer"></span>
-        <span id="lanoutgoingrateGaugeContainer"></span>
-        <span id="wanincomingrateGaugeContainer"></span>
-        <span id="wanoutgoingrateGaugeContainer"></span>
-        </body>
-    </div>
+<div class="well">
+    <div>Last 24hrs: Average WAC</div>
 </div>
 
-<div class="well" id="widget-actions" style="display: block;">
-    <div class="legend">
-        Last 24hrs: Average Cloud Meters
-    </div>
-    <div style="text-align: center; color:white;">
-        <body style="font: 10px arial">
-        <span id="cpupercentGaugeContainer"></span>
-        <span id="cpuuserpercentGaugeContainer"></span>
-        <span id="cpuidlepercentGaugeContainer"></span>
-        <span id="cpuiowaitpercentGaugeContainer"></span>
-        <span id="cpukernelpercentGaugeContainer"></span>
-        </body>
-    </div>
+<div class="well">
+    <div>Last 24hrs: Average Cloud Meters</div>
 </div>
 
 <script>
     $(function(){
-        initializeGauges()
+        getGauges();
     });
 </script>

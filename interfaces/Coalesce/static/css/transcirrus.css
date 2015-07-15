@@ -124,6 +124,15 @@ footer {
     right: -6px;
 }
 
+.page-header > .btn-group.actions-dropdown {
+    margin-top: -10px;
+}
+
+.page-header > .actions-dropdown > ul {
+    margin-left: -100px;
+    margin-top: -1px;
+}
+
 /* WELCOME PAGE */
 
 .learn-more {

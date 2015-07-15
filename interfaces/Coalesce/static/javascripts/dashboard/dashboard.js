@@ -165,9 +165,59 @@ window.getUpgradeMessage = (function (load) {
 
 // --- Dashboard Gauges ---
 
-var gauges = [],
-    calls = [],
-    calls_complete = true;
+function getGauges() {
+    var wacGauges = [
+            "cpu",
+            "memory",
+            "storage",
+            "diskreadrate",
+            "diskwriterate",
+            "lanincomingrate",
+            "lanoutgoingrate",
+            "wanincomingrate",
+            "wanoutgoingrate"
+        ],
+        cloudGauges = [
+            "cpupercent",
+            "cpuuserpercent",
+            "cpuidlepercent",
+            "cpuiowaitpercent",
+            "cpukernelpercent"
+        ],
+        days = 3,
+        date = new Date(),
+        then = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + (date.getDate() - days) + "T" + date.getUTCHours() + "%3A" + date.getUTCMinutes(),
+        now = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + (date.getDate()) + "T" + date.getUTCHours() + "%3A" + date.getUTCMinutes(),
+        wacString = "",
+        cloudString = "",
+        wac = $.Deferred(),
+        cloud = $.Deferred();
+
+    $(wacGauges).each(function (index, element) {
+        wacString += element;
+        if (index + 1 != wacGauges.length) {
+            wacString += ","
+        }
+    });
+
+    $(cloudGauges).each(function (index, element) {
+        cloudString += element;
+        if (index + 1 != cloudGauges.length) {
+            cloudString += ","
+        }
+    });
+
+    wac = $.getJSON('ceilometer/get/statistics/' + then + '/' + now + '/' + wacString + '/')
+        .done(function (data) {
+            console.log(data);
+        });
+    $.when(wac).done(function () {
+        cloud = $.getJSON('ceilometer/get/statistics/' + then + '/' + now + '/' + cloudString + '/')
+            .done(function (data) {
+                console.log(data);
+            });
+    })
+}
 
 function createGauge(name, label, meterType, calcType, min, max, minorTicks) {
     var config =
@@ -187,66 +237,4 @@ function createGauge(name, label, meterType, calcType, min, max, minorTicks) {
 
     gauges[name] = new Gauge(name + "GaugeContainer", config);
     gauges[name].render();
-}
-
-function createGauges() {
-
-    // 6 Fusion Meters
-    createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);
-    createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);
-    createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);
-    createGauge("diskreadrate", "Disk Reads B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);
-    createGauge("diskwriterate", "Disk Writes B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);
-    createGauge("lanincomingrate", "LAN Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);
-    createGauge("lanoutgoingrate", "LAN Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);
-    createGauge("wanincomingrate", "WAN Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);
-    createGauge("wanoutgoingrate", "WAN Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);
-
-    // Core and Compute Meters
-    createGauge("cpupercent", "% CPU", "compute.node.cpu.percent", "avg", 0, 100, 5);
-    createGauge("cpuuserpercent", "% CPU User", "compute.node.cpu.user.percent", "avg", 0, 100, 5);
-    createGauge("cpuidlepercent", "% CPU Idle", "compute.node.cpu.idle.percent", "avg", 0, 100, 5);
-    createGauge("cpuiowaitpercent", "% CPU I/O Wait", "compute.node.cpu.iowait.percent", "avg", 0, 100, 5);
-    createGauge("cpukernelpercent", "% CPU Kernel", "compute.node.cpu.kernel.percent", "avg", 0, 100, 5);
-}
-
-function updateGauges() {
-    if (calls_complete) {
-        calls_complete = false;
-        calls = [];
-        for (var key in gauges) {
-            calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)
-        }
-
-        $.when.apply(null, calls).done(function () {
-            calls_complete = true;
-        });
-    }
-}
-
-function getCeilometerResults(guage, meterType, calcType) {
-    var endDate = new Date();
-    var startDate = new Date(endDate);
-    var durationInMinutes = 4320;
-    startDate.setUTCMinutes(endDate.getUTCMinutes() - durationInMinutes);
-    var startTimeString = startDate.getUTCFullYear() + "-" + (startDate.getUTCMonth() + 1 ) + "-" + startDate.getUTCDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getUTCMinutes()).slice(-2);
-    var endTimeString = endDate.getUTCFullYear() + "-" + (endDate.getUTCMonth() + 1) + "-" + endDate.getUTCDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getUTCMinutes()).slice(-2);
-    var url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/";
-
-    call_complete = $.getJSON(url).done(function (data) {
-        if (data.status == "success") {
-            if (data.message != "empty dataset") {
-                var result = data.statistics[0][calcType];
-                guage.redraw(result);
-            }
-        }
-    });
-
-    return call_complete;
-}
-
-function initializeGauges() {
-    createGauges();
-    updateGauges();
-    window.setInterval(updateGauges, 60000);
 }
