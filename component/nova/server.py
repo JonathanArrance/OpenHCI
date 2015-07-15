@@ -295,8 +295,8 @@ class server_ops:
                 select_sec = {"select":'def_security_group_name', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 get_sec = self.db.pg_select(select_sec)
             except:
-                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
-                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
+                logger.sql_error("Could not find the default security group for this project in the database")
+                raise Exception("Could not find the default security group for this project in the database")
             create_dict['sec_group_name'] = get_sec[0][0]
         else:
             #check if the group specified is associated with the users project
@@ -304,20 +304,20 @@ class server_ops:
                 select_sec = {"select":'sec_group_id', "from":'trans_security_group', "where":"proj_id='%s'" %(create_dict['project_id']),"and":"sec_group_name='%s'"%(create_dict['sec_group_name'])}
                 get_sec = self.db.pg_select(select_sec)
                 if(not get_sec[0][0]):
-                    raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
-            except:
-                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
-                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
+                    raise Exception("Could not find the specified security group. Please specify a security group for this instance or create a new security group for this instance.")
+            except Exception as e:
+                logger.sql_error("Error finding security group (%s) in database: %s" %(create_dict['sec_group_name'], e))
+                raise Exception("Error finding security group (%s) in database: %s" %(create_dict['sec_group_name'], e))
 
         #security key verification
         if('sec_key_name' not in create_dict):
-            #get the default security group from the transcirrus db
+            #get the default security key from the transcirrus db
             try:
                 select_key = {"select":'def_security_key_name', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 sec_key = self.db.pg_select(select_key)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+                logger.sql_error("Could not find the default security key for this project in the database")
+                raise Exception("Could not find the default security key for this project in the database")
             create_dict['sec_key_name'] = sec_key[0][0]
         else:
             #check if the key specified is associated with the users project
@@ -325,8 +325,8 @@ class server_ops:
                 select_key = {"select":'sec_key_name', "from":'trans_security_keys', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 sec_key = self.db.pg_select(select_key)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+                logger.sql_error("Error finding security key (%s) in database: %s" %(create_dict['sec_key_name'], e))
+                raise Exception("Error finding security key (%s) in database: %s" %(create_dict['sec_key_name'], e))
 
         #network verification
         if('network_name' not in create_dict):
