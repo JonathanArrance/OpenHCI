@@ -2,6 +2,8 @@
 
 {% block title %}Node View{% endblock %}
 
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
 {% block content %}
 
     <div class="col-sm-12">

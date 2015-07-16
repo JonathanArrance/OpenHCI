@@ -1,5 +1,7 @@
 {% extends "coal/base-fluid.html" %}
 
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
 {% block content %}
     <div class="row-fluid">
         <div class="col-md-6">

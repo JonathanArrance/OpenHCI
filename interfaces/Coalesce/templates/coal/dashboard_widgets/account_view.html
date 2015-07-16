@@ -1,5 +1,7 @@
 <h1 class="page-header">{{ username }}'s Account</h1>
 
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
 {% if project_name != "trans_default" %}
     {% if user_level > 0 %}
         <div class="col-md-6">

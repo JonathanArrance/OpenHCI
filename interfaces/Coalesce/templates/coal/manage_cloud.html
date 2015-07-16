@@ -1,5 +1,7 @@
 {% extends "coal/base-fluid.html" %}
 
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
 {% block title %}Cloud Management{% endblock %}
 
 {% block content %}

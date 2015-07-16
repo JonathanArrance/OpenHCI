@@ -1,5 +1,8 @@
 <h1 class="page-header">Metering</h1>
 
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
+
 <div class="well">
     <div>Last 24hrs: Average WAC</div>
 </div>

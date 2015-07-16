@@ -1,5 +1,8 @@
 <h1 class="page-header">Node Stats</h1>
 
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
+
 {% for node in full_stats %}
     <div class="panel panel-primary">
         <div class="panel-heading">
