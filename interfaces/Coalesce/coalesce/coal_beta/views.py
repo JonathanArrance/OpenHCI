@@ -2933,25 +2933,26 @@ def get_quota_utilization(request):
         out = {'status': "error", 'message' : "Error getting statistics: %s" %e}
     return HttpResponse(simplejson.dumps(out))
 
-# ---- Ceilometer Statistics ----
-def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id=None, ceil_resource_id=None):
+# ---Ceilometer Statistics ----
+def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_list, ceil_tenant_id=None, ceil_resource_id=None):
     try:
+        meter_list = ceil_meter_list.split(",")
         out = {}
         auth = request.session['auth']
         ceil = meter_ops(auth)
 
         # Meter Overview for environment
         if ((ceil_tenant_id == None) and (ceil_resource_id == None)):
-            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type)
+            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list)
         # Meter for instance/resource
         elif ((ceil_tenant_id == None) and (ceil_resource_id != None)):
-            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_resource_id)
+            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_resource_id)
         # Meter Overview for tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id == None)):
-            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id)
+            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id)
         # Meter Overview for resource in tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id != None)):
-            result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id)
+            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
 
         if result == []:
             # No data was provided for this meter.
@@ -2963,14 +2964,15 @@ def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_type, cei
         out = {'status': "error", 'message' : "Error getting statistics: %s" %e}
     return HttpResponse(simplejson.dumps(out))
 
-def get_statistics_for_instance(request, project_id, instance_id, ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id):
+def get_statistics_for_instance(request, project_id, instance_id, ceil_start_time, ceil_end_time, ceil_meter_list, ceil_tenant_id, ceil_resource_id):
     try:
+        meter_list = ceil_meter_list.split(",")
         out = {}
         auth = request.session['auth']
         ceil = meter_ops(auth)
 
         # Meter Overview for resource in tenant
-        result = ceil.show_statistics(auth['project_id'], ceil_start_time, ceil_end_time, ceil_meter_type, ceil_tenant_id, ceil_resource_id)
+        result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
 
         if result == []:
             # No data was provided for this meter.
