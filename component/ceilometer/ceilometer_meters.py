@@ -72,7 +72,6 @@ class meter_ops:
 
         try:
             body = '[{"counter_type": "%s", "counter_name": "%s", "counter_volume": "%f", "counter_unit": "%s", "resource_id": "%s", "project_id": "%s"}]' % (counter_type, counter_name, counter_volume, counter_unit, resource_id, project_id)
-            print body
             header = {"X-Auth-Token": self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'POST'
             api_path = '/v2/meters/' + counter_name
