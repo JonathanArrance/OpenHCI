@@ -122,48 +122,42 @@ def get_project_stats(request):
         if(auth != None and auth['is_admin'] == 1):
             tenant_info = []
             #Project stats
-            try:
-                to = tenant_ops(auth)
-                so = server_ops(auth)
-                l3 = layer_three_ops(auth)
-                vo = volume_ops(auth)
-                no = neutron_net_ops(auth)
-                try:
-                    tl = to.list_all_tenants()
-                    for tenant in tl:
-                        try:
-                            servers = so.list_servers(tenant['project_id'])
-                            num_servers = len(servers)
+            to = tenant_ops(auth)
+            so = server_ops(auth)
+            l3 = layer_three_ops(auth)
+            vo = volume_ops(auth)
+            no = neutron_net_ops(auth)
 
-                            fips = l3.list_floating_ips(tenant['project_id'])
-                            num_fips = len(fips)
+            tl = to.list_all_tenants()
+            for tenant in tl:
+                if (tenant['project_name'] != "trans_default"):
+                    servers = so.list_servers(tenant['project_id'])
+                    num_servers = len(servers)
 
-                            volumes = vo.list_volumes(tenant['project_id'])
-                            num_vol = len(volumes)
+                    fips = l3.list_floating_ips(tenant['project_id'])
+                    num_fips = len(fips)
 
-                            routers = l3.list_routers(tenant['project_id'])
-                            num_rout = len(routers)
+                    volumes = vo.list_volumes(tenant['project_id'])
+                    num_vol = len(volumes)
 
-                            networks = no.list_internal_networks(tenant['project_id'])
-                            num_net = len(networks)
+                    routers = l3.list_routers(tenant['project_id'])
+                    num_rout = len(routers)
 
-                            users = to.list_tenant_users(tenant['project_id'])
-                            num_users = len(users)
+                    networks = no.list_internal_networks(tenant['project_id'])
+                    num_net = len(networks)
 
-                            tenant_info.append({'project_name': tenant['project_name'],
-                                            'num_servers': num_servers,
-                                            'num_fips': num_fips,
-                                            'num_vol': num_vol,
-                                            'num_rout': num_rout,
-                                            'num_net': num_net,
-                                            'num_users': num_users})
-                        except Exception as e:
-                            print e
-                except Exception as e:
-                    print e
-            except Exception as e:
-                print e
-            return render_to_response('coal/dashboard_widgets/project_stats.html', RequestContext(request, {'tenant_info': tenant_info}))
+                    users = to.list_tenant_users(tenant['project_id'])
+                    num_users = len(users)
+
+                    tenant_info.append({'project_name': tenant['project_name'],
+                                    'num_servers': num_servers,
+                                    'num_fips': num_fips,
+                                    'num_vol': num_vol,
+                                    'num_rout': num_rout,
+                                    'num_net': num_net,
+                                    'num_users': num_users})
+            return render_to_response('coal/dashboard_widgets/project_stats.html',
+                                      RequestContext(request, {'tenant_info': tenant_info}))
     except Exception as e:
         tenant_info = []
         tenant_info.append({'project_name': "error",
@@ -173,7 +167,8 @@ def get_project_stats(request):
                                     'num_rout': "error",
                                     'num_net': "error",
                                     'num_users': "error"})
-        return render_to_response('coal/dashboard_widgets/project_stats.html', RequestContext(request, {'tenant_info': tenant_info, 'error': "Error: %s"%e}))
+        return render_to_response('coal/dashboard_widgets/project_stats.html',
+                                  RequestContext(request, {'tenant_info': tenant_info, 'error': "Error: %s"%e}))
 
 def get_third_party_storage(request):
     try:
