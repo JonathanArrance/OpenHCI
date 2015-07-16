@@ -35,28 +35,40 @@
 </table>
 
 {% for provider in providers %}
-    {% if provider.id == 'eseries' and provider.configured == '1' %}
-        <div class="panel panel-primary">
+    {% if provider.configured == '1' and provider.id == "eseries" %} <!-- TODO: Add NFS and Nimble stats call -->
+        <div class="panel panel-primary panel-light">
             <div class="panel-heading">
-                <h3 class="panel-title">E-Series Storage</h3>
+                <h3 class="panel-title">
+                    {% if provider.id == "eseries" %}
+                        E-Series
+                    {% elif provider.id == "nfs" %}
+                        NFS
+                    {% elif provider.id == "nimble" %}
+                        Nimble
+                    {% endif %} Storage
+                </h3>
             </div>
-            <div class="panel-body">
-                <div id="eseries-graph">
-                    <style scoped>
-                        #eseries-graph {
-                            font: 10px sans-serif;
-                        }
-
-                        .arc path {
-                            stroke: #fff;
-                        }
-
-                    </style>
-                    <script>
-                        $(function () {
-                            $("#eseries-graph").html(eseriesGraph())
-                        });
-                    </script>
+            <div class="panel-body center-text">
+                <div id="{{ provider.id }}-graph">
+                    {% if provider.id == "eseries" %}
+                        <script>
+                            $(function () {
+                                $("#eseries-graph").html(eseriesGraph())
+                            });
+                        </script>
+                    {% elif provider.id == "nfs" %}
+                        <script>
+                            $(function () {
+                                $("#nfs-graph").html(nfsGraph())
+                            });
+                        </script>
+                    {% elif provider.id == "nimble" %}
+                        <script>
+                            $(function () {
+                                $("#nimble-graph").html(nimbleGraph())
+                            });
+                        </script>
+                    {% endif %}
                 </div>
             </div>
         </div>

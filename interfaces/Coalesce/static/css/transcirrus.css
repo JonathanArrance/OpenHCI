@@ -46,6 +46,10 @@ section {
     color: rgb(255, 255, 255);
 }
 
+.panel-light {
+    background-color: rgb(106, 123, 138)
+}
+
 /* FORM ELEMENTS */
 
 .form-inline .radio, .form-inline .checkbox {
@@ -163,4 +167,10 @@ footer {
     padding: 12px;
     position: relative;
     transition: box-shadow 0.3s ease-out 0s;
+}
+
+/* DASHBOARD */
+
+#eseries-graph {
+    font-size: 12px;
 }
