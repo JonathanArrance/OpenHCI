@@ -69,38 +69,16 @@ function setModalButtons(enabled, buttons) {
 
 function refreshContent(container, url, load) {
     container.empty();
-    opts = {
-        lines: 17,
-        length: 56,
-        width: 4,
-        radius: 10,
-        scale: .35,
-        corners: 0,
-        color: '#df691a',
-        opacity: 0.25,
-        rotate: 0,
-        direction: 1,
-        speed: 1,
-        trail: 60,
-        fps: 20,
-        zIndex: 2e9,
-        className: 'spinner',
-        top: '-20px',
-        left: '215px',
-        shadow: false,
-        hwaccel: true,
-        position: 'relative'
-    };
-    container.append($('<h1 class="loading-text">LOADING</h1>')
-        .append(new Spinner(opts).spin().el));
+    container.append($('<h1 class="loading-text">LOADING </h1>')
+        .append('<i class="fa fa-cog fa-spin"></i>'));
     container.load(url, function () {
         if (!(load === undefined)) {
             spinners = [];
             window[load]();
             container.find('.loadable').each(function () {
                 $(this).css("opacity", "0.5")
-                    .prepend($('<h1 class="loading-text">LOADING</h1>')
-                        .append(new Spinner(opts).spin().el));
+                    .prepend($('<h1 class="loading-text">LOADING </h1>')
+                        .append('<i class="fa fa-cog fa-spin"></i>'));
             });
             var checkLoading = window.setInterval(function () {
                 if (!window.checkLoading()) {
