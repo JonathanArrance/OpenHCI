@@ -20,7 +20,7 @@ $(function () {
 
     $("#metering").click(function (event) {
         event.preventDefault();
-        switchPageContent(page, $(this), "/metering/get/");
+        switchPageContent(page, $(this), "/metering/get/", "getGaugeStats");
     });
 
     $("#account").click(function (event) {
@@ -165,76 +165,79 @@ window.getUpgradeMessage = (function (load) {
 
 // --- Dashboard Gauges ---
 
-function getGauges() {
-    var wacGauges = [
-            "cpu",
-            "memory",
-            "storage",
-            "diskreadrate",
-            "diskwriterate",
-            "lanincomingrate",
-            "lanoutgoingrate",
-            "wanincomingrate",
-            "wanoutgoingrate"
-        ],
-        cloudGauges = [
-            "cpupercent",
-            "cpuuserpercent",
-            "cpuidlepercent",
-            "cpuiowaitpercent",
-            "cpukernelpercent"
-        ],
-        days = 3,
-        date = new Date(),
-        then = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + (date.getDate() - days) + "T" + date.getUTCHours() + "%3A" + date.getUTCMinutes(),
-        now = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + (date.getDate()) + "T" + date.getUTCHours() + "%3A" + date.getUTCMinutes(),
-        wacString = "",
-        cloudString = "",
-        wac = $.Deferred(),
-        cloud = $.Deferred();
+charts = {};
 
-    $(wacGauges).each(function (index, element) {
-        wacString += element;
-        if (index + 1 != wacGauges.length) {
-            wacString += ","
-        }
-    });
-
-    $(cloudGauges).each(function (index, element) {
-        cloudString += element;
-        if (index + 1 != cloudGauges.length) {
-            cloudString += ","
-        }
-    });
-
-    wac = $.getJSON('ceilometer/get/statistics/' + then + '/' + now + '/' + wacString + '/')
-        .done(function (data) {
-            console.log(data);
-        });
-    $.when(wac).done(function () {
-        cloud = $.getJSON('ceilometer/get/statistics/' + then + '/' + now + '/' + cloudString + '/')
-            .done(function (data) {
-                console.log(data);
-            });
-    })
+function tester() {
+    var def = $.Deferred()
 }
 
-function createGauge(name, label, meterType, calcType, min, max, minorTicks) {
-    var config =
-    {
-        size: 120,
-        label: label,
-        meterType: meterType,
-        calcType: calcType,
-        min: undefined != min ? min : 0,
-        max: undefined != max ? max : 1000,
-        minorTicks: minorTicks
-    };
+window.getGaugeStats = function () {
+    window.loading = true;
+    var endDate = new Date(),
+        startDate = new Date(endDate),
+        durationInMinutes = 4320;
+    startDate.setUTCMinutes(endDate.getUTCMinutes() - durationInMinutes);
+    var startTimeString = startDate.getUTCFullYear() + "-" + (startDate.getUTCMonth() + 1 ) + "-" + startDate.getUTCDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getUTCMinutes()).slice(-2),
+        endTimeString = endDate.getUTCFullYear() + "-" + (endDate.getUTCMonth() + 1) + "-" + endDate.getUTCDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getUTCMinutes()).slice(-2);
 
-    var range = config.max - config.min;
-    config.yellowZones = [{from: config.min + range * 0.75, to: config.min + range * 0.9}];
-    config.redZones = [{from: config.min + range * 0.9, to: config.max}];
+    $.getJSON('ceilometer/get/meters/dashboard/').done(function (data) {
+        if (data.message) {
+            showMessage("error", "Error getting gauges")
+        } else {
+            var callString = "";
+            $(data).each(function (index, element) {
+                var meterString = callString == "" ? "" : ",";
+                $(element.meters).each(function (key, value) {
+                    meterString += value.meterType;
+                    if (key + 1 != element.meters.length) {
+                        meterString += ","
+                    }
+                });
+                callString += meterString;
+            });
 
-    gauges[name] = new Gauge(name + "GaugeContainer", config);
-    gauges[name].render();
+            var call = USER_LEVEL > 0
+                ? 'ceilometer/get/statistics/' + startTimeString + '/' + endTimeString + '/' + callString + '/' + USER_ID + '/'
+                : 'ceilometer/get/statistics/' + startTimeString + '/' + endTimeString + '/' + callString + '/';
+            $.getJSON(call)
+                .done(function (stats) {
+                    if (stats.status == "success") {
+                        if (stats.message != "empty dataset") {
+                            for (var stat in stats.statistics) {
+                                var chartType = stats.statistics[stat].meter_type;
+                                if (chartType == "cpu_util") {
+                                    chartType = "cpu-util";
+                                } else {
+                                    for (var i = 0; i < chartType.length; i++) {
+                                        if (chartType[i] == ".") {
+                                            chartType = chartType.replace(".", "-");
+                                        }
+                                    }
+                                }
+                                var chart = charts[chartType];
+                                chart.load({
+                                    columns: [
+                                        ['data', stats.statistics[stat].avg.toFixed(0)]
+                                    ]
+                                });
+                            }
+                        } else {
+                            //showMessage('error', "Error getting Ceilometer statistics");
+                        }
+                    }
+                })
+                .always(function(){
+                    window.loading = false;
+                });
+        }
+    });
+};
+
+function startGaugeUpdateTimer() {
+    if (window.gaugeTimer) {
+        window.clearInterval(window.gaugeTimer);
+    }
+    window.gaugeTimer = setInterval(function () {
+        window.getGaugeStats();
+    }, 30000)
 }

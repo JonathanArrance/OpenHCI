@@ -1,18 +1,45 @@
 <h1 class="page-header">Metering</h1>
 
-{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
 
-
-<div class="well">
-    <div>Last 24hrs: Average WAC</div>
-</div>
-
-<div class="well">
-    <div>Last 24hrs: Average Cloud Meters</div>
-</div>
+{% if meters.id %}
+    <div class="well loadable meters">
+        <div>{{ meters.title }}</div>
+        <div class="center-text">
+            <div id="{{ meters.id }}">
+                {% for meter in meters.meters %}
+                    <span id="{{ meter.id }}">
+                <script>
+                    charts["{{ meter.id }}"] = generateGauge("{{ meter.id }}", "{{ meter.min }}", "{{ meter.max }}", "{{ meter.label }}");
+                </script>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    {% for group in meters %}
+        <div class="well loadable meters">
+            <div>{{ group.title }}</div>
+            <div class="center-text">
+                <div id="{{ group.id }}">
+                    {% for meter in group.meters %}
+                        <span id="{{ meter.id }}">
+                <script>
+                    charts["{{ meter.id }}"] = generateGauge("{{ meter.id }}", "{{ meter.min }}", "{{ meter.max }}", "{{ meter.label }}");
+                </script>
+                </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
 
 <script>
-    $(function(){
-        getGauges();
-    });
+    $(function () {
+        startGaugeUpdateTimer();
+    })
 </script>

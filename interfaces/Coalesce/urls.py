@@ -564,6 +564,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_statistics_for_instance',
             name='get_statistics_for_instance'),
 
+        url(r'^ceilometer/get/meters/(?P<meter_group>[^/]+)/$',
+            'coalesce.coal_beta.views.get_meters',
+            name='get_meters'),
+
         # --- Version info ----
         url(r'^version/$',
             'coalesce.coal_beta.views.get_version',

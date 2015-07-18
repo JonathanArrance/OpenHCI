@@ -47,7 +47,7 @@
             <img class="navbar-logo" src="{{ STATIC_URL }}images/transcirrus-icon.png">
                 <span class="navbar-brand">
                     Trans<span style="font-weight: bold">Cirrus</span>
-                    <span class="small"> - {% block title %}{% endblock %}</span>
+                    <span class="small" id="page-title"> - {% block title %}Welcome{% endblock %}</span>
                 </span>
         </a>
     </div>
@@ -114,8 +114,9 @@
 <script src="{{ STATIC_URL }}javascripts/external/jquery-1.11.3.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/external/bootstrap.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/external/toastr.min.js"></script>
-<script src="{{ STATIC_URL }}javascripts/messages.js"></script>
 <script src="{{ STATIC_URL }}javascripts/external/spin.min.js"></script>
+<script src="{{ STATIC_URL }}javascripts/extensions.js"></script>
+<script src="{{ STATIC_URL }}javascripts/messages.js"></script>
 
 <!--HTML5 shim, for IE6-8 support of HTML elements -->
 <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->

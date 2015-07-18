@@ -68,6 +68,7 @@ from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
 import transcirrus.operations.support_create as support_create
 import transcirrus.operations.upgrade as ug
+import transcirrus.operations.meters as meters
 sys.path.append("/usr/lib/python2.6/site-packages/")
 
 
@@ -210,7 +211,13 @@ def get_third_party_storage_configure(request, provider, update=None):
         return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
 
 def get_metering(request):
-    return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request))
+    try:
+        auth = request.session['auth']
+        meter_dict = meters.get_dashboard_meters(auth['is_admin'])
+        return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': meter_dict}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': "error", 'error': "Error: %s"%e}))
+
 
 def user_account_view(request, project_name, project_id, user_name):
     try:
@@ -3074,6 +3081,19 @@ def get_statistics_for_instance(request, project_id, instance_id, ceil_start_tim
     except Exception as e:
         out = {'status': "error", 'message' : "Error getting statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
+
+
+def get_meters(request, meter_group):
+    try:
+        out = {}
+        auth = request.session['auth']
+        if (meter_group is not None):
+            if (meter_group == "dashboard"):
+                out = meters.get_dashboard_meters(auth['is_admin'])
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out = {'message' : "Error getting meters: %s" % e}
+        return HttpResponse(simplejson.dumps(out))
 
 # ---
 

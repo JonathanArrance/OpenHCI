@@ -67,7 +67,7 @@ function setModalButtons(enabled, buttons) {
     }
 }
 
-function refreshContent(container, url) {
+function refreshContent(container, url, load) {
     container.empty();
     opts = {
         lines: 17,
@@ -91,17 +91,43 @@ function refreshContent(container, url) {
         hwaccel: true,
         position: 'relative'
     };
-    spinner = new Spinner(opts).spin();
-    container.append($('<h1 id="loading-text">LOADING</h1>')
-        .append(spinner.el));
+    container.append($('<h1 class="loading-text">LOADING</h1>')
+        .append(new Spinner(opts).spin().el));
     container.load(url, function () {
-        spinner.stop();
-        $("#loading-text").remove();
+        if (!(load === undefined)) {
+            spinners = [];
+            window[load]();
+            container.find('.loadable').each(function () {
+                $(this).css("opacity", "0.5")
+                    .prepend($('<h1 class="loading-text">LOADING</h1>')
+                        .append(new Spinner(opts).spin().el));
+            });
+            var checkLoading = window.setInterval(function () {
+                if (!window.checkLoading()) {
+                    container.find('.loadable').each(function () {
+                        $(this).css("opacity", "1");
+                    });
+                    $(".loading-text").remove();
+                    window.clearInterval(checkLoading);
+                }
+            }, 1000);
+        }
+        else {
+            $(".loading-text").remove();
+        }
     });
 }
 
-function switchPageContent(container, link, url) {
-    refreshContent(container, url);
+window.checkLoading = function () {
+    if (window.loading) {
+        return window.loading;
+    } else {
+        return false;
+    }
+};
+
+function switchPageContent(container, link, url, load) {
+    refreshContent(container, url, load);
     switchActiveNav(link);
 }
 

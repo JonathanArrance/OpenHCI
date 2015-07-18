@@ -130,11 +130,22 @@ footer {
 
 .page-header > .btn-group.actions-dropdown {
     margin-top: -10px;
+    font-weight: bold;
 }
 
 .page-header > .actions-dropdown > ul {
     margin-left: -100px;
     margin-top: -1px;
+}
+
+.loadable.meters > .loading-text {
+    background-color: rgba(43, 62, 80, 0.8);
+    height: 50%;
+    margin: -20px 0 0 -20px;
+    padding: 0;
+    position: absolute;
+    width: calc(100% - 30px);
+    z-index: 1000;
 }
 
 /* WELCOME PAGE */
@@ -169,8 +180,23 @@ footer {
     transition: box-shadow 0.3s ease-out 0s;
 }
 
-/* DASHBOARD */
+/* CHARTS */
 
 #eseries-graph {
     font-size: 12px;
+}
+
+.c3-chart-arcs-gauge-min, .c3-chart-arcs-gauge-max, .c3-chart-arcs-gauge-unit, .c3-gauge-value {
+    fill: rgb(235, 235, 235) !important;
+}
+
+.c3-chart-arcs-gauge-unit, .c3-gauge-value {
+    font-size: 12px !important;
+    display: inline !important;
+}
+
+.c3-title {
+    fill: rgb(235, 235, 235);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px !important;
 }
