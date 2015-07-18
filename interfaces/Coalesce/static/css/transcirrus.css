@@ -200,3 +200,14 @@ footer {
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 12px !important;
 }
+
+/* ICONS */
+
+/*i.fa {*/
+  /*-webkit-animation: show 1s 1;*/
+  /*/!* any other properties to override from FontAwesome's default .fa rule *!/*/
+/*}*/
+/*@-webkit-keyframes show {*/
+  /*0% { opacity: 0; }*/
+  /*100% { opacity: 1; }*/
+/*}*/
