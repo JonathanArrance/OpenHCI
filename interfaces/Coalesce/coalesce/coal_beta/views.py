@@ -1669,7 +1669,7 @@ def power_cycle(request, project_id, instance_id):
         ps = sa.power_cycle_server(input_dict)
         if(ps == 'OK'):
             out['status'] = 'success'
-            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
+            out['message'] = "Instance %s has been power cycled." % (serv_info['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1685,7 +1685,7 @@ def power_off_server(request,project_id,instance_id):
         po = sa.power_off_server(input_dict)
         if(po == 'OK'):
             out['status'] = 'success'
-            out['message'] = "Instance %s powered off."%(get['server_name'])
+            out['message'] = "Instance %s has been powered off." % (get['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1701,7 +1701,7 @@ def power_on_server(request,project_id,instance_id):
         po = sa.power_on_server(input_dict)
         if(po == 'OK'):
             out['status'] = 'success'
-            out['message'] = "Instance %s powered on."%(get['server_name'])
+            out['message'] = "Instance %s has been powered on." % (get['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
