@@ -57,7 +57,7 @@ import transcirrus.operations.delete_instance as di
 import transcirrus.operations.boot_new_instance as bni
 
 # Python imports
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 import csv
 import json
@@ -172,11 +172,65 @@ def get_project_stats(request):
                                   RequestContext(request, {'tenant_info': tenant_info, 'error': "Error: %s"%e}))
 
 def get_third_party_storage(request):
+    global eseries_config
+    service_path = "/devmgr/v2"         # Hard coded path since most users will not change the default
     try:
         auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
             providers = tpc.get_supported_third_party_storage()
-            return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': providers}))
+            for provider in providers:
+                if (provider['id'] == 'eseries') and (provider['configured'] == '1'):
+                    if eseries_config == None:
+                        data = tpc.get_eseries()
+                        if data['enabled'] != "1":
+                            out = {'status' : "error", 'message' : "Error getting E-Series statistics, web proxy server is not configured"}
+                            return HttpResponse(simplejson.dumps(out))
+                        eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], service_path, data['login'], data['pwd'])
+                        eseries_config.set_ctrl_password_and_ips (data['ctrl_pwd'], data['ctrl_ips'])
+                        eseries_config.set_storage_pools (data['disk_pools'])
+                    eseries_data  = []
+                    pools = eseries_config.get_storage_pools()
+                    for pool in pools:
+                        pool_usage = eseries_config.get_pool_usage (pool['id'])
+                        vol_stats = {}
+                        vol_stats['origin'] = pool['label']
+                        vol_stats['volumeName'] = "free-space"
+                        vol_stats['usage'] = pool_usage['free_capacity_gb']
+                        vol_stats['type'] = "thick"
+                        eseries_data.append(vol_stats)
+                        volumes = eseries_config.get_volumes()
+                        for volume in volumes:
+                            if volume['volumeGroupRef'] == pool['volumeGroupRef']:
+                                vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
+                                vol_name = eseries_config.convert_vol_name(volume['label'], auth)
+                                vol_stats = {}
+                                vol_stats['origin'] = pool['label']
+                                vol_stats['volumeName'] = vol_name
+                                vol_stats['usage'] = vol_capacity_gb
+                                vol_stats['max'] = 0
+                                vol_stats['type'] = "thick"
+                                eseries_data.append(vol_stats)
+                                if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
+                                    thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
+                                    for thin in thin_volumes:
+                                        if thin['storageVolumeRef'] == volume['volumeRef']:
+                                            capacity_gb = vol_capacity_gb
+                                            provisioned_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
+                                            quota_gb = int(thin['provisionedCapacityQuota'], 0) / eseries_config.GigaBytes
+                                            thin_name = eseries_config.convert_vol_name(thin['label'], auth)
+                                            vol_stats = {}
+                                            vol_stats['origin'] = vol_name
+                                            vol_stats['volumeName'] = thin_name
+                                            vol_stats['usage'] = capacity_gb
+                                            vol_stats['max'] = quota_gb
+                                            eseries_data.append(vol_stats)
+                                    vol_stats = {}
+                                    vol_stats['origin'] = volume['label']
+                                    vol_stats['volumeName'] = "provisioned"
+                                    vol_stats['usage'] = quota_gb - provisioned_gb
+                                    vol_stats['max'] = quota_gb
+                                    eseries_data.append(vol_stats)
+                    return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': providers, 'eseries_stats': eseries_data}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': "error", 'error': "Error: %s"%e}))
 
@@ -214,7 +268,41 @@ def get_metering(request):
     try:
         auth = request.session['auth']
         meter_dict = meters.get_dashboard_meters(auth['is_admin'])
-        return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': meter_dict}))
+        ceil = meter_ops(auth)
+        stats = []
+
+        try:
+            meter_list = []
+            for ms in meter_dict:
+                for m in ms['meters']:
+                    meter_list.append(m['meterType'])
+
+            now = str(datetime.utcnow())
+            date = now.split()[0]
+            time = now.split()[1].split(':')
+            end_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+            then =  str(datetime.utcnow() - timedelta(days=3))
+            date = then.split()[0]
+            time = then.split()[1].split(':')
+            start_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+            # Meter Overview for environment
+            if auth['is_admin'] == 1:
+                result = ceil.show_stats_for_meter_list(auth['project_id'], start_time, end_time, meter_list)
+            # Meter Overview for tenant
+            else:
+                result = ceil.show_stats_for_meter_list(auth['project_id'], start_time, end_time, meter_list, auth['user_id'])
+
+            if result == []:
+                # No data was provided for this meter.
+                stats = "empty dataset"
+            else:
+                stats = result
+
+            return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': meter_dict, 'stats': stats}))
+        except Exception as e:
+            return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': meter_dict, 'stats': stats, 'error': "Error: %s" %e}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': "error", 'error': "Error: %s"%e}))
 

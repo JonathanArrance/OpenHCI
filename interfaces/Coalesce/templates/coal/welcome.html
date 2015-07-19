@@ -146,6 +146,7 @@
                     success: function (data) {
                         data = $.parseJSON(data);
                         if (data.status == "success") {
+                            showMessage('success', "Successfully logged in, redirecting ...");
                             if (data.user_level == 0) {
                                 if (data.first_time == "TRUE") {
                                     location.reload()
@@ -153,7 +154,6 @@
                                     location.replace("/cloud/manage/");
                                 }
                             } else {
-                                console.log(data.user_level);
                                 if (data.user_level == 1) {
                                     location.replace("/projects/" + data.project_id + "/pu_project_view/");
                                 } else {

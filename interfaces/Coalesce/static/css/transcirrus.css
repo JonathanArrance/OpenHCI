@@ -46,10 +46,6 @@ section {
     color: rgb(255, 255, 255);
 }
 
-.panel-light {
-    background-color: rgb(106, 123, 138)
-}
-
 /* FORM ELEMENTS */
 
 .form-inline .radio, .form-inline .checkbox {
@@ -138,7 +134,7 @@ footer {
     margin-top: -1px;
 }
 
-.loadable.meters > .loading-text {
+.well.loadable.meters > .loading-text {
     background-color: rgba(43, 62, 80, 0.8);
     height: 50%;
     margin: -20px 0 0 -20px;
@@ -199,6 +195,16 @@ footer {
     fill: rgb(235, 235, 235);
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 12px !important;
+}
+
+.c3-legend-item > text, .c3-chart-arcs-title {
+    fill: rgb(235, 235, 235);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.c3-tooltip tbody tr td.name, .c3-tooltip tbody tr td.value {
+    color: rgb(46, 46, 46);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* ICONS */

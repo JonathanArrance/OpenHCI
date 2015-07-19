@@ -1,6 +1,13 @@
 $(function () {
     initializeUtilities();
+
+    $(document).on("mousemove", function (event) {
+        currentMousePosition["x"] = event.pageX;
+        currentMousePosition["y"] = event.pageY
+    });
 });
+
+var currentMousePosition = { "x": 0, "y": 0 };
 
 function initializeUtilities() {
     // Call click events
@@ -124,7 +131,7 @@ function switchActiveNav(link) {
     }
 }
 
-function formatString(string) {
+function formatSpaces(string) {
     for (var i = 0; i < string.length; i++) {
         if (string[i] === ' ') {
             string = string.replace(' ', '!');

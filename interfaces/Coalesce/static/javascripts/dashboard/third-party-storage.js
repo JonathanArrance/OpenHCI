@@ -277,16 +277,16 @@ $(function () {
             async = $(this).data("async");
 
         if (provider == "eseries") {
-            title = formatString("Delete E-Series Storage");
-            message = formatString("Remove E-Series Storage configuration");
+            title = formatSpaces("Delete E-Series Storage");
+            message = formatSpaces("Remove E-Series Storage configuration");
             call = formatCall("/" + provider + "/delete/");
-            notice = formatString("Deleting E-Series Configuration");
+            notice = formatSpaces("Deleting E-Series Configuration");
             showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
         } else if (provider == "nfs") {
-            title = formatString("Delete NFS Storage");
-            message = formatString("Remove NFS Storage configuration");
+            title = formatSpaces("Delete NFS Storage");
+            message = formatSpaces("Remove NFS Storage configuration");
             call = formatCall("/" + provider + "/delete/");
-            notice = formatString("Deleting NFS Configuration");
+            notice = formatSpaces("Deleting NFS Configuration");
             showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
         }
     });
@@ -310,259 +310,42 @@ function configureNimble(inputs) {
     return inputs.hostnameIP.val() + "/" + inputs.login.val() + "/" + inputs.password.val();
 }
 
-function eseriesGraph() {
-    d3.json("/eseries/get/stats/", function (error, json) {
-
-        var disks = d3.nest()
-                .key(function (d) {
-                    return d.origin;
-                })
-                .entries(json.stats.data),
-            m = 10,
-            r = 150,
-            z = d3.scale.category20c(),
-            pie = d3.layout.pie()
-                .value(function (d) {
-                    return +d.usage;
-                })
-                .sort(function (a, b) {
-                    return b.usage - a.usage;
-                }),
-            arc = d3.svg.arc()
-                .innerRadius(r / 2)
-                .outerRadius(r),
-            svg = d3.select("#eseries-graph").selectAll("div")
-                .data(disks)
-                .enter().append("div")
-                .style("display", "inline-block")
-                .style("width", (r + m) * 2 + "px")
-                .style("height", (r + m) * 2 + "px")
-                .append("svg:svg")
-                .attr("width", (r + m) * 2)
-                .attr("height", (r + m) * 2)
-                .append("svg:g")
-                .attr("transform", "translate(" + (r + m) + "," + (r + m) + ")");
-
-        svg.append("svg:text")
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .text(function (d) {
-                return d.key;
+function getStorageStats() {
+    var call = $.getJSON("/supported_third_party_storage/")
+        .done(function (data) {
+            $(data.providers).each(function (key, value) {
+                if (value.configured == "1") {
+                    var provider = value.id;
+                    $.getJSON("/" + provider + "/get/stats/")
+                        .done(function (stats) {
+                            var pools = {};
+                            $(stats.stats.data).each(function (index, element) {
+                                if (pools[element.origin] === undefined) {
+                                    pools[element.origin] = {};
+                                }
+                                pools[element.origin][element.volumeName] = element.usage
+                            });
+                            provider = "#" + provider;
+                            for (var pool in pools) {
+                                var poolData = [];
+                                for (var datum in pools[pool]) {
+                                    poolData.push([datum, pools[pool][datum]])
+                                }
+                                charts[pool].load({
+                                    columns: poolData
+                                });
+                            }
+                        });
+                }
             });
-
-        var g = svg.selectAll("g")
-            .data(function (d) {
-                return pie(d.values);
-            })
-            .enter().append("svg:g");
-
-        g.append("svg:path")
-            .attr("d", arc)
-            .style("fill", function (d) {
-                return z(d.data.volumeName);
-            })
-            .append("svg:title")
-            .text(function (d) {
-                return d.data.volumeName + ": " + d.data.usage;
-            });
-
-        g.filter(function (d) {
-            return d.endAngle - d.startAngle > .2;
-        })
-            .append("svg:text")
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-            })
-            .text(function (d) {
-                return d.data.volumeName;
-            });
-
-        g.filter(function (d) {
-            return d.endAngle - d.startAngle > .2;
-        })
-            .append("svg:text")
-            .attr("dy", "15")
-            .attr("text-anchor", "middle")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-            })
-            .text(function (d) {
-                return d.data.usage;
-            });
-    });
+        });
 }
 
-function nfsGraph() {
-    d3.json("/nfs/get/stats/", function (error, json) {
-
-        var disks = d3.nest()
-                .key(function (d) {
-                    return d.origin;
-                })
-                .entries(json.stats.data),
-            m = 10,
-            r = 150,
-            z = d3.scale.category20c(),
-            pie = d3.layout.pie()
-                .value(function (d) {
-                    return +d.usage;
-                })
-                .sort(function (a, b) {
-                    return b.usage - a.usage;
-                }),
-            arc = d3.svg.arc()
-                .innerRadius(r / 2)
-                .outerRadius(r),
-            svg = d3.select("#nfs-graph").selectAll("div")
-                .data(disks)
-                .enter().append("div")
-                .style("display", "inline-block")
-                .style("width", (r + m) * 2 + "px")
-                .style("height", (r + m) * 2 + "px")
-                .append("svg:svg")
-                .attr("width", (r + m) * 2)
-                .attr("height", (r + m) * 2)
-                .append("svg:g")
-                .attr("transform", "translate(" + (r + m) + "," + (r + m) + ")");
-
-        svg.append("svg:text")
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .text(function (d) {
-                return d.key;
-            });
-
-        var g = svg.selectAll("g")
-            .data(function (d) {
-                return pie(d.values);
-            })
-            .enter().append("svg:g");
-
-        g.append("svg:path")
-            .attr("d", arc)
-            .style("fill", function (d) {
-                return z(d.data.volumeName);
-            })
-            .append("svg:title")
-            .text(function (d) {
-                return d.data.volumeName + ": " + d.data.usage;
-            });
-
-        g.filter(function (d) {
-            return d.endAngle - d.startAngle > .2;
-        })
-            .append("svg:text")
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-            })
-            .text(function (d) {
-                return d.data.volumeName;
-            });
-
-        g.filter(function (d) {
-            return d.endAngle - d.startAngle > .2;
-        })
-            .append("svg:text")
-            .attr("dy", "15")
-            .attr("text-anchor", "middle")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-            })
-            .text(function (d) {
-                return d.data.usage;
-            });
-    });
-}
-
-function nimbleGraph() {
-    d3.json("/nimble/get/stats/", function (error, json) {
-
-        var disks = d3.nest()
-                .key(function (d) {
-                    return d.origin;
-                })
-                .entries(json.stats.data),
-            m = 10,
-            r = 150,
-            z = d3.scale.category20c(),
-            pie = d3.layout.pie()
-                .value(function (d) {
-                    return +d.usage;
-                })
-                .sort(function (a, b) {
-                    return b.usage - a.usage;
-                }),
-            arc = d3.svg.arc()
-                .innerRadius(r / 2)
-                .outerRadius(r),
-            svg = d3.select("#nimble-graph").selectAll("div")
-                .data(disks)
-                .enter().append("div")
-                .style("display", "inline-block")
-                .style("width", (r + m) * 2 + "px")
-                .style("height", (r + m) * 2 + "px")
-                .append("svg:svg")
-                .attr("width", (r + m) * 2)
-                .attr("height", (r + m) * 2)
-                .append("svg:g")
-                .attr("transform", "translate(" + (r + m) + "," + (r + m) + ")");
-
-        svg.append("svg:text")
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .text(function (d) {
-                return d.key;
-            });
-
-        var g = svg.selectAll("g")
-            .data(function (d) {
-                return pie(d.values);
-            })
-            .enter().append("svg:g");
-
-        g.append("svg:path")
-            .attr("d", arc)
-            .style("fill", function (d) {
-                return z(d.data.volumeName);
-            })
-            .append("svg:title")
-            .text(function (d) {
-                return d.data.volumeName + ": " + d.data.usage;
-            });
-
-        g.filter(function (d) {
-            return d.endAngle - d.startAngle > .2;
-        })
-            .append("svg:text")
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-            })
-            .text(function (d) {
-                return d.data.volumeName;
-            });
-
-        g.filter(function (d) {
-            return d.endAngle - d.startAngle > .2;
-        })
-            .append("svg:text")
-            .attr("dy", "15")
-            .attr("text-anchor", "middle")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
-            })
-            .text(function (d) {
-                return d.data.usage;
-            });
-    });
-}
-
-function angle(d) {
-    var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
-    return a > 90 ? a - 180 : a;
+function startDonutUpdateTimer() {
+    if (window.gaugeTimer) {
+        window.clearInterval(window.gaugeTimer);
+    }
+    window.gaugeTimer = setInterval(function () {
+        getStorageStats();
+    }, 30000)
 }

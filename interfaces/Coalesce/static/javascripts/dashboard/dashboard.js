@@ -20,7 +20,7 @@ $(function () {
 
     $("#metering").click(function (event) {
         event.preventDefault();
-        switchPageContent(page, $(this), "/metering/get/", "getGaugeStats");
+        switchPageContent(page, $(this), "/metering/get/");
     });
 
     $("#account").click(function (event) {
@@ -84,10 +84,10 @@ $(function () {
     // Phone Home
     $(document).on('click', '.phonehome', function (event) {
         event.preventDefault();
-        var title = formatString($(this).data("title")),
-            message = formatString($(this).data("message")),
+        var title = formatSpaces($(this).data("title")),
+            message = formatSpaces($(this).data("message")),
             call = formatCall($(this).data("call")),
-            notice = formatString($(this).data("notice")),
+            notice = formatSpaces($(this).data("notice")),
             async = $(this).data("async");
         showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
     });
@@ -95,10 +95,10 @@ $(function () {
     // Upgrade
     $(document).on('click', '.upgrade', function (event) {
         event.preventDefault();
-        var title = formatString($(this).data("title")),
-            message = formatString($(this).data("message")),
+        var title = formatSpaces($(this).data("title")),
+            message = formatSpaces($(this).data("message")),
             call = formatCall($(this).data("call")),
-            notice = formatString($(this).data("notice")),
+            notice = formatSpaces($(this).data("notice")),
             async = $(this).data("async");
         showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
     });
@@ -163,16 +163,11 @@ window.getUpgradeMessage = (function (load) {
     });
 });
 
-// --- Dashboard Gauges ---
+// --- Dashboard Charts ---
 
 charts = {};
 
-function tester() {
-    var def = $.Deferred()
-}
-
-window.getGaugeStats = function () {
-    window.loading = true;
+function getCeilometerStats() {
     var endDate = new Date(),
         startDate = new Date(endDate),
         durationInMinutes = 4320;
@@ -214,30 +209,26 @@ window.getGaugeStats = function () {
                                         }
                                     }
                                 }
-                                var chart = charts[chartType];
-                                chart.load({
+                                charts[chartType].load({
                                     columns: [
                                         ['data', stats.statistics[stat].avg.toFixed(0)]
                                     ]
                                 });
                             }
                         } else {
-                            //showMessage('error', "Error getting Ceilometer statistics");
+                            showMessage('error', "Error getting Ceilometer statistics");
                         }
                     }
                 })
-                .always(function(){
-                    window.loading = false;
-                });
         }
     });
-};
+}
 
 function startGaugeUpdateTimer() {
     if (window.gaugeTimer) {
         window.clearInterval(window.gaugeTimer);
     }
     window.gaugeTimer = setInterval(function () {
-        window.getGaugeStats();
+        getCeilometerStats();
     }, 30000)
 }

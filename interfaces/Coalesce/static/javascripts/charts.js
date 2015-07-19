@@ -1,3 +1,58 @@
+function generateDonut(id, label) {
+    id = '#' + id;
+    return c3.generate({
+        bindto: id,
+        data: {
+            columns: [
+                ['', 1]
+            ],
+            type: 'donut',
+            onclick: function (d, i) {
+            },
+            onmouseover: function (d, i) {
+            },
+            onmouseout: function (d, i) {
+            }
+        },
+        donut: {
+            title: label,
+            label: {
+                format: function (value, ratio, id) {
+                    return value;
+                },
+                show: true
+            }
+        },
+        color: {
+            pattern: ['#5bc0de', '#5cb85c', '#f0ad4e', '#df691a', '#d9534f']
+        },
+        legend: {
+            position: "right",
+            show: true
+        },
+        padding: {
+            right: 100,
+            left: 100
+        },
+        size: {
+            height: 400,
+            width: 615
+        },
+        tooltip: {
+            position: function (data, width, height, element) {
+                var x = currentMousePosition["x"] - $(id).offset().left + 10;
+                var y = currentMousePosition["y"] - $(id).offset().top;
+                return {top: y, left: x}
+            },
+            format: {
+                value: function (value, ratio, id) {
+                    return value;
+                }
+            }
+        }
+    });
+}
+
 function generateGauge(id, min, max, label) {
     id = '#' + id;
     return c3.generate({
