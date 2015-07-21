@@ -50,9 +50,8 @@ $(function () {
                 'new': $("#new-password"),
                 'confirm': $("#confirm-password")
             },
-            button = $(this);
-        var isValid =
-            checkPassword(inputs.new) && checkPasswordMatch(inputs.new, inputs.confirm);
+            button = $(this),
+            isValid = checkPassword(inputs.new) && checkPasswordMatch(inputs.new, inputs.confirm);
         if (isValid) {
             button.button('loading');
             button.prop("disabled", "disabled");

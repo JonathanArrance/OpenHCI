@@ -16,12 +16,14 @@
                     </script>
                     </span>
                     {% for stat in stats %}
-                        <script>
-                            console.log("{{ stat.meter_type }}");
-                            console.log("{{ meter.meterType }}");
-                        </script>
                         {% if stat.meter_type == meter.meterType %}
-                            charts["{{ meter.id }}]
+                                <script>
+                                    charts["{{ meter.id }}"].load({
+                                    columns: [
+                                        ['data', parseInt({{ stat.avg }}).toFixed(0)]
+                                    ]
+                                });
+                                </script>
                         {% endif %}
                     {% endfor %}
                 {% endfor %}

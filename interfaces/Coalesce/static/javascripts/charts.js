@@ -78,7 +78,7 @@ function generateGauge(id, min, max, label) {
             },
             min: min, // 0 is default, //can handle negative min e.g. vacuum / voltage / current flow / rate of change
             max: max, // 100 is default
-            width: 75 // for adjusting arc thickness
+            width: 60 // for adjusting arc thickness
         },
         color: {
             pattern: ['#5bc0de', '#5cb85c', '#f0ad4e', '#d9534f'], // the three color levels for the percentage values.
