@@ -61,7 +61,7 @@ $(function () {
                             confSize = volume_size.val(),
                             confType = volume_type.val();
 
-                        message.showMessage('notice', 'Creating new volume ' + volume_name.val());
+                        messages.showMessage('notice', 'Creating new volume ' + volume_name.val());
 
                         // Disable widget view links and hide create button
                         disableLinks(true);
@@ -76,12 +76,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', data.message);
+                                    messages.showMessage('success', data.message);
 
                                     // Initialize empty string for new volume row
                                     var newRow =
@@ -132,7 +132,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                message.showMessage('error', 'Server Fault');	// Flag server fault message
+                                messages.showMessage('error', 'Server Fault');	// Flag server fault message
                             })
                             .always(function () {
 
@@ -186,7 +186,7 @@ $(function () {
                 }
             }
             if (count > 0) {
-                message.showMessage('error', "Cannot delete this volume because it has " + count + " dependent snapshots.")
+                messages.showMessage('error', "Cannot delete this volume because it has " + count + " dependent snapshots.")
             } else {
                 $('#volume-delete-confirm-form').dialog("open");
             }
@@ -214,7 +214,7 @@ $(function () {
                         confId = id,
                         confVol = $(volume).text();
 
-                    message.showMessage('notice', "Deleting " + confVol + ".");
+                    messages.showMessage('notice', "Deleting " + confVol + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -241,7 +241,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -250,7 +250,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Remove row
                                 confRow.fadeOut().remove();
@@ -286,7 +286,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -362,7 +362,7 @@ $(function () {
                         confVol = 'none';
                     }
 
-                    message.showMessage('notice', "Cloning " + $(volume).text() + ".");
+                    messages.showMessage('notice', "Cloning " + $(volume).text() + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -389,12 +389,12 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
                             }
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', "Volume " + confVol + " cloned from volume " + $(volume).text() + ".");
+                                messages.showMessage('success', "Volume " + confVol + " cloned from volume " + $(volume).text() + ".");
 
                                 // Initialize empty string for new volume row
                                 var isBoot = volumes.items[confId].bootable == "true",
@@ -458,7 +458,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
                         })
                         .always(function () {
 
@@ -533,7 +533,7 @@ $(function () {
                         confInstance = instanceOpts.items[instance.val()].value,
                         confInstanceName = instanceOpts.items[confInstance].option;
 
-                    message.showMessage('notice', 'Attaching ' + confVol + ' to ' + confInstanceName + '.');
+                    messages.showMessage('notice', 'Attaching ' + confVol + ' to ' + confInstanceName + '.');
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -560,7 +560,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -569,7 +569,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Update row
                                 var targetAttached = document.getElementById(confId + "-attached-cell");
@@ -606,7 +606,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -680,7 +680,7 @@ $(function () {
                         confInstance = instance.val(),
                         confInstanceName = instanceOpts.items[confInstance].option;
 
-                    message.showMessage('notice', 'Detaching ' + confVol + ' from ' + confInstanceName + '.');
+                    messages.showMessage('notice', 'Detaching ' + confVol + ' from ' + confInstanceName + '.');
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -707,7 +707,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -716,7 +716,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Update row
                                 var targetAttached = document.getElementById(confId + "-attached-cell");
@@ -757,7 +757,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -851,7 +851,7 @@ $(function () {
                             confName = name.val(),
                             confSnap = snapshot.val();
 
-                        message.showMessage('notice', "Reverting " + $(volume).text() + ".");
+                        messages.showMessage('notice', "Reverting " + $(volume).text() + ".");
 
                         // Store actions cell html
                         var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -878,12 +878,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', data.message);
+                                    messages.showMessage('success', data.message);
 
                                     // Initialize empty string for new volume row
                                     var newRow =
@@ -952,7 +952,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                message.showMessage('error', 'Server Fault');
+                                messages.showMessage('error', 'Server Fault');
                             })
                             .always(function () {
 

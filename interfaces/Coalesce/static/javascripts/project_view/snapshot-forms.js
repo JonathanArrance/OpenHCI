@@ -53,16 +53,16 @@ $(function () {
                     var isValid =
                         checkLength(name, "Snapshot name", standardStringMin, standardStringMax) &&
                         checkCharfield(name, "Snapshot name") &&
-                        checkLength(description, "Snapshot description", 1, 80);
+                        checkLength(description, "Snapshot description", 0, 80);
 
                     if (isValid) {
 
                         // Confirmed Selections
                         var confName = name.val(),
                             confVolume = volume.val(),
-                            confDescription = description.val();
+                            confDescription = description.val() == "" ? "none" : description.val();
 
-                        message.showMessage('notice', 'Creating new snapshot ' + confName);
+                        messages.showMessage('notice', 'Creating new snapshot ' + confName);
 
                         // Disable widget view links and hide create button
                         disableLinks(true);
@@ -77,12 +77,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', "Created snapshot " + data.snapshot_name + " of volume " + volumes.items[confVolume].name + ".");
+                                    messages.showMessage('success', "Created snapshot " + data.snapshot_name + " of volume " + volumes.items[confVolume].name + ".");
 
                                     // Initialize empty string for new snapshot row
                                     var newRow =
@@ -116,7 +116,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                message.showMessage('error', 'Server Fault');	// Flag server fault message
+                                messages.showMessage('error', 'Server Fault');	// Flag server fault message
                             })
                             .always(function () {
 
@@ -185,7 +185,7 @@ $(function () {
                         confSnapshot = $(snapshot).text(),
                         confRow = targetRow;
 
-                    message.showMessage('notice', "Deleting " + confSnapshot + ".");
+                    messages.showMessage('notice', "Deleting " + confSnapshot + ".");
 
                     // Store actions cell html
                     var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -212,7 +212,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 // Restore actions cell html
                                 $(actionsCell).empty().fadeOut();
@@ -221,7 +221,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 // Remove row
                                 confRow.fadeOut().remove();
@@ -239,7 +239,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
 
                             // Restore Actions html
                             $(actionsCell).empty().fadeOut();
@@ -330,7 +330,7 @@ $(function () {
                             confVolume = 'none'
                         }
 
-                        message.showMessage('notice', "Cloning " + confClonedVolume + ".");
+                        messages.showMessage('notice', "Cloning " + confClonedVolume + ".");
 
                         // Store actions cell html
                         var actionsCell = document.getElementById(confId + "-actions-cell");
@@ -357,12 +357,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', "Volume " + confVolume + " cloned from " + confClonedVolume + ".");
+                                    messages.showMessage('success', "Volume " + confVolume + " cloned from " + confClonedVolume + ".");
 
                                     // Initialize empty string for new volume row
                                     var newRow =
@@ -401,7 +401,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                message.showMessage('error', 'Server Fault');
+                                messages.showMessage('error', 'Server Fault');
                             })
                             .always(function () {
 

@@ -1,0 +1,67 @@
+<h1 class="page-header">Metering</h1>
+
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+{% if meters.id %}
+    <div class="well loadable meters">
+        <div>{{ meters.title }}</div>
+        <div class="center-text">
+            <div id="{{ meters.id }}">
+                {% for meter in meters.meters %}
+                    <span id="{{ meter.id }}">
+                    <script>
+                        charts["{{ meter.id }}"] = generateGauge("{{ meter.id }}", "{{ meter.min }}", "{{ meter.max }}", "{{ meter.label }}");
+                    </script>
+                    </span>
+                    {% for stat in stats %}
+                        {% if stat.meter_type == meter.meterType %}
+                                <script>
+                                    charts["{{ meter.id }}"].load({
+                                    columns: [
+                                        ['data', parseInt({{ stat.avg }}).toFixed(0)]
+                                    ]
+                                });
+                                </script>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    {% for group in meters %}
+        <div class="well loadable meters">
+            <div>{{ group.title }}</div>
+            <div class="center-text">
+                <div id="{{ group.id }}">
+                    {% for meter in group.meters %}
+                        <span id="{{ meter.id }}">
+                        <script>
+                            charts["{{ meter.id }}"] = generateGauge("{{ meter.id }}", "{{ meter.min }}", "{{ meter.max }}", "{{ meter.label }}");
+                        </script>
+                        </span>
+                        {% for stat in stats %}
+                            {% if stat.meter_type == meter.meterType %}
+                                <script>
+                                    charts["{{ meter.id }}"].load({
+                                    columns: [
+                                        ['data', parseInt({{ stat.avg }}).toFixed(0)]
+                                    ]
+                                });
+                                </script>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<script>
+    $(function () {
+        startGaugeUpdateTimer();
+    })
+</script>

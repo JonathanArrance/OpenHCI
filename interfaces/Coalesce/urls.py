@@ -23,7 +23,7 @@ urlpatterns = patterns('',
             TemplateView.as_view(template_name="409.html")),
 
         url(r'^$',
-            'coalesce.coal_beta.views.stats',
+            'coalesce.coal_beta.views.dashboard',
             name='home'),
 
         url(r'^welcome/$',
@@ -42,8 +42,12 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.disclaimer',
             name='disclaimer'),
 
+        url(r'^get_confirm/(?P<title>[^/]+)/(?P<message>[^/]+)/(?P<call>[^/]+)/(?P<notice>[^/]+)/(?P<async>[^/]+)/$',
+            'coalesce.coal_beta.views.get_confirm',
+            name='get_confirm'),
 
         # --- Nodes ----
+
         url(r'^nodes/(?P<node_id>[-\w]+)/view/$',
             'coalesce.coal_beta.views.node_view',
             name='node_view'),
@@ -51,6 +55,10 @@ urlpatterns = patterns('',
         url(r'^nodes/manage/$',
             'coalesce.coal_beta.views.manage_nodes',
             name='manage_nodes'),
+
+        url(r'^nodes/get_stats/$',
+            'coalesce.coal_beta.views.get_node_stats',
+            name='get_node_stats'),
 
         url(r'^cloud/manage/$',
             'coalesce.coal_beta.views.manage_cloud',
@@ -66,7 +74,12 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
 
+        url(r'^projects/get_stats/$',
+            'coalesce.coal_beta.views.get_project_stats',
+            name='get_project_stats'),
+
         # --- Quotas ----
+
         url(r'^projects/(?P<project_id>\w+)/get_project_quota/$',
             'coalesce.coal_beta.views.get_project_quota',
             name='get_project_quota'),
@@ -341,7 +354,12 @@ urlpatterns = patterns('',
             name='router_view'),
 
         # --- Users ----
-        url(r'^projects/(?P<project_name>\w+)/(?P<project_id>\w+)/user/(?P<user_name>\w+)/view/',
+
+        url(r'^user/(?P<project_name>\w+)/(?P<project_id>\w+)/(?P<user_name>\w+)/account_view/$',
+            'coalesce.coal_beta.views.user_account_view',
+            name='user_account_view'),
+
+        url(r'^projects/(?P<project_name>\w+)/(?P<project_id>\w+)/user/(?P<user_name>\w+)/view/$',
             'coalesce.coal_beta.views.user_view',
             name='user_view'),
 
@@ -368,6 +386,10 @@ urlpatterns = patterns('',
         url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<current_password>[^/]+)/(?P<new_password>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.update_user_password',
             name='update_user_password'),
+
+        url(r'^get_update_account_password/$',
+            'coalesce.coal_beta.views.get_update_account_password',
+            name='get_update_account_password'),
 
         # --- Security Groups ----
         url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<transport>[^/]+)/(?P<project_id>[^/]+)/$',
@@ -407,6 +429,22 @@ urlpatterns = patterns('',
         url(r'^supported_third_party_storage/$',
             'coalesce.coal_beta.views.supported_third_party_storage',
             name='supported_third_party_storage'),
+
+        url(r'^third_party_storage/get/$',
+            'coalesce.coal_beta.views.get_third_party_storage',
+            name='get_third_party_storage'),
+
+        url(r'^third_party_storage/get_license/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_storage_license',
+            name='get_third_party_storage_license'),
+
+        url(r'^third_party_storage/get_configure/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_storage_configure',
+            name='get_third_party_storage_configure'),
+
+        url(r'^third_party_storage/get_configure/(?P<provider>[^/]+)/(?P<update>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_storage_configure',
+            name='get_third_party_storage_configure'),
 
         # --- E-Series ---
         url(r'^eseries/get/$',
@@ -495,6 +533,11 @@ urlpatterns = patterns('',
 	        'coalesce.coal_beta.views.nimble_stats',
             name='nimble_stats'),
 
+        # --- Metering ----
+	    url(r'^metering/get/$',
+	        'coalesce.coal_beta.views.get_metering',
+            name='get_metering'),
+
         # --- Ceilometer Post Third Part Meter ----
         url(r'^ceilometer/post/meter/(?P<counter_type>[^/]+)/(?P<counter_name>[^/]+)/(?P<counter_volume>[^/]+)/(?P<counter_unit>[^/]+)/(?P<resource_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_statistics',
@@ -521,10 +564,9 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_statistics_for_instance',
             name='get_statistics_for_instance'),
 
-        # --- Quota Utilization ----
-        url(r'^quota_utilization/get/utilization/',
-            'coalesce.coal_beta.views.get_quota_utilization',
-            name='get_quota_utilization'),
+        url(r'^ceilometer/get/meters/(?P<meter_group>[^/]+)/$',
+            'coalesce.coal_beta.views.get_meters',
+            name='get_meters'),
 
         # --- Version info ----
         url(r'^version/$',

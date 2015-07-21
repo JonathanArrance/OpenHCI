@@ -33,7 +33,6 @@ from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
 from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
-from transcirrus.component.nova.absolute_limits import absolute_limits_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -58,7 +57,7 @@ import transcirrus.operations.delete_instance as di
 import transcirrus.operations.boot_new_instance as bni
 
 # Python imports
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 import csv
 import json
@@ -69,6 +68,7 @@ from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
 import transcirrus.operations.support_create as support_create
 import transcirrus.operations.upgrade as ug
+import transcirrus.operations.meters as meters
 sys.path.append("/usr/lib/python2.6/site-packages/")
 
 
@@ -86,87 +86,275 @@ upgrade_cache = None
 eseries_config = None
 nfs_config = None
 
-def stats(request):
+def dashboard(request):
     try:
         auth = request.session['auth']
+        if auth:
+            return render_to_response('coal/dashboard.html', RequestContext(request,))
+        else:
+            return render_to_response('coal/welcome.html', RequestContext(request,))
+    except Exception as e:
+        return render_to_response('coal/welcome.html', RequestContext(request,))
 
+def get_confirm(request, title, message, call, notice, async):
+    t = title.replace('!', ' ')
+    m = message.replace('!', ' ')
+    m += "?"
+    c = call.replace('!', '/')
+    n = notice.replace('!', ' ')
+    n += " ..."
+    confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async}
+    return render_to_response('coal/confirm.html', RequestContext(request, {'confirm': confirm}))
+
+def get_node_stats(request):
+    try:
+        auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
             #Cloud/Node stats
-            stats = stat_ops(auth)
             ns = node_stats
-            tot_users = stats.get_total_cloud_users()
-            tot_proj = stats.get_num_project()
             full_stats = ns.node_stats()
-            tot_nodes = len(full_stats)
+            return render_to_response('coal/dashboard_widgets/node_stats.html', RequestContext(request, {'full_stats': full_stats}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/node_stats.html', RequestContext(request, {'full_stats': "error", 'error': "Error: %s"%e}))
 
+def get_project_stats(request):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            tenant_info = []
             #Project stats
             to = tenant_ops(auth)
             so = server_ops(auth)
             l3 = layer_three_ops(auth)
             vo = volume_ops(auth)
-            ao = account_service_ops(auth)
             no = neutron_net_ops(auth)
 
             tl = to.list_all_tenants()
-            tenant_info = []
             for tenant in tl:
-                servers = so.list_servers(tenant['project_id'])
-                num_servers = len(servers)
+                if (tenant['project_name'] != "trans_default"):
+                    servers = so.list_servers(tenant['project_id'])
+                    num_servers = len(servers)
 
-                fips = l3.list_floating_ips(tenant['project_id'])
-                num_fips = len(fips)
+                    fips = l3.list_floating_ips(tenant['project_id'])
+                    num_fips = len(fips)
 
-                volumes = vo.list_volumes(tenant['project_id'])
-                num_vol = len(volumes)
+                    volumes = vo.list_volumes(tenant['project_id'])
+                    num_vol = len(volumes)
 
-                #containers = ao.get_account_info(tenant['project_id'])
-                #num_cont = len(containers)
-                #print num_cont
-                num_cont = 0
+                    routers = l3.list_routers(tenant['project_id'])
+                    num_rout = len(routers)
 
-                routers = l3.list_routers(tenant['project_id'])
-                num_rout = len(routers)
+                    networks = no.list_internal_networks(tenant['project_id'])
+                    num_net = len(networks)
 
-                networks = no.list_internal_networks(tenant['project_id'])
-                num_net = len(networks)
+                    users = to.list_tenant_users(tenant['project_id'])
+                    num_users = len(users)
 
-                users = to.list_tenant_users(tenant['project_id'])
-                num_users = len(users)
-
-                tenant_info.append({'project_name': tenant['project_name'],
+                    tenant_info.append({'project_name': tenant['project_name'],
                                     'num_servers': num_servers,
                                     'num_fips': num_fips,
                                     'num_vol': num_vol,
-                                    'num_cont': num_cont,
                                     'num_rout': num_rout,
                                     'num_net': num_net,
                                     'num_users': num_users})
-
-            return render_to_response('coal/stat_panel.html', RequestContext(request, {'full_stats': full_stats,
-                                                                                       'tot_users': tot_users,
-                                                                                       'tot_proj': tot_proj,
-                                                                                       'tot_nodes': tot_nodes,
-                                                                                       'tenant_info': tenant_info}))
-        elif(auth != None and auth['is_admin'] == 0):
-            uo = user_ops(auth)
-            qo = quota_ops(auth)
-
-            project_id = auth['project_id']
-            project = qo.get_project_quotas(project_id)
-            project_name = project['project_name']
-            username = auth['username']
-            user_dict = {'username': username, 'project_name': project_name}
-            user_info = uo.get_user_info(user_dict)
-
-            return render_to_response('coal/user_view.html',
-                               RequestContext(request, {'project_name': project_name,
-                                                        'current_project_id': project_id,
-                                                        'user_info': user_info}))
-        else:
-            return render_to_response('coal/welcome.html', RequestContext(request,))
-
+            return render_to_response('coal/dashboard_widgets/project_stats.html',
+                                      RequestContext(request, {'tenant_info': tenant_info}))
     except Exception as e:
-        return render_to_response('coal/welcome.html', RequestContext(request,))
+        tenant_info = []
+        tenant_info.append({'project_name': "error",
+                                    'num_servers': "error",
+                                    'num_fips': "error",
+                                    'num_vol': "error",
+                                    'num_rout': "error",
+                                    'num_net': "error",
+                                    'num_users': "error"})
+        return render_to_response('coal/dashboard_widgets/project_stats.html',
+                                  RequestContext(request, {'tenant_info': tenant_info, 'error': "Error: %s"%e}))
+
+def get_third_party_storage(request):
+    global eseries_config
+    service_path = "/devmgr/v2"         # Hard coded path since most users will not change the default
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            providers = tpc.get_supported_third_party_storage()
+            for provider in providers:
+                if (provider['id'] == 'eseries') and (provider['configured'] == '1'):
+                    if eseries_config == None:
+                        data = tpc.get_eseries()
+                        if data['enabled'] != "1":
+                            out = {'status' : "error", 'message' : "Error getting E-Series statistics, web proxy server is not configured"}
+                            return HttpResponse(simplejson.dumps(out))
+                        eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], service_path, data['login'], data['pwd'])
+                        eseries_config.set_ctrl_password_and_ips (data['ctrl_pwd'], data['ctrl_ips'])
+                        eseries_config.set_storage_pools (data['disk_pools'])
+                    eseries_data  = []
+                    pools = eseries_config.get_storage_pools()
+                    for pool in pools:
+                        pool_usage = eseries_config.get_pool_usage (pool['id'])
+                        vol_stats = {}
+                        vol_stats['origin'] = pool['label']
+                        vol_stats['volumeName'] = "free-space"
+                        vol_stats['usage'] = pool_usage['free_capacity_gb']
+                        vol_stats['type'] = "thick"
+                        eseries_data.append(vol_stats)
+                        volumes = eseries_config.get_volumes()
+                        for volume in volumes:
+                            if volume['volumeGroupRef'] == pool['volumeGroupRef']:
+                                vol_capacity_gb = int(volume['capacity'], 0) / eseries_config.GigaBytes
+                                vol_name = eseries_config.convert_vol_name(volume['label'], auth)
+                                vol_stats = {}
+                                vol_stats['origin'] = pool['label']
+                                vol_stats['volumeName'] = vol_name
+                                vol_stats['usage'] = vol_capacity_gb
+                                vol_stats['max'] = 0
+                                vol_stats['type'] = "thick"
+                                eseries_data.append(vol_stats)
+                                if volume['label'].find("repos_") == 0:                     # THIS IS A HACK! Must find a better method of
+                                    thin_volumes = eseries_config.get_thin_volumes()        # determining if the volume is for holding TP volumes.
+                                    for thin in thin_volumes:
+                                        if thin['storageVolumeRef'] == volume['volumeRef']:
+                                            capacity_gb = vol_capacity_gb
+                                            provisioned_gb = int(thin['currentProvisionedCapacity'], 0) / eseries_config.GigaBytes
+                                            quota_gb = int(thin['provisionedCapacityQuota'], 0) / eseries_config.GigaBytes
+                                            thin_name = eseries_config.convert_vol_name(thin['label'], auth)
+                                            vol_stats = {}
+                                            vol_stats['origin'] = vol_name
+                                            vol_stats['volumeName'] = thin_name
+                                            vol_stats['usage'] = capacity_gb
+                                            vol_stats['max'] = quota_gb
+                                            eseries_data.append(vol_stats)
+                                    vol_stats = {}
+                                    vol_stats['origin'] = volume['label']
+                                    vol_stats['volumeName'] = "provisioned"
+                                    vol_stats['usage'] = quota_gb - provisioned_gb
+                                    vol_stats['max'] = quota_gb
+                                    eseries_data.append(vol_stats)
+                    return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': providers, 'eseries_stats': eseries_data}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': "error", 'error': "Error: %s"%e}))
+
+def get_third_party_storage_license(request, provider):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            prov = {}
+            if provider == 'eseries':
+                prov = { 'id': provider, 'name':"E-Series" }
+            if provider == 'nfs':
+                prov = { 'id': provider, 'name':"NFS" }
+            if provider == 'nimble':
+                prov = { 'id': provider, 'name':"Nimble" }
+            return render_to_response('coal/dashboard_widgets/third_party_storage_license.html', RequestContext(request, { 'provider': prov}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_storage_license.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
+
+def get_third_party_storage_configure(request, provider, update=None):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            prov = {}
+            if provider == 'eseries':
+                prov = { 'id': provider, 'name':"E-Series" }
+            if provider == 'nfs':
+                prov = { 'id': provider, 'name':"NFS" }
+            if provider == 'nimble':
+                prov = { 'id': provider, 'name':"Nimble" }
+            return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': prov, 'update': update}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
+
+def get_metering(request):
+    try:
+        auth = request.session['auth']
+        meter_dict = meters.get_dashboard_meters(auth['is_admin'])
+        ceil = meter_ops(auth)
+        stats = []
+
+        try:
+            meter_list = []
+            for ms in meter_dict:
+                for m in ms['meters']:
+                    meter_list.append(m['meterType'])
+
+            now = str(datetime.utcnow())
+            date = now.split()[0]
+            time = now.split()[1].split(':')
+            end_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+            then =  str(datetime.utcnow() - timedelta(days=3))
+            date = then.split()[0]
+            time = then.split()[1].split(':')
+            start_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+            # Meter Overview for environment
+            if auth['is_admin'] == 1:
+                result = ceil.show_stats_for_meter_list(auth['project_id'], start_time, end_time, meter_list)
+            # Meter Overview for tenant
+            else:
+                result = ceil.show_stats_for_meter_list(auth['project_id'], start_time, end_time, meter_list, auth['user_id'])
+
+            if result == []:
+                # No data was provided for this meter.
+                stats = "empty dataset"
+            else:
+                stats = result
+
+            return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': meter_dict, 'stats': stats}))
+        except Exception as e:
+            return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': meter_dict, 'stats': stats, 'error': "Error: %s" %e}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/metering.html', RequestContext(request, {'meters': "error", 'error': "Error: %s"%e}))
+
+
+def user_account_view(request, project_name, project_id, user_name):
+    try:
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        to = tenant_ops(auth)
+        so = server_ops(auth)
+        l3 = layer_three_ops(auth)
+        vo = volume_ops(auth)
+        no = neutron_net_ops(auth)
+
+        user_dict = {'username': user_name, 'project_name': project_name}
+        user_info = uo.get_user_info(user_dict)
+        project_info = { 'project_name': project_name }
+
+        if auth['is_admin'] == 0:
+            servers = so.list_servers(project_id)
+            num_servers = len(servers)
+
+            fips = l3.list_floating_ips(project_id)
+            num_fips = len(fips)
+
+            volumes = vo.list_volumes(project_id)
+            num_vol = len(volumes)
+
+            routers = l3.list_routers(project_id)
+            num_rout = len(routers)
+
+            networks = no.list_internal_networks(project_id)
+            num_net = len(networks)
+
+            users = to.list_tenant_users(project_id)
+            num_users = len(users)
+
+            project_info = {'project_name': project_name,
+                            'num_servers': num_servers,
+                            'num_fips': num_fips,
+                            'num_vol': num_vol,
+                            'num_rout': num_rout,
+                            'num_net': num_net,
+                            'num_users': num_users}
+
+        return render_to_response('coal/dashboard_widgets/account_view.html', RequestContext(request, {'user_info': user_info, 'project_info': project_info}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/account_view.html', RequestContext(request, {'user_info': "error", 'project_info': "error", 'error': "Error: %s"%e}))
+
+def get_update_account_password(request):
+    return render_to_response('coal/dashboard_widgets/update_account_password.html', RequestContext(request))
+
 
 def privacy_policy(request):
     return render_to_response('coal/privacy-policy.html', RequestContext(request,))
@@ -187,54 +375,60 @@ def welcome(request):
             return render_to_response('coal/welcome.html', RequestContext(request, { "project_admin": project_admin}))
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
-    except:
-        return render_to_response('coal/welcome.html', RequestContext(request,))
+    except Exception as e:
+        return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: %s"%e}))
 
 def node_view(request, node_id):
-    node=get_node(node_id)
-    node['status'] = node_stats.node_status (node['node_mgmt_ip'], node['node_data_ip'])
-    node['mgmt_ip_issue'] = False
-    node['data_ip_issue'] = False
-    if node['status'] == "Issue":
-        if not node_stats.is_node_up (node['node_mgmt_ip']):
-            node['mgmt_ip_issue'] = True
-        else:
-            node['data_ip_issue'] = True
-    return render_to_response('coal/node_view.html', RequestContext(request, {'node': node}))
+    try:
+        node=get_node(node_id)
+        node['status'] = node_stats.node_status (node['node_mgmt_ip'], node['node_data_ip'])
+        node['mgmt_ip_issue'] = False
+        node['data_ip_issue'] = False
+        if node['status'] == "Issue":
+            if not node_stats.is_node_up (node['node_mgmt_ip']):
+                node['mgmt_ip_issue'] = True
+            else:
+                node['data_ip_issue'] = True
+        return render_to_response('coal/node_view.html', RequestContext(request, {'node': node}))
+    except Exception as e:
+        return render_to_response('coal/node_view.html', RequestContext(request, {'node': "error", 'error': "Error: %s"%e}))
 
 def manage_cloud(request):
-    node_list = list_nodes()
-    node_info = []
-    auth = request.session['auth']
-    to = tenant_ops(auth)
-    project_list = to.list_all_tenants()
-    project_info = []
     try:
-        for node in node_list:
-            nid = node['node_id']
-            ni = get_node(nid)
-            ni['node_id'] = nid
-            ni['status'] = node_stats.node_status (ni['node_mgmt_ip'], ni['node_data_ip'])
-            ni['mgmt_ip_issue'] = False
-            ni['data_ip_issue'] = False
-            if ni['status'] == "Issue":
-                if not node_stats.is_node_up (ni['node_mgmt_ip']):
-                    ni['mgmt_ip_issue'] = True
-                else:
-                    ni['data_ip_issue'] = True
-            node_info.append(ni)
-    except TypeError:
-        pass
-    try:
-        for proj in project_list:
-            pid = proj['project_id']
-            dict={}
-            pi = to.get_tenant(pid)
-            project_info.append(pi)
-    except:
-        messages.warning(request, "Unable to manage cloud.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    return render_to_response('coal/manage_cloud.html', RequestContext(request, {'project_info': project_info, 'node_info': node_info}))
+        node_list = list_nodes()
+        node_info = []
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        project_list = to.list_all_tenants()
+        project_info = []
+        try:
+            for node in node_list:
+                nid = node['node_id']
+                ni = get_node(nid)
+                ni['node_id'] = nid
+                ni['status'] = node_stats.node_status (ni['node_mgmt_ip'], ni['node_data_ip'])
+                ni['mgmt_ip_issue'] = False
+                ni['data_ip_issue'] = False
+                if ni['status'] == "Issue":
+                    if not node_stats.is_node_up (ni['node_mgmt_ip']):
+                        ni['mgmt_ip_issue'] = True
+                    else:
+                        ni['data_ip_issue'] = True
+                node_info.append(ni)
+        except TypeError:
+            pass
+        try:
+            for proj in project_list:
+                pid = proj['project_id']
+                dict={}
+                pi = to.get_tenant(pid)
+                project_info.append(pi)
+        except:
+            messages.warning(request, "Unable to manage cloud.")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        return render_to_response('coal/manage_cloud.html', RequestContext(request, {'project_info': project_info, 'node_info': node_info}))
+    except Exception as e:
+        return render_to_response('coal/manage_cloud.html', RequestContext(request, {'project_info': "error", 'node_info': "error", 'error': "Error: %s"%e}))
 
 def manage_nodes(request):
     node_list = list_nodes()
@@ -629,7 +823,6 @@ def basic_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
     project = to.get_tenant(project_id)
-    # project_admin = util.get_project_admin(project_id)
     vo = volume_ops(auth)
     go = glance_ops(auth)
     sa = server_actions(auth)
@@ -793,7 +986,6 @@ we need to build a function to request a vm resize
 
     return render_to_response('coal/basic_project_view.html',
                                RequestContext(request, {'project': project,
-                                                        # 'project_admin': project_admin,
                                                         'sec_groups': sec_groups,
                                                         'sec_keys': sec_keys,
                                                         'volumes': volumes,
@@ -816,11 +1008,7 @@ def user_view(request, project_name, project_id, user_name):
     user_dict = {'username': user_name, 'project_name': project_name}
     user_info = uo.get_user_info(user_dict)
 
-    return render_to_response('coal/user_view.html',
-                               RequestContext(request, {'project_name': project_name,
-                                                        'current_project_id': project_id,
-                                                        'user_info': user_info,
-                                                 }))
+    return render_to_response('coal/user_view.html', RequestContext(request, {'user_info': user_info,}))
 
 def key_view(request, sec_key_id, project_id):
     auth = request.session['auth']
@@ -1137,12 +1325,10 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         inst_dict = revert_inst_snap(create, auth)
-        print "inst_dict: %s" % inst_dict
         srv_dict = {'server_id': inst_dict['instance']['vm_id'], 'project_id':project_id}
         out['server_info'] = so.get_server(srv_dict)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
-        print "out: %s" % out
     except Exception as e:
         out = {"status": "error", "message": "%s" % (e)}
     return HttpResponse(simplejson.dumps(out))
@@ -2984,6 +3170,19 @@ def get_statistics_for_instance(request, project_id, instance_id, ceil_start_tim
     except Exception as e:
         out = {'status': "error", 'message' : "Error getting statistics: %s" % e}
     return HttpResponse(simplejson.dumps(out))
+
+
+def get_meters(request, meter_group):
+    try:
+        out = {}
+        auth = request.session['auth']
+        if (meter_group is not None):
+            if (meter_group == "dashboard"):
+                out = meters.get_dashboard_meters(auth['is_admin'])
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out = {'message' : "Error getting meters: %s" % e}
+        return HttpResponse(simplejson.dumps(out))
 
 # ---
 
