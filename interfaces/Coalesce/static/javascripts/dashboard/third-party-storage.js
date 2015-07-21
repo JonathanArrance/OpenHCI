@@ -341,7 +341,7 @@ function getStorageStats() {
     var call = $.getJSON("/supported_third_party_storage/")
         .done(function (data) {
             $(data.providers).each(function (key, value) {
-                if (value.configured == "1") {
+                if (value.configured == "1" && value.id == "eseries") {
                     var provider = value.id;
                     $.getJSON("/" + provider + "/get/stats/")
                         .done(function (stats) {
