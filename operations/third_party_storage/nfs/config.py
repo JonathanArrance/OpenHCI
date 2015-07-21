@@ -105,7 +105,7 @@ def validate_mountpoints (mountpoints):
 
         if subproc.returncode != 0:
             mount_failure = True
-            mountpoint_msgs.append(stderr)
+            mountpoint_msgs.append([mntpt, stderr])
         else:
             command = "sudo touch " + mount_dir + "/test.file"
             subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -113,9 +113,9 @@ def validate_mountpoints (mountpoints):
 
             if subproc.returncode != 0:
                 mount_failure = True
-                mountpoint_msgs.append("Error attempting to create file on %s - %s" % (mntpt, stderr))
+                mountpoint_msgs.append([mntpnt, "Error attempting to create file on %s - %s" % (mntpt, stderr)])
             else:
-                mountpoint_msgs.append("")
+                mountpoint_msgs.append([mntpt, ""])
                 command = "sudo rm -fr " + mount_dir + "/test.file"
                 subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 stdout, stderr = subproc.communicate()

@@ -53,6 +53,11 @@ section {
     padding-right: 5px;
 }
 
+.bootstrap-tagsinput .tag{
+    padding: 1px 5px 2px;
+    font-size: 90%;
+}
+
 /* BUTTONS */
 
 .btn-center {

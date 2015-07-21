@@ -127,9 +127,9 @@
                     </fieldset>
                     <!-- ===== NFS ===== -->
                 {% elif provider.id == 'nfs' %}
-                    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-tagsinput.css">
+                    <link rel="stylesheet" href="{{ STATIC_URL }}css/external/bootstrap/bootstrap-tagsinput.min.css">
                     <fieldset id="nfs-config-data">
-                        <label for="nfs-mountpoints">NFS Mount Points (comma separate)</label>
+                        <label for="nfs-mountpoints">NFS Mount Points (press enter/return to add)</label>
                         <input name="nfs-mountpoints" id="nfs-mountpoints" value="" type="text" data-role="tagsinput">
                     </fieldset>
                     <!-- ===== NIMBLE ===== -->

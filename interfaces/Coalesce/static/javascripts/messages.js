@@ -11,8 +11,8 @@ toastr.options.fadeIn = 250;
 toastr.options.preventDuplicates = true;
 
 function showMessage(type, msg, params) {
-
-    toastr.options.timeOut = type == 'error' ? 10000 : toastr.options.timeOut;
+    var timeout = toastr.options.timeOut;
+    toastr.options.timeOut = type == 'error' ? toastr.options.extendedTimeOut : toastr.options.timeOut;
     toastr.options.progressBar = true;
 
     if (params != undefined) {
@@ -25,4 +25,5 @@ function showMessage(type, msg, params) {
 
     toast = new Toast(type, msg);
     toastr[toast.type](toast.msg);
+    toastr.options.timeOut = timeout;
 }

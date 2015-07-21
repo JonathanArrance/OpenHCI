@@ -178,6 +178,9 @@ def get_third_party_storage(request):
         auth = request.session['auth']
         if(auth != None and auth['is_admin'] == 1):
             providers = tpc.get_supported_third_party_storage()
+            eseries_data = []
+            nfs_data = []
+            nimble_data = []
             for provider in providers:
                 if (provider['id'] == 'eseries') and (provider['configured'] == '1'):
                     if eseries_config == None:
@@ -188,7 +191,6 @@ def get_third_party_storage(request):
                         eseries_config = eseries_mgmt (data['transport'], data['server'], data['srv_port'], service_path, data['login'], data['pwd'])
                         eseries_config.set_ctrl_password_and_ips (data['ctrl_pwd'], data['ctrl_ips'])
                         eseries_config.set_storage_pools (data['disk_pools'])
-                    eseries_data  = []
                     pools = eseries_config.get_storage_pools()
                     for pool in pools:
                         pool_usage = eseries_config.get_pool_usage (pool['id'])
@@ -230,7 +232,7 @@ def get_third_party_storage(request):
                                     vol_stats['usage'] = quota_gb - provisioned_gb
                                     vol_stats['max'] = quota_gb
                                     eseries_data.append(vol_stats)
-                    return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': providers, 'eseries_stats': eseries_data}))
+            return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': providers, 'eseries_stats': eseries_data}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': "error", 'error': "Error: %s"%e}))
 

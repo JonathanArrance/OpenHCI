@@ -91,7 +91,7 @@ $(function () {
                 (inputs.disks.find("option:selected").length > 0);
             notValidMsg = "At least one Disk Pool must be selected to configure E-Series Storage";
         } else if (provider == "nfs") {
-            inputs = $("#nfs-mountpoints").val();
+            inputs = $(".bootstrap-tagsinput").find('span.tag.label');
             name = "NFS";
             isValid = (inputs != "");
             notValidMsg = "At least one Mount Point must be entered to configure NFS Storage";
@@ -119,9 +119,16 @@ $(function () {
                     ? 'eseries/config/update/' + configureEseriesUpdate(inputs) + '/'
                     : 'eseries/config/set/' + inputs.disks.val() + '/';
             } else if (provider == "nfs") {
+                var mountpoints = "";
+                $(inputs).each(function (index, element) {
+                    mountpoints += element.textContent;
+                    if (index + 1 != inputs.length) {
+                        mountpoints += ",";
+                    }
+                });
                 call = update == true
-                    ? 'nfs/update/' + formatCall(inputs)
-                    : 'nfs/set/' + formatCall(inputs);
+                    ? 'nfs/update/' + formatCall(mountpoints)
+                    : 'nfs/set/' + formatCall(mountpoints);
             } else if (provider == "nimble") {
                 call = update == true
                     ? 'nfs/update/' + configureNimble(inputs)
@@ -133,7 +140,22 @@ $(function () {
             $.getJSON(call)
                 .done(function (data) {
                     if (data.status == 'error') {
-                        showMessage('error', data.message);
+                        if (data.message) {
+                            showMessage('error', data.message);
+                        } else if (data.msgs) {
+                            // Hand NFS validation
+                            $(inputs).each(function (index, element) {
+                                $(element).removeClass('label-danger');
+                            });
+                            $(data.msgs).each(function (index, element) {
+                                $(inputs).each(function (key, value) {
+                                    if (value.textContent == element[0] && element[1] != "") {
+                                        showMessage('error', "Error with " + element[0] + " " + element[1]);
+                                        $(value).addClass('label-danger');
+                                    }
+                                });
+                            });
+                        }
                         setModalButtons(true, buttons);
                     }
                     if (data.status == 'success') {
@@ -290,8 +312,13 @@ $(function () {
             showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
         }
     });
-});
 
+    $(document).on('keypress', '.tag-editable', function (e) {
+        if (e.which == 13) {
+            $(".bootstrap-tagsinput input").focus();
+        }
+    });
+});
 
 window.refreshTPS = (function (load) {
     $.when(load).done(function () {
