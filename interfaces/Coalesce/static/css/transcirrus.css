@@ -1,3 +1,19 @@
+/*
+COLORS
+
+    background: rgb(43, 62, 80)
+    default: rgb(78, 93, 108) [panel and well backgrounds]
+    primary: rgb(223, 105, 26)
+    success: rgb(92, 184, 92)
+    info: rgb(91, 192, 222)
+    warning: rgb(240, 173, 78)
+    danger: rgb(217, 83, 79)
+    font-light: rgb(235, 235, 235)
+    font-dark: rgb(43, 62, 80)
+    link: rgb(223, 105, 26) [same as primary]
+
+*/
+
 /* GENERAL */
 
 html, body {
@@ -43,27 +59,66 @@ section {
     position: absolute;
     display: block;
     width: 100%;
-    color: rgb(255, 255, 255);
+    color: rgb(235, 235, 235);
+}
+
+.tooltip-inner {
+    color: rgb(235, 235, 235);
+    background: rgb(43, 62, 80);
+    border: solid 1px rgb(43, 62, 80);
+}
+
+.tooltip.top .tooltip-arrow {
+    bottom: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-top-color: rgb(43, 62, 80);
+    border-width: 5px 5px 0;
+}
+
+.tooltip.left .tooltip-arrow {
+    top: 50%;
+    right: 0;
+    margin-top: -5px;
+    border-left-color: rgb(43, 62, 80);
+    border-width: 5px 0 5px 5px;
+}
+
+.tooltip.right .tooltip-arrow {
+    top: 50%;
+    left: 0;
+    margin-top: -5px;
+    border-right-color: rgb(43, 62, 80);
+    border-width: 5px 5px 5px 0;
+}
+
+.tooltip.bottom .tooltip-arrow {
+    top: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-bottom-color: rgb(43, 62, 80);
+    border-width: 0 5px 5px;
 }
 
 /* FORM ELEMENTS */
+
+select {
+    color: rgb(43, 62, 80);
+    height: 25px;
+}
 
 .form-inline .radio, .form-inline .checkbox {
     padding-left: 5px;
     padding-right: 5px;
 }
 
-.bootstrap-tagsinput .tag{
+.bootstrap-tagsinput .tag {
     padding: 1px 5px 2px;
     font-size: 90%;
 }
 
 .help-block {
     padding: inherit;
-}
-
-.form-group.has-error > input {
-
 }
 
 /* BUTTONS */
@@ -223,10 +278,10 @@ footer {
 /* ICONS */
 
 /*i.fa {*/
-  /*-webkit-animation: show 1s 1;*/
-  /*/!* any other properties to override from FontAwesome's default .fa rule *!/*/
+/*-webkit-animation: show 1s 1;*/
+/*/!* any other properties to override from FontAwesome's default .fa rule *!/*/
 /*}*/
 /*@-webkit-keyframes show {*/
-  /*0% { opacity: 0; }*/
-  /*100% { opacity: 1; }*/
+/*0% { opacity: 0; }*/
+/*100% { opacity: 1; }*/
 /*}*/
