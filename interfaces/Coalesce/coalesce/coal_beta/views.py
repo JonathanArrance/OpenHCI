@@ -357,6 +357,11 @@ def user_account_view(request, project_name, project_id, user_name):
 def get_update_account_password(request):
     return render_to_response('coal/dashboard_widgets/update_account_password.html', RequestContext(request))
 
+def get_build_project(request):
+    try:
+        return render_to_response('coal/build_project.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/build_project.html', RequestContext(request, {'error': "Error: %s"%e}))
 
 def privacy_policy(request):
     return render_to_response('coal/privacy-policy.html', RequestContext(request,))
@@ -3239,107 +3244,96 @@ def setup(request):
         form = SetupForm()
     return render_to_response('coal/setup.html', RequestContext(request, { 'form':form, }))
 
+
 def build_project(request):
     if request.method == 'POST':
         if request.POST.get('cancel'):
             return HttpResponseRedirect('/')
-        form = BuildProjectForm(request.POST)
-        if form.is_valid():
-            proj_name        = form.cleaned_data['proj_name']
-            username         = form.cleaned_data['username']
-            password         = form.cleaned_data['password']
-            password_confirm = form.cleaned_data['password_confirm']
-            email           = form.cleaned_data['email']
-            net_name        = form.cleaned_data['net_name']
-            subnet_dns      = form.cleaned_data['subnet_dns']
-            #ports[] - op
-            group_name      = form.cleaned_data['group_name']
-            group_desc      = form.cleaned_data['group_desc']
-            sec_keys_name   = form.cleaned_data['sec_keys_name']
-            router_name     = form.cleaned_data['router_name']
-
-            #get the advanced props flag
-            #advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
+        try:
+            proj_name = request.POST['projectName']
+            username = request.POST['adminName']
+            password = request.POST['adminPassword']
+            email = request.POST['adminEmail']
+            group_name = request.POST['securityGroup']
+            sec_keys_name = request.POST['securityKey']
+            net_name = request.POST['networkName']
+            router_name = request.POST['routerName']
+            subnet_dns = request.POST['dnsAddress']
+            # ports[] - op
+            # get the advanced props flag
+            # advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
             advanced = None
             dns = []
             dns.append(subnet_dns)
-
             dns = []
             dns.append(subnet_dns)
             auth = request.session['auth']
-            project_var_array = {'project_name': proj_name,
-                                 'user_dict': { 'username': username,
-                                                'password': password,
-                                                'user_role': 'admin',
-                                                'email': email,
-                                                'project_id': ''},
-
-                                 'net_name':net_name,
-                                 'subnet_dns': dns,
-                                 'sec_group_dict':  { 'ports': '',
-                                                     'group_name': group_name,
-                                                     'group_desc': 'group_desc',
-                                                     'project_id': ''},
-
-                                 'sec_keys_name': sec_keys_name,
-                                 'router_name': router_name
-                            }
-
-            #add in the advanced quota options
-            if(advanced):
-                cores           = form.cleaned_data['core']
-                fixed_ips       = form.cleaned_data['fixed_ips']
-                floating_ips    = form.cleaned_data['floating_ips']
-                injected_file_content_bytes = form.cleaned_data['injected_file_content_bytes']
-                injected_file_path_bytes = form.cleaned_data['injected_file_path_bytes']
-                injected_files  = form.cleaned_data['injected_files']
-                instances       = form.cleaned_data['instances']
-                key_pairs       = form.cleaned_data['key_pairs']
-                metadata_items  = form.cleaned_data['metadata_items']
-                ram             = form.cleaned_data['ram']
-                security_group_rules = form.cleaned_data['security_group_rules']
-                security_groups = form.cleaned_data['security_groups']
-                storage         = form.cleaned_data['storage']
-                snapshots       = form.cleaned_data['snapshots']
-                volumes         = form.cleaned_data['volumes']
-                subnet_quota    = form.cleaned_data['subnet_quota']
-                router_quota    = form.cleaned_data['router_quota']
-                network_quota   = form.cleaned_data['network_quota']
-                floatingip_quota = form.cleaned_data['floatingip_quota']
-                port_quota      = form.cleaned_data['port_quota']
-
+            project_var_array = {
+                'project_name': proj_name,
+                'user_dict': {
+                    'username': username,
+                    'password': password,
+                    'user_role': 'admin',
+                    'email': email,
+                    'project_id': ''},
+                'net_name': net_name,
+                'subnet_dns': dns,
+                'sec_group_dict': {
+                    'ports': '',
+                    'group_name': group_name,
+                    'group_desc': 'none',
+                    'project_id': ''},
+                'sec_keys_name': sec_keys_name,
+                'router_name': router_name
+            }
+            # add in the advanced quota options
+            if (advanced):
+                cores = request.POST['core']
+                fixed_ips = request.POST['fixed_ips']
+                floating_ips = request.POST['floating_ips']
+                injected_file_content_bytes = request.POST['injected_file_content_bytes']
+                injected_file_path_bytes = request.POST['injected_file_path_bytes']
+                injected_files = request.POST['injected_files']
+                instances = request.POST['instances']
+                key_pairs = request.POST['key_pairs']
+                metadata_items = request.POST['metadata_items']
+                ram = request.POST['ram']
+                security_group_rules = request.POST['security_group_rules']
+                security_groups = request.POST['security_groups']
+                storage = request.POST['storage']
+                snapshots = request.POST['snapshots']
+                volumes = request.POST['volumes']
+                subnet_quota = request.POST['subnet_quota']
+                router_quota = request.POST['router_quota']
+                network_quota = request.POST['network_quota']
+                floatingip_quota = request.POST['floatingip_quota']
+                port_quota = request.POST['port_quota']
                 quota = {
-                        'cores':cores,
-                        'fixed_ips':fixed_ips,
-                        'floating_ips':floating_ips,
-                        'injected_file_content_bytes':injected_file_content_bytes,
-                        'injected_file_path_bytes':injected_file_path_bytes,
-                        'injected_files':injected_files,
-                        'instances':instances,
-                        'key_pairs':key_pairs,
-                        'metadata_items':metadata_items,
-                        'ram':ram,
-                        'security_group_rules':security_group_rules,
-                        'security_groups':security_groups,
-                        'storage':storage,
-                        'snapshots':snapshots,
-                        'volumes':volumes
-                }
-
+                    'cores': cores,
+                    'fixed_ips': fixed_ips,
+                    'floating_ips': floating_ips,
+                    'injected_file_content_bytes': injected_file_content_bytes,
+                    'injected_file_path_bytes': injected_file_path_bytes,
+                    'injected_files': injected_files,
+                    'instances': instances,
+                    'key_pairs': key_pairs,
+                    'metadata_items': metadata_items,
+                    'ram': ram,
+                    'security_group_rules': security_group_rules,
+                    'security_groups': security_groups,
+                    'storage': storage,
+                    'snapshots': snapshots,
+                    'volumes': volumes}
                 project_var_array['advanced_ops']['quota'] = quota
-
             pid = bcp.build_project(auth, project_var_array)
-
-            redirect_to = "/projects/%s/view/" % (pid)
-            return HttpResponseRedirect(redirect_to)
-
-        else:
-            return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
-
+            out = {'status': "success", 'redirect': "/projects/%s/view/"%(pid)}
+            return HttpResponse(simplejson.dumps(out))
+        except Exception as e:
+            out = {'status': "error", 'message': 'Error: %s'%e}
+            return HttpResponse(simplejson.dumps(out))
     else:
-        form = BuildProjectForm()
-    return render_to_response('coal/build_project.html', RequestContext(request, { 'form':form, }))
-
+        return render_to_response('coal/build_project.html',
+                                  RequestContext(request, {'error', 'Server Fault: Please try again'}))
 
 # --- Media ---
 def logo(request):
@@ -3380,34 +3374,6 @@ def login(request):
     except:
         out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
         return HttpResponse(simplejson.dumps(out))
-
-@never_cache
-def login_page(request, template_name):
-    if request.method == "POST":
-        form = authentication_form(request.POST)
-        if form.is_valid():
-            try:
-                user = form.cleaned_data['username']
-                pw = form.cleaned_data['password']
-                a = authorization(user, pw)
-                auth = a.get_auth()
-                if auth['token'] == None:
-                    form = authentication_form()
-                    messages.warning(request, 'Login failed.  Please verify your username and password.')
-                    return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-                request.session['auth'] = auth
-                return render_to_response('coal/welcome.html', RequestContext(request, {  }))
-            except:
-                form = authentication_form()
-                messages.warning(request, 'Login failed.  Please verify your username and password.')
-                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-        else:
-                form = authentication_form()
-                messages.warning(request, 'Login failed.  Please verify your username and password.')
-                return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
-    else:
-        form = authentication_form()
-        return render_to_response('coal/login.html', RequestContext(request, { 'form':form, }))
 
 @never_cache
 def logout(request, next_page=None,

@@ -58,6 +58,14 @@ section {
     font-size: 90%;
 }
 
+.help-block {
+    padding: inherit;
+}
+
+.form-group.has-error > input {
+
+}
+
 /* BUTTONS */
 
 .btn-center {

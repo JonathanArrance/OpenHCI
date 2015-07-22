@@ -61,7 +61,7 @@
                     <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="/projects/build" id="create-project">New Project</a></li>
+                    <li><a href="#" id="build-project">Build Project</a></li>
                 </ul>
             </div>
         </div>
@@ -93,4 +93,17 @@
         </table>
     </div>
 
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
+    <script>
+    $(function(){
+       $(document).on('click', '#build-project', function(event){
+           event.preventDefault();
+        var call = '/projects/get/build/';
+        showModal(call);
+       });
+    });
+    </script>
 {% endblock %}

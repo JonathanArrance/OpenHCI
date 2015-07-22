@@ -70,6 +70,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.build_project',
             name='build_project'),
 
+        url(r'^projects/get/build/$',
+            'coalesce.coal_beta.views.get_build_project',
+            name='get_build_project'),
+
         url(r'^projects/(?P<project_id>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
             name='project_view'),
@@ -599,11 +603,6 @@ urlpatterns = patterns('',
         url(r'^login/$',
             'coalesce.coal_beta.views.login',
             name='login'),
-
-        url(r'^coal/login_page/$',
-            'coalesce.coal_beta.views.login_page',
-            {'template_name': 'coal/login.html'},
-            name='login_page'),
 
         url(r'^coal/logout/$',
             'coalesce.coal_beta.views.logout',
