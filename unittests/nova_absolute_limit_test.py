@@ -8,7 +8,7 @@ c = authorization("user", "password")
 print "Get admin authorization dictionary"
 b = c.get_auth()
 
-print "Instantiating hypervisor object"
+print "Instantiating absolution_limit object"
 ho = absolute_limits_ops(b)
 
 print "Get limits"

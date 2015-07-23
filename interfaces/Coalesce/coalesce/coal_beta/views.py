@@ -32,7 +32,8 @@ from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
-from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
+import transcirrus.operations.obtain_meters as meter_ops
+from transcirrus.component.nova.absolute_limits import absolute_limits_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -68,7 +69,6 @@ from transcirrus.component.swift.containerconnection import ContainerConnection
 from transcirrus.component.swift.swiftconnection import SwiftConnection
 import transcirrus.operations.support_create as support_create
 import transcirrus.operations.upgrade as ug
-import transcirrus.operations.meters as meters
 sys.path.append("/usr/lib/python2.6/site-packages/")
 
 
@@ -1864,7 +1864,7 @@ def power_cycle(request, project_id, instance_id):
         ps = sa.power_cycle_server(input_dict)
         if(ps == 'OK'):
             out['status'] = 'success'
-            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
+            out['message'] = "Instance %s has been power cycled." % (serv_info['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1880,7 +1880,7 @@ def power_off_server(request,project_id,instance_id):
         po = sa.power_off_server(input_dict)
         if(po == 'OK'):
             out['status'] = 'success'
-            out['message'] = "Instance %s powered off."%(get['server_name'])
+            out['message'] = "Instance %s has been powered off." % (get['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1896,7 +1896,7 @@ def power_on_server(request,project_id,instance_id):
         po = sa.power_on_server(input_dict)
         if(po == 'OK'):
             out['status'] = 'success'
-            out['message'] = "Instance %s powered on."%(get['server_name'])
+            out['message'] = "Instance %s has been powered on." % (get['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -3133,20 +3133,34 @@ def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_list, cei
         meter_list = ceil_meter_list.split(",")
         out = {}
         auth = request.session['auth']
-        ceil = meter_ops(auth)
+        # ceil = meter_ops(auth)
 
         # Meter Overview for environment
         if ((ceil_tenant_id == None) and (ceil_resource_id == None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list)
+            meter_list = {'tenant_id': None, 'resource_id': None, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
         # Meter for instance/resource
         elif ((ceil_tenant_id == None) and (ceil_resource_id != None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_resource_id)
+            # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_resource_id)
+            meter_list = {'tenant_id': None, 'resource_id': ceil_resource_id, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
         # Meter Overview for tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id == None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id)
+            # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id)
+            meter_list = {'tenant_id': ceil_tenant_id, 'resource_id': None, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
         # Meter Overview for resource in tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id != None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+            # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+            meter_list = {'tenant_id': ceil_tenant_id, 'resource_id': ceil_resource_id, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
 
         if result == []:
             # No data was provided for this meter.
@@ -3163,10 +3177,14 @@ def get_statistics_for_instance(request, project_id, instance_id, ceil_start_tim
         meter_list = ceil_meter_list.split(",")
         out = {}
         auth = request.session['auth']
-        ceil = meter_ops(auth)
+        # ceil = meter_ops(auth)
 
         # Meter Overview for resource in tenant
-        result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+        # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+
+        meter_list = {'tenant_id': ceil_tenant_id, 'resource_id': ceil_resource_id, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+        result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
 
         if result == []:
             # No data was provided for this meter.

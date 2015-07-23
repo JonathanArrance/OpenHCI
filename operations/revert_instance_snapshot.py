@@ -70,6 +70,15 @@ def revert_inst_snap(input_dict,auth_dict):
     att_dict = {'instance_id':inst_info['server_id'],'project_id':input_dict['project_id']}
     attached = storage.list_attached_vols(att_dict)
 
+    # You may wonder why in the hell we have a sleep here! That is a good damn question!!
+    # After a lot of trial and error, this is the location I found. The problem is this:
+    # If a user creates a snapshot and then immediately tries to revert it, the REST call
+    # to create_server errors with a 400 (image not ready) error. BUT you can't wait before
+    # that call, you have to wait all the way back here. The other option is to put the wait
+    # in create_inst_snapshot but I decided to put it here. If you put the wait after the
+    # call to delete_instance (below), it won't work! Very f'ing strange!!
+    time.sleep(30)
+
     #delete original instance
     del_input = {'project_id':input_dict['project_id'],'server_id':inst_info['server_id']}
     del_instance = delete_instance(auth_dict,del_input)
