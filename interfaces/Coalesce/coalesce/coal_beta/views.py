@@ -1137,12 +1137,10 @@ def revert_instance_snapshot(request, project_id, instance_id, snapshot_id):
         so = server_ops(auth)
         create = {'project_id': project_id, 'instance_id': instance_id, 'snapshot_id': snapshot_id}
         inst_dict = revert_inst_snap(create, auth)
-        print "inst_dict: %s" % inst_dict
         srv_dict = {'server_id': inst_dict['instance']['vm_id'], 'project_id':project_id}
         out['server_info'] = so.get_server(srv_dict)
         out['status'] = 'success'
         out['message'] = "Instance has been reverted."
-        print "out: %s" % out
     except Exception as e:
         out = {"status": "error", "message": "%s" % (e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1671,7 +1669,7 @@ def power_cycle(request, project_id, instance_id):
         ps = sa.power_cycle_server(input_dict)
         if(ps == 'OK'):
             out['status'] = 'success'
-            out['message'] = 'Successfully deleted instance %s'%(serv_info['server_name'])
+            out['message'] = "Instance %s has been power cycled." % (serv_info['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1687,7 +1685,7 @@ def power_off_server(request,project_id,instance_id):
         po = sa.power_off_server(input_dict)
         if(po == 'OK'):
             out['status'] = 'success'
-            out['message'] = "Instance %s powered off."%(get['server_name'])
+            out['message'] = "Instance %s has been powered off." % (get['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
@@ -1703,7 +1701,7 @@ def power_on_server(request,project_id,instance_id):
         po = sa.power_on_server(input_dict)
         if(po == 'OK'):
             out['status'] = 'success'
-            out['message'] = "Instance %s powered on."%(get['server_name'])
+            out['message'] = "Instance %s has been powered on." % (get['server_name'])
     except Exception as e:
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
