@@ -3,7 +3,7 @@ from transcirrus.common.auth import authorization
 from transcirrus.component.nova.hypervisor import hypervisor_ops
 
 print "Instantiating authorization object for an default admin"
-c = authorization("user", "password")
+c = authorization("admin", "password")
 
 print "Get admin authorization dictionary"
 b = c.get_auth()
@@ -13,12 +13,12 @@ ho = hypervisor_ops(b)
 
 print "Get hypervisor list"
 
-project_id = "9e8d9999e31c4e41a38867ec0e4ae542"
+project_id = "8c37340157634b29be59143240f0a5e8"
 hl = ho.list_hypervisors(project_id)
 print hl
 
 print "Get hypervisor stats"
-project_id = "9e8d9999e31c4e41a38867ec0e4ae542"
+project_id = "8c37340157634b29be59143240f0a5e8"
 hs = ho.get_hypervisor_stats(project_id)
 print hs
 
