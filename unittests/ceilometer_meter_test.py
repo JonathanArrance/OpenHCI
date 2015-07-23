@@ -39,14 +39,15 @@ mo = meter_ops(b)
 # print disk_root_stats
 
 print "Show memory usage & VCPU stats"
-project_id = "9e8d9999e31c4e41a38867ec0e4ae542"
-tenant_identifier = "9e8d9999e31c4e41a38867ec0e4ae542"
-resource_identifier = "ba1f5b04-d222-45d1-a010-583ba9a23d61"
+project_id = "e3dd24d867d442c3badf02fc0c475f54"
+tenant_identifier = "e3dd24d867d442c3badf02fc0c475f54"
+resource_identifier = "3c8b0be9-a646-49aa-885a-6f7687f025fd"
 start_time = "2015-07-12T13%3A00"
-end_time = "2015-07-15T14%3A00"
-meter_list = "memory.usage"
+end_time = "2015-07-16T23%3A00"
+meter_list = "memory.usage,vcpus"
 meters = meter_list.split(",")
-meter_stats = mo.show_stats_for_meter_list(project_id, start_time, end_time, meters, tenant_identifier, resource_identifier)
+meter_stats = mo.show_stats_for_meter_list(project_id, start_time, end_time, meters, tenant_identifier,
+                                           resource_identifier)
 print meter_stats
 
 # print "Show memory usage statistics"

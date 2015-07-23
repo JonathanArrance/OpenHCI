@@ -16,7 +16,6 @@ class meter_ops:
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
-        # user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token}
         else:
             self.username = user_dict['username']
             self.password = user_dict['password']

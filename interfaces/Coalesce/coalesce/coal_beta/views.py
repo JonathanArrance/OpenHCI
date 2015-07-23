@@ -32,7 +32,7 @@ from transcirrus.component.swift.account_services import account_service_ops
 from transcirrus.component.swift.object_services import object_service_ops
 from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
-from transcirrus.component.ceilometer.ceilometer_meters import meter_ops
+import transcirrus.operations.obtain_meters as meter_ops
 from transcirrus.component.nova.absolute_limits import absolute_limits_ops
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
@@ -2938,20 +2938,34 @@ def get_statistics(request, ceil_start_time, ceil_end_time, ceil_meter_list, cei
         meter_list = ceil_meter_list.split(",")
         out = {}
         auth = request.session['auth']
-        ceil = meter_ops(auth)
+        # ceil = meter_ops(auth)
 
         # Meter Overview for environment
         if ((ceil_tenant_id == None) and (ceil_resource_id == None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list)
+            meter_list = {'tenant_id': None, 'resource_id': None, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
         # Meter for instance/resource
         elif ((ceil_tenant_id == None) and (ceil_resource_id != None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_resource_id)
+            # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_resource_id)
+            meter_list = {'tenant_id': None, 'resource_id': ceil_resource_id, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
         # Meter Overview for tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id == None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id)
+            # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id)
+            meter_list = {'tenant_id': ceil_tenant_id, 'resource_id': None, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
         # Meter Overview for resource in tenant
         elif ((ceil_tenant_id != None) and (ceil_resource_id != None)):
-            result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+            # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+            meter_list = {'tenant_id': ceil_tenant_id, 'resource_id': ceil_resource_id, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
 
         if result == []:
             # No data was provided for this meter.
@@ -2968,10 +2982,14 @@ def get_statistics_for_instance(request, project_id, instance_id, ceil_start_tim
         meter_list = ceil_meter_list.split(",")
         out = {}
         auth = request.session['auth']
-        ceil = meter_ops(auth)
+        # ceil = meter_ops(auth)
 
         # Meter Overview for resource in tenant
-        result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+        # result = ceil.show_stats_for_meter_list(auth['project_id'], ceil_start_time, ceil_end_time, meter_list, ceil_tenant_id, ceil_resource_id)
+
+        meter_list = {'tenant_id': ceil_tenant_id, 'resource_id': ceil_resource_id, 'start_time': ceil_start_time, 'end_time': ceil_end_time,
+              'meter_list': ceil_meter_list}
+        result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
 
         if result == []:
             # No data was provided for this meter.

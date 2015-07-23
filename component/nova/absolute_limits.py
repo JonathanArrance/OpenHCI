@@ -4,6 +4,7 @@ import transcirrus.common.config as config
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
 
+
 class absolute_limits_ops:
     def __init__(self, user_dict):
         if (not user_dict):
