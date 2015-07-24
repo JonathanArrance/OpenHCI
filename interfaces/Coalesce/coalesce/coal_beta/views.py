@@ -34,6 +34,7 @@ from transcirrus.component.nova.quota import quota_ops
 from transcirrus.component.neutron.admin_actions import admin_ops
 import transcirrus.operations.obtain_meters as meter_ops
 from transcirrus.component.nova.absolute_limits import absolute_limits_ops
+import transcirrus.operations.meters as meters
 from transcirrus.operations.initial_setup import run_setup
 import transcirrus.operations.build_complete_project as bcp
 from transcirrus.operations.change_adminuser_password import change_admin_password
@@ -270,14 +271,20 @@ def get_metering(request):
     try:
         auth = request.session['auth']
         meter_dict = meters.get_dashboard_meters(auth['is_admin'])
-        ceil = meter_ops(auth)
         stats = []
 
         try:
             meter_list = []
-            for ms in meter_dict:
-                for m in ms['meters']:
-                    meter_list.append(m['meterType'])
+            for group in meter_dict:
+                for meter in group['meters']:
+                    meter_list.append(meter['meterType'])
+            meter_string = ""
+            i = 0
+            for meter in meter_list:
+                meter_string += meter
+                if i + 1 != len(meter_list):
+                    meter_string += ","
+                i += 1
 
             now = str(datetime.utcnow())
             date = now.split()[0]
@@ -291,10 +298,12 @@ def get_metering(request):
 
             # Meter Overview for environment
             if auth['is_admin'] == 1:
-                result = ceil.show_stats_for_meter_list(auth['project_id'], start_time, end_time, meter_list)
+                meter_list = {'tenant_id': None, 'resource_id': None, 'start_time': start_time, 'end_time': end_time, 'meter_list': meter_string}
+                result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
             # Meter Overview for tenant
             else:
-                result = ceil.show_stats_for_meter_list(auth['project_id'], start_time, end_time, meter_list, auth['user_id'])
+                meter_list = {'tenant_id': auth['user_id'], 'resource_id': auth['project_id'], 'start_time': start_time, 'end_time': end_time, 'meter_list': meter_string}
+                result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
 
             if result == []:
                 # No data was provided for this meter.

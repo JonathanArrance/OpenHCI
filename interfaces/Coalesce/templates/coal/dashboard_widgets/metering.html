@@ -4,64 +4,28 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-{% if meters.id %}
-    <div class="well loadable meters">
-        <div>{{ meters.title }}</div>
-        <div class="center-text">
-            <div id="{{ meters.id }}">
-                {% for meter in meters.meters %}
-                    <span id="{{ meter.id }}">
-                    <script>
-                        charts["{{ meter.id }}"] = generateGauge("{{ meter.id }}", "{{ meter.min }}", "{{ meter.max }}", "{{ meter.label }}");
-                    </script>
-                    </span>
+{% for group in meters %}
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">{{ group.title }}</h3>
+        </div>
+        <div id="{{ group.id }}" class="panel-body center-text">
+            <div class="col-sm-12">
+                {% for meter in group.meters %}
                     {% for stat in stats %}
-                        {% if stat.meter_type == meter.meterType %}
+                        {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
+                            <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
                                 <script>
-                                    charts["{{ meter.id }}"].load({
-                                    columns: [
-                                        ['data', parseInt({{ stat.avg }}).toFixed(0)]
-                                    ]
-                                });
+                                    charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
                                 </script>
+                            </span>
                         {% endif %}
                     {% endfor %}
                 {% endfor %}
             </div>
         </div>
     </div>
-{% else %}
-    {% for group in meters %}
-        <div class="well loadable meters">
-            <div>{{ group.title }}</div>
-            <div class="center-text">
-                <div id="{{ group.id }}">
-                    {% for meter in group.meters %}
-                        <span id="{{ meter.id }}">
-                        <script>
-                            charts["{{ meter.id }}"] = generateGauge("{{ meter.id }}", "{{ meter.min }}", "{{ meter.max }}", "{{ meter.label }}");
-                        </script>
-                        </span>
-                        {% for stat in stats %}
-                            {% if stat.meter_type == meter.meterType %}
-                                <script>
-                                    charts["{{ meter.id }}"].load({
-                                    columns: [
-                                        ['data', parseInt({{ stat.avg }}).toFixed(0)]
-                                    ]
-                                });
-                                </script>
-                            {% endif %}
-                        {% endfor %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    {% endfor %}
-{% endif %}
-
+{% endfor %}
 <script>
-    $(function () {
-        startGaugeUpdateTimer();
-    })
+    generateDashBars("{{ meters }}", "{{ stats }}");
 </script>

@@ -25,6 +25,18 @@
             </ul>
         </div>
         <div id="page-content" class="col-md-10 main"></div>
+        <div class="col-md-10 main" style="position:fixed; bottom: 100%;">
+            {% if user_level == 0 %}
+                <div id="node-container"></div>
+                <div id="project-container"></div>
+                <div id="tps-container"></div>
+                <div id="metering-container"></div>
+                <div id="account-container"></div>
+            {% else %}
+                <div id="metering-container"></div>
+                <div id="account-container"></div>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}
 
@@ -36,7 +48,4 @@
     <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
     <script src="{{ STATIC_URL }}javascripts/dashboard/dashboard.js"></script>
     <script src="{{ STATIC_URL }}javascripts/dashboard/third-party-storage.js"></script>
-    <script>
-        initializeAdminDashboard();
-    </script>
 {% endblock %}

@@ -1,26 +1,35 @@
 $(function () {
     // Declare Page Container
-    var page = $("#page-content");
+    var page = $("#page-content"),
+        node = $("#node-container"),
+        project = $("#project-container"),
+        tps = $("#tps-container"),
+        metering = $("#metering-container"),
+        account = $("#account-container");
 
     // --- Sidebar Nav ---
     $("#node-stats").click(function (event) {
         event.preventDefault();
-        switchPageContent(page, $(this), "/nodes/get_stats/");
+        switchPageContent($(this), page, window.loading.current, node, [], "/nodes/get_stats/");
+        window.loading.current = node;
     });
 
     $("#project-stats").click(function (event) {
         event.preventDefault();
-        switchPageContent(page, $(this), "/projects/get_stats/");
+        switchPageContent($(this), page, window.loading.current, project, [], "/projects/get_stats/");
+        window.loading.current = project;
     });
 
     $("#third-party-storage").click(function (event) {
         event.preventDefault();
-        switchPageContent(page, $(this), "/third_party_storage/get/");
+        switchPageContent($(this), page, window.loading.current, tps, [], "/third_party_storage/get/");
+        window.loading.current = tps;
     });
 
     $("#metering").click(function (event) {
         event.preventDefault();
-        switchPageContent(page, $(this), "/metering/get/");
+        switchPageContent($(this), page, window.loading.current, metering, ["getCeilometerStatistics"], "/metering/get/");
+        window.loading.current = metering;
     });
 
     $("#account").click(function (event) {
@@ -28,7 +37,8 @@ $(function () {
         var user = $(this).data("user"),
             projectName = $(this).data("project-name"),
             projectId = $(this).data("project-id");
-        switchPageContent(page, $(this), "/user/" + projectName + "/" + projectId + "/" + user + "/account_view/");
+        switchPageContent($(this), page, window.loading.current, account, [], "/user/" + projectName + "/" + projectId + "/" + user + "/account_view/");
+        window.loading.current = account
     });
 
     // --- Click Events ---
@@ -102,25 +112,21 @@ $(function () {
         showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
     });
 
-});
-
-function initializeAdminDashboard() {
-    container = $("#page-content");
+    // Initialize Dashboard
     if (USER_LEVEL == 0) {
         // On page load, get node stats and make that page content, set Node Stats link as active
-        link = $("#node-stats");
-        pill = link.parent();
-        url = "/nodes/get_stats/";
+        window.loading.current = page;
+        switchPageContent($("#node-stats"), page, window.loading.current, node, [], "/nodes/get_stats/");
+        $("#node-stats").addClass('active');
     } else {
         // On page load, get account view and make that page content, set account view link as active
-        link = $("#account");
-        pill = link.parent();
-        url = "/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/";
+        window.loading.current = page;
+        switchPageContent($("#account"), page, window.loading.current, node, [], "/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/");
+        $("#account").addClass('active');
     }
 
-    switchPageContent(container, link, url);
-    pill.addClass('active');
-}
+    startGaugeUpdateTimer();
+});
 
 window.getPhoneHomeMessage = (function (load) {
     $("#confirm-status").html("Initializing Phone Home ...");
@@ -166,7 +172,57 @@ window.getUpgradeMessage = (function (load) {
 
 charts = {};
 
-function getCeilometerStats() {
+function generateDashBars(meters, stats) {
+    meters = JSON.parse(meters.jsonify());
+    stats = JSON.parse(stats.jsonify());
+    var counters = [],
+        groups = [];
+    $(stats).each(function (index, element) {
+        if (element.chartType == "counter") {
+            counters.push(element);
+        }
+    });
+    var barGroups = {};
+    $(counters).each(function (index, element) {
+        if (barGroups[element['meterName'].split(".")[0]] === undefined) {
+            barGroups[element['meterName'].split(".")[0]] = [];
+        }
+        barGroups[element['meterName'].split(".")[0]].push(element);
+    });
+    for (var bar in barGroups) {
+        var data = [],
+            units,
+            id;
+        $(barGroups[bar]).each(function (a, b) {
+            $(meters).each(function (c, d) {
+                $(d.meters).each(function (e, f) {
+                    if (f.meterType == b.meterName) {
+                        data.push([f.label, b.utilization]);
+                        units = b.unitMeasurement;
+                        if (units != b.unitMeasurement) {
+                            units === undefined ? console.log("Unit name mismatch in " + bar + " graph.") : units = b.unitMeasurement;
+                        }
+                        id = d.id;
+                    }
+                });
+            });
+        });
+        units = units === undefined ? "" :
+            units == "B/s" ? "bytes/second" : units;
+        id = id === undefined ? console.log("Bar group id never defined.") : id;
+        groups.push([bar, units, data, id]);
+    }
+    $(groups).each(function (c, d) {
+        if (document.getElementById(d[0]) === null) {
+            var groupId = "#" + d[3];
+            $(groupId).append($($('<div id="' + d[0] + '" class="col-sm-6 no-padding" style="margin-left:-15px;"></div>')));
+            charts[d[0]] = generateBar(d[0], d[1], d[2]);
+        }
+    });
+}
+
+window.getCeilometerStats = function () {
+    window.loading.add("getCeilometerStats");
     var endDate = new Date(),
         startDate = new Date(endDate),
         durationInMinutes = 4320;
@@ -221,13 +277,14 @@ function getCeilometerStats() {
                 })
         }
     });
-}
+    window.loading.remove("getCeilometerStats");
+};
 
-function startGaugeUpdateTimer() {
+window.startGaugeUpdateTimer = function () {
     if (window.gaugeTimer) {
         window.clearInterval(window.gaugeTimer);
     }
     window.gaugeTimer = setInterval(function () {
         getCeilometerStats();
     }, 30000)
-}
+};

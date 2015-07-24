@@ -18,6 +18,7 @@ COLORS
 
 html, body {
     height: auto;
+    min-width: 360px;
 }
 
 section {
@@ -98,6 +99,10 @@ section {
     margin-left: -5px;
     border-bottom-color: rgb(43, 62, 80);
     border-width: 0 5px 5px;
+}
+
+.no-padding {
+    padding: 0;
 }
 
 /* FORM ELEMENTS */
@@ -202,16 +207,6 @@ footer {
     margin-top: -1px;
 }
 
-.well.loadable.meters > .loading-text {
-    background-color: rgba(43, 62, 80, 0.8);
-    height: 50%;
-    margin: -20px 0 0 -20px;
-    padding: 0;
-    position: absolute;
-    width: calc(100% - 30px);
-    z-index: 1000;
-}
-
 /* WELCOME PAGE */
 
 .learn-more {
@@ -273,6 +268,19 @@ footer {
 .c3-tooltip tbody tr td.name, .c3-tooltip tbody tr td.value {
     color: rgb(46, 46, 46);
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.c3-axis {
+    fill: rgb(235, 235, 235);
+}
+
+.c3-axis-x-label {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.c3-grid {
+    opacity: 0;
 }
 
 /* ICONS */

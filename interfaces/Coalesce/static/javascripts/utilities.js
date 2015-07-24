@@ -68,46 +68,81 @@ function setModalButtons(enabled, buttons) {
     }
 }
 
-function refreshContent(container, url, load) {
-    container.empty();
-    container.append($('<h1 class="loading-text">LOADING </h1>')
-        .append('<i class="fa fa-cog fa-spin"></i>'));
-    container.load(url, function () {
-        if (!(load === undefined)) {
-            spinners = [];
-            window[load]();
-            container.find('.loadable').each(function () {
-                $(this).css("opacity", "0.5")
-                    .prepend($('<h1 class="loading-text">LOADING </h1>')
-                        .append('<i class="fa fa-cog fa-spin"></i>'));
-            });
-            var checkLoading = window.setInterval(function () {
-                if (!window.checkLoading()) {
-                    container.find('.loadable').each(function () {
-                        $(this).css("opacity", "1");
-                    });
-                    $(".loading-text").remove();
-                    window.clearInterval(checkLoading);
-                }
-            }, 1000);
+// Async functions loading
+window.loading = {
+    items: [],
+    current: undefined,
+    checkLoading: function () {
+        return this.items.length > 0;
+    },
+    add: function (func) {
+        this.items.push(func);
+    },
+    remove: function (func) {
+        if (this.items.indexOf(func) != -1) {
+            this.items.splice(this.items.indexOf(func), 1);
         }
-        else {
-            $(".loading-text").remove();
-        }
-    });
-}
-
-window.checkLoading = function () {
-    if (window.loading) {
-        return window.loading;
-    } else {
-        return false;
+    },
+    hasItem: function (func) {
+        return this.items.indexOf(func) != -1;
     }
 };
 
-function switchPageContent(container, link, url, load) {
-    refreshContent(container, url, load);
-    switchActiveNav(link);
+function refreshContent(pageContainer, newContentContainer, url, load) {
+    if (window.loading.hasItem(url)) {
+        pageContainer.load(url, function () {
+            newContentContainer.html(pageContainer.html());
+            if (!(load === undefined)) {
+                window[load]();
+                var checkLoading = window.setInterval(function () {
+                    if (!window.loading.hasItem(load)) {
+                        $(".loading-text").remove();
+                        window.clearInterval(checkLoading);
+                        if (window.loading.current != newContentContainer) {
+                            pageContainer.html(window.loading.current.html());
+                        }
+                        window.loading.remove(url);
+                    }
+                }, 1000);
+            }
+            else {
+                $(".loading-text").remove();
+                if (window.loading.current != newContentContainer) {
+                    pageContainer.html(window.loading.current.html());
+                }
+                window.loading.remove(url);
+            }
+        });
+    }
+}
+
+function switchPageContent(link, pageContainer, oldContentContainer, newContentContainer, funcs, url, load) {
+    if (window.loading.current != newContentContainer) {
+        oldContentContainer.html(pageContainer.html());
+        if (window.loading.hasItem(url)) {
+            pageContainer.html(newContentContainer.html());
+            switchActiveNav(link);
+            window.loading.remove(url);
+        } else {
+            window.loading.add(url);
+            broken = false;
+            pageContainer.empty();
+            pageContainer.append($('<h1 class="loading-text">LOADING </h1>')
+                .append('<i class="fa fa-cog fa-spin"></i>'));
+            $(funcs).each(function (index, element) {
+                if (window.loading.hasItem(element)) {
+                    pageContainer.html(newContentContainer.html());
+                    window.loading.remove(url);
+                    broken = true;
+                    return false;
+                }
+            });
+            if (!broken) {
+                refreshContent(pageContainer, newContentContainer, url, load);
+                switchActiveNav(link);
+            }
+        }
+    }
 }
 
 function switchActiveNav(link) {
@@ -203,7 +238,7 @@ var standardStringMax = 32;
 // DOM MANIPULATION
 // ---------------- //
 
-var currentMousePosition = { "x": 0, "y": 0 };
+var currentMousePosition = {"x": 0, "y": 0};
 
 // --- INSTANCE MANAGEMENT
 

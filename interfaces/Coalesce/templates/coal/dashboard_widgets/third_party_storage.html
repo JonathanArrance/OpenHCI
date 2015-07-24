@@ -55,7 +55,7 @@
                 </h3>
             </div>
             <div class="panel-body center-text">
-                <div id="{{ provider.id }}">
+                <div id="{{ provider.id }}" class="col-sm-12 no-padding">
                     {% if provider.id == "eseries" %}
                         {% if eseries_stats %}
                             <script>
@@ -77,16 +77,13 @@
                                 provider = "#{{ provider.id }}";
                                 for (var pool in pools) {
                                     donutId = "donut-" + count;
-                                    $(provider).append('<span id="' + donutId + '"></span>');
-                                    charts[pool] = generateDonut(donutId, pool);
-                                    count++;
+                                    $(provider).append('<span id="' + donutId + '" class="no-padding"></span>');
                                     poolData = [];
                                     for (var datum in pools[pool]) {
                                         poolData.push([datum, pools[pool][datum]])
                                     }
-                                    charts[pool].load({
-                                        columns: poolData
-                                    });
+                                    charts[pool] = generateDonut(donutId, pool, poolData);
+                                    count++;
                                 }
                                 delete origin;
                                 delete volumeName;
@@ -99,11 +96,7 @@
                             </script>
                         {% endif %}
                     {% elif provider.id == "nfs" %}
-                        <script>
-                        </script>
                     {% elif provider.id == "nimble" %}
-                        <script>
-                        </script>
                     {% endif %}
                 </div>
             </div>
@@ -113,6 +106,6 @@
 <script>
     delete count;
     $(function () {
-        startDonutUpdateTimer();
+        window.startDonutUpdateTimer();
     })
 </script>

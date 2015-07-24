@@ -3,6 +3,16 @@ String.prototype.trunc = String.prototype.trunc ||
         return this.length > n ? this.substr(0, n - 1) + '&hellip;' : this;
     };
 
+String.prototype.jsonify = function () {
+    var n = this;
+    for (var i in n) {
+        n = n.replace("&#39;", '"');
+        n = n.replace(': u"', ': "');
+        n = n.replace("None", null);
+    }
+    return n;
+};
+
 $.validator.setDefaults({
     errorElement: "span",
     errorClass: "help-block",
@@ -34,7 +44,7 @@ $(document).ready(function () {
     jQuery.validator.addMethod("charField", function (value, element) {
         return this.optional(element) || /([0-9a-zA-Z_])+$/i.test(value);
     }, "Please use letters, numbers and underscores(_).");
-    jQuery.validator.addMethod("ip", function(value, element) {
+    jQuery.validator.addMethod("ip", function (value, element) {
         return this.optional(element) || /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/i.test(value);
     }, "Please enter valid IP address.");
     jQuery.validator.addMethod("projectTag", function (value, element) {

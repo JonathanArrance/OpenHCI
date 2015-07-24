@@ -63,7 +63,6 @@ $(function () {
 
     $(document).on('click', '#confirm-configure', function (event) {
         event.preventDefault();
-        clearUiValidation();
         var provider = $(this).data("provider"),
             inputs,
             name,
@@ -337,7 +336,8 @@ function configureNimble(inputs) {
     return inputs.hostnameIP.val() + "/" + inputs.login.val() + "/" + inputs.password.val();
 }
 
-function getStorageStats() {
+window.getStorageStats = function() {
+    window.loading.add("getStorageStats");
     var call = $.getJSON("/supported_third_party_storage/")
         .done(function (data) {
             $(data.providers).each(function (key, value) {
@@ -366,13 +366,14 @@ function getStorageStats() {
                 }
             });
         });
-}
+    window.loading.add("getStorageStats");
+};
 
-function startDonutUpdateTimer() {
+window.startDonutUpdateTimer = function() {
     if (window.gaugeTimer) {
         window.clearInterval(window.gaugeTimer);
     }
     window.gaugeTimer = setInterval(function () {
         getStorageStats();
     }, 30000)
-}
+};
