@@ -1822,30 +1822,60 @@ def add_existing_user(request, username, user_role, project_id):
         out = {'status' : "error", 'message' : "Could not add the user %s to the project: %s"%(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
+
 def update_user_password(request, user_id, project_id, current_password, new_password):
     out = {}
     try:
+        # Get current users auth session
         auth = request.session['auth']
-        if auth['user_level'] != 0:
-            if current_password != auth['password']:
-                out = {'status' : "error", 'message' : "Could not validate user password, please re-enter current password."}
+        # print auth
+
+        # Get info for user that is about to be changed
+        uo = user_ops(auth)
+        user_info_dict = {"user_id": user_id, "project_id": project_id}
+        selected_user_info = uo.get_user_id_info(user_info_dict)
+        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': new_password}
+
+        if auth['user_level'] < selected_user_info['user_level']:  # ADMIN can reset children
+            out = private_reset_user_password(auth, passwd_dict)
+        elif auth['user_id'] == selected_user_info['user_id']:
+            if current_password != auth['password'] and auth['is_admin'] != 1:
+                out = {'status': "error",
+                       'message': "Could not validate user password, please re-enter current password."}
                 return HttpResponse(simplejson.dumps(out))
             else:
-                uo = user_ops(auth)
-                passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': new_password}
-                up = uo.update_user_password(passwd_dict)
-                if(up == 'OK'):
-                    out['status'] = 'success'
-                    out['message'] = 'The password has been successfully updated.'
-                    request.session['auth']['password'] = new_password
-                    a = authorization(request.session['auth']['username'], request.session['auth']['password'])
-                    auth2 = a.get_auth()
-                    request.session['auth']['token'] = auth2['token']
-                    request.session.cycle_key()
-                    request.session.save()
+                out = private_reset_user_password(auth, passwd_dict)
+                request.session['auth']['password'] = passwd_dict['new_password']
+                a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                auth2 = a.get_auth()
+                request.session['auth']['token'] = auth2['token']
+                request.session.cycle_key()
+                request.session.save()
+        elif auth['username'] == "admin":
+            out = private_reset_user_password(auth, passwd_dict)
+        else:
+            out = {'status': "error", 'message': "Could not update the user password."}
+            return HttpResponse(simplejson.dumps(out))
+
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not update the user password.: %s" % e}
+        out = {'status': "error", 'message': "Could not update the user password.: %s" % e}
+
     return HttpResponse(simplejson.dumps(out))
+
+
+def private_reset_user_password(auth, passwd_dict):
+    out = {}
+    try:
+        uo = user_ops(auth)
+        up = uo.update_user_password(passwd_dict)
+        if up == 'OK':
+            out['status'] = 'success'
+            out['message'] = 'The password has been successfully updated.'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not update the user password.: %s" % e}
+
+    return out
+
 
 def update_admin_password(request, current_password, new_password):
     out = {}
