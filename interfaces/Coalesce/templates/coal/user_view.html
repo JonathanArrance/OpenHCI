@@ -88,9 +88,13 @@
                         Actions
                     </div>
 
-                    <div class="center-buttons">
-                        <a href="#" id="update-user-password" class="btn">Update Password</a>
-                    </div>
+                    {% if request.session.auth.username == "admin" or request.session.auth.user_id == user_info.user_id or request.session.auth.user_level == 0 and user_info.user_role == "pu" or request.session.auth.user_level == 0 and user_info.user_role == "user" or request.session.auth.user_level == 1 and user_info.user_role == "user" %}
+                        <div class="center-buttons">
+                            <a href="#" id="update-user-password" class="btn">Update Password</a>
+                        </div>
+                    {% else %}
+                        <p><i>No actions available.</i></p>
+                    {% endif %}
                 </div>
             </div>
             <!-- end inner row -->
