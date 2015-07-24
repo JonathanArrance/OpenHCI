@@ -50,7 +50,7 @@ $(function () {
                         clearUiValidation(allFields);
                         var bValid = checkPassword(password1) && checkPasswordMatch(password1, password2);
                         if (bValid) {
-                            $.getJSON('/update_user_password/' + USER_ID + '/' + password0 + '/' + password1.val() + '/' + PROJECT_ID + '/')
+                            $.getJSON('/update_user_password/' + USER_VIEW_ID + '/' + password0 + '/' + password1.val() + '/' + PROJECT_VIEW_ID + '/')
                                 .done(function (data) {
                                     if (data.status == 'error') {
                                         message.showMessage('error', data.message);
