@@ -285,7 +285,6 @@ window.getCeilometerStats = function () {
                             groups.push([bar, data]);
                         }
                         $(groups).each(function (a, group) {
-                            console.log(group[1]);
                             charts[group[0]].load({columns: group[1]});
                         });
                     } else {
