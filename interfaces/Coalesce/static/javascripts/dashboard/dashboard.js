@@ -238,7 +238,7 @@ window.getCeilometerStats = function () {
                 var meterString = callString == "" ? "" : ",";
                 $(meterGroup.meters).each(function (b, meter) {
                     meterString += meter.meterType;
-                    if (key + 1 != meterGroup.meters.length) {
+                    if (b + 1 != meterGroup.meters.length) {
                         meterString += ","
                     }
                 });
