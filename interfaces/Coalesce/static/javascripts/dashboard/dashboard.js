@@ -24,12 +24,14 @@ $(function () {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, tps, [], "/third_party_storage/get/");
         window.loading.current = tps;
+        window.startDonutUpdateTimer();
     });
 
     $("#metering").click(function (event) {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, metering, ["getCeilometerStatistics"], "/metering/get/");
         window.loading.current = metering;
+        startGaugeUpdateTimer();
     });
 
     $("#account").click(function (event) {
@@ -124,8 +126,6 @@ $(function () {
         switchPageContent($("#account"), page, window.loading.current, node, [], "/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/");
         $("#account").addClass('active');
     }
-
-    startGaugeUpdateTimer();
 });
 
 window.getPhoneHomeMessage = (function (load) {
@@ -177,9 +177,9 @@ function generateDashBars(meters, stats) {
     stats = JSON.parse(stats.jsonify());
     var counters = [],
         groups = [];
-    $(stats).each(function (index, element) {
-        if (element.chartType == "counter") {
-            counters.push(element);
+    $(stats).each(function (index, stat) {
+        if (stat.chartType == "counter") {
+            counters.push(stat);
         }
     });
     var barGroups = {};
@@ -193,16 +193,13 @@ function generateDashBars(meters, stats) {
         var data = [],
             units,
             id;
-        $(barGroups[bar]).each(function (a, b) {
-            $(meters).each(function (c, d) {
-                $(d.meters).each(function (e, f) {
-                    if (f.meterType == b.meterName) {
-                        data.push([f.label, b.utilization]);
-                        units = b.unitMeasurement;
-                        if (units != b.unitMeasurement) {
-                            units === undefined ? console.log("Unit name mismatch in " + bar + " graph.") : units = b.unitMeasurement;
-                        }
-                        id = d.id;
+        $(barGroups[bar]).each(function (a, statsMeter) {
+            $(meters).each(function (b, meterGroup) {
+                $(meterGroup.meters).each(function (c, meter) {
+                    if (meter.meterType == statsMeter.meterName) {
+                        data.push([meter.label, statsMeter.utilization]);
+                        units = statsMeter.unitMeasurement;
+                        id = meterGroup.id;
                     }
                 });
             });
@@ -234,12 +231,14 @@ window.getCeilometerStats = function () {
         if (data.message) {
             showMessage("error", "Error getting gauges")
         } else {
-            var callString = "";
-            $(data).each(function (index, element) {
+            var callString = "",
+                meters = [];
+            $(data).each(function (a, meterGroup) {
+                meters.push(meterGroup);
                 var meterString = callString == "" ? "" : ",";
-                $(element.meters).each(function (key, value) {
-                    meterString += value.meterType;
-                    if (key + 1 != element.meters.length) {
+                $(meterGroup.meters).each(function (b, meter) {
+                    meterString += meter.meterType;
+                    if (key + 1 != meterGroup.meters.length) {
                         meterString += ","
                     }
                 });
@@ -252,27 +251,45 @@ window.getCeilometerStats = function () {
             $.getJSON(call)
                 .done(function (stats) {
                     if (stats.status == "success") {
-                        if (stats.message != "empty dataset") {
-                            for (var stat in stats.statistics) {
-                                var chartType = stats.statistics[stat].meter_type;
-                                if (chartType == "cpu_util") {
-                                    chartType = "cpu-util";
-                                } else {
-                                    for (var i = 0; i < chartType.length; i++) {
-                                        if (chartType[i] == ".") {
-                                            chartType = chartType.replace(".", "-");
-                                        }
-                                    }
-                                }
-                                charts[chartType].load({
+                        var counters = [],
+                            groups = [];
+                        $(stats.statistics).each(function (a, stat) {
+                            if (stat.chartType == "radial") {
+                                charts[stat.htmlID].load({
                                     columns: [
-                                        ['data', stats.statistics[stat].avg.toFixed(0)]
+                                        ['data', stat.utilization.toFixed(0)]
                                     ]
                                 });
+                            } else if (stat.chartType == "counter") {
+                                counters.push(stat);
                             }
-                        } else {
-                            showMessage('error', "Error getting Ceilometer statistics");
+                        });
+                        var barGroups = {};
+                        $(counters).each(function (index, counterStat) {
+                            if (barGroups[counterStat['meterName'].split(".")[0]] === undefined) {
+                                barGroups[counterStat['meterName'].split(".")[0]] = [];
+                            }
+                            barGroups[counterStat['meterName'].split(".")[0]].push(counterStat);
+                        });
+                        for (var bar in barGroups) {
+                            var data = [];
+                            $(barGroups[bar]).each(function (a, statsMeter) {
+                                $(meters).each(function (b, meterGroup) {
+                                    $(meterGroup.meters).each(function (c, meter) {
+                                        if (meter.meterType == statsMeter.meterName) {
+                                            data.push([meter.label, statsMeter.utilization]);
+                                        }
+                                    });
+                                });
+                            });
+                            groups.push([bar, data]);
                         }
+                        $(groups).each(function (a, group) {
+                            console.log(group[1]);
+                            charts[group[0]].load({columns: group[1]});
+                        });
+                    } else {
+                        showMessage('error', "Error getting Ceilometer statistics");
                     }
                 })
         }

@@ -336,9 +336,32 @@ function configureNimble(inputs) {
     return inputs.hostnameIP.val() + "/" + inputs.login.val() + "/" + inputs.password.val();
 }
 
-window.getStorageStats = function() {
+function generateEseriesDonuts(stats) {
+    var pools = {};
+    stats = JSON.parse(stats.jsonify());
+    $(stats).each(function (a, stat) {
+        if (pools[stat.origin] === undefined) {
+            pools[stat.origin] = {};
+        }
+        pools[stat.origin][stat.volumeName] = stat.usage
+    });
+    var provider = "#eseries",
+        count = 0;
+    for (var pool in pools) {
+        var donutId = "eseries-donut-" + count;
+        $(provider).append('<span id="' + donutId + '" class="no-padding"></span>');
+        var poolData = [];
+        for (var datum in pools[pool]) {
+            poolData.push([datum, pools[pool][datum]])
+        }
+        charts[pool] = generateDonut(donutId, pool, poolData);
+        count++;
+    }
+}
+
+window.getStorageStats = function () {
     window.loading.add("getStorageStats");
-    var call = $.getJSON("/supported_third_party_storage/")
+    $.getJSON("/supported_third_party_storage/")
         .done(function (data) {
             $(data.providers).each(function (key, value) {
                 if (value.configured == "1" && value.id == "eseries") {
@@ -346,11 +369,11 @@ window.getStorageStats = function() {
                     $.getJSON("/" + provider + "/get/stats/")
                         .done(function (stats) {
                             var pools = {};
-                            $(stats.stats.data).each(function (index, element) {
-                                if (pools[element.origin] === undefined) {
-                                    pools[element.origin] = {};
+                            $(stats.stats.data).each(function (a, stat) {
+                                if (pools[stat.origin] === undefined) {
+                                    pools[stat.origin] = {};
                                 }
-                                pools[element.origin][element.volumeName] = element.usage
+                                pools[stat.origin][stat.volumeName] = stat.usage
                             });
                             provider = "#" + provider;
                             for (var pool in pools) {
@@ -365,11 +388,13 @@ window.getStorageStats = function() {
                         });
                 }
             });
+        })
+        .always(function () {
+            window.loading.remove("getStorageStats");
         });
-    window.loading.add("getStorageStats");
 };
 
-window.startDonutUpdateTimer = function() {
+window.startDonutUpdateTimer = function () {
     if (window.gaugeTimer) {
         window.clearInterval(window.gaugeTimer);
     }
