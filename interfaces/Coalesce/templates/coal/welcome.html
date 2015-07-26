@@ -11,15 +11,15 @@
                         <h3 class="panel-title">Help</h3>
                     </div>
                     <div class="panel-body center-text">
-                        <p class="lead">Manage your account by going to your
+                        <h4>Manage your account by going to your
                             {% if user_level == 0 %}
-                                <a href={% url 'home' %}>admin panel</a>.
+                                <a href={% url 'home' %}> Dashboard</a>.
                             {% else %}
-                                <a href={% url 'home' %}>user panel</a>.
+                                <a href={% url 'home' %}> Dashboard</a>.
                             {% endif %}
-                        </p>
+                        </h4>
 
-                        <p class="lead">
+                        <h4>
                             {% if user_level == 0 %}
                                 Manage projects in your cloud with <a href="/cloud/manage">Cloud Management</a>.
                             {% else %}
@@ -31,9 +31,9 @@
                                     <a href="/projects/{{ project_id }}/basic_project_view/">My Project</a> link.
                                 {% endif %}
                             {% endif %}
-                        </p>
+                        </h4>
 
-                        <p class="lead">
+                        <h4>
                             {% if user_level == 0 %}
                                 For technical support, please go to our
                                 <a href="http://www.transcirrus.com/support.html">support page</a>.
@@ -41,7 +41,7 @@
                                 For help, contact:
                                 <a href="mailto:{{ project_admin.admin_email }}">{{ project_admin.admin_name }}</a>
                             {% endif %}
-                        </p>
+                        </h4>
                     </div>
                 </div>
             {% else %}

@@ -350,13 +350,15 @@ function generateEseriesDonuts(stats) {
         count = 0;
     for (var pool in pools) {
         var donutId = "eseries-donut-" + count;
-        $(provider).append('<span id="' + donutId + '" class="no-padding"></span>');
-        var poolData = [];
-        for (var datum in pools[pool]) {
-            poolData.push([datum, pools[pool][datum]])
+        if (document.getElementById(donutId) == null) {
+            $(provider).append('<span id="' + donutId + '" class="no-padding"></span>');
+            var poolData = [];
+            for (var datum in pools[pool]) {
+                poolData.push([datum, pools[pool][datum]])
+            }
+            charts[pool] = generateDonut(donutId, pool, poolData);
+            count++;
         }
-        charts[pool] = generateDonut(donutId, pool, poolData);
-        count++;
     }
 }
 

@@ -301,5 +301,5 @@ window.startGaugeUpdateTimer = function () {
     }
     window.gaugeTimer = setInterval(function () {
         getCeilometerStats();
-    }, 30000)
+    }, 60000)
 };
