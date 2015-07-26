@@ -36,10 +36,7 @@ $(function () {
 
     $("#account").click(function (event) {
         event.preventDefault();
-        var user = $(this).data("user"),
-            projectName = $(this).data("project-name"),
-            projectId = $(this).data("project-id");
-        switchPageContent($(this), page, window.loading.current, account, [], "/user/" + projectName + "/" + projectId + "/" + user + "/account_view/");
+        switchPageContent($(this), page, window.loading.current, account, [], "/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/");
         window.loading.current = account
     });
 
@@ -99,8 +96,9 @@ $(function () {
             message = formatSpaces($(this).data("message")),
             call = formatCall($(this).data("call")),
             notice = formatSpaces($(this).data("notice")),
+            refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
             async = $(this).data("async");
-        showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
+        showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/'+ refresh + '/' + async + '/');
     });
 
     // Upgrade
@@ -110,8 +108,9 @@ $(function () {
             message = formatSpaces($(this).data("message")),
             call = formatCall($(this).data("call")),
             notice = formatSpaces($(this).data("notice")),
+            refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
             async = $(this).data("async");
-        showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
+        showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
     // Initialize Dashboard

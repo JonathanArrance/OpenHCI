@@ -5,6 +5,7 @@ $(function () {
         var call = $(this).data("call"),
             notice = $(this).data("notice"),
             async = $(this).data("async"),
+            refresh = $(this).data("refresh"),
             buttons = $(this).parent().parent().find('button'),
             load = $.Deferred();
         showMessage('info', notice);
@@ -16,6 +17,7 @@ $(function () {
                 }
                 if (data.status == 'success') {
                     showMessage('success', data.message);
+                    refreshContent($("#page-content"), window.loading.current, refresh);
                     closeModal();
                 }
             })
@@ -88,7 +90,7 @@ window.loading = {
     }
 };
 
-function refreshContent(pageContainer, newContentContainer, url, load) {
+function loadContent(pageContainer, newContentContainer, url, load) {
     if (window.loading.hasItem(url)) {
         pageContainer.load(url, function () {
             newContentContainer.html(pageContainer.html());
@@ -116,6 +118,24 @@ function refreshContent(pageContainer, newContentContainer, url, load) {
     }
 }
 
+function refreshContent(pageContainer, newContentContainer, url, load) {
+    pageContainer.load(url, function () {
+        newContentContainer.html(pageContainer.html());
+        if (!(load === undefined)) {
+            window[load]();
+            var checkLoading = window.setInterval(function () {
+                if (!window.loading.hasItem(load)) {
+                    $(".loading-text").remove();
+                    window.clearInterval(checkLoading);
+                }
+            }, 1000);
+        }
+        else {
+            $(".loading-text").remove();
+        }
+    });
+}
+
 function switchPageContent(link, pageContainer, oldContentContainer, newContentContainer, funcs, url, load) {
     if (window.loading.current != newContentContainer) {
         oldContentContainer.html(pageContainer.html());
@@ -138,7 +158,7 @@ function switchPageContent(link, pageContainer, oldContentContainer, newContentC
                 }
             });
             if (!broken) {
-                refreshContent(pageContainer, newContentContainer, url, load);
+                loadContent(pageContainer, newContentContainer, url, load);
                 switchActiveNav(link);
             }
         }
@@ -160,10 +180,14 @@ function switchActiveNav(link) {
     }
 }
 
+function encodeString(string) {
+    formatSpaces(string);
+}
+
 function formatSpaces(string) {
     for (var i = 0; i < string.length; i++) {
         if (string[i] === ' ') {
-            string = string.replace(' ', '!');
+            string = string.replace(' ', "&32");
         }
     }
     return string;
@@ -172,7 +196,7 @@ function formatSpaces(string) {
 function formatCall(call) {
     for (var i = 0; i < call.length; i++) {
         if (call[i] === '/') {
-            call = call.replace('/', '!');
+            call = call.replace('/', "&47");
         }
     }
     return call;

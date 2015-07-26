@@ -32,7 +32,7 @@ $(function () {
                     }
                     if (data.status == 'success') {
                         showMessage('success', data.message);
-                        refreshContent(page, "/third_party_storage/get/");
+                        refreshContent(page, $("#tps-container"), "/third_party_storage/get/");
                         closeModal();
                     }
                 })
@@ -130,8 +130,8 @@ $(function () {
                     : 'nfs/set/' + formatCall(mountpoints);
             } else if (provider == "nimble") {
                 call = update == true
-                    ? 'nfs/update/' + configureNimble(inputs)
-                    : 'nfs/set/' + configureNimble(inputs);
+                    ? 'nimble/update/' + configureNimble(inputs)
+                    : 'nimble/set/' + configureNimble(inputs);
             }
 
             showMessage('info', update == true ? "Updating " + name + " Storage ..." : "Configuring " + name + " Storage ...");
@@ -161,7 +161,7 @@ $(function () {
                         showMessage('success', update == true ? name + " Storage Updated" : name + " Storage Configured");
                         setModalButtons(true, buttons);
                         closeModal();
-                        refreshContent($("#page-content"), "/third_party_storage/get/");
+                        refreshContent($("#page-content"), $("#tps-container"), "/third_party_storage/get/");
                     }
                 })
                 .fail(function () {
@@ -295,20 +295,21 @@ $(function () {
             message,
             call,
             notice,
-            async = $(this).data("async");
+            async = $(this).data("async"),
+            refresh = formatCall("/third_party_storage/get/");
 
         if (provider == "eseries") {
             title = formatSpaces("Delete E-Series Storage");
             message = formatSpaces("Remove E-Series Storage configuration");
             call = formatCall("/" + provider + "/delete/");
             notice = formatSpaces("Deleting E-Series Configuration");
-            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
+            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         } else if (provider == "nfs") {
             title = formatSpaces("Delete NFS Storage");
             message = formatSpaces("Remove NFS Storage configuration");
             call = formatCall("/" + provider + "/delete/");
             notice = formatSpaces("Deleting NFS Configuration");
-            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + async + '/');
+            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         }
     });
 
@@ -321,7 +322,7 @@ $(function () {
 
 window.refreshTPS = (function (load) {
     $.when(load).done(function () {
-        refreshContent($("#page-content"), "/third_party_storage/get/")
+        refreshContent($("#page-content"), $("#tps-container"), "/third_party_storage/get/")
     });
 });
 

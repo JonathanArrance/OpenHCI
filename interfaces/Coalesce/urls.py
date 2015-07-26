@@ -42,7 +42,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.disclaimer',
             name='disclaimer'),
 
-        url(r'^get_confirm/(?P<title>[^/]+)/(?P<message>[^/]+)/(?P<call>[^/]+)/(?P<notice>[^/]+)/(?P<async>[^/]+)/$',
+        url(r'^get_confirm/(?P<title>[^/]+)/(?P<message>[^/]+)/(?P<call>[^/]+)/(?P<notice>[^/]+)/(?P<refresh>[^/]+)/(?P<async>[^/]+)/$',
             'coalesce.coal_beta.views.get_confirm',
             name='get_confirm'),
 

@@ -97,14 +97,15 @@ def dashboard(request):
     except Exception as e:
         return render_to_response('coal/welcome.html', RequestContext(request,))
 
-def get_confirm(request, title, message, call, notice, async):
-    t = title.replace('!', ' ')
-    m = message.replace('!', ' ')
+def get_confirm(request, title, message, call, notice, async, refresh):
+    t = title.replace('&32', ' ')
+    m = message.replace('&32', ' ')
     m += "?"
-    c = call.replace('!', '/')
-    n = notice.replace('!', ' ')
+    c = call.replace('&47', '/')
+    n = notice.replace('&32', ' ')
     n += " ..."
-    confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async}
+    r = refresh.replace('&47', '/')
+    confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async, 'refresh': r}
     return render_to_response('coal/confirm.html', RequestContext(request, {'confirm': confirm}))
 
 def get_node_stats(request):
@@ -2911,7 +2912,7 @@ def nfs_set (request, mountpoints):
     '''
     try:
         auth = request.session['auth']
-        mntpts = mountpoints.replace("!","/").split(",")
+        mntpts = mountpoints.replace("&47","/").split(",")
         success, msgs = tpc.add_nfs (mntpts, auth)
         if success:
             out = {'status' : "success", 'message' : "NFS storage has been successfully added"}
@@ -2940,7 +2941,7 @@ def nfs_update (request, mountpoints):
                     msgs: array of validation error messages
     '''
     try:
-        mntpts = mountpoints.replace("!","/").split(",")
+        mntpts = mountpoints.replace("&47","/").split(",")
         success, msgs = tpc.update_nfs (mntpts)
         if success:
             out = {'status' : "success", 'message' : "NFS storage has been successfully updated"}
