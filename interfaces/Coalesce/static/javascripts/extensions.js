@@ -35,7 +35,7 @@ $.validator.setDefaults({
 
 // UI VALIDATION
 $(document).ready(function () {
-    jQuery.validator.addMethod("password", function (value, element) {
+    jQuery.validator.addMethod("passwordCreate", function (value, element) {
         return this.optional(element) || value.length >= 8;
     }, "Please use at least 8 characters.");
     jQuery.validator.addMethod("email", function (value, element) {
@@ -50,4 +50,7 @@ $(document).ready(function () {
     jQuery.validator.addMethod("projectTag", function (value, element) {
         return value != "";
     }, "Tag cannot be blank to auto-fill form.");
+    jQuery.validator.addMethod("port", function (value, element) {
+        return this.optional(element) || /^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/i.test(value);
+    }, "Please use a valid port: 0 - 65535");
 });

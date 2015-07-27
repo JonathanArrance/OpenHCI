@@ -101,10 +101,21 @@ $(function () {
                 'password': $("#nimble-password")
             };
             name = "Nimble";
-            isValid =
-                checkRequired(inputs.hostnameIP, "Hostname/IP") &&
-                checkRequired(inputs.login, "Login") &&
-                checkRequired(inputs.password, "Password");
+            var nimbleInputs = $(inputs.hostnameIP, inputs.login, inputs.password).validate({
+                rules: {
+                    nimbleHostnameIP: {
+                        required: true
+                    },
+                    nimbleLogin: {
+                        required: true
+                    },
+                    nimblePassword: {
+                        required: true
+                    }
+                }
+            });
+            console.log(nimbleInputs.valid());
+            isValid = nimbleInputs.valid();
             notValidMsg = "All fields are required to configure Nimble Storage";
         } else {
             isValid = false;
@@ -175,74 +186,64 @@ $(function () {
 
     $(document).on('click', '#eseries-discover-controllers', function (event) {
             event.preventDefault();
-            clearUiValidation();
             var inputs = {
-                    'useProxy': $("input[name='eseries-use-proxy']:checked"),
+                    'useProxy': $("input[name='eseriesUseProxy']:checked"),
                     'hostnameIp': $("#eseries-hostname-ip"),
                     'login': $("#eseries-login"),
                     'password': $("#eseries-password"),
-                    'transport': $("input[name='eseries-transport']:checked"),
+                    'transport': $("input[name='eseriesTransport']:checked"),
                     'port': $("#eseries-server-port"),
                     'storagePassword': $("#eseries-storage-password")
                 },
-                buttons = $(this).parent().parent().find('button'),
-                isValid =
-                    checkRequired(inputs.hostnameIp, "Hostname/IP") &&
-                    checkRequired(inputs.login, "Login") &&
-                    checkRequired(inputs.password, "Password") &&
-                    checkRequired(inputs.port, "Server Port") &&
-                    checkRange(inputs.port, "Server Port", 0, 65535);
+                buttons = $(this).parent().parent().find('button');
 
-            if (isValid) {
-                showMessage('info', "Discovering E-Series Storage Controllers ...");
-                setModalButtons(false, buttons);
-                var call =
-                        '/eseries/web_proxy_srv/set/' +
-                        inputs.useProxy.val() + '/' +
-                        inputs.hostnameIp.val() + '/' +
-                        inputs.port.val() + '/' +
-                        inputs.transport.val() + '/' +
-                        inputs.login.val() + '/' +
-                        inputs.password.val() + '/',
-                    size = 0,
-                    controllers = $("#eseries-mgmt-hostnames-ips");
-                $.getJSON(call)
-                    .done(function (data) {
-                        if (data.status == 'error') {
-                            showMessage('error', data.message);
-                            setModalButtons(true, buttons);
-                            if ($("#eseries-mgmt-hostnames-ips option").length == 0) {
-                                window.setTimeout(function () {
-                                    $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
-                                }, 1);
-                            }
-                        }
-                        if (data.status == 'success') {
-                            showMessage('success', "Discovered Controllers");
-                            controllers.empty();
-                            for (var ip in data.ips) {
-                                var option = '<option value="' + data.ips[ip] + '" selected>' + data.ips[ip] + '</option>';
-                                controllers.append(option);
-                                size++;
-                            }
-
-                            controllers.size = size;
-                            controllers.removeProp("disabled");
-                            setModalButtons(true, buttons);
-                        }
-                    })
-                    .
-                    fail(function () {
-                        showMessage('error', 'Server Fault');
+            showMessage('info', "Discovering E-Series Storage Controllers ...");
+            setModalButtons(false, buttons);
+            var call =
+                    '/eseries/web_proxy_srv/set/' +
+                    inputs.useProxy.val() + '/' +
+                    inputs.hostnameIp.val() + '/' +
+                    inputs.port.val() + '/' +
+                    inputs.transport.val() + '/' +
+                    inputs.login.val() + '/' +
+                    inputs.password.val() + '/',
+                size = 0,
+                controllers = $("#eseries-mgmt-hostnames-ips");
+            $.getJSON(call)
+                .done(function (data) {
+                    if (data.status == 'error') {
+                        showMessage('error', data.message);
                         setModalButtons(true, buttons);
-                        $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
-                    });
-            }
+                        if ($("#eseries-mgmt-hostnames-ips option").length == 0) {
+                            window.setTimeout(function () {
+                                $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
+                            }, 1);
+                        }
+                    }
+                    if (data.status == 'success') {
+                        showMessage('success', "Discovered Controllers");
+                        controllers.empty();
+                        for (var ip in data.ips) {
+                            var option = '<option value="' + data.ips[ip] + '" selected>' + data.ips[ip] + '</option>';
+                            controllers.append(option);
+                            size++;
+                        }
+
+                        controllers.size = size;
+                        controllers.removeProp("disabled");
+                        setModalButtons(true, buttons);
+                    }
+                })
+                .
+                fail(function () {
+                    showMessage('error', 'Server Fault');
+                    setModalButtons(true, buttons);
+                    $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
+                });
         }
     );
     $(document).on('click', '#eseries-discover-disk-pools', function (event) {
         event.preventDefault();
-        clearUiValidation();
         var inputs = {
                 'password': $("#eseries-storage-password"),
                 'hostnamesIPs': $("#eseries-mgmt-hostnames-ips")
