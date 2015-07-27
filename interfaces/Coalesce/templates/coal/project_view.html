@@ -9,36 +9,37 @@
     <div class="row-fluid">
         <div class="col-sm-2 sidebar">
             <ul class="nav nav-sidebar navbar-default nav-pills nav-stacked">
-                <li><a href="#" id="project-details">Project Details</a></li>
+                <li><a href="#" id="project-panel">Project Details</a></li>
                 <li><a href="#" id="instances">Instances</a></li>
                 <li><a href="#" id="storage">Storage</a></li>
-                <li><a href="#" id="account" data-user="{{ username }}" data-project-id="{{ project_id }}"
-                       data-project-name="{{ project_name }}">Your Account</a></li>
-                <li><a href="#">Metering</a></li>
             </ul>
         </div>
         <div id="page-content" class="col-sm-10 main"></div>
+        <div class="col-md-10 main" style="position:fixed; bottom: 100%;">
+            <div id="project-container"></div>
+            <div id="instances-container"></div>
+            <div id="storage-container"></div>
+        </div>
     </div>
 {% endblock %}
 
 {% block javascripts %}
-    <script>console.log("{{ project }}");</script>
     <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>#}
-{#    <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>#}
+    <script src="{{ STATIC_URL }}javascripts/project_view/project.js"></script>
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/instance-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/image-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/volume-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/snapshot-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/private-network-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/router-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/fip-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/keypair-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/sec-group-forms.js"></script>#}
+    {#    <script src="{{ STATIC_URL }}javascripts/project_view/user-forms.js"></script>#}
     <script>
-        // TODO: initializeProjectView();
-        var PROJECT = "{{ project.project_name }}",
-                PROJECT_ID = "{{ project.project_id }}",
+        var CURRENT_PROJECT = "{{ project.project_name }}",
+                CURRENT_PROJECT_ID = "{{ project.project_id }}",
                 DEFAULT_PUBLIC = "{{ default_public }}";
     </script>
 {% endblock %}

@@ -1,0 +1,89 @@
+<h1 class="page-header">{{ project.project_name }} Details</h1>
+
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="col-sm-12">
+
+    <div class="col-sm-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Project Info</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-hover table-responsive">
+                    <tbody>
+                    <tr>
+                        <th>Project Name</th>
+                        <td>{{ project.project_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Project ID</th>
+                        <td style="word-break: break-all">{{ project.project_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Host System</th>
+                        <td data-toggle="tooltip" data-placement="bottom"
+                            title="IP: {{ project.host_system_ip }}">{{ project.host_system_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Default Group</th>
+                        <td data-toggle="tooltip" data-placement="bottom"
+                            title="ID: {{ project.def_security_group_id }}">{{ project.def_security_group_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Default Key</th>
+                        <td data-toggle="tooltip" data-placement="bottom"
+                            title="ID: {{ project.def_security_key_id }}">{{ project.def_security_key_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Default Network</th>
+                        <td data-toggle="tooltip" data-placement="bottom"
+                            title="ID: {{ project.def_network_id }}">{{ project.def_network_name }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Project Stats</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-hover table-responsive">
+                    <tr>
+                        <th>Instances</th>
+                        <td>{{ tenant_info.num_servers }}</td>
+                    </tr>
+                    <tr>
+                        <th>Floating IPs</th>
+                        <td>{{ tenant_info.num_fips }}</td>
+                    </tr>
+                    <tr>
+                        <th>Volumes</th>
+                        <td>{{ tenant_info.num_vol }}</td>
+                    </tr>
+                    <tr>
+                        <th>Routers</th>
+                        <td>{{ tenant_info.num_rout }}</td>
+                    </tr>
+                    <tr>
+                        <th>Internal Networks</th>
+                        <td>{{ tenant_info.num_net }}</td>
+                    </tr>
+                    <tr>
+                        <th>Users</th>
+                        <td>{{ tenant_info.num_users }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+</script>

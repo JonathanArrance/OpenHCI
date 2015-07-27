@@ -2,7 +2,7 @@
 COLORS
 
     background: rgb(43, 62, 80)
-    default: rgb(78, 93, 108) [panel and well backgrounds]
+    default: rgb(72, 85, 99) [darker] , rgb(78, 93, 108) [panel and well backgrounds]
     primary: rgb(223, 105, 26)
     success: rgb(92, 184, 92)
     info: rgb(91, 192, 222)
@@ -67,6 +67,7 @@ section {
     color: rgb(235, 235, 235);
     background: rgb(43, 62, 80);
     border: solid 1px rgb(43, 62, 80);
+    word-break: break-all;
 }
 
 .tooltip.top .tooltip-arrow {
@@ -103,6 +104,10 @@ section {
 
 .no-padding {
     padding: 0;
+}
+
+.bg-default{
+    background-color: rgb(72, 85, 99);
 }
 
 /* FORM ELEMENTS */

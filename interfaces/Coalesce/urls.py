@@ -82,6 +82,11 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_project_stats',
             name='get_project_stats'),
 
+        url(r'^projects/(?P<project_id>\w+)/get_project_panel/$',
+            'coalesce.coal_beta.views.get_project_panel',
+            name='get_project_panel'),
+
+
         # --- Quotas ----
 
         url(r'^projects/(?P<project_id>\w+)/get_project_quota/$',

@@ -523,123 +523,124 @@ def manage_projects(request):
 def project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
-    so = server_ops(auth)
     no = neutron_net_ops(auth)
-    l3o = layer_three_ops(auth)
-    vo = volume_ops(auth)
-    sno = snapshot_ops(auth)
-    go = glance_ops(auth)
-    sa = server_actions(auth)
-    ssa = server_admin_actions(auth)
-    fo = flavor_ops(auth)
-    cso = container_service_ops(auth)
-    qo = quota_ops(auth)
-    #do not call until version2
-    #aso = account_service_ops(auth)
 
     project = to.get_tenant(project_id)
-    users = to.list_tenant_users(project_id)
-    userinfo = {}
-    uo = user_ops(auth)
-
-    for user in users:
-        user_dict = {'username': user['username'], 'project_name': project['project_name']}
-        user_info = uo.get_user_info(user_dict)
-        userinfo[user['username']] = user_info
-
-    ouserinfo = []
-    try:
-        ousers = uo.list_orphaned_users()
-        if ousers:
-            for ouser in ousers:
-                ouserinfo.append({'username': ouser['username'], 'user_role': ouser['user_group'],
-                                  'user_enabled': ouser['user_enabled'], 'keystone_user_id': ouser['keystone_user_id'],
-                                  'email': ouser['user_email']})
-    except:
-        ousers=[]
-
-    priv_net_list = no.list_internal_networks(project_id)
     pub_net_list  = no.list_external_networks()
-    routers       = l3o.list_routers(project_id)
-    volumes       = vo.list_volumes(project_id)
-    volume_info={}
-    snapshots     = sno.list_snapshots(project_id)
+    # so = server_ops(auth)
+    # no = neutron_net_ops(auth)
+    # l3o = layer_three_ops(auth)
+    # vo = volume_ops(auth)
+    # sno = snapshot_ops(auth)
+    go = glance_ops(auth)
+    # sa = server_actions(auth)
+    # ssa = server_admin_actions(auth)
+    # fo = flavor_ops(auth)
+    # cso = container_service_ops(auth)
+    # qo = quota_ops(auth)
+    # #do not call until version2
+    # #aso = account_service_ops(auth)
+    # users = to.list_tenant_users(project_id)
+    # userinfo = {}
+    # uo = user_ops(auth)
+
+    # for user in users:
+    #     user_dict = {'username': user['username'], 'project_name': project['project_name']}
+    #     user_info = uo.get_user_info(user_dict)
+    #     userinfo[user['username']] = user_info
+    #
+    # ouserinfo = []
+    # try:
+    #     ousers = uo.list_orphaned_users()
+    #     if ousers:
+    #         for ouser in ousers:
+    #             ouserinfo.append({'username': ouser['username'], 'user_role': ouser['user_group'],
+    #                               'user_enabled': ouser['user_enabled'], 'keystone_user_id': ouser['keystone_user_id'],
+    #                               'email': ouser['user_email']})
+    # except:
+    #     ousers=[]
+    # routers       = l3o.list_routers(project_id)
+    # volumes       = vo.list_volumes(project_id)
+    # volume_info={}
+    # snapshots     = sno.list_snapshots(project_id)
 
     #do not call until version2
     #try:
     #    containers    = aso.get_account_containers(project_id)
     #except:
     #    containers = []
-    containers = []
+    # containers = []
 
-    sec_groups = so.list_sec_group(project_id)
-    sec_keys = so.list_sec_keys(project_id)
-    instances = so.list_servers(project_id)
-    instance_info = {}
-    flavors = fo.list_flavors()
-    flavor_info = []
+    # sec_groups = so.list_sec_group(project_id)
+    # sec_keys = so.list_sec_keys(project_id)
+    # instances = so.list_servers(project_id)
+    # instance_info = {}
+    # flavors = fo.list_flavors()
+    # flavor_info = []
 
-    for flavor in flavors:
-        flav = fo.get_flavor(flavor['id'])
-        flav_dict = {
-            'name': flav['flavor_name'],
-            'id': flav['flav_id'],
-            'memory': flav['memory(MB)'],
-            'disk_space': flav['disk_space(GB)'],
-            'ephemeral': flav['ephemeral(GB)'],
-            'swap': flav['swap(GB)'],
-            'cpus': flav['cpus'],
-            'link': flav['link'],
-            'metadata': flav['metadata'] }
-        flavor_info.append(flav_dict)
+    # for flavor in flavors:
+    #     flav = fo.get_flavor(flavor['id'])
+    #     flav_dict = {
+    #         'name': flav['flavor_name'],
+    #         'id': flav['flav_id'],
+    #         'memory': flav['memory(MB)'],
+    #         'disk_space': flav['disk_space(GB)'],
+    #         'ephemeral': flav['ephemeral(GB)'],
+    #         'swap': flav['swap(GB)'],
+    #         'cpus': flav['cpus'],
+    #         'link': flav['link'],
+    #         'metadata': flav['metadata'] }
+    #     flavor_info.append(flav_dict)
 
-    host_dict     = {'project_id': project_id, 'zone': 'nova'}
-    hosts         = ssa.list_compute_hosts(host_dict)
+    # host_dict     = {'project_id': project_id, 'zone': 'nova'}
+    # hosts         = ssa.list_compute_hosts(host_dict)
+    #
+    # volume_types = vo.list_volume_types()
 
-    volume_types = vo.list_volume_types()
+    # for volume in volumes:
+    #     v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
+    #     v_info = vo.get_volume_info(v_dict)
+    #     vid = volume['volume_id']
+    #     volume_info[vid] = v_info
 
-    for volume in volumes:
-        v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
-        v_info = vo.get_volume_info(v_dict)
-        vid = volume['volume_id']
-        volume_info[vid] = v_info
-
-    for instance in instances:
-        i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
-        try:
-            i_info = so.get_server(i_dict)
-            i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
-            sname  = instance['server_name']
-            instance_info[sname] = i_info
-        except Exception:
-            sys.exc_clear()
-            i_info = {'server_os': '',
-                      'server_key_name': '',
-                      'server_group_name': '',
-                      'server_zone': '',
-                      'server_public_ips': {},
-                      'server_id': '',
-                      'server_name': instance['server_name'],
-                      'server_status': u'BUILDING',
-                      'server_node': '',
-                      'server_int_net': {},
-                      'server_net_id': '',
-                      'server_flavor': '',
-                      'snapshots': []}
-            sname = instance['server_name']
-            instance_info[sname] = i_info
-
+    # for instance in instances:
+    #     i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
+    #     try:
+    #         i_info = so.get_server(i_dict)
+    #         i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
+    #         sname  = instance['server_name']
+    #         instance_info[sname] = i_info
+    #     except Exception:
+    #         sys.exc_clear()
+    #         i_info = {'server_os': '',
+    #                   'server_key_name': '',
+    #                   'server_group_name': '',
+    #                   'server_zone': '',
+    #                   'server_public_ips': {},
+    #                   'server_id': '',
+    #                   'server_name': instance['server_name'],
+    #                   'server_status': u'BUILDING',
+    #                   'server_node': '',
+    #                   'server_int_net': {},
+    #                   'server_net_id': '',
+    #                   'server_flavor': '',
+    #                   'snapshots': []}
+    #         sname = instance['server_name']
+    #         instance_info[sname] = i_info
+    #
     try:
-        images    = go.list_images()
-    except:
-        images =[]
+        images = go.list_images()
+    except Exception as e:
+        images = e
 
-    private_networks={}
-    for net in priv_net_list:
-        try:
-            private_networks[net['net_name']]= no.get_network(net['net_id'])
-        except:
-            pass
+    print "images = %s"%images
+
+    # private_networks={}
+    # for net in priv_net_list:
+    #     try:
+    #         private_networks[net['net_name']]= no.get_network(net['net_id'])
+    #     except:
+    #         pass
 
     public_networks={}
     for net in pub_net_list:
@@ -653,43 +654,89 @@ def project_view(request, project_id):
     except:
         default_public = "NO PUBLIC NETWORK"
 
-    floating_ips = l3o.list_floating_ips(project_id)
-    for fip in floating_ips:
-        if fip["floating_in_use"]:
-            ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
-            fip['instance_name']=ip_info['instance_name']
-        else:
-            fip['instance_name']=''
+    # floating_ips = l3o.list_floating_ips(project_id)
+    # for fip in floating_ips:
+    #     if fip["floating_in_use"]:
+    #         ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
+    #         fip['instance_name']=ip_info['instance_name']
+    #     else:
+    #         fip['instance_name']=''
 
-    quota = qo.get_project_quotas(project_id)
+    # quota = qo.get_project_quotas(project_id)
 
     return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
-                                                        'users': users,
-                                                        'ouserinfo': ouserinfo,
-                                                        'userinfo':userinfo,
-                                                        'sec_groups': sec_groups,
-                                                        'sec_keys': sec_keys,
-                                                        'private_networks': private_networks,
-                                                        'public_networks': public_networks,
-                                                        'default_public': default_public,
-                                                        'priv_net_list':priv_net_list,
-                                                        'pub_net_list':pub_net_list,
-                                                        'routers': routers,
-                                                        'floating_ips': floating_ips,
-                                                        'hosts': hosts,
-                                                        'volumes': volumes,
-                                                        'volume_types': volume_types,
-                                                        'volume_info': volume_info,
-                                                        'snapshots': snapshots,
-                                                        'containers': containers,
-                                                        'images': images,
-                                                        'instances': instances,
-                                                        'instance_info': instance_info,
-                                                        'flavors': flavor_info,
-                                                        'quota': quota
+                                                        'default_public': default_public
+                                                        # 'users': users,
+                                                        # 'ouserinfo': ouserinfo,
+                                                        # 'userinfo':userinfo,
+                                                        # 'sec_groups': sec_groups,
+                                                        # 'sec_keys': sec_keys,
+                                                        # 'private_networks': private_networks,
+                                                        # 'public_networks': public_networks,
+                                                        # 'priv_net_list':priv_net_list,
+                                                        # 'pub_net_list':pub_net_list,
+                                                        # 'routers': routers,
+                                                        # 'floating_ips': floating_ips,
+                                                        # 'hosts': hosts,
+                                                        # 'volumes': volumes,
+                                                        # 'volume_types': volume_types,
+                                                        # 'volume_info': volume_info,
+                                                        # 'snapshots': snapshots,
+                                                        # 'containers': containers,
+                                                        # 'images': images,
+                                                        # 'instances': instances,
+                                                        # 'instance_info': instance_info,
+                                                        # 'flavors': flavor_info,
+                                                        # 'quota': quota
                                                         }))
 
+def get_project_panel(request, project_id):
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        so = server_ops(auth)
+        l3 = layer_three_ops(auth)
+        vo = volume_ops(auth)
+        no = neutron_net_ops(auth)
+        tl = to.list_all_tenants()
+        qo = quota_ops(auth)
+        project = to.get_tenant(project_id)
+        quota = qo.get_project_quotas(project_id)
+
+        tenant_info = {}
+        for tenant in tl:
+            if (tenant['project_id'] == project['project_id']):
+                servers = so.list_servers(tenant['project_id'])
+                num_servers = len(servers)
+
+                fips = l3.list_floating_ips(tenant['project_id'])
+                num_fips = len(fips)
+
+                volumes = vo.list_volumes(tenant['project_id'])
+                num_vol = len(volumes)
+
+                routers = l3.list_routers(tenant['project_id'])
+                num_rout = len(routers)
+
+                networks = no.list_internal_networks(tenant['project_id'])
+                num_net = len(networks)
+
+                users = to.list_tenant_users(tenant['project_id'])
+                num_users = len(users)
+
+                tenant_info = {'num_servers': num_servers,
+                           'num_fips': num_fips,
+                           'num_vol': num_vol,
+                           'num_rout': num_rout,
+                           'num_net': num_net,
+                           'num_users': num_users}
+
+        return render_to_response('coal/project_view_widgets/project_panel.html',
+                               RequestContext(request, {'project': project,'quota': quota, 'tenant_info': tenant_info}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/project_panel.html',
+                               RequestContext(request, {'project': "error",'quota': "error", 'tenant_info': "error", 'error': e}))
 def pu_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
