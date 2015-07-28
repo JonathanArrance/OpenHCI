@@ -8,6 +8,8 @@ String.prototype.jsonify = function () {
     for (var i in n) {
         n = n.replace("&#39;", '"');
         n = n.replace(': u"', ': "');
+        n = n.replace(', u"', ', "');
+        n = n.replace('{u"', '{"');
         n = n.replace("None", null);
     }
     return n;

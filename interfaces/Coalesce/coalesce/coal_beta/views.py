@@ -692,6 +692,10 @@ def project_view(request, project_id):
                                                         }))
 
 def get_project_panel(request, project_id):
+    project = []
+    limits = []
+    quota = []
+    tenant_info = []
     try:
         auth = request.session['auth']
         to = tenant_ops(auth)
@@ -701,10 +705,17 @@ def get_project_panel(request, project_id):
         no = neutron_net_ops(auth)
         tl = to.list_all_tenants()
         qo = quota_ops(auth)
+        absolute_limits = absolute_limits_ops(auth)
         project = to.get_tenant(project_id)
+        limits = absolute_limits.get_absolute_limit_for_tenant(auth['project_id'])
         quota = qo.get_project_quotas(project_id)
 
-        tenant_info = {}
+        if limits == []:
+            # No data was provided for this meter.
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
+
         for tenant in tl:
             if (tenant['project_id'] == project['project_id']):
                 servers = so.list_servers(tenant['project_id'])
@@ -733,10 +744,10 @@ def get_project_panel(request, project_id):
                            'num_users': num_users}
 
         return render_to_response('coal/project_view_widgets/project_panel.html',
-                               RequestContext(request, {'project': project,'quota': quota, 'tenant_info': tenant_info}))
+                               RequestContext(request, {'project': project,'quota': quota, 'limits': limits, 'tenant_info': tenant_info}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/project_panel.html',
-                               RequestContext(request, {'project': "error",'quota': "error", 'tenant_info': "error", 'error': e}))
+                               RequestContext(request, {'project': project,'quota': quota, 'limits': limits, 'tenant_info': tenant_info, 'error': "Error: %s"%e}))
 def pu_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
