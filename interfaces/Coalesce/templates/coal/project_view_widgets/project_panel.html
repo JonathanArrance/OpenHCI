@@ -4,8 +4,7 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-<div class="col-sm-12">
-
+<div class="row-fluid">
     <div class="col-sm-7">
         <div class="panel panel-primary">
             <div class="panel-heading">
@@ -62,67 +61,191 @@
             <div class="panel-body">
                 <ul class="list-group list-unstyled list-hover col-sm-12">
                     <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Instances: </span></div>
-                        <div class="col-sm-4"><span class="center-text">{{ tenant_info.num_servers }}</span></div>
+                        <div class="col-sm-8"><span>Images: </span></div>
+                        <div class="col-sm-4"><span class="center-text">{{ tenant_info.num_images }}</span></div>
                     </li>
                     <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Floating IPs: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_fips }}</span></div>
+                        <div class="col-sm-8"><span>Volume Snapshots: </span></div>
+                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_snaps }}</span></div>
                     </li>
                     <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Volumes: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_vol }}</span></div>
+                        <div class="col-sm-8"><span>Users: </span></div>
+                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_users }}</span></div>
                     </li>
                     <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Routers: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_rout }}</span></div>
+                        <div class="col-sm-8"><span>Security Keys: </span></div>
+                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_keys }}</span></div>
                     </li>
                     <li class="col-sm-12">
                         <div class="col-sm-8"><span>Internal Networks: </span></div>
                         <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_net }}</span></div>
                     </li>
                     <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Users: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_users }}</span></div>
+                        <div class="col-sm-8"><span>Routers: </span></div>
+                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_rout }}</span></div>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
+</div>
 
+<div class="row-fluid">
     <div class="col-sm-12">
         <div class="panel panel-primary">
             <div class="panel-heading">
-                <h3 class="panel-title">Project Quotas</h3>
+                <h3 class="panel-title inline-block">Project Quotas</h3>
+                {% if user_level == 0 %}
+                    <div class="btn-group actions-dropdown">
+                        <a href="#" class="dropdown-toggle bg-primary" data-toggle="dropdown" role="button"
+                           aria-expanded="false">
+                            Actions
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu panel-dropdown bg-primary">
+                            <li><a href="#" id="update-quotas">Update Quotas</a></li>
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
             <div class="panel-body">
-                <div class="list-group list-unstyled col-sm-12">
-                    <div class="cores-quota">
-                        <script>
-                            generateQuotaBar($(".cores-quota"), "{{ limits.absolute.totalCoresUsed }}", "{{ limits.absolute.maxTotalCores }}", "Cores:");
-                        </script>
+                {% if user_level == 0  and project_id != project.project_id %}
+                    <p>Legend:
+                        <span class="label label-info">Project</span>
+                        <span class="label label-success">Cloud</span>
+                    </p>
+                    <div class="list-group list-unstyled col-sm-12 no-padding">
+                        <div class="row-fluid">
+                            <div class="col-sm-6">
+                                <div class="cores-quota">
+                                    <script>
+                                        generateQuotaBar($(".cores-quota"), "{{ limits.absolute.totalCoresUsed }}", "{{ quota.cores }}", "Cores:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="ram-quota">
+                                    <script>
+                                        generateQuotaBar($(".ram-quota"), "{{ limits.absolute.totalRAMUsed }}", "{{ quota.ram }}", "RAM:");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <div class="col-sm-6">
+                                <div class="instance-quota">
+                                    <script>
+                                        generateQuotaBar($(".instance-quota"), "{{ tenant_info.num_instances }}", "{{ quota.instances }}", "Instances:", "{{ limits.absolute.totalInstancesUsed }}");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="floating-ips-quota">
+                                    <script>
+                                        generateQuotaBar($(".floating-ips-quota"), "{{ tenant_info.num_fips }}", "{{ quota.floating_ips }}", "Floating IPs:", "{{ limits.absolute.maxTotalFloatingIps }}");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <div class="col-sm-4">
+                                <div class="volume-quota">
+                                    <script>
+                                        generateQuotaBar($(".volume-quota"), "{{ tenant_info.num_vols }}", "{{ quota.volumes }}", "Volumes:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="storage-quota">
+                                    <script>
+                                        generateQuotaBar($(".storage-quota"), "{{ limits.absolute.totalRAMUsed }}", "{{ quota.gigabytes }}", "Storage:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="snapshots-quota">
+                                    <script>
+                                        generateQuotaBar($(".snapshots-quota"), "{{ tenant_info.num_snaps }}", "{{ quota.snapshots }}", "Snapshots:");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <div class="col-sm-6">
+                                <div class="security-groups-quota">
+                                    <script>
+                                        generateQuotaBar($(".security-groups-quota"), "{{ tenant_info.num_groups }}", "{{ quota.security_groups }}", "Security Groups:", "{{ limits.absolute.totalSecurityGroupsUsed }}");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="security-keys-quota">
+                                    <script>
+                                        generateQuotaBar($(".security-keys-quota"), "{{ tenant_info.num_keys }}", "{{ quota.key_pairs }}", "Security Keys:");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="instance-quota">
-                        <script>
-                            generateQuotaBar($(".instance-quota"), "{{ limits.absolute.totalInstancesUsed }}", "{{ limits.absolute.maxTotalInstances }}", "Instances:");
-                        </script>
+                {% else %}
+                    <div class="list-group list-unstyled col-sm-12">
+                        <div class="row-fluid">
+                            <div class="col-sm-6">
+                                <div class="instance-quota">
+                                    <script>
+                                        generateQuotaBar($(".instance-quota"), "{{ tenant_info.num_instances }}", "{{ quota.instances }}", "Instances:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="floating-ips-quota">
+                                    <script>
+                                        generateQuotaBar($(".floating-ips-quota"), "{{ tenant_info.num_fips }}", "{{ quota.floating_ips }}", "Floating IPs:");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <div class="col-sm-4">
+                                <div class="volume-quota">
+                                    <script>
+                                        generateQuotaBar($(".volume-quota"), "{{ tenant_info.num_vols }}", "{{ quota.volumes }}", "Volumes:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="storage-quota">
+                                    <script>
+                                        generateQuotaBar($(".storage-quota"), "{{ tenant_info.num_vols }}", "{{ quota.gigabytes }}", "Storage:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="snapshots-quota">
+                                    <script>
+                                        generateQuotaBar($(".snapshots-quota"), "{{ tenant_info.num_snaps }}", "{{ quota.snapshots }}", "Snapshots:");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <div class="col-sm-6">
+                                <div class="security-groups-quota">
+                                    <script>
+                                        generateQuotaBar($(".security-groups-quota"), "{{ tenant_info.num_groups }}", "{{ quota.security_groups }}", "Security Groups:");
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="security-keys-quota">
+                                    <script>
+                                        generateQuotaBar($(".security-keys-quota"), "{{ tenant_info.num_keys }}", "{{ quota.key_pairs }}", "Security Keys:");
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="ram-quota">
-                        <script>
-                            generateQuotaBar($(".ram-quota"), "{{ limits.absolute.totalRAMUsed }}", "{{ limits.absolute.maxTotalRAMSize }}", "RAM:");
-                        </script>
-                    </div>
-                    <div class="security-groups-quota">
-                        <script>
-                            generateQuotaBar($(".security-groups-quota"), "{{ limits.absolute.totalSecurityGroupsUsed }}", "{{ limits.absolute.maxSecurityGroups }}", "Security Groups:");
-                        </script>
-                    </div>
-                    <div class="floating-ips-quota">
-                        <script>
-                            generateQuotaBar($(".floating-ips-quota"), "{{ limits.absolute.totalFloatingIpsUsed }}", "{{ limits.absolute.maxTotalFloatingIps }}", "Floating IPs:");
-                        </script>
-                    </div>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>

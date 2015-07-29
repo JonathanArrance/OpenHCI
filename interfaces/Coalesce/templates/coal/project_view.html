@@ -9,7 +9,7 @@
     <div class="row-fluid">
         <div class="col-sm-2 sidebar">
             <ul class="nav nav-sidebar navbar-default nav-pills nav-stacked">
-                <li><a href="#" id="project-panel">Project Details</a></li>
+                <li><a href="#" id="project">Project Details</a></li>
                 <li><a href="#" id="instances">Instances</a></li>
                 <li><a href="#" id="storage">Storage</a></li>
             </ul>
@@ -24,6 +24,9 @@
 {% endblock %}
 
 {% block javascripts %}
+    <script src="{{ STATIC_URL }}javascripts/external/d3.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/external/c3.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/charts.js"></script>
     <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
     <script src="{{ STATIC_URL }}javascripts/project_view/project.js"></script>
     {#    <script src="{{ STATIC_URL }}javascripts/project_view/project-forms.js"></script>#}

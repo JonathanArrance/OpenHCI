@@ -3,6 +3,7 @@ COLORS
 
     background: rgb(43, 62, 80)
     default: rgb(72, 85, 99) [darker] , rgb(78, 93, 108) [panel and well backgrounds]
+    progress-bg: rgb(98, 113, 128)
     hover: rgb(72, 85, 99) [dull]
     primary: rgb(223, 105, 26)
     success: rgb(92, 184, 92)
@@ -55,14 +56,26 @@ section {
 
 .progress {
     position: relative;
+    background-color: rgb(98, 113, 128);
 }
 
 .progress span {
-    position: absolute;
-    display: block;
-    width: 100%;
     color: rgb(235, 235, 235);
+    display: block;
+    position: absolute;
     text-align: center;
+    width: 100%;
+}
+
+.progress-bar > span {
+    color: rgb(235, 235, 235);
+    display: block;
+    position: relative;
+    text-align: center;
+    width: 100%;
+}
+.tooltip {
+    z-index: 1000;
 }
 
 .tooltip-inner {
@@ -112,9 +125,10 @@ section {
     word-break: break-all;
 }
 
-.bg-default{
+.bg-default {
     background-color: rgb(72, 85, 99);
 }
+
 .list-hover *:hover {
     background-color: rgb(72, 85, 99);
 }
@@ -197,18 +211,34 @@ footer {
     float: right;
 }
 
+.dropdown-toggle.bg-primary {
+    background-color: rgb(223, 105, 26);
+    color: rgb(255, 255, 255)
+}
+
 .dropdown-menu.bg-primary {
     background-color: rgb(223, 105, 26);
     color: rgb(255, 255, 255)
 }
 
-.dropdown-menu.table-dropdown {
-    left: unset;
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 7px;
+.dropdown-menu.table-dropdown, .dropdown-menu.panel-dropdown {
+    left: auto;
     padding: 0;
+    margin-right: 0;
+}
+
+.dropdown-menu.table-dropdown {
+    margin-top: 7px;
     right: -6px;
+}
+
+.dropdown-menu.panel-dropdown {
+    margin-top: 11px;
+    right: -15px;
+}
+
+.instance .actions .dropdown-menu.table-dropdown {
+    margin-right: -1px;
 }
 
 .page-header > .btn-group.actions-dropdown {
@@ -219,6 +249,10 @@ footer {
 .page-header > .actions-dropdown > ul {
     margin-left: -100px;
     margin-top: -1px;
+}
+
+.inline-block {
+    display: inline-block;
 }
 
 /* WELCOME PAGE */
@@ -279,6 +313,14 @@ footer {
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+.c3-tooltip-container {
+    z-index: 1000;
+}
+
+.c3-tooltip {
+    background-color: rgb(235, 235, 235);
+}
+
 .c3-tooltip tbody tr td.name, .c3-tooltip tbody tr td.value {
     color: rgb(46, 46, 46);
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -295,6 +337,10 @@ footer {
 
 .c3-grid {
     opacity: 0;
+}
+
+.c3-target text {
+    fill: rgb(235, 235, 235);
 }
 
 /* ICONS */

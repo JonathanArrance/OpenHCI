@@ -1,6 +1,5 @@
 // Declare click events after document has loaded
 $(function () {
-
     // --- Create ---
 
     $("#create-instance").click(function (event) {

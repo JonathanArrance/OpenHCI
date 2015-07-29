@@ -156,3 +156,55 @@ function generateBar(id, units, data, pattern) {
     });
 }
 
+function generatePie(id, data, label, pattern) {
+    id = '#' + id;
+    return c3.generate({
+        bindto: id,
+        data: {
+            columns: data,
+            type: 'pie',
+            onclick: function (d, i) {
+            },
+            onmouseover: function (d, i) {
+            },
+            onmouseout: function (d, i) {
+            }
+        },
+        pie: {
+            label: {
+                show: false
+            }
+        },
+        color: {
+            pattern: pattern === undefined ? ['#5bc0de', '#5cb85c', '#d9534f', '#f0ad4e'] : undefined
+        },
+        legend: {
+            show: false
+        },
+        padding: {
+            bottom: 10
+        },
+        size: {
+            width: 180,
+            height: 180
+        },
+        title: {
+            text: label,
+            position: "center",
+            show: true
+        },
+        tooltip: {
+            position: function (data, width, height, element) {
+                var x = currentMousePosition["x"] - $(id).offset().left + 15;
+                var y = currentMousePosition["y"] - $(id).offset().top;
+                return {top: y, left: x}
+            },
+            format: {
+                value: function (value, ratio, id) {
+                    return ":" + value;
+                }
+            }
+        }
+    });
+}
+

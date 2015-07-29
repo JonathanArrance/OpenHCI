@@ -1,0 +1,185 @@
+<h1 class="page-header">{{ project.project_name }} Instances</h1>
+
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="row-fluid">
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
+                <th>Instance</th>
+                <th>Status</th>
+                <th>
+                    <button id="create-instance" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if instances %}
+                {% for instance in instances %}
+                    <tr id="{{ instance.server_id }}"
+                        class="instance {% if instance.status == 'PAUSED' %}paused{% endif %}{% if instance.status == 'SUSPENDED' %}suspended{% endif %}">
+                        <td class="name">
+                            <a href="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
+                               class="disable-link" data-toggle="tooltip" data-placement="right"
+                               title="ID: {{ instance.server_id }}">{{ instance.server_name }}</a>
+                        </td>
+                        <td class="status">{{ instance.status }}</td>
+                        <td class="actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    Actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    {% if instance.status == "ACTIVE" %}
+                                        <script>console.log("{{ instance.info }}");</script>
+                                        <li>
+                                            <a href="#"
+                                               onClick="window.open({{ instance.info.novnc_console }},'', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
+                                                console</a>
+                                        </li>
+                                        <li><a href="#" class="pause-instance">pause</a></li>
+                                        <li><a href="#" class="suspend-instance">suspend</a></li>
+                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                    {% elif instance.status == "PAUSED" %}
+                                        <li><a href="#" class="unpause-instance">unpause</a></li>
+                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                    {% elif instance.status == "SUSPENDED" %}
+                                        <li><a href="#" class="resume-instance">resume</a></li>
+                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                    {% else %}
+                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="placeholder text-warning">
+                    <td><p><i>This project has no instances</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Instance Stats</h3>
+            </div>
+            <div class="panel-body center-text">
+                <span id="instance-stats">
+                    <script>
+                        generateInstancePie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
+                    </script>
+                </span>
+                <span id="fips-stats">
+                    <script>
+                        generateInstancePie("fips-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
+                    </script>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 class="page-header">Images and Instance Snapshots</h3>
+
+<div class="row-fluid">
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead class="bg-primary">
+            <tr>
+                <th>Image</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if images %}
+                {% for image in images %}
+                    <tr id="{{ image.image_id }}" class="image">
+                        <td class="name">
+                            <span data-toggle="tooltip" data-placement="right"
+                                  title="ID: {{ image.image_id }}">{{ image.image_name }}</span>
+                        </td>
+                        <td class="actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    Actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    <li>
+                                        <a href="#" class="delete-image">delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="placeholder text-warning">
+                    <td><p><i>This project has no images.</i></p></td>
+                    <td></td>
+                </tr>
+            {% endif %}</tbody>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead class="bg-primary">
+            <tr>
+                <th>Snapshot</th>
+                <th>Origin</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if snapshots %}
+                {% for snapshot in snapshots %}
+                    <tr id="{{ image.image_id }}" class="image">
+                        <td class="name">
+                            <span data-toggle="tooltip" data-placement="right"
+                                  title="ID: {{ image.image_id }}">{{ image.image_name }}</span>
+                        </td>
+                        <td class="origin">
+
+                        </td>
+                        <td class="actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    Actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    <li>
+                                        <a href="#" class="delete-image">delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="placeholder text-warning">
+                    <td><p><i>This project has no instance snapshots.</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}</tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+</script>

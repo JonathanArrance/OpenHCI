@@ -1,49 +1,65 @@
 $(function () {
     // Declare Page Container
     var page = $("#page-content"),
-        project = $("#project-container");
+        project = $("#project-container"),
+        instances = $("#instances-container");
 
     // --- Sidebar Nav ---
-    $("#project-panel").click(function (event) {
+    $("#project").click(function (event) {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
         window.loading.current = project;
+    });
+
+    $("#instances").click(function (event) {
+        event.preventDefault();
+        switchPageContent($(this), page, window.loading.current, instances, [], "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+        window.loading.current = instances;
     });
 
     // --- Click Events ---
 
     // Initialize Project View
     window.loading.current = page;
-    switchPageContent($("#project-panel"), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
-    $("#project-panel").addClass('active');
+    switchPageContent($("#project"), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
+    $("#project").addClass('active');
 });
 
-function generateQuotaBar(parent, project_used, project_total, label, classes, limit_used, limit_max) {
+// --- Project Charts ---
+
+charts = {};
+
+function generateQuotaBar(parent, project_used, project_total, label, limit_used, classes) {
     if (parent.find('div.quota-bar').length == 0) {
-        classes = classes === undefined ? ["progress-bar-info", "progress-bar-success", "progress-bar-warning"] : classes;
         limit_used = limit_used === undefined ? limit_used = false : parseInt(limit_used);
-        limit_max = limit_max === undefined ? limit_max = false : parseInt(limit_max);
+        classes = classes === undefined ? ["progress-bar-info", "progress-bar-success", "progress-bar-warning"] : classes;
         project_used = parseInt(project_used);
         project_total = parseInt(project_total);
         var html = $('<div class="progress"></div>');
-        if (limit_used != false && limit_max != false) {
-            var usedWidth = ((project_used / limit_max) * 100) + "%",
-                totalWidth = ((project_total / limit_max) * 100) + "%",
-                limitWidth = ((limit_used / limit_max) * 100) + "%";
+        if (limit_used != false) {
+            var usedWidth = ((project_used / project_total) * 100),
+                totalWidth = ((limit_used / project_total) * 100);
+            totalWidth = totalWidth - usedWidth;
+            if (usedWidth <= totalWidth){
             html
-                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + '"></div>'))
-                .append($('<div class="progress-bar ' + classes[1] + '" style="width: ' + totalWidth + '"></div>'))
-                .append($('<div class="progress-bar ' + classes[2] + '" style="width: ' + limitWidth + '"></div>'))
-                .append($('<span>' + project_used + '/' + project_total + '/' + limit_used + '/' + limit_max + '</span>'));
+                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'))
+                .append($('<div class="progress-bar ' + classes[1] + '" style="width: ' + totalWidth + "%" + '"></div>'));
+            } else {
+            html
+                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'));
+            }
+            html = $('<div class="quota-bar"><h5>' + label + ' ' + project_used + '/' + limit_used + '/' + project_total + '</h5></div>').append(html);
         } else {
-            var usedWidth = ((project_used / project_total) * 100) + "%";
+            var usedWidth = ((project_used / project_total) * 100);
             html
-                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + '"></div>'))
-                .append($('<span>' + project_used + '/' + project_total + '</span>'));
+                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'));
+            html = $('<div class="quota-bar"><h5>' + label + ' ' + project_used + '/' + project_total + '</h5></div>').append(html);
         }
-
-        html = $('<div class="quota-bar"><h5>' + label + '</h5></div>').append(html);
-
         parent.append(html);
     }
+}
+
+function generateInstancePie(id, data, label){
+    data = [[data[0][0], data[0][1]], [data[1][0], (data[1][1] - data[0][1])]];
+    charts[id] = generatePie(id, data, label);
 }
