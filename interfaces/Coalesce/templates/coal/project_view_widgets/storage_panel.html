@@ -25,11 +25,13 @@
                     </script>
                     {% if volume.info.volume_set_bootable %}
                         <tr id="{{ volume.info.volume_id }}"
-                            class="volume {% if volume.info.volume_attached == 'true' %}attached{% endif %}">
+                            class="volume">
                             <td class="volume-name">
-                                <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/">{{ volume.info.volume_name }}</a>
+                                <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                                   data-toggle="tooltip" data-placement="right"
+                                   title="ID: {{ volume.info.volume_id }}">{{ volume.info.volume_name }}</a>
                             </td>
-                            <td class="volume-attached">
+                            <td class="volume-attached center-text {% if volume.info.volume_attached == 'true' %}bg-info{% endif %}">
                                 {% if volume.info.volume_attached == 'false' %}
                                     <span class="attached-placeholder">No Attached Instance</span>
                                 {% else %}
@@ -40,7 +42,7 @@
                                 <div class="btn-group actions-dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                        aria-expanded="false">
-                                        Actions
+                                        actions
                                         <span class="caret"></span>
                                     </a>
                                     <ul class="dropdown-menu table-dropdown">
@@ -119,14 +121,14 @@
                                   title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</span>
                             </a>
                         </td>
-                        <td class="snapshot-volume">
+                        <td class="snapshot-volume center-text">
                             {{ snapshot.volume_name }}
                         </td>
                         <td class="snapshot-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    Actions
+                                    actions
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
@@ -159,11 +161,13 @@
             {% if boot_volumes %}
                 {% for volume in boot_volumes %}
                     <tr id="{{ volume.info.volume_id }}"
-                        class="volume {% if volume.info.volume_attached == 'true' %}attached{% endif %}">
+                        class="volume">
                         <td class="volume-name">
-                            <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/">{{ volume.info.volume_name }}</a>
+                            <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                               data-toggle="tooltip" data-placement="right"
+                               title="ID: {{ volume.info.volume_id }}">{{ volume.info.volume_name }}</a>
                         </td>
-                        <td class="volume-attached">
+                        <td class="volume-attached center-text {% if volume.info.volume_attached == 'true' %}bg-info{% endif %}">
                             {% if volume.info.volume_attached == 'false' %}
                                 <span class="attached-placeholder">No Attached Instance</span>
                             {% else %}
@@ -174,7 +178,7 @@
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    Actions
+                                    actions
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">

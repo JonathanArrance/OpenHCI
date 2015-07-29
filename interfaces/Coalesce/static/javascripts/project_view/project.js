@@ -3,7 +3,8 @@ $(function () {
     var page = $("#page-content"),
         project = $("#project-container"),
         instances = $("#instances-container"),
-        storage = $("#storage-container");
+        storage = $("#storage-container"),
+        networking = $("#networking-container");
 
     // --- Sidebar Nav ---
     $("#project").click(function (event) {
@@ -22,6 +23,12 @@ $(function () {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, storage, [], "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
         window.loading.current = storage;
+    });
+
+    $("#networking").click(function (event) {
+        event.preventDefault();
+        switchPageContent($(this), page, window.loading.current, networking, [], "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+        window.loading.current = networking;
     });
 
     // --- Click Events ---

@@ -21,18 +21,19 @@
             {% if instances %}
                 {% for instance in instances %}
                     <tr id="{{ instance.server_id }}"
-                        class="instance {% if instance.status == 'PAUSED' %}paused{% endif %}{% if instance.status == 'SUSPENDED' %}suspended{% endif %}">
+                        class="instance">
                         <td class="instance-name">
                             <a href="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
                                data-toggle="tooltip" data-placement="right"
                                title="ID: {{ instance.server_id }}">{{ instance.server_name }}</a>
                         </td>
-                        <td class="instance-status">{{ instance.status }}</td>
+                        <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILDING" %}bg-warning{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
+                            {{ instance.status }}</td>
                         <td class="instance-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    Actions
+                                    actions
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
@@ -117,7 +118,7 @@
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    Actions
+                                    actions
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
@@ -157,14 +158,14 @@
                             <span data-toggle="tooltip" data-placement="right"
                                   title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</span>
                         </td>
-                        <td class="snapshot-instance">
+                        <td class="snapshot-instance center-text">
 
                         </td>
                         <td class="snapshot-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    Actions
+                                    actions
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
@@ -182,7 +183,8 @@
                     <td></td>
                     <td></td>
                 </tr>
-            {% endif %}</tbody>
+            {% endif %}
+            </tbody>
         </table>
     </div>
 </div>

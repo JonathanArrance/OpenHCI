@@ -901,13 +901,6 @@ def get_instance_panel(request, project_id):
 
         try:
             fips = l3.list_floating_ips(project_id)
-            for fip in fips:
-                if fip["floating_in_use"]:
-                    try:
-                        ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
-                        fip['instance_name'] = ip_info['instance_name']
-                    except Exception as e:
-                        fip['instance_name'] = e
             num_fips = len(fips)
         except Exception as e:
             fips = e
@@ -1006,13 +999,13 @@ def get_storage_panel(request, project_id):
 
         try:
             volume_types = vo.list_volume_types()
-        except:
+        except Exception as e:
             volume_types = e
 
         tenant_info = {'num_vols': num_vols,
                        'num_snaps': num_snaps}
 
-        return render_to_response('coal/project_view_widgets/volume_panel.html',
+        return render_to_response('coal/project_view_widgets/storage_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -1021,8 +1014,8 @@ def get_storage_panel(request, project_id):
                                       'volumes': volumes,
                                       'snapshots': snapshots,
                                       'volume_types': volume_types}))
-    except:
-        return render_to_response('coal/project_view_widgets/volume_panel.html',
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/storage_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -1031,6 +1024,101 @@ def get_storage_panel(request, project_id):
                                       'volumes': volumes,
                                       'snapshots': snapshots,
                                       'volume_types': volume_types,
+                                      'error': "Error: %s" % e}))
+
+
+def get_networking_panel(request, project_id):
+    project = []
+    limits = []
+    quota = []
+    fips = []
+    networks = []
+    routers = []
+    tenant_info = {}
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        qo = quota_ops(auth)
+        al = absolute_limits_ops(auth)
+        no = neutron_net_ops(auth)
+        l3o = layer_three_ops(auth)
+
+        try:
+            project = to.get_tenant(project_id)
+        except Exception as e:
+            project = e
+
+        try:
+            limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+            if limits == []:
+                limits = "empty dataset"
+                # No data was provided for this meter.
+            else:
+                limits = limits['limits']
+        except Exception as e:
+            limits = e
+
+        try:
+            quota = qo.get_project_quotas(project_id)
+        except Exception as e:
+            quota = e
+
+        try:
+            fips = l3o.list_floating_ips(project_id)
+            for fip in fips:
+                if fip["floating_in_use"]:
+                    try:
+                        ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
+                        fip['instance_name'] = ip_info['instance_name']
+                    except Exception as e:
+                        fip['instance_name'] = e
+            num_fips = len(fips)
+        except Exception as e:
+            fips = e
+            num_fips = 0
+
+        try:
+            networks = no.list_internal_networks(project_id)
+            for net in networks:
+                try:
+                    net['info'] = no.get_network(net['net_id'])
+                except Exception as e:
+                    net['info'] = e
+            num_nets = len(networks)
+        except Exception as e:
+            networks = e
+            num_nets = 0
+
+        try:
+            routers = l3o.list_routers(project_id)
+            num_routers = len(routers)
+        except Exception as e:
+            routers = e
+            num_routers = 0
+
+        tenant_info = {'num_fips': num_fips,
+                       'num_nets': num_nets,
+                       'num_routers': num_routers}
+
+        return render_to_response('coal/project_view_widgets/networking_panel.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'quota': quota,
+                                      'limits': limits,
+                                      'tenant_info': tenant_info,
+                                      'fips': fips,
+                                      'networks': networks,
+                                      'routers': routers}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking_panel.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'quota': quota,
+                                      'limits': limits,
+                                      'tenant_info': tenant_info,
+                                      'fips': fips,
+                                      'networks': networks,
+                                      'routers': routers,
                                       'error': "Error: %s" % e}))
 
 

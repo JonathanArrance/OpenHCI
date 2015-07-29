@@ -94,6 +94,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_storage_panel',
             name='get_storage_panel'),
 
+        url(r'^projects/(?P<project_id>\w+)/get_networking_panel/$',
+            'coalesce.coal_beta.views.get_networking_panel',
+            name='get_networking_panel'),
+
 
         # --- Quotas ----
 
