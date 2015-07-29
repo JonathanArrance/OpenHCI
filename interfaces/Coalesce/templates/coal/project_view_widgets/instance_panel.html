@@ -22,13 +22,13 @@
                 {% for instance in instances %}
                     <tr id="{{ instance.server_id }}"
                         class="instance {% if instance.status == 'PAUSED' %}paused{% endif %}{% if instance.status == 'SUSPENDED' %}suspended{% endif %}">
-                        <td class="name">
+                        <td class="instance-name">
                             <a href="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
-                               class="disable-link" data-toggle="tooltip" data-placement="right"
+                               data-toggle="tooltip" data-placement="right"
                                title="ID: {{ instance.server_id }}">{{ instance.server_name }}</a>
                         </td>
-                        <td class="status">{{ instance.status }}</td>
-                        <td class="actions">
+                        <td class="instance-status">{{ instance.status }}</td>
+                        <td class="instance-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
@@ -61,7 +61,7 @@
                     </tr>
                 {% endfor %}
             {% else %}
-                <tr class="placeholder text-warning">
+                <tr class="instance-placeholder text-warning">
                     <td><p><i>This project has no instances</i></p></td>
                     <td></td>
                     <td></td>
@@ -78,12 +78,12 @@
             <div class="panel-body center-text">
                 <span id="instance-stats">
                     <script>
-                        generateInstancePie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
+                        generateQuotaPie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
                     </script>
                 </span>
                 <span id="fips-stats">
                     <script>
-                        generateInstancePie("fips-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
+                        generateQuotaPie("fips-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
                     </script>
                 </span>
             </div>
@@ -99,18 +99,21 @@
             <thead class="bg-primary">
             <tr>
                 <th>Image</th>
-                <th></th>
+                <th>
+                    <button id="import-image" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
             </tr>
             </thead>
             <tbody>
             {% if images %}
                 {% for image in images %}
                     <tr id="{{ image.image_id }}" class="image">
-                        <td class="name">
+                        <td class="image-name">
                             <span data-toggle="tooltip" data-placement="right"
                                   title="ID: {{ image.image_id }}">{{ image.image_name }}</span>
                         </td>
-                        <td class="actions">
+                        <td class="image-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
@@ -127,7 +130,7 @@
                     </tr>
                 {% endfor %}
             {% else %}
-                <tr class="placeholder text-warning">
+                <tr class="image-placeholder text-warning">
                     <td><p><i>This project has no images.</i></p></td>
                     <td></td>
                 </tr>
@@ -139,22 +142,25 @@
             <thead class="bg-primary">
             <tr>
                 <th>Snapshot</th>
-                <th>Origin</th>
-                <th></th>
+                <th>Instance</th>
+                <th>
+                    <button id="create-snapshot" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
             </tr>
             </thead>
             <tbody>
             {% if snapshots %}
                 {% for snapshot in snapshots %}
-                    <tr id="{{ image.image_id }}" class="image">
-                        <td class="name">
+                    <tr id="{{ snapshot.snapshot_id }}" class="snapshot">
+                        <td class="snapshot-name">
                             <span data-toggle="tooltip" data-placement="right"
-                                  title="ID: {{ image.image_id }}">{{ image.image_name }}</span>
+                                  title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</span>
                         </td>
-                        <td class="origin">
+                        <td class="snapshot-instance">
 
                         </td>
-                        <td class="actions">
+                        <td class="snapshot-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
@@ -163,7 +169,7 @@
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
                                     <li>
-                                        <a href="#" class="delete-image">delete</a>
+                                        <a href="#" class="delete-snapshot">delete</a>
                                     </li>
                                 </ul>
                             </div>
@@ -171,7 +177,7 @@
                     </tr>
                 {% endfor %}
             {% else %}
-                <tr class="placeholder text-warning">
+                <tr class="snapshot-placeholder text-warning">
                     <td><p><i>This project has no instance snapshots.</i></p></td>
                     <td></td>
                     <td></td>

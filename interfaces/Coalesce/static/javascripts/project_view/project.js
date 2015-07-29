@@ -2,7 +2,8 @@ $(function () {
     // Declare Page Container
     var page = $("#page-content"),
         project = $("#project-container"),
-        instances = $("#instances-container");
+        instances = $("#instances-container"),
+        storage = $("#storage-container");
 
     // --- Sidebar Nav ---
     $("#project").click(function (event) {
@@ -15,6 +16,12 @@ $(function () {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, instances, [], "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
         window.loading.current = instances;
+    });
+
+    $("#storage").click(function (event) {
+        event.preventDefault();
+        switchPageContent($(this), page, window.loading.current, storage, [], "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+        window.loading.current = storage;
     });
 
     // --- Click Events ---
@@ -59,7 +66,7 @@ function generateQuotaBar(parent, project_used, project_total, label, limit_used
     }
 }
 
-function generateInstancePie(id, data, label){
+function generateQuotaPie(id, data, label){
     data = [[data[0][0], data[0][1]], [data[1][0], (data[1][1] - data[0][1])]];
     charts[id] = generatePie(id, data, label);
 }

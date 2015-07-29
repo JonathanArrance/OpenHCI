@@ -528,14 +528,6 @@ def project_view(request, project_id):
     project = to.get_tenant(project_id)
     pub_net_list  = no.list_external_networks()
 
-
-
-
-
-
-
-
-
     # so = server_ops(auth)
     # no = neutron_net_ops(auth)
     # l3o = layer_three_ops(auth)
@@ -945,6 +937,102 @@ def get_instance_panel(request, project_id):
                                       'snapshots': snapshots,
                                       'images': images,
                                       'error': "Error: %s" % e}))
+
+
+def get_storage_panel(request, project_id):
+    project = []
+    limits = []
+    quota = []
+    volumes = []
+    boot_volumes = []
+    snapshots = []
+    volume_types = []
+    tenant_info = {}
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        qo = quota_ops(auth)
+        al = absolute_limits_ops(auth)
+        vo = volume_ops(auth)
+        so = server_ops(auth)
+        sno = snapshot_ops(auth)
+
+        try:
+            project = to.get_tenant(project_id)
+        except Exception as e:
+            project = e
+
+        try:
+            limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+            if limits == []:
+                limits = "empty dataset"
+                # No data was provided for this meter.
+            else:
+                limits = limits['limits']
+        except Exception as e:
+            limits = e
+
+        try:
+            quota = qo.get_project_quotas(project_id)
+        except Exception as e:
+            quota = e
+
+        try:
+            volumes = vo.list_volumes(project_id)
+            for volume in volumes:
+                try:
+                    v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
+                    v_info = vo.get_volume_info(v_dict)
+                    if v_info['volume_attached'] == 'true':
+                        i_dict = {'server_id': v_info['volume_instance'], 'project_id': project_id}
+                        instance = so.get_server(i_dict)
+                        v_info['volume_instance'] = instance
+                    if (v_info['volume_set_bootable' == 'true']):
+                        boot_volumes.append(volume)
+                    volume['info'] = v_info
+                except Exception as e:
+                    volume['info'] = e
+            num_vols = len(volumes)
+        except:
+            volumes = e
+            num_vols = 0
+
+        try:
+            snapshots = sno.list_snapshots(project_id)
+            num_snaps = len(snapshots)
+        except Exception as e:
+            snapshots = e
+            num_snaps = 0
+
+        try:
+            volume_types = vo.list_volume_types()
+        except:
+            volume_types = e
+
+        tenant_info = {'num_vols': num_vols,
+                       'num_snaps': num_snaps}
+
+        return render_to_response('coal/project_view_widgets/volume_panel.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'quota': quota,
+                                      'limits': limits,
+                                      'tenant_info': tenant_info,
+                                      'volumes': volumes,
+                                      'snapshots': snapshots,
+                                      'volume_types': volume_types}))
+    except:
+        return render_to_response('coal/project_view_widgets/volume_panel.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'quota': quota,
+                                      'limits': limits,
+                                      'tenant_info': tenant_info,
+                                      'volumes': volumes,
+                                      'snapshots': snapshots,
+                                      'volume_types': volume_types,
+                                      'error': "Error: %s" % e}))
+
 
 def pu_project_view(request, project_id):
     auth = request.session['auth']
