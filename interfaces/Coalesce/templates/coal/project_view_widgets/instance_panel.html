@@ -23,7 +23,8 @@
                     <tr id="{{ instance.server_id }}"
                         class="instance">
                         <td class="instance-name">
-                            <a href="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
+                            <a href="#" data-call="{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
+                               data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
                                data-toggle="tooltip" data-placement="right"
                                title="ID: {{ instance.server_id }}">{{ instance.server_name }}</a>
                         </td>

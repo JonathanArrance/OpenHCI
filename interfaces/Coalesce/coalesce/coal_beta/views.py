@@ -108,6 +108,13 @@ def get_confirm(request, title, message, call, notice, async, refresh):
     confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async, 'refresh': r}
     return render_to_response('coal/confirm.html', RequestContext(request, {'confirm': confirm}))
 
+def get_info(request, title, call, container, refresh):
+    t = title.replace('&32', ' ')
+    c = call.replace('&47', '/')
+    r = refresh.replace('&47', '/')
+    info = {'title': t, 'call': c, 'container': container, 'refresh': r}
+    return render_to_response('coal/info.html', RequestContext(request, {'info': info}))
+
 def get_node_stats(request):
     try:
         auth = request.session['auth']

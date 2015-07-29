@@ -45,7 +45,7 @@ $(function () {
     $(document).on('click', '.update-password', function (event) {
         event.preventDefault();
         var call = '/get_update_account_password/';
-        showModal(call);
+        showConfirmModal(call);
     });
 
     $(document).on('click', '#update-account-password', function (event) {
@@ -98,7 +98,7 @@ $(function () {
             notice = formatSpaces($(this).data("notice")),
             refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
             async = $(this).data("async");
-        showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/'+ refresh + '/' + async + '/');
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/'+ refresh + '/' + async + '/');
     });
 
     // Upgrade
@@ -110,7 +110,7 @@ $(function () {
             notice = formatSpaces($(this).data("notice")),
             refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
             async = $(this).data("async");
-        showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
     // Initialize Dashboard

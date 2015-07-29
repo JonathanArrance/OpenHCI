@@ -39,8 +39,16 @@ $(function () {
     });
 
     // --- Click Events ---
+    $(document).on('click', '.instance-name a', function(event){
+       event.preventDefault();
+        var title,
+            call = $(this).data("call"),
+            container = "#instance-container",
+            refresh = $(this).data("refresh");
+            showInfoModal('/get_info/' + title + '/' + call + '/' + container + '/' + refresh + '/');
+    });
 
-    // Initialize Project View
+    // --- Initialize Project View ---
     window.loading.current = page;
     switchPageContent($("#project"), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
     $("#project").addClass('active');

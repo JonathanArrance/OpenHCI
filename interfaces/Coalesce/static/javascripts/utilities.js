@@ -44,9 +44,15 @@ $(function () {
     });
 });
 
-function showModal(call) {
-    $(".modal-content").load(call, function () {
-        $(".modal").modal('show');
+function showConfirmModal(call) {
+    $(".confirm-content").load(call, function () {
+        $("#confirm-modal").modal('show');
+    });
+}
+
+function showInfoModal(call) {
+    $(".info-content").load(call, function () {
+        $("#info-modal");
     });
 }
 

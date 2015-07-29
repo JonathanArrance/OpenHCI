@@ -8,7 +8,7 @@ $(function () {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_license/' + provider + '/';
-        showModal(call);
+        showConfirmModal(call);
     });
 
     $(document).on('click', '#confirm-license', function (event) {
@@ -51,14 +51,14 @@ $(function () {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_configure/' + provider + '/';
-        showModal(call);
+        showConfirmModal(call);
     });
 
     $(document).on('click', '.update', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_configure/' + provider + '/true/';
-        showModal(call);
+        showConfirmModal(call);
     });
 
     $(document).on('click', '#confirm-configure', function (event) {
@@ -304,13 +304,13 @@ $(function () {
             message = formatSpaces("Remove E-Series Storage configuration");
             call = formatCall("/" + provider + "/delete/");
             notice = formatSpaces("Deleting E-Series Configuration");
-            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+            showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         } else if (provider == "nfs") {
             title = formatSpaces("Delete NFS Storage");
             message = formatSpaces("Remove NFS Storage configuration");
             call = formatCall("/" + provider + "/delete/");
             notice = formatSpaces("Deleting NFS Configuration");
-            showModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+            showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         }
     });
 
