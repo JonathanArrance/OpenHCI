@@ -7,7 +7,7 @@ $(function () {
                 .append($("<p>All form fields are required.</p>").addClass("validateTips"))
                 .append($("<form></form>")
                     .append($("<fieldset></fieldset>")));
-            if (USER_LEVEL > 0) {
+            if ((USER_ID == USER_VIEW_ID && USER_LEVEL > 0)  || (USER_ID == USER_VIEW_ID && USER_LEVEL == 0)) {
                 form.find("form").find("fieldset")
                     .append($("<label>Current Password</label>").prop("for", "password0"))
                     .append($("<input></input>").prop("type", "password").prop("name", "password0").prop("id", "password0").addClass("text"));
@@ -50,7 +50,7 @@ $(function () {
                         clearUiValidation(allFields);
                         var bValid = checkPassword(password1) && checkPasswordMatch(password1, password2);
                         if (bValid) {
-                            $.getJSON('/update_user_password/' + USER_ID + '/' + password0 + '/' + password1.val() + '/' + PROJECT_ID + '/')
+                            $.getJSON('/update_user_password/' + USER_VIEW_ID + '/' + password0 + '/' + password1.val() + '/' + PROJECT_VIEW_ID + '/')
                                 .done(function (data) {
                                     if (data.status == 'error') {
                                         message.showMessage('error', data.message);
