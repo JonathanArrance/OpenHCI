@@ -39,13 +39,16 @@ $(function () {
     });
 
     // --- Click Events ---
-    $(document).on('click', '.instance-name a', function(event){
-       event.preventDefault();
+    $(document).on('click', '.instance-name a', function (event) {
+        event.preventDefault();
         var title,
             call = $(this).data("call"),
             container = "#instance-container",
             refresh = $(this).data("refresh");
-            showInfoModal('/get_info/' + title + '/' + call + '/' + container + '/' + refresh + '/');
+        $($('<div id="instance-modal" class="modal">').load(call, function () {
+            $(this).modal('show');
+        }));
+        //, {'container': container, 'refresh': refresh}
     });
 
     // --- Initialize Project View ---
@@ -100,7 +103,7 @@ function generateQuotaPie(id, data, label) {
         var used = data[0],
             util = data[1],
             max = data[2];
-        if (used[0] >= util[0]){
+        if (used[0] >= util[0]) {
             data = [
                 [used[0], used[1]],
                 [max[0], (max[1] - used[1])]

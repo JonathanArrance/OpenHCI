@@ -108,13 +108,6 @@ def get_confirm(request, title, message, call, notice, async, refresh):
     confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async, 'refresh': r}
     return render_to_response('coal/confirm.html', RequestContext(request, {'confirm': confirm}))
 
-def get_info(request, title, call, container, refresh):
-    t = title.replace('&32', ' ')
-    c = call.replace('&47', '/')
-    r = refresh.replace('&47', '/')
-    info = {'title': t, 'call': c, 'container': container, 'refresh': r}
-    return render_to_response('coal/info.html', RequestContext(request, {'info': info}))
-
 def get_node_stats(request):
     try:
         auth = request.session['auth']
@@ -528,175 +521,56 @@ def manage_projects(request):
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info}))
 
 def project_view(request, project_id):
-    auth = request.session['auth']
-    to = tenant_ops(auth)
-    no = neutron_net_ops(auth)
-
-    project = to.get_tenant(project_id)
-    pub_net_list  = no.list_external_networks()
-
-    # so = server_ops(auth)
-    # no = neutron_net_ops(auth)
-    # l3o = layer_three_ops(auth)
-    # vo = volume_ops(auth)
-    # sno = snapshot_ops(auth)
-    # go = glance_ops(auth)
-    # sa = server_actions(auth)
-    # ssa = server_admin_actions(auth)
-    # fo = flavor_ops(auth)
-    # cso = container_service_ops(auth)
-    # qo = quota_ops(auth)
-    # #do not call until version2
-    # #aso = account_service_ops(auth)
-    # users = to.list_tenant_users(project_id)
-    # userinfo = {}
-    # uo = user_ops(auth)
-
-    # for user in users:
-    #     user_dict = {'username': user['username'], 'project_name': project['project_name']}
-    #     user_info = uo.get_user_info(user_dict)
-    #     userinfo[user['username']] = user_info
-    #
-    # ouserinfo = []
-    # try:
-    #     ousers = uo.list_orphaned_users()
-    #     if ousers:
-    #         for ouser in ousers:
-    #             ouserinfo.append({'username': ouser['username'], 'user_role': ouser['user_group'],
-    #                               'user_enabled': ouser['user_enabled'], 'keystone_user_id': ouser['keystone_user_id'],
-    #                               'email': ouser['user_email']})
-    # except:
-    #     ousers=[]
-    # routers       = l3o.list_routers(project_id)
-    # volumes       = vo.list_volumes(project_id)
-    # volume_info={}
-    # snapshots     = sno.list_snapshots(project_id)
-
-    #do not call until version2
-    #try:
-    #    containers    = aso.get_account_containers(project_id)
-    #except:
-    #    containers = []
-    # containers = []
-
-    # sec_groups = so.list_sec_group(project_id)
-    # sec_keys = so.list_sec_keys(project_id)
-    # instances = so.list_servers(project_id)
-    # instance_info = {}
-    # flavors = fo.list_flavors()
-    # flavor_info = []
-
-    # for flavor in flavors:
-    #     flav = fo.get_flavor(flavor['id'])
-    #     flav_dict = {
-    #         'name': flav['flavor_name'],
-    #         'id': flav['flav_id'],
-    #         'memory': flav['memory(MB)'],
-    #         'disk_space': flav['disk_space(GB)'],
-    #         'ephemeral': flav['ephemeral(GB)'],
-    #         'swap': flav['swap(GB)'],
-    #         'cpus': flav['cpus'],
-    #         'link': flav['link'],
-    #         'metadata': flav['metadata'] }
-    #     flavor_info.append(flav_dict)
-
-    # host_dict     = {'project_id': project_id, 'zone': 'nova'}
-    # hosts         = ssa.list_compute_hosts(host_dict)
-    #
-    # volume_types = vo.list_volume_types()
-
-    # for volume in volumes:
-    #     v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
-    #     v_info = vo.get_volume_info(v_dict)
-    #     vid = volume['volume_id']
-    #     volume_info[vid] = v_info
-
-    # for instance in instances:
-    #     i_dict = {'server_id': instance['server_id'], 'project_id': project['project_id']}
-    #     try:
-    #         i_info = so.get_server(i_dict)
-    #         i_info['snapshots'] = sa.list_instance_snaps(instance['server_id'])
-    #         sname  = instance['server_name']
-    #         instance_info[sname] = i_info
-    #     except Exception:
-    #         sys.exc_clear()
-    #         i_info = {'server_os': '',
-    #                   'server_key_name': '',
-    #                   'server_group_name': '',
-    #                   'server_zone': '',
-    #                   'server_public_ips': {},
-    #                   'server_id': '',
-    #                   'server_name': instance['server_name'],
-    #                   'server_status': u'BUILDING',
-    #                   'server_node': '',
-    #                   'server_int_net': {},
-    #                   'server_net_id': '',
-    #                   'server_flavor': '',
-    #                   'snapshots': []}
-    #         sname = instance['server_name']
-    #         instance_info[sname] = i_info
-    #
-
-    # private_networks={}
-    # for net in priv_net_list:
-    #     try:
-    #         private_networks[net['net_name']]= no.get_network(net['net_id'])
-    #     except:
-    #         pass
-
-    public_networks={}
-    for net in pub_net_list:
-        try:
-            public_networks[net['net_name']]= no.get_network(net['net_id'])
-        except:
-            pass
-
+    project = []
+    default_public = []
+    hosts = []
     try:
-        default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
-    except:
-        default_public = "NO PUBLIC NETWORK"
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        no = neutron_net_ops(auth)
+        saa = server_admin_actions
 
-    # floating_ips = l3o.list_floating_ips(project_id)
-    # for fip in floating_ips:
-    #     if fip["floating_in_use"]:
-    #         ip_info =l3o.get_floating_ip(fip['floating_ip_id'])
-    #         fip['instance_name']=ip_info['instance_name']
-    #     else:
-    #         fip['instance_name']=''
+        project = to.get_tenant(project_id)
+        pub_net_list  = no.list_external_networks()
 
-    # quota = qo.get_project_quotas(project_id)
+        public_networks={}
+        for net in pub_net_list:
+            try:
+                public_networks[net['net_name']]= no.get_network(net['net_id'])
+            except:
+                pass
 
-    return render_to_response('coal/project_view.html',
+        #do not call until version2
+        #try:
+        #    containers    = aso.get_account_containers(project_id)
+        #except:
+        #    containers = []
+        # containers = []
+
+        host_dict     = {'project_id': project_id, 'zone': 'nova'}
+        hosts         = saa.list_compute_hosts(host_dict)
+
+        try:
+            default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+        except:
+            default_public = "NO PUBLIC NETWORK"
+
+        return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
-                                                        'default_public': default_public
-                                                        # 'users': users,
-                                                        # 'ouserinfo': ouserinfo,
-                                                        # 'userinfo':userinfo,
-                                                        # 'sec_groups': sec_groups,
-                                                        # 'sec_keys': sec_keys,
-                                                        # 'private_networks': private_networks,
-                                                        # 'public_networks': public_networks,
-                                                        # 'priv_net_list':priv_net_list,
-                                                        # 'pub_net_list':pub_net_list,
-                                                        # 'routers': routers,
-                                                        # 'floating_ips': floating_ips,
-                                                        # 'hosts': hosts,
-                                                        # 'volumes': volumes,
-                                                        # 'volume_types': volume_types,
-                                                        # 'volume_info': volume_info,
-                                                        # 'snapshots': snapshots,
-                                                        # 'containers': containers,
-                                                        # 'images': images,
-                                                        # 'instances': instances,
-                                                        # 'instance_info': instance_info,
-                                                        # 'flavors': flavor_info,
-                                                        # 'quota': quota
-                                                        }))
+                                                        'default_public': default_public,
+                                                        'hosts': hosts}))
+    except Exception as e:
+        return render_to_response('coal/project_view.html',
+                               RequestContext(request, {'project': project,
+                                                        'default_public': default_public,
+                                                        'hosts': hosts,
+                                                        'error': "Error: %s"%e}))
 
 def get_project_panel(request, project_id):
     project = []
     limits = []
     quota = []
+    used_storage = 0
     tenant_info = []
     try:
         auth = request.session['auth']
@@ -733,9 +607,9 @@ def get_project_panel(request, project_id):
         num_vols = len(volumes)
         for vol in volumes:
             v_dict = {'volume_id': vol['volume_id'], 'project_id': project_id}
-            print "v_dict = %s"%v_dict
-            v_info = vo.get_volume_info(v_dict)
-            print "v_info = %s"%v_info
+            vol['info'] = vo.get_volume_info(v_dict)
+            used_storage += vol['info']['volume_size']
+            print vol
 
         snapshots = sno.list_snapshots(project_id)
         num_snaps = len(snapshots)
@@ -768,7 +642,8 @@ def get_project_panel(request, project_id):
                        'num_net': num_net,
                        'num_users': num_users,
                        'num_groups': num_groups,
-                       'num_keys': num_keys}
+                       'num_keys': num_keys,
+                       'used_storage': used_storage}
 
         return render_to_response('coal/project_view_widgets/project_panel.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
@@ -785,16 +660,18 @@ def get_instance_panel(request, project_id):
     instances = []
     snapshots = []
     images = []
+    flavors = []
     tenant_info = {}
     try:
         auth = request.session['auth']
         to = tenant_ops(auth)
+        al = absolute_limits_ops(auth)
+        qo = quota_ops(auth)
         so = server_ops(auth)
         sa = server_actions(auth)
         go = glance_ops(auth)
         l3 = layer_three_ops(auth)
-        qo = quota_ops(auth)
-        al = absolute_limits_ops(auth)
+        fo = flavor_ops(auth)
 
         project = to.get_tenant(project_id)
 
@@ -837,6 +714,20 @@ def get_instance_panel(request, project_id):
         fips = l3.list_floating_ips(project_id)
         num_fips = len(fips)
 
+        flavors = fo.list_flavors()
+        for flavor in flavors:
+            f_info = fo.get_flavor(flavor['id'])
+            flavor['info'] = {
+                'name': f_info['flavor_name'],
+                'id': f_info['flav_id'],
+                'memory': f_info['memory(MB)'],
+                'disk_space': f_info['disk_space(GB)'],
+                'ephemeral': f_info['ephemeral(GB)'],
+                'swap': f_info['swap(GB)'],
+                'cpus': f_info['cpus'],
+                'link': f_info['link'],
+                'metadata': f_info['metadata']}
+
         tenant_info = {'num_instances': num_instances,
                        'num_snaps': num_snaps,
                        'num_fips': num_fips}
@@ -849,7 +740,8 @@ def get_instance_panel(request, project_id):
                                       'tenant_info': tenant_info,
                                       'instances': instances,
                                       'snapshots': snapshots,
-                                      'images': images}))
+                                      'images': images,
+                                      'flavors': flavors}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instance_panel.html',
                                   RequestContext(request, {
@@ -860,6 +752,7 @@ def get_instance_panel(request, project_id):
                                       'instances': instances,
                                       'snapshots': snapshots,
                                       'images': images,
+                                      'flavors': flavors,
                                       'error': "Error: %s" % e}))
 
 
@@ -871,6 +764,7 @@ def get_storage_panel(request, project_id):
     boot_volumes = []
     snapshots = []
     volume_types = []
+    used_storage = 0
     tenant_info = {}
     try:
         auth = request.session['auth']
@@ -892,20 +786,17 @@ def get_storage_panel(request, project_id):
         quota = qo.get_project_quotas(project_id)
 
         volumes = vo.list_volumes(project_id)
-        for volume in volumes:
-            try:
-                v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
-                v_info = vo.get_volume_info(v_dict)
-                if v_info['volume_attached'] == 'true':
-                    i_dict = {'server_id': v_info['volume_instance'], 'project_id': project_id}
-                    instance = so.get_server(i_dict)
-                    v_info['volume_instance'] = instance
-                if (v_info['volume_set_bootable' == 'true']):
-                    boot_volumes.append(volume)
-                volume['info'] = v_info
-            except Exception as e:
-                volume['info'] = e
         num_vols = len(volumes)
+        for volume in volumes:
+            v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
+            volume['info'] = vo.get_volume_info(v_dict)
+            if volume['info']['volume_attached'] == 'true':
+                i_dict = {'server_id': volume['info']['volume_instance'], 'project_id': project_id}
+                instance = so.get_server(i_dict)
+                volume['info']['volume_instance'] = instance
+            if (volume['info']['volume_set_bootable'] == 'true'):
+                boot_volumes.append(volume)
+            used_storage += volume['info']['volume_size']
 
         snapshots = sno.list_snapshots(project_id)
         num_snaps = len(snapshots)
@@ -913,7 +804,8 @@ def get_storage_panel(request, project_id):
         volume_types = vo.list_volume_types()
 
         tenant_info = {'num_vols': num_vols,
-                       'num_snaps': num_snaps}
+                       'num_snaps': num_snaps,
+                       'used_storage': used_storage}
 
         return render_to_response('coal/project_view_widgets/storage_panel.html',
                                   RequestContext(request, {
@@ -2497,14 +2389,18 @@ def instance_view(request, project_id, server_id):
     so = server_ops(auth)
     sa = server_actions(auth)
     fo = flavor_ops(auth)
-    i_dict = {'server_id': server_id, 'project_id': project_id}
-    server = so.get_server(i_dict)
+    instances = so.list_servers(project_id)
+    for instance in instances:
+        if instance['server_id'] == server_id:
+            instance = instance
+    i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
+    instance['info'] = so.get_server(i_dict)
     flavors = fo.list_flavors()
     snapshots = sa.list_instance_snaps(server_id)
 
     return render_to_response('coal/instance_view.html',
                                RequestContext(request, {
-                                                        'server': server,
+                                                        'instance': instance,
                                                         'flavors': flavors,
                                                         'snapshots': snapshots,
                                                         'current_project_id': project_id,

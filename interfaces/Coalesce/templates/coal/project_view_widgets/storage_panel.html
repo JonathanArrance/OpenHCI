@@ -88,7 +88,7 @@
                 </span>
                 <span id="storage-stats">
                     <script>
-                        generateQuotaPie("storage-stats", [['used', "{{ tenant_info.num_vols }}"], ['available', "{{ quota.gigabytes }}"]], "Storage (gb)");
+                        generateQuotaPie("storage-stats", [['used', "{{ tenant_info.used_storage }}"], ['available', "{{ quota.gigabytes }}"]], "Storage (gb)");
                     </script>
                 </span>
             </div>

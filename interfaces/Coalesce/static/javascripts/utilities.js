@@ -50,12 +50,6 @@ function showConfirmModal(call) {
     });
 }
 
-function showInfoModal(call) {
-    $(".info-content").load(call, function () {
-        $("#info-modal");
-    });
-}
-
 function closeModal() {
     $(".modal").modal('hide');
 }

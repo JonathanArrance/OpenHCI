@@ -23,7 +23,7 @@
                     <tr id="{{ instance.server_id }}"
                         class="instance">
                         <td class="instance-name">
-                            <a href="#" data-call="{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
+                            <a href="#" data-call="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
                                data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
                                data-toggle="tooltip" data-placement="right"
                                title="ID: {{ instance.server_id }}">{{ instance.server_name }}</a>
@@ -39,7 +39,6 @@
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
                                     {% if instance.status == "ACTIVE" %}
-                                        <script>console.log("{{ instance.info }}");</script>
                                         <li>
                                             <a href="#"
                                                onClick="window.open({{ instance.info.novnc_console }},'', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
@@ -93,7 +92,7 @@
     </div>
 </div>
 
-<h3 class="row-header">Images and Instance Snapshots</h3>
+<h3 class="row-header">Images and Flavors</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">
@@ -143,26 +142,34 @@
         <table class="table table-striped table-hover table-responsive table-bordered">
             <thead class="bg-primary">
             <tr>
-                <th>Snapshot</th>
-                <th>Instance</th>
+                <th>Flavor</th>
+                <th>Memory (mb)</th>
+                <th>Space (gb)</th>
+                <th>CPUs</th>
                 <th>
-                    <button id="create-snapshot" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button id="create-flavor" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
             </thead>
             <tbody>
-            {% if snapshots %}
-                {% for snapshot in snapshots %}
-                    <tr id="{{ snapshot.snapshot_id }}" class="snapshot">
-                        <td class="snapshot-name">
+            {% if flavors %}
+                {% for flavor in flavors %}
+                    <tr id="{{ flavor.id }}" class="snapshot">
+                        <td class="flavor-name">
                             <span data-toggle="tooltip" data-placement="right"
-                                  title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</span>
+                                  title="ID: {{ flavor.id }}">{{ flavor.name }}</span>
                         </td>
-                        <td class="snapshot-instance center-text">
-
+                        <td class="flavor-memory">
+                            {{ flavor.info.memory }}
                         </td>
-                        <td class="snapshot-actions">
+                        <td class="flavor-space">
+                            <span class="text-info">disk: <span>{{ flavor.info.disk_space }}</span></span>
+                        </td>
+                        <td class="flavor-cpus">
+                            {{ flavor.info.cpus }}
+                        </td>
+                        <td class="flavor-actions">
                             <div class="btn-group actions-dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
@@ -171,7 +178,7 @@
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
                                     <li>
-                                        <a href="#" class="delete-snapshot">delete</a>
+                                        <a href="#" class="delete-flavor">delete</a>
                                     </li>
                                 </ul>
                             </div>
@@ -179,8 +186,10 @@
                     </tr>
                 {% endfor %}
             {% else %}
-                <tr class="snapshot-placeholder text-warning">
-                    <td><p><i>This project has no instance snapshots.</i></p></td>
+                <tr class="flavor-placeholder text-warning">
+                    <td><p><i>This project has no flavors.</i></p></td>
+                    <td></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                 </tr>

@@ -137,6 +137,10 @@ h3.row-header{
     background-color: rgb(72, 85, 99);
 }
 
+.modal-responsive {
+    width: 100%;
+}
+
 /* FORM ELEMENTS */
 
 select {

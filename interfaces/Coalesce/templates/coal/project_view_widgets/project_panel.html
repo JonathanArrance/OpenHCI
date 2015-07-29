@@ -156,7 +156,7 @@
                             <div class="col-sm-4">
                                 <div class="storage-quota">
                                     <script>
-                                        generateQuotaBar($(".storage-quota"), "{{ limits.absolute.totalRAMUsed }}", "{{ quota.gigabytes }}", "Storage:");
+                                        generateQuotaBar($(".storage-quota"), "{{ tenant_info.used_storage }}", "{{ quota.gigabytes }}", "Storage:");
                                     </script>
                                 </div>
                             </div>
@@ -214,7 +214,7 @@
                             <div class="col-sm-4">
                                 <div class="storage-quota">
                                     <script>
-                                        generateQuotaBar($(".storage-quota"), "{{ tenant_info.num_vols }}", "{{ quota.gigabytes }}", "Storage:");
+                                        generateQuotaBar($(".storage-quota"), "{{ tenant_info.used_storage }}", "{{ quota.gigabytes }}", "Storage:");
                                     </script>
                                 </div>
                             </div>

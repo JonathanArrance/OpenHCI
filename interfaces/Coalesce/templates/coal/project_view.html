@@ -17,7 +17,20 @@
             </ul>
         </div>
         <div class="col-sm-10">
-            <h1 class="page-header">{{ project.project_name }}</h1>
+            <div class="page-header">
+                <h1>{{ project.project_name }}</h1>
+
+                <div class="btn-group actions-dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                        Actions
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="bg-danger"><a href="#" id="delete-project">Delete Project</a></li>
+                        <li><a href="#" id="instance-wizard">Instance Wizard</a></li>
+                    </ul>
+                </div>
+            </div>
 
             <div id="page-content" class="col-sm-12 main"></div>
         </div>
