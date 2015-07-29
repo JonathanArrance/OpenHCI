@@ -695,6 +695,7 @@ def get_project_panel(request, project_id):
         auth = request.session['auth']
         to = tenant_ops(auth)
         so = server_ops(auth)
+        go = glance_ops(auth)
         l3 = layer_three_ops(auth)
         vo = volume_ops(auth)
         sno = snapshot_ops(auth)
@@ -702,111 +703,54 @@ def get_project_panel(request, project_id):
         qo = quota_ops(auth)
         al = absolute_limits_ops(auth)
 
-        try:
-            project = to.get_tenant(project_id)
-        except Exception as e:
-            project = e
+        project = to.get_tenant(project_id)
 
-        try:
-            limits = al.get_absolute_limit_for_tenant(auth['project_id'])
-            if limits == []:
-                limits = "empty dataset"
-                # No data was provided for this meter.
-            else:
-                limits = limits['limits']
-        except Exception as e:
-            limits = e
+        limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+        if limits == []:
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
 
-        try:
-            quota = qo.get_project_quotas(project_id)
-        except Exception as e:
-            quota = e
+        quota = qo.get_project_quotas(project_id)
 
-        try:
-            instances = so.list_servers(project_id)
-            num_instances = len(instances)
-        except Exception as e:
-            instances = e
-            num_instances = 0
+        instances = so.list_servers(project_id)
+        num_instances = len(instances)
 
-        try:
-            images = go.list_images()
-            num_images = len(images)
-        except Exception as e:
-            images = e
-            num_images = 0
+        images = go.list_images()
+        num_images = len(images)
 
-        try:
-            fips = l3.list_floating_ips(project_id)
-            num_fips = len(fips)
-        except Exception as e:
-            fips = e
-            num_fips = 0
+        fips = l3.list_floating_ips(project_id)
+        num_fips = len(fips)
 
-        try:
-            fips = l3.list_floating_ips(project_id)
-            num_fips = len(fips)
-        except Exception as e:
-            fips = e
-            num_fips = 0
+        volumes = vo.list_volumes(project_id)
+        num_vols = len(volumes)
+        for vol in volumes:
+            v_dict = {'volume_id': vol['volume_id'], 'project_id': project_id}
+            print "v_dict = %s"%v_dict
+            v_info = vo.get_volume_info(v_dict)
+            print "v_info = %s"%v_info
 
-        try:
-            volumes = vo.list_volumes(project_id)
-            num_vols = len(volumes)
-            for vol in volumes:
-                v_dict = {'volume_id': vol['volume_id'], 'project_id': project_id}
-                print "v_dict = %s"%v_dict
-                v_info = vo.get_volume_info(v_dict)
-                print "v_info = %s"%v_info
-        except Exception as e:
-            volumes = e
-            num_vols = 0
+        snapshots = sno.list_snapshots(project_id)
+        num_snaps = len(snapshots)
 
-        try:
-            snapshots = sno.list_snapshots(project_id)
-            num_snaps = len(snapshots)
-        except Exception as e:
-            snapshots = e
-            num_snaps = 0
+        routers = l3.list_routers(project_id)
+        num_rout = len(routers)
 
-        try:
-            routers = l3.list_routers(project_id)
-            num_rout = len(routers)
-        except Exception as e:
-            routers = e
-            num_rout = 0
+        networks = no.list_internal_networks(project_id)
+        num_net = len(networks)
 
-        try:
-            networks = no.list_internal_networks(project_id)
-            num_net = len(networks)
-        except Exception as e:
-            networks = e
-            num_net = 0
+        users = to.list_tenant_users(project_id)
+        num_users = len(users)
 
-        try:
-            users = to.list_tenant_users(project_id)
-            num_users = len(users)
-        except Exception as e:
-            users = e
-            num_users = 0
+        sec_groups = so.list_sec_group(project_id)
+        if sec_groups == []:
+            sec_groups.append(project['def_security_group_id'])
+        num_groups = len(sec_groups)
 
-        try:
-            sec_groups = so.list_sec_group(project_id)
-            if sec_groups == []:
-                sec_groups.append(project['def_security_group_id'])
-            num_groups = len(sec_groups)
-        except Exception as e:
-            sec_groups = e
-            num_groups = 0
-
-        try:
-            sec_keys = so.list_sec_keys(project_id)
-            if sec_keys == []:
-                sec_keys.append(project['def_security_key_id'])
-            num_keys = len(sec_keys)
-        except Exception as e:
-            sec_keys = e
-            num_keys = 0
+        sec_keys = so.list_sec_keys(project_id)
+        if sec_keys == []:
+            sec_keys.append(project['def_security_key_id'])
+        num_keys = len(sec_keys)
 
         tenant_info = {'num_instances': num_instances,
                        'num_images': num_images,
@@ -845,66 +789,46 @@ def get_instance_panel(request, project_id):
         qo = quota_ops(auth)
         al = absolute_limits_ops(auth)
 
-        try:
-            project = to.get_tenant(project_id)
-        except Exception as e:
-            project = e
+        project = to.get_tenant(project_id)
 
-        try:
-            limits = al.get_absolute_limit_for_tenant(auth['project_id'])
-            if limits == []:
-                limits = "empty dataset"
-                # No data was provided for this meter.
-            else:
-                limits = limits['limits']
-        except Exception as e:
-            limits = e
+        limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+        if limits == []:
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
 
-        try:
-            quota = qo.get_project_quotas(project_id)
-        except Exception as e:
-            quota = e
+        quota = qo.get_project_quotas(project_id)
 
-        try:
-            instances = so.list_servers(project_id)
-            num_instances = len(instances)
-            for instance in instances:
+        instances = so.list_servers(project_id)
+        num_instances = len(instances)
+        for instance in instances:
+            try:
+                i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
+                i_info = so.get_server(i_dict)
                 try:
-                    i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
-                    i_info = so.get_server(i_dict)
-                    try:
-                        snapshot = sa.list_instance_snaps(instance['server_id'])
-                        if snapshot != []:
-                            snapshots.append(snapshot)
-                    except Exception as e:
-                        snapshots.append(e)
-                    instance['info'] = i_info
-                except Exception as e:
-                    sys.exc_clear()
-                    instance['info'] = e
-        except Exception as e:
-            instances = e
-            num_instances = 0
+                    snapshot = sa.list_instance_snaps(instance['server_id'])
+                    if snapshot != []:
+                        snapshots.append(snapshot)
+                except:
+                    pass
+                instance['info'] = i_info
+            except Exception as e:
+                sys.exc_clear()
+                instance['info'] = e
 
         num_snaps = len(snapshots)
 
-        try:
-            images = go.list_images()
-            for image in images:
-                try:
-                    i_info = go.get_image(image['image_id'])
-                    image['info'] = i_info
-                except Exception as e:
-                    image['info'] = e
-        except Exception as e:
-            images = e
+        images = go.list_images()
+        for image in images:
+            try:
+                i_info = go.get_image(image['image_id'])
+                image['info'] = i_info
+            except Exception as e:
+                image['info'] = e
 
-        try:
-            fips = l3.list_floating_ips(project_id)
-            num_fips = len(fips)
-        except Exception as e:
-            fips = e
-            num_fips = 0
+
+        fips = l3.list_floating_ips(project_id)
+        num_fips = len(fips)
 
         tenant_info = {'num_instances': num_instances,
                        'num_snaps': num_snaps,
@@ -950,57 +874,36 @@ def get_storage_panel(request, project_id):
         so = server_ops(auth)
         sno = snapshot_ops(auth)
 
-        try:
-            project = to.get_tenant(project_id)
-        except Exception as e:
-            project = e
+        project = to.get_tenant(project_id)
 
-        try:
-            limits = al.get_absolute_limit_for_tenant(auth['project_id'])
-            if limits == []:
-                limits = "empty dataset"
-                # No data was provided for this meter.
-            else:
-                limits = limits['limits']
-        except Exception as e:
-            limits = e
+        limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+        if limits == []:
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
 
-        try:
-            quota = qo.get_project_quotas(project_id)
-        except Exception as e:
-            quota = e
+        quota = qo.get_project_quotas(project_id)
 
-        try:
-            volumes = vo.list_volumes(project_id)
-            for volume in volumes:
-                try:
-                    v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
-                    v_info = vo.get_volume_info(v_dict)
-                    if v_info['volume_attached'] == 'true':
-                        i_dict = {'server_id': v_info['volume_instance'], 'project_id': project_id}
-                        instance = so.get_server(i_dict)
-                        v_info['volume_instance'] = instance
-                    if (v_info['volume_set_bootable' == 'true']):
-                        boot_volumes.append(volume)
-                    volume['info'] = v_info
-                except Exception as e:
-                    volume['info'] = e
-            num_vols = len(volumes)
-        except:
-            volumes = e
-            num_vols = 0
+        volumes = vo.list_volumes(project_id)
+        for volume in volumes:
+            try:
+                v_dict = {'volume_id': volume['volume_id'], 'project_id': project['project_id']}
+                v_info = vo.get_volume_info(v_dict)
+                if v_info['volume_attached'] == 'true':
+                    i_dict = {'server_id': v_info['volume_instance'], 'project_id': project_id}
+                    instance = so.get_server(i_dict)
+                    v_info['volume_instance'] = instance
+                if (v_info['volume_set_bootable' == 'true']):
+                    boot_volumes.append(volume)
+                volume['info'] = v_info
+            except Exception as e:
+                volume['info'] = e
+        num_vols = len(volumes)
 
-        try:
-            snapshots = sno.list_snapshots(project_id)
-            num_snaps = len(snapshots)
-        except Exception as e:
-            snapshots = e
-            num_snaps = 0
+        snapshots = sno.list_snapshots(project_id)
+        num_snaps = len(snapshots)
 
-        try:
-            volume_types = vo.list_volume_types()
-        except Exception as e:
-            volume_types = e
+        volume_types = vo.list_volume_types()
 
         tenant_info = {'num_vols': num_vols,
                        'num_snaps': num_snaps}
@@ -1043,58 +946,37 @@ def get_networking_panel(request, project_id):
         no = neutron_net_ops(auth)
         l3o = layer_three_ops(auth)
 
-        try:
-            project = to.get_tenant(project_id)
-        except Exception as e:
-            project = e
+        project = to.get_tenant(project_id)
 
-        try:
-            limits = al.get_absolute_limit_for_tenant(auth['project_id'])
-            if limits == []:
-                limits = "empty dataset"
-                # No data was provided for this meter.
-            else:
-                limits = limits['limits']
-        except Exception as e:
-            limits = e
+        limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+        if limits == []:
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
 
-        try:
-            quota = qo.get_project_quotas(project_id)
-        except Exception as e:
-            quota = e
+        quota = qo.get_project_quotas(project_id)
 
-        try:
-            fips = l3o.list_floating_ips(project_id)
-            for fip in fips:
-                if fip["floating_in_use"]:
-                    try:
-                        ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
-                        fip['instance_name'] = ip_info['instance_name']
-                    except Exception as e:
-                        fip['instance_name'] = e
-            num_fips = len(fips)
-        except Exception as e:
-            fips = e
-            num_fips = 0
 
-        try:
-            networks = no.list_internal_networks(project_id)
-            for net in networks:
+        fips = l3o.list_floating_ips(project_id)
+        for fip in fips:
+            if fip["floating_in_use"]:
                 try:
-                    net['info'] = no.get_network(net['net_id'])
+                    ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
+                    fip['instance_name'] = ip_info['instance_name']
                 except Exception as e:
-                    net['info'] = e
-            num_nets = len(networks)
-        except Exception as e:
-            networks = e
-            num_nets = 0
+                    fip['instance_name'] = e
+        num_fips = len(fips)
 
-        try:
-            routers = l3o.list_routers(project_id)
-            num_routers = len(routers)
-        except Exception as e:
-            routers = e
-            num_routers = 0
+        networks = no.list_internal_networks(project_id)
+        for net in networks:
+            try:
+                net['info'] = no.get_network(net['net_id'])
+            except Exception as e:
+                net['info'] = e
+        num_nets = len(networks)
+
+        routers = l3o.list_routers(project_id)
+        num_routers = len(routers)
 
         tenant_info = {'num_fips': num_fips,
                        'num_nets': num_nets,
@@ -1119,6 +1001,76 @@ def get_networking_panel(request, project_id):
                                       'fips': fips,
                                       'networks': networks,
                                       'routers': routers,
+                                      'error': "Error: %s" % e}))
+
+
+def get_users_security_panel(request, project_id):
+    project = []
+    limits = []
+    quota = []
+    users = []
+    orphaned_users = []
+    groups = []
+    keys = []
+    tenant_info = {}
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        qo = quota_ops(auth)
+        al = absolute_limits_ops(auth)
+        uo = user_ops(auth)
+        so = server_ops(auth)
+
+        project = to.get_tenant(project_id)
+
+        limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+        if limits == []:
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
+
+        quota = qo.get_project_quotas(project_id)
+
+        users = to.list_tenant_users(project_id)
+        for user in users:
+            user_dict = {'username': user['username'], 'project_name': project['project_name']}
+            user_info = uo.get_user_info(user_dict)
+            user['info'] = user_info
+        num_users = len(users)
+
+        orphaned_users = uo.list_orphaned_users()
+
+        sec_groups = so.list_sec_group(project_id)
+        num_groups = len(sec_groups)
+
+        sec_keys = so.list_sec_keys(project_id)
+        num_keys = len(sec_keys)
+
+        tenant_info = {'num_users': num_users,
+                       'num_groups': num_groups,
+                       'num_keys': num_keys}
+
+        return render_to_response('coal/project_view_widgets/users_security_panel.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'quota': quota,
+                                      'limits': limits,
+                                      'tenant_info': tenant_info,
+                                      'users': users,
+                                      'orphaned_users': orphaned_users,
+                                      'groups': sec_groups,
+                                      'keys': sec_keys}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security_panel.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'quota': quota,
+                                      'limits': limits,
+                                      'tenant_info': tenant_info,
+                                      'users': users,
+                                      'orphaned_users': orphaned_users,
+                                      'groups': sec_groups,
+                                      'keys': sec_keys,
                                       'error': "Error: %s" % e}))
 
 

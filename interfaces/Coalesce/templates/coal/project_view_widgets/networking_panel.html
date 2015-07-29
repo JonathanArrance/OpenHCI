@@ -1,8 +1,8 @@
-<h1 class="page-header">{{ project.project_name }} Networking</h1>
-
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
+
+<h3 class="row-header">Floating IP Addresses</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">
@@ -71,9 +71,9 @@
                 <h3 class="panel-title">Networking Stats</h3>
             </div>
             <div class="panel-body center-text">
-                <span id="fips-stats">
+                <span id="fip-stats">
                     <script>
-                        generateQuotaPie("fips-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
+                        generateQuotaPie("fip-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
                     </script>
                 </span>
             </div>
@@ -81,7 +81,7 @@
     </div>
 </div>
 
-<h3 class="page-header">Private Networks and Routers</h3>
+<h3 class="row-header">Private Networks and Routers</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">
@@ -139,6 +139,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
                 </tr>
             {% endif %}
             </tbody>
@@ -184,7 +185,7 @@
                     </tr>
                 {% endfor %}
             {% else %}
-                <tr id="router_placeholder">
+                <tr class="router-placeholder text-warning">
                     <td><p><i>This project has no routers</i></p></td>
                     <td></td>
                     <td></td>

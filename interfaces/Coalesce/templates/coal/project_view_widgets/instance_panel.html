@@ -1,8 +1,8 @@
-<h1 class="page-header">{{ project.project_name }} Instances</h1>
-
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
+
+<h3 class="row-header">Instances</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">
@@ -82,9 +82,9 @@
                         generateQuotaPie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
                     </script>
                 </span>
-                <span id="fips-stats">
+                <span id="fip-stats">
                     <script>
-                        generateQuotaPie("fips-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
+                        generateQuotaPie("fip-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
                     </script>
                 </span>
             </div>
@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<h3 class="page-header">Images and Instance Snapshots</h3>
+<h3 class="row-header">Images and Instance Snapshots</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">

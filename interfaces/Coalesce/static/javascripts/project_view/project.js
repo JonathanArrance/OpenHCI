@@ -4,7 +4,8 @@ $(function () {
         project = $("#project-container"),
         instances = $("#instances-container"),
         storage = $("#storage-container"),
-        networking = $("#networking-container");
+        networking = $("#networking-container"),
+        usersSecurity = $("#users-security-container");
 
     // --- Sidebar Nav ---
     $("#project").click(function (event) {
@@ -31,6 +32,12 @@ $(function () {
         window.loading.current = networking;
     });
 
+    $("#users-security").click(function (event) {
+        event.preventDefault();
+        switchPageContent($(this), page, window.loading.current, usersSecurity, [], "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
+        window.loading.current = usersSecurity;
+    });
+
     // --- Click Events ---
 
     // Initialize Project View
@@ -54,13 +61,13 @@ function generateQuotaBar(parent, project_used, project_total, label, limit_used
             var usedWidth = ((project_used / project_total) * 100),
                 totalWidth = ((limit_used / project_total) * 100);
             totalWidth = totalWidth - usedWidth;
-            if (usedWidth <= totalWidth){
-            html
-                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'))
-                .append($('<div class="progress-bar ' + classes[1] + '" style="width: ' + totalWidth + "%" + '"></div>'));
+            if (usedWidth <= totalWidth) {
+                html
+                    .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'))
+                    .append($('<div class="progress-bar ' + classes[1] + '" style="width: ' + totalWidth + "%" + '"></div>'));
             } else {
-            html
-                .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'));
+                html
+                    .append($('<div class="progress-bar ' + classes[0] + '" style="width: ' + usedWidth + "%" + '"></div>'));
             }
             html = $('<div class="quota-bar"><h5>' + label + ' ' + project_used + '/' + limit_used + '/' + project_total + '</h5></div>').append(html);
         } else {
@@ -73,7 +80,30 @@ function generateQuotaBar(parent, project_used, project_total, label, limit_used
     }
 }
 
-function generateQuotaPie(id, data, label){
-    data = [[data[0][0], data[0][1]], [data[1][0], (data[1][1] - data[0][1])]];
+function generateQuotaPie(id, data, label) {
+    if (data.length == 2) {
+        var used = data[0],
+            max = data[1];
+        data = [
+            [used[0], used[1]],
+            [max[0], (max[1] - used[1])]
+        ];
+    } else if (data.length == 3) {
+        var used = data[0],
+            util = data[1],
+            max = data[2];
+        if (used[0] >= util[0]){
+            data = [
+                [used[0], used[1]],
+                [max[0], (max[1] - used[1])]
+            ];
+        } else {
+            data = [
+                [used[0], used[1]],
+                [util[0], (util[1] - used[1])],
+                [max[0], (max[1] - (used[0] + util[0]))]
+            ];
+        }
+    }
     charts[id] = generatePie(id, data, label);
 }

@@ -1,8 +1,8 @@
-<h1 class="page-header">{{ project.project_name }} Storage</h1>
-
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
+
+<h3 class="row-header">Volumes</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">
@@ -96,7 +96,7 @@
     </div>
 </div>
 
-<h3 class="page-header">Snapshots and Boot Volumes</h3>
+<h3 class="row-header">Snapshots and Boot Volumes</h3>
 
 <div class="row-fluid">
     <div class="col-sm-6">
@@ -194,7 +194,7 @@
                     </tr>
                 {% endfor %}
             {% else %}
-                <tr class="placeholder text-warning">
+                <tr class="volume-placeholder text-warning">
                     <td><p><i>This project has no boot volumes.</i></p></td>
                     <td></td>
                     <td></td>
