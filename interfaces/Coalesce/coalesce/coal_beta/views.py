@@ -909,8 +909,8 @@ def get_users_security_panel(request, project_id):
     quota = []
     users = []
     orphaned_users = []
-    groups = []
-    keys = []
+    sec_groups = []
+    sec_keys = []
     tenant_info = {}
     try:
         auth = request.session['auth']
@@ -2384,27 +2384,88 @@ def router_view(request, router_id):
                                                         'router': router,
                                                         }))
 
-def instance_view(request, project_id, server_id):
-    auth = request.session['auth']
-    so = server_ops(auth)
-    sa = server_actions(auth)
-    fo = flavor_ops(auth)
-    instances = so.list_servers(project_id)
-    for instance in instances:
-        if instance['server_id'] == server_id:
-            instance = instance
-    i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
-    instance['info'] = so.get_server(i_dict)
-    flavors = fo.list_flavors()
-    snapshots = sa.list_instance_snaps(server_id)
 
-    return render_to_response('coal/instance_view.html',
-                               RequestContext(request, {
-                                                        'instance': instance,
-                                                        'flavors': flavors,
-                                                        'snapshots': snapshots,
-                                                        'current_project_id': project_id,
-                                                        }))
+def instance_view(request, project_id, server_id):
+    meter_dict = []
+    stats = []
+    instance = {}
+    flavors = []
+    snapshots = []
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        sa = server_actions(auth)
+        fo = flavor_ops(auth)
+
+        meter_dict = meters.get_instance_meters()
+        meter_list = []
+
+        for group in meter_dict:
+            for meter in group['meters']:
+                meter_list.append(meter['meterType'])
+        meter_string = ""
+        i = 0
+        for meter in meter_list:
+            meter_string += meter
+            if i + 1 != len(meter_list):
+                meter_string += ","
+            i += 1
+
+        now = str(datetime.utcnow())
+        date = now.split()[0]
+        time = now.split()[1].split(':')
+        end_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+        then = str(datetime.utcnow() - timedelta(days=3))
+        date = then.split()[0]
+        time = then.split()[1].split(':')
+        start_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+        # Meter Overview for environment
+        if auth['is_admin'] == 1:
+            meter_list = {'tenant_id': None, 'resource_id': None, 'start_time': start_time, 'end_time': end_time,
+                          'meter_list': meter_string}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+        # Meter Overview for tenant
+        else:
+            meter_list = {'tenant_id': auth['user_id'], 'resource_id': project_id, 'start_time': start_time,
+                          'end_time': end_time, 'meter_list': meter_string}
+            result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
+        if result == []:
+            # No data was provided for this meter.
+            stats = "empty dataset"
+        else:
+            stats = result
+
+        instances = so.list_servers(project_id)
+        for instance in instances:
+            if instance['server_id'] == server_id:
+                instance = instance
+        i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
+        instance['info'] = so.get_server(i_dict)
+        flavors = fo.list_flavors()
+        snapshots = sa.list_instance_snaps(server_id)
+
+        return render_to_response('coal/instance_view.html',
+                                  RequestContext(request, {
+                                      'meters': meter_dict,
+                                      'stats': stats,
+                                      'instance': instance,
+                                      'flavors': flavors,
+                                      'snapshots': snapshots,
+                                      'current_project_id': project_id}))
+    except Exception as e:
+        return render_to_response('coal/instance_view.html',
+                                  RequestContext(request, {
+                                      'meters': meter_dict,
+                                      'stats': stats,
+                                      'instance': instance,
+                                      'flavors': flavors,
+                                      'snapshots': snapshots,
+                                      'current_project_id': project_id,
+                                      'error': "Error: %s" % e}))
+
 
 def add_private_network(request, net_name, admin_state, shared, project_id):
     try:

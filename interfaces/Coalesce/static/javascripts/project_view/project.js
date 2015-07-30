@@ -41,14 +41,15 @@ $(function () {
     // --- Click Events ---
     $(document).on('click', '.instance-name a', function (event) {
         event.preventDefault();
-        var title,
-            call = $(this).data("call"),
-            container = "#instance-container",
-            refresh = $(this).data("refresh");
-        $($('<div id="instance-modal" class="modal">').load(call, function () {
-            $(this).modal('show');
-        }));
-        //, {'container': container, 'refresh': refresh}
+        var call = $(this).data("call");
+        $($('<div id="instance-modal" class="modal">')).modal('show');
+        $("#instance-modal")
+            .append($('<h1 class="loading-text">LOADING </h1>')
+            .append('<i class="fa fa-cog fa-spin"></i>'))
+            .load(call, function () {
+                $(".loading-text").remove();
+            })
+
     });
 
     // --- Initialize Project View ---
@@ -117,4 +118,52 @@ function generateQuotaPie(id, data, label) {
         }
     }
     charts[id] = generatePie(id, data, label);
+
+}
+function generateInstanceBars(meters, stats) {
+    console.log(meters.jsonify());
+    console.log(stats.jsonify());
+    meters = JSON.parse(meters.jsonify());
+    stats = JSON.parse(stats.jsonify());
+    var counters = [],
+        groups = [];
+    $(stats).each(function (index, stat) {
+        if (stat.chartType == "counter") {
+            counters.push(stat);
+        }
+    });
+    var barGroups = {};
+    $(counters).each(function (index, element) {
+        if (barGroups[element['meterName'].split(".")[0]] === undefined) {
+            barGroups[element['meterName'].split(".")[0]] = [];
+        }
+        barGroups[element['meterName'].split(".")[0]].push(element);
+    });
+    for (var bar in barGroups) {
+        var data = [],
+            units,
+            id;
+        $(barGroups[bar]).each(function (a, statsMeter) {
+            $(meters).each(function (b, meterGroup) {
+                $(meterGroup.meters).each(function (c, meter) {
+                    if (meter.meterType == statsMeter.meterName) {
+                        data.push([meter.label, statsMeter.utilization]);
+                        units = statsMeter.unitMeasurement;
+                        id = meterGroup.id;
+                    }
+                });
+            });
+        });
+        units = units === undefined ? "" :
+            units == "B/s" ? "bytes/second" : units;
+        id = id === undefined ? console.log("Bar group id never defined.") : id;
+        groups.push([bar, units, data, id]);
+    }
+    $(groups).each(function (c, d) {
+        if (document.getElementById(d[0]) === null) {
+            var groupId = "#" + d[3];
+            $(groupId).append($($('<div id="' + d[0] + '" class="col-sm-6 no-padding" style="margin-left:-15px;"></div>')));
+            charts[d[0]] = generateBar(d[0], d[1], d[2]);
+        }
+    });
 }
