@@ -32,6 +32,10 @@ h3.row-header {
     margin: 0 0 10px;
 }
 
+i {
+    vertical-align: text-top;
+}
+
 .bg {
     background-color: rgb(43, 62, 80);
 }

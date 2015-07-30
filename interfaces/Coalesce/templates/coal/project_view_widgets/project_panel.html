@@ -3,88 +3,82 @@
 {% endif %}
 
 <div class="row-fluid">
-    <div class="col-sm-7">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title">Project Info</h3>
-            </div>
-            <div class="panel-body">
-                <ul class="list-group list-unstyled list-hover col-sm-12">
-                    <li class="col-sm-12">
-                        <div class="col-sm-4"><span>Project Name: </span></div>
-                        <div class="col-sm-8 center-text"><span>{{ project.project_name }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-4"><span>Project ID: </span></div>
-                        <div class="col-sm-8 center-text break"><span class="">{{ project.project_id }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-4"><span>Host System: </span></div>
-                        <div class="col-sm-8 center-text">
-                            <span data-toggle="tooltip" data-placement="bottom"
-                                  title="IP: {{ project.host_system_ip }}">{{ project.host_system_name }}</span>
-                        </div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-4"><span>Default Group: </span></div>
-                        <div class="col-sm-8 center-text">
-                            <span data-toggle="tooltip" data-placement="bottom"
-                                  title="ID: {{ project.def_security_group_id }}">{{ project.def_security_group_name }}</span>
-                        </div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-4"><span>Default Key: </span></div>
-                        <div class="col-sm-8 center-text">
-                            <span data-toggle="tooltip" data-placement="bottom"
-                                  title="ID: {{ project.def_security_key_id }}">{{ project.def_security_key_name }}</span>
-                        </div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-4"><span>Default Network: </span></div>
-                        <div class="col-sm-8 center-text">
-                            <span data-toggle="tooltip" data-placement="bottom"
-                                  title="ID: {{ project.def_network_id }}">{{ project.def_network_name }}</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <div class="col-sm-8">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
+                <th>Project Details</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Name</td>
+                <td>{{ project.project_name }}</td>
+            </tr>
+            <tr>
+                <td>ID</td>
+                <td>{{ project.project_id }}</td>
+            </tr>
+            <tr>
+                <td>Host System</td>
+                <td>
+                    {{ project.host_system_name }} <i class="fa fa-info-circle" data-toggle="tooltip"
+                                                      data-placement="right"
+                                                      title="IP: {{ project.host_system_ip }}"></i>
+                </td>
+            </tr>
+            <tr>
+                <td>Default Group</td>
+                <td>{{ project.def_security_group_name }}</td>
+            </tr>
+            <tr>
+                <td>Default Key</td>
+                <td>{{ project.def_security_key_name }}</td>
+            </tr>
+            <tr>
+                <td>Default Network</td>
+                <td>{{ project.def_network_name }}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
-    <div class="col-sm-5">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title">Project Stats</h3>
-            </div>
-            <div class="panel-body">
-                <ul class="list-group list-unstyled list-hover col-sm-12">
-                    <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Images: </span></div>
-                        <div class="col-sm-4"><span class="center-text">{{ tenant_info.num_images }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Volume Snapshots: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_snaps }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Users: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_users }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Security Keys: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_keys }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Internal Networks: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_net }}</span></div>
-                    </li>
-                    <li class="col-sm-12">
-                        <div class="col-sm-8"><span>Routers: </span></div>
-                        <div class="col-sm-4"><span class="center-text"> {{ tenant_info.num_rout }}</span></div>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <div class="col-sm-4">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
+                <th>Project Statistics</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Images</td>
+                <td>{{ tenant_info.num_images }}</td>
+            </tr>
+            <tr>
+                <td>Volume Snapshots</td>
+                <td>{{ tenant_info.num_snaps }}</td>
+            </tr>
+            <tr>
+                <td>Users</td>
+                <td>{{ tenant_info.num_users }}</td>
+            </tr>
+            <tr>
+                <td>Security Keys</td>
+                <td>{{ tenant_info.num_keys }}</td>
+            </tr>
+            <tr>
+                <td>Internal Networks</td>
+                <td>{{ tenant_info.num_net }}</td>
+            </tr>
+            <tr>
+                <td>Routers</td>
+                <td>{{ tenant_info.num_rout }}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
