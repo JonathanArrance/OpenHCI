@@ -1,0 +1,359 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ instance.server_name }} View</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Instance Details</th>
+                    <th>
+                        <div class="btn-group actions-dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-expanded="false">
+                                Actions
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu bg-primary table-dropdown">
+                                <li><a href="#" id="resize-server">Resize Instance</a></li>
+                                <li><a href="#" id="reboot-server">Reboot</a></li>
+                                <li><a href="#" id="cycle-server">Power Cycle</a></li>
+                                {% if server.server_status != "SHUTOFF" %}
+                                    <li><a href="#" id="poweroff-server">Power Off</a></li>
+                                {% else %}
+                                    <li><a href="#" id="poweron-server">Power On</a></li>
+                                {% endif %}
+
+                                {% if server.server_status == "ACTIVE" %}
+                                    {% if snapshots %}
+                                        <li><a href="#" id="revert-server">Revert</a></li>
+                                    {% endif %}
+                                {% endif %}
+                                <li>
+                                    <a href="{{ server.novnc_console }}"
+                                       onClick="window.open(this.href,'','toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;"
+                                            >Console</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td class="center-text">{{ instance.server_name }}</td>
+                </tr>
+                <tr>
+                    <td>ID</td>
+                    <td class="center-text">{{ instance.server_id }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td class="center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILDING" %}bg-warning{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
+                        {{ instance.status }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>OS</td>
+                    <td class="center-text">{{ instance.server_os }}</td>
+                </tr>
+                <tr>
+                    <td>Flavor</td>
+                    <td class="center-text">{{ instance.server_flavor }}</td>
+                </tr>
+                <tr>
+                    <td>Key Name</td>
+                    <td class="center-text">{{ instance.server_key_name }}</td>
+                </tr>
+                <tr>
+                    <td>Group Name</td>
+                    <td class="center-text">{{ instance.server_group_name }}</td>
+                </tr>
+                <tr>
+                    <td>Public IP</td>
+                    <td class="center-text">{{ instance.server_public_ips }}</td>
+                </tr>
+                <tr>
+                    <td>Network ID</td>
+                    <td class="center-text">{{ instance.server_net_id }}</td>
+                </tr>
+                <tr>
+                    <td>Internal Networks</td>
+                    <td class="center-text">
+                        {% for k,v in instance.server_int_net.items %}
+                            <span>{{ k }}: </span>
+                            {% for i in v %}
+                                <span>{{ i.addr }}</span>
+                            {% endfor %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Snapshot</th>
+                    <th>Instance</th>
+                    <th>
+                        <button id="create-snapshot"
+                                class="btn btn-xs btn-success pull-right"><i
+                                class="fa fa-plus"></i>
+                        </button>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if snapshots %}
+                    {% for snapshot in snapshots %}
+                        <tr id="{{ snapshot.snapshot_id }}" class="snapshot">
+                            <td class="snapshot-name">
+                                                        <span data-toggle="tooltip" data-placement="right"
+                                                              title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}
+                                                        </span>
+                            </td>
+                            <td class="snapshot-instance center-text">
+
+                            </td>
+                            <td class="snapshot-actions">
+                                <div class="btn-group actions-dropdown">
+                                    <a href="#" class="dropdown-toggle"
+                                       data-toggle="dropdown" role="button"
+                                       aria-expanded="false">
+                                        actions
+                                        <span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu table-dropdown">
+                                        <li>
+                                            <a href="#" class="delete-snapshot">delete</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="snapshot-placeholder text-warning">
+                        <td><p><i>This project has no instance snapshots.</i></p></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Last 24hrs: Average Instance Meters
+                    </h3>
+                </div>
+                <div class="panel-body center-text">
+                    {% for group in meters %}
+                        {% for meter in group.meters %}
+                            {% for stat in stats %}
+                                {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
+                                    <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
+                                        <script>
+                                            charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
+                                        </script>
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{#<div id="instance-view-resize-dialog-form" title="Resize server?">#}
+{#    <form id="instance-resize-form" action="">#}
+{#        {% csrf_token %}#}
+{#        <fieldset>#}
+{#            <label for="flavor">Select new flavor</label>#}
+{#            <select name="flavor" id="flavor">#}
+{#                {% for flav in flavors %}#}
+{#                    <option value="{{ flav.id }}">{{ flav.name }}</option>#}
+{#                {% endfor %}#}
+{#            </select>#}
+{#        </fieldset>#}
+{#    </form>#}
+{#</div>#}
+{##}
+{#<div id="instance-snapshot-dialog-form" title="Snapshot an instance">#}
+{#    <p class="validateTips">Specify name and description. </p>#}
+{##}
+{#    <form>#}
+{#        {% csrf_token %}#}
+{#        <fieldset>#}
+{#            <label for="instance_snap_name">Snapshot Name</label>#}
+{#            <input type="text" name="instance_snap_name" id="instance_snap_name"#}
+{#                   class="text ui-widget-content ui-corner-all" placeholder="Optional"/>#}
+{#            <label for="instance_snap_desc">Description</label>#}
+{#            <textarea name="instance_snap_desc" id="instance_snap_desc" class="text ui-widget-content ui-corner-all"#}
+{#                      maxlength="80" placeholder="enter a description for the snapshot (optional)"#}
+{#                      rows="2"></textarea>#}
+{#        </fieldset>#}
+{#    </form>#}
+{#</div>#}
+{##}
+{#<div id="instance-revert-form" title="Revert Instance">#}
+{#    <p class="validateTips">Revert <span class="instance-name"></span> from snapshot.</p>#}
+{##}
+{#    <form>#}
+{#        {% csrf_token %}#}
+{#        <fieldset>#}
+{#            <label for="instance_snapshot_name">Snapshot</label>#}
+{#            <select name="instance_snapshot_name" id="instance_snapshot_name"></select>#}
+{#        </fieldset>#}
+{#    </form>#}
+{#</div>#}
+
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-resize-dialog-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-reboot-confirm-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-cycle-confirm-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweroff-confirm-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweron-confirm-form.js"></script>#}
+<script>
+    generateInstanceBars("{{ meters }}", "{{ stats }}");
+    var CURRENT_PROJECT_ID = "{{current_project_id}}",
+            DEFAULT_PUBLIC = "{{ default_public }}",
+            INSTANCE_ID = "{{server.server_id}}",
+            INSTANCE = "{{server.server_name}}",
+            ATTACHED_IP = "{{server.server_public_ips}}";
+    $(".close").click(function () {
+        refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
+    });
+</script>
+
+{#<script>#}
+{#    var consoleHidden = false;#}
+{##}
+{#    $(function () {#}
+{#        $("#widget-console-icon").click(function (event) {#}
+{##}
+{#            // Prevent scrolling to top of page on click#}
+{#            event.preventDefault();#}
+{##}
+{#            if (consoleHidden) {#}
+{##}
+{#                $(".widget-console").show(0);#}
+{#                $(".widget-console-well").removeClass("well-hidden");#}
+{#                $("#widget-console-icon").text("-");#}
+{#                consoleHidden = false;#}
+{#            } else {#}
+{##}
+{#                $(".widget-console").hide(0);#}
+{#                $(".widget-console-well").addClass("well-hidden");#}
+{#                $("#widget-console-icon").text("+");#}
+{#                consoleHidden = true;#}
+{#            }#}
+{#        });#}
+{#    });#}
+{#</script>#}
+{##}
+{#<script>#}
+{#    $(function () {#}
+{#        initialize()#}
+{#    });#}
+{##}
+{#    var gauges = [],#}
+{#            calls = [],#}
+{#            calls_complete = true;#}
+{##}
+{#    function createGauge(name, label, meterType, calcType, min, max, minorTicks) {#}
+{#        var config =#}
+{#        {#}
+{#            size: 120,#}
+{#            label: label,#}
+{#            meterType: meterType,#}
+{#            calcType: calcType,#}
+{#            min: undefined != min ? min : 0,#}
+{#            max: undefined != max ? max : 1000,#}
+{#            minorTicks: minorTicks#}
+{#        };#}
+{##}
+{#        var range = config.max - config.min;#}
+{#        config.yellowZones = [{from: config.min + range * 0.75, to: config.min + range * 0.9}];#}
+{#        config.redZones = [{from: config.min + range * 0.9, to: config.max}];#}
+{##}
+{#        gauges[name] = new Gauge(name + "GaugeContainer", config);#}
+{#        gauges[name].render();#}
+{#    }#}
+{##}
+{#    function createGauges() {#}
+{#        createGauge("cpu", "CPU %", "cpu_util", "avg", 0, 100, 5);#}
+{#        createGauge("memory", "Memory MB", "memory.usage", "avg", 0, 128000, 8);#}
+{#        createGauge("storage", "Storage GB", "disk.root.size", "avg", 0, 1000, 8);#}
+{#        createGauge("diskreadrate", "Disk Read B/s", "disk.read.bytes.rate", "avg", 0, 100000, 8);#}
+{#        createGauge("diskwriterate", "Disk Write B/s", "disk.write.bytes.rate", "avg", 0, 100000, 8);#}
+{#        createGauge("lanincomingrate", "Lan Incoming B/s", "network.incoming.bytes.rate", "avg", 0, 100000, 8);#}
+{#        createGauge("lanoutgoingrate", "Lan Outgoing B/s", "network.outgoing.bytes.rate", "avg", 0, 100000, 8);#}
+{#        createGauge("wanincomingrate", "Wan Incoming B/s", "wan.incoming.bytes.rate", "avg", 0, 100000, 8);#}
+{#        createGauge("wanoutgoingrate", "Wan Outgoing B/s", "wan.outgoing.bytes.rate", "avg", 0, 100000, 8);#}
+{#    }#}
+{##}
+{#    function updateGauges() {#}
+{#        if (calls_complete) {#}
+{#            calls_complete = false;#}
+{#            calls = [];#}
+{#            for (var key in gauges) {#}
+{#                calls[calls.length] = getCeilometerResults(gauges[key], gauges[key].config.meterType, gauges[key].config.calcType)#}
+{#            }#}
+{##}
+{#            $.when.apply(null, calls).done(function () {#}
+{#                calls_complete = true;#}
+{#            });#}
+{#        }#}
+{#    }#}
+{##}
+{#    function getCeilometerResults(gauge, meterType, calcType) {#}
+{#        var endDate = new Date();#}
+{#        var startDate = new Date(endDate);#}
+{#        var durationInMinutes = 4320;#}
+{#        startDate.setUTCMinutes(endDate.getUTCMinutes() - durationInMinutes);#}
+{#        var startTimeString = startDate.getUTCFullYear() + "-" + (startDate.getUTCMonth() + 1 ) + "-" + startDate.getUTCDate() + "T" + ("0" + startDate.getUTCHours()).slice(-2) + "%3A" + ("0" + startDate.getUTCMinutes()).slice(-2);#}
+{#        var endTimeString = endDate.getUTCFullYear() + "-" + (endDate.getUTCMonth() + 1) + "-" + endDate.getUTCDate() + "T" + ("0" + endDate.getUTCHours()).slice(-2) + "%3A" + ("0" + endDate.getUTCMinutes()).slice(-2);#}
+{#        var url = "ceilometer/get/statistics/" + startTimeString + "/" + endTimeString + "/" + meterType + "/" + getProjectID() + "/" + getInstanceID() + "/";#}
+{#        call_complete = $.getJSON(url).done(function (data) {#}
+{#            if (data.status == "success") {#}
+{#                if (data.message != "empty dataset") {#}
+{#                    var result = data.statistics[0][calcType];#}
+{#                    gauge.redraw(result);#}
+{#                }#}
+{#            }#}
+{#        });#}
+{#        return call_complete;#}
+{#    }#}
+{##}
+{#    function getProjectID() {#}
+{#        return CURRENT_PROJECT_ID;#}
+{#    }#}
+{##}
+{#    function getInstanceID() {#}
+{#        return $("#instance-id").html();#}
+{#    }#}
+{##}
+{#    function initialize() {#}
+{#        createGauges();#}
+{#        updateGauges();#}
+{#        window.setInterval(updateGauges, 60000);#}
+{#    }#}
+{##}
+{#</script>#}

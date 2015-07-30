@@ -732,7 +732,7 @@ def get_instance_panel(request, project_id):
                        'num_snaps': num_snaps,
                        'num_fips': num_fips}
 
-        return render_to_response('coal/project_view_widgets/instance_panel.html',
+        return render_to_response('coal/project_view_widgets/instances/instance_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -743,7 +743,7 @@ def get_instance_panel(request, project_id):
                                       'images': images,
                                       'flavors': flavors}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/instance_panel.html',
+        return render_to_response('coal/project_view_widgets/instances/instance_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -2447,7 +2447,7 @@ def instance_view(request, project_id, server_id):
         flavors = fo.list_flavors()
         snapshots = sa.list_instance_snaps(server_id)
 
-        return render_to_response('coal/instance_view.html',
+        return render_to_response('coal/project_view_widgets/instances/instance_view.html',
                                   RequestContext(request, {
                                       'meters': meter_dict,
                                       'stats': stats,
@@ -2456,7 +2456,7 @@ def instance_view(request, project_id, server_id):
                                       'snapshots': snapshots,
                                       'current_project_id': project_id}))
     except Exception as e:
-        return render_to_response('coal/instance_view.html',
+        return render_to_response('coal/project_view_widgets/instances/instance_view.html',
                                   RequestContext(request, {
                                       'meters': meter_dict,
                                       'stats': stats,

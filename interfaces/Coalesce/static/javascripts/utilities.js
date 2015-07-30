@@ -50,6 +50,23 @@ function showConfirmModal(call) {
     });
 }
 
+function showInfoModal(call) {
+    $("#info-modal").modal('show');
+    var loader = $('<div class="loading-text"></div>')
+        .append($('<div class="modal-header"></div>')
+            .append($('<button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close"></button>')
+                .append($('<span aria-hidden="true">&times;</span>')))
+            .append($('<h5 class="modal-title" id="modal-label"> </h5>')))
+        .append($('<div class="modal-body well bg"></div>')
+            .append($('<h1>LOADING <i class="fa fa-cog fa-spin"></i></h1>')));
+    $(".info-content")
+        .empty()
+        .append(loader)
+        .load(call, function () {
+            loader.remove();
+        });
+}
+
 function closeModal() {
     $(".modal").modal('hide');
 }
@@ -136,6 +153,27 @@ function refreshContent(pageContainer, newContentContainer, url, load) {
     });
 }
 
+function refreshContainer(pageContainer, contentContainer, url, load) {
+    var loader = $('<div class="loading-text"><h1>LOADING <i class="fa fa-cog fa-spin"></i></h1></div>');
+    pageContainer
+        .prepend(loader)
+        .load(url, function () {
+        contentContainer.html(pageContainer.html());
+        if (!(load === undefined)) {
+            window[load]();
+            var checkLoading = window.setInterval(function () {
+                if (!window.loading.hasItem(load)) {
+                    $(".loading-text").remove();
+                    window.clearInterval(checkLoading);
+                }
+            }, 1000);
+        }
+        else {
+            $(".loading-text").remove();
+        }
+    });
+}
+
 function switchPageContent(link, pageContainer, oldContentContainer, newContentContainer, funcs, url, load) {
     if (window.loading.current != newContentContainer) {
         oldContentContainer.html(pageContainer.html());
@@ -146,9 +184,9 @@ function switchPageContent(link, pageContainer, oldContentContainer, newContentC
         } else {
             window.loading.add(url);
             broken = false;
-            pageContainer.empty();
-            pageContainer.append($('<h1 class="loading-text">LOADING </h1>')
-                .append('<i class="fa fa-cog fa-spin"></i>'));
+            pageContainer
+                .empty()
+                .append($('<div class="loading-text"><h1>LOADING <i class="fa fa-cog fa-spin"></i></h1></div>'));
             $(funcs).each(function (index, element) {
                 if (window.loading.hasItem(element)) {
                     pageContainer.html(newContentContainer.html());

@@ -27,8 +27,12 @@ section {
     margin-bottom: 60px;
 }
 
-h3.row-header{
+h3.row-header {
     margin: 0 0 10px;
+}
+
+.bg {
+    background-color: rgb(43, 62, 80);
 }
 
 .error {
@@ -78,6 +82,7 @@ h3.row-header{
     text-align: center;
     width: 100%;
 }
+
 .tooltip {
     z-index: 1000;
 }
@@ -137,8 +142,18 @@ h3.row-header{
     background-color: rgb(72, 85, 99);
 }
 
-.modal-responsive {
+.modal-wide {
+    width: 90%;
+}
+
+.loading-text {
+    background-color: rgba(43, 62, 80, 0.5);
+    height: 100%;
+    position: absolute;
+    text-align: center;
+    vertical-align: middle;
     width: 100%;
+    z-index: 1000;
 }
 
 /* FORM ELEMENTS */

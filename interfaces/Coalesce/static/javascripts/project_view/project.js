@@ -41,15 +41,7 @@ $(function () {
     // --- Click Events ---
     $(document).on('click', '.instance-name a', function (event) {
         event.preventDefault();
-        var call = $(this).data("call");
-        $($('<div id="instance-modal" class="modal">')).modal('show');
-        $("#instance-modal")
-            .append($('<h1 class="loading-text">LOADING </h1>')
-            .append('<i class="fa fa-cog fa-spin"></i>'))
-            .load(call, function () {
-                $(".loading-text").remove();
-            })
-
+        showInfoModal($(this).data("call"));
     });
 
     // --- Initialize Project View ---
@@ -121,8 +113,6 @@ function generateQuotaPie(id, data, label) {
 
 }
 function generateInstanceBars(meters, stats) {
-    console.log(meters.jsonify());
-    console.log(stats.jsonify());
     meters = JSON.parse(meters.jsonify());
     stats = JSON.parse(stats.jsonify());
     var counters = [],
