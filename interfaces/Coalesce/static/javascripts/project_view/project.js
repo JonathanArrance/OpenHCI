@@ -39,7 +39,15 @@ $(function () {
     });
 
     // --- Click Events ---
+
+    // Instances
     $(document).on('click', '.instance-name button', function (event) {
+        event.preventDefault();
+        showInfoModal(page, $(this).data("call"));
+    });
+
+    // Storage
+    $(document).on('click', '.volume-name button', function (event) {
         event.preventDefault();
         showInfoModal(page, $(this).data("call"));
     });

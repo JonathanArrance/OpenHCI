@@ -27,9 +27,12 @@
                         <tr id="{{ volume.info.volume_id }}"
                             class="volume">
                             <td class="volume-name">
-                                <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
-                                   data-toggle="tooltip" data-placement="right"
-                                   title="ID: {{ volume.info.volume_id }}">{{ volume.info.volume_name }}</a>
+                                <button data-call="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                                        data-toggle="tooltip" data-placement="bottom"
+                                        title="ID: {{ volume.info.volume_id }}"
+                                        class="btn btn-wide btn-xs btn-social btn-light">
+                                    <i class="fa fa-info-circle"></i>{{ volume.info.volume_name }}
+                                </button>
                             </td>
                             <td class="volume-attached center-text {% if volume.info.volume_attached == 'true' %}bg-info{% endif %}">
                                 {% if volume.info.volume_attached == 'false' %}
@@ -106,7 +109,7 @@
                 <th>Snapshot</th>
                 <th>Volume</th>
                 <th>
-                    <button id="import-image" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button id="create-snapshot" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
@@ -145,7 +148,8 @@
                     <td></td>
                     <td></td>
                 </tr>
-            {% endif %}</tbody>
+            {% endif %}
+            </tbody>
         </table>
     </div>
     <div class="col-sm-6">

@@ -807,7 +807,7 @@ def get_storage_panel(request, project_id):
                        'num_snaps': num_snaps,
                        'used_storage': used_storage}
 
-        return render_to_response('coal/project_view_widgets/storage_panel.html',
+        return render_to_response('coal/project_view_widgets/storage/storage_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -817,7 +817,7 @@ def get_storage_panel(request, project_id):
                                       'snapshots': snapshots,
                                       'volume_types': volume_types}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/storage_panel.html',
+        return render_to_response('coal/project_view_widgets/storage/storage_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -1357,27 +1357,39 @@ def attach_server_to_network(request, server_id, project_id, net_id):
     redirect_to = urlsplit(referer, 'http', False)[2]
     return HttpResponseRedirect(redirect_to)
 
-def volume_view(request, project_id, volume_id):
-    auth = request.session['auth']
-    vo = volume_ops(auth)
-    sno = snapshot_ops(auth)
-    so = server_ops(auth)
-    instances = so.list_servers(project_id)
-    snapshots = sno.list_snapshots()
-    vol_dict = {'project_id': project_id, 'volume_id': volume_id}
-    volume_info = vo.get_volume_info(vol_dict)
-    attached_to = None
-    if volume_info['volume_instance']:
-        server_dict = {'project_id': project_id, 'server_id': volume_info['volume_instance']}
-        attached_to = so.get_server(server_dict)
 
-    return render_to_response('coal/volume_view.html',
-                               RequestContext(request, {'current_project_id' : project_id,
-                                                        'volume_info': volume_info,
-                                                        'snapshots': snapshots,
-                                                        'attached_to': attached_to,
-                                                        'instances': instances,
-                                                        }))
+def volume_view(request, project_id, volume_id):
+    volume_info = {}
+    instances = []
+    snapshots = []
+    try:
+        auth = request.session['auth']
+        vo = volume_ops(auth)
+        sno = snapshot_ops(auth)
+        so = server_ops(auth)
+
+        instances = so.list_servers(project_id)
+        snapshots = sno.list_snapshots()
+
+        vol_dict = {'project_id': project_id, 'volume_id': volume_id}
+        volume_info = vo.get_volume_info(vol_dict)
+
+        if volume_info['volume_instance']:
+            server_dict = {'project_id': project_id, 'server_id': volume_info['volume_instance']}
+            volume_info['volume_instance']['info'] = so.get_server(server_dict)
+
+        return render_to_response('coal/project_view_widgets/storage/volume_view.html',
+                                  RequestContext(request, {'current_project_id': project_id,
+                                                           'volume_info': volume_info,
+                                                           'snapshots': snapshots,
+                                                           'instances': instances}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/storage/volume_view.html',
+                                  RequestContext(request, {'current_project_id': project_id,
+                                                           'volume_info': volume_info,
+                                                           'snapshots': snapshots,
+                                                           'instances': instances,
+                                                           'error': "Error: %s" % e}))
 
 def floating_ip_view(request, floating_ip_id):
     auth = request.session['auth']

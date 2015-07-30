@@ -1,0 +1,147 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ volume_info.volume_name }} View</h5>
+</div>
+
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Volume Details</th>
+                    <th>
+                        <div class="btn-group actions-dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-expanded="false">
+                                Actions
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu bg-primary table-dropdown">
+                                {% if volume_info.volume_attached != 'true' %}
+                                    <li><a href="#" id="attach-volume">Attach</a></li>
+                                {% else %}
+                                    <li><a href="#" id="detach-volume">Detach</a></li>
+                                {% endif %}
+                                <li><a href="#" class="clone-volume">Clone</a></li>
+                                <li><a href="#" class="revert-volume">Revert</a></li>
+                                <li><a href="#" class="delete-volume">Delete</a></li>
+                            </ul>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td id="volume-name">{{ volume_info.volume_name }}</td>
+                </tr>
+                <tr>
+                    <td>Id</td>
+                    <td id="volume-id">{{ volume_info.volume_id }}</td>
+                </tr>
+                <tr>
+                    <td>Size</td>
+                    <td id="volume-size">{{ volume_info.volume_size }}GB</td>
+                </tr>
+                <tr>
+                    <td>Type</td>
+                    <td id="volume-type">{{ volume_info.volume_type }}</td>
+                </tr>
+                <tr>
+                    <td>Mountpoint</td>
+                    <td id="volume-mountpoint">{{ volume_info.volume_mount_location }}</td>
+                </tr>
+                <tr>
+                    <td>Attached</td>
+                    <td>
+                        {% if volume_info.volume_attached == 'true' %}
+                            {{ attached_to.server_name }}
+                        {% else %}
+                            Not Attached
+                        {% endif %}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Snapshot</th>
+                    <th>
+                        <button id="create-snapshot" class="btn btn-xs btn-success pull-right"><i
+                                class="fa fa-plus"></i>
+                        </button>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if snapshots %}
+                    {% for snapshot in snapshots %}
+                        {% if snapshot.volume_id == volume_info.volume_id %}
+                            <tr id="{{ snapshot.image_id }}" class="snapshot">
+                                <td class="snapshot-name">
+                                    {{ snapshot.snapshot_name }}
+                                </td>
+                                <td class="snapshot-actions">
+                                    <div class="btn-group actions-dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                           aria-expanded="false">
+                                            actions
+                                            <span class="caret"></span>
+                                        </a>
+                                        <ul class="dropdown-menu table-dropdown">
+                                            <li><a href="#" class="delete-snapshot">delete</a></li>
+                                            <li><a href="#" class="create-volume-from-snapshot">create volume</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <tr class="snapshot-placeholder text-warning">
+                        <td><p><i>This volume has no snapshots.</i></p></td>
+                        <td></td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    var VOLUME_ID = "{{ volume_info.volume_id }}",
+            VOLUME = "{{volume_info.volume_name}}";
+    $(".close").click(function () {
+        refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/")
+    });
+</script>
+
+{#    <div id="volume-view-attach-dialog-form" title="Attach volume to instance">#}
+{#        <p class="validateTips">Attach {{ volume_info.volume_name }} to an instance. </p>#}
+{##}
+{#        <form>#}
+{#            {% csrf_token %}#}
+{#            <fieldset>#}
+{#                <label for="att_instance">Instance</label>#}
+{#                <select name="att_instance" id="att_instance">#}
+{#                    {% for server in instances %}#}
+{#                        <option value="{{ server.server_id }}">{{ server.server_name }}</option>#}
+{#                    {% endfor %}#}
+{#                </select>#}
+{#            </fieldset>#}
+{#            <label for="att_mount_point">Mount Point</label>#}
+{#            <input type="text" name="att_mount_point" id="att_mount_point"#}
+{#                   class="text ui-widget-content ui-corner-all"/>#}
+{#        </form>#}
+{#    </div>#}
