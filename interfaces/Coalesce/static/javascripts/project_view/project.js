@@ -41,7 +41,7 @@ $(function () {
     // --- Click Events ---
     $(document).on('click', '.instance-name a', function (event) {
         event.preventDefault();
-        showInfoModal($(this).data("call"));
+        showInfoModal(page, $(this).data("call"));
     });
 
     // --- Initialize Project View ---

@@ -35,26 +35,42 @@ h3.row-header {
     background-color: rgb(43, 62, 80);
 }
 
-.error {
-    font-size: 90%;
-    margin: 0;
-    padding: 0 15px;
+.bg-default {
+    background-color: rgb(72, 85, 99);
+}
+
+.bg-progress {
+    background-color: rgb(98, 113, 128)
+}
+
+.break {
+    word-break: break-all;
 }
 
 .center-text {
     text-align: center;
 }
 
-.trans {
-    font-weight: lighter;
-    color: dimgrey;
-    font-family: sans-serif;
+.inline-block {
+    display: inline-block;
 }
 
-.cirrus {
-    font-family: sans-serif;
-    font-weight: bold;
-    color: rgb(28, 60, 119);
+.no-padding {
+    padding: 0;
+}
+
+.list-hover *:hover {
+    background-color: rgb(72, 85, 99);
+}
+
+.modal-wide {
+    width: 90%;
+}
+
+.error {
+    font-size: 90%;
+    margin: 0;
+    padding: 0 15px;
 }
 
 .page-header {
@@ -126,26 +142,6 @@ h3.row-header {
     border-width: 0 5px 5px;
 }
 
-.no-padding {
-    padding: 0;
-}
-
-.break {
-    word-break: break-all;
-}
-
-.bg-default {
-    background-color: rgb(72, 85, 99);
-}
-
-.list-hover *:hover {
-    background-color: rgb(72, 85, 99);
-}
-
-.modal-wide {
-    width: 90%;
-}
-
 .loading-text {
     background-color: rgba(43, 62, 80, 0.5);
     height: 100%;
@@ -154,6 +150,18 @@ h3.row-header {
     vertical-align: middle;
     width: 100%;
     z-index: 1000;
+}
+
+.trans {
+    font-weight: lighter;
+    color: dimgrey;
+    font-family: sans-serif;
+}
+
+.cirrus {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: rgb(28, 60, 119);
 }
 
 /* FORM ELEMENTS */
@@ -272,10 +280,6 @@ footer {
 .page-header > .actions-dropdown > ul {
     margin-left: -100px;
     margin-top: -1px;
-}
-
-.inline-block {
-    display: inline-block;
 }
 
 /* WELCOME PAGE */

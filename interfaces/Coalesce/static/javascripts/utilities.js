@@ -50,15 +50,9 @@ function showConfirmModal(call) {
     });
 }
 
-function showInfoModal(call) {
+function showInfoModal(page, call) {
     $("#info-modal").modal('show');
-    var loader = $('<div class="loading-text"></div>')
-        .append($('<div class="modal-header"></div>')
-            .append($('<button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close"></button>')
-                .append($('<span aria-hidden="true">&times;</span>')))
-            .append($('<h5 class="modal-title" id="modal-label"> </h5>')))
-        .append($('<div class="modal-body well bg"></div>')
-            .append($('<h1>LOADING <i class="fa fa-cog fa-spin"></i></h1>')));
+    var loader = $('<div class="loading-text"><h1>LOADING <i class="fa fa-cog fa-spin"></i></h1></div>').prependTo(page);
     $(".info-content")
         .empty()
         .append(loader)
@@ -158,20 +152,20 @@ function refreshContainer(pageContainer, contentContainer, url, load) {
     pageContainer
         .prepend(loader)
         .load(url, function () {
-        contentContainer.html(pageContainer.html());
-        if (!(load === undefined)) {
-            window[load]();
-            var checkLoading = window.setInterval(function () {
-                if (!window.loading.hasItem(load)) {
-                    $(".loading-text").remove();
-                    window.clearInterval(checkLoading);
-                }
-            }, 1000);
-        }
-        else {
-            $(".loading-text").remove();
-        }
-    });
+            contentContainer.html(pageContainer.html());
+            if (!(load === undefined)) {
+                window[load]();
+                var checkLoading = window.setInterval(function () {
+                    if (!window.loading.hasItem(load)) {
+                        $(".loading-text").remove();
+                        window.clearInterval(checkLoading);
+                    }
+                }, 1000);
+            }
+            else {
+                $(".loading-text").remove();
+            }
+        });
 }
 
 function switchPageContent(link, pageContainer, oldContentContainer, newContentContainer, funcs, url, load) {
