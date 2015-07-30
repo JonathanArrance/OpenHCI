@@ -39,7 +39,7 @@ $(function () {
     });
 
     // --- Click Events ---
-    $(document).on('click', '.instance-name a', function (event) {
+    $(document).on('click', '.instance-name button', function (event) {
         event.preventDefault();
         showInfoModal(page, $(this).data("call"));
     });

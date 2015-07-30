@@ -23,10 +23,12 @@
                     <tr id="{{ instance.server_id }}"
                         class="instance">
                         <td class="instance-name">
-                            <a href="#" data-call="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
+                            <button data-call="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
                                data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
-                               data-toggle="tooltip" data-placement="right"
-                               title="ID: {{ instance.server_id }}">{{ instance.server_name }}</a>
+                               data-toggle="tooltip" data-placement="bottom"
+                               title="ID: {{ instance.server_id }}" class="btn btn-wide btn-xs btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ instance.server_name }}
+                            </button>
                         </td>
                         <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILDING" %}bg-warning{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
                             {{ instance.status }}</td>
