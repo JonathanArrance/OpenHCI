@@ -1632,3 +1632,30 @@ def getCPUInfo():
               'cpu_model':proc[11],'cpu_stepping':proc[12],'cpu_speed':proc[13]}
 
     return r_dict
+
+
+def restart_rabbitmq():
+    """
+    DESC:   restarts rabbitmq-server service and rabbitmqctl, necessary after a hostname change
+    INPUT:  none
+    OUTPUT: none
+    ACCESS: need to have sudo privileges to run this
+    NOTE:   currently does not check for privileged access
+    """
+    # rabbitmq fixes
+    epmd_pid = subprocess.check_output(['sudo', 'pgrep', '[e]pmd']).strip()
+    subprocess.call(['sudo', 'kill', epmd_pid])
+    rabbitmq_pid = subprocess.check_output(['sudo', 'lsof', '-t', '-i', ':25672']).strip()
+    subprocess.call(['sudo', 'kill', rabbitmq_pid])
+    subprocess.call(['sudo', 'service', 'rabbitmq-server', 'restart'])
+
+    # rabbitmqctl fixes
+    d = dict(os.environ)
+    d['HOSTNAME'] = config.NODE_NAME
+    subprocess.Popen('sudo rabbitmqctl change_password guest transcirrus1', shell=True, env=d).wait()
+    subprocess.call(['sudo', 'service', 'rabbitmq-server', 'restart'])
+
+    # restart some openstack services as well
+    subprocess.call(['sudo', 'service', 'neutron-server', 'restart'])
+    subprocess.call(['sudo', 'service', 'openstack-nova-compute', 'stop'])  # a plain restart did not work in testing
+    subprocess.call(['sudo', 'service', 'openstack-nova-compute', 'start'])
