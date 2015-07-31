@@ -533,12 +533,17 @@ def project_view(request, project_id):
         project = to.get_tenant(project_id)
         pub_net_list  = no.list_external_networks()
 
-        public_networks={}
+        public_networks=[]
         for net in pub_net_list:
             try:
-                public_networks[net['net_name']]= no.get_network(net['net_id'])
+                public_networks.append(no.get_network(net['net_id'])['net_id'])
             except:
                 pass
+
+        try:
+            default_public = public_networks[0] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
+        except:
+            default_public = "NO PUBLIC NETWORK"
 
         #do not call until version2
         #try:
@@ -549,11 +554,6 @@ def project_view(request, project_id):
 
         host_dict     = {'project_id': project_id, 'zone': 'nova'}
         hosts         = saa.list_compute_hosts(host_dict)
-
-        try:
-            default_public = public_networks.values()[0]['net_id'] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
-        except:
-            default_public = "NO PUBLIC NETWORK"
 
         return render_to_response('coal/project_view.html',
                                RequestContext(request, {'project': project,
@@ -609,7 +609,6 @@ def get_project_panel(request, project_id):
             v_dict = {'volume_id': vol['volume_id'], 'project_id': project_id}
             vol['info'] = vo.get_volume_info(v_dict)
             used_storage += vol['info']['volume_size']
-            print vol
 
         snapshots = sno.list_snapshots(project_id)
         num_snaps = len(snapshots)
@@ -829,6 +828,13 @@ def get_storage_panel(request, project_id):
                                       'error': "Error: %s" % e}))
 
 
+def get_create_snapshot(request, volume_id):
+    try:
+        return render_to_response('coal/project_view_widgets/storage/create_snapshot.html', RequestContext(request, {'volume_id': volume_id}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/storage/create_snapshot.html', RequestContext(request, {'volume_id': volume_id, 'error': "Error: %s"%e}))
+
+
 def get_networking_panel(request, project_id):
     project = []
     limits = []
@@ -855,15 +861,13 @@ def get_networking_panel(request, project_id):
 
         quota = qo.get_project_quotas(project_id)
 
-
         fips = l3o.list_floating_ips(project_id)
         for fip in fips:
             if fip["floating_in_use"]:
-                try:
-                    ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
-                    fip['instance_name'] = ip_info['instance_name']
-                except Exception as e:
-                    fip['instance_name'] = e
+                ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
+                fip['instance_name'] = ip_info['instance_name']
+            else:
+                fip['instance_name'] = ''
         num_fips = len(fips)
 
         networks = no.list_internal_networks(project_id)
@@ -881,7 +885,7 @@ def get_networking_panel(request, project_id):
                        'num_nets': num_nets,
                        'num_routers': num_routers}
 
-        return render_to_response('coal/project_view_widgets/networking_panel.html',
+        return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -891,7 +895,7 @@ def get_networking_panel(request, project_id):
                                       'networks': networks,
                                       'routers': routers}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/networking_panel.html',
+        return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,

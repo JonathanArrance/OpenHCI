@@ -40,6 +40,18 @@ $(function () {
 
     // --- Click Events ---
 
+    // Project
+    $(document).on('click', '#delete-project', function (event) {
+        event.preventDefault();
+        var title = formatSpaces($(this).data("title")),
+            message = formatSpaces($(this).data("message")),
+            call = formatCall($(this).data("call")),
+            notice = formatSpaces($(this).data("notice")),
+            refresh = formatCall("redirect-to:/cloud/manage/"),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
     // Instances
     $(document).on('click', '.instance-name button', function (event) {
         event.preventDefault();
@@ -50,6 +62,30 @@ $(function () {
     $(document).on('click', '.volume-name button', function (event) {
         event.preventDefault();
         showInfoModal(page, $(this).data("call"));
+    });
+    $(document).on('click', '.create-snapshot', function(event){
+        event.preventDefault();
+        showConfirmModal('/snapshot/get/create/' + $(this).data("volume") + '/');
+    });
+
+    // Networking
+    $(document).on('click', "#allocate-ip", function (event) {
+        event.preventDefault();
+        showMessage('info', "Allocating IP.");
+
+        $.getJSON('/allocate_floating_ip/' + CURRENT_PROJECT_ID + '/' + DEFAULT_PUBLIC + '/')
+            .done(function (data) {
+                if (data.status == 'error') {
+                    showMessage('error', data.message);
+                }
+                if (data.status == 'success') {
+                    showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
+                    refreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                }
+            })
+            .fail(function () {
+                showMessage('error', 'Server Fault');
+            })
     });
 
     // --- Initialize Project View ---

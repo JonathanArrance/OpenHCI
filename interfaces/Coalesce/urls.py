@@ -125,7 +125,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.basic_project_view',
             name='basic_project_view'),
 
-        url(r'^projects/(?P<project_id>\w+)/(?P<project_name>\w+)/delete/$',
+        url(r'^projects/(?P<project_id>\w+)/(?P<project_name>[-\w]+)/delete/$',
             'coalesce.coal_beta.views.destroy_project',
             name='destroy_project'),
 
@@ -312,6 +312,14 @@ urlpatterns = patterns('',
         url(r'^snapshot/(?P<snapshot_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.snapshot_view',
             name='snapshot_view'),
+
+        url(r'^snapshot/(?P<snapshot_id>[^/]+)/view/$',
+            'coalesce.coal_beta.views.snapshot_view',
+            name='snapshot_view'),
+
+        url(r'^snapshot/get/create/(?P<volume_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_create_snapshot',
+            name='get_create_snapshot'),
 
         # --- Containers ----
         url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',

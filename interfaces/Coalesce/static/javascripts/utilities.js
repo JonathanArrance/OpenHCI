@@ -17,8 +17,13 @@ $(function () {
                 }
                 if (data.status == 'success') {
                     showMessage('success', data.message);
-                    refreshContent($("#page-content"), window.loading.current, refresh);
-                    closeModal();
+                    if (refresh.split(':')[0] == "redirect-to") {
+                        refresh = refresh.split(':')[1];
+                        window.location.replace(refresh);
+                    } else {
+                        refreshContent($("#page-content"), window.loading.current, refresh);
+                        closeModal();
+                    }
                 }
             })
             .fail(function () {
@@ -28,7 +33,9 @@ $(function () {
                 setModalButtons(true, buttons);
             });
 
-        window[async](load);
+        if (async != "undefined") {
+            window[async](load);
+        }
     });
 
     $('#refresh-console').click(function (event) {

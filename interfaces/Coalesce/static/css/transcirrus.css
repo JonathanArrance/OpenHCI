@@ -1,10 +1,13 @@
 /*
-COLORS
 
+COLORS:
+------------------------------------------------------------------
     background: rgb(43, 62, 80)
-    default: rgb(72, 85, 99) [darker] , rgb(78, 93, 108) [panel and well backgrounds]
-    light: rgb(98, 113, 128)
-    dark: rgb(63, 82, 100)
+    default: rgb(72, 85, 99) [darker]
+    default-light: rgb(78, 93, 108) [panel and well backgrounds]
+    default-dark: rgb(66, 77, 90)
+    alt-light: rgb(98, 113, 128)
+    alt-dark: rgb(63, 82, 100)
     hover: rgb(72, 85, 99) [dull]
     primary: rgb(223, 105, 26)
     success: rgb(92, 184, 92)
@@ -14,6 +17,7 @@ COLORS
     font-light: rgb(235, 235, 235)
     font-dark: rgb(43, 62, 80)
     link: rgb(223, 105, 26) [same as primary]
+------------------------------------------------------------------
 
 */
 
@@ -32,10 +36,6 @@ h3.row-header {
     margin: 0 0 10px;
 }
 
-i {
-    vertical-align: text-top;
-}
-
 .bg {
     background-color: rgb(43, 62, 80);
 }
@@ -44,8 +44,20 @@ i {
     background-color: rgb(72, 85, 99);
 }
 
-.bg-light {
+.bg-default-light {
+    background-color: rgb(78, 93, 108)
+}
+
+.bg-default-dark {
+    background-color: rgb(66, 77, 90)
+}
+
+.bg-alt-light {
     background-color: rgb(98, 113, 128)
+}
+
+.bg-alt-dark {
+    background-color: rgb(63, 82, 100)
 }
 
 .break {
@@ -70,6 +82,22 @@ i {
 
 .modal-wide {
     width: 90%;
+}
+
+.label-lg {
+    font-size: 85%;
+}
+
+.label-condensed{
+    padding: 0 0.2em 0.1em;
+}
+
+.text-top {
+    vertical-align: text-top;
+}
+
+.middle {
+    vertical-align: middle;
 }
 
 .error {
@@ -213,8 +241,9 @@ select {
 .btn-light {
     background-color: rgb(98, 113, 128);
 }
+
 .btn-light:hover {
-    background-color:  rgb(78, 93, 108);
+    background-color: rgb(78, 93, 108);
 }
 
 /* NAVIGATION */

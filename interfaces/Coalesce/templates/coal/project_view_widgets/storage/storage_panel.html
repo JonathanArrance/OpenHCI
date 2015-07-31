@@ -53,6 +53,7 @@
                                             <li><a href="#" class="detach-volume">detach</a></li>
                                         {% else %}
                                             <li><a href="#" class="attach-volume">attach</a></li>
+                                            <li><a href="#" class="create-snapshot" data-volume="{{ volume.info.volume_id }}">snapshot</a></li>
                                         {% endif %}
                                         <li><a href="#" class="clone-volume">clone</a></li>
                                         <li><a href="#" class="revert-volume">revert</a></li>
@@ -108,10 +109,9 @@
             <tr>
                 <th>Snapshot</th>
                 <th>Volume</th>
-                <th>
-                    <button id="create-snapshot" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
-                    </button>
-                </th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -119,13 +119,19 @@
                 {% for snapshot in snapshots %}
                     <tr id="{{ snapshot.image_id }}" class="snapshot">
                         <td class="snapshot-name">
-                            <a href="/snapshot/{{ snapshot.snapshot_id }}/view/">
-                            <span data-toggle="tooltip" data-placement="right"
-                                  title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</span>
-                            </a>
+                            {{ snapshot.snapshot_name }} <i class="fa fa-info-circle text-top" data-toggle="tooltip"
+                                                            data-placement="right"
+                                                            title="ID: {{ snapshot.snapshot_id }}">></i>
+
                         </td>
                         <td class="snapshot-volume center-text">
                             {{ snapshot.volume_name }}
+                        </td>
+                        <td class="snapshot-status center-text">
+                            {{ snapshot.snapshot_status }}
+                        </td>
+                        <td class="snapshot-created center-text">
+                            {{ snapshot.create_time }}
                         </td>
                         <td class="snapshot-actions">
                             <div class="btn-group actions-dropdown">
@@ -145,6 +151,8 @@
             {% else %}
                 <tr class="snapshot-placeholder text-warning">
                     <td><p><i>This project has no volume snapshots.</i></p></td>
+                    <td></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                 </tr>

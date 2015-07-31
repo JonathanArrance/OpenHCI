@@ -113,8 +113,7 @@
                 {% for image in images %}
                     <tr id="{{ image.image_id }}" class="image">
                         <td class="image-name">
-                            <span data-toggle="tooltip" data-placement="right"
-                                  title="ID: {{ image.image_id }}">{{ image.image_name }}</span>
+                            <span>{{ image.image_name }}</span>
                         </td>
                         <td class="image-actions">
                             <div class="btn-group actions-dropdown">
@@ -159,8 +158,7 @@
                 {% for flavor in flavors %}
                     <tr id="{{ flavor.id }}" class="snapshot">
                         <td class="flavor-name">
-                            <span data-toggle="tooltip" data-placement="right"
-                                  title="ID: {{ flavor.id }}">{{ flavor.name }}</span>
+                            <span>{{ flavor.name }}</span>
                         </td>
                         <td class="flavor-memory">
                             {{ flavor.info.memory }}
