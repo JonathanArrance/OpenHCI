@@ -56,3 +56,7 @@ if [ ! -f /usr/local/lib/python2.7/site-packages/IPy.py ]
 then
     pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/IPy-0.83.tar
 fi
+
+#diable selinux
+sudo setenforce 0
+sudo sed -i 's/=enforcing/=disabled/;s/=permissive/=disabled/' /etc/selinux/config
