@@ -21,8 +21,14 @@ $(function () {
                         refresh = refresh.split(':')[1];
                         window.location.replace(refresh);
                     } else {
-                        refreshContent($("#page-content"), window.loading.current, refresh);
-                        closeModal();
+                        if (async != "undefined") {
+                            closeModal();
+                            showLoader($("#page-content"));
+                            window.setTimeout(function () {
+                                removeLoaders();
+                                refreshContainer($("#page-content"), window.loading.current, refresh);
+                            }, 2000);
+                        }
                     }
                 }
             })
@@ -35,6 +41,13 @@ $(function () {
 
         if (async != "undefined") {
             window[async](load);
+        } else {
+            closeModal();
+            showLoader($("#page-content"));
+            window.setTimeout(function () {
+                removeLoaders();
+                refreshContainer($("#page-content"), window.loading.current, refresh);
+            }, 2000);
         }
     });
 
@@ -54,6 +67,7 @@ $(function () {
 function showConfirmModal(call) {
     $(".confirm-content").load(call, function () {
         $("#confirm-modal").modal('show');
+        removeLoaders();
     });
 }
 
@@ -136,6 +150,15 @@ function loadContent(pageContainer, newContentContainer, url, load) {
     }
 }
 
+function showLoader(container) {
+    var loader = $('<div class="loading-text"><h1>LOADING <i class="fa fa-cog fa-spin"></i></h1></div>');
+    container.prepend(loader);
+}
+
+function removeLoaders() {
+    $(".loading-text").remove();
+}
+
 function refreshContent(pageContainer, newContentContainer, url, load) {
     pageContainer.load(url, function () {
         newContentContainer.html(pageContainer.html());
@@ -155,24 +178,28 @@ function refreshContent(pageContainer, newContentContainer, url, load) {
 }
 
 function refreshContainer(pageContainer, contentContainer, url, load) {
-    var loader = $('<div class="loading-text"><h1>LOADING <i class="fa fa-cog fa-spin"></i></h1></div>');
-    pageContainer
-        .prepend(loader)
-        .load(url, function () {
-            contentContainer.html(pageContainer.html());
-            if (!(load === undefined)) {
-                window[load]();
-                var checkLoading = window.setInterval(function () {
-                    if (!window.loading.hasItem(load)) {
-                        $(".loading-text").remove();
-                        window.clearInterval(checkLoading);
-                    }
-                }, 1000);
-            }
-            else {
-                $(".loading-text").remove();
+    if (contentContainer.selector == window.loading.current.selector) {
+        var loader = $('<div class="loading-text"><h1>LOADING <i class="fa fa-cog fa-spin"></i></h1></div>');
+        pageContainer.prepend(loader);
+        contentContainer.load(url, function () {
+            if (contentContainer.selector == window.loading.current.selector) {
+                pageContainer.html(contentContainer.html());
+
+                if (!(load === undefined)) {
+                    window[load]();
+                    var checkLoading = window.setInterval(function () {
+                        if (!window.loading.hasItem(load)) {
+                            $(".loading-text").remove();
+                            window.clearInterval(checkLoading);
+                        }
+                    }, 1000);
+                }
+                else {
+                    $(".loading-text").remove();
+                }
             }
         });
+    }
 }
 
 function switchPageContent(link, pageContainer, oldContentContainer, newContentContainer, funcs, url, load) {

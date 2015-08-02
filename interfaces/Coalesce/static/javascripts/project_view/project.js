@@ -58,11 +58,29 @@ $(function () {
         showInfoModal(page, $(this).data("call"));
     });
 
+    $(document).on('click', '#create-instance', function(event){
+        event.preventDefault();
+        showLoader(page);
+        showConfirmModal('/instance/get/create/' + CURRENT_PROJECT_ID + '/');
+    });
+
+    $(document).on('click', '.delete-instance, .pause-instance, .unpause-instance, .suspend-instance, .resume-instance', function (event) {
+        event.preventDefault();
+        var title = formatSpaces($(this).data("title")),
+            message = formatSpaces($(this).data("message")),
+            call = formatCall($(this).data("call")),
+            notice = formatSpaces($(this).data("notice")),
+            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/"),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
     // Storage
     $(document).on('click', '.volume-name button', function (event) {
         event.preventDefault();
         showInfoModal(page, $(this).data("call"));
     });
+
     $(document).on('click', '.create-snapshot', function(event){
         event.preventDefault();
         showConfirmModal('/snapshot/get/create/' + $(this).data("volume") + '/');
@@ -93,6 +111,10 @@ $(function () {
     switchPageContent($("#project"), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
     $("#project").addClass('active');
 });
+
+window.deleteTimer = function(){
+  window.setInterval(function(){}, 1000)
+};
 
 // --- Project Charts ---
 

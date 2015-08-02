@@ -16,10 +16,20 @@ COLORS:
     danger: rgb(217, 83, 79)
     font-light: rgb(235, 235, 235)
     font-dark: rgb(43, 62, 80)
+    disabled:
     link: rgb(223, 105, 26) [same as primary]
 ------------------------------------------------------------------
 
 */
+
+@keyframes progress-bar-stripes {
+    0% {
+        background-position: 40px 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
 
 /* GENERAL */
 
@@ -34,6 +44,17 @@ section {
 
 h3.row-header {
     margin: 0 0 10px;
+}
+
+input[disabled],
+select[disabled] {
+    background-color: rgb(205, 205, 205);
+    cursor: not-allowed;
+}
+
+hr.narrow {
+    margin-bottom: 10px;
+    margin-top: 0;
 }
 
 .bg {
@@ -58,6 +79,15 @@ h3.row-header {
 
 .bg-alt-dark {
     background-color: rgb(63, 82, 100)
+}
+
+.bg-active {
+    animation: 2s linear 0s normal none infinite running progress-bar-stripes;
+}
+
+.bg-striped {
+    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0));
+    background-size: 40px 40px;
 }
 
 .break {
@@ -88,7 +118,7 @@ h3.row-header {
     font-size: 85%;
 }
 
-.label-condensed{
+.label-condensed {
     padding: 0 0.2em 0.1em;
 }
 
@@ -147,7 +177,7 @@ h3.row-header {
     color: rgb(235, 235, 235);
     background: rgb(63, 82, 100);
     border: solid 1px rgb(63, 82, 100);
-    word-break: break-all;
+    word-break: normal;
 }
 
 .tooltip.top .tooltip-arrow {

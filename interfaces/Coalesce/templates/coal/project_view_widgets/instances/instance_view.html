@@ -1,7 +1,7 @@
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
-
+<script>console.log("{{ instance }}")</script>
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -64,32 +64,32 @@
                 </tr>
                 <tr>
                     <td>OS</td>
-                    <td class="center-text">{{ instance.server_os }}</td>
+                    <td class="center-text">{{ instance.info.server_os }}</td>
                 </tr>
                 <tr>
                     <td>Flavor</td>
-                    <td class="center-text">{{ instance.server_flavor }}</td>
+                    <td class="center-text">{{ instance.info.server_flavor }}</td>
                 </tr>
                 <tr>
                     <td>Key Name</td>
-                    <td class="center-text">{{ instance.server_key_name }}</td>
+                    <td class="center-text">{{ instance.info.server_key_name }}</td>
                 </tr>
                 <tr>
                     <td>Group Name</td>
-                    <td class="center-text">{{ instance.server_group_name }}</td>
+                    <td class="center-text">{{ instance.info.server_group_name }}</td>
                 </tr>
                 <tr>
                     <td>Public IP</td>
-                    <td class="center-text">{{ instance.server_public_ips }}</td>
+                    <td class="center-text">{{ instance.info.server_public_ips }}</td>
                 </tr>
                 <tr>
                     <td>Network ID</td>
-                    <td class="center-text">{{ instance.server_net_id }}</td>
+                    <td class="center-text">{{ instance.info.server_net_id }}</td>
                 </tr>
                 <tr>
                     <td>Internal Networks</td>
                     <td class="center-text">
-                        {% for k,v in instance.server_int_net.items %}
+                        {% for k,v in instance.info.server_int_net.items %}
                             <span>{{ k }}: </span>
                             {% for i in v %}
                                 <span>{{ i.addr }}</span>
@@ -187,9 +187,9 @@
     var INSTANCE_ID = "{{server.server_id}}",
             INSTANCE = "{{server.server_name}}",
             ATTACHED_IP = "{{server.server_public_ips}}";
-    $(".close").click(function () {
-        refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
-    });
+{#    $(".close").click(function () {#}
+{#        refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")#}
+{#    });#}
 </script>
 
 {#<div id="instance-view-resize-dialog-form" title="Resize server?">#}

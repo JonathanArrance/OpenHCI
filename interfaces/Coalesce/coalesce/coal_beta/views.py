@@ -556,15 +556,15 @@ def project_view(request, project_id):
         hosts         = saa.list_compute_hosts(host_dict)
 
         return render_to_response('coal/project_view.html',
-                               RequestContext(request, {'project': project,
-                                                        'default_public': default_public,
-                                                        'hosts': hosts}))
+                                  RequestContext(request, {'project': project,
+                                                           'default_public': default_public,
+                                                           'hosts': hosts}))
     except Exception as e:
         return render_to_response('coal/project_view.html',
-                               RequestContext(request, {'project': project,
-                                                        'default_public': default_public,
-                                                        'hosts': hosts,
-                                                        'error': "Error: %s"%e}))
+                                  RequestContext(request, {'project': project,
+                                                           'default_public': default_public,
+                                                           'hosts': hosts,
+                                                           'error': "Error: %s" % e}))
 
 def get_project_panel(request, project_id):
     project = []
@@ -754,6 +754,79 @@ def get_instance_panel(request, project_id):
                                       'flavors': flavors,
                                       'error': "Error: %s" % e}))
 
+def get_instance_create(request, project_id):
+    quota = []
+    images = []
+    flavors = []
+    networks = []
+    sec_groups = []
+    sec_keys = []
+    used_storage = 0
+    volume_types = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        qo = quota_ops(auth)
+        go = glance_ops(auth)
+        fo = flavor_ops(auth)
+        no = neutron_net_ops(auth)
+        so = server_ops(auth)
+        vo = volume_ops(auth)
+
+        project = to.get_tenant(project_id)
+        quota = qo.get_project_quotas(project_id)
+        images = go.list_images()
+
+        flavors = fo.list_flavors()
+        for flavor in flavors:
+            f_info = fo.get_flavor(flavor['id'])
+            flavor['info'] = {
+                'name': f_info['flavor_name'],
+                'id': f_info['flav_id'],
+                'memory': f_info['memory(MB)'],
+                'disk_space': f_info['disk_space(GB)'],
+                'ephemeral': f_info['ephemeral(GB)'],
+                'swap': f_info['swap(GB)'],
+                'cpus': f_info['cpus'],
+                'link': f_info['link'],
+                'metadata': f_info['metadata']}
+
+        networks = no.list_internal_networks(project_id)
+
+        sec_groups = so.list_sec_group(project_id)
+        if sec_groups == []:
+            sec_groups.append(project['def_security_group_id'])
+
+        sec_keys = so.list_sec_keys(project_id)
+        if sec_keys == []:
+            sec_keys.append(project['def_security_key_id'])
+
+        volumes = vo.list_volumes(project_id)
+        used_storage = 0
+        for volume in volumes:
+            v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
+            volume['info'] = vo.get_volume_info(v_dict)
+            used_storage += volume['info']['volume_size']
+        volume_types = vo.list_volume_types()
+
+        return render_to_response('coal/project_view_widgets/instances/instance_create.html', RequestContext(request, {'quota': quota,
+                                                                                                                       'images': images,
+                                                                                                                     'flavors': flavors,
+                                                                                                                     'networks': networks,
+                                                                                                                     'groups': sec_groups,
+                                                                                                                     'keys': sec_keys,
+                                                                                                                     'used_storage': used_storage,
+                                                                                                                     'volume_types': volume_types}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/instance_create.html', RequestContext(request, {'quota': quota,
+                                                                                                                       'images': images,
+                                                                                                                     'flavors': flavors,
+                                                                                                                     'networks': networks,
+                                                                                                                     'groups': sec_groups,
+                                                                                                                     'keys': sec_keys,
+                                                                                                                     'used_storage': used_storage,
+                                                                                                                     'volume_types': volume_types,
+                                                                                                                     'error': "Error: %s"%e}))
 
 def get_storage_panel(request, project_id):
     project = []
@@ -800,8 +873,6 @@ def get_storage_panel(request, project_id):
         snapshots = sno.list_snapshots(project_id)
         num_snaps = len(snapshots)
 
-        volume_types = vo.list_volume_types()
-
         tenant_info = {'num_vols': num_vols,
                        'num_snaps': num_snaps,
                        'used_storage': used_storage}
@@ -828,11 +899,11 @@ def get_storage_panel(request, project_id):
                                       'error': "Error: %s" % e}))
 
 
-def get_create_snapshot(request, volume_id):
+def get_snapshot_create(request, volume_id):
     try:
-        return render_to_response('coal/project_view_widgets/storage/create_snapshot.html', RequestContext(request, {'volume_id': volume_id}))
+        return render_to_response('coal/project_view_widgets/storage/snapshot_create.html', RequestContext(request, {'volume_id': volume_id}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/storage/create_snapshot.html', RequestContext(request, {'volume_id': volume_id, 'error': "Error: %s"%e}))
+        return render_to_response('coal/project_view_widgets/storage/snapshot_create.html', RequestContext(request, {'volume_id': volume_id, 'error': "Error: %s"%e}))
 
 
 def get_networking_panel(request, project_id):

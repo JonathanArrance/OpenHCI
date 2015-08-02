@@ -2,10 +2,10 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-<h3 class="row-header">Instances</h3>
-
 <div class="row-fluid">
-    <div class="col-sm-6">
+    <h3 class="row-header col-sm-12">Instances</h3>
+
+    <div class="col-sm-6" data-toggle="table" data-height="200">
         <table class="table table-striped table-hover table-responsive table-bordered">
             <thead>
             <tr class="bg-primary">
@@ -24,13 +24,14 @@
                         class="instance">
                         <td class="instance-name">
                             <button data-call="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
-                               data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
-                               data-toggle="tooltip" data-placement="bottom"
-                               title="ID: {{ instance.server_id }}" class="btn btn-wide btn-xs btn-social btn-light">
+                                    data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ instance.server_id }}"
+                                    class="btn btn-wide btn-xs btn-social btn-light">
                                 <i class="fa fa-info-circle"></i>{{ instance.server_name }}
                             </button>
                         </td>
-                        <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILDING" %}bg-warning{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
+                        <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILD" %}bg-warning {% if instance.status == "BUILD" %}bg-active bg-striped{% endif %}{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
                             {{ instance.status }}</td>
                         <td class="instance-actions">
                             <div class="btn-group actions-dropdown">
@@ -43,21 +44,35 @@
                                     {% if instance.status == "ACTIVE" %}
                                         <li>
                                             <a href="#"
-                                               onClick="window.open({{ instance.info.novnc_console }},'', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
+                                               onClick="window.open('{{ instance.info.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
                                                 console</a>
                                         </li>
-                                        <li><a href="#" class="pause-instance">pause</a></li>
-                                        <li><a href="#" class="suspend-instance">suspend</a></li>
-                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                        <li><a href="#" class="pause-instance" data-title="Pause Instance"
+                                               data-message="Pause {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
+                                               data-notice="Pausing Instance {{ instance.server_name }}">pause</a></li>
+                                        <li><a href="#" class="suspend-instance" data-title="Suspend Instance"
+                                               data-message="Suspend {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
+                                               data-notice="Suspending Instance {{ instance.server_name }}">suspend</a>
+                                        </li>
                                     {% elif instance.status == "PAUSED" %}
-                                        <li><a href="#" class="unpause-instance">unpause</a></li>
-                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                        <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
+                                               data-message="Unpause {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
+                                               data-notice="Unpausing Instance {{ instance.server_name }}">unpause</a>
+                                        </li>
                                     {% elif instance.status == "SUSPENDED" %}
-                                        <li><a href="#" class="resume-instance">resume</a></li>
-                                        <li><a href="#" class="delete-instance">delete</a></li>
-                                    {% else %}
-                                        <li><a href="#" class="delete-instance">delete</a></li>
+                                        <li><a href="#" class="resume-instance" data-title="Resume Instance"
+                                               data-message="Resume {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
+                                               data-notice="Resuming Instance {{ instance.server_name }}">resume</a>
+                                        </li>
                                     {% endif %}
+                                    <li><a href="#" class="delete-instance" data-title="Delete Instance"
+                                           data-message="Delete {{ instance.server_name }}"
+                                           data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
+                                           data-notice="Deleting Instance {{ instance.server_name }}">delete</a></li>
                                 </ul>
                             </div>
                         </td>
@@ -92,11 +107,8 @@
             </div>
         </div>
     </div>
-</div>
+    <h3 class="row-header col-sm-12">Images and Instance Settings</h3>
 
-<h3 class="row-header">Images and Flavors</h3>
-
-<div class="row-fluid">
     <div class="col-sm-6">
         <table class="table table-striped table-hover table-responsive table-bordered">
             <thead class="bg-primary">
@@ -143,7 +155,7 @@
         <table class="table table-striped table-hover table-responsive table-bordered">
             <thead class="bg-primary">
             <tr>
-                <th>Flavor</th>
+                <th>Setting</th>
                 <th>Memory (mb)</th>
                 <th>Space (gb)</th>
                 <th>CPUs</th>
@@ -156,7 +168,7 @@
             <tbody>
             {% if flavors %}
                 {% for flavor in flavors %}
-                    <tr id="{{ flavor.id }}" class="snapshot">
+                    <tr id="{{ flavor.id }}" class="flavor">
                         <td class="flavor-name">
                             <span>{{ flavor.name }}</span>
                         </td>
@@ -187,7 +199,7 @@
                 {% endfor %}
             {% else %}
                 <tr class="flavor-placeholder text-warning">
-                    <td><p><i>This project has no flavors.</i></p></td>
+                    <td><p><i>This project has no settings.</i></p></td>
                     <td></td>
                     <td></td>
                     <td></td>

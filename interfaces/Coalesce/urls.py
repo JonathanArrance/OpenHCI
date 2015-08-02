@@ -214,6 +214,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.delete_instance_snapshot',
             name='delete_instance_snapshot'),
 
+        url(r'^instance/get/create/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_instance_create',
+            name='get_instance_create'),
+
         # --- Images ----
         url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
             'coalesce.coal_beta.views.import_local',
@@ -318,8 +322,8 @@ urlpatterns = patterns('',
             name='snapshot_view'),
 
         url(r'^snapshot/get/create/(?P<volume_id>[^/]+)/$',
-            'coalesce.coal_beta.views.get_create_snapshot',
-            name='get_create_snapshot'),
+            'coalesce.coal_beta.views.get_snapshot_create',
+            name='get_snapshot_create'),
 
         # --- Containers ----
         url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',
