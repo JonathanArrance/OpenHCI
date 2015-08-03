@@ -40,7 +40,7 @@
                 <tr>
                     <td>Settings</td>
                     <td class="center-text">{{ instance.server_flavor }}
-                        <button id="update" type="button" class="btn btn-xs btn-info" data-toggle="popover"
+                        <button type="button" class="btn btn-xs btn-info update" data-toggle="popover"
                                 title="Update Settings" data-html="true"
                                 data-content="Loading <i class='fa fa-cog fa-spin'></i>"
                                 data-placement="bottom">
@@ -84,8 +84,10 @@
                                 <i class="fa fa-desktop"></i> console
                             </button>
                             {% if snapshots %}
-                                <button type="button" class="btn btn-xs btn-info revert-instance">
-                                    <i class="fa fa-fast-backward"></i> revert
+                                <button type="button" class="btn btn-xs btn-info revert-instance"
+                                        data-toggle="popover" title="Revert Instance" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="bottom"><i class="fa fa-fast-backward"></i> revert
                                 </button>
                             {% endif %}
                             <button type="button" class="btn btn-xs btn-warning pause-instance"
@@ -259,7 +261,7 @@
 
         $('[data-toggle="popover"]').popover();
 
-        $("#update").click(function (event) {
+        $(".update").click(function (event) {
             event.preventDefault();
             $(".popover-content").load("/instance/get/resize/");
         });
@@ -267,6 +269,11 @@
         $(".create-instance-snapshot").click(function (event) {
             event.preventDefault();
             $(".popover-content").load("/instance/get/create_snapshot/");
+        });
+
+        $(".revert-instance").click(function (event) {
+            event.preventDefault();
+            $(".popover-content").load("/instance/get/revert/" + INSTANCE_ID + "/");
         });
 
         $(document).on('click', '.delete-snapshot', function (event) {
@@ -320,6 +327,7 @@
         });
 
         $(".close").click(function () {
+            window.clearInterval(window.instanceViewTimer);
             window.loading.current = $("#instances-container");
             if (window.loading.loadFromView == true) {
                 refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
@@ -328,23 +336,6 @@
     });
 </script>
 
-{#<div id="instance-snapshot-dialog-form" title="Snapshot an instance">#}
-{#    <p class="validateTips">Specify name and description. </p>#}
-{##}
-{#    <form>#}
-{#        {% csrf_token %}#}
-{#        <fieldset>#}
-{#            <label for="instance_snap_name">Snapshot Name</label>#}
-{#            <input type="text" name="instance_snap_name" id="instance_snap_name"#}
-{#                   class="text ui-widget-content ui-corner-all" placeholder="Optional"/>#}
-{#            <label for="instance_snap_desc">Description</label>#}
-{#            <textarea name="instance_snap_desc" id="instance_snap_desc" class="text ui-widget-content ui-corner-all"#}
-{#                      maxlength="80" placeholder="enter a description for the snapshot (optional)"#}
-{#                      rows="2"></textarea>#}
-{#        </fieldset>#}
-{#    </form>#}
-{#</div>#}
-{##}
 {#<div id="instance-revert-form" title="Revert Instance">#}
 {#    <p class="validateTips">Revert <span class="instance-name"></span> from snapshot.</p>#}
 {##}

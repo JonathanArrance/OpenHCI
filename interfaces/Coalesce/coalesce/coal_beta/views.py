@@ -666,7 +666,6 @@ def get_instance_panel(request, project_id):
         al = absolute_limits_ops(auth)
         qo = quota_ops(auth)
         so = server_ops(auth)
-        sa = server_actions(auth)
         go = glance_ops(auth)
         l3 = layer_three_ops(auth)
         fo = flavor_ops(auth)
@@ -687,19 +686,10 @@ def get_instance_panel(request, project_id):
             try:
                 i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
                 i_info = so.get_server(i_dict)
-                try:
-                    i_snaps = sa.list_instance_snaps(instance['server_id'])
-                    i_info['snapshots'] = i_snaps
-                    for snap in i_snaps:
-                        snapshots.append(snap)
-                except:
-                    pass
                 instance['info'] = i_info
             except Exception as e:
                 sys.exc_clear()
                 instance['info'] = e
-
-        num_snaps = len(snapshots)
 
         images = go.list_images()
         for image in images:
@@ -727,9 +717,7 @@ def get_instance_panel(request, project_id):
                 'link': f_info['link'],
                 'metadata': f_info['metadata']}
 
-        tenant_info = {'num_instances': num_instances,
-                       'num_snaps': num_snaps,
-                       'num_fips': num_fips}
+        tenant_info = {'num_instances': num_instances, 'num_fips': num_fips}
 
         return render_to_response('coal/project_view_widgets/instances/instance_panel.html',
                                   RequestContext(request, {
@@ -738,7 +726,6 @@ def get_instance_panel(request, project_id):
                                       'limits': limits,
                                       'tenant_info': tenant_info,
                                       'instances': instances,
-                                      'snapshots': snapshots,
                                       'images': images,
                                       'flavors': flavors}))
     except Exception as e:
@@ -749,7 +736,6 @@ def get_instance_panel(request, project_id):
                                       'limits': limits,
                                       'tenant_info': tenant_info,
                                       'instances': instances,
-                                      'snapshots': snapshots,
                                       'images': images,
                                       'flavors': flavors,
                                       'error': "Error: %s" % e}))
@@ -858,6 +844,16 @@ def get_instance_create_snapshot(request):
         return render_to_response('coal/project_view_widgets/instances/instance_create_snapshot.html', RequestContext(request))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instances/instance_create_snapshot.html', RequestContext(request, {'error': "Error: %s"%e}))
+
+def get_instance_revert(request, server_id):
+    snapshots = []
+    try:
+        auth = request.session['auth']
+        sa = server_actions(auth)
+        snapshots = sa.list_instance_snaps(server_id)
+        return render_to_response('coal/project_view_widgets/instances/instance_revert.html', RequestContext(request, {'snapshots': snapshots}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/instance_revert.html', RequestContext(request, {'snapshots': snapshots, 'error': "Error: %s"%e}))
 
 def get_storage_panel(request, project_id):
     project = []

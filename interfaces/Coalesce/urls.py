@@ -226,6 +226,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_instance_create_snapshot',
             name='get_instance_create_snapshot'),
 
+        url(r'^instance/get/revert/(?P<server_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_instance_revert',
+            name='get_instance_revert'),
+
         # --- Images ----
         url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
             'coalesce.coal_beta.views.import_local',

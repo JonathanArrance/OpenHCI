@@ -48,11 +48,11 @@
                             showMessage('error', "Server Fault");
                         })
                         .always(function () {
-                            $("#update").removeClass("bg-active bg-striped").removeProp("disabled");
+                            $(".update").removeClass("bg-active bg-striped").removeProp("disabled");
                         });
 
                 $(".popover").popover('hide');
-                $("#update").addClass("bg-active bg-striped").prop("disabled", "disabled");
+                $(".update").addClass("bg-active bg-striped").prop("disabled", "disabled");
             }
         });
     });

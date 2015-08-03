@@ -47,9 +47,6 @@
                                                onClick="window.open('{{ instance.info.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
                                                 <i class="fa fa-desktop"></i> console</a>
                                         </li>
-                                        {% if instance.info.snapshots %}
-                                            <li><a href="#"><i class="fa fa-fast-backward"></i> Revert</a></li>
-                                        {% endif %}
                                         <li><a href="#" class="pause-instance" data-title="Pause Instance"
                                                data-message="Pause {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
