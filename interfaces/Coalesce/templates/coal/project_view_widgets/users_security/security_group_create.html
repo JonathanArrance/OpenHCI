@@ -23,7 +23,7 @@
                     <div class="form-group col-sm-12">
                         <label for="group-desc" class="col-sm-4 control-label">Description:</label>
                         <textarea name="groupDesc" id="group-desc" placeholder="Optional Description" maxlength="80"
-                               rows="3" class="col-sm-8"></textarea>
+                                  rows="3" class="col-sm-8"></textarea>
                     </div>
                     <h4>group Options</h4>
                     <hr class="narrow">
@@ -35,7 +35,7 @@
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
-                        <label for="group-ports" class="col-sm-4 control-label">Name:</label>
+                        <label for="group-ports" class="col-sm-4 control-label">Ports:</label>
                         <input type="text" name="groupPorts" id="group-ports" placeholder="Security Group Ports"
                                class="col-sm-8" value="443,80,22">
                     </div>
@@ -74,34 +74,40 @@
                     required: true
                 },
                 groupPorts: {
-                    required: true,
-                    ports: true
+                    required: true
                 }
             },
             submitHandler: function () {
-                showMessage('info', "Creating new group");
-                var url = '/create_security_group/' + $("#group-name").val() + '/' + ($("#group-desc").val() == "" ? "none" : $("#group-desc").val()) + '/' + $("#group-ports").val() + '/' + $("#group-transport").val() + '/' + CURRENT_PROJECT_ID + '/';
+                var isValid = true;
+                $($("#group-ports").val().split(',')).each(function (index, element) {
+                    if (!parseInt(element).between(1, 65535))
+                        isValid = false;
+                });
+                if (isValid) {
+                    showMessage('info', "Creating new group");
+                    var url = '/create_security_group/' + $("#group-name").val() + '/' + ($("#group-desc").val() == "" ? "none" : $("#group-desc").val()) + '/' + $("#group-ports").val() + '/' + $("#group-transport").val() + '/' + CURRENT_PROJECT_ID + '/';
 
-                $.getJSON(url)
-                        .done(function (data) {
-                            if (data.status == 'error')
-                                showMessage('error', data.message);
-                            if (data.status == 'success')
-                                showMessage('success', data.message);
-                        })
-                        .fail(function () {
-                            showMessage('error', 'Server Fault');
-                        })
-                        .always(function () {
-                            refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
-                        });
+                    $.getJSON(url)
+                            .done(function (data) {
+                                if (data.status == 'error')
+                                    showMessage('error', data.message);
+                                if (data.status == 'success')
+                                    showMessage('success', data.message);
+                            })
+                            .fail(function () {
+                                showMessage('error', 'Server Fault');
+                            })
+                            .always(function () {
+                                refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
+                            });
 
-                closeModal();
-                showLoader(page);
-                window.setTimeout(function () {
-                    removeLoaders();
-                    refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
-                }, 2000);
+                    closeModal();
+                    showLoader(page);
+                    window.setTimeout(function () {
+                        removeLoaders();
+                        refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
+                    }, 2000);
+                }
             },
             invalidHandler: function (event, validator) {
                 var errors = validator.numberOfInvalids();
@@ -115,14 +121,23 @@
         });
         $("#group-form input, #group-form select").change(function () {
             if ($("#group-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
+                var isValid = true;
+                $($("#group-ports").val().split(',')).each(function (index, element) {
+                    if (!parseInt(element).between(1, 65535)) {
+                        isValid = false;
+                    }
+                });
+                if (isValid)
+                    $('button[type=submit]').removeProp("disabled");
+                else
+                    $('button[type=submit]').prop("disabled", true);
+
             } else {
                 $('button[type=submit]').prop("disabled", true);
             }
         });
     });
 </script>
-
 
 
 <!--<form>-->

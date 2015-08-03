@@ -15,6 +15,10 @@ String.prototype.jsonify = function () {
     return n;
 };
 
+Number.prototype.between = function (min, max) {
+    return this > min && this < max;
+};
+
 $.validator.setDefaults({
     errorElement: "span",
     errorClass: "help-block",

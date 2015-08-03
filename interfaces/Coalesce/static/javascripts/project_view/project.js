@@ -166,7 +166,7 @@ $(function () {
         showConfirmModal('/key_pair/get/create/');
     });
 
-    $(document).on('click', '.delete-key', function (event) {
+    $(document).on('click', '.delete-group, .delete-key', function (event) {
         event.preventDefault();
         var title = encodeString($(this).data("title")),
             message = encodeString($(this).data("message")),
