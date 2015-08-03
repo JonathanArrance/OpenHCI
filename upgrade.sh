@@ -87,3 +87,7 @@ for svc in $CEILO_SVCS
 do
     /sbin/service openstack-ceilometer-$svc restart
 done
+
+#diable selinux
+sudo setenforce 0
+sudo sed -i 's/=enforcing/=disabled/;s/=permissive/=disabled/' /etc/selinux/config
