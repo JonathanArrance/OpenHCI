@@ -147,7 +147,7 @@
                 var isValid = $("#instance-boot").val() == "volume" ? ($("#instance-form").valid() && $("#boot-form").valid()) : ($("#instance-form").valid());
                 if (isValid) {
                     setModalButtons(false, buttons);
-                    showMessage('info', "Creating new instance ...");
+                    showMessage('info', "Creating new instance");
 
                     var url =
                             '/create_instance/' +

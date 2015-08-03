@@ -23,11 +23,16 @@
                 {% for user in users %}
                     <tr id="{{ user.info.user_id }}" class="user">
                         <td class="user-name">
-                            <a href="/projects/{{ project.project_name }}/{{ project.project_id }}/user/{{ user.username }}/view/"
-                               data-toggle="tooltip" data-placement="right" title="ID: {{ user.info.user_id }}">
-                                {{ user.info.username }}</a>
-                            <span> </span>
-                            <a href="mailto:{{ user.info.email }}">[{{ user.info.email }}]</a>
+                            <button data-call="/projects/{{ project.project_name }}/{{ project.project_id }}/user/{{ user.username }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ user.info.user_id }}"
+                                    class="btn btn-xs btn-6 btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ user.info.username }}
+                            </button>
+                            <a href="mailto:{{ user.info.email }}" class="btn btn-xs btn-6 btn-social btn-warning">
+                                <i class="fa fa-envelope text-top"></i> {{ user.info.email }}
+                            </a>
                         </td>
                         <td class="user-role">
                             {{ user.info.user_role }}
@@ -48,12 +53,12 @@
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
                                     {% if user.info.user_enabled == "TRUE" %}
-                                        <li><a href="#" class="disable-user">disable</a></li>
+                                        <li><a href="#" class="disable-user"><i class="fa fa-user-times"></i> disable</a></li>
                                     {% else %}
-                                        <li><a href="#" class="enable-user">enable</a></li>
+                                        <li><a href="#" class="enable-user"><i class="fa fa-user-plus"></i> enable</a></li>
                                     {% endif %}
-                                    <li><a href="#" class="remove-user">remove</a></li>
-                                    <li><a href="#" class="delete-user"> delete</a></li>
+                                    <li><a href="#" class="remove-user"><i class="fa fa-users"></i> remove</a></li>
+                                    <li class="bg-danger"><a href="#" class="delete-user"><i class="fa fa-trash-o"></i> delete</a></li>
                                 </ul>
                             </div>
                         </td>
@@ -114,7 +119,7 @@
                 <th>Security Group</th>
                 <th>Owner</th>
                 <th>
-                    <button id="create-group" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button class="btn btn-xs btn-success pull-right create-group"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
@@ -124,10 +129,13 @@
                 {% for group in groups %}
                     <tr id="{{ group.sec_group_id }}" class="group">
                         <td class="group-name">
-                            <a href="/security_group/{{ group.sec_group_id }}/{{ group.project_id }}/view/"
-                               data-toggle="tooltip" data-placement="right"
-                               title="ID: {{ group.sec_group_id }}">{{ group.sec_group_name }}
-                            </a>
+                            <button data-call="/security_group/{{ group.sec_group_id }}/{{ group.project_id }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ group.sec_group_id }}"
+                                    class="btn btn-xs btn-12 btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ group.sec_group_name }}
+                            </button>
                         </td>
                         <td class="group-owner">
                             {{ group.username }}
@@ -140,8 +148,9 @@
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
-                                    <li><a href="#" class="delete-group">delete</a></li>
-                                    <li><a href="#" class="update-group">update</a></li>
+                                    <!--<li><a href="#" class="update-group"><i class="fa fa-cog"></i> update</a></li>-->
+                                    <li class="bg-danger"><a href="#" class="delete-group"><i class="fa fa-trash-o"></i> delete</a>
+                                    </li>
                                 </ul>
                             </div>
                         </td>
@@ -164,7 +173,7 @@
                 <th>Security Key</th>
                 <th>Owner</th>
                 <th>
-                    <button id="create-key" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button class="btn btn-xs btn-success pull-right create-key"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
@@ -174,25 +183,24 @@
                 {% for key in keys %}
                     <tr id="{{ key.key_id }}" class="key">
                         <td class="key-name">
-                            <a href="/key_pair/{{ key.key_id }}/{{ project.project_id }}/view/"
-                               data-toggle="tooltip" data-placement="right"
-                               title="ID: {{ key.key_id }}">{{ key.key_name }}
-                            </a>
+                            <button data-call="/key_pair/{{ key.key_id }}/{{ project.project_id }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ key.key_id }}"
+                                    class="btn btn-xs btn-12 btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ key.key_name }}
+                            </button>
                         </td>
                         <td class="key-owner">
                             <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
                         </td>
                         <td class="key-actions">
-                            <div class="btn-group actions-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                   aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
-                                    <li><a href="#" class="delete-key">delete</a></li>
-                                </ul>
-                            </div>
+                            <button type='button' class="delete-key btn btn-xs btn-danger pull-right"
+                                    data-title="Delete Security Key" data-message="Delete {{ key.key_name }}?"
+                                    data-call="/key_pair/{{ key.key_name }}/{{ project.project_id }}/delete/"
+                                    data-notice="Deleting Security Key {{ key.key_name }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}

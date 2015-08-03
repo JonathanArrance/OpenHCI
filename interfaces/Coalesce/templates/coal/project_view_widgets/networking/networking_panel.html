@@ -52,7 +52,13 @@
                                         <li><a href="#" class="unassign-ip">unassign</a></li>
                                     {% else %}
                                         <li><a href="#" class="assign-ip">assign</a></li>
-                                        <li><a href="#" class="deallocate-ip">deallocate</a></li>
+                                        <li class="bg-danger"><a href="#" class="deallocate-ip"
+                                                                 data-title="Deallocate Floating IP Address"
+                                                                 data-message="Deallocate {{ fip.floating_ip }}?"
+                                                                 data-call="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/"
+                                                                 data-notice="Deallocating {{ fip.floating_ip }}">
+                                            <i class="fa fa-trash-o"></i> deallocate</a>
+                                        </li>
                                     {% endif %}
                                 </ul>
                             </div>
@@ -96,11 +102,11 @@
                 <th>Network</th>
                 <th>
                     <span class="label label-info label-lg label-condensed middle">Shared</span>
-                     /
+                    /
                     <span class="label label-success label-lg label-condensed middle">Admin State</span></th>
                 <th>Subnets</th>
                 <th>
-                    <button id="create-network" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button class="btn btn-xs btn-success pull-right create-network"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
@@ -110,10 +116,13 @@
                 {% for network in networks %}
                     <tr id="{{ network.info.net_id }}" class="network">
                         <td class="network-name">
-                            <a href="/network/{{ network.info.net_id }}/view/"
-                               data-toggle="tooltip" data-placement="right"
-                               title="ID: {{ network.info.net_id }}">{{ network.info.net_name }}
-                            </a>
+                            <button data-call="/network/{{ network.info.net_id }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_networking_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ network.info.net_id }}"
+                                    class="btn btn-12 btn-xs btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ network.info.net_name }}
+                            </button>
                         </td>
                         <td class="network-shared-admin">
                             <span>
@@ -128,16 +137,13 @@
                             {% endfor %}
                         </td>
                         <td class="network-actions">
-                            <div class="btn-group actions-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                   aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
-                                    <li><a href="#" class="delete-network">delete</a></li>
-                                </ul>
-                            </div>
+                            <button type='button' class="btn btn-xs btn-danger pull-right delete-network"
+                                    data-title="Delete Private Network"
+                                    data-message="Delete {{ network.info.net_name }}?"
+                                    data-call="/delete_private_network/{{ project.project_id }}/{{ network.info.net_id }}/"
+                                    data-notice="Deleting Private Network {{ network.info.net_name }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -159,8 +165,10 @@
                 <th>Router</th>
                 <th>Status</th>
                 <th>
-                    <button id="create-router" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
-                    </button>
+                    {% if open_networks %}
+                        <button class="btn btn-xs btn-success pull-right create-router"><i class="fa fa-plus"></i>
+                        </button>
+                    {% endif %}
                 </th>
             </tr>
             </thead>
@@ -169,25 +177,24 @@
                 {% for router in routers %}
                     <tr id="{{ router.router_id }}" class="router">
                         <td class="router-name">
-                            <a href="/router/{{ router.router_id }}/view/"
-                               data-toggle="tooltip" data-placement="right"
-                               title="ID: {{ router.router_id }}">{{ router.router_name }}
-                            </a>
+                            <button data-call="/router/{{ router.router_id }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_networking_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ router.router_id }}"
+                                    class="btn btn-12 btn-xs btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ router.router_name }}
+                            </button>
                         </td>
                         <td class="router-status center-text {% if router.router_status == "ACTIVE" %}bg-success{% elif router.router_status == "ERROR" %}bg-danger{% else %}bg-warning{% endif %}">
                             {{ router.router_status }}
                         </td>
                         <td class="router-actions">
-                            <div class="btn-group actions-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                   aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
-                                    <li><a href="#" class="delete-router">delete</a></li>
-                                </ul>
-                            </div>
+                            <button type='button' class="btn btn-xs btn-danger pull-right delete-router"
+                                    data-title="Delete Router" data-message="Delete {{ router.router_name }}?"
+                                    data-call="/delete_router/{{ project.project_id }}/{{ router.router_id }}/"
+                                    data-notice="Deleting Router {{ router.router_name }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}

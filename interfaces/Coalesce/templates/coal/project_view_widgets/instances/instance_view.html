@@ -40,7 +40,7 @@
                 <tr>
                     <td>Settings</td>
                     <td class="center-text">{{ instance.server_flavor }}
-                        <button type="button" class="btn btn-xs btn-info update" data-toggle="popover"
+                        <button type="button" class="btn btn-xs btn-info update-instance-settings" data-toggle="popover"
                                 title="Update Settings" data-html="true"
                                 data-content="Loading <i class='fa fa-cog fa-spin'></i>"
                                 data-placement="bottom">
@@ -90,35 +90,35 @@
                                         data-placement="bottom"><i class="fa fa-fast-backward"></i> revert
                                 </button>
                             {% endif %}
-                            <button type="button" class="btn btn-xs btn-warning pause-instance"
+                            <button type="button" class="btn btn-xs btn-warning pause-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
                                     data-notice="Pausing Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Pause Instance" data-html="true"
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-pause"></i> pause
                             </button>
-                            <button type="button" class="btn btn-xs btn-warning suspend-instance"
+                            <button type="button" class="btn btn-xs btn-warning suspend-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
                                     data-notice="Suspending Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Suspend Instance" data-html="true"
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-stop"></i> suspend
                             </button>
-                            <button type="button" class="btn btn-xs btn-warning power-off-instance"
+                            <button type="button" class="btn btn-xs btn-warning power-off-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
                                     data-notice="Powering Off Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Power Off Instance" data-html="true"
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-power-off"></i> power off
                             </button>
-                            <button type="button" class="btn btn-xs btn-warning power-cycle-instance"
+                            <button type="button" class="btn btn-xs btn-warning power-cycle-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_cycle/"
                                     data-notice="Power Cycling Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Power Cycle Instance" data-html="true"
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-plug"></i> power cycle
                             </button>
-                            <button type="button" class="btn btn-xs btn-warning reboot-instance"
+                            <button type="button" class="btn btn-xs btn-warning reboot-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
                                     data-notice="Rebooting On Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Reboot Instance" data-html="true"
@@ -126,7 +126,7 @@
                                 <i class="fa fa-flash"></i> reboot
                             </button>
                         {% elif instance.server_status == "PAUSED" %}
-                            <button type="button" class="btn btn-xs btn-success unpause-instance"
+                            <button type="button" class="btn btn-xs btn-success unpause-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
                                     data-notice="Unpausing Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Unpause Instance" data-html="true"
@@ -134,7 +134,7 @@
                                     class="fa fa-play"></i> unpause
                             </button>
                         {% elif instance.server_status == "SUSPENDED" %}
-                            <button type="button" class="btn btn-xs btn-success resume-instance"
+                            <button type="button" class="btn btn-xs btn-success resume-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
                                     data-notice="Resuming Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Resume Instance" data-html="true"
@@ -143,7 +143,7 @@
                             </button>
                         {% endif %}
                         {% if instance.server_status == "SHUTOFF" %}
-                            <button type="button" class="btn btn-xs btn-success power-on-instance"
+                            <button type="button" class="btn btn-xs btn-success power-on-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_on_server/"
                                     data-notice="Powering On Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Power On Instance" data-html="true"
@@ -151,7 +151,7 @@
                                 <i class="fa fa-power-off"></i> power on
                             </button>
                         {% endif %}
-                        <button type="button" class="btn btn-xs btn-danger delete-instance"
+                        <button type="button" class="btn btn-xs btn-danger delete-instance-from-view"
                                 data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"
                                 data-notice="Deleting Instance {{ instance.server_name }}"
                                 data-toggle="popover" title="Delete Instance" data-html="true"
@@ -194,7 +194,7 @@
                                 {{ snapshot.info.date_created }}
                             </td>
                             <td class="snapshot-actions">
-                                <button type='button' class="delete-snapshot btn btn-xs btn-danger pull-right"
+                                <button type='button' class="delete-instance-from-view-snapshot btn btn-xs btn-danger pull-right"
                                         data-call="/server/{{ snapshot.snapshot_id }}/delete_instance_snapshot/"
                                         data-notice="Power Cycling Instance {{ snapshot.snapshot_name }}"
                                         data-toggle="popover" title="Delete Instance Snapshot" data-html="true"
@@ -261,27 +261,31 @@
 
         $('[data-toggle="popover"]').popover();
 
-        $(".update").click(function (event) {
+        $(".update-instance-settings").click(function (event) {
             event.preventDefault();
+            $('.btn').not(this).popover('hide');
             $(".popover-content").load("/instance/get/resize/");
-        });
-
-        $(".create-instance-snapshot").click(function (event) {
-            event.preventDefault();
-            $(".popover-content").load("/instance/get/create_snapshot/");
         });
 
         $(".revert-instance").click(function (event) {
             event.preventDefault();
+            $('.btn').not(this).popover('hide');
             $(".popover-content").load("/instance/get/revert/" + INSTANCE_ID + "/");
         });
 
-        $(document).on('click', '.delete-snapshot', function (event) {
+        $(".create-instance-snapshot").click(function (event) {
             event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/instance/get/create_snapshot/");
+        });
+
+        $(document).on('click', '.delete-instance-from-view-snapshot', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
             var call = $(this).data("call"),
                     notice = $(this).data("call");
-            $(".popover-content").html($('<button type="button" id="delete-snapshot" class="btn btn-xs btn-primary">Confirm</button>'));
-            $("#delete-snapshot").click(function (event) {
+            $(".popover-content").html($('<button type="button" id="delete-instance-from-view-snapshot" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-instance-from-view-snapshot").click(function (event) {
                 event.preventDefault();
                 showMessage('info', notice);
                 $.getJSON(call)
@@ -301,13 +305,41 @@
             });
         });
 
-        $(document).on('click', '.delete-instance, .pause-instance, .unpause-instance, .suspend-instance, .resume-instance, .power-on-instance, .power-off-instance, .power-cycle-instance, .reboot-instance', function (event) {
+        $(document).on('click', '.pause-instance-from-view, .unpause-instance-from-view, .suspend-instance-from-view, .resume-instance-from-view, .power-on-instance-from-view, .power-off-instance-from-view, .power-cycle-instance-from-view, .reboot-instance-from-view', function (event) {
             event.preventDefault();
+            $('.btn').not(this).popover('hide');
             var call = $(this).data("call"),
                     notice = $(this).data("notice");
             $(".popover-content").html($('<button type="button" id="confirm-action" class="btn btn-xs btn-primary">Confirm</button>'));
             $("#confirm-action").click(function (event) {
                 event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+
+        $(document).on('click', '.delete-instance-from-view', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="delete-instance-from-view" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-instance-from-view").click(function (event) {
+                event.preventDefault();
+                window.loading.loadFromView = true;
                 showMessage('info', notice);
                 $.getJSON(call)
                         .done(function (data) {

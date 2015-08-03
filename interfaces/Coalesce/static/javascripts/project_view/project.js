@@ -76,7 +76,7 @@ $(function () {
     });
 
     // Images
-    $(document).on('click', '#import-image', function (event) {
+    $(document).on('click', '.import-image', function (event) {
         event.preventDefault();
         showLoader(page);
         showConfirmModal('/image/get/import/');
@@ -105,6 +105,11 @@ $(function () {
     });
 
     // Networking
+    $(document).on('click', '.network-name button, .router-name button', function (event) {
+        event.preventDefault();
+        showInfoModal(page, $(this).data("call"));
+    });
+
     $(document).on('click', "#allocate-ip", function (event) {
         event.preventDefault();
         showMessage('info', "Allocating IP.");
@@ -122,6 +127,54 @@ $(function () {
             .fail(function () {
                 showMessage('error', 'Server Fault');
             })
+    });
+
+    $(document).on('click', ".deallocate-ip, .delete-network, .delete-router", function (event) {
+        event.preventDefault();
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
+            call = formatCall($(this).data("call")),
+            notice = encodeString($(this).data("notice")),
+            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/"),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
+    $(document).on('click', '.create-network', function (event) {
+        event.preventDefault();
+        showConfirmModal('/network/get/create/');
+    });
+
+    $(document).on('click', '.create-router', function (event) {
+        event.preventDefault();
+        showConfirmModal('/router/get/create/' + CURRENT_PROJECT_ID + "/");
+    });
+
+    // Users/Security
+    $(document).on('click', '.user-name button, .group-name button, .key-name button', function (event) {
+        event.preventDefault();
+        showInfoModal(page, $(this).data("call"));
+    });
+
+    $(document).on('click', '.create-group', function (event) {
+        event.preventDefault();
+        showConfirmModal('/security_group/get/create/');
+    });
+
+    $(document).on('click', '.create-key', function (event) {
+        event.preventDefault();
+        showConfirmModal('/key_pair/get/create/');
+    });
+
+    $(document).on('click', '.delete-key', function (event) {
+        event.preventDefault();
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
+            call = formatCall($(this).data("call")),
+            notice = encodeString($(this).data("notice")),
+            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/"),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
     // --- Initialize Project View ---
@@ -265,7 +318,7 @@ window.updateProjectContent = function () {
             stealthRefreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
             break;
         case usersSecurity.selector:
-            stealthRefreshContainer(page, usersSecurity, "/projects/" + CURRENT_PROJECT_ID + "/get_usersSecurity_panel/");
+            stealthRefreshContainer(page, usersSecurity, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
             break;
     }
 };

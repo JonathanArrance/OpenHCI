@@ -1,0 +1,154 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create Security Group</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="group-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="group-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="groupName" id="group-name" placeholder="Security Group Name"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="group-desc" class="col-sm-4 control-label">Description:</label>
+                        <textarea name="groupDesc" id="group-desc" placeholder="Optional Description" maxlength="80"
+                               rows="3" class="col-sm-8"></textarea>
+                    </div>
+                    <h4>group Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="group-transport" class="col-sm-4 control-label">Transport:</label>
+                        <select name="groupTransport" id="group-transport" class="col-sm-8">
+                            <option value="tcp" selected>tcp</option>
+                            <option value="udp">udp</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="group-ports" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="groupPorts" id="group-ports" placeholder="Security Group Ports"
+                               class="col-sm-8" value="443,80,22">
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="group-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var page = $("#page-content"),
+                security = $("#users-security-container");
+        $("#group-form").validate({
+            rules: {
+                groupName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                groupDesc: {
+                    specialChars: true,
+                    minlength: 0,
+                    maxlength: 80
+                },
+                groupTransport: {
+                    required: true
+                },
+                groupPorts: {
+                    required: true,
+                    ports: true
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Creating new group");
+                var url = '/create_security_group/' + $("#group-name").val() + '/' + ($("#group-desc").val() == "" ? "none" : $("#group-desc").val()) + '/' + $("#group-ports").val() + '/' + $("#group-transport").val() + '/' + CURRENT_PROJECT_ID + '/';
+
+                $.getJSON(url)
+                        .done(function (data) {
+                            if (data.status == 'error')
+                                showMessage('error', data.message);
+                            if (data.status == 'success')
+                                showMessage('success', data.message);
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');
+                        })
+                        .always(function () {
+                            refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
+                        });
+
+                closeModal();
+                showLoader(page);
+                window.setTimeout(function () {
+                    removeLoaders();
+                    refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
+                }, 2000);
+            },
+            invalidHandler: function (event, validator) {
+                var errors = validator.numberOfInvalids();
+                if (errors) {
+                    var message = errors == 1
+                            ? 'You missed 1 field. It has been highlighted'
+                            : 'You missed ' + errors + ' fields. They have been highlighted';
+                    showMessage('error', message)
+                }
+            }
+        });
+        $("#group-form input, #group-form select").change(function () {
+            if ($("#group-form").valid()) {
+                $('button[type=submit]').removeProp("disabled");
+            } else {
+                $('button[type=submit]').prop("disabled", true);
+            }
+        });
+    });
+</script>
+
+
+
+<!--<form>-->
+<!--{% csrf_token %}-->
+<!--<fieldset>-->
+<!--<label>Transport Protocol</label>-->
+<!--<label>-->
+<!--TCP:-->
+<!--<input type="radio" name="update_transport" id="update_tcp" value='tcp' checked>-->
+<!--</label>-->
+<!--<label>-->
+<!--UDP:-->
+<!--<input type="radio" name="update_transport" id="update_udp" value='udp'>-->
+<!--</label>-->
+<!--<label for="update_ports">Ports</label>-->
+<!--<input type="text" name="ports" id="update_ports" value="443,80,22"-->
+<!--class="text ui-widget-content ui-corner-all"/>-->
+<!--<label>Enable Ping</label>-->
+<!--<label>-->
+<!--true:-->
+<!--<input type="radio" name="enable_ping" id="true" value='true' checked>-->
+<!--</label>-->
+<!--<label>-->
+<!--false:-->
+<!--<input type="radio" name="enable_ping" id="false" value='false'>-->
+<!--</label>-->
+<!--</fieldset>-->
+<!--</form>-->
+<!--</div>-->

@@ -64,4 +64,7 @@ $(document).ready(function () {
     jQuery.validator.addMethod("port", function (value, element) {
         return this.optional(element) || /^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/i.test(value);
     }, "Please use a valid port: 0 - 65535");
+    jQuery.validator.addMethod("ports", function (value, element) {
+        return this.optional(element) || /([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/g.test(value);
+    }, "Please use valid ports: 0 - 65535");
 });

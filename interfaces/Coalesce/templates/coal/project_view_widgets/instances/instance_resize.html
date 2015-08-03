@@ -30,6 +30,7 @@
                 }
             },
             submitHandler: function () {
+                showMessage("info", "Resizing " + INSTANCE);
                 $.getJSON('/server/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + $("#instance-flavor").val() + '/resize_server/')
                         .done(function (data) {
                             if (data.status == "error") {
@@ -48,11 +49,11 @@
                             showMessage('error', "Server Fault");
                         })
                         .always(function () {
-                            $(".update").removeClass("bg-active bg-striped").removeProp("disabled");
+                            $(".update-instance-settings").removeClass("bg-active bg-striped").removeProp("disabled");
                         });
 
                 $(".popover").popover('hide');
-                $(".update").addClass("bg-active bg-striped").prop("disabled", "disabled");
+                $(".update-instance-settings").addClass("bg-active bg-striped").prop("disabled", "disabled");
             }
         });
     });

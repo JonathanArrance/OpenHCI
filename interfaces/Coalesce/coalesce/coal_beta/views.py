@@ -946,6 +946,7 @@ def get_networking_panel(request, project_id):
     quota = []
     fips = []
     networks = []
+    open_networks = []
     routers = []
     tenant_info = {}
     try:
@@ -979,6 +980,8 @@ def get_networking_panel(request, project_id):
         for net in networks:
             try:
                 net['info'] = no.get_network(net['net_id'])
+                if net['in_use'] == "false":
+                    open_networks.append(net)
             except Exception as e:
                 net['info'] = e
         num_nets = len(networks)
@@ -998,6 +1001,7 @@ def get_networking_panel(request, project_id):
                                       'tenant_info': tenant_info,
                                       'fips': fips,
                                       'networks': networks,
+                                      'open_networks': open_networks,
                                       'routers': routers}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
@@ -1008,8 +1012,28 @@ def get_networking_panel(request, project_id):
                                       'tenant_info': tenant_info,
                                       'fips': fips,
                                       'networks': networks,
+                                      'open_networks': open_networks,
                                       'routers': routers,
                                       'error': "Error: %s" % e}))
+
+
+def get_private_network_create(request):
+    try:
+        return render_to_response('coal/project_view_widgets/networking/private_network_create.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/private_network_create.html', RequestContext(request, {'error': "Error: %s"%e}))
+
+
+def get_router_create(request, project_id):
+    networks = []
+    try:
+        auth = request.session['auth']
+        no = neutron_net_ops(auth)
+        networks = no.list_internal_networks(project_id)
+        return render_to_response('coal/project_view_widgets/networking/router_create.html', RequestContext(request, {'networks': networks}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/router_create.html', RequestContext(request, {'networks': networks, 'error': "Error: %s"%e}))
+
 
 
 def get_users_security_panel(request, project_id):
@@ -1058,7 +1082,7 @@ def get_users_security_panel(request, project_id):
                        'num_groups': num_groups,
                        'num_keys': num_keys}
 
-        return render_to_response('coal/project_view_widgets/users_security_panel.html',
+        return render_to_response('coal/project_view_widgets/users_security/users_security_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -1069,7 +1093,7 @@ def get_users_security_panel(request, project_id):
                                       'groups': sec_groups,
                                       'keys': sec_keys}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/users_security_panel.html',
+        return render_to_response('coal/project_view_widgets/users_security/users_security_panel.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'quota': quota,
@@ -1081,6 +1105,17 @@ def get_users_security_panel(request, project_id):
                                       'keys': sec_keys,
                                       'error': "Error: %s" % e}))
 
+def get_security_key_create(request):
+    try:
+        return render_to_response('coal/project_view_widgets/users_security/security_key_create.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/security_key_create.html', RequestContext(request, {'error': "Error: %s"%e}))
+
+def get_security_group_create(request):
+    try:
+        return render_to_response('coal/project_view_widgets/users_security/security_group_create.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/security_group_create.html', RequestContext(request, {'error': "Error: %s"%e}))
 
 def pu_project_view(request, project_id):
     auth = request.session['auth']
@@ -1425,7 +1460,7 @@ def key_view(request, sec_key_id, project_id):
     key_dict = {'sec_key_id': sec_key_id, 'project_id': project_id}
     key_info = so.get_sec_keys(key_dict)
 
-    return render_to_response('coal/key_view.html',
+    return render_to_response('coal/project_view_widgets/users_security/security_key_view.html',
                                RequestContext(request, {
                                                         'key_info': key_info,
                                                         'current_project_id': project_id
@@ -1577,13 +1612,23 @@ def delete_sec_group(request, sec_group_id, project_id):
 
 def security_group_view(request, groupid, project_id):
     auth = request.session['auth']
+    tcp = []
+    udp = []
+    icmp = []
+    ports = {}
     so = server_ops(auth)
     grp = { 'project_id': project_id, 'sec_group_id': groupid }
     sec_group = so.get_sec_group(grp)
-    return render_to_response('coal/security_group_view.html',
-                               RequestContext(request, {
-                                                        'sec_group': sec_group,
-                                                        }))
+    for port in sec_group['ports']:
+        if port['transport'] == 'tcp':
+            tcp.append(port)
+        if port['transport'] == 'udp':
+            udp.append(port)
+        if port['transport'] == 'icmp':
+            icmp.append(port)
+    ports = {'tcp': tcp, 'udp': udp, 'icmp':icmp}
+    return render_to_response('coal/project_view_widgets/users_security/security_group_view.html',
+                               RequestContext(request, {'sec_group': sec_group, 'ports':ports}))
 
 def create_keypair(request, key_name, project_id):
     try:
@@ -2481,25 +2526,28 @@ def update_admin_password(request, current_password, new_password):
     return HttpResponse(simplejson.dumps(out))
 
 def network_view(request, net_id):
-    auth = request.session['auth']
-    no = neutron_net_ops(auth)
-    nw = no.get_network(net_id)
+    nw=[]
     sn = {}
-    if nw['net_name'] != "DefaultPublic":
-        sn = no.get_net_subnet(nw['net_subnet_id'][0]['subnet_id'])
+    try:
+        auth = request.session['auth']
+        no = neutron_net_ops(auth)
+        nw = no.get_network(net_id)
+        if nw['net_name'] != "DefaultPublic":
+            sn = no.get_net_subnet(nw['net_subnet_id'][0]['subnet_id'])
 
-    return render_to_response('coal/network_view.html',
-                               RequestContext(request, {
-                                                        'nw': nw,
-                                                        'sn': sn,
-                                                        }))
+        return render_to_response('coal/project_view_widgets/networking/private_network_view.html',
+                                   RequestContext(request, {'nw': nw,'sn': sn,}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/private_network_view.html',
+                                   RequestContext(request, {'nw': nw, 'sn': sn, 'error': "Error: %s"%e,}))
+
 
 def router_view(request, router_id):
     auth = request.session['auth']
     l3o = layer_three_ops(auth)
     router = l3o.get_router(router_id)
 
-    return render_to_response('coal/router_view.html',
+    return render_to_response('coal/project_view_widgets/networking/router_view.html',
                                RequestContext(request, {
                                                         'router': router,
                                                         }))

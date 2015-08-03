@@ -393,6 +393,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.add_private_network',
             name='add_private_network'),
 
+        url(r'^network/get/create/$',
+            'coalesce.coal_beta.views.get_private_network_create',
+            name='get_private_network_create'),
+
         # --- Routers ----
         url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_router',
@@ -405,6 +409,10 @@ urlpatterns = patterns('',
         url(r'^router/(?P<router_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.router_view',
             name='router_view'),
+
+        url(r'^router/get/create/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_router_create',
+            name='get_router_create'),
 
         # --- Users ----
 
@@ -461,6 +469,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.security_group_view',
             name='security_group_view'),
 
+        url(r'^security_group/get/create/$',
+            'coalesce.coal_beta.views.get_security_group_create',
+            name='get_security_group_create'),
+
         url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),
@@ -477,6 +489,10 @@ urlpatterns = patterns('',
         url(r'^download_public_key/(?P<sec_key_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.download_public_key',
             name='download_public_key'),
+
+        url(r'^key_pair/get/create/$',
+            'coalesce.coal_beta.views.get_security_key_create',
+            name='get_security_key_create'),
 
         # --- 3rd Party Storage ----
         url(r'^supported_third_party_storage/$',

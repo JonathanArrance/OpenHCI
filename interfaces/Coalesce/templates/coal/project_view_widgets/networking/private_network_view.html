@@ -1,0 +1,102 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ nw.net_name }} View</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Private Network Details</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td>{{ nw.net_name }}</td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td>{{ nw.net_id }}</td>
+                </tr>
+                <tr>
+                    <th>Creator Id</th>
+                    <td>{{ nw.net_creator_id }}</td>
+                </tr>
+                <tr>
+                    <th>Shared</th>
+                    <td>{{ nw.net_shared }}</td>
+                </tr>
+                <tr>
+                    <th>Internal</th>
+                    <td>{{ nw.net_internal }}</td>
+                </tr>
+                <tr>
+                    <th>Admin State</th>
+                    <td>{{ nw.net_admin_state }}</td>
+                </tr>
+                <tr>
+                    <th>Project Id</th>
+                    <td>{{ nw.project_id }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+            <div class="col-sm-6">
+                <table class="table table-striped table-hover table-responsive table-bordered">
+                    <thead class="bg-primary">
+                    <tr>
+                        <th>Subnet Details</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ sn.subnet_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Id</th>
+                        <td>{{ sn.subnet_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Class</th>
+                        <td>{{ sn.subnet_class }}</td>
+                    </tr>
+                    <tr>
+                        <th>IP Version</th>
+                        <td>{{ sn.subnet_ip_ver }}</td>
+                    </tr>
+                    <tr>
+                        <th>Gateway</th>
+                        <td>{{ sn.subnet_gateway }}</td>
+                    </tr>
+                    <tr>
+                        <th>Mask</th>
+                        <td>{{ sn.subnet_mask }}</td>
+                    </tr>
+                    <tr>
+                        <th>Allocation Start</th>
+                        <td>{{ sn.subnet_allocation_start }}</td>
+                    </tr>
+                    <tr>
+                        <th>Allocation End</th>
+                        <td>{{ sn.subnet_allocation_end }}</td>
+                    </tr>
+                    <tr>
+                        <th>DHCP Enabled</th>
+                        <td>{{ sn.subnet_dhcp_enable }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+    </div>
+</div>
