@@ -64,6 +64,7 @@ from collections import defaultdict
 import csv
 import json
 from urlparse import urlsplit
+import urllib
 
 from transcirrus.component.swift.containerconnection import Args
 from transcirrus.component.swift.containerconnection import ContainerConnection
@@ -98,12 +99,10 @@ def dashboard(request):
         return render_to_response('coal/welcome.html', RequestContext(request,))
 
 def get_confirm(request, title, message, call, notice, async, refresh):
-    t = title.replace('&32', ' ')
-    m = message.replace('&32', ' ')
-    m += "?"
+    t = urllib.unquote(title)
+    m = urllib.unquote(message)
     c = call.replace('&47', '/')
-    n = notice.replace('&32', ' ')
-    n += " ..."
+    n = urllib.unquote(notice)
     r = refresh.replace('&47', '/')
     confirm = {'title': t, 'message': m, 'call': c, 'notice': n, 'async': async, 'refresh': r}
     return render_to_response('coal/confirm.html', RequestContext(request, {'confirm': confirm}))
@@ -689,9 +688,10 @@ def get_instance_panel(request, project_id):
                 i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
                 i_info = so.get_server(i_dict)
                 try:
-                    snapshot = sa.list_instance_snaps(instance['server_id'])
-                    if snapshot != []:
-                        snapshots.append(snapshot)
+                    i_snaps = sa.list_instance_snaps(instance['server_id'])
+                    i_info['snapshots'] = i_snaps
+                    for snap in i_snaps:
+                        snapshots.append(snap)
                 except:
                     pass
                 instance['info'] = i_info
@@ -827,6 +827,37 @@ def get_instance_create(request, project_id):
                                                                                                                      'used_storage': used_storage,
                                                                                                                      'volume_types': volume_types,
                                                                                                                      'error': "Error: %s"%e}))
+
+def get_instance_resize(request):
+    flavors = []
+    try:
+        auth = request.session['auth']
+        fo = flavor_ops(auth)
+
+        flavors = fo.list_flavors()
+        for flavor in flavors:
+            f_info = fo.get_flavor(flavor['id'])
+            flavor['info'] = {
+                'name': f_info['flavor_name'],
+                'id': f_info['flav_id'],
+                'memory': f_info['memory(MB)'],
+                'disk_space': f_info['disk_space(GB)'],
+                'ephemeral': f_info['ephemeral(GB)'],
+                'swap': f_info['swap(GB)'],
+                'cpus': f_info['cpus'],
+                'link': f_info['link'],
+                'metadata': f_info['metadata']}
+
+        return render_to_response('coal/project_view_widgets/instances/instance_resize.html', RequestContext(request, {'flavors': flavors}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/instance_resize.html', RequestContext(request, {'flavors': flavors,
+                                                                                                                     'error': "Error: %s"%e}))
+
+def get_instance_create_snapshot(request):
+    try:
+        return render_to_response('coal/project_view_widgets/instances/instance_create_snapshot.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/instance_create_snapshot.html', RequestContext(request, {'error': "Error: %s"%e}))
 
 def get_storage_panel(request, project_id):
     project = []
@@ -1693,7 +1724,7 @@ def delete_image (request, image_id, project_id):
             out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description=None):
+def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description):
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
@@ -2475,11 +2506,13 @@ def router_view(request, router_id):
 def instance_view(request, project_id, server_id):
     meter_dict = []
     stats = []
+    project = []
     instance = {}
     flavors = []
     snapshots = []
     try:
         auth = request.session['auth']
+        to = tenant_ops(auth)
         so = server_ops(auth)
         sa = server_actions(auth)
         fo = flavor_ops(auth)
@@ -2525,19 +2558,21 @@ def instance_view(request, project_id, server_id):
         else:
             stats = result
 
-        instances = so.list_servers(project_id)
-        for instance in instances:
-            if instance['server_id'] == server_id:
-                instance = instance
-        i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
-        instance['info'] = so.get_server(i_dict)
+        project = to.get_tenant(project_id)
+
+        i_dict = {'server_id': server_id, 'project_id': project_id}
+        instance = so.get_server(i_dict)
         flavors = fo.list_flavors()
         snapshots = sa.list_instance_snaps(server_id)
+        for snapshot in snapshots:
+            snap_dict = {'snapshot_id': snapshot['snapshot_id'], 'project_id': project_id}
+            snapshot['info'] = sa.get_instance_snap_info(snap_dict)
 
         return render_to_response('coal/project_view_widgets/instances/instance_view.html',
                                   RequestContext(request, {
                                       'meters': meter_dict,
                                       'stats': stats,
+                                      'project': project,
                                       'instance': instance,
                                       'flavors': flavors,
                                       'snapshots': snapshots,
@@ -2547,6 +2582,7 @@ def instance_view(request, project_id, server_id):
                                   RequestContext(request, {
                                       'meters': meter_dict,
                                       'stats': stats,
+                                      'project': project,
                                       'instance': instance,
                                       'flavors': flavors,
                                       'snapshots': snapshots,

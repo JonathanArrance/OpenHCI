@@ -45,7 +45,10 @@ $(document).ready(function () {
     }, "Please use a valid e-mail address.");
     jQuery.validator.addMethod("charField", function (value, element) {
         return this.optional(element) || /^([0-9a-zA-Z-_.~])+$/i.test(value);
-    }, "Please use these special characters: - _ . ~");
+    }, "Please use these characters: - _ . ~");
+    jQuery.validator.addMethod("specialChars", function (value, element) {
+        return this.optional(element) || !/([!])|([*])|([(])|([)])|(['])/g.test(value);
+    }, "Please replace these characters: ! * ( )'");
     jQuery.validator.addMethod("ip", function (value, element) {
         return this.optional(element) || /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/i.test(value);
     }, "Please enter valid IP address.");

@@ -2,52 +2,6 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-{#            $("<div></div>").prop("id", "instance-dialog-form").prop("title", "Create Instance")#}
-{#                .append($("<h6>Create a new instance. All form fields are required.</h6>").addClass("validateTips"))#}
-{#                .append($("<form></form>")#}
-{#                    .append($("<fieldset></fieldset>")#}
-{#                        .append($("<label>Instance Name</label>").prop("for", "name"))#}
-{#                        .append($("<input></input>").prop("id", "name").prop("name", "name").prop("type", "text")))#}
-{#                    .append($("<fieldset></fieldset>").addClass("tall")#}
-{#                        .append($("<legend>Instance Options</legend>"))#}
-{#                        .append($("<label>Image</label>").prop("for", "image"))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "image").prop("name", "image")))#}
-{#                        .append($("<label>Flavor</label>").prop("for", "flavor"))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "flavor").prop("name", "flavor")))#}
-{#                        .append($("<label>Boot Options</label>").prop("for", "Boot Options"))#}
-{#                        .append($("<span>(help)<span>").addClass("helper").prop("title", 'To store all instance data on a physical volume, choose "Boot From Volume"; otherwise, all instance data will be lost on instance deletion.'))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "boot-option").prop("name", "boot-option")#}
-{#                                .append($("<option>Boot Ephemeral</option>").prop("value", "false"))#}
-{#                                .append($("<option>Boot From Volume</option>").prop("value", "true"))#}
-{#                                .click(function (event) {#}
-{#                                    event.preventDefault();#}
-{#                                    toggleBootOptions($("#boot-option").val());#}
-{#                                }))))#}
-{#                    .append($("<fieldset></fieldset>").addClass("tall")#}
-{#                        .append($("<legend>Network & Security</legend>"))#}
-{#                        .append($("<label>Private Network</label>").prop("for", "network"))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "network").prop("name", "network")))#}
-{#                        .append($("<label>Security Group</label>").prop("for", "group"))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "group").prop("name", "group")))#}
-{#                        .append($("<label>Security Key</label>").prop("for", "key"))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "key").prop("name", "key"))))#}
-{#                    .append($("<fieldset></fieldset>").prop("id", "instance-boot-options").css("display", "None").addClass("wide")#}
-{#                        .append($("<legend>Boot Volume Options</legend>"))#}
-{#                        .append($("<label>Boot Volume Name</label>").prop("for", "boot-name").css("margin-top", "15px"))#}
-{#                        .append($("<input></input>").prop("id", "boot-name").prop("name", "boot-name").prop("type", "text").prop("placeholder", "Optional"))#}
-{#                        .append($("<label>Boot Volume Type</label>").prop("for", "boot-type").css("margin-top", "14px").css("vertical-align", "top"))#}
-{#                        .append($("<div></div").addClass("styled-select")#}
-{#                            .append($("<select></select>").prop("id", "boot-type").prop("name", "boot-type")))#}
-{#                        .append($("<label>Boot Volume Size</label>").prop("for", "boot-size"))#}
-{#                        .append($("<input></input>").prop("id", "boot-size").prop("name", "boot-size").prop("type", "text"))));#}
-
-
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>

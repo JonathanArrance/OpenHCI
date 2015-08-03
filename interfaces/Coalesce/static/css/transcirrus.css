@@ -130,6 +130,11 @@ hr.narrow {
     vertical-align: middle;
 }
 
+.popover-content{
+    min-width: 300px;
+    width: 100%;
+}
+
 .error {
     font-size: 90%;
     margin: 0;

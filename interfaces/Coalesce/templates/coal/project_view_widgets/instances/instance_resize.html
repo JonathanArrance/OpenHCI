@@ -1,0 +1,59 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<form id="resize-form" class="form-horizontal">
+    {% csrf_token %}
+    <fieldset>
+        <div class="form-group col-sm-12">
+            <label for="instance-flavor" class="col-sm-4 control-label">Settings:</label>
+            <select name="instanceFlavor" id="instance-flavor" class="col-sm-8">
+                {% for flavor in flavors %}
+                    <option value="{{ flavor.info.id }}">{{ flavor.info.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" form="resize-form" class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+            Confirm
+        </button>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        var view = $(".info-content");
+        $("#resize-form").validate({
+            rules: {
+                instanceFlavor: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                $.getJSON('/server/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + $("#instance-flavor").val() + '/resize_server/')
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                                window.loading.loadFromView = true;
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                                window.loading.loadFromView = true;
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                        })
+                        .always(function () {
+                            $("#update").removeClass("bg-active bg-striped").removeProp("disabled");
+                        });
+
+                $(".popover").popover('hide');
+                $("#update").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>

@@ -31,7 +31,7 @@
                                 <i class="fa fa-info-circle"></i>{{ instance.server_name }}
                             </button>
                         </td>
-                        <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILD" %}bg-warning {% if instance.status == "BUILD" %}bg-active bg-striped{% endif %}{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
+                        <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILD" or instance.status == "REBOOT" %}bg-warning {% if instance.status == "BUILD" or instance.status == "REBOOT" %}bg-active bg-striped{% endif %}{% elif instance.status == "ERROR"  or instance.status == "SHUTOFF" %}bg-danger{% endif %}">
                             {{ instance.status }}</td>
                         <td class="instance-actions">
                             <div class="btn-group actions-dropdown">
@@ -45,34 +45,65 @@
                                         <li>
                                             <a href="#"
                                                onClick="window.open('{{ instance.info.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
-                                                console</a>
+                                                <i class="fa fa-desktop"></i> console</a>
                                         </li>
+                                        {% if instance.info.snapshots %}
+                                            <li><a href="#"><i class="fa fa-fast-backward"></i> Revert</a></li>
+                                        {% endif %}
                                         <li><a href="#" class="pause-instance" data-title="Pause Instance"
                                                data-message="Pause {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
-                                               data-notice="Pausing Instance {{ instance.server_name }}">pause</a></li>
+                                               data-notice="Pausing Instance {{ instance.server_name }}"><i
+                                                class="fa fa-pause"></i> pause</a></li>
                                         <li><a href="#" class="suspend-instance" data-title="Suspend Instance"
                                                data-message="Suspend {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
-                                               data-notice="Suspending Instance {{ instance.server_name }}">suspend</a>
-                                        </li>
+                                               data-notice="Suspending Instance {{ instance.server_name }}"><i
+                                                class="fa fa-stop"></i> suspend</a>
+                                        <li><a href="#" class="power-off-instance" data-title="Power Off Instance"
+                                               data-message="Power Off {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
+                                               data-notice="Powering Off Instance {{ instance.server_name }}"><i
+                                                class="fa fa-power-off"></i> Power Off</a></li>
+                                        <li><a href="#" class="power-cycle-instance" data-title="Power Cycle Instance"
+                                               data-message="Power Cycle {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_cycle/"
+                                               data-notice="Power Cycling Instance {{ instance.server_name }}"><i
+                                                class="fa fa-plug"></i> Power Cycle</a></li>
+                                        <li><a href="#" class="reboot-instance" data-title="Reboot Instance"
+                                               data-message="Reboot {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
+                                               data-notice="Rebooting On Instance {{ instance.server_name }}"><i
+                                                class="fa fa-flash"></i> Reboot</a></li>
                                     {% elif instance.status == "PAUSED" %}
                                         <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
                                                data-message="Unpause {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
-                                               data-notice="Unpausing Instance {{ instance.server_name }}">unpause</a>
+                                               data-notice="Unpausing Instance {{ instance.server_name }}"><i
+                                                class="fa fa-play"></i> unpause</a>
                                         </li>
                                     {% elif instance.status == "SUSPENDED" %}
                                         <li><a href="#" class="resume-instance" data-title="Resume Instance"
                                                data-message="Resume {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
-                                               data-notice="Resuming Instance {{ instance.server_name }}">resume</a>
+                                               data-notice="Resuming Instance {{ instance.server_name }}"><i
+                                                class="fa fa-play-circle"></i> resume</a>
                                         </li>
                                     {% endif %}
+
+                                    {% if instance.status == "SHUTOFF" %}
+                                        <li><a href="#" class="power-on-instance" data-title="Power On Instance"
+                                               data-message="Power On {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_on_server/"
+                                               data-notice="Powering On Instance {{ instance.server_name }}"><i
+                                                class="fa fa-power-off"></i> Power On</a></li>
+                                    {% endif %}
+
                                     <li><a href="#" class="delete-instance" data-title="Delete Instance"
-                                           data-message="Delete {{ instance.server_name }}"
+                                           data-message="Delete {{ instance.server_name }}?"
                                            data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
-                                           data-notice="Deleting Instance {{ instance.server_name }}">delete</a></li>
+                                           data-notice="Deleting Instance {{ instance.server_name }}"><i
+                                            class="fa fa-trash-o"></i> delete</a></li>
                                 </ul>
                             </div>
                         </td>
@@ -97,11 +128,6 @@
                 <span id="instance-stats">
                     <script>
                         generateQuotaPie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
-                    </script>
-                </span>
-                <span id="fip-stats">
-                    <script>
-                        generateQuotaPie("fip-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
                     </script>
                 </span>
             </div>

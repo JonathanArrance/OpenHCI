@@ -300,16 +300,16 @@ $(function () {
             refresh = formatCall("/third_party_storage/get/");
 
         if (provider == "eseries") {
-            title = formatSpaces("Delete E-Series Storage");
-            message = formatSpaces("Remove E-Series Storage configuration");
+            title = encodeString("Delete E-Series Storage");
+            message = encodeString("Remove E-Series Storage configuration");
             call = formatCall("/" + provider + "/delete/");
-            notice = formatSpaces("Deleting E-Series Configuration");
+            notice = encodeString("Deleting E-Series Configuration");
             showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         } else if (provider == "nfs") {
-            title = formatSpaces("Delete NFS Storage");
-            message = formatSpaces("Remove NFS Storage configuration");
+            title = encodeString("Delete NFS Storage");
+            message = encodeString("Remove NFS Storage configuration");
             call = formatCall("/" + provider + "/delete/");
-            notice = formatSpaces("Deleting NFS Configuration");
+            notice = encodeString("Deleting NFS Configuration");
             showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         }
     });

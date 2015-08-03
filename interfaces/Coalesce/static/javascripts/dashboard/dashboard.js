@@ -92,10 +92,10 @@ $(function () {
     // Phone Home
     $(document).on('click', '.phonehome', function (event) {
         event.preventDefault();
-        var title = formatSpaces($(this).data("title")),
-            message = formatSpaces($(this).data("message")),
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
             call = formatCall($(this).data("call")),
-            notice = formatSpaces($(this).data("notice")),
+            notice = encodeString($(this).data("notice")),
             refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/'+ refresh + '/' + async + '/');
@@ -104,10 +104,10 @@ $(function () {
     // Upgrade
     $(document).on('click', '.upgrade', function (event) {
         event.preventDefault();
-        var title = formatSpaces($(this).data("title")),
-            message = formatSpaces($(this).data("message")),
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
             call = formatCall($(this).data("call")),
-            notice = formatSpaces($(this).data("notice")),
+            notice = encodeString($(this).data("notice")),
             refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');

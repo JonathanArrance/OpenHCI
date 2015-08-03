@@ -1,7 +1,7 @@
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
-<script>console.log("{{ instance }}")</script>
+
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -15,36 +15,7 @@
                 <thead class="bg-primary">
                 <tr>
                     <th>Instance Details</th>
-                    <th>
-                        <div class="btn-group actions-dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                               aria-expanded="false">
-                                Actions
-                                <span class="caret"></span>
-                            </a>
-                            <ul class="dropdown-menu bg-primary table-dropdown">
-                                <li><a href="#" id="resize-server">Resize Instance</a></li>
-                                <li><a href="#" id="reboot-server">Reboot</a></li>
-                                <li><a href="#" id="cycle-server">Power Cycle</a></li>
-                                {% if server.server_status != "SHUTOFF" %}
-                                    <li><a href="#" id="poweroff-server">Power Off</a></li>
-                                {% else %}
-                                    <li><a href="#" id="poweron-server">Power On</a></li>
-                                {% endif %}
-
-                                {% if server.server_status == "ACTIVE" %}
-                                    {% if snapshots %}
-                                        <li><a href="#" id="revert-server">Revert</a></li>
-                                    {% endif %}
-                                {% endif %}
-                                <li>
-                                    <a href="{{ server.novnc_console }}"
-                                       onClick="window.open(this.href,'','toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;"
-                                            >Console</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -58,44 +29,134 @@
                 </tr>
                 <tr>
                     <td>Status</td>
-                    <td class="center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILDING" %}bg-warning{% elif instance.status == "ERROR" %}bg-danger{% endif %}">
-                        {{ instance.status }}
+                    <td class="center-text {% if instance.server_status == "ACTIVE" %}bg-success{% elif instance.server_status == "PAUSED" or instance.server_status == "SUSPENDED" or instance.server_status == "BUILD" or instance.server_status == "REBOOT" %}bg-warning {% if instance.server_status == "BUILD" or instance.server_status == "REBOOT" %}bg-active bg-striped{% endif %}{% elif instance.server_status == "ERROR"  or instance.server_status == "SHUTOFF" %}bg-danger{% endif %}">
+                        {{ instance.server_status }}
                     </td>
                 </tr>
                 <tr>
                     <td>OS</td>
-                    <td class="center-text">{{ instance.info.server_os }}</td>
+                    <td class="center-text">{{ instance.server_os }}</td>
                 </tr>
                 <tr>
-                    <td>Flavor</td>
-                    <td class="center-text">{{ instance.info.server_flavor }}</td>
+                    <td>Settings</td>
+                    <td class="center-text">{{ instance.server_flavor }}
+                        <button id="update" type="button" class="btn btn-xs btn-info" data-toggle="popover"
+                                title="Update Settings" data-html="true"
+                                data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                data-placement="bottom">
+                            <i class="fa fa-cog"></i> Update
+                        </button>
+                    </td>
                 </tr>
                 <tr>
                     <td>Key Name</td>
-                    <td class="center-text">{{ instance.info.server_key_name }}</td>
+                    <td class="center-text">{{ instance.server_key_name }}</td>
                 </tr>
                 <tr>
                     <td>Group Name</td>
-                    <td class="center-text">{{ instance.info.server_group_name }}</td>
+                    <td class="center-text">{{ instance.server_group_name }}</td>
                 </tr>
                 <tr>
                     <td>Public IP</td>
-                    <td class="center-text">{{ instance.info.server_public_ips }}</td>
+                    <td class="center-text">{{ instance.server_public_ips }}</td>
                 </tr>
                 <tr>
                     <td>Network ID</td>
-                    <td class="center-text">{{ instance.info.server_net_id }}</td>
+                    <td class="center-text">{{ instance.server_net_id }}</td>
                 </tr>
                 <tr>
                     <td>Internal Networks</td>
                     <td class="center-text">
-                        {% for k,v in instance.info.server_int_net.items %}
+                        {% for k,v in instance.server_int_net.items %}
                             <span>{{ k }}: </span>
                             {% for i in v %}
                                 <span>{{ i.addr }}</span>
                             {% endfor %}
                         {% endfor %}
                     </td>
+                </tr>
+                <tr>
+                    <td>Actions</td>
+                    <th>
+                        {% if instance.server_status == "ACTIVE" %}
+                            <button type="button" class="btn btn-xs btn-info"
+                                    onClick="window.open('{{ instance.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
+                                <i class="fa fa-desktop"></i> console
+                            </button>
+                            {% if snapshots %}
+                                <button type="button" class="btn btn-xs btn-info revert-instance">
+                                    <i class="fa fa-fast-backward"></i> revert
+                                </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-xs btn-warning pause-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
+                                    data-notice="Pausing Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Pause Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-pause"></i> pause
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning suspend-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
+                                    data-notice="Suspending Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Suspend Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-stop"></i> suspend
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning power-off-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
+                                    data-notice="Powering Off Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Power Off Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-power-off"></i> power off
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning power-cycle-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_cycle/"
+                                    data-notice="Power Cycling Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Power Cycle Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-plug"></i> power cycle
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning reboot-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
+                                    data-notice="Rebooting On Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Reboot Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
+                                <i class="fa fa-flash"></i> reboot
+                            </button>
+                        {% elif instance.server_status == "PAUSED" %}
+                            <button type="button" class="btn btn-xs btn-success unpause-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
+                                    data-notice="Unpausing Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Unpause Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom"><i
+                                    class="fa fa-play"></i> unpause
+                            </button>
+                        {% elif instance.server_status == "SUSPENDED" %}
+                            <button type="button" class="btn btn-xs btn-success resume-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
+                                    data-notice="Resuming Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Resume Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-play-circle"></i> resume
+                            </button>
+                        {% endif %}
+                        {% if instance.server_status == "SHUTOFF" %}
+                            <button type="button" class="btn btn-xs btn-success power-on-instance"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_on_server/"
+                                    data-notice="Powering On Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Power On Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-power-off"></i> power on
+                            </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-xs btn-danger delete-instance"
+                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"
+                                data-notice="Deleting Instance {{ instance.server_name }}"
+                                data-toggle="popover" title="Delete Instance" data-html="true"
+                                data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                            <i class="fa fa-trash-o"></i> delete
+                        </button>
+                    </th>
                 </tr>
                 </tbody>
             </table>
@@ -105,11 +166,14 @@
                 <thead class="bg-primary">
                 <tr>
                     <th>Snapshot</th>
-                    <th>Instance</th>
+                    <th>Description</th>
+                    <th>Created</th>
                     <th>
-                        <button id="create-snapshot"
-                                class="btn btn-xs btn-success pull-right"><i
-                                class="fa fa-plus"></i>
+                        <button type="button" class="create-instance-snapshot btn btn-xs btn-success pull-right"
+                                data-toggle="popover" title="Update Settings" data-html="true"
+                                data-content="<div class='col-sm-12'><h1>Loading <i class='fa fa-cog fa-spin'></i></h1></div>"
+                                data-placement="left">
+                            <i class="fa fa-plus text-top"></i>
                         </button>
                     </th>
                 </tr>
@@ -119,33 +183,29 @@
                     {% for snapshot in snapshots %}
                         <tr id="{{ snapshot.snapshot_id }}" class="snapshot">
                             <td class="snapshot-name">
-                                                        <span data-toggle="tooltip" data-placement="right"
-                                                              title="ID: {{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}
-                                                        </span>
+                                {{ snapshot.snapshot_name }}
                             </td>
-                            <td class="snapshot-instance center-text">
-
+                            <td>
+                                {{ snapshot.info.description }}
+                            </td>
+                            <td>
+                                {{ snapshot.info.date_created }}
                             </td>
                             <td class="snapshot-actions">
-                                <div class="btn-group actions-dropdown">
-                                    <a href="#" class="dropdown-toggle"
-                                       data-toggle="dropdown" role="button"
-                                       aria-expanded="false">
-                                        actions
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu table-dropdown">
-                                        <li>
-                                            <a href="#" class="delete-snapshot">delete</a>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <button type='button' class="delete-snapshot btn btn-xs btn-danger pull-right"
+                                        data-call="/server/{{ snapshot.snapshot_id }}/delete_instance_snapshot/"
+                                        data-notice="Power Cycling Instance {{ snapshot.snapshot_name }}"
+                                        data-toggle="popover" title="Delete Instance Snapshot" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
+                                    <i class="fa fa-minus"></i>
+                                </button>
                             </td>
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr class="snapshot-placeholder text-warning">
                         <td><p><i>This project has no instance snapshots.</i></p></td>
+                        <td></td>
                         <td></td>
                         <td></td>
                     </tr>
@@ -183,29 +243,91 @@
 </div>
 
 <script>
-    generateInstanceBars("{{ meters }}", "{{ stats }}");
-    var INSTANCE_ID = "{{server.server_id}}",
-            INSTANCE = "{{server.server_name}}",
-            ATTACHED_IP = "{{server.server_public_ips}}";
-{#    $(".close").click(function () {#}
-{#        refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")#}
-{#    });#}
+    var INSTANCE_ID = "{{instance.server_id}}",
+            INSTANCE = "{{instance.server_name}}",
+            ATTACHED_IP = "{{instance.server_public_ips}}";
+    $(function () {
+        var view = $(".info-content");
+
+        window.loading.current = view;
+        if (window.instanceViewTimer) {
+            window.clearInterval(window.instanceViewTimer);
+        }
+        window.instanceViewTimer = setInterval(function () {
+            stealthRefreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+        }, 60000);
+
+        $('[data-toggle="popover"]').popover();
+
+        $("#update").click(function (event) {
+            event.preventDefault();
+            $(".popover-content").load("/instance/get/resize/");
+        });
+
+        $(".create-instance-snapshot").click(function (event) {
+            event.preventDefault();
+            $(".popover-content").load("/instance/get/create_snapshot/");
+        });
+
+        $(document).on('click', '.delete-snapshot', function (event) {
+            event.preventDefault();
+            var call = $(this).data("call"),
+                    notice = $(this).data("call");
+            $(".popover-content").html($('<button type="button" id="delete-snapshot" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-snapshot").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+
+        $(document).on('click', '.delete-instance, .pause-instance, .unpause-instance, .suspend-instance, .resume-instance, .power-on-instance, .power-off-instance, .power-cycle-instance, .reboot-instance', function (event) {
+            event.preventDefault();
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="confirm-action" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#confirm-action").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+
+        $(".close").click(function () {
+            window.loading.current = $("#instances-container");
+            if (window.loading.loadFromView == true) {
+                refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
+            }
+        });
+    });
 </script>
 
-{#<div id="instance-view-resize-dialog-form" title="Resize server?">#}
-{#    <form id="instance-resize-form" action="">#}
-{#        {% csrf_token %}#}
-{#        <fieldset>#}
-{#            <label for="flavor">Select new flavor</label>#}
-{#            <select name="flavor" id="flavor">#}
-{#                {% for flav in flavors %}#}
-{#                    <option value="{{ flav.id }}">{{ flav.name }}</option>#}
-{#                {% endfor %}#}
-{#            </select>#}
-{#        </fieldset>#}
-{#    </form>#}
-{#</div>#}
-{##}
 {#<div id="instance-snapshot-dialog-form" title="Snapshot an instance">#}
 {#    <p class="validateTips">Specify name and description. </p>#}
 {##}

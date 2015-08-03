@@ -43,10 +43,10 @@ $(function () {
     // Project
     $(document).on('click', '#delete-project', function (event) {
         event.preventDefault();
-        var title = formatSpaces($(this).data("title")),
-            message = formatSpaces($(this).data("message")),
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
             call = formatCall($(this).data("call")),
-            notice = formatSpaces($(this).data("notice")),
+            notice = encodeString($(this).data("notice")),
             refresh = formatCall("redirect-to:/cloud/manage/"),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
@@ -58,18 +58,18 @@ $(function () {
         showInfoModal(page, $(this).data("call"));
     });
 
-    $(document).on('click', '#create-instance', function(event){
+    $(document).on('click', '#create-instance', function (event) {
         event.preventDefault();
         showLoader(page);
         showConfirmModal('/instance/get/create/' + CURRENT_PROJECT_ID + '/');
     });
 
-    $(document).on('click', '.delete-instance, .pause-instance, .unpause-instance, .suspend-instance, .resume-instance', function (event) {
+    $(document).on('click', '.delete-instance, .pause-instance, .unpause-instance, .suspend-instance, .resume-instance, .power-on-instance, .power-off-instance, .power-cycle-instance, .reboot-instance', function (event) {
         event.preventDefault();
-        var title = formatSpaces($(this).data("title")),
-            message = formatSpaces($(this).data("message")),
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
             call = formatCall($(this).data("call")),
-            notice = formatSpaces($(this).data("notice")),
+            notice = encodeString($(this).data("notice")),
             refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/"),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
@@ -81,7 +81,7 @@ $(function () {
         showInfoModal(page, $(this).data("call"));
     });
 
-    $(document).on('click', '.create-snapshot', function(event){
+    $(document).on('click', '.create-snapshot', function (event) {
         event.preventDefault();
         showConfirmModal('/snapshot/get/create/' + $(this).data("volume") + '/');
     });
@@ -108,12 +108,14 @@ $(function () {
 
     // --- Initialize Project View ---
     window.loading.current = page;
+    window.startProjectUpdateTimer();
     switchPageContent($("#project"), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
     $("#project").addClass('active');
 });
 
-window.deleteTimer = function(){
-  window.setInterval(function(){}, 1000)
+window.deleteTimer = function () {
+    window.setInterval(function () {
+    }, 1000)
 };
 
 // --- Project Charts ---
@@ -223,3 +225,38 @@ function generateInstanceBars(meters, stats) {
         }
     });
 }
+
+window.updateProjectContent = function () {
+    var page = $("#page-content"),
+        project = $("#project-container"),
+        instances = $("#instances-container"),
+        storage = $("#storage-container"),
+        networking = $("#networking-container"),
+        usersSecurity = $("#users-security-container");
+    switch (window.loading.current.selector) {
+        case project.selector:
+            stealthRefreshContainer(page, project, "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
+            break;
+        case instances.selector:
+            stealthRefreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+            break;
+        case storage.selector:
+            stealthRefreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+            break;
+        case networking.selector:
+            stealthRefreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+            break;
+        case usersSecurity.selector:
+            stealthRefreshContainer(page, usersSecurity, "/projects/" + CURRENT_PROJECT_ID + "/get_usersSecurity_panel/");
+            break;
+    }
+};
+
+window.startProjectUpdateTimer = function () {
+    if (window.projectUpdateTimer) {
+        window.clearInterval(window.projectUpdateTimer);
+    }
+    window.projectUpdateTimer = setInterval(function () {
+        window.updateProjectContent();
+    }, 60000)
+};

@@ -27,7 +27,7 @@ $(function () {
                             window.setTimeout(function () {
                                 removeLoaders();
                                 refreshContainer($("#page-content"), window.loading.current, refresh);
-                            }, 2000);
+                            }, 3000);
                         }
                     }
                 }
@@ -47,7 +47,7 @@ $(function () {
             window.setTimeout(function () {
                 removeLoaders();
                 refreshContainer($("#page-content"), window.loading.current, refresh);
-            }, 2000);
+            }, 3000);
         }
     });
 
@@ -106,6 +106,7 @@ function setModalButtons(enabled, buttons) {
 window.loading = {
     items: [],
     current: undefined,
+    loadFromView: false,
     checkLoading: function () {
         return this.items.length > 0;
     },
@@ -184,7 +185,28 @@ function refreshContainer(pageContainer, contentContainer, url, load) {
         contentContainer.load(url, function () {
             if (contentContainer.selector == window.loading.current.selector) {
                 pageContainer.html(contentContainer.html());
+                if (!(load === undefined)) {
+                    window[load]();
+                    var checkLoading = window.setInterval(function () {
+                        if (!window.loading.hasItem(load)) {
+                            $(".loading-text").remove();
+                            window.clearInterval(checkLoading);
+                        }
+                    }, 1000);
+                }
+                else {
+                    $(".loading-text").remove();
+                }
+            }
+        });
+    }
+}
 
+function stealthRefreshContainer(pageContainer, contentContainer, url, load) {
+    if (contentContainer.selector == window.loading.current.selector) {
+        contentContainer.load(url, function () {
+            if (contentContainer.selector == window.loading.current.selector) {
+                pageContainer.html(contentContainer.html());
                 if (!(load === undefined)) {
                     window[load]();
                     var checkLoading = window.setInterval(function () {
@@ -247,16 +269,7 @@ function switchActiveNav(link) {
 }
 
 function encodeString(string) {
-    formatSpaces(string);
-}
-
-function formatSpaces(string) {
-    for (var i = 0; i < string.length; i++) {
-        if (string[i] === ' ') {
-            string = string.replace(' ', "&32");
-        }
-    }
-    return string;
+    return encodeURIComponent(string);
 }
 
 function formatCall(call) {
