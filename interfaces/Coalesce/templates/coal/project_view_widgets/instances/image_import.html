@@ -1,0 +1,300 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Import Image</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="image-form" class="form-horizontal" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="image-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="imageName" id="image-name" placeholder="Image Name"
+                               class="col-sm-8">
+                    </div>
+                    <h4>Image Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="image-container" class="col-sm-4 control-label">Container Format:</label>
+                        <select name="imageContainer" id="image-container" class="col-sm-8">
+                            <option value="bare">bare</option>
+                            <option value="ovf">ovf</option>
+                            <option value="aki">aki</option>
+                            <option value="ari">ari</option>
+                            <option value="ami">ami</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="image-disk" class="col-sm-4 control-label">Disk Format:</label>
+                        <select name="imageDisk" id="image-disk" class="col-sm-8">
+                            <option value="raw">raw</option>
+                            <option value="vhd">vhd</option>
+                            <option value="vmdk">vmdk</option>
+                            <option value="vdi">vdi</option>
+                            <option value="iso">iso</option>
+                            <option value="qcow2">qcow2</option>
+                            <option value="aki">aki</option>
+                            <option value="ari">ari</option>
+                            <option value="ami">ami</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="image-type" class="col-sm-4 control-label">File Location:</label>
+                        <select name="imageType" id="image-type" class="col-sm-8">
+                            <option value="local" selected>local</option>
+                            <option value="remote">remote</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="image-local" class="col-sm-4 control-label">Local Location:</label>
+
+                        <div class="input-group col-sm-8">
+                            <span class="input-group-addon"><i class="fa fa-desktop text-top"></i></span>
+                            <input type="file" name="imageLocal" id="image-local">
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="image-remote" class="col-sm-4 control-label">Remote Location:</label>
+                        <input type="url" name="imageRemote" id="image-remote" class="col-sm-8" disabled>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="image-os" class="col-sm-4 control-label">
+                            <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                               title="When booting a Windows instance, OS Type must be specified. Otherwise your instance's timezone will be set to UTC, which has unexpected side effects in Windows">
+                            </i>OS Type:</label>
+                        <select name="imageOS" id="image-os" class="col-sm-8">
+                            <option value="linux" selected="selected">Linux</option>
+                            <option value="windows">Windows</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="image-visibility" class="col-sm-4 control-label">Visibility:</label>
+                        <select name="imageVisibility" id="image-visibility" class="col-sm-8">
+                            <option value="public">public</option>
+                            <option value="private">private</option>
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+            <div class="col-sm-12">
+                <h5>Upload Progress: <span class="upload-percent"></span></h5>
+
+                <div class="progress progress-striped active">
+                    <div class="progress-bar progress-bar-info upload-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="image-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var buttons = $("button"),
+                page = $("#page-content"),
+                instances = $("#instances-container");
+        $("#image-form").validate({
+            rules: {
+                imageName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                imageContainer: {
+                    required: true
+                },
+                imageDisk: {
+                    required: true
+                },
+                imageType: {
+                    required: true
+                },
+                imageLocal: {
+                    file: true
+                },
+                imageRemote: {
+                    url: true,
+                    remote: true
+                },
+                imageOS: {
+                    required: true
+                },
+                imageVisibility: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                var type = $("#image-type").val() == "local"
+                        ? $("#image-local")
+                        : $("#image-remote");
+                if (type.valid()) {
+                    setModalButtons(false, buttons);
+                    showMessage('info', "Importing new image ...");
+                    var progressID = guid(),
+                            uploading = true,
+                            formData = new FormData(),
+                            url = "";
+                    if ($("#image-type").val() == "local") {
+                        formData.append('imageLocal', $("#image-local")[0].files[0]);
+                        url =
+                                '/import_local/' +
+                                $("#image-name").val() + '/' +
+                                $("#image-container").val() + '/' +
+                                $("#image-disk").val() + '/' +
+                                $("#image-type").val() + '/' +
+                                "na" + '/' +
+                                $("#image-visibility").val() + '/' +
+                                $("#image-os").val() + '/' +
+                                progressID + '/';
+                        $.ajax(
+                                {
+                                    type: 'POST',
+                                    url: url,
+                                    data: formData,
+                                    contentType: false,
+                                    cache: false,
+                                    processData: false,
+                                    async: true,
+                                    xhr: function () {
+                                        window.loading.add("importing");
+                                        // This function will be called during the upload to update the progress of the upload.
+                                        var bar = $(".upload-bar"),
+                                                percent = $(".upload-percent");
+                                        var xhr = $.ajaxSettings.xhr();
+                                        xhr.upload.onprogress = function (e) {
+                                            if (e.lengthComputable) {
+                                                var percentage = Math.floor(100 * parseInt(e.loaded) / parseInt(e.total));
+                                                percentage = percentage + "%";
+                                                bar.css("width", percentage);
+                                                percent.html(percentage);
+                                            }
+                                        };
+                                        return xhr;
+                                    },
+                                    success: function (data) {
+                                        // This function is called if the post was successful to the server (not the upload).
+                                        // Convert the data into something we can use.
+                                        var data = JSON.parse(data);
+                                        if (data.status == "error") {
+                                            // There was an error on the server uploading the file so display the error message.
+                                            showMessage("error", data.message);
+                                            uploading = false;
+                                            //resetProgressBar(form);
+                                            window.loading.remove("importing");
+                                        }
+                                        if (data.status == "success") {
+                                            showMessage("success", data.message);
+                                            uploading = false;
+                                            //resetProgressBar(form);
+                                            window.loading.remove("importing");
+                                            closeModal();
+                                            refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                                        }
+                                    },
+                                    error: function () {
+                                        // This function is called if there was an issue posting the data to the server.
+                                        showMessage("error", "Server Fault");
+                                        uploading = false;
+                                        //resetProgressBar(form);
+                                        window.loading.remove("importing");
+                                    }
+                                });
+                    } else {
+                        var loc = $("#image-remote").val();
+                        loc = formatCall(loc);
+                        loc = encodeString(loc);
+                        url =
+                                '/import_remote/' +
+                                $("#image-name").val() + '/' +
+                                $("#image-container").val() + '/' +
+                                $("#image-disk").val() + '/' +
+                                $("#image-type").val() + '/' +
+                                loc + '/' +
+                                $("#image-visibility").val() + '/' +
+                                $("#image-os").val() + '/' +
+                                progressID + '/';
+                        window.loading.ad("importing");
+                        startProgressBarUpdate(progressID, $("#image-form"));
+                        $.ajax(
+                                {
+                                    type: 'POST',
+                                    url: url,
+                                    contentType: false,
+                                    cache: false,
+                                    processData: false,
+                                    async: true,                    // must be true to get updated with the progress of the upload
+                                    success: function (data) {
+                                        // This function is called if the post was successful to the server (not the upload).
+                                        // Convert the data into something we can use.
+                                        var data = JSON.parse(data);
+
+                                        if (data.status == "error") {
+                                            // There was an error on the server uploading the file so display the error message.
+                                            showMessage("error", data.message);
+                                            uploading = false;
+                                            //resetProgressBar(form);
+                                            window.loading.remove("importing");
+                                        }
+                                        if (data.status == "success") {
+                                            showMessage("success", data.message);
+                                            uploading = false;
+                                            //resetProgressBar(form);
+                                            window.loading.remove("importing");
+                                            closeModal();
+                                            refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                                        }
+                                    },
+                                    error: function () {
+                                        // This function is called if there was an issue posting the data to the server.
+                                        showMessage("error", "Server Fault");
+                                        uploading = false;
+                                        //resetProgressBar(form);
+                                        window.loading.remove("importing");
+                                    }
+                                });
+                    }
+                }
+            }
+        });
+        $("#image-form input, #image-form select").change(function () {
+            if ($("#image-form").valid()) {
+                var type = $("#image-type").val() == "local"
+                        ? $("#image-local")
+                        : $("#image-remote");
+                if (type.valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
+            } else {
+                $('button[type=submit]').prop("disabled", true);
+            }
+        });
+        $("#image-type").change(function () {
+            if ($(this).val() == "local") {
+                $("input[name=imageLocal]").removeProp("disabled");
+                $("input[name=imageRemote]").prop("disabled", "disabled");
+            } else {
+                $("input[name=imageRemote]").removeProp("disabled");
+                $("input[name=imageLocal]").prop("disabled", "disabled");
+            }
+        })
+    });
+</script>

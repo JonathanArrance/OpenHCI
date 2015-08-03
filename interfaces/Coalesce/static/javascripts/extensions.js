@@ -55,6 +55,12 @@ $(document).ready(function () {
     jQuery.validator.addMethod("projectTag", function (value, element) {
         return value != "";
     }, "Tag cannot be blank to auto-fill form.");
+    jQuery.validator.addMethod("file", function (value, element) {
+        return value != "";
+    }, "Please select a file.");
+    jQuery.validator.addMethod("remote", function (value, element) {
+        return value != "";
+    }, "Please enter a remote url.");
     jQuery.validator.addMethod("port", function (value, element) {
         return this.optional(element) || /^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/i.test(value);
     }, "Please use a valid port: 0 - 65535");

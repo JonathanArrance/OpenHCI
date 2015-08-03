@@ -27,7 +27,7 @@ $(function () {
                             window.setTimeout(function () {
                                 removeLoaders();
                                 refreshContainer($("#page-content"), window.loading.current, refresh);
-                            }, 3000);
+                            }, 2500);
                         }
                     }
                 }
@@ -47,7 +47,7 @@ $(function () {
             window.setTimeout(function () {
                 removeLoaders();
                 refreshContainer($("#page-content"), window.loading.current, refresh);
-            }, 3000);
+            }, 2500);
         }
     });
 
@@ -273,12 +273,7 @@ function encodeString(string) {
 }
 
 function formatCall(call) {
-    for (var i = 0; i < call.length; i++) {
-        if (call[i] === '/') {
-            call = call.replace('/', "&47");
-        }
-    }
-    return call;
+    return call.replace(/\//g, '&47');
 }
 
 // ---------------- //
@@ -345,25 +340,25 @@ var currentMousePosition = {"x": 0, "y": 0};
 
 // --- INSTANCE MANAGEMENT
 
-function startProgressBarUpdate(upload_id, form) {
+function startProgressBarUpdate(upload_id) {
     // This function will update the progress bar every second with the progress of the remote upload.
     // The progress is determined by querying the server for the current progress.
 
-    var g_progress_intv = 0,
-        bar = form.find('.upload-bar'),
-        percent = form.find('.upload-percent');
+    var gProgressIntV = 0,
+        bar = $(".upload-bar"),
+        percent = $(".upload-percent");
 
-    if (g_progress_intv != 0)
-        clearInterval(g_progress_intv);
+    if (gProgressIntV != 0)
+        clearInterval(gProgressIntV);
 
-    g_progress_intv = setInterval(function () {
+    gProgressIntV = setInterval(function () {
         $.getJSON("/get_upload_progress/" + upload_id, function (data) {
             if (data.status == "error") {
 
                 // We got an error back so display the message and stop updating the progress bar.
-                messages.showMessage("error", data.message);
-                clearInterval(g_progress_intv);
-                g_progress_intv = 0;
+                showMessage("error", data.message);
+                clearInterval(gProgressIntV);
+                gProgressIntV = 0;
                 return;
             }
 
@@ -372,8 +367,8 @@ function startProgressBarUpdate(upload_id, form) {
                 percentage = "100%";
                 bar.width(percentage);
                 percent.html(percentage);
-                clearInterval(g_progress_intv);
-                g_progress_intv = 0;
+                clearInterval(gProgressIntV);
+                gProgressIntV = 0;
                 return;
             }
 
@@ -384,7 +379,7 @@ function startProgressBarUpdate(upload_id, form) {
                 var percentage = 0;
 
             percentage = percentage + "%";
-            bar.width(percentage);
+            bar.css("width", percentage);
             percent.html(percentage);
         });
     }, 1000);

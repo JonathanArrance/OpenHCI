@@ -855,6 +855,13 @@ def get_instance_revert(request, server_id):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instances/instance_revert.html', RequestContext(request, {'snapshots': snapshots, 'error': "Error: %s"%e}))
 
+
+def get_image_import(request):
+    try:
+        return render_to_response('coal/project_view_widgets/instances/image_import.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/image_import.html', RequestContext(request, {'error': "Error: %s"%e}))
+
 def get_storage_panel(request, project_id):
     project = []
     limits = []
@@ -1598,8 +1605,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-
-        content_type = request.FILES['import_local'].content_type
+        content_type = request.FILES['imageLocal'].content_type
 
         # Create a temp file to hold the image contents until we give it to glance.
         download_dir   = "/tmp/"
@@ -1609,7 +1615,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
         # Transfer the content from the temp location to our own file.
         try:
             with open(download_file, 'wb+') as destination:
-                for chunk in request.FILES['import_local'].chunks():
+                for chunk in request.FILES['imageLocal'].chunks():
                     destination.write(chunk)
         except Exception as e:
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}

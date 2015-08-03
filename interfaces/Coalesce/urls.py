@@ -255,6 +255,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.revert_instance_snapshot',
             name='revert_instance_snapshot'),
 
+        url(r'^image/get/import/$',
+            'coalesce.coal_beta.views.get_image_import',
+            name='get_image_import'),
+
         # --- Floating IPs ----
         url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.floating_ip_view',

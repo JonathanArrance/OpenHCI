@@ -75,6 +75,24 @@ $(function () {
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
+    // Images
+    $(document).on('click', '#import-image', function (event) {
+        event.preventDefault();
+        showLoader(page);
+        showConfirmModal('/image/get/import/');
+    });
+
+    $(document).on('click', '.delete-image', function (event) {
+        event.preventDefault();
+        var title = encodeString($(this).data("title")),
+            message = encodeString($(this).data("message")),
+            call = formatCall($(this).data("call")),
+            notice = encodeString($(this).data("notice")),
+            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/"),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
     // Storage
     $(document).on('click', '.volume-name button', function (event) {
         event.preventDefault();
