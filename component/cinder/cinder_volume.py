@@ -139,15 +139,15 @@ class volume_ops:
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
         #This needs to be fixed, it is broken for some reason all of the sudden.
-        vol_type_list = self.list_volume_types()
-        vol_type_found = False
-        for v_type in vol_type_list:
-            if v_type['name'].lower() == voltype.lower():
-                vol_type_found = True
-                break
-
-        if not vol_type_found:
-            raise Exception ("Volume Type %s was not found for volume creation" % voltype)
+        #vol_type_list = self.list_volume_types()
+        #vol_type_found = False
+        #for v_type in vol_type_list:
+        #    if v_type['name'].lower() == voltype.lower():
+        #        vol_type_found = True
+        #        break
+#
+        #if not vol_type_found:
+        #    raise Exception ("Volume Type %s was not found for volume creation" % voltype)
 
         #get the name of the project based on the id
         try:
