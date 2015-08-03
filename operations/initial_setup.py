@@ -637,6 +637,9 @@ def run_setup(new_system_variables, auth_dict):
     os.system('source /home/transuser/factory_creds;openstack-status >> /transcirrus/first_time_status.txt')
     logger.sys_info("SETUP54:END")
 
+    # restart rabbitmq using new hostname
+    util.restart_rabbitmq()
+
     # restore file descriptors so I can print the results
     os.dup2(save[0], 1)
     os.dup2(save[1], 2)
