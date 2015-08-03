@@ -137,8 +137,8 @@ $(function () {
                     }
                 });
                 call = update == true
-                    ? 'nfs/update/' + formatCall(mountpoints)
-                    : 'nfs/set/' + formatCall(mountpoints);
+                    ? 'nfs/update/' + (mountpoints).slashTo47()
+                    : 'nfs/set/' + (mountpoints).slashTo47();
             } else if (provider == "nimble") {
                 call = update == true
                     ? 'nimble/update/' + configureNimble(inputs)
@@ -297,19 +297,19 @@ $(function () {
             call,
             notice,
             async = $(this).data("async"),
-            refresh = formatCall("/third_party_storage/get/");
+            refresh = ("/third_party_storage/get/").slashTo47();
 
         if (provider == "eseries") {
-            title = encodeString("Delete E-Series Storage");
-            message = encodeString("Remove E-Series Storage configuration");
-            call = formatCall("/" + provider + "/delete/");
-            notice = encodeString("Deleting E-Series Configuration");
+            title = encodeURIComponent("Delete E-Series Storage");
+            message = encodeURIComponent("Remove E-Series Storage configuration");
+            call = ("/" + provider + "/delete/").slashTo47();
+            notice = encodeURIComponent("Deleting E-Series Configuration");
             showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         } else if (provider == "nfs") {
-            title = encodeString("Delete NFS Storage");
-            message = encodeString("Remove NFS Storage configuration");
-            call = formatCall("/" + provider + "/delete/");
-            notice = encodeString("Deleting NFS Configuration");
+            title = encodeURIComponent("Delete NFS Storage");
+            message = encodeURIComponent("Remove NFS Storage configuration");
+            call = ("/" + provider + "/delete/").slashTo47();
+            notice = encodeURIComponent("Deleting NFS Configuration");
             showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
         }
     });

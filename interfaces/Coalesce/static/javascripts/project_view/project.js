@@ -43,11 +43,11 @@ $(function () {
     // Project
     $(document).on('click', '#delete-project', function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("redirect-to:/cloud/manage/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("redirect-to:/cloud/manage/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
@@ -66,11 +66,11 @@ $(function () {
 
     $(document).on('click', '.delete-instance, .pause-instance, .unpause-instance, .suspend-instance, .resume-instance, .power-on-instance, .power-off-instance, .power-cycle-instance, .reboot-instance', function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
@@ -84,11 +84,11 @@ $(function () {
 
     $(document).on('click', '.delete-image', function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
@@ -131,11 +131,11 @@ $(function () {
 
     $(document).on('click', ".deallocate-ip, .delete-network, .delete-router", function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
@@ -168,11 +168,11 @@ $(function () {
 
     $(document).on('click', '.delete-group, .delete-key', function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });

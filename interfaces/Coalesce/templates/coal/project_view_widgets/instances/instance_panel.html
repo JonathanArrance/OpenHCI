@@ -96,7 +96,7 @@
                                                 class="fa fa-power-off"></i> Power On</a></li>
                                     {% endif %}
 
-                                    <li><a href="#" class="delete-instance" data-title="Delete Instance"
+                                    <li class="bg-danger"><a href="#" class="delete-instance" data-title="Delete Instance"
                                            data-message="Delete {{ instance.server_name }}?"
                                            data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
                                            data-notice="Deleting Instance {{ instance.server_name }}"><i

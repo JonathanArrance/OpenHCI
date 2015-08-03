@@ -1,8 +1,3 @@
-String.prototype.trunc = String.prototype.trunc ||
-    function (n) {
-        return this.length > n ? this.substr(0, n - 1) + '&hellip;' : this;
-    };
-
 String.prototype.jsonify = function () {
     var n = this;
     for (var i in n) {
@@ -14,6 +9,10 @@ String.prototype.jsonify = function () {
     }
     return n;
 };
+
+String.prototype.slashTo47 = function () {
+        return this.replace(/\//g, '&47');
+    };
 
 Number.prototype.between = function (min, max) {
     return this > min && this < max;

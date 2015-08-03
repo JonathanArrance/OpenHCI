@@ -218,8 +218,8 @@
                                 });
                     } else {
                         var loc = $("#image-remote").val();
-                        loc = formatCall(loc);
-                        loc = encodeString(loc);
+                        loc = (loc).slashTo47();
+                        loc = encodeURIComponent(loc);
                         url =
                                 '/import_remote/' +
                                 $("#image-name").val() + '/' +

@@ -92,11 +92,11 @@ $(function () {
     // Phone Home
     $(document).on('click', '.phonehome', function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = $(this).data("call").slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/'+ refresh + '/' + async + '/');
     });
@@ -104,11 +104,11 @@ $(function () {
     // Upgrade
     $(document).on('click', '.upgrade', function (event) {
         event.preventDefault();
-        var title = encodeString($(this).data("title")),
-            message = encodeString($(this).data("message")),
-            call = formatCall($(this).data("call")),
-            notice = encodeString($(this).data("notice")),
-            refresh = formatCall("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/"),
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/").slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });

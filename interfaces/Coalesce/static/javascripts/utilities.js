@@ -268,14 +268,6 @@ function switchActiveNav(link) {
     }
 }
 
-function encodeString(string) {
-    return encodeURIComponent(string);
-}
-
-function formatCall(call) {
-    return call.replace(/\//g, '&47');
-}
-
 // ---------------- //
 // CSRF
 // ---------------- //
