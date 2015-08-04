@@ -6,7 +6,7 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title " id="modal-label">Create Volume</h4>
+    <h4 class="modal-title " id="modal-label">Create Volume From Snapshot</h4>
 </div>
 
 <div class="modal-body bg-default-light">
@@ -20,11 +20,9 @@
                         <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
                                class="col-sm-8">
                     </div>
-                    <h4>Volume Options</h4>
-                    <hr class="narrow">
                     <div class="form-group col-sm-12">
-                        <label for="volume-size" class="col-sm-4 control-label">Size (gb):</label>
-                        <input type="text" name="volumeSize" id="volume-size" placeholder="Volume Size in gigabytes"
+                        <label for="volume-size" class="col-sm-4 control-label">Size:</label>
+                        <input type="text" name="volumeSize" id="volume-size" placeholder="Volume Size"
                                class="col-sm-8">
                     </div>
                     <div class="col-sm-12">
@@ -34,14 +32,6 @@
                             <div class="progress-bar {% if tenant_info.avail_percent <= 30 %}progress-bar-info{% elif tenant_info.avail_percent <= 60 %}progress-bar-success{% elif tenant_info.avail_percent <= 90 %}progress-bar-warning{% elif tenant_info.avail_percent > 90 %}progress-bar-danger{% endif %}"
                                  style="width: {{ tenant_info.avail_percent }}%"></div>
                         </div>
-                    </div>
-                    <div class="form-group col-sm-12">
-                        <label for="volume-type" class="col-sm-4 control-label">Type:</label>
-                        <select name="volumeType" id="volume-type" class="col-sm-8">
-                            {% for type in volume_types %}
-                                <option value="{{ type.name }}">{{ type.name }}</option>
-                            {% endfor %}
-                        </select>
                     </div>
                 </fieldset>
             </form>
@@ -74,22 +64,19 @@
                     number: true,
                     min: 1,
                     max: {{ tenant_info.avail_storage }}
-                },
-                volumeType: {
-                    required: true
                 }
             },
             submitHandler: function () {
                 setModalButtons(false, buttons);
-                showMessage('info', "Creating new Volume");
+                showMessage('info', "Creating Volume from Snapshot");
 
-                $.getJSON('/create_volume/' + $("#volume-name").val() + '/' + $("#volume-size").val() + '/' + $("#volume-type").val() + '/' + CURRENT_PROJECT_ID + '/')
+                $.getJSON('/create_vol_from_snapshot/' + CURRENT_PROJECT_ID + '/{{ snapshot_id }}/' + $("#volume-size").val() + '/' + $("#volume-name").val() + '/')
                         .done(function (data) {
                             if (data.status == 'error') {
                                 showMessage('error', data.message);
                             }
                             if (data.status == 'success') {
-                                showMessage('success', "Created Volume " + data.volume_name + ".");
+                                showMessage('success', data.message);
                                 refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
                             }
                         })
@@ -99,12 +86,10 @@
                 closeModal();
             }
         });
-        $("#volume-form input, #volume-form select").change(function () {
+        $("#volume-form input").change(function () {
             if ($("#volume-form").valid()) {
                 $('button[type=submit]').removeProp("disabled");
-            } else {
-                $('button[type=submit]').prop("disabled", "disabled");
             }
-        });
+        })
     });
 </script>

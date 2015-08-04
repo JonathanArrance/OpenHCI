@@ -20,6 +20,14 @@
                         <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
                                class="col-sm-8">
                     </div>
+                    <div class="col-sm-12">
+                        <label>Available Storage: {{ tenant_info.avail_storage }}gb</label>
+
+                        <div class="progress">
+                            <div class="progress-bar {% if tenant_info.avail_percent <= 30 %}progress-bar-info{% elif tenant_info.avail_percent <= 60 %}progress-bar-success{% elif tenant_info.avail_percent <= 90 %}progress-bar-warning{% elif tenant_info.avail_percent > 90 %}progress-bar-danger{% endif %}"
+                                 style="width: {{ tenant_info.avail_percent }}%"></div>
+                        </div>
+                    </div>
                 </fieldset>
             </form>
         </div>

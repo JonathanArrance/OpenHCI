@@ -967,7 +967,13 @@ def get_volume_create(request, project_id):
         volume_types = vo.list_volume_types()
         avail_storage = quota['gigabytes'] - used_storage
         avail_percent = float(float(used_storage) / float(quota['gigabytes']) * 100)
+
         tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
+
+        if avail_storage < this_vol_size:
+            return render_to_response('coal/project_view_widgets/storage/volume_revert.html', RequestContext(request, {
+                'quota': quota, 'volume_types': volume_types, 'tenant_info': tenant_info,
+            'error': "Error: There may not be enough available storage to create this Volume"}))
 
         return render_to_response('coal/project_view_widgets/storage/volume_create.html', RequestContext(request, {
             'quota': quota, 'volume_types': volume_types, 'tenant_info': tenant_info}))
@@ -991,43 +997,132 @@ def get_volume_attach(request, project_id, volume_id):
             'volume_id': volume_id, 'instances': instances, 'error': "Error: %s" % e}))
 
 
-
 def get_volume_revert(request, project_id, volume_id):
-    snaps = []
+    quota = []
     snapshots = []
+    tenant_info = {}
     try:
         auth = request.session['auth']
+        qo = quota_ops(auth)
         vo = volume_ops(auth)
         sno = snapshot_ops(auth)
 
+        quota = qo.get_project_quotas(project_id)
+
         volumes = vo.list_volumes(project_id)
+        used_storage = 0
+        this_vol_size = 0
+        for volume in volumes:
+            v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
+            vol_size = vo.get_volume_info(v_dict)['volume_size']
+            used_storage += vol_size
+            if volume['volume_id'] == volume_id:
+                this_vol_size = vol_size
+
+        avail_storage = quota['gigabytes'] - used_storage
+        avail_percent = float(float(used_storage) / float(quota['gigabytes']) * 100)
+
         snaps = sno.list_snapshots(project_id)
         for snapshot in snaps:
             for volume in volumes:
                 if snapshot['volume_name'] == volume['volume_name']:
                     snapshots.append(snapshot)
 
+        tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
+
+        if avail_storage < this_vol_size:
+            return render_to_response('coal/project_view_widgets/storage/volume_revert.html', RequestContext(request, {
+                'volume_id': volume_id, 'quota': quota, 'snapshots': snapshots, 'tenant_info': tenant_info,
+            'error': "Error: There may not be enough available storage to revert this Volume"}))
+
         return render_to_response('coal/project_view_widgets/storage/volume_revert.html', RequestContext(request, {
-            'volume_id': volume_id, 'snapshots': snapshots}))
+            'volume_id': volume_id, 'quota': quota, 'snapshots': snapshots, 'tenant_info': tenant_info}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/storage/volume_revert.html', RequestContext(request, {
-            'volume_id': volume_id, 'snapshots': snapshots, 'error': "Error: %s" % e}))
+            'volume_id': volume_id, 'quota': quota, 'snapshots': snapshots, 'tenant_info': tenant_info,
+        'error': "Error: %s" % e}))
 
 
-def get_volume_clone(request, volume_id):
+def get_volume_clone(request, project_id, volume_id):
+    quota = []
+    snapshots = []
+    tenant_info = {}
     try:
-        return render_to_response('coal/project_view_widgets/storage/volume_clone.html', RequestContext(request, {'volume_id': volume_id}))
+        auth = request.session['auth']
+        qo = quota_ops(auth)
+        vo = volume_ops(auth)
+        sno = snapshot_ops(auth)
+
+        quota = qo.get_project_quotas(project_id)
+
+        volumes = vo.list_volumes(project_id)
+        used_storage = 0
+        this_vol_size = 0
+        for volume in volumes:
+            v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
+            vol_size = vo.get_volume_info(v_dict)['volume_size']
+            used_storage += vol_size
+            if volume['volume_id'] == volume_id:
+                this_vol_size = vol_size
+
+        avail_storage = quota['gigabytes'] - used_storage
+        avail_percent = float(float(used_storage) / float(quota['gigabytes']) * 100)
+
+        snaps = sno.list_snapshots(project_id)
+        for snapshot in snaps:
+            for volume in volumes:
+                if snapshot['volume_name'] == volume['volume_name']:
+                    snapshots.append(snapshot)
+
+        tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
+
+        if avail_storage < this_vol_size:
+            return render_to_response('coal/project_view_widgets/storage/volume_clone.html', RequestContext(request, {
+                'volume_id': volume_id, 'quota': quota, 'tenant_info': tenant_info,
+            'error': "Error: There may not be enough available storage to clone this Volume"}))
+
+        return render_to_response('coal/project_view_widgets/storage/volume_clone.html', RequestContext(request, {
+            'volume_id': volume_id, 'quota': quota, 'tenant_info': tenant_info}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/storage/volume_clone.html', RequestContext(request, {'volume_id': volume_id, 'error': "Error: %s"%e}))
-
-
+        return render_to_response('coal/project_view_widgets/storage/volume_clone.html', RequestContext(request, {
+            'volume_id': volume_id, 'quota': quota, 'tenant_info': tenant_info, 'error': "Error: %s" % e}))
 
 
 def get_snapshot_create(request, volume_id):
     try:
-        return render_to_response('coal/project_view_widgets/storage/snapshot_create.html', RequestContext(request, {'volume_id': volume_id}))
+        return render_to_response('coal/project_view_widgets/storage/snapshot_create.html',
+                                  RequestContext(request, {'volume_id': volume_id}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/storage/snapshot_create.html', RequestContext(request, {'volume_id': volume_id, 'error': "Error: %s"%e}))
+        return render_to_response('coal/project_view_widgets/storage/snapshot_create.html',
+                                  RequestContext(request, {'volume_id': volume_id, 'error': "Error: %s" % e}))
+
+
+def get_snapshot_create_volume(request, project_id, snapshot_id):
+    quota = []
+    tenant_info = {}
+    try:
+        auth = request.session['auth']
+        qo = quota_ops(auth)
+        vo = volume_ops(auth)
+
+        quota = qo.get_project_quotas(project_id)
+
+        volumes = vo.list_volumes(project_id)
+        used_storage = 0
+        for volume in volumes:
+            v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
+            used_storage += vo.get_volume_info(v_dict)['volume_size']
+
+        avail_storage = quota['gigabytes'] - used_storage
+        avail_percent = float(float(used_storage) / float(quota['gigabytes']) * 100)
+
+        tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
+
+        return render_to_response('coal/project_view_widgets/storage/snapshot_create_volume.html', RequestContext(request, {
+            'snapshot_id': snapshot_id, 'quota': quota, 'tenant_info': tenant_info}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/storage/snapshot_create_volume.html', RequestContext(request, {
+            'snapshot_id': snapshot_id, 'quota': quota, 'tenant_info': tenant_info, 'error': "Error: %s" % e}))
 
 
 def get_networking_panel(request, project_id):

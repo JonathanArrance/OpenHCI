@@ -116,7 +116,7 @@ $(function () {
 
     $(document).on('click', '.clone-volume', function (event) {
         event.preventDefault();
-        showConfirmModal('/volume/get/clone/' + $(this).data("volume") + '/');
+        showConfirmModal('/volume/get/clone/' + CURRENT_PROJECT_ID + '/' + $(this).data("volume") + '/');
     });
 
     $(document).on('click', '.create-snapshot', function (event) {
@@ -124,7 +124,12 @@ $(function () {
         showConfirmModal('/snapshot/get/create/' + $(this).data("volume") + '/');
     });
 
-    $(document).on('click', '.detach-volume, .delete-volume', function (event) {
+    $(document).on('click', '.create-volume-from-snapshot', function (event) {
+        event.preventDefault();
+        showConfirmModal('/snapshot/get/create_volume/' + CURRENT_PROJECT_ID + '/' + $(this).data("snapshot") + '/');
+    });
+
+    $(document).on('click', '.detach-volume, .delete-volume, .delete-snapshot', function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),
             message = encodeURIComponent($(this).data("message")),

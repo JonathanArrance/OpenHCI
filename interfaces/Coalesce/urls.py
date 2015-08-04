@@ -328,7 +328,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_volume_revert',
             name='get_volume_revert'),
 
-        url(r'^volume/get/clone/(?P<volume_id>[^/]+)/$',
+        url(r'^volume/get/clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_volume_clone',
             name='get_volume_clone'),
 
@@ -356,6 +356,10 @@ urlpatterns = patterns('',
         url(r'^snapshot/get/create/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_snapshot_create',
             name='get_snapshot_create'),
+
+        url(r'^snapshot/get/create_volume/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_snapshot_create_volume',
+            name='get_snapshot_create_volume'),
 
         # --- Containers ----
         url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',
