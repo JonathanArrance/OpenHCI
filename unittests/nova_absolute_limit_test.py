@@ -1,18 +1,14 @@
-#!/usr/bin/python
 from transcirrus.common.auth import authorization
 from transcirrus.component.nova.absolute_limits import absolute_limits_ops
 
-print "Instantiating authorization object for an default admin"
-c = authorization("user", "password")
+c = authorization("admin", "password")
 
-print "Get admin authorization dictionary"
 b = c.get_auth()
 
-print "Instantiating absolution_limit object"
 ho = absolute_limits_ops(b)
 
-print "Get limits"
-
-project_id = "9e8d9999e31c4e41a38867ec0e4ae542"
+project_id = "8c37340157634b29be59143240f0a5e8"
+# project_id = "4633053212a84fe3aac17c1269004ecb"
+# project_id = "c7644341af3942099f6363974f528112"
 hl = ho.get_absolute_limit_for_tenant(project_id)
 print hl
