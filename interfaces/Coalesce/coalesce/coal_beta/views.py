@@ -1105,6 +1105,25 @@ def get_users_security_panel(request, project_id):
                                       'keys': sec_keys,
                                       'error': "Error: %s" % e}))
 
+def get_user_create(request):
+    try:
+        return render_to_response('coal/project_view_widgets/users_security/user_create.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/user_create.html', RequestContext(request, {'error': "Error: %s"%e}))
+
+def get_user_add(request):
+    ouserinfo = []
+    try:
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        ousers = uo.list_orphaned_users()
+        if ousers:
+            for ouser in ousers:
+                ouserinfo.append(ouser['username'])
+        return render_to_response('coal/project_view_widgets/users_security/user_add.html', RequestContext(request, {'ouserinfo': ouserinfo}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/user_add.html', RequestContext(request, {'ouserinfo': ouserinfo, 'error': "Error: %s"%e}))
+
 def get_security_key_create(request):
     try:
         return render_to_response('coal/project_view_widgets/users_security/security_key_create.html', RequestContext(request))
@@ -1446,25 +1465,78 @@ we need to build a function to request a vm resize
                                                         'flavors': flavors
                                                         }))
 
-def user_view(request, project_name, project_id, user_name):
-    auth = request.session['auth']
-    uo = user_ops(auth)
-    user_dict = {'username': user_name, 'project_name': project_name}
-    user_info = uo.get_user_info(user_dict)
 
-    return render_to_response('coal/user_view.html', RequestContext(request, {'user_info': user_info,}))
+def user_view(request, project_id, user_name):
+    project = []
+    user_info = {}
+    meter_dict = []
+    stats = []
+    try:
+        auth = request.session['auth']
+        uo = user_ops(auth)
+        to = tenant_ops(auth)
+
+        project = to.get_tenant(project_id)
+
+        user_dict = {'username': user_name, 'project_name': project['project_name']}
+        user_info = uo.get_user_info(user_dict)
+
+        meter_dict = meters.get_instance_meters()
+        meter_list = []
+
+        for group in meter_dict:
+            for meter in group['meters']:
+                meter_list.append(meter['meterType'])
+        meter_string = ""
+        i = 0
+        for meter in meter_list:
+            meter_string += meter
+            if i + 1 != len(meter_list):
+                meter_string += ","
+            i += 1
+
+        now = str(datetime.utcnow())
+        date = now.split()[0]
+        time = now.split()[1].split(':')
+        end_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+        then = str(datetime.utcnow() - timedelta(days=3))
+        date = then.split()[0]
+        time = then.split()[1].split(':')
+        start_time = str(date) + "T" + str(time[0]) + "%3A" + str(time[1])
+
+        meter_list = {'tenant_id': user_info['user_id'], 'resource_id': project_id, 'start_time': start_time,
+                      'end_time': end_time, 'meter_list': meter_string}
+        result = meter_ops.get_data_for_drawing_meters(auth, meter_list)
+
+        if result == []:
+            # No data was provided for this meter.
+            stats = "empty dataset"
+        else:
+            stats = result
+
+        return render_to_response('coal/project_view_widgets/users_security/user_view.html', RequestContext(request, {
+            'meters': meter_dict, 'stats': stats, 'project': project, 'user_info': user_info,
+            'current_project_id': project_id}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/user_view.html', RequestContext(request, {
+            'meters': meter_dict, 'stats': stats, 'project': project, 'user_info': user_info,
+            'current_project_id': project_id, 'error': "Error: %s" % e}))
+
 
 def key_view(request, sec_key_id, project_id):
-    auth = request.session['auth']
-    so = server_ops(auth)
-    key_dict = {'sec_key_id': sec_key_id, 'project_id': project_id}
-    key_info = so.get_sec_keys(key_dict)
-
-    return render_to_response('coal/project_view_widgets/users_security/security_key_view.html',
-                               RequestContext(request, {
-                                                        'key_info': key_info,
-                                                        'current_project_id': project_id
-                                                        }))
+    key_info = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        key_dict = {'sec_key_id': sec_key_id, 'project_id': project_id}
+        key_info = so.get_sec_keys(key_dict)
+        return render_to_response('coal/project_view_widgets/users_security/security_key_view.html',
+                                  RequestContext(request, {'key_info': key_info, 'current_project_id': project_id}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/security_key_view.html',
+                                  RequestContext(request, {'key_info': key_info, 'current_project_id': project_id,
+                                                           'error': "Error: %s" % e}))
 
 
 def key_delete(request, sec_key_name, project_id):

@@ -156,6 +156,16 @@ $(function () {
         showInfoModal(page, $(this).data("call"));
     });
 
+    $(document).on('click', '.create-user', function (event) {
+        event.preventDefault();
+        showConfirmModal('/user/get/create/');
+    });
+
+    $(document).on('click', '.add-user', function (event) {
+        event.preventDefault();
+        showConfirmModal('/user/get/add/');
+    });
+
     $(document).on('click', '.create-group', function (event) {
         event.preventDefault();
         showConfirmModal('/security_group/get/create/');
@@ -166,7 +176,7 @@ $(function () {
         showConfirmModal('/key_pair/get/create/');
     });
 
-    $(document).on('click', '.delete-group, .delete-key', function (event) {
+    $(document).on('click', '.delete-user, .enable-user, .disable-user, .remove-user, .delete-group, .delete-key', function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),
             message = encodeURIComponent($(this).data("message")),

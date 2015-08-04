@@ -416,11 +416,11 @@ urlpatterns = patterns('',
 
         # --- Users ----
 
-        url(r'^user/(?P<project_name>\w+)/(?P<project_id>\w+)/(?P<user_name>\w+)/account_view/$',
+        url(r'^user/(?P<project_name>\w+)/(?P<project_id>\w+)/(?P<user_name>[-\w]+)/account_view/$',
             'coalesce.coal_beta.views.user_account_view',
             name='user_account_view'),
 
-        url(r'^projects/(?P<project_name>\w+)/(?P<project_id>\w+)/user/(?P<user_name>\w+)/view/$',
+        url(r'^projects/(?P<project_id>\w+)/user/(?P<user_name>[-\w]+)/view/$',
             'coalesce.coal_beta.views.user_view',
             name='user_view'),
 
@@ -451,6 +451,14 @@ urlpatterns = patterns('',
         url(r'^get_update_account_password/$',
             'coalesce.coal_beta.views.get_update_account_password',
             name='get_update_account_password'),
+
+        url(r'^user/get/create/$',
+            'coalesce.coal_beta.views.get_user_create',
+            name='get_user_create'),
+
+        url(r'^user/get/add/$',
+            'coalesce.coal_beta.views.get_user_add',
+            name='get_user_add'),
 
         # --- Security Groups ----
         url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<transport>[^/]+)/(?P<project_id>[^/]+)/$',
