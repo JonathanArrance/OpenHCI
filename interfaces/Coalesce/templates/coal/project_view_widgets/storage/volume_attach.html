@@ -6,18 +6,26 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title " id="modal-label">Create Snapshot</h4>
+    <h4 class="modal-title " id="modal-label">Create Volume</h4>
 </div>
 
 <div class="modal-body bg-default-light">
     <div class="container-fluid">
         <div class="row-fluid">
-            <form id="snap-form" class="form-horizontal">
+            <form id="volume-form" class="form-horizontal">
                 {% csrf_token %}
-                <div class="form-group col-sm-12">
-                    <label for="snap-name" class="col-sm-4 control-label">Name:</label>
-                    <input type="text" name="snapName" id="snap-name" placeholder="Snapshot Name" class="col-sm-8">
-                </div>
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="volume-instance" class="col-sm-4 control-label">Instance:</label>
+                        <select name="volumeInstance" id="volume-instance" class="col-sm-8">
+                            {% for instance in instances %}
+                                {% if instance.server_status != "BUILDING" and instance.server_status != "ERROR" %}
+                                    <option value="{{ instance.server_id }}">{{ instance.server_name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
             </form>
         </div>
     </div>
@@ -25,7 +33,7 @@
 
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
-    <button type="submit" form="snap-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+    <button type="submit" form="volume-form" class="btn btn-primary" data-loading-text="Loading ...">
         Confirm
     </button>
 </div>
@@ -35,26 +43,23 @@
         var buttons = $(this).parent().parent().find('button'),
                 page = $("#page-content"),
                 storage = $("#storage-container");
-        $("#snap-form").validate({
+        $("#volume-form").validate({
             rules: {
-                snapName: {
-                    required: true,
-                    charField: true,
-                    minlength: standardStringMin,
-                    maxlength: standardStringMax
+                volumeInstance: {
+                    required: true
                 }
             },
             submitHandler: function () {
                 setModalButtons(false, buttons);
-                showMessage('info', "Creating new snapshot ...");
+                showMessage('info', "Attaching Volume to Instance");
 
-                $.getJSON('/create_snapshot/' + CURRENT_PROJECT_ID + '/' + $("#snap-name").val() + '/{{ volume_id }}/No Description/')
+                $.getJSON('/attach_volume/' + CURRENT_PROJECT_ID + '/' + $("#volume-instance").val() + '/{{ volume_id }}/')
                         .done(function (data) {
                             if (data.status == 'error') {
                                 showMessage('error', data.message);
                             }
                             if (data.status == 'success') {
-                                showMessage('success', "Created snapshot " + data.snapshot_name + ".");
+                                showMessage('success', data.message);
                                 refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
                             }
                         })
@@ -62,21 +67,7 @@
                             showMessage('error', 'Server Fault');	// Flag server fault message
                         });
                 closeModal();
-            },
-            invalidHandler: function (event, validator) {
-                var errors = validator.numberOfInvalids();
-                if (errors) {
-                    var message = errors == 1
-                            ? 'You missed 1 field. It has been highlighted'
-                            : 'You missed ' + errors + ' fields. They have been highlighted';
-                    showMessage('error', message)
-                }
             }
         });
-        $("#snap-name").change(function () {
-            if ($("#snap-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            }
-        })
     });
 </script>

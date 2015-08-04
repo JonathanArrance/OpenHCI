@@ -99,9 +99,40 @@ $(function () {
         showInfoModal(page, $(this).data("call"));
     });
 
+    $(document).on('click', '.create-volume', function (event) {
+        event.preventDefault();
+        showConfirmModal('/volume/get/create/' + CURRENT_PROJECT_ID + '/');
+    });
+
+    $(document).on('click', '.attach-volume', function (event) {
+        event.preventDefault();
+        showConfirmModal('/volume/get/attach/' + CURRENT_PROJECT_ID + '/' + $(this).data("volume") + '/');
+    });
+
+    $(document).on('click', '.revert-volume', function (event) {
+        event.preventDefault();
+        showConfirmModal('/volume/get/revert/' + CURRENT_PROJECT_ID + '/' + $(this).data("volume") + '/');
+    });
+
+    $(document).on('click', '.clone-volume', function (event) {
+        event.preventDefault();
+        showConfirmModal('/volume/get/clone/' + $(this).data("volume") + '/');
+    });
+
     $(document).on('click', '.create-snapshot', function (event) {
         event.preventDefault();
         showConfirmModal('/snapshot/get/create/' + $(this).data("volume") + '/');
+    });
+
+    $(document).on('click', '.detach-volume, .delete-volume', function (event) {
+        event.preventDefault();
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/").slashTo47(),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
     // Networking

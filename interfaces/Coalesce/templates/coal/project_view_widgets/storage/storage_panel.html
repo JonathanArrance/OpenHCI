@@ -12,7 +12,7 @@
                 <th>Volume</th>
                 <th>Attached</th>
                 <th>
-                    <button id="create-volume" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button class="btn btn-xs btn-success pull-right create-volume"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
@@ -20,9 +20,6 @@
             <tbody>
             {% if volumes %}
                 {% for volume in volumes %}
-                    <script>
-                        console.log("{{ volume.info }}")
-                    </script>
                     {% if volume.info.volume_set_bootable %}
                         <tr id="{{ volume.info.volume_id }}"
                             class="volume">
@@ -50,14 +47,46 @@
                                     </a>
                                     <ul class="dropdown-menu table-dropdown">
                                         {% if volume.info.volume_attached == 'true' %}
-                                            <li><a href="#" class="detach-volume">detach</a></li>
+                                            <li><a href="#" class="detach-volume" data-title="Detach Volume"
+                                                   data-message="Detach {{ volume.info.volume_name }} from {{ volume.info.volume_instance.server_name }}?"
+                                                   data-call="/detach_volume/{{ project.project_id }}/{{ volume.info.volume_id }}/"
+                                                   data-notice="Detaching Volume {{ volume.info.volume_name }} from instance {{ volume.info.volume_instance.server_name }}">
+                                                <i class="fa fa-chain-broken"></i> detach</a>
+                                            </li>
                                         {% else %}
-                                            <li><a href="#" class="attach-volume">attach</a></li>
-                                            <li><a href="#" class="create-snapshot" data-volume="{{ volume.info.volume_id }}">snapshot</a></li>
+                                            {% if tenant_info.num_instances > 0 %}
+                                                <li>
+                                                    <a href="#" class="attach-volume"
+                                                       data-volume="{{ volume.info.volume_id }}">
+                                                        <i class="fa fa-chain"></i> attach</a>
+                                                </li>
+                                            {% endif %}
+                                            <li>
+                                                <a href="#" class="create-snapshot"
+                                                   data-volume="{{ volume.info.volume_id }}">
+                                                    <i class="fa fa-camera-retro"></i> snapshot</a>
+                                            </li>
                                         {% endif %}
-                                        <li><a href="#" class="clone-volume">clone</a></li>
-                                        <li><a href="#" class="revert-volume">revert</a></li>
-                                        <li><a href="#" class="delete-volume">delete</a></li>
+                                        <li>
+                                            <a href="#" class="clone-volume"
+                                               data-volume="{{ volume.info.volume_id }}">
+                                                <i class="fa fa-clone"></i> clone</a>
+                                        </li>
+                                        {% if volume.info.snapshots %}
+                                            <li>
+                                                <a href="#" class="revert-volume"
+                                                   data-volume="{{ volume.info.volume_id }}">
+                                                    <i class="fa fa-fast-backward">
+                                                    </i> revert</a>
+                                            </li>
+                                        {% endif %}
+                                        <li class="bg-danger">
+                                            <a href="#" class="delete-volume" data-title="Delete Volume"
+                                               data-message="Delete {{ volume.info.volume_name }}?"
+                                               data-call="/delete_volume/{{ volume.info.volume_id }}/{{ project.project_id }}/"
+                                               data-notice="Deleting User {{ volume.info.volume_name }}">
+                                                <i class="fa fa-trash-o"></i> delete</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </td>
@@ -121,8 +150,7 @@
                         <td class="snapshot-name">
                             {{ snapshot.snapshot_name }} <i class="fa fa-info-circle text-top" data-toggle="tooltip"
                                                             data-placement="right"
-                                                            title="ID: {{ snapshot.snapshot_id }}">></i>
-
+                                                            title="ID: {{ snapshot.snapshot_id }}"></i>
                         </td>
                         <td class="snapshot-volume center-text">
                             {{ snapshot.volume_name }}
