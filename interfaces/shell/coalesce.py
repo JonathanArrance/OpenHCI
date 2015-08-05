@@ -380,38 +380,41 @@ def setup(d):
     p.start()
 
     fill_text = "Preparing your cloud..."
+    spinner = ["[|] ", "[/] ", "[-] ", "[\\] "]
+    spin = 0
     d.gauge_start(text=fill_text)
     fill = 0
-    status = None
-    status1 = None
     count = 0
     while (1):
+        spin = (spin + 1) % 4
         out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s' % (count), shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out.wait()
         time.sleep(1)
         stat_raw = out.stdout.readlines()
         if (len(stat_raw) == 0):
+            d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
             continue
-        count = count + 1
+        count += 1
         fill = fill + 1.851
         stat = stat_raw[0].split(':')
         fill_text = stat[-1].strip()
         if (fill_text == "END"):
-            status = p.join()
+            p.join()
             fill = 0
             o = Process(target=change_admin_password, args=(user_dict, pwd))
             o.start()
             while (1):
-                d.gauge_update(fill, text='Updating credentials...', update_text=1)
+                spin = (spin + 1) % 4
+                d.gauge_update(fill, text=spinner[spin]+'Updating credentials...', update_text=1)
                 fill = fill + 10
                 time.sleep(1)
                 if (fill > 100):
-                    status1 = o.join()
+                    o.join()
                     break
             break
         else:
-            d.gauge_update(fill, text=fill_text, update_text=1)
+            d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
     d.gauge_stop()
 
     timeout = 10
