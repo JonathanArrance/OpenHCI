@@ -2,12 +2,12 @@
 
 import sys
 from transcirrus.common.daemon import Daemon
-import transcirrus.operations.obtain_memory_usage as memory_usage_ops
+import transcirrus.operations.obtain_third_party_meters as third_party_ops
 
 class MyDaemon(Daemon):
     def run(self):
         while True:
-            memory_usage_ops.daemonize(True, 600)
+            third_party_ops.daemonize(True, 600)
 
 if __name__ == "__main__":
     daemon = MyDaemon(sys.argv[1])

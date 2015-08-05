@@ -62,14 +62,15 @@ then
     /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/IPy-0.83.tar
 fi
 
-# Commands to setup our ceilometer deamon.
-/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch /etc/init.d
-/bin/chmod 755 /etc/init.d/ceilometer_memory_patch
-/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
-/bin/chown root:root /etc/init.d/ceilometer_memory_patch
-/sbin/chkconfig --levels 235 ceilometer_memory_patch on
-/sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
-/sbin/service ceilometer_memory_patch restart
+# Commands to setup our ceilometer daemon.
+# This service is no longer needed
+#/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch /etc/init.d
+#/bin/chmod 755 /etc/init.d/ceilometer_memory_patch
+#/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
+#/bin/chown root:root /etc/init.d/ceilometer_memory_patch
+#/sbin/chkconfig --levels 235 ceilometer_memory_patch on
+#/sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
+#/sbin/service ceilometer_memory_patch restart
 
 ######################################################
 #
@@ -91,3 +92,24 @@ done
 #diable selinux
 sudo setenforce 0
 sudo sed -i 's/=enforcing/=disabled/;s/=permissive/=disabled/' /etc/selinux/config
+
+# Install python lxml lib "Offline"
+if [ ! -f /usr/local/lib/python2.7/site-packages/lxml/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/lxml-3.4.4.tar.gz
+fi
+
+# Remove old ceilometer memory patch daemon.
+/sbin/service ceilometer_memory_patch stop
+/sbin/chkconfig --level 235 ceilometer_memory_patch off
+/sbin/chkconfig --del /etc/init.d/ceilometer_memory_patch
+/bin/rm -f /etc/init.d/ceilometer_memory_patch
+
+# Commands to setup our ceilometer third party meters daemon.
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_third_party_meters /etc/init.d
+/bin/chmod 755 /etc/init.d/ceilometer_third_party_meters
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_third_party_meters
+/bin/chown root:root /etc/init.d/ceilometer_third_party_meters
+/sbin/chkconfig --levels 235 ceilometer_third_party_meters on
+/sbin/chkconfig --add /etc/init.d/ceilometer_third_party_meters
+/sbin/service ceilometer_third_party_meters restart
