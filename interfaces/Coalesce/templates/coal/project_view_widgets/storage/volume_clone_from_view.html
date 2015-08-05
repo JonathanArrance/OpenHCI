@@ -2,16 +2,6 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-    <h4 class="modal-title " id="modal-label">Revert Volume</h4>
-</div>
-
-<div class="modal-body bg-default-light">
-    <div class="container-fluid">
-        <div class="row-fluid">
             <form id="volume-form" class="form-horizontal">
                 {% csrf_token %}
                 <fieldset>
@@ -19,14 +9,6 @@
                         <label for="volume-name" class="col-sm-4 control-label">Name:</label>
                         <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
                                class="col-sm-8">
-                    </div>
-                    <div class="form-group col-sm-12">
-                        <label for="volume-snapshot" class="col-sm-4 control-label">Snapshot:</label>
-                        <select name="volumeSnapshot" id="volume-snapshot" class="col-sm-8">
-                            {% for snapshot in snapshots %}
-                                    <option value="{{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</option>
-                            {% endfor %}
-                        </select>
                     </div>
                     <div class="col-sm-12">
                         <label>Available Storage: {{ tenant_info.avail_storage }}gb</label>
@@ -36,22 +18,16 @@
                                  style="width: {{ tenant_info.avail_percent }}%"></div>
                         </div>
                     </div>
+                    <button type="submit" form="volume-form" id="clone-volume-from-view"
+                            class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+                        Confirm
+                    </button>
                 </fieldset>
             </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal-footer">
-    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
-    <button type="submit" form="volume-form" class="btn btn-primary" data-loading-text="Loading ...">
-        Confirm
-    </button>
-</div>
 
 <script>
     $(function () {
-        var buttons = $(this).parent().parent().find('button'),
+        var view = $(".info-content"),
                 page = $("#page-content"),
                 storage = $("#storage-container");
         $("#volume-form").validate({
@@ -61,29 +37,36 @@
                     charField: true,
                     minlength: standardStringMin,
                     maxlength: standardStringMax
-                },
-                volumeSnapshot: {
-                    required: true
                 }
             },
             submitHandler: function () {
-                setModalButtons(false, buttons);
-                showMessage('info', "Reverting Volume");
+                $("#clone-volume-from-view").removeProp("disabled");
+                showMessage('info', "Cloning Volume");
 
-                $.getJSON('/revert_volume_snapshot/' + CURRENT_PROJECT_ID + '/{{ volume_id }}/' + $("#volume-name").val() + '/' + $("#volume-snapshot").val() + '/')
+                $.getJSON('/create_vol_clone/' + CURRENT_PROJECT_ID + '/{{ volume_id }}/' + $("#volume-name").val() + '/')
                         .done(function (data) {
                             if (data.status == 'error') {
                                 showMessage('error', data.message);
                             }
                             if (data.status == 'success') {
                                 showMessage('success', data.message);
-                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                window.loading.loadFromView = true;
+                                stealthRefreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                refreshContainer(view, view, "/projects/" + CURRENT_PROJECT_ID + "/volumes/" + VOLUME_ID + "/view/");
                             }
                         })
                         .fail(function () {
                             showMessage('error', 'Server Fault');	// Flag server fault message
+                        })
+                        .always(function () {
+                            $(".clone-volume-from-view").removeClass("bg-active bg-striped").removeProp("disabled");
                         });
-                closeModal();
+
+                $(".popover").popover('hide');
+                $(".clone-volume-from-view").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            },
+            invalidHandler: function () {
+                $("#clone-volume-from-view").prop("disabled", "disabled");
             }
         });
     });

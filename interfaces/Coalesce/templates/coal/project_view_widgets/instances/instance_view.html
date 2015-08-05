@@ -172,7 +172,7 @@
                     <th>Created</th>
                     <th>
                         <button type="button" class="create-instance-snapshot btn btn-xs btn-success pull-right"
-                                data-toggle="popover" title="Update Settings" data-html="true"
+                                data-toggle="popover" title="Create Instance Snapshot" data-html="true"
                                 data-content="<div class='col-sm-12'><h1>Loading <i class='fa fa-cog fa-spin'></i></h1></div>"
                                 data-placement="left">
                             <i class="fa fa-plus text-top"></i>
@@ -194,9 +194,10 @@
                                 {{ snapshot.info.date_created }}
                             </td>
                             <td class="snapshot-actions">
-                                <button type='button' class="delete-instance-from-view-snapshot btn btn-xs btn-danger pull-right"
+                                <button type='button'
+                                        class="delete-instance-snapshot-from-view btn btn-xs btn-danger pull-right"
                                         data-call="/server/{{ snapshot.snapshot_id }}/delete_instance_snapshot/"
-                                        data-notice="Power Cycling Instance {{ snapshot.snapshot_name }}"
+                                        data-notice="Deleting Instance Snapshot {{ snapshot.snapshot_name }}"
                                         data-toggle="popover" title="Delete Instance Snapshot" data-html="true"
                                         data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
                                     <i class="fa fa-minus"></i>
@@ -279,13 +280,13 @@
             $(".popover-content").load("/instance/get/create_snapshot/");
         });
 
-        $(document).on('click', '.delete-instance-from-view-snapshot', function (event) {
+        $(document).on('click', '.delete-instance-snapshot-from-view', function (event) {
             event.preventDefault();
             $('.btn').not(this).popover('hide');
             var call = $(this).data("call"),
-                    notice = $(this).data("call");
-            $(".popover-content").html($('<button type="button" id="delete-instance-from-view-snapshot" class="btn btn-xs btn-primary">Confirm</button>'));
-            $("#delete-instance-from-view-snapshot").click(function (event) {
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="delete-instance-snapshot-from-view" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-instance-snapshot-from-view").click(function (event) {
                 event.preventDefault();
                 showMessage('info', notice);
                 $.getJSON(call)
@@ -339,7 +340,6 @@
             $(".popover-content").html($('<button type="button" id="delete-instance-from-view" class="btn btn-xs btn-primary">Confirm</button>'));
             $("#delete-instance-from-view").click(function (event) {
                 event.preventDefault();
-                window.loading.loadFromView = true;
                 showMessage('info', notice);
                 $.getJSON(call)
                         .done(function (data) {
@@ -349,12 +349,13 @@
                             }
                             if (data.status == "success") {
                                 showMessage('success', data.message);
-                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                                window.loading.loadFromView = true;
+                                refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
                             }
                         }).fail(function () {
                             showMessage('error', "Server Fault");
                         });
-                $(".popover").popover('hide');
+                closeModal()
             });
         });
 

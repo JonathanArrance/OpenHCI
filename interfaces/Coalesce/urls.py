@@ -324,13 +324,25 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_volume_attach',
             name='get_volume_attach'),
 
+        url(r'^volume/get/attach_from_view/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_volume_attach_from_view',
+            name='get_volume_attach_from_view'),
+
         url(r'^volume/get/revert/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_volume_revert',
             name='get_volume_revert'),
 
+        url(r'^volume/get/revert_from_view/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_volume_revert_from_view',
+            name='get_volume_revert_from_view'),
+
         url(r'^volume/get/clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_volume_clone',
             name='get_volume_clone'),
+
+        url(r'^volume/get/clone_from_view/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_volume_clone_from_view',
+            name='get_volume_clone_from_view'),
 
         # --- Snapshots ----
         url(r'^take_snapshot/(?P<snapshot_name>[^/]+)/(?P<snapshot_desc>[^/]+)/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
@@ -357,9 +369,17 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_snapshot_create',
             name='get_snapshot_create'),
 
+        url(r'^snapshot/get/create_from_view/$',
+            'coalesce.coal_beta.views.get_snapshot_create_from_view',
+            name='get_snapshot_create_from_view'),
+
         url(r'^snapshot/get/create_volume/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_snapshot_create_volume',
             name='get_snapshot_create_volume'),
+
+        url(r'^snapshot/get/create_volume_from_view/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_snapshot_create_volume_from_view',
+            name='get_snapshot_create_volume_from_view'),
 
         # --- Containers ----
         url(r'^projects/(?P<project_id>\w+)/containers/(?P<container_name>[^/]+)/view/$',

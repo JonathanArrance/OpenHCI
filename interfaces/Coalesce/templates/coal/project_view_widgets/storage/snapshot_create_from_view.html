@@ -1,0 +1,61 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<form id="snapshot-form" class="form-horizontal">
+    {% csrf_token %}
+    <fieldset>
+        <div class="form-group col-sm-12">
+            <label for="snapshot-name" class="col-sm-4 control-label">Name:</label>
+            <input type="text" name="snapshotName" id="snapshot-name" class="col-sm-8" placeholder="Snapshot Name">
+        </div>
+
+        <button type="submit" form="snapshot-form" id="create-snapshot-from-view" class="btn btn-xs btn-primary"
+                data-loading-text="Loading ...">
+            Confirm
+        </button>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        var view = $(".info-content");
+        $("#snapshot-form").validate({
+            rules: {
+                snapshotName: {
+                    required: true,
+                    charField: true,
+                    minlength: 0,
+                    maxlength: standardStringMax
+                }
+            },
+            submitHandler: function () {
+                $("#create-snapshot-from-view").removeProp("disabled");
+                $.getJSON('/create_snapshot/' + CURRENT_PROJECT_ID + '/' + $("#snapshot-name").val() + '/' + VOLUME_ID + '/No Description/')
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', "Snapshot " + data.snapshot_name + " has been created.");
+                                window.loading.loadFromView = true;
+                                stealthRefreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                refreshContainer(view, view, "/projects/" + CURRENT_PROJECT_ID + "/volumes/" + VOLUME_ID + "/view/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                        })
+                        .always(function () {
+                            $(".create-snapshot-from-view").removeClass("bg-active bg-striped").removeProp("disabled");
+                        });
+
+                $(".popover").popover('hide');
+                $(".create-snapshot-from-view").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            },
+            invalidHandler: function () {
+                $("#create-snapshot-from-view").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>
