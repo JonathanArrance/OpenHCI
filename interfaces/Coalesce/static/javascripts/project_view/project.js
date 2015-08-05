@@ -165,6 +165,11 @@ $(function () {
             })
     });
 
+    $(document).on('click', '.assign-ip', function (event) {
+        event.preventDefault();
+        showConfirmModal('/floating_ip/get/assign/' + CURRENT_PROJECT_ID + '/' + $(this).data("ip") + '/');
+    });
+
     $(document).on('click', ".deallocate-ip, .delete-network, .delete-router", function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),

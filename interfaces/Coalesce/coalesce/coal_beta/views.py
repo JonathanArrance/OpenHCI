@@ -1274,6 +1274,8 @@ def get_networking_panel(request, project_id):
     networks = []
     open_networks = []
     routers = []
+    instances = []
+    avail_instances = []
     tenant_info = {}
     try:
         auth = request.session['auth']
@@ -1282,6 +1284,7 @@ def get_networking_panel(request, project_id):
         al = absolute_limits_ops(auth)
         no = neutron_net_ops(auth)
         l3o = layer_three_ops(auth)
+        so = server_ops(auth)
 
         project = to.get_tenant(project_id)
 
@@ -1315,9 +1318,19 @@ def get_networking_panel(request, project_id):
         routers = l3o.list_routers(project_id)
         num_routers = len(routers)
 
+        instances = so.list_servers(project_id)
+        for instance in instances:
+            i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
+            instance = so.get_server(i_dict)
+            if instance['server_public_ips'] == "None":
+                print instance
+                avail_instances.append(instance)
+        num_instances = len(instances)
+
         tenant_info = {'num_fips': num_fips,
                        'num_nets': num_nets,
-                       'num_routers': num_routers}
+                       'num_routers': num_routers,
+                       'num_instances': num_instances}
 
         return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
                                   RequestContext(request, {
@@ -1328,7 +1341,8 @@ def get_networking_panel(request, project_id):
                                       'fips': fips,
                                       'networks': networks,
                                       'open_networks': open_networks,
-                                      'routers': routers}))
+                                      'routers': routers,
+                                      'instances': avail_instances}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
                                   RequestContext(request, {
@@ -1340,7 +1354,30 @@ def get_networking_panel(request, project_id):
                                       'networks': networks,
                                       'open_networks': open_networks,
                                       'routers': routers,
+                                      'instances': avail_instances,
                                       'error': "Error: %s" % e}))
+
+
+def get_ip_assign(request, project_id, floating_ip):
+    avail_instances = []
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+
+        instances = so.list_servers(project_id)
+        print instances
+        for instance in instances:
+            print instance
+            i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
+            instance = so.get_server(i_dict)
+            if instance['server_public_ips'] != None:
+                avail_instances.append(instance)
+
+        return render_to_response('coal/project_view_widgets/networking/ip_assign.html', RequestContext(request, {
+            'floating_ip': floating_ip, 'instances': avail_instances}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/ip_assign.html', RequestContext(request, {
+            'floating_ip': floating_ip, 'instances': avail_instances, 'error': "Error: %s" % e}))
 
 
 def get_private_network_create(request):

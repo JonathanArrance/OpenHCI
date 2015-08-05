@@ -49,9 +49,11 @@
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
                                     {% if fip.floating_in_use == 'true' %}
-                                        <li><a href="#" class="unassign-ip">unassign</a></li>
+                                        <li><a href="#" class="unassign-ip"><i class="fa fa-map-o"></i> unassign</a></li>
                                     {% else %}
-                                        <li><a href="#" class="assign-ip">assign</a></li>
+                                        {% if instances %}
+                                            <li><a href="#" class="assign-ip" data-ip="{{ fip.floating_ip }}"><i class="fa fa-map-signs"></i> assign</a></li>
+                                        {% endif %}
                                         <li class="bg-danger"><a href="#" class="deallocate-ip"
                                                                  data-title="Deallocate Floating IP Address"
                                                                  data-message="Deallocate {{ fip.floating_ip }}?"

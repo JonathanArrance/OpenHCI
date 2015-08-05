@@ -280,6 +280,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.unassign_floating_ip',
             name='unassign_floating_ip'),
 
+        url(r'^floating_ip/get/assign/(?P<project_id>[^/]+)/(?P<floating_ip>[^/]+)/$',
+            'coalesce.coal_beta.views.get_ip_assign',
+            name='get_ip_assign'),
+
         # --- Volumes ----
         url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.volume_view',
