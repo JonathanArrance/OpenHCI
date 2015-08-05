@@ -94,6 +94,10 @@ hr.narrow {
     background-size: 40px 40px;
 }
 
+.fa-giant {
+    font-size: 500%;
+}
+
 .break {
     word-break: break-all;
 }

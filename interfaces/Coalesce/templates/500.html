@@ -1,9 +1,24 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-</head>
-<body>
-<h1>Server Error: 500</h1>
-</body>
-</html>
+{% extends "coal/base-fluid.html" %}
 
+{% block content %}
+<div class="container-fluid">
+    <div class="jumbotron">
+        <h1><i class="fa fa-warning text-danger"></i> Server Error: 500</h1>
+    </div>
+    <div class="well center-text">
+        <p class="lead text-warning">
+            Oh no! Something has gone terribly wrong with the server!
+        </p>
+
+        <p class="lead text-warning">
+            Please try again after our gnomes try some <i>careful</i> maintenance.
+        </p>
+
+        <h1 class="text-primary">
+            <i class="fa fa-giant fa-bomb"></i>
+            <i class="fa fa-giant fa-hand-o-right"></i>
+            <i class="fa fa-giant fa-server"></i>
+        </h1>
+    </div>
+</div>
+{% endblock %}
