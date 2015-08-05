@@ -13,14 +13,26 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
 
+        url(r'^503.html$',
+            TemplateView.as_view(template_name="503.html")),
+
         url(r'^500.html$',
             TemplateView.as_view(template_name="500.html")),
+
+        url(r'^409.html$',
+            TemplateView.as_view(template_name="409.html")),
 
         url(r'^404.html$',
             TemplateView.as_view(template_name="404.html")),
 
-        url(r'^409.html$',
-            TemplateView.as_view(template_name="409.html")),
+        url(r'^403.html$',
+            TemplateView.as_view(template_name="403.html")),
+
+        url(r'^401.html$',
+            TemplateView.as_view(template_name="401.html")),
+
+        url(r'^400.html$',
+            TemplateView.as_view(template_name="400.html")),
 
         url(r'^$',
             'coalesce.coal_beta.views.dashboard',
