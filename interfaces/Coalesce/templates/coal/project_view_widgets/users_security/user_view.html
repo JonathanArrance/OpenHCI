@@ -1,0 +1,91 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ user_info.username }} View</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-8 col-sm-offset-2">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>User Details</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td>{{ user_info.username }}</td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td>{{ user_info.user_id }}</td>
+                </tr>
+                <tr>
+                    <th>Role</th>
+                    <td>{{ user_info.user_role }}</td>
+                </tr>
+                <tr>
+                    <th>Enabled</th>
+                    <td>{{ user_info.user_enabled }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td><a href="mailto:{{ user_info.email }}">{{ user_info.email }}</a></td>
+                </tr>
+                <tr>
+                    <th>Project Id</th>
+                    <td>{{ user_info.project_id }}</td>
+                </tr>
+                {% if user_id == user_info.user_id or user_level == 0 and user_info.user_role == "pu" or user_level == 0 and user_info.user_role == "user" or user_level == 1 and user_info.user_role == "user" %}
+                    <tr>
+                        <th>Actions</th>
+                        <td>
+                            <div class="center-buttons">
+                                <a href="#" id="update-user-password" class="btn">Update Password</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-8 col-sm-offset-2">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Last 24hrs: Average User Meters
+                    </h3>
+                </div>
+                <div class="panel-body center-text">
+                {% if stats != "empty dataset" %}
+                    {% for group in meters %}
+                        {% for meter in group.meters %}
+                            {% for stat in stats %}
+                                {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
+                                    <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
+                                        <script>
+                                            charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
+                                        </script>
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                {% else %}
+                <p class="text-warning">no data returned for user</p>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

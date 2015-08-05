@@ -1,0 +1,108 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create Router</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="router-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="router-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="routerName" id="router-name" placeholder="Router Name"
+                               class="col-sm-8">
+                    </div>
+                    <h4>Router Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="router-network" class="col-sm-4 control-label">Network:</label>
+                        <select name="routerNetwork" id="router-network" class="col-sm-8">
+                            {% for network in networks %}
+                                {% if network.in_use == "false" %}
+                                    <option value="{{ network.net_id }}">{{ network.net_name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="router-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var page = $("#page-content"),
+                networking = $("#networking-container");
+        $("#router-form").validate({
+            rules: {
+                routerName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                routerNetwork: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Creating new router");
+                var url = '/create_router/' + $("#router-name").val() + '/' + $("#router-network").val() + '/' + DEFAULT_PUBLIC + '/' + CURRENT_PROJECT_ID + '/';
+
+                $.getJSON(url)
+                        .done(function (data) {
+                            if (data.status == 'error')
+                                showMessage('error', data.message);
+                            if (data.status == 'success')
+                                showMessage('success', data.message);
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');
+                        })
+                        .always(function () {
+                            refreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                        });
+
+                closeModal();
+                showLoader(page);
+                window.setTimeout(function () {
+                    removeLoaders();
+                    refreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                }, 2000);
+            },
+            invalidHandler: function (event, validator) {
+                var errors = validator.numberOfInvalids();
+                if (errors) {
+                    var message = errors == 1
+                            ? 'You missed 1 field. It has been highlighted'
+                            : 'You missed ' + errors + ' fields. They have been highlighted';
+                    showMessage('error', message)
+                }
+            }
+        });
+        $("#router-form input, #router-form select").change(function () {
+            if ($("#router-form").valid()) {
+                $('button[type=submit]').removeProp("disabled");
+            } else {
+                $('button[type=submit]').prop("disabled", true);
+            }
+        });
+    });
+</script>

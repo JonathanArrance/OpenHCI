@@ -1,0 +1,486 @@
+/*
+
+COLORS:
+------------------------------------------------------------------
+    background: rgb(43, 62, 80)
+    default: rgb(72, 85, 99) [darker]
+    default-light: rgb(78, 93, 108) [panel and well backgrounds]
+    default-dark: rgb(66, 77, 90)
+    alt-light: rgb(98, 113, 128)
+    alt-dark: rgb(63, 82, 100)
+    hover: rgb(72, 85, 99) [dull]
+    primary: rgb(223, 105, 26)
+    success: rgb(92, 184, 92)
+    info: rgb(91, 192, 222)
+    warning: rgb(240, 173, 78)
+    danger: rgb(217, 83, 79)
+    font-light: rgb(235, 235, 235)
+    font-dark: rgb(43, 62, 80)
+    disabled:
+    link: rgb(223, 105, 26) [same as primary]
+------------------------------------------------------------------
+
+*/
+
+@keyframes progress-bar-stripes {
+    0% {
+        background-position: 40px 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+/* GENERAL */
+
+html, body {
+    height: auto;
+    min-width: 360px;
+}
+
+section {
+    margin-bottom: 60px;
+}
+
+i {
+    min-width: 15px;
+}
+
+h3.row-header {
+    margin: 0 0 10px;
+}
+
+input[disabled],
+select[disabled] {
+    background-color: rgb(205, 205, 205);
+    cursor: not-allowed;
+}
+
+hr.narrow {
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.bg {
+    background-color: rgb(43, 62, 80);
+}
+
+.bg-default {
+    background-color: rgb(72, 85, 99);
+}
+
+.bg-default-light {
+    background-color: rgb(78, 93, 108)
+}
+
+.bg-default-dark {
+    background-color: rgb(66, 77, 90)
+}
+
+.bg-alt-light {
+    background-color: rgb(98, 113, 128)
+}
+
+.bg-alt-dark {
+    background-color: rgb(63, 82, 100)
+}
+
+.bg-active {
+    animation: 2s linear 0s normal none infinite running progress-bar-stripes;
+}
+
+.bg-striped {
+    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0));
+    background-size: 40px 40px;
+}
+
+.fa-giant {
+    font-size: 500%;
+}
+
+.break {
+    word-break: break-all;
+}
+
+.center-text {
+    text-align: center;
+}
+
+.inline-block {
+    display: inline-block;
+}
+
+.no-padding {
+    padding: 0;
+}
+
+.list-hover *:hover {
+    background-color: rgb(72, 85, 99);
+}
+
+.modal-wide {
+    width: 90%;
+}
+
+.label-lg {
+    font-size: 85%;
+}
+
+.label-condensed {
+    padding: 0 0.2em 0.1em;
+}
+
+.text-top {
+    vertical-align: text-top;
+}
+
+.middle {
+    vertical-align: middle;
+}
+
+.popover-content{
+    min-width: 300px;
+    width: 100%;
+}
+
+.error {
+    font-size: 90%;
+    margin: 0;
+    padding: 0 15px;
+}
+
+.page-header {
+    border-bottom-color: rgb(78, 93, 108);
+    margin-bottom: 5px;
+    margin-top: 0;
+    padding-bottom: 0;
+}
+
+.page-header h3 {
+    margin-bottom: 5px;
+    margin-top: 0;
+}
+
+.progress {
+    background-color: rgb(98, 113, 128);
+    position: relative;
+}
+
+.progress span {
+    color: rgb(235, 235, 235);
+    display: block;
+    position: absolute;
+    text-align: center;
+    width: 100%;
+}
+
+.progress-bar > span {
+    color: rgb(235, 235, 235);
+    display: block;
+    position: relative;
+    text-align: center;
+    width: 100%;
+}
+
+.tooltip {
+    z-index: 1000;
+}
+
+.tooltip-inner {
+    color: rgb(235, 235, 235);
+    background: rgb(63, 82, 100);
+    border: solid 1px rgb(63, 82, 100);
+    word-break: normal;
+}
+
+.tooltip.top .tooltip-arrow {
+    border-top-color: rgb(63, 82, 100);
+    border-width: 5px 5px 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -5px;
+}
+
+.tooltip.left .tooltip-arrow {
+    border-left-color: rgb(63, 82, 100);
+    border-width: 5px 0 5px 5px;
+    margin-top: -5px;
+    right: 0;
+    top: 50%;
+}
+
+.tooltip.right .tooltip-arrow {
+    border-right-color: rgb(63, 82, 100);
+    border-width: 5px 5px 5px 0;
+    left: 0;
+    margin-top: -5px;
+    top: 50%;
+}
+
+.tooltip.bottom .tooltip-arrow {
+    border-bottom-color: rgb(63, 82, 100);
+    border-width: 0 5px 5px;
+    left: 50%;
+    top: 0;
+}
+
+.loading-text {
+    background-color: rgba(43, 62, 80, 0.5);
+    height: 100%;
+    position: absolute;
+    text-align: center;
+    vertical-align: middle;
+    width: 100%;
+    z-index: 1000;
+}
+
+.trans {
+    color: dimgrey;
+    font-family: sans-serif;
+    font-weight: lighter;
+}
+
+.cirrus {
+    color: rgb(28, 60, 119);
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+/* FORM ELEMENTS */
+
+select {
+    color: rgb(43, 62, 80);
+    height: 25px;
+}
+
+input[type=file] {
+    background-color: rgb(235, 235, 235);
+    height: 33px;
+}
+
+.form-inline .radio, .form-inline .checkbox {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.bootstrap-tagsinput .tag {
+    font-size: 90%;
+    padding: 1px 5px 2px;
+}
+
+.help-block {
+    padding: inherit;
+}
+
+/* BUTTONS */
+
+.btn-center {
+    margin: 0 auto;
+}
+
+.btn-12 {
+    width: 100%;
+}
+
+.btn-6 {
+    width: 50%;
+    display: inline;
+}
+
+.btn-300 {
+    max-width: 300px;
+}
+
+.btn-light {
+    background-color: rgb(98, 113, 128);
+}
+
+.btn-light:hover {
+    background-color: rgb(78, 93, 108);
+}
+
+/* NAVIGATION */
+
+.navbar-logo {
+    padding: 0;
+    width: 40px;
+    z-index: 100000;
+}
+
+.navbar-brand {
+    display: inline;
+    float: none;
+    margin-left: 0 !important;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.navbar-badge {
+    display: inline-block;
+    padding: 0 5px;
+}
+
+.navbar-badge:hover {
+    background-color: rgba(255, 255, 255, .5);
+    text-decoration: none;
+}
+
+footer {
+    background-color: rgb(214, 214, 214);
+}
+
+.footer-links {
+    list-style: none;
+    margin: 0;
+}
+
+.version-label {
+    bottom: 5px;
+    color: rgb(212, 85, 0);
+    font-family: sans-serif;
+    position: fixed;
+    right: 5px;
+}
+
+.btn-group.actions-dropdown {
+    float: right;
+}
+
+.dropdown-toggle.bg-primary {
+    background-color: rgb(223, 105, 26);
+    color: rgb(255, 255, 255)
+}
+
+.dropdown-menu.bg-primary {
+    background-color: rgb(223, 105, 26);
+    color: rgb(255, 255, 255)
+}
+
+.dropdown-menu.table-dropdown, .dropdown-menu.panel-dropdown {
+    left: auto;
+    padding: 0;
+    margin-right: 0;
+}
+
+.dropdown-menu.table-dropdown {
+    margin-top: 7px;
+    right: -6px;
+}
+
+.dropdown-menu.panel-dropdown {
+    margin-top: 11px;
+    right: -15px;
+}
+
+.instance .actions .dropdown-menu.table-dropdown {
+    margin-right: -1px;
+}
+
+.page-header > .btn-group.actions-dropdown {
+    margin-top: -20px;
+    font-weight: bold;
+}
+
+.page-header > .actions-dropdown > ul {
+    margin-left: -100px;
+    margin-top: -1px;
+}
+
+/* WELCOME PAGE */
+
+.learn-more {
+    margin: 0 auto 21px;
+    position: relative;
+}
+
+.help {
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 5px;
+    display: inline-block;
+    margin: 0 0 10px;
+    max-width: 100%;
+    min-width: 180px;
+    padding: 0;
+    position: static;
+    visibility: visible;
+    width: 520px;
+}
+
+.help-legend {
+    border-width: 0 0 1px;
+    box-shadow: 0 0 0 -3px rgba(0, 0, 0, 0);
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 18px;
+    padding: 12px;
+    position: relative;
+    transition: box-shadow 0.3s ease-out 0s;
+}
+
+/* CHARTS */
+
+#eseries-graph {
+    font-size: 12px;
+}
+
+.c3-chart-arcs-gauge-min, .c3-chart-arcs-gauge-max, .c3-chart-arcs-gauge-unit, .c3-gauge-value {
+    fill: rgb(235, 235, 235) !important;
+    font-size: 12px !important;
+}
+
+.c3-chart-arcs-gauge-unit, .c3-gauge-value {
+    display: inline !important;
+}
+
+.c3-title {
+    fill: rgb(235, 235, 235);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px !important;
+}
+
+.c3-legend-item > text, .c3-chart-arcs-title {
+    fill: rgb(235, 235, 235);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.c3-tooltip-container {
+    z-index: 1000;
+}
+
+.c3-tooltip {
+    background-color: rgb(235, 235, 235);
+}
+
+.c3-tooltip tbody tr td.name, .c3-tooltip tbody tr td.value {
+    color: rgb(46, 46, 46);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.c3-axis {
+    fill: rgb(235, 235, 235);
+}
+
+.c3-axis-x-label {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.c3-grid {
+    opacity: 0;
+}
+
+.c3-target text {
+    fill: rgb(235, 235, 235);
+}
+
+/* ICONS */
+
+/*i.fa {*/
+/*-webkit-animation: show 1s 1;*/
+/*/!* any other properties to override from FontAwesome's default .fa rule *!/*/
+/*}*/
+/*@-webkit-keyframes show {*/
+/*0% { opacity: 0; }*/
+/*100% { opacity: 1; }*/
+/*}*/

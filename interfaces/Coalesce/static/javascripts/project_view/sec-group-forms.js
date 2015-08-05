@@ -47,7 +47,7 @@ $(function () {
                     var isValid =
                         checkLength(groupName, "Group name", standardStringMin, standardStringMax) &&
                         checkCharfield(groupName, "Group name") &&
-                        checkLength(groupDesc, "Group description", 0, 80);
+                        checkLength(groupDesc, "Group description", 6, 80);
 
                     if (!isValid) {
                     } else {
@@ -65,11 +65,7 @@ $(function () {
                             confTransport = 'tcp';
                         }
 
-                        if (confDesc == "") {
-                            confDesc = "none";
-                        }
-
-                        message.showMessage('notice', 'Creating new Key ' + confName);
+                        messages.showMessage('notice', 'Creating new Key ' + confName);
 
                         setVisible("#create-security-group", false);
                         disableLinks(true);
@@ -83,12 +79,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', data.message);
+                                    messages.showMessage('success', data.message);
 
                                     // Initialize empty string for new router row
                                     var newRow = '';
@@ -121,7 +117,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                message.showMessage('error', 'Server Fault');
+                                messages.showMessage('error', 'Server Fault');
                             })
                             .always(function () {
 
@@ -192,7 +188,7 @@ $(function () {
                     var actionsCell = document.getElementById(confId + "-actions-cell");
                     var actionsHtml = actionsCell.innerHTML;
 
-                    message.showMessage('notice', "Deleting " + confSecGroup + ".");
+                    messages.showMessage('notice', "Deleting " + confSecGroup + ".");
 
                     disableLinks(true);
 
@@ -216,7 +212,7 @@ $(function () {
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
 
                                 $(actionsCell).empty().fadeOut();
                                 $(actionsCell).append(actionsHtml).fadeIn();
@@ -224,7 +220,7 @@ $(function () {
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
+                                messages.showMessage('success', data.message);
 
                                 $(targetRow).fadeOut().remove();
                             }
@@ -244,7 +240,7 @@ $(function () {
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
 
                             $(actionsCell).empty().fadeOut();
                             $(actionsCell).append(actionsHtml).fadeIn();

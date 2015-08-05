@@ -1,19 +1,224 @@
-{% extends "coal/base-fluid.html" %}
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
 
-{% block title %}Build a new project{% endblock %}
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Build Project</h4>
+</div>
 
-{% block content %}
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="tag-form" class="form-horizontal">
+                <fieldset class="form-inline">
+                    <div class="form-group col-sm-12">
+                        <div class="col-sm-4">
+                            <button type="submit" form="tag-form" id="tag-fill"
+                                    class="btn btn-sm btn-success center-block"
+                                    data-loading-text="Tag Fill &check;" data-toggle="tooltip" data-placement="top"
+                                    title="Use this to automatically fill in all applicable fields (project_[tag])">
+                                <span aria-hidden="true">Auto-Fill &check;</span>
+                            </button>
+                        </div>
+                        <input type="text" name="tag" id="tag" value="" class="col-sm-8"
+                               placeholder="Example tags: my_team, class101, 0">
+                    </div>
+                </fieldset>
+            </form>
+            <hr>
+            <form id="project-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset id="project-settings" class="form-inline">
+                    <legend>Project Settings</legend>
+                    <div class="form-group col-sm-12">
+                        <label for="project-name" class="col-sm-4 control-label">Project:</label>
+                        <input type="text" name="projectName" id="project-name" value=""
+                               placeholder="Project Name" class="col-sm-8" data-tag="project">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="project-admin" class="col-sm-4 control-label">Admin:</label>
+                        <input type="text" name="adminName" id="project-admin" value=""
+                               placeholder="Admin Name" class="col-sm-8" data-tag="admin">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="project-admin-email" class="col-sm-4 control-label">Admin E-Mail:</label>
+                        <input type="email" name="adminEmail" id="project-admin-email" value=""
+                               placeholder="admin@email.com" class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="project-admin-password" class="col-sm-4 control-label">Admin Password:</label>
+                        <input type="password" name="adminPassword" id="project-admin-password" value=""
+                               placeholder="********" class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="project-admin-password-confirm" class="col-sm-4 control-label">
+                            Confirm Password:</label>
+                        <input type="password" name="adminPasswordConfirm"
+                               id="project-admin-password-confirm" value=""
+                               placeholder="********" class="col-sm-8">
+                    </div>
+                </fieldset>
+                <hr>
+                <fieldset id="security-settings" class="form-inline">
+                    <legend>Security Settings</legend>
+                    <div class="form-group col-sm-12">
+                        <label for="security-group" class="col-sm-4 control-label">Security Group:</label>
+                        <input type="text" name="securityGroup" id="security-group" value=""
+                               placeholder="Security Group Name" class="col-sm-8" data-tag="secgroup">
+                    </div>
 
+                    <div class="form-group col-sm-12">
+                        <label for="security-key" class="col-sm-4 control-label">Security Key:</label>
+                        <input type="text" name="securityKey" id="security-key" value=""
+                               placeholder="Security Key Name" class="col-sm-8" data-tag="seckey">
+                    </div>
+                </fieldset>
+                <hr>
+                <fieldset id="network-settings" class="form-inline">
+                    <legend>Network Settings</legend>
+                    <div class="form-group col-sm-12">
+                        <label for="network-name" class="col-sm-4 control-label">Private Network:</label>
+                        <input type="text" name="networkName" id="network-name" value=""
+                               placeholder="Private Network Name" class="col-sm-8" data-tag="network">
+                    </div>
 
-    <div class="row-fluid">
-        {% if token %}
-            <div class="span6">
-    		{% load crispy_forms_tags %}
-    		{% crispy form %}
+                    <div class="form-group col-sm-12">
+                        <label for="router-name" class="col-sm-4 control-label">Router:</label>
+                        <input type="text" name="routerName" id="router-name" value=""
+                               placeholder="Router Name" class="col-sm-8" data-tag="router">
+                    </div>
 
-            </div><!-- end span-->
-        {% endif %}
-    </div><!-- end row-fluid-->
+                    <div class="form-group col-sm-12">
+                        <label for="dns-address" class="col-sm-4 control-label">Subnet DNS:</label>
+                        <input type="text" name="dnsAddress" id="dns-address" value=""
+                               placeholder="IP Address (ex: 192.168.0.1)" class="col-sm-8">
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
 
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="project-form" class="btn btn-primary" data-loading-text="Loading ...">
+        Build Project
+    </button>
+</div>
 
-{% endblock %}
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        var buttons = $(this).parent().parent().find('button');
+        $("#tag-form").validate({
+            rules: {
+                tag: {
+                    projectTag: true,
+                    charField: true,
+                    minlength: 1,
+                    maxlength: 22
+                }
+            },
+            submitHandler: function () {
+                $("#project-form").find('input').each(function (index, element) {
+                    if ($(element).data("tag") != undefined) {
+                        $(element).val($(element).data("tag") + "_" + $("#tag").val());
+                    }
+                });
+            }
+        });
+        $("#project-form").validate({
+            rules: {
+                projectName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                adminName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                adminEmail: {
+                    required: true,
+                    email: true
+                },
+                adminPassword: {
+                    required: true,
+                    passwordCreate: true
+                },
+                adminPasswordConfirm: {
+                    required: true,
+                    equalTo: "#project-admin-password"
+                },
+                securityGroup: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                securityKey: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                networkName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                routerName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                dnsAddress: {
+                    required: true,
+                    ip: true
+                }
+            },
+            submitHandler: function () {
+                setModalButtons(false, buttons);
+                showMessage('info', "Creating new project ...");
+                $.ajax({
+                    type: 'POST',
+                    url: "/projects/build/",
+                    data: $('#project-form').serialize(),
+                    success: function (data) {
+                        data = $.parseJSON(data);
+                        if (data.status == "success") {
+                            showMessage('success', "Successfully built new project, redirecting ...");
+                            location.replace(data.redirect);
+                        }
+                        if (data.status == "error") {
+                            showMessage('error', data.message);
+                            setModalButtons(true, buttons);
+                        }
+                    },
+                    error: function () {
+                        showMessage('error', "Server Fault");
+                        setModalButtons(true, buttons);
+                    }
+                });
+                return false;
+            },
+            invalidHandler: function (event, validator) {
+                var errors = validator.numberOfInvalids();
+                if (errors) {
+                    var message = errors == 1
+                            ? 'You missed 1 field. It has been highlighted'
+                            : 'You missed ' + errors + ' fields. They have been highlighted';
+                    showMessage('error', message)
+                }
+            }
+        });
+    });
+</script>

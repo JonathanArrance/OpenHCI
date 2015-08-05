@@ -1,0 +1,31 @@
+<h1 class="page-header">Metering</h1>
+
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+{% for group in meters %}
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">{{ group.title }}</h3>
+        </div>
+        <div id="{{ group.id }}" class="panel-body center-text">
+            <div class="col-sm-12">
+                {% for meter in group.meters %}
+                    {% for stat in stats %}
+                        {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
+                            <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
+                                <script>
+                                    charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
+                                </script>
+                            </span>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endfor %}
+<script>
+    generateDashBars("{{ meters }}", "{{ stats }}");
+</script>

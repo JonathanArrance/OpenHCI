@@ -59,7 +59,7 @@ $(function () {
                             confDesc = 'none';
                         }
 
-                        message.showMessage('notice', 'Creating new instance snapshot.');
+                        messages.showMessage('notice', 'Creating new instance snapshot.');
 
                         // Disable widget view links and hide create button
                         disableLinks(true);
@@ -74,12 +74,12 @@ $(function () {
 
                                 if (data.status == 'error') {
 
-                                    message.showMessage('error', data.message);
+                                    messages.showMessage('error', data.message);
                                 }
 
                                 if (data.status == 'success') {
 
-                                    message.showMessage('success', data.message);
+                                    messages.showMessage('success', data.message);
 
                                     // Initialize empty string for new snapshot row
                                     var newRow =
@@ -95,7 +95,6 @@ $(function () {
                                     var rowCount = $("#snapshot_list tr").length;
                                     if (rowCount > 2) {
                                         $("#snapshot_placeholder").remove().fadeOut();
-                                        $("#revert-server").show();
                                     }
 
                                     // Update Selects
@@ -110,7 +109,7 @@ $(function () {
                             })
                             .fail(function () {
 
-                                message.showMessage('error', 'Server Fault');	// Flag server fault message
+                                messages.showMessage('error', 'Server Fault');	// Flag server fault message
                             })
                             .always(function () {
 
@@ -177,7 +176,7 @@ $(function () {
                     clearUiValidation(allFields);
 
                     // Validate form inputs
-                    message.showMessage('notice', 'Reverting Instance ' + SERVER_NAME);
+                    messages.showMessage('notice', 'Reverting Instance ' + SERVER_NAME);
 
                     // Initialize progressbar and make it visible if hidden
                     $(instProgressbar).progressbar({value: false});
@@ -187,23 +186,22 @@ $(function () {
 
                     $.getJSON('/revert_instance_snapshot/' + PROJECT_ID + '/' + SERVER_ID + '/' + confSnap + '/')
                         .done(function (data) {
-                            console.log(data);
 
                             if (data.status == 'error') {
 
-                                message.showMessage('error', data.message);
+                                messages.showMessage('error', data.message);
                             }
 
                             if (data.status == 'success') {
 
-                                message.showMessage('success', data.message);
-                                var urlstring = '/' + PROJECT_ID + '/' + data.server_info.server_id + '/instance_view/'
-                                window.location.assign(urlstring);
+                                messages.showMessage('success', data.message);
+
+                                window.location.assign(STATIC_URL + '/' + PROJECT_ID + '/' + SERVER_ID + '/instance_view/');
                             }
                         })
                         .fail(function () {
 
-                            message.showMessage('error', 'Server Fault');
+                            messages.showMessage('error', 'Server Fault');
                         })
                         .always(function () {
 
@@ -285,7 +283,7 @@ $(function () {
             confSnap = name,
             confRow = row;
         // Show toast message
-        message.showMessage('notice', "Deleting " + confSnap + ".");
+        messages.showMessage('notice', "Deleting " + confSnap + ".");
         // Store actions cell html
         var actionsCell = $(document.getElementById(confId + "-actions-cell"));
         var actionsHtml = actionsCell.html();
@@ -302,14 +300,14 @@ $(function () {
             .done(function (data) {
                 if (data.status == 'error') {
                     // Show toast message
-                    message.showMessage('error', data.message);
+                    messages.showMessage('error', data.message);
                     // Restore actions cell html
                     actionsCell.empty()
                         .append(actionsHtml.fadeIn());
                 }
                 if (data.status == 'success') {
                     // Show toast message
-                    message.showMessage('success', data.message);
+                    messages.showMessage('success', data.message);
                     // Remove row
                     confRow.fadeOut().remove();
                     // Remove snapshot
@@ -323,12 +321,11 @@ $(function () {
                             .append($("<td></td>"))
                             .append($("<td></td>"))
                             .appendTo($("#snapshot_list")).fadeIn();
-                        $("#revert-server").hide();
                     }
                 }
             })
             .fail(function () {
-                message.showMessage('error', 'Server Fault');
+                messages.showMessage('error', 'Server Fault');
                 // Restore actions cell html
                 actionsCell.empty()
                     .append(actionsHtml.fadeIn());

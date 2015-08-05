@@ -1,0 +1,56 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<form id="revert-form" class="form-horizontal">
+    {% csrf_token %}
+    <fieldset>
+        <div class="form-group col-sm-12">
+            <label for="instance-snapshot" class="col-sm-4 control-label">Snapshot:</label>
+            <select name="instanceSnapshot" id="instance-snapshot" class="col-sm-8">
+                {% for snapshot in snapshots %}
+                    <option value="{{ snapshot.snapshot_id }}">{{ snapshot.snapshot_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" form="revert-form" class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+            Confirm
+        </button>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        var view = $(".info-content");
+        $("#revert-form").validate({
+            rules: {
+                instanceSnapshot: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Reverting " + INSTANCE);
+                window.loading.loadFromView = true;
+                $.getJSON('/revert_instance_snapshot/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + $("#instance-snapshot").val() + '/')
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                window.loading.current = $("#instances-container");
+                refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                $("#info-modal").modal('hide');
+                window.clearInterval(window.instanceViewTimer);
+            }
+        });
+    });
+</script>
