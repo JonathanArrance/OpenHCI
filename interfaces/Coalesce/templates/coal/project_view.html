@@ -26,7 +26,8 @@
                         Actions
                         <span class="caret"></span>
                     </a>
-                    <ul class="dropdown-menu bg-primary">
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="instance-wizard">Instance Wizard</a></li>
                         <li class="bg-danger">
                             <a href="#" id="delete-project" data-title="Delete Project"
                                data-message="Delete {{ project.project_name }}?"
@@ -35,7 +36,6 @@
                                 Delete Project
                             </a>
                         </li>
-                        <li><a href="#" id="instance-wizard">Instance Wizard</a></li>
                     </ul>
                 </div>
             </div>
@@ -141,6 +141,6 @@
         {% include "coal/project_view_widgets/key_pairs.html" %}
     </div>
 
-    {% include "coal/project_view_widgets/build-instance.html" %}
+    {% include "coal/project_view_widgets/instance_wizard.html" %}
 
 #}

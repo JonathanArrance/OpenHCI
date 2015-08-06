@@ -565,6 +565,76 @@ def project_view(request, project_id):
                                                            'hosts': hosts,
                                                            'error': "Error: %s" % e}))
 
+
+def get_instance_wizard(request, project_id):
+    project = []
+    limits = []
+    quota = []
+    images = []
+    flavors = []
+    networks = []
+    fips = []
+    volumes = []
+    volume_types = []
+    sec_groups = []
+    sec_keys = []
+    tenant_info = {}
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        so = server_ops(auth)
+        fo = flavor_ops(auth)
+        go = glance_ops(auth)
+        l3 = layer_three_ops(auth)
+        vo = volume_ops(auth)
+        no = neutron_net_ops(auth)
+        qo = quota_ops(auth)
+        al = absolute_limits_ops(auth)
+
+        project = to.get_tenant(project_id)
+        quota = qo.get_project_quotas(project_id)
+
+        limits = al.get_absolute_limit_for_tenant(auth['project_id'])
+        if limits == []:
+            limits = "empty dataset"
+        else:
+            limits = limits['limits']
+
+        images = go.list_images()
+        flavors = fo.list_flavors()
+        networks = no.list_internal_networks(project_id)
+        fips = l3.list_floating_ips(project_id)
+
+        volumes = vo.list_volumes(project_id)
+        used_storage = 0
+        for volume in volumes:
+            v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
+            used_storage += vo.get_volume_info(v_dict)['volume_size']
+
+        volume_types = vo.list_volume_types()
+        avail_storage = quota['gigabytes'] - used_storage
+        avail_percent = float(float(used_storage) / float(quota['gigabytes']) * 100)
+
+        sec_groups = so.list_sec_group(project_id)
+        sec_keys = so.list_sec_keys(project_id)
+
+        tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
+
+        return render_to_response('coal/project_view_widgets/instance_wizard.html',
+                                  RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
+                                                           'images': images, 'flavors': flavors, 'networks': networks,
+                                                           'fips': fips, 'volumes': volumes,
+                                                           'volume_types': volume_types, 'sec_groups': sec_groups,
+                                                           'sec_keys': sec_keys, 'tenant_info': tenant_info}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instance_wizard.html',
+                                  RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
+                                                           'images': images, 'flavors': flavors, 'networks': networks,
+                                                           'fips': fips, 'volumes': volumes,
+                                                           'volume_types': volume_types, 'sec_groups': sec_groups,
+                                                           'sec_keys': sec_keys, 'tenant_info': tenant_info,
+                                                           'error': "Error: %s" % e}))
+
 def get_project_panel(request, project_id):
     project = []
     limits = []

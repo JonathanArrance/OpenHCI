@@ -114,6 +114,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_users_security_panel',
             name='get_users_security_panel'),
 
+        url(r'^projects/get/instance_wizard/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_instance_wizard',
+            name='get_instance_wizard'),
+
 
         # --- Quotas ----
 
