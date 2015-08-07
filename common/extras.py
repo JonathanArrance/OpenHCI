@@ -22,8 +22,8 @@ def shadow_auth():
     ACCESS: wide open, but with great power comes great responsibility
     NOTE:   need to not have hard-coded password here
     """
-    #a = authorization('shadow_admin', 'manbehindthecurtain')
-    a = authorization('admin', 'password')
+    a = authorization('shadow_admin', 'manbehindthecurtain')
+    #a = authorization('admin', 'password')
     auth_dict = a.get_auth()
     return auth_dict
 
