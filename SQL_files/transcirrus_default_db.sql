@@ -1572,7 +1572,8 @@ CREATE TABLE trans_user_info (
     user_primary_project character varying,
     user_project_id character varying,
     keystone_role character varying,
-    user_email character varying
+    user_email character varying,
+    encrypted_password character varying
 );
 
 
