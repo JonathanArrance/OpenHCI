@@ -20,10 +20,10 @@ def shadow_auth():
                             adm_token       -   "" if not admin, otherwise some token
                         }
     ACCESS: wide open, but with great power comes great responsibility
-    NOTE:   THIS IS A MAJOR HACK
+    NOTE:   need to consider the fact of hard-coding the password here
     """
-    #a = authorization('shadow_admin', 'manbehindthecurtain')
-    a = authorization('admin', 'password')
+    a = authorization('shadow_admin', 'manbehindthecurtain')
+    #a = authorization('admin', 'password')
     auth_dict = a.get_auth()
     return auth_dict
 
