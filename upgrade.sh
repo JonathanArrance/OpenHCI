@@ -62,6 +62,11 @@ sudo setenforce 0
 sudo sed -i 's/=enforcing/=disabled/;s/=permissive/=disabled/' /etc/selinux/config
 
 # add shadow_admin
+if [ ! /home/transuser/factory_creds ]
+then
+echo "no factory_creds file"
+else
+source /home/transuser/factory_creds
 SHADOW="$(sudo grep -c 'shadow_admin:' /etc/passwd)"
 if [ -z "$SHADOW" ]
 then
@@ -93,4 +98,5 @@ usermod -a -G ceilometer shadow_admin
 SHADOW_ADMIN_USER=$(keystone user-create --name=shadow_admin --pass=manbehindthecurtain | grep " id " | awk '{print $4}')
 # add admin, shadow_admin and trans_default project to transcirrus db
 psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${ID}"', 'admin', NULL);"
+fi
 fi
