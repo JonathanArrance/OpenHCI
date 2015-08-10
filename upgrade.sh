@@ -113,37 +113,3 @@ fi
 /sbin/chkconfig --levels 235 ceilometer_third_party_meters on
 /sbin/chkconfig --add /etc/init.d/ceilometer_third_party_meters
 /sbin/service ceilometer_third_party_meters restart
-
-# add shadow_admin
-SHADOW="$(sudo grep -c 'shadow_admin:' /etc/passwd)"
-if [ -z "$SHADOW" ]
-then
-echo "shadow_admin already exists"
-else
-echo "adding shadow_admin"
-TRANS="$(sudo cat /usr/local/lib/python2.7/transcirrus/common/config.py | grep "TRANS_DEFAULT_ID")"
-ID="$(echo $TRANS |awk -F\" '$0=$2')"
-# add the shadow_admin user
-useradd -d /home/shadow_admin -g transystem -s /bin/admin.sh shadow_admin
-#set shadow_admin default password
-echo -e 'manbehindthecurtain\nmanbehindthecurtain\n' | passwd shadow_admin
-# set the shadow_admin account up in sudo
-(
-cat << 'EOP'
-shadow_admin ALL=(ALL) NOPASSWD: ALL
-EOP
-) >> /etc/sudoers
-# add shadow_admin to groups
-usermod -a -G postgres shadow_admin
-usermod -a -G nova shadow_admin
-usermod -a -G cinder shadow_admin
-usermod -a -G glance shadow_admin
-usermod -a -G swift shadow_admin
-usermod -a -G neutron shadow_admin
-usermod -a -G keystone shadow_admin
-usermod -a -G heat shadow_admin
-usermod -a -G ceilometer shadow_admin
-SHADOW_ADMIN_USER=$(keystone user-create --name=shadow_admin --pass=manbehindthecurtain | grep " id " | awk '{print $4}')
-# add admin, shadow_admin and trans_default project to transcirrus db
-psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${ID}"', 'admin', NULL);"
-fi
