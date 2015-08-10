@@ -7,7 +7,7 @@ def shadow_auth():
     """
     DESC:   authenticate as shadow_admin to perform tasks that need authentication but don't have an easy way to do so
     INPUT:  none
-    OUTPUT: auth_dict: {
+    OUTPUT: auth_dict:  {
                             username
                             status_level    -   0 = not enabled, 1 = transcirrus only, 2 = transcirrus and keystone (mostly don't worry about this)
                             token
@@ -20,10 +20,10 @@ def shadow_auth():
                             adm_token       -   "" if not admin, otherwise some token
                         }
     ACCESS: wide open, but with great power comes great responsibility
-    NOTE:   THIS IS A MAJOR HACK
+    NOTE:   need to not have hard-coded password here
     """
-    #a = authorization('shadow_admin', 'manbehindthecurtain')
-    a = authorization('admin', 'password')
+    a = authorization('shadow_admin', 'manbehindthecurtain')
+    #a = authorization('admin', 'password')
     auth_dict = a.get_auth()
     return auth_dict
 
