@@ -16,7 +16,6 @@ class meter_ops:
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
-        # user_dict = {"username":self.username,"password":self.user_pass,"project_id":exist[0][7],"status_level":status_level,"user_level":user_level,"is_admin": is_admin,"token":token}
         else:
             self.username = user_dict['username']
             self.password = user_dict['password']
@@ -71,7 +70,7 @@ class meter_ops:
             raise Exception("Could not connect to the Keystone API")
 
         try:
-            body = '[{"counter_type": "%s", "counter_name": "%s", "counter_volume": "%f", "counter_unit": "%s", "resource_id": "%s", "tenant_id": "%s"}]' % (counter_type, counter_name, counter_volume, counter_unit, resource_id, project_id)
+            body = '[{"counter_type": "%s", "counter_name": "%s", "counter_volume": "%f", "counter_unit": "%s", "resource_id": "%s", "project_id": "%s"}]' % (counter_type, counter_name, counter_volume, counter_unit, resource_id, project_id)
             header = {"X-Auth-Token": self.token, "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "python-ceilometerclient"}
             function = 'POST'
             api_path = '/v2/meters/' + counter_name
@@ -139,6 +138,18 @@ class meter_ops:
         else:
             util.http_codes(rest['response'], rest['reason'])
 
+    def show_stats_for_meter_list(self, project_id, start_time, end_time, meter_list, tenant_identifier=None, resource_identifier=None):
+        result = []
+
+        for meter_type in meter_list:
+
+            #hack for fixing poorly formatted data from openstack
+            meter_data = self.show_statistics(project_id, start_time, end_time, meter_type, tenant_identifier, resource_identifier)
+            for element in meter_data:
+                element.update({'meter_type': meter_type})
+                result.append(element)
+        return result
+
     def show_statistics(self, project_id, start_time, end_time, meter_type, tenant_identifier=None, resource_identifier=None):
         try:
             api_dict = {"username": self.username, "password": self.password, "project_id": project_id}
@@ -182,7 +193,6 @@ class meter_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" % (rest['response'], rest['reason']))
             load = json.loads(rest['data'])
-
         else:
             logger.sys_error("Could not determine the meter type.")
             raise Exception("Could not determine the meter type.")

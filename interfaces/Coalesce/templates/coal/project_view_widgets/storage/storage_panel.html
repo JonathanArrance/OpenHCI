@@ -1,0 +1,260 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<h3 class="row-header">Volumes</h3>
+
+<div class="row-fluid">
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
+                <th>Volume</th>
+                <th>Attached</th>
+                <th>
+                    <button class="btn btn-xs btn-success pull-right create-volume"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if volumes %}
+                {% for volume in volumes %}
+                    {% if volume.info.volume_set_bootable %}
+                        <tr id="{{ volume.info.volume_id }}"
+                            class="volume">
+                            <td class="volume-name">
+                                <button data-call="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                                        data-toggle="tooltip" data-placement="bottom"
+                                        title="ID: {{ volume.info.volume_id }}"
+                                        class="btn btn-12 btn-xs btn-social btn-light">
+                                    <i class="fa fa-info-circle"></i>{{ volume.info.volume_name }}
+                                </button>
+                            </td>
+                            <td class="volume-attached center-text {% if volume.info.volume_attached == 'true' %}bg-info{% endif %}">
+                                {% if volume.info.volume_attached == 'false' %}
+                                    <span class="attached-placeholder">No Attached Instance</span>
+                                {% else %}
+                                    <span class="attached-instance">{{ volume.info.volume_instance.server_name }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="volume-actions">
+                                <div class="btn-group actions-dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                       aria-expanded="false">
+                                        actions
+                                        <span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu table-dropdown">
+                                        {% if volume.info.volume_attached == 'true' %}
+                                            <li><a href="#" class="detach-volume" data-title="Detach Volume"
+                                                   data-message="Detach {{ volume.info.volume_name }} from {{ volume.info.volume_instance.server_name }}?"
+                                                   data-call="/detach_volume/{{ project.project_id }}/{{ volume.info.volume_id }}/"
+                                                   data-notice="Detaching Volume {{ volume.info.volume_name }} from instance {{ volume.info.volume_instance.server_name }}">
+                                                <i class="fa fa-chain-broken"></i> detach</a>
+                                            </li>
+                                        {% else %}
+                                            {% if tenant_info.num_instances > 0 %}
+                                                <li>
+                                                    <a href="#" class="attach-volume"
+                                                       data-volume="{{ volume.info.volume_id }}">
+                                                        <i class="fa fa-chain"></i> attach</a>
+                                                </li>
+                                            {% endif %}
+                                            <li>
+                                                <a href="#" class="clone-volume"
+                                                   data-volume="{{ volume.info.volume_id }}">
+                                                    <i class="fa fa-clone"></i> clone</a>
+                                            </li>
+                                            <li>
+                                                <a href="#" class="create-snapshot"
+                                                   data-volume="{{ volume.info.volume_id }}">
+                                                    <i class="fa fa-camera-retro"></i> snapshot</a>
+                                            </li>
+                                        {% endif %}
+                                        {% if volume.info.snapshots %}
+                                            <li>
+                                                <a href="#" class="revert-volume"
+                                                   data-volume="{{ volume.info.volume_id }}">
+                                                    <i class="fa fa-fast-backward">
+                                                    </i> revert</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="bg-danger">
+                                                <a href="#" class="delete-volume" data-title="Delete Volume"
+                                                   data-message="Delete {{ volume.info.volume_name }}?"
+                                                   data-call="/delete_volume/{{ volume.info.volume_id }}/{{ project.project_id }}/"
+                                                   data-notice="Deleting User {{ volume.info.volume_name }}">
+                                                    <i class="fa fa-trash-o"></i> delete</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <tr class="volume-placeholder text-warning">
+                    <td><p><i>This project has no volumes</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Storage Statistics</h3>
+            </div>
+            <div class="panel-body center-text">
+                <span id="volume-stats">
+                    <script>
+                        generateQuotaPie("volume-stats", [['used', "{{ tenant_info.num_vols }}"], ['available', "{{ quota.volumes }}"]], "# Volumes");
+                    </script>
+                </span>
+                <span id="snapshot-stats">
+                    <script>
+                        generateQuotaPie("snapshot-stats", [['used', "{{ tenant_info.num_snaps }}"], ['available', "{{ quota.snapshots }}"]], "# Snapshots");
+                    </script>
+                </span>
+                <span id="storage-stats">
+                    <script>
+                        generateQuotaPie("storage-stats", [['used', "{{ tenant_info.used_storage }}"], ['available', "{{ quota.gigabytes }}"]], "Storage (gb)");
+                    </script>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="row-header col-sm-12">Snapshots and Boot Volumes</h3>
+
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead class="bg-primary">
+            <tr>
+                <th>Snapshot</th>
+                <th>Volume</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if snapshots %}
+                {% for snapshot in snapshots %}
+                    <tr id="{{ snapshot.image_id }}" class="snapshot">
+                        <td class="snapshot-name">
+                            {{ snapshot.snapshot_name }} <i class="fa fa-info-circle text-top" data-toggle="tooltip"
+                                                            data-placement="right"
+                                                            title="ID: {{ snapshot.snapshot_id }}"></i>
+                        </td>
+                        <td class="snapshot-volume center-text">
+                            {{ snapshot.volume_name }}
+                        </td>
+                        <td class="snapshot-status center-text">
+                            {{ snapshot.snapshot_status }}
+                        </td>
+                        <td class="snapshot-created center-text">
+                            {{ snapshot.create_time }}
+                        </td>
+                        <td class="snapshot-actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    <li>
+                                        <a href="#" class="create-volume-from-snapshot"
+                                           data-snapshot="{{ snapshot.snapshot_id }}"><i class="fa fa-hdd-o"></i> create
+                                            volume</a>
+                                    </li>
+                                    <li class="bg-danger">
+                                        <a href="#" class="delete-snapshot" data-title="Delete Snapshot"
+                                           data-message="Delete {{ snapshot.snapshot_name }}?"
+                                           data-call="/delete_snapshot/{{ project.project_id }}/{{ snapshot.snapshot_id }}/"
+                                           data-notice="Deleting Snapshot {{ snapshot.snapshot_name }}">
+                                            <i class="fa fa-trash-o"></i> delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="snapshot-placeholder text-warning">
+                    <td><p><i>This project has no volume snapshots.</i></p></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead class="bg-primary">
+            <tr>
+                <th>Boot Volume</th>
+                <th>Attached</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if boot_volumes %}
+                {% for volume in boot_volumes %}
+                    <tr id="{{ volume.info.volume_id }}"
+                        class="volume">
+                        <td class="volume-name">
+                            <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                               data-toggle="tooltip" data-placement="right"
+                               title="ID: {{ volume.info.volume_id }}">{{ volume.info.volume_name }}</a>
+                        </td>
+                        <td class="volume-attached center-text {% if volume.info.volume_attached == 'true' %}bg-info{% endif %}">
+                            {% if volume.info.volume_attached == 'false' %}
+                                <span class="attached-placeholder">No Attached Instance</span>
+                            {% else %}
+                                <span class="attached-instance">{{ volume.info.volume_instance.server_name }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="volume-actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    {% if v.volume_attached == 'false' %}
+                                        <li><a href="#" class="attach-volume">attach</a></li>
+                                        <li><a href="#" class="clone-volume">clone</a></li>
+                                        <li><a href="#" class="revert-volume">revert</a></li>
+                                        <li><a href="#" class="delete-volume">delete</a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="volume-placeholder text-warning">
+                    <td><p><i>This project has no boot volumes.</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+</script>

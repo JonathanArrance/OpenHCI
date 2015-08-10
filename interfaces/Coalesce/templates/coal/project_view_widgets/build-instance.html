@@ -285,6 +285,9 @@
 
             <div class="bam-form">
                 <label for="bam-security-ip">Floating IP</label>
+                {% if user_level < 2 %}
+                    <a href="#" id="bam-allocate-ip" class="btn btn-widget" style="display:inline; float:right">+</a>
+                {% endif %}
                 <select name="bam-security-ip" id="bam-security-ip">
                     <script>
                         $(function () {

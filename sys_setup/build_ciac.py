@@ -1,2 +1,0 @@
-import ubuntu_auto
-import setup_os_ciac

@@ -76,21 +76,19 @@ class tenant_ops:
         self.keystone_users = user_ops(user_dict)
         self.gluster = gluster_ops(user_dict)
 
-    def create_tenant(self,project_name, is_default=False):
+    def create_tenant(self,project_name):
         """
         DESC: create a new project in Openstack. Only admins can perform this operation.
               calls the rest api in OpenStack and updates applicable fields in Transcirrus
               database
         INPUT: self object
-               project_name -   what you want to call the new project - Required
-               is_default   -   op, if true, will be used as default project for adding third party authentication users
-                            -   THERE CAN ONLY BE ONE per cloud, TODO below as to where to check for this
+               project_name - what you want to call the new project - Required
         OUTPUT project_id
         """
         logger.sys_info('\n**Creating new Keystone project. Component: Keystone Def: create_tenant**\n')
         if((not project_name) or (project_name == "")):
             logger.sys_error("No project name was specified for the new project.")
-            raise Exception("No project name was specified for the new project.")
+            raise EXception("No project name was specified for the new project.")
 
         try:
             #Try to connect to the transcirrus db
@@ -124,16 +122,9 @@ class tenant_ops:
                 logger.sys_error("Could not connect to the API")
                 raise Exception("Could not connect to the API")
 
-            # added for custom third party configuration, now we can check description to determine cloud behavior
-            description = project_name
-
-            # TODO: determine if "THERE CAN ONLY BE ONE" check should be done in frontend or backend, currently relying on frontend
-            if is_default == True:
-                description = "DEFAULT"
-
             try:
                 #Build the new project in OpenStack
-                body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s"}}' %(project_name,description)
+                body = '{"tenant": {"enabled": true, "name": "%s", "description": "%s project"}}' %(project_name,project_name)
                 header = {"X-Auth-Token":self.adm_token, "Content-Type": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/tenants'
@@ -154,14 +145,11 @@ class tenant_ops:
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             project_id = load['tenant']['id']
-            description = load['tenant']['description']
             # need to update the project_id info to the relevent transcirrus db tables
             try:
                 self.db.pg_transaction_begin()
                 #insert the new project into the db
                 proj_ins_dict = {"proj_id":project_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
-                if description == "DEFAULT":
-                    proj_ins_dict["is_default"] = "TRUE"
                 self.db.pg_insert("projects",proj_ins_dict)
             except Exception as e:
                 logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
@@ -383,7 +371,6 @@ class tenant_ops:
                        - host_system_ip
                        - def_network_name
                        - def_network_id
-                       - is_default
         ACCESS: Admins can get any project, users can only view the primary project
               they belong to.
         NOTE: If any of the project variables are empty a None will be returned for that variable.
@@ -412,8 +399,7 @@ class tenant_ops:
         logger.sys_info('%s proj stuff' %(proj))
         #build the dictionary up
         r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
-                  "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9],
-                  "is_default":proj[0][10]}
+                  "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9]}
         if(self.is_admin == 1):
             return r_dict
         else:
@@ -464,37 +450,3 @@ class tenant_ops:
 
     def update_tenant(self):
         pass
-
-
-    def get_default_tenant(self):
-        """
-        DESC:   returns the default project used in third party authentication, or None if none exists
-        INPUT:  none
-        OUTPUT: tenant_dict:    {
-                                    project_id
-                                    project_name
-                                    def_security_key_name
-                                    def_security_key_id
-                                    def_security_group_id
-                                    def_security_group_name
-                                    host_system_name
-                                    host_system_ip
-                                    def_network_name
-                                    def_network_id
-                                    is_default
-                                }
-                    - OR -
-                None
-        ACCESS: wide open, but with great power comes great responsibility
-        NOTE:
-        """
-        # list all tenants
-        tenants = self.list_all_tenants()
-        for tenant in tenants:
-            # get each tenant's info
-            info = self.get_tenant(tenant['project_id'])
-            if info['is_default'] == "TRUE":
-                # if default, return this tenant
-                return tenant
-        #else return None
-        return None

@@ -17,86 +17,99 @@
 
 # Create the directories needed to mount NFS volumes via cinder.
 # The owner of cinder-volume must be cinder so it can write to it.
-mkdir -p /mnt/nfs-vol/cinder-volume
-chown cinder:cinder /mnt/nfs-vol/cinder-volume
+/bin/mkdir -p /mnt/nfs-vol/cinder-volume
+/bin/chown cinder:cinder /mnt/nfs-vol/cinder-volume
 
-# Commands to setup our ceilometer deamon.
-cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch /etc/init.d
-chmod 755 /etc/init.d/ceilometer_memory_patch
-chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
-chown root:root /etc/init.d/ceilometer_memory_patch
-chkconfig --levels 235 ceilometer_memory_patch on
+# Create the mongo db ceilometer user in case it was missing.
+/bin/echo 'db.addUser({user: "ceilometer",pwd: "transcirrus1",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
+/usr/bin/mongo --host 172.24.24.10 ceilometer /tmp/MongoCeilometerUser.js
+
+# Fix any configs that may not have been setup for ceilometer meters
+/usr/bin/openstack-config --set /etc/ceilometer/ceilometer.conf DEFAULT pipeline_cfg_file pipeline.yaml
+/usr/bin/openstack-config --set /etc/ceilometer/ceilometer.conf DEFAULT host $HOSTNAME
+/usr/bin/openstack-config --set /etc/nova/nova.conf DEFAULT notification_driver nova.openstack.common.notifier.rpc_notifier
+/usr/bin/openstack-config --set /etc/nova/nova.conf DEFAULT notification_driver ceilometer.compute.nova_notifier
+/usr/bin/openstack-config --set /etc/nova/nova.conf DEFAULT compute_available_monitors nova.compute.monitors.all_monitors
+/usr/bin/openstack-config --set /etc/nova/nova.conf DEFAULT compute_monitors ComputeDriverCPUMonitor
 
 # Create the symlinks so that libvirt python 2.6 files are found in python 2.7.
 if [ ! -f /usr/local/lib/python2.7/site-packages/libvirt.py ]
 then
-    ln -s /usr/lib64/python2.6/site-packages/libvirt.py /usr/local/lib/python2.7/site-packages/libvirt.py
+    /bin/ln -s /usr/lib64/python2.6/site-packages/libvirt.py /usr/local/lib/python2.7/site-packages/libvirt.py
 fi
 if [ ! -f /usr/local/lib/python2.7/site-packages/libvirtmod.so ]
 then
-    ln -s /usr/lib64/python2.6/site-packages/libvirtmod.so /usr/local/lib/python2.7/site-packages/libvirtmod.so
+    /bin/ln -s /usr/lib64/python2.6/site-packages/libvirtmod.so /usr/local/lib/python2.7/site-packages/libvirtmod.so
 fi
 
 # Delete obsolete monit config files.
 if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/openstack.conf ]
 then
-    rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/openstack.conf 
+    /bin/rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/openstack.conf
 fi
 if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/quantum.conf ]
 then
-    rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/quantum.conf
+    /bin/rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/quantum.conf
 fi
 if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf ]
 then
-    rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf
+    /bin/rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf
 fi
 
 # Install python IPy lib "Offline"
 if [ ! -f /usr/local/lib/python2.7/site-packages/IPy.py ]
 then
-    pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/IPy-0.83.tar
+    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/IPy-0.83.tar
 fi
 
-# diable selinux
+# Commands to setup our ceilometer daemon.
+# This service is no longer needed
+#/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch /etc/init.d
+#/bin/chmod 755 /etc/init.d/ceilometer_memory_patch
+#/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_memory_patch
+#/bin/chown root:root /etc/init.d/ceilometer_memory_patch
+#/sbin/chkconfig --levels 235 ceilometer_memory_patch on
+#/sbin/chkconfig --add /etc/init.d/ceilometer_memory_patch
+#/sbin/service ceilometer_memory_patch restart
+
+######################################################
+#
+#---------------------2.3 Patches---------------------
+#
+######################################################
+
+#Add time to live feilds to new records recorded in mongo db
+/usr/bin/openstack-config --set /etc/ceilometer/ceilometer.conf database time_to_live 604800
+
+# Ceilometer Restart Calls
+declare -a CEILO_SVCS=('compute central collector api alarm-evaluator alarm-notifier')
+
+for svc in $CEILO_SVCS
+do
+    /sbin/service openstack-ceilometer-$svc restart
+done
+
+#diable selinux
 sudo setenforce 0
 sudo sed -i 's/=enforcing/=disabled/;s/=permissive/=disabled/' /etc/selinux/config
 
-# add shadow_admin
-if [ ! /home/transuser/factory_creds ]
+# Install python lxml lib "Offline"
+if [ ! -f /usr/local/lib/python2.7/site-packages/lxml/__init__.py ]
 then
-echo "no factory_creds file"
-else
-source /home/transuser/factory_creds
-SHADOW="$(sudo grep -c 'shadow_admin:' /etc/passwd)"
-if [ -z "$SHADOW" ]
-then
-echo "shadow_admin already exists"
-else
-echo "adding shadow_admin"
-TRANS="$(sudo cat /usr/local/lib/python2.7/transcirrus/common/config.py | grep "TRANS_DEFAULT_ID")"
-ID="$(echo $TRANS |awk -F\" '$0=$2')"
-# add the shadow_admin user
-useradd -d /home/shadow_admin -g transystem -s /bin/admin.sh shadow_admin
-#set shadow_admin default password
-echo -e 'manbehindthecurtain\nmanbehindthecurtain\n' | passwd shadow_admin
-# set the shadow_admin account up in sudo
-(
-cat << 'EOP'
-shadow_admin ALL=(ALL) NOPASSWD: ALL
-EOP
-) >> /etc/sudoers
-# add shadow_admin to groups
-usermod -a -G postgres shadow_admin
-usermod -a -G nova shadow_admin
-usermod -a -G cinder shadow_admin
-usermod -a -G glance shadow_admin
-usermod -a -G swift shadow_admin
-usermod -a -G neutron shadow_admin
-usermod -a -G keystone shadow_admin
-usermod -a -G heat shadow_admin
-usermod -a -G ceilometer shadow_admin
-SHADOW_ADMIN_USER=$(keystone user-create --name=shadow_admin --pass=manbehindthecurtain | grep " id " | awk '{print $4}')
-# add admin, shadow_admin and trans_default project to transcirrus db
-psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${ID}"', 'admin', NULL);"
+    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/lxml-3.4.4.tar.gz
 fi
-fi
+
+# Remove old ceilometer memory patch daemon.
+/sbin/service ceilometer_memory_patch stop
+/sbin/chkconfig --level 235 ceilometer_memory_patch off
+/sbin/chkconfig --del /etc/init.d/ceilometer_memory_patch
+/bin/rm -f /etc/init.d/ceilometer_memory_patch
+
+# Commands to setup our ceilometer third party meters daemon.
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_third_party_meters /etc/init.d
+/bin/chmod 755 /etc/init.d/ceilometer_third_party_meters
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/ceilometer_third_party_meters
+/bin/chown root:root /etc/init.d/ceilometer_third_party_meters
+/sbin/chkconfig --levels 235 ceilometer_third_party_meters on
+/sbin/chkconfig --add /etc/init.d/ceilometer_third_party_meters
+/sbin/service ceilometer_third_party_meters restart

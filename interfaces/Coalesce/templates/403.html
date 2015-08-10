@@ -1,9 +1,23 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-</head>
-<body>
-<h1>Forbidden: 403</h1>
-</body>
-</html>
+{% extends "coal/base-fluid.html" %}
 
+{% block content %}
+    <div class="container-fluid">
+        <div class="jumbotron">
+            <h1><i class="fa fa-warning text-danger"></i> Forbidden: 403</h1>
+        </div>
+        <div class="well center-text">
+            <p class="lead text-warning">
+                Oh no! You don't have permission to view that page!
+            </p>
+
+            <p class="lead text-warning">
+                Please try again after we double check your credentials.
+            </p>
+
+            <h1 class="text-primary">
+                <i class="fa fa-giant fa-search"></i>
+                <i class="fa fa-giant fa-user-secret"></i>
+            </h1>
+        </div>
+    </div>
+{% endblock %}

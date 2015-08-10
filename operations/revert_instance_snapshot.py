@@ -70,24 +70,51 @@ def revert_inst_snap(input_dict,auth_dict):
     att_dict = {'instance_id':inst_info['server_id'],'project_id':input_dict['project_id']}
     attached = storage.list_attached_vols(att_dict)
 
-    #remove the original vm
+    # You may wonder why in the hell we have a sleep here! That is a good damn question!!
+    # After a lot of trial and error, this is the location I found. The problem is this:
+    # If a user creates a snapshot and then immediately tries to revert it, the REST call
+    # to create_server errors with a 400 (image not ready) error. BUT you can't wait before
+    # that call, you have to wait all the way back here. The other option is to put the wait
+    # in create_inst_snapshot but I decided to put it here. If you put the wait after the
+    # call to delete_instance (below), it won't work! Very f'ing strange!!
+    time.sleep(30)
+
+    #delete original instance
     del_input = {'project_id':input_dict['project_id'],'server_id':inst_info['server_id']}
     del_instance = delete_instance(auth_dict,del_input)
 
-    time.sleep(5)
+    #Should we just power off original instance? This would prevent 400 errors if the new reverted instance did not boot, however the reverted instance would not be able to have the
+    #original name since the original instance still exisits in the system. Maybe we can leverage the Nova rename API call? Rename the new instance after the original is deleted.
+    #pow_input = {'project_id':input_dict['project_id'],'server_id':inst_info['server_id'],'power_state':'off'}
+    #power_instance = sa.server_power_control(pow_input)
+
+    time.sleep(2)
 
     #create a new virtual machine with the snapshot image anf the info from the original instance
     logger.sys_info('Createing a new instance from snapshot %s'%(input_dict['snapshot_id']))
     create_dict = {'project_id':input_dict['project_id'],
+                   'instance_name': inst_info['server_name'],
                    'sec_group_name':inst_info['server_group_name'],
                    'sec_key_name': inst_info['server_key_name'],
                    'avail_zone':inst_info['server_zone'],
                    'network_name': network['net_name'],
                    'image_name': inst_snap_info['snapshot_name'],
+                   'image_id': inst_snap_info['snapshot_id'],
                    'flavor_name': inst_info['server_flavor'],
+                   'flavor_id': inst_info['flavor_id'],
                    'name': inst_info['server_name']
     }
     create = server.create_server(create_dict)
+
+    #We could delete the original only after we are sure the new instance is created and then rename the new instance to the original name.
+    #if('vm_id' in create):
+    #    #remove the original vm if new vm created
+    #    del_input = {'project_id':input_dict['project_id'],'server_id':inst_info['server_id']}
+    #    del_instance = delete_instance(auth_dict,del_input)
+    # rename new reverted instance
+    #    sa.rename_instance(blah)
+
+    #    time.sleep(5)
 
     #add back the float ip
     if(inst_info['server_public_ips'] == 'None'):

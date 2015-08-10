@@ -808,6 +808,67 @@ class user_ops:
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
+    def get_user_id_info(self, user_dict):
+        #this was written for assisting in password resets do not delete
+        #I know it looks like a duplicate but it is not ~Ricardo
+        """
+        DESC: Get information in regards to a specific user.
+        INPUT: user_dict - user_id
+                         - project_id
+        OUTPUT: r_dict - username
+                       - user_id
+                       - project_name
+                       - project_id
+                       - user_role
+                       - email
+                       - user_enabled
+        ACCESS: Only admins can get specific user information
+        NOTE: none
+        """
+        if (not user_dict):
+            logger.sys_error("user_dict not specified for get_user_info operation.")
+            raise Exception("user_dict not specified for get_user_info operation.")
+        # Check to make sure that the username and keystone role are specified
+        if ((not user_dict['user_id']) or (not user_dict['project_id'])):
+            logger.sys_error("Blank parametrs passed into get_user_info operation, INVALID.")
+            raise Exception("Blank parametrs passed into get_user_info, INVALID.")
+
+        # check if the calling user is an admin and if so proceed
+        # this is a HACK. With this a user can look at another user. that should not happen
+        if (self.user_level <= 2):
+            logger.sys_info("User identified as an admin or pu.")
+            # check the user status if user status is <= 1 error - must be enabled in both OS and Tran
+            if (self.status_level <= 1):
+                logger.sys_error("User status not sufficient.")
+                raise Exception("User status not sufficient.")
+
+            # connect to the transcirrus DB and the keystone DB
+            try:
+                # Try to connect to the transcirrus db
+                self.db = pgsql(config.TRANSCIRRUS_DB, config.TRAN_DB_PORT, config.TRAN_DB_NAME, config.TRAN_DB_USER,
+                                config.TRAN_DB_PASS)
+                logger.sql_info("Connected to the Transcirrus DB to do keystone user operations.")
+            except Exception as e:
+                logger.sql_error("Could not connect to the DB, %s" % (e))
+                raise
+
+            # get the user info from the transcirrus db
+            try:
+                get_user = {"select": "*", "from": "trans_user_info",
+                            "where": "keystone_user_uuid='%s'" % (user_dict['user_id']),
+                            "and": "user_project_id = '%s'" % (user_dict['project_id'])}
+                user_info = self.db.pg_select(get_user)
+            except Exception as e:
+                logger.sql_error("Could not find user information in Transcirrus DB., %s" % (e))
+                raise
+
+            r_dict = {"username": user_info[0][1], "user_id": user_info[0][5], "project_name": user_info[0][6],
+                      "project_id": user_info[0][7], "user_role": user_info[0][2], "email": user_info[0][9],
+                      "user_enabled": user_info[0][4], "user_level": user_info[0][3]}
+            return r_dict
+        else:
+            logger.sys_error("Admin flag not set, could not create the new user.")
+
     def update_user_password(self,passwd_dict):
         """
         DESC: Change the user password.

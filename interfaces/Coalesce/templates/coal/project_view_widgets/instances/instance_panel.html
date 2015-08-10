@@ -1,0 +1,229 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="row-fluid">
+    <h3 class="row-header col-sm-12">Instances</h3>
+
+    <div class="col-sm-6" data-toggle="table" data-height="200">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
+                <th>Instance</th>
+                <th>Status</th>
+                <th>
+                    <button id="create-instance" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if instances %}
+                {% for instance in instances %}
+                    <tr id="{{ instance.server_id }}"
+                        class="instance">
+                        <td class="instance-name">
+                            <button data-call="/{{ project.project_id }}/{{ instance.server_id }}/instance_view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ instance.server_id }}"
+                                    class="btn btn-12 btn-xs btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ instance.server_name }}
+                            </button>
+                        </td>
+                        <td class="instance-status center-text {% if instance.status == "ACTIVE" %}bg-success{% elif instance.status == "PAUSED" or instance.status == "SUSPENDED" or instance.status == "BUILD" or instance.status == "REBOOT" %}bg-warning {% if instance.status == "BUILD" or instance.status == "REBOOT" %}bg-active bg-striped{% endif %}{% elif instance.status == "ERROR"  or instance.status == "SHUTOFF" %}bg-danger{% endif %}">
+                            {{ instance.status }}</td>
+                        <td class="instance-actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    {% if instance.status == "ACTIVE" %}
+                                        <li>
+                                            <a href="#"
+                                               onClick="window.open('{{ instance.info.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
+                                                <i class="fa fa-desktop"></i> console</a>
+                                        </li>
+                                        <li><a href="#" class="pause-instance" data-title="Pause Instance"
+                                               data-message="Pause {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
+                                               data-notice="Pausing Instance {{ instance.server_name }}"><i
+                                                class="fa fa-pause"></i> pause</a></li>
+                                        <li><a href="#" class="suspend-instance" data-title="Suspend Instance"
+                                               data-message="Suspend {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
+                                               data-notice="Suspending Instance {{ instance.server_name }}"><i
+                                                class="fa fa-stop"></i> suspend</a>
+                                        <li><a href="#" class="power-off-instance" data-title="Power Off Instance"
+                                               data-message="Power Off {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
+                                               data-notice="Powering Off Instance {{ instance.server_name }}"><i
+                                                class="fa fa-power-off"></i> Power Off</a></li>
+                                        <li><a href="#" class="power-cycle-instance" data-title="Power Cycle Instance"
+                                               data-message="Power Cycle {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_cycle/"
+                                               data-notice="Power Cycling Instance {{ instance.server_name }}"><i
+                                                class="fa fa-plug"></i> Power Cycle</a></li>
+                                        <li><a href="#" class="reboot-instance" data-title="Reboot Instance"
+                                               data-message="Reboot {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
+                                               data-notice="Rebooting On Instance {{ instance.server_name }}"><i
+                                                class="fa fa-flash"></i> Reboot</a></li>
+                                    {% elif instance.status == "PAUSED" %}
+                                        <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
+                                               data-message="Unpause {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
+                                               data-notice="Unpausing Instance {{ instance.server_name }}"><i
+                                                class="fa fa-play"></i> unpause</a>
+                                        </li>
+                                    {% elif instance.status == "SUSPENDED" %}
+                                        <li><a href="#" class="resume-instance" data-title="Resume Instance"
+                                               data-message="Resume {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
+                                               data-notice="Resuming Instance {{ instance.server_name }}"><i
+                                                class="fa fa-play-circle"></i> resume</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% if instance.status == "SHUTOFF" %}
+                                        <li><a href="#" class="power-on-instance" data-title="Power On Instance"
+                                               data-message="Power On {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_on_server/"
+                                               data-notice="Powering On Instance {{ instance.server_name }}"><i
+                                                class="fa fa-power-off"></i> Power On</a></li>
+                                    {% endif %}
+
+                                    <li class="bg-danger"><a href="#" class="delete-instance" data-title="Delete Instance"
+                                           data-message="Delete {{ instance.server_name }}?"
+                                           data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
+                                           data-notice="Deleting Instance {{ instance.server_name }}"><i
+                                            class="fa fa-trash-o"></i> delete</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="instance-placeholder text-warning">
+                    <td><p><i>This project has no instances</i></p></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Instance Statistics</h3>
+            </div>
+            <div class="panel-body center-text">
+                <span id="instance-stats">
+                    <script>
+                        generateQuotaPie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
+                    </script>
+                </span>
+            </div>
+        </div>
+    </div>
+    <h3 class="row-header col-sm-12">Images and Instance Settings</h3>
+
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead class="bg-primary">
+            <tr>
+                <th>Image</th>
+                <th>
+                    <button class="btn btn-xs btn-success pull-right import-image"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if images %}
+                {% for image in images %}
+                    <tr id="{{ image.image_id }}" class="image">
+                        <td class="image-name">
+                            <span>{{ image.image_name }}</span>
+                        </td>
+                        <td class="image-actions">
+                            <button type='button' class="delete-image btn btn-xs btn-danger pull-right"
+                                    data-title="Delete Image" data-message="Delete {{ image.image_name }}?"
+                                    data-call="/delete_image/{{ project.project_id }}/{{ image.image_id }}/"
+                                    data-notice="Deleting Image {{ image.image_name }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="image-placeholder text-warning">
+                    <td><p><i>This project has no images.</i></p></td>
+                    <td></td>
+                </tr>
+            {% endif %}</tbody>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead class="bg-primary">
+            <tr>
+                <th>Setting</th>
+                <th>Memory (mb)</th>
+                <th>Space (gb)</th>
+                <th>CPUs</th>
+                <th>
+                    <button id="create-flavor" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if flavors %}
+                {% for flavor in flavors %}
+                    <tr id="{{ flavor.id }}" class="flavor">
+                        <td class="flavor-name">
+                            <span>{{ flavor.name }}</span>
+                        </td>
+                        <td class="flavor-memory">
+                            {{ flavor.info.memory }}
+                        </td>
+                        <td class="flavor-space">
+                            <span class="text-info">disk: <span>{{ flavor.info.disk_space }}</span></span>
+                        </td>
+                        <td class="flavor-cpus">
+                            {{ flavor.info.cpus }}
+                        </td>
+                        <td class="flavor-actions">
+                            <div class="btn-group actions-dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    actions
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu table-dropdown">
+                                    <li>
+                                        <a href="#" class="delete-flavor">delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="flavor-placeholder text-warning">
+                    <td><p><i>This project has no settings.</i></p></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

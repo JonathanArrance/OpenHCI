@@ -296,8 +296,8 @@ class server_ops:
                 select_sec = {"select":'def_security_group_name', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 get_sec = self.db.pg_select(select_sec)
             except:
-                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
-                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
+                logger.sql_error("Could not find the default security group for this project in the database")
+                raise Exception("Could not find the default security group for this project in the database")
             create_dict['sec_group_name'] = get_sec[0][0]
         else:
             #check if the group specified is associated with the users project
@@ -305,20 +305,20 @@ class server_ops:
                 select_sec = {"select":'sec_group_id', "from":'trans_security_group', "where":"proj_id='%s'" %(create_dict['project_id']),"and":"sec_group_name='%s'"%(create_dict['sec_group_name'])}
                 get_sec = self.db.pg_select(select_sec)
                 if(not get_sec[0][0]):
-                    raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
-            except:
-                logger.sql_error("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
-                raise Exception("Could not find the specified security group for create_server operation %s" %(create_dict['sec_group_name']))
+                    raise Exception("Could not find the specified security group. Please specify a security group for this instance or create a new security group for this instance.")
+            except Exception as e:
+                logger.sql_error("Error finding security group (%s) in database: %s" %(create_dict['sec_group_name'], e))
+                raise Exception("Error finding security group (%s) in database: %s" %(create_dict['sec_group_name'], e))
 
         #security key verification
         if('sec_key_name' not in create_dict):
-            #get the default security group from the transcirrus db
+            #get the default security key from the transcirrus db
             try:
                 select_key = {"select":'def_security_key_name', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 sec_key = self.db.pg_select(select_key)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+                logger.sql_error("Could not find the default security key for this project in the database")
+                raise Exception("Could not find the default security key for this project in the database")
             create_dict['sec_key_name'] = sec_key[0][0]
         else:
             #check if the key specified is associated with the users project
@@ -326,8 +326,8 @@ class server_ops:
                 select_key = {"select":'sec_key_name', "from":'trans_security_keys', "where":"proj_id='%s'" %(create_dict['project_id'])}
                 sec_key = self.db.pg_select(select_key)
             except:
-                logger.sql_error("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
-                raise Exception("Could not find the specified security key for create_server operation %s" %(create_dict['sec_key_name']))
+                logger.sql_error("Error finding security key (%s) in database: %s" %(create_dict['sec_key_name'], e))
+                raise Exception("Error finding security key (%s) in database: %s" %(create_dict['sec_key_name'], e))
 
         #network verification
         if('network_name' not in create_dict):
@@ -475,8 +475,8 @@ class server_ops:
         """
         #server_int_net - {"fishnet": [{"version": 4, "addr": "192.0.23.4", "OS-EXT-IPS:type": "fixed"}]}
         if(('server_id' not in input_dict) or (input_dict['server_id'] == "")):
-            logger.sys_error("The virtual server id was not specifed or is blank.")
-            raise Exception("The virtual server id was not specifed or is blank.")
+            logger.sys_error("The virtual server id was not specified or is blank.")
+            raise Exception("The virtual server id was not specified or is blank.")
         if(('project_id' not in input_dict) or (input_dict['project_id'] == "")):
             logger.sys_error("The project id was not specifed or is blank.")
             raise Exception("The project id was not specifed or is blank.")
@@ -869,15 +869,15 @@ class server_ops:
         if(self.user_level != 0):
             if(self.user_id != serv_id[0][0]):
                 logger.sys_error("Users can only update virtual servers they own.")
-                raise Exceptopn("Users can only update virtual servers they own.")
+                raise Exception("Users can only update virtual servers they own.")
 
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
             api = caller(api_dict)
         except:
-            logger.sys_error("Could not connec to the REST api caller in create_server operation.")
-            raise Esception("Could not connec to the REST api caller in create_server operation.")
+            logger.sys_error("Could not connect to the REST api caller in create_server operation.")
+            raise Exception("Could not connect to the REST api caller in create_server operation.")
 
         #update the server name
         try:
@@ -904,8 +904,8 @@ class server_ops:
                 #commit the db transaction
             except:
                 self.db.pg_transaction_rollback()
-                logger.sql_error('Could not update instance %s from Transcirrus DB.'%(delete_dict['server_id']))
-                raise Exception('Could not update instance %s from Transcirrus DB.'%(delete_dict['server_id']))
+                logger.sql_error('Could not update instance %s from Transcirrus DB.'%(update_dict['server_id']))
+                raise Exception('Could not update instance %s from Transcirrus DB.'%(update_dict['server_id']))
             else:
                 self.db.pg_transaction_commit()
                 r_dict = {'server_name':update_dict['new_server_name'],'server_id':load['server']['id']}
@@ -923,9 +923,9 @@ class server_ops:
                            - project_id
         OUTPUT: OK if deleted or error
         """
-        if(not 'server_id'):
-            logger.sys_error("The virtual server id was not specifed or is blank.")
-            raise Exception("The virtual server id was not specifed or is blank.")
+        if(not delete_dict['server_id']):
+            logger.sys_error("The virtual server id was not supplied or is blank.")
+            raise Exception("The virtual server id was not supplied or is blank.")
 
         if(self.status_level < 2):
             logger.sys_error("Status level not sufficient to delete virtual servers.")
@@ -1030,7 +1030,7 @@ class server_ops:
             logger.sys_error("No dictionary passed into create_sec_group operation.")
             raise Exception("No dictionary passed into create_sec_group operation.")
         if(create_sec['update'] == 'false'):
-            if(('group_name' not in create_sec) or ('group_desc' not in create_sec)):
+            if('group_name' not in create_sec):
                 logger.sys_error("Required value not passed to create_sec_group operation")
                 raise Exception("Required value not passed to create_sec_group operation")
             #check if the group name exists, this is a huge hack
@@ -1044,6 +1044,8 @@ class server_ops:
             except:
                 logger.sql_error("Failed while checking security group.")
                 raise Exception("Failed while checking security group.")
+            if(('group_desc' not in create_sec) or (create_sec['group_desc'] == "")):
+                create_sec['group_desc'] = "none"
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(create_sec['project_id'])}
@@ -1291,8 +1293,8 @@ class server_ops:
             rest = api.call_rest(rest_dict)
         except Exception as e:
             self.db.pg_transaction_rollback()
-            logger.sys_error("Could not create the keys %s in project %s" %(key_name, key_dict['project_id']))
-            raise e
+            logger.sys_error("Could not create the keys pairs %s in project %s: %s" % (key_dict['key_name'], key_dict['project_id'], e))
+            raise Exception("Could not create the keys pairs %s in project %s: %s" % (key_dict['key_name'], key_dict['project_id'], e))
 
         if(rest['response'] == 200):
             #build up the return dictionary and return it if everythig is good to go
@@ -1301,7 +1303,6 @@ class server_ops:
             #check to see if there is a default key
             get_def_key = {"select":"def_security_key_id", "from":"projects", "where":"proj_id='%s'" %(key_dict['project_id'])}
             def_key = self.db.pg_select(get_def_key)
-            print self.is_admin
             try:
                 self.db.pg_transaction_begin()
                 #if the default is empty and the user is an admin add a default
@@ -1579,7 +1580,6 @@ class server_ops:
             logger.sql_error("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
             raise Exception("Could not get the security key info for sec_key: %s in project: %s" %(sec_key_name,self.project_id))
 
-        print get_key
         if(get_key[0][2] != self.user_id):
             logger.sys_error("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))
             raise Exception("The security key %s does not belong to the user %s" %(delete_dict['sec_key_name'],self.username))

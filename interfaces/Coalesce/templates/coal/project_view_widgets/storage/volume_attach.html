@@ -1,0 +1,74 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Attach Volume</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="volume-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="volume-instance" class="col-sm-4 control-label">Instance:</label>
+                        <select name="volumeInstance" id="volume-instance" class="col-sm-8">
+                            {% for instance in instances %}
+                                {% if instance.server_status != "BUILDING" and instance.server_status != "ERROR" %}
+                                    <option value="{{ instance.server_id }}">{{ instance.server_name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="volume-form" class="btn btn-primary" data-loading-text="Loading ...">
+        Confirm
+    </button>
+</div>
+
+<script>
+    $(function () {
+        var buttons = $(this).parent().parent().find('button'),
+                page = $("#page-content"),
+                storage = $("#storage-container");
+        $("#volume-form").validate({
+            rules: {
+                volumeInstance: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                setModalButtons(false, buttons);
+                showMessage('info', "Attaching Volume to Instance");
+
+                $.getJSON('/attach_volume/' + CURRENT_PROJECT_ID + '/' + $("#volume-instance").val() + '/{{ volume_id }}/')
+                        .done(function (data) {
+                            if (data.status == 'error') {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+                                showMessage('success', data.message);
+                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                stealthRefreshContainer(page, $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instances_panel/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');	// Flag server fault message
+                        });
+                closeModal();
+            }
+        });
+    });
+</script>

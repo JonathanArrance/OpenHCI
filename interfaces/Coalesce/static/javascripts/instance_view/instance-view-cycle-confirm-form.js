@@ -26,7 +26,7 @@ $(function () {
         buttons: {
             "Confirm": function () {
 
-                message.showMessage('notice', 'Powering Cycling');
+                messages.showMessage('notice', 'Powering Cycling');
 
                 // Hide other actions
                 actions.slideUp();
@@ -42,18 +42,18 @@ $(function () {
 
                         if (data.status == "error") {
 
-                            message.showMessage('error', data.message);
+                            messages.showMessage('error', data.message);
                         }
 
                         if (data.status == "success") {
 
-                            message.showMessage('success', data.message);
+                            messages.showMessage('success', data.message);
                             emptyAndAppend(status, "ACTIVE");
                         }
                     })
                     .fail(function () {
 
-                        message.showMessage('error', 'Server Fault');
+                        messages.showMessage('error', 'Server Fault');
                         emptyAndAppend(status, "ERROR");
                     })
                     .always(function () {

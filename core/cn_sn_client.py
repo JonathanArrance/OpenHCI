@@ -583,7 +583,9 @@ def processComputeConfig(sock, node_id):
     print "******Adding Core Node******"
     contname = util.get_cloud_controller_name()
     if(contname):
-        with open("/usr/local/lib/python2.7/transcirrus/common/config.py", "a") as f: f.write("CLOUD_CONTROLLER='%s'"%(contname))
+        with open("/usr/local/lib/python2.7/transcirrus/common/config.py", "a") as f:
+            f.write("CLOUD_CONTROLLER='%s'"%(contname))
+            f.close()
     else:
         logger.sys_error('Could not add CLOUD_CONTROLLER to config.py')
 

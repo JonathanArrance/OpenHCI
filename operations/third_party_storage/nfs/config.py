@@ -5,6 +5,7 @@
 import os
 import pwd
 import grp
+import subprocess
 import transcirrus.operations.third_party_storage.common as common
 
 # Constants
@@ -87,3 +88,40 @@ def delete_nfs_conf():
         return
     os.remove (NFS_SHARES_CONF)
     return
+
+
+def validate_mountpoints (mountpoints):
+    mount_dir = "/tmp/nfs_test"
+    if not os.path.isdir (mount_dir):
+        os.makedirs (mount_dir)
+
+    mount_failure = False
+    mountpoint_msgs = []
+
+    for mntpt in mountpoints:
+        command = "sudo mount " + mntpt + " " + mount_dir + " -o retry=0,timeo=50"
+        subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = subproc.communicate()
+
+        if subproc.returncode != 0:
+            mount_failure = True
+            mountpoint_msgs.append([mntpt, stderr])
+        else:
+            command = "sudo touch " + mount_dir + "/test.file"
+            subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            stdout, stderr = subproc.communicate()
+
+            if subproc.returncode != 0:
+                mount_failure = True
+                mountpoint_msgs.append([mntpnt, "Error attempting to create file on %s - %s" % (mntpt, stderr)])
+            else:
+                mountpoint_msgs.append([mntpt, ""])
+                command = "sudo rm -fr " + mount_dir + "/test.file"
+                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                stdout, stderr = subproc.communicate()
+
+            command = "sudo umount " + mount_dir
+            subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            stdout, stderr = subproc.communicate()
+    
+    return (not mount_failure, mountpoint_msgs)

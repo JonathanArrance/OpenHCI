@@ -1,0 +1,388 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ instance.server_name }} View</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Instance Details</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td class="center-text">{{ instance.server_name }}</td>
+                </tr>
+                <tr>
+                    <td>ID</td>
+                    <td class="center-text">{{ instance.server_id }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td class="center-text {% if instance.server_status == "ACTIVE" %}bg-success{% elif instance.server_status == "PAUSED" or instance.server_status == "SUSPENDED" or instance.server_status == "BUILD" or instance.server_status == "REBOOT" %}bg-warning {% if instance.server_status == "BUILD" or instance.server_status == "REBOOT" %}bg-active bg-striped{% endif %}{% elif instance.server_status == "ERROR"  or instance.server_status == "SHUTOFF" %}bg-danger{% endif %}">
+                        {{ instance.server_status }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>OS</td>
+                    <td class="center-text">{{ instance.server_os }}</td>
+                </tr>
+                <tr>
+                    <td>Settings</td>
+                    <td class="center-text">{{ instance.server_flavor }}
+                        <button type="button" class="btn btn-xs btn-info update-instance-settings" data-toggle="popover"
+                                title="Update Settings" data-html="true"
+                                data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                data-placement="bottom">
+                            <i class="fa fa-cog"></i> Update
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Key Name</td>
+                    <td class="center-text">{{ instance.server_key_name }}</td>
+                </tr>
+                <tr>
+                    <td>Group Name</td>
+                    <td class="center-text">{{ instance.server_group_name }}</td>
+                </tr>
+                <tr>
+                    <td>Public IP</td>
+                    <td class="center-text">{{ instance.server_public_ips }}</td>
+                </tr>
+                <tr>
+                    <td>Network ID</td>
+                    <td class="center-text">{{ instance.server_net_id }}</td>
+                </tr>
+                <tr>
+                    <td>Internal Networks</td>
+                    <td class="center-text">
+                        {% for k,v in instance.server_int_net.items %}
+                            <span>{{ k }}: </span>
+                            {% for i in v %}
+                                <span>{{ i.addr }}</span>
+                            {% endfor %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Actions</td>
+                    <th>
+                        {% if instance.server_status == "ACTIVE" %}
+                            <button type="button" class="btn btn-xs btn-info"
+                                    onClick="window.open('{{ instance.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
+                                <i class="fa fa-desktop"></i> console
+                            </button>
+                            {% if snapshots %}
+                                <button type="button" class="btn btn-xs btn-info revert-instance"
+                                        data-toggle="popover" title="Revert Instance" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="bottom"><i class="fa fa-fast-backward"></i> revert
+                                </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-xs btn-warning pause-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
+                                    data-notice="Pausing Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Pause Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-pause"></i> pause
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning suspend-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
+                                    data-notice="Suspending Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Suspend Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-stop"></i> suspend
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning power-off-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
+                                    data-notice="Powering Off Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Power Off Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-power-off"></i> power off
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning power-cycle-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_cycle/"
+                                    data-notice="Power Cycling Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Power Cycle Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-plug"></i> power cycle
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning reboot-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
+                                    data-notice="Rebooting On Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Reboot Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
+                                <i class="fa fa-flash"></i> reboot
+                            </button>
+                        {% elif instance.server_status == "PAUSED" %}
+                            <button type="button" class="btn btn-xs btn-success unpause-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
+                                    data-notice="Unpausing Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Unpause Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom"><i
+                                    class="fa fa-play"></i> unpause
+                            </button>
+                        {% elif instance.server_status == "SUSPENDED" %}
+                            <button type="button" class="btn btn-xs btn-success resume-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
+                                    data-notice="Resuming Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Resume Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-play-circle"></i> resume
+                            </button>
+                        {% endif %}
+                        {% if instance.server_status == "SHUTOFF" %}
+                            <button type="button" class="btn btn-xs btn-success power-on-instance-from-view"
+                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_on_server/"
+                                    data-notice="Powering On Instance {{ instance.server_name }}"
+                                    data-toggle="popover" title="Power On Instance" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-power-off"></i> power on
+                            </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-xs btn-danger delete-instance-from-view"
+                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"
+                                data-notice="Deleting Instance {{ instance.server_name }}"
+                                data-toggle="popover" title="Delete Instance" data-html="true"
+                                data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                            <i class="fa fa-trash-o"></i> delete
+                        </button>
+                    </th>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Snapshot</th>
+                    <th>Description</th>
+                    <th>Created</th>
+                    <th>
+                        <button type="button" class="create-instance-snapshot btn btn-xs btn-success pull-right"
+                                data-toggle="popover" title="Create Instance Snapshot" data-html="true"
+                                data-content="<div class='col-sm-12'><h1>Loading <i class='fa fa-cog fa-spin'></i></h1></div>"
+                                data-placement="left">
+                            <i class="fa fa-plus text-top"></i>
+                        </button>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if snapshots %}
+                    {% for snapshot in snapshots %}
+                        <tr id="{{ snapshot.snapshot_id }}" class="snapshot">
+                            <td class="snapshot-name">
+                                {{ snapshot.snapshot_name }}
+                            </td>
+                            <td>
+                                {{ snapshot.info.description }}
+                            </td>
+                            <td>
+                                {{ snapshot.info.date_created }}
+                            </td>
+                            <td class="snapshot-actions">
+                                <button type='button'
+                                        class="delete-instance-snapshot-from-view btn btn-xs btn-danger pull-right"
+                                        data-call="/server/{{ snapshot.snapshot_id }}/delete_instance_snapshot/"
+                                        data-notice="Deleting Instance Snapshot {{ snapshot.snapshot_name }}"
+                                        data-toggle="popover" title="Delete Instance Snapshot" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="snapshot-placeholder text-warning">
+                        <td><p><i>This project has no instance snapshots.</i></p></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Last 24hrs: Average Instance Meters
+                    </h3>
+                </div>
+                <div class="panel-body center-text">
+                    {% for group in meters %}
+                        {% for meter in group.meters %}
+                            {% for stat in stats %}
+                                {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
+                                    <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
+                                        <script>
+                                            charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
+                                        </script>
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var INSTANCE_ID = "{{instance.server_id}}",
+            INSTANCE = "{{instance.server_name}}",
+            ATTACHED_IP = "{{instance.server_public_ips}}";
+    $(function () {
+        var view = $(".info-content");
+
+        window.loading.current = view;
+        if (window.instanceViewTimer) {
+            window.clearInterval(window.instanceViewTimer);
+        }
+        window.instanceViewTimer = setInterval(function () {
+            stealthRefreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+        }, 60000);
+
+        $('[data-toggle="popover"]').popover();
+
+        $(".update-instance-settings").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/instance/get/resize/");
+        });
+
+        $(".revert-instance").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/instance/get/revert/" + INSTANCE_ID + "/");
+        });
+
+        $(".create-instance-snapshot").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/instance/get/create_snapshot/");
+        });
+
+        $(document).on('click', '.delete-instance-snapshot-from-view', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="delete-instance-snapshot-from-view" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-instance-snapshot-from-view").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+
+        $(document).on('click', '.pause-instance-from-view, .unpause-instance-from-view, .suspend-instance-from-view, .resume-instance-from-view, .power-on-instance-from-view, .power-off-instance-from-view, .power-cycle-instance-from-view, .reboot-instance-from-view', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="confirm-action" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#confirm-action").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+
+        $(document).on('click', '.delete-instance-from-view', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="delete-instance-from-view" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-instance-from-view").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                window.loading.loadFromView = true;
+                                refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                closeModal()
+            });
+        });
+
+        $(".close").click(function () {
+            window.clearInterval(window.instanceViewTimer);
+            window.loading.current = $("#instances-container");
+            if (window.loading.loadFromView == true) {
+                refreshContainer($("#page-content"), $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/")
+            }
+        });
+    });
+</script>
+
+{#<div id="instance-revert-form" title="Revert Instance">#}
+{#    <p class="validateTips">Revert <span class="instance-name"></span> from snapshot.</p>#}
+{##}
+{#    <form>#}
+{#        {% csrf_token %}#}
+{#        <fieldset>#}
+{#            <label for="instance_snapshot_name">Snapshot</label>#}
+{#            <select name="instance_snapshot_name" id="instance_snapshot_name"></select>#}
+{#        </fieldset>#}
+{#    </form>#}
+{#</div>#}
+
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-resize-dialog-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-reboot-confirm-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-cycle-confirm-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweroff-confirm-form.js"></script>#}
+{#<script src="{{ STATIC_URL }}javascripts/instance_view/instance-view-poweron-confirm-form.js"></script>#}

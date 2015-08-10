@@ -752,8 +752,7 @@ CREATE TABLE projects (
     host_system_name character varying,
     host_system_ip character varying,
     def_network_name character varying,
-    def_network_id character varying DEFAULT 0,
-    is_default character varying
+    def_network_id character varying DEFAULT 0
 );
 
 
@@ -1573,8 +1572,7 @@ CREATE TABLE trans_user_info (
     user_primary_project character varying,
     user_project_id character varying,
     keystone_role character varying,
-    user_email character varying,
-    encrypted_password character varying
+    user_email character varying
 );
 
 
