@@ -114,6 +114,11 @@ fi
 /sbin/chkconfig --add /etc/init.d/ceilometer_third_party_meters
 /sbin/service ceilometer_third_party_meters restart
 
+# update transcirrus db
+sudo service postgresql restart
+psql -U postgres -d transcirrus -c "ALTER TABLE trans_user_info ADD COLUMN encrypted_password character varying;"
+psql -U postgres -d transcirrus -c "ALTER TABLE projects ADD COLUMN is_default character varying;"
+
 # add shadow_admin
 if [ ! /home/transuer/factory_creds ]
 then
@@ -121,7 +126,7 @@ echo "no factory_creds"
 else
 source /home/transuser/factory_creds
 SHADOW="$(sudo grep -c 'shadow_admin:' /etc/passwd)"
-if [ -z "$SHADOW" ]
+if [ $SHADOW -eq 1 ]
 then
 echo "shadow_admin already exists"
 else
