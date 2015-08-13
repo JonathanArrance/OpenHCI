@@ -116,45 +116,44 @@ fi
 
 # update transcirrus db
 sudo service postgresql restart
-psql -U postgres -d transcirrus -c "ALTER TABLE trans_user_info ADD COLUMN encrypted_password character varying;"
-psql -U postgres -d transcirrus -c "ALTER TABLE projects ADD COLUMN is_default character varying;"
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE trans_user_info ADD COLUMN encrypted_password character varying;"
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE projects ADD COLUMN is_default character varying;"
+
+SHADOW="$(sudo grep -c 'shadow_admin:' /etc/passwd)"
+if [ ! $SHADOW -eq 1 ]
+then
+    /bin/echo "create the linux user shadow_admin"
+    #create shadown_admin
+    useradd -d /home/shadow_admin -g transystem -s /bin/admin.sh shadow_admin
+    #set shadow_admin default password
+    /bin/echo -e 'manbehindthecurtain\nmanbehindthecurtain\n' | passwd shadow_admin
+    # set the shadow_admin account up in sudo
+    echo 'shadow_admin ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+fi
+
+shadowadmingroups=('postgres' 'keystone' 'glance' 'nova' 'cinder' 'neutron'  'ceilometer' 'heat' 'swift')
+for i in "${shadowadmingroups[@]}"
+do
+    id -Gn 'shadow_admin' | grep '\b'$i'\b'
+    IDRESULT=$?
+    if [ ! $IDRESULT -eq 0 ]
+    then
+        usermod -a -G $i shadow_admin
+    fi
+done
 
 # add shadow_admin
 if [ ! /home/transuer/factory_creds ]
 then
-echo "no factory_creds"
+    /bin/echo "ERROR: No factory_creds file"
 else
-source /home/transuser/factory_creds
-SHADOW="$(sudo grep -c 'shadow_admin:' /etc/passwd)"
-if [ $SHADOW -eq 1 ]
-then
-echo "shadow_admin already exists"
-else
-echo "adding shadow_admin"
-TRANS="$(sudo cat /usr/local/lib/python2.7/transcirrus/common/config.py | grep "TRANS_DEFAULT_ID")"
-ID="$(echo $TRANS |awk -F\" '$0=$2')"
-# add the shadow_admin user
-useradd -d /home/shadow_admin -g transystem -s /bin/admin.sh shadow_admin
-#set shadow_admin default password
-echo -e 'manbehindthecurtain\nmanbehindthecurtain\n' | passwd shadow_admin
-# set the shadow_admin account up in sudo
-(
-cat << 'EOP'
-shadow_admin ALL=(ALL) NOPASSWD: ALL
-EOP
-) >> /etc/sudoers
-# add shadow_admin to groups
-usermod -a -G postgres shadow_admin
-usermod -a -G nova shadow_admin
-usermod -a -G cinder shadow_admin
-usermod -a -G glance shadow_admin
-usermod -a -G swift shadow_admin
-usermod -a -G neutron shadow_admin
-usermod -a -G keystone shadow_admin
-usermod -a -G heat shadow_admin
-usermod -a -G ceilometer shadow_admin
-SHADOW_ADMIN_USER=$(keystone user-create --name=shadow_admin --pass=manbehindthecurtain | grep " id " | awk '{print $4}')
-# add admin, shadow_admin and trans_default project to transcirrus db
-psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${ID}"', 'admin', NULL);"
+    source /home/transuser/factory_creds
+    keystone user-create --name="shadow_admin" --pass="manbehindthecurtain"
+    SHADOW_ADMIN_USER=$(keystone user-get shadow_admin | grep " id " | awk '{print $4}')
+    echo $SHADOW_ADMIN_USER
+    # add admin, shadow_admin and trans_default project to transcirrus db
+    /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${ID}"', 'admin', NULL);"
 fi
-fi
+
+cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
+cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
