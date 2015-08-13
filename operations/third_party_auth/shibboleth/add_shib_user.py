@@ -43,7 +43,11 @@ def add_user(input_dict):
         user_dict['user_role'] = 'user'
         user_dict['project_id'] = input_dict['project_id']
         # create user and add to project
-        user = uo.create_user(user_dict)
+        try:
+            user = uo.create_user(user_dict)
+        except Exception as e:
+            logger.sys_error("add shib user error, add to project section: %s" % str(e))
+            raise e
     # else build an entire project for user
     else:
         user_dict['user_role'] = 'admin'
@@ -67,7 +71,11 @@ def add_user(input_dict):
                             'router_name':      username + "_router"
                        }
         # create project and user
-        proj, user = bsp.build_project(shadow_auth, project_dict)
+        try:
+            proj, user = bsp.build_project(shadow_auth, project_dict)
+        except Exception as e:
+            logger.sys_error("add shib user error, build project section: %s" % str(e))
+            raise e
 
     # instantiate db
     db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)

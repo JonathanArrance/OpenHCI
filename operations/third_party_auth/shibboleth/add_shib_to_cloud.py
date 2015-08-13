@@ -1,6 +1,7 @@
 import subprocess
 import xml.etree.ElementTree as etree
 import transcirrus.common.util as util
+import transcirrus.common.logger as logger
 
 
 def add_centos6_shib(input_dict):
@@ -11,7 +12,7 @@ def add_centos6_shib(input_dict):
                             mp_backing_file_path    - MetadataProvider backingFilePath - ex: "testshib-two-idp-metadata.xml"
                             mp_uri                  - MetadataProvider uri - ex: "http://www.testshib.org/metadata/testshib-providers.xml"
                         }
-    OUTPUT: 'OK' if task completed successfully
+    OUTPUT: 'OK' if task completed successfully, else 'ERROR'
     ACCESS: admins only
     NOTE:   admin must upload metadata to idp after this
             metadata can be found at https://<uplink_ip>/Shibboleth.sso/Metadata
@@ -26,7 +27,8 @@ def add_centos6_shib(input_dict):
             subprocess.call(["sudo", "wget", "http://download.opensuse.org/repositories/security://shibboleth/CentOS_CentOS-6/security:shibboleth.repo",  "-P", "/etc/yum.repos.d"])
             subprocess.call(["sudo", "yum", "-y", "install", "shibboleth.x86_64"])
         except Exception as e:
-            print "ERROR: " + str(e)
+            logger.sys_error("add shib error, wget section: %s" % str(e))
+            raise e
 
         # modify shibboleth config, updating:
         #   * ApplicationDefaults entityID  ->  uplink_ip
@@ -48,7 +50,8 @@ def add_centos6_shib(input_dict):
                 meta_prov.set("uri", input_dict['mp_uri'])
             shib_tree.write('/etc/shibboleth/shibboleth2.xml')
         except Exception as e:
-            print "ERROR: " + str(e)
+            logger.sys_error("add shib error, etree section: %s" % str(e))
+            raise e
 
         # sync time settings to avoid shibboleth timing errors, restart shibd after modifying config,
         # and stop httpd before modifying config
@@ -59,7 +62,8 @@ def add_centos6_shib(input_dict):
             subprocess.call(["sudo", "service", "shibd", "start"])
             subprocess.call(["sudo", "service", "httpd", "stop"])
         except Exception as e:
-            print "ERROR: " + str(e)
+            logger.sys_error("add shib error, service section: %s" % str(e))
+            raise e
 
         # modify apache's httpd.conf, adding shibboleth wrapper
         try:
@@ -74,18 +78,18 @@ def add_centos6_shib(input_dict):
                                     Require valid-user\n \
                                   </Location>")
         except Exception as e:
-            print "ERROR: " + str(e)
+            logger.sys_error("add shib error, xml section: %s" % str(e))
+            raise e
 
 
-        # restart httpd and reset rabbitmq (behaves strangely after shibboleth install) after modifying config
+        # restart httpd
         try:
             subprocess.call(["sudo", "service", "httpd", "start"])
-            """
-            subprocess.call(["sudo", "rabbitmqctl", "change_password", "guest", "transcirrus1"])
-            subprocess.call(["sudo", "service", "rabbitmq-server", "restart"])
-            subprocess.call(["sudo", "service", "neutron-server", "restart"])
-            """
         except Exception as e:
-            print "ERROR: " + str(e)
+            logger.sys_error("add shib error, httpd section: %s" % str(e))
+            raise e
 
-    return 'OK'
+        return 'OK'
+
+    # this means not centos6.x
+    return 'ERROR'

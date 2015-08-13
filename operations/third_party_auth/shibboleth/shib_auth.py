@@ -4,6 +4,7 @@ import transcirrus.common.config as config
 from transcirrus.common import extras as extras
 from transcirrus.common.auth import authorization
 from transcirrus.database.postgres import pgsql
+from transcirrus.component.keystone.keystone_users import user_ops
 
 
 class shibboleth_authorization:
@@ -36,7 +37,7 @@ class shibboleth_authorization:
 
     def get_auth(self):
         """
-        DESC:   get all authorization information for the user
+        DESC:   get all authorization information for the user or returns None if user doesn't exist
         INPUT:  none
         OUTPUT: auth_dict:  {
                                 username
@@ -50,17 +51,33 @@ class shibboleth_authorization:
                                 db_object
                                 adm_token       -   "" if not admin, otherwise some token
                             }
+                    - OR -
+                None
         ACCESS: wide open, but with great power comes great responsibility
         NOTE:
         """
-        # get encrypted password, decrypt and authenticate
-        try:
-            get_pass = {'select':'encrypted_password','from':'trans_user_info','where':"user_name='%s'"%(self.username)}
-            cipher = self.db.pg_select(get_pass)
-            plaintext = extras.decrypt(cipher[0][0])
-            a = authorization(self.username, plaintext)
-            auth = a.get_auth()
-            return auth
-        except Exception as e:
-            logger.sys_error("Error during authentication of shibboleth user, %s." %(str(e)))
-            raise Exception("Error during authentication of shibboleth user, %s." %(str(e)))
+        # make sure user exists
+        shadow_auth = extras.shadow_auth()
+        uo = user_ops(shadow_auth)
+        users = uo.list_cloud_user_names()
+        exists = False
+        for user in users:
+            if user == self.username:
+                exists = True
+                break
+
+        if exists == True:
+            # get encrypted password, decrypt and authenticate
+            try:
+                get_pass = {'select':'encrypted_password','from':'trans_user_info','where':"user_name='%s'"%(self.username)}
+                cipher = self.db.pg_select(get_pass)
+                plaintext = extras.decrypt(cipher[0][0])
+                a = authorization(self.username, plaintext)
+                auth = a.get_auth()
+                return auth
+            except Exception as e:
+                logger.sys_error("Error during authentication of shibboleth user, %s." %(str(e)))
+                raise Exception("Error during authentication of shibboleth user, %s." %(str(e)))
+
+        # user doesn't exist
+        return None
