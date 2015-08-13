@@ -160,7 +160,7 @@ def ceilometer(action):
     NOTES: These only work on the ciac node for now
     """
     ceil_array = ['openstack-ceilometer-alarm-evaluator','openstack-ceilometer-alarm-notifier','openstack-ceilometer-api','openstack-ceilometer-central','openstack-ceilometer-collector',
-                  'openstack-ceilometer-compute','openstack-ceilometer-notification']
+                  'openstack-ceilometer-compute','openstack-ceilometer-notification','ceilometer_third_party_meters']
     out = _operator(ceil_array,action)
     return out
 
