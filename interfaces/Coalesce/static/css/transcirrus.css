@@ -418,6 +418,12 @@ footer {
     transition: box-shadow 0.3s ease-out 0s;
 }
 
+/* PROJECT VIEW */
+
+.cores-quota, .ram-quota {
+    padding: 15px 0;
+}
+
 /* INSTANCE WIZARD */
 
 .wizard-info > li:nth-child(even) {

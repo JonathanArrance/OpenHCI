@@ -620,14 +620,14 @@ def get_instance_wizard(request, project_id):
 
         tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
 
-        return render_to_response('coal/project_view_widgets/instance_wizard.html',
+        return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
                                                            'fips': fips, 'volumes': volumes,
                                                            'volume_types': volume_types, 'groups': sec_groups,
                                                            'keys': sec_keys, 'tenant_info': tenant_info}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/instance_wizard.html',
+        return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
                                                            'fips': fips, 'volumes': volumes,
@@ -732,13 +732,24 @@ def get_project_panel(request, project_id):
                        'num_keys': num_keys,
                        'used_storage': used_storage}
 
-        return render_to_response('coal/project_view_widgets/project_panel.html',
+        return render_to_response('coal/project_view_widgets/project/project_panel.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'tenant_info': tenant_info}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/project_panel.html',
+        return render_to_response('coal/project_view_widgets/project/project_panel.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'tenant_info': tenant_info, 'error': "Error: %s" % e}))
+
+def get_project_update_quotas(request, project_id):
+    quota= []
+    try:
+        auth = request.session['auth']
+        qo = quota_ops(auth)
+        quota = qo.get_project_quotas(project_id)
+        return render_to_response('coal/project_view_widgets/project/project_update_quotas.html', RequestContext(request, {'quota': quota}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/project/project_update_quotas.html', RequestContext(request, {'quota': quota,'error': "Error: %s"%e}))
+
 
 def get_instance_panel(request, project_id):
     project = []

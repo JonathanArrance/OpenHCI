@@ -52,6 +52,12 @@ $(function () {
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
+    $(document).on('click', '#update-quotas', function (event) {
+        event.preventDefault();
+        showLoader(page);
+        showConfirmModal('/projects/get/update_quotas/' + CURRENT_PROJECT_ID + '/');
+    });
+
     // Instances
     $(document).on('click', '.instance-name button', function (event) {
         event.preventDefault();
@@ -237,6 +243,7 @@ $(function () {
     window.loading.current = page;
     window.startProjectUpdateTimer();
     switchPageContent($("#project"), page, window.loading.current, project, [], "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
+    window.loading.current = project;
     $("#project").addClass('active');
 });
 
