@@ -6,15 +6,15 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title " id="modal-label">Create Instance</h4>
+    <h4 class="modal-title " id="modal-label">Instance Wizard</h4>
 </div>
 
 <div class="modal-body bg-default-light">
     <div class="container-fluid">
         <div class="row-fluid">
-            <div id="build-instance-form" title="Build Instance" class="col-sm-12">
+            <div id="instance-wizard" title="Instance Wizard" class="col-sm-12">
                 {% csrf_token %}
-                <div id="bam-instance-section">
+                <div id="wizard-instance">
                     <div class="col-sm-12">
                         <form id="instance-form" class="form-horizontal">
                             {% csrf_token %}
@@ -36,7 +36,8 @@
                                             data-title="Use the pulldown to select an image that has already been uploaded for you or select 'Upload Image' to upload your own image. If you are uploading a new image, the next screen will allow you to upload your new image."></i>Image:</label>
                                     <select name="instanceImage" id="instance-image" class="col-sm-8">
                                         {% for image in images %}
-                                            <option value="{{ image.image_id }}">{{ image.image_name }}</option>
+                                            <option value="{{ image.image_id }}"
+                                                    data-name="{{ image.image_name }}">{{ image.image_name }}</option>
                                         {% endfor %}
                                         <option value="upload">Upload Image</option>
                                     </select>
@@ -62,19 +63,19 @@
                                     </select>
                                 </div>
                                 <div class="form-group col-sm-12">
-                                    <label for="instance-ip" class="col-sm-4 control-label"><i
-                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
-                                            data-title="To assign an external IP address to your new instance, select an IP address in pulldown list. If no IP addresses are available, please contact your cloud administrator."></i>
-                                        Floating IP
-                                        <button type="button" id="bam-allocate-ip" class="btn btn-xs btn-success">
+                                    <label for="instance-ip" class="col-sm-4 control-label">
+                                        <button type="button" id="wizard-allocate-ip" class="btn btn-xs btn-success">
                                             <i class="fa fa-plus"></i>
                                         </button>
+                                        <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                           data-title="To assign an external IP address to your new instance, select an IP address in pulldown list. If no IP addresses are available, please contact your cloud administrator."></i>
+                                        Floating IP
                                         :</label>
                                     <select name="instanceIP" id="instance-ip" class="col-sm-8">
+                                        <option value="none">Skip Attaching IP</option>
                                         {% for fip in fips %}
                                             <option value="{{ fip.floating_ip }}">{{ fip.floating_ip }}</option>
                                         {% endfor %}
-                                        <option value="none">Skip Attaching IP</option>
                                     </select>
                                 </div>
                             </fieldset>
@@ -125,7 +126,7 @@
                         </table>
                     </div>
                 </div>
-                <div id="bam-image-section" style="display: none;">
+                <div id="wizard-image" style="display: none;">
                     <div class="col-sm-12">
                         <form id="image-form" class="form-horizontal" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
@@ -223,7 +224,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="bam-volume-section" style="display: none;">
+                <div id="wizard-volume" style="display: none;">
                     <div class="col-sm-12">
                         <form id="volume-form" class="form-horizontal">
                             {% csrf_token %}
@@ -238,11 +239,11 @@
                                             data-title="If you would like others to use your image then choose ‘Public’ otherwise choose ‘Private’."></i>
                                         Select Pre-existing/Create:</label>
                                     <select name="volumeExisting" id="volume-existing" class="col-sm-8">
+                                        <option value="none">Skip Adding Storage</option>
+                                        <option value="create">Create Volume</option>
                                         {% for volume in volumes %}
                                             <option value="{{ volume.volume_id }}">{{ volume.volume_name }}</option>
                                         {% endfor %}
-                                        <option value="none">Skip Adding Storage</option>
-                                        <option value="create">Create Volume</option>
                                     </select>
                                 </div>
 
@@ -254,7 +255,7 @@
                                             data-title="To choose an existing volume, use the pulldown to select a volume to attach to your new instance. If no volumes exist, you can create a new volume or skip adding permanent storage to your instance."></i>
                                         Name:</label>
                                     <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
-                                           class="col-sm-8">
+                                           class="col-sm-8" disabled>
                                 </div>
                                 <h4>Volume Options</h4>
                                 <hr class="narrow">
@@ -265,7 +266,7 @@
                                         Size (gb):</label>
                                     <input type="text" name="volumeSize" id="volume-size"
                                            placeholder="Volume Size in gigabytes"
-                                           class="col-sm-8">
+                                           class="col-sm-8" disabled>
                                 </div>
                                 <div class="col-sm-12">
                                     <label><i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
@@ -282,7 +283,7 @@
                                             class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
                                             data-title="Select the type of storage to create your volume on. The default types are ‘ssd’ and ‘spindle’. For performance ssd is faster than spindle. If you need a large amount of storage and performance is not an issue, then ‘spindle’ may be a better option."></i>
                                         Type:</label>
-                                    <select name="volumeType" id="volume-type" class="col-sm-8">
+                                    <select name="volumeType" id="volume-type" class="col-sm-8" disabled>
                                         {% for type in volume_types %}
                                             <option value="{{ type.name }}">{{ type.name }}</option>
                                         {% endfor %}
@@ -292,10 +293,10 @@
                         </form>
                     </div>
                 </div>
-                <div id="bam-security-section" style="display: none;">
+                <div id="wizard-security" style="display: none;">
                     <div class="col-sm-12">
 
-                        <form id="security-form" style="display: none;">
+                        <form id="security-form">
                             <fieldset>
                                 <legend>Security</legend>
                                 <h6>Please enter the following security information:</h6>
@@ -316,7 +317,7 @@
                                 <div class="form-group col-sm-12">
                                     <label for="key-name" class="col-sm-4 control-label">Name:</label>
                                     <input type="text" name="keyName" id="key-name" placeholder="Security Key Name"
-                                           class="col-sm-8">
+                                           class="col-sm-8" {% if keys %}disabled{% endif %}>
                                 </div>
 
                                 <hr>
@@ -337,7 +338,7 @@
                         </form>
                     </div>
                 </div>
-                <div id="bam-group-section" style="display: none;">
+                <div id="wizard-group" style="display: none;">
                     <div class="col-sm-12">
                         <form id="group-form" class="form-horizontal">
                             {% csrf_token %}
@@ -405,12 +406,16 @@
                                 <td>80</td>
                                 <td>25</td>
                             </tr>
+                            </tbody>
+                            <thead class="bg-primary">
                             <tr>
                                 <th>https</th>
                                 <th>smtps</th>
                                 <th>ftp</th>
                                 <th>nfs</th>
                             </tr>
+                            </thead>
+                            <tbody>
                             <tr>
                                 <td>443</td>
                                 <td>465</td>
@@ -421,48 +426,42 @@
                         </table>
                     </div>
                 </div>
-                <div id="bam-progress-section" style="display: none;">
+                <div id="wizard-progress" style="display: none;">
                     <div class="col-sm-12">
                         <form id="progress-form">
                             <fieldset>
                                 <legend>Progress</legend>
                                 <h6>Your Instance information:</h6>
-                                <ul class="list-unstyled">
-                                    <li class="instance"><label>Instance Name:</label><span class="name"></span></li>
-                                    <li class="image"><label>Image Name:</label><span class="name"></span></li>
-                                    <li class="instance"><label>Instance Network:</label><span class="network"></span>
+                                <ul class="list-unstyled wizard-info">
+                                    <li class="instance"><label>Instance Name: </label><span class="name"></span></li>
+                                    <li class="image"><label>Image Name: </label><span class="name"></span></li>
+                                    <li class="instance"><label>Instance Network: </label><span class="network"></span>
                                     </li>
-                                    <li class="instance"><label>Instance Flavor:</label><span class="flavor"></span>
+                                    <li class="instance"><label>Instance Flavor: </label><span class="flavor"></span>
                                     </li>
-                                    <li></li>
-                                    <li class="volume"><label>Volume Name:</label><span class="name"></span></li>
-                                    <li class="volume"><label>Volume Size:</label><span class="size"></span></li>
-                                    <li class="volume"><label>Volume Type:</label><span class="type"></span></li>
-                                    <li></li>
-                                    <li class="security"><label>Floating IP Address:</label><span class="ip"></span>
+                                    <li class="volume"><label>Volume Name: </label><span class="name"></span></li>
+                                    <li class="volume"><label>Volume Size: </label><span class="size"></span></li>
+                                    <li class="volume"><label>Volume Type: </label><span class="type"></span></li>
+                                    <li class="instance"><label>Floating IP Address: </label><span class="ip"></span>
                                     </li>
-                                    <li class="security"><label>Security Group:</label><span class="group"></span></li>
-                                    <li class="security"><label>Security Key Pair:</label><span class="key"></span></li>
+                                    <li class="security"><label>Security Group: </label><span class="group"></span></li>
+                                    <li class="security"><label>Security Key Pair: </label><span class="key"></span>
+                                    </li>
                                 </ul>
-
-                                <label>Overall Progress:</label>
-
-                                <p>Please verify the information provided. If there are any issues, use the "Back"
-                                    button to fix them. If the information is correct, click the ‘Create’ button and the
-                                    creation process will begin. </p>
 
                                 <p>The progress bars will show you the status of your creation process. The Overall
                                     Progress bar is the overall progress of the entire creation process. The Image
-                                    Upload is the progress of uploading your image. The Volume Creation is the progress
-                                    of creating and attaching your new image to your instance.</p>
+                                    Upload is the progress of uploading your image.</p>
 
-                                <label>Overall Rrogress: <span id="bam-overall-progress-label">0%</span></label>
+                                <label>Overall Rrogress: <span id="wizard-overall-progress-label"></span></label>
 
-                                <div id="bam-overall-progress-bar" class="progress progress-striped">
+                                <div id="wizard-overall-progress-bar" class="progress progress-striped">
                                     <div class="progress-bar progress-bar-info progress-bar-striped bg-active"
                                          style="width: 0"></div>
                                 </div>
-                                <div id="bam-image-upload-bar" class="progress progress-striped">
+                                <label>Upload Rrogress: <span id="wizard-image-progress-label">0%</span></label>
+
+                                <div id="wizard-image-upload-bar" class="progress progress-striped">
                                     <div class="progress-bar progress-bar-info progress-bar-striped bg-active"
                                          style="width: 0"></div>
                                 </div>
@@ -470,27 +469,34 @@
                         </form>
                     </div>
                 </div>
-                <div id="bam-confirm-section" style="display: none;">
+                <div id="wizard-confirm" style="display: none;">
                     <div class="col-sm-12">
                         <form id="confirm-form">
                             <fieldset>
                                 <legend>Success</legend>
                                 <h6>Login/Access Information:</h6>
 
-
-                                <label>Instance Name: </label><span class="bam-confirm-name"></span>
-                                <label>External IP address: </label><span class="bam-confirm-ip"></span>
-                                <label>Linux Device: </label><span>/dev/vdb</span>
-
-                                <a class="bam-confirm-key" href="">Download RSA Key</a>
-
-                                <p>Please use the given information to access and login to your new virtual machine
-                                    instance. If your
-                                    instance requires a key to login, you will need to download the RSA Key file to
-                                    use when logging in.</p>
-
-                                <p>If a password is needed, the following are common username/passwords for the
-                                    following OSes:</p>
+                                <div class="col-sm-12"><p class="text-success">
+                                    Instance Name: <span class="wizard-confirm-name"></span></p>
+                                </div>
+                                <div class="col-sm-12"><p class="text-info">
+                                    External IP address: <span class="wizard-confirm-ip"></span></p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p class="text-success">Linux Device: <span>/dev/vdb</span></p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <a class="wizard-confirm-key" href="">Download RSA Key</a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p>Please use the given information to access and login to your
+                                        new virtual machine instance. If your instance requires a key to login, you will
+                                        need to download the RSA Key file to use when logging in.</p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p>If a password is needed, the following are common username/passwords for the
+                                        following OSes:</p>
+                                </div>
 
                                 <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
                                     <thead class="bg-primary">
@@ -531,16 +537,15 @@
                                     </tbody>
                                 </table>
 
-                                <br>
-
                                 <h6>You can access your like so:</h6>
 
-                                <p>Linux:</p>
-
-                                <p>&#62; ssh -I &#60;RSA Key file&#62; fedora@204.64.2.44</p>
-
-                                <p>If at anytime you forget this information, you can retrieve it by clicking the name
-                                    of your instance in the Project View page.</p>
+                                <div class="col-sm-12">
+                                    <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@204.64.2.44</p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p>If at anytime you forget this information, you can retrieve it by clicking the
+                                        name of your instance in the Project View page.</p>
+                                </div>
                             </fieldset>
                         </form>
                     </div>
@@ -552,51 +557,57 @@
 
 
 <div class="modal-footer">
-    <button class="btn btn-primary" id="bam-finish-button" data-loading-text="Finish" style="display: none;">Finish
-    </button>
-    <button class="btn btn-primary" id="bam-create-button" data-loading-text="Create" style="display: none;">Create
-    </button>
-    <button class="btn btn-primary" id="bam-next-button" data-loading-text="Next">Next</button>
-    <button class="btn btn-primary" id="bam-back-button" data-loading-text="Back" style="display: none;">Back</button>
+    <button class="btn btn-primary" id="wizard-back" data-loading-text="Back" style="display: none;">Back</button>
+    <button class="btn btn-primary" id="wizard-finish" data-loading-text="Finish" style="display: none;">Finish</button>
+    <button class="btn btn-primary" id="wizard-create" data-loading-text="Create" style="display: none;">Create</button>
+    <button class="btn btn-primary" id="wizard-next" data-loading-text="Next" disabled>Next</button>
 </div>
 
+<script src="{{ STATIC_URL }}javascripts/project_view/instance-wizard.js"></script>
 <script>
     $('[data-toggle="tooltip"]').tooltip();
     $(function () {
         initializeBamSection();
 
-        $("#bam-next-button").click(function (event) {
+        $("#wizard-next").click(function (event) {
             event.preventDefault();
             changeBamSection("next");
-        });
-
-        $("#bam-back-button").click(function (event) {
-
-            event.preventDefault();
-            if ($(this).attr('disabled') == undefined) {
-                changeBamSection("back");
+            var currentForm = "#" + wizardSection + "-form";
+            if ($(currentForm).valid()) {
+                $("#wizard-next").removeProp("disabled");
+            } else {
+                $("#wizard-next").prop("disabled", "disabled");
             }
         });
 
-        $("#bam-create-button").click(function (event) {
+        $("#wizard-back").click(function (event) {
             event.preventDefault();
-            if ($(this).attr('disabled') == undefined) {
-                $("#bam-create-button").attr('disabled', true);
-                $("#bam-back-button").attr('disabled', true);
+            changeBamSection("back");
+            var currentForm = "#" + wizardSection + "-form";
+            if ($(currentForm).valid()) {
+                $("#wizard-next").removeProp("disabled");
+            } else {
+                $("#wizard-next").prop("disabled", "disabled");
+            }
+        });
+
+        $("#wizard-create").click(function (event) {
+            event.preventDefault();
+            if ($(this).prop("disabled") == false) {
+                $("#wizard-create").prop("disabled", "disabled");
+                $("#wizard-back").prop("disabled", "disabled");
                 buildInstance();
             }
         });
 
-        $("#bam-finish-button").click(function (event) {
+        $("#wizard-finish").click(function (event) {
             event.preventDefault();
-            $(bamParams["confirm"].section).hide(0);
-            currentSection = "initialize";
-            resetBamInputs();
-            $("#build-instance-form").dialog("close");
+            wizardSection = "initialize";
+            closeModal();
 
         });
 
-        $("#bam-allocate-ip").click(function (event) {
+        $("#wizard-allocate-ip").click(function (event) {
             event.preventDefault();
             showMessage('info', "Allocating IP.");
             $.getJSON('/allocate_floating_ip/' + CURRENT_PROJECT_ID + '/' + DEFAULT_PUBLIC + '/')
@@ -637,14 +648,13 @@
                 }
             },
             submitHandler: function () {
-                console.log(currentSection);
-                if (currentSection = "instance") {
-                    $("#bam-next-button").removeProp("disabled");
+                if (wizardSection = "instance") {
+                    $("#wizard-next").removeProp("disabled");
                 }
             },
             invalidHandler: function () {
-                console.log(currentSection);
-                if (currentSection = "instance") {
+                if (wizardSection = "instance") {
+                    $("#wizard-next").prop("disabled", "disabled");
                 }
             }
         });
@@ -666,9 +676,18 @@
                     required: true
                 },
                 imageLocal: {
-                    file: true
+                    required: {
+                        depends: function (element) {
+                            return $("#image-type").val() == "local";
+                        }
+                    }
                 },
                 imageRemote: {
+                    required: {
+                        depends: function (element) {
+                            return $("#image-type").val() == "remote";
+                        }
+                    },
                     url: true,
                     remote: true
                 },
@@ -681,13 +700,13 @@
 
             },
             submitHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").removeProp("disabled");
+                if (wizardSection = "image") {
+                    $("#wizard-next").removeProp("disabled");
                 }
             },
             invalidHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").prop("disabled", true);
+                if (wizardSection = "instance") {
+                    $("#wizard-next").prop("disabled", "disabled");
                 }
 
             }
@@ -699,29 +718,41 @@
                     required: true
                 },
                 volumeName: {
-                    required: true,
+                    required: {
+                        depends: function (element) {
+                            return $("#volume-existing").val() == "create";
+                        }
+                    },
                     charField: true,
                     minlength: standardStringMin,
                     maxlength: standardStringMax
                 },
                 volumeSize: {
-                    required: true,
+                    required: {
+                        depends: function (element) {
+                            return $("#volume-existing").val() == "create";
+                        }
+                    },
                     number: true,
                     min: 1,
                     max: {{ tenant_info.avail_storage }}
                 },
                 volumeType: {
-                    required: true
+                    required: {
+                        depends: function (element) {
+                            return $("#volume-existing").val() == "create";
+                        }
+                    }
                 }
             },
             submitHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").removeProp("disabled");
+                if (wizardSection = "volume") {
+                    $("#wizard-next").removeProp("disabled");
                 }
             },
             invalidHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").prop("disabled", true);
+                if (wizardSection = "volume") {
+                    $("#wizard-next").prop("disabled", "disabled");
                 }
             }
         });
@@ -731,7 +762,11 @@
                     required: true
                 },
                 keyName: {
-                    required: true,
+                    required: {
+                        depends: function (element) {
+                            return $("#instance-key").val() == "create";
+                        }
+                    },
                     charField: true,
                     minlength: standardStringMin,
                     maxlength: standardStringMax
@@ -741,13 +776,13 @@
                 }
             },
             submitHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").removeProp("disabled");
+                if (wizardSection = "security") {
+                    $("#wizard-next").removeProp("disabled");
                 }
             },
             invalidHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").prop("disabled", true);
+                if (wizardSection = "security") {
+                    $("#wizard-next").prop("disabled", "disabled");
                 }
             }
         });
@@ -772,21 +807,53 @@
                 }
             },
             submitHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").removeProp("disabled");
+                if (wizardSection = "group") {
+                    $("#wizard-next").removeProp("disabled");
                 }
             },
             invalidHandler: function () {
-                if (currentSection = "instance") {
-                    $("#bam-next-button").prop("disabled", true);
+                if (wizardSection = "group") {
+                    $("#wizard-next").prop("disabled", "disabled");
                 }
             }
         });
 
-        $("input select").change(function(event){
-            event.preventDefault();
-            console.log(currentSection);
-        })
+        $("form input, form select").on("click change focus", function () {
+            var currentForm = "#" + wizardSection + "-form";
+            if ($(currentForm).valid()) {
+                $("#wizard-next").removeProp("disabled");
+            } else {
+                $("#wizard-next").prop("disabled", "disabled");
+            }
+        });
+
+        $("#volume-existing").change(function () {
+            if ($(this).val() == "create") {
+                $("#wizard-next").prop("disabled", "disabled");
+                $("#volume-name, #volume-size, #volume-type").removeProp("disabled");
+            } else {
+                $("#volume-name, #volume-size, #volume-type").prop("disabled", "disabled");
+            }
+        });
+
+        $("#image-type").change(function () {
+            if ($(this).val() == "local") {
+                $("input[name=imageLocal]").removeProp("disabled");
+                $("input[name=imageRemote]").prop("disabled", "disabled");
+            } else {
+                $("input[name=imageRemote]").removeProp("disabled");
+                $("input[name=imageLocal]").prop("disabled", "disabled");
+            }
+        });
+
+        $("#instance-key").change(function () {
+            if ($(this).val() == "create") {
+                $("#wizard-next").prop("disabled", "disabled");
+                $("#key-name").removeProp("disabled");
+            } else {
+                $("#key-name").prop("disabled", "disabled");
+            }
+        });
     });
 </script>
 

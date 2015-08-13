@@ -118,6 +118,13 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_instance_wizard',
             name='get_instance_wizard'),
 
+        url(r'^projects/get/images/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_project_images',
+            name='get_project_images'),
+
+        url(r'^projects/get/keys/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_project_keys',
+            name='get_project_keys'),
 
         # --- Quotas ----
 

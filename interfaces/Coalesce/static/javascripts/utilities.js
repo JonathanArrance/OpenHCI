@@ -395,20 +395,3 @@ function getStorage(projectId) {
         })
 }
 
-
-// --- BUG FIXER: Add <div id="delete-check></div> before TEXT NODES needing to be deleted on page load
-function deleteCheck(containerId) {
-    $(document).ready(function () {
-        var textNodes = $(containerId).contents()
-            .filter(function () {
-                return this.nodeType === 3;
-            });
-
-        textNodes.each(function () {
-            if (this.previousSibling == document.getElementById("delete-check")) {
-                $(this).remove();
-            }
-        });
-    });
-}
-

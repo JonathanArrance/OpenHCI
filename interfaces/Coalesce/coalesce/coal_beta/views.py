@@ -624,8 +624,8 @@ def get_instance_wizard(request, project_id):
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
                                                            'fips': fips, 'volumes': volumes,
-                                                           'volume_types': volume_types, 'sec_groups': sec_groups,
-                                                           'sec_keys': sec_keys, 'tenant_info': tenant_info}))
+                                                           'volume_types': volume_types, 'groups': sec_groups,
+                                                           'keys': sec_keys, 'tenant_info': tenant_info}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
@@ -634,6 +634,25 @@ def get_instance_wizard(request, project_id):
                                                            'volume_types': volume_types, 'sec_groups': sec_groups,
                                                            'sec_keys': sec_keys, 'tenant_info': tenant_info,
                                                            'error': "Error: %s" % e}))
+
+
+def get_project_images(request, project_id):
+    images = []
+    auth = request.session['auth']
+    go = glance_ops(auth)
+    imgs = go.list_images()
+    for img in imgs:
+        images.append(go.get_image(img['image_id']))
+    return HttpResponse(simplejson.dumps(images))
+
+
+def get_project_keys(request, project_id):
+    keys = []
+    auth = request.session['auth']
+    so = server_ops(auth)
+    keys = so.list_sec_keys(project_id)
+    return HttpResponse(simplejson.dumps(keys))
+
 
 def get_project_panel(request, project_id):
     project = []

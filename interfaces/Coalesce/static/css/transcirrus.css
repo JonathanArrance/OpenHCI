@@ -138,7 +138,7 @@ hr.narrow {
     vertical-align: middle;
 }
 
-.popover-content{
+.popover-content {
     min-width: 300px;
     width: 100%;
 }
@@ -416,6 +416,16 @@ footer {
     padding: 12px;
     position: relative;
     transition: box-shadow 0.3s ease-out 0s;
+}
+
+/* INSTANCE WIZARD */
+
+.wizard-info > li:nth-child(even) {
+    color: rgb(92, 184, 92)
+}
+
+.wizard-info > li:nth-child(odd) {
+    color: rgb(91, 192, 222)
 }
 
 /* CHARTS */
