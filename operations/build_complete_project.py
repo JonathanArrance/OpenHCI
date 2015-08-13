@@ -45,6 +45,19 @@ def build_project(auth_dict, project_dict):
     gluster = gluster_ops(auth_dict)
     logger.sys_info("Instantiated Gluster object")
 
+    # List out the current cloud users
+    cloud_users = user.list_orphaned_users()
+    x = []
+    for y in cloud_users:
+        x.append(y['username'])
+    userset = set(x)
+
+    # check to see if user is an active user, if so, raise exception
+    all_users = user.list_cloud_user_names()
+    if project_dict['user_dict']['username'] in all_users and project_dict['user_dict']['username'] not in userset:
+        logger.sys_error("User %s already exists in a project, cannot be added to this one." %(project_dict['user_dict']['username']))
+        raise Exception("User %s already exists in a project, cannot be added to this one." %(project_dict['user_dict']['username']))
+
     proj = None
     net = None
     router = None
@@ -56,13 +69,6 @@ def build_project(auth_dict, project_dict):
     except Exception as e:
         logger.sys_error("Couldn't create a project, %s" %(str(e)))
 
-    # List out the current cloud users
-    cloud_users = user.list_orphaned_users()
-    x = []
-    for y in cloud_users:
-        x.append(y['username'])
-
-    userset = set(x)
     #If the user specifed already exists and is not attached to another project just add him to the project as power user.
     if('%s'%(project_dict['user_dict']['username']) in userset):
         try:
