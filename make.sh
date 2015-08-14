@@ -58,3 +58,4 @@ service httpd restart
 python2.7 /usr/local/lib/python2.7/transcirrus/operations/monit/fix_monit_conf.py
 monit
 
+/bin/sh ./upgrade.sh
