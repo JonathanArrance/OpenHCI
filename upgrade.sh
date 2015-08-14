@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # This is the primary upgrade script for the product. This file will
 # be executed by our rpm installer after the files have been upgraded.
