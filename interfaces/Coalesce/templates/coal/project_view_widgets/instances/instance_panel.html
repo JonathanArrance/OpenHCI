@@ -96,10 +96,11 @@
                                                 class="fa fa-power-off"></i> Power On</a></li>
                                     {% endif %}
 
-                                    <li class="bg-danger"><a href="#" class="delete-instance" data-title="Delete Instance"
-                                           data-message="Delete {{ instance.server_name }}?"
-                                           data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
-                                           data-notice="Deleting Instance {{ instance.server_name }}"><i
+                                    <li class="bg-danger"><a href="#" class="delete-instance"
+                                                             data-title="Delete Instance"
+                                                             data-message="Delete {{ instance.server_name }}?"
+                                                             data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
+                                                             data-notice="Deleting Instance {{ instance.server_name }}"><i
                                             class="fa fa-trash-o"></i> delete</a></li>
                                 </ul>
                             </div>
@@ -177,7 +178,7 @@
                 <th>Space (gb)</th>
                 <th>CPUs</th>
                 <th>
-                    <button id="create-flavor" class="btn btn-xs btn-success pull-right"><i class="fa fa-plus"></i>
+                    <button class="btn btn-xs btn-success pull-right create-flavor"><i class="fa fa-plus"></i>
                     </button>
                 </th>
             </tr>
@@ -199,18 +200,12 @@
                             {{ flavor.info.cpus }}
                         </td>
                         <td class="flavor-actions">
-                            <div class="btn-group actions-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                   aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
-                                    <li>
-                                        <a href="#" class="delete-flavor">delete</a>
-                                    </li>
-                                </ul>
-                            </div>
+                            <button type='button' class="delete-flavor btn btn-xs btn-danger pull-right"
+                                    data-title="Delete Machine Type" data-message="Delete {{ flavor.name }}?"
+                                    data-call="/delete_vm_spec/{{ flavor.id }}/"
+                                    data-notice="Deleting Machine Type {{ flavor.name }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}

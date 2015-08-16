@@ -99,6 +99,24 @@ $(function () {
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
+    // Flavors
+    $(document).on('click', '.create-flavor', function (event) {
+        event.preventDefault();
+        showLoader(page);
+        showConfirmModal('/flavor/get/create/');
+    });
+
+    $(document).on('click', '.delete-flavor', function (event) {
+        event.preventDefault();
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = ("/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/").slashTo47(),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
     // Storage
     $(document).on('click', '.volume-name button', function (event) {
         event.preventDefault();

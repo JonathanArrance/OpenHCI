@@ -286,6 +286,19 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_image_import',
             name='get_image_import'),
 
+        # --- Flavors ----
+        url(r'^create_vm_spec/(?P<name>[^/]+)/(?P<ram>[^/]+)/(?P<boot_disk>[^/]+)/(?P<cpus>[^/]+)/$',
+            'coalesce.coal_beta.views.create_vm_spec',
+            name='create_vm_spec'),
+
+        url(r'^delete_vm_spec/(?P<flavor_id>[^/]+)/$',
+            'coalesce.coal_beta.views.delete_vm_spec',
+            name='delete_vm_spec'),
+
+        url(r'^flavor/get/create/$',
+            'coalesce.coal_beta.views.get_flavor_create',
+            name='get_flavor_create'),
+
         # --- Floating IPs ----
         url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.floating_ip_view',

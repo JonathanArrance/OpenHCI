@@ -298,7 +298,7 @@ function buildInstance() {
     }
 
     if (wizardInputs.instanceGroup.val() == "create") {
-        secGroupDesc = wizardInputs.groupDescription.val() == "" ? "none" : wizardInputs.groupDescription.val();
+        secGroupDesc = wizardInputs.groupDescription.val() == "" ? "none" : encodeURIComponent(wizardInputs.groupDescription.val());
         updateProgress(step, steps, "Creating Group");
         createSecGroup = $.getJSON(
             '/create_security_group/' +

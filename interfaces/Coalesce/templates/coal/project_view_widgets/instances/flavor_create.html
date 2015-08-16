@@ -1,0 +1,110 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create Machine Type</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="machine-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="machine-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="machineName" id="machine-name" placeholder="Machine Name"
+                               class="col-sm-8">
+                    </div>
+                    <h4>Machine Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="machine-ram" class="col-sm-4 control-label">Memory (mb):</label>
+                        <input type="text" name="machineRam" id="machine-ram" placeholder="Memory in megabytes"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="machine-disk" class="col-sm-4 control-label">Space (gb):</label>
+                        <input type="text" name="machineDisk" id="machine-disk" placeholder="Space in gigabytes"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="machine-cpus" class="col-sm-4 control-label">CPUs:ss</label>
+                        <input type="text" name="machineCpus" id="machine-cpus" placeholder="Number of CPUs"
+                               class="col-sm-8">
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="machine-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $(function () {
+        var buttons = $(this).parent().parent().find('button'),
+                page = $("#page-content"),
+                instances = $("#instance-container");
+        $("#machine-form").validate({
+            rules: {
+                machineName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                machineRam: {
+                    required: true,
+                    number: true,
+                    min: 1
+                },
+                machineDisk: {
+                    required: true,
+                    number: true,
+                    min: 1
+                },
+                machineCpus: {
+                    required: true,
+                    number: true,
+                    min: 1
+                }
+            },
+            submitHandler: function () {
+                setModalButtons(false, buttons);
+                showMessage('info', "Creating new Machine");
+
+                $.getJSON('/create_vm_spec/' + $("#machine-name").val() + '/' + $("#machine-ram").val() + '/' + $("#machine-disk").val() + '/' + $("#machine-cpus").val() + '/')
+                        .done(function (data) {
+                            if (data.status == 'error') {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+                                showMessage('success', "Created Machine Type" + data.flavor_name + ".");
+                                refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');	// Flag server fault message
+                        });
+                closeModal();
+            }
+        });
+        $("#machine-form input, #machine-form select").change(function () {
+            if ($("#machine-form").valid()) {
+                $('button[type=submit]').removeProp("disabled");
+            } else {
+                $('button[type=submit]').prop("disabled", "disabled");
+            }
+        });
+    });
+</script>

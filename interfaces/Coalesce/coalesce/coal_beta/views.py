@@ -962,6 +962,14 @@ def get_image_import(request):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instances/image_import.html', RequestContext(request, {'error': "Error: %s"%e}))
 
+
+def get_flavor_create(request):
+    try:
+        return render_to_response('coal/project_view_widgets/instances/flavor_create.html', RequestContext(request))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/flavor_create.html', RequestContext(request, {'error': "Error: %s"%e}))
+
+
 def get_storage_panel(request, project_id):
     project = []
     limits = []
@@ -2630,7 +2638,7 @@ def delete_vm_spec(request,flavor_id):
         out = fo.delete_flavor(flavor_id)
         if(out == 'OK'):
             output['status'] = 'success'
-            output['message'] = "Vm spec %s deleted."%(spec['flavor_name'])
+            output['message'] = "Machine Type %s deleted."%(spec['flavor_name'])
     except Exception as e:
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
@@ -2655,7 +2663,7 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
         #net_info = so.attach_server_to_network(input_dict)
         out['server_info']= so.get_server(input_dict)
         out['status'] = 'success'
-        out['message'] = "New server %s was created."%(out['instance']['vm_name'])
+        out['message'] = "New instance %s was created."%(out['instance']['vm_name'])
         if boot_from_vol == 'true':
             out['message'] += " New boot volume %s was created for instance %s"%(out['volume']['volume_name'], out['instance']['vm_name'])
     except Exception as e:
