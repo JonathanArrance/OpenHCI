@@ -157,3 +157,5 @@ fi
 
 cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
 cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
+
+/sbin/service ceilometer_third_party_meters restart

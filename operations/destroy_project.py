@@ -133,17 +133,17 @@ def destroy_project(auth_dict, project_dict):
     #        raise Exception("Destroy project: Can not remove security key %s."%(sec_key['key_name']))
 
     #security groups
-    time.sleep(10)
-    sec_group_list = nova.list_sec_group(project_dict['project_id'])
-    for sec_group in sec_group_list:
-        logger.sys_info("Deleting security group %s"%(sec_group['sec_group_name']))
-        sec_group['project_id'] = project_dict['project_id']
-        remove_sec_group = nova.delete_sec_group(sec_group)
-        if(remove_sec_group == "OK"):
-            logger.sys_info("Destroy project: sec_group %s removed." % sec_group['sec_group_name'])
-        else:
-            logger.sys_error("Destroy project: sec_group %s not removed." % sec_group['sec_group_name'])
-            raise Exception("Destroy project: Can not remove security group %s."%(sec_group['sec_group_name']))
+    # time.sleep(10)
+    # sec_group_list = nova.list_sec_group(project_dict['project_id'])
+    # for sec_group in sec_group_list:
+    #     logger.sys_info("Deleting security group %s"%(sec_group['sec_group_name']))
+    #     sec_group['project_id'] = project_dict['project_id']
+    #     remove_sec_group = nova.delete_sec_group(sec_group)
+    #     if(remove_sec_group == "OK"):
+    #         logger.sys_info("Destroy project: sec_group %s removed." % sec_group['sec_group_name'])
+    #     else:
+    #         logger.sys_error("Destroy project: sec_group %s not removed." % sec_group['sec_group_name'])
+    #         raise Exception("Destroy project: Can not remove security group %s."%(sec_group['sec_group_name']))
 
     #internal networks
     internal_network_list = neutron_net.list_internal_networks(project_dict['project_id'])
@@ -153,13 +153,20 @@ def destroy_project(auth_dict, project_dict):
         for subnet in subnet_list:
             logger.sys_info("Deleting subnet %s"%(subnet['subnet_id']))
             subnet['project_id'] = project_dict['project_id']
+
             remove_subnet = neutron_net.remove_net_subnet(subnet)
+
             if(remove_subnet == "OK"):
                 logger.sys_info("Destroy project: Subnet %s removed." % subnet['subnet_id'])
             else:
                 logger.sys_error("Destroy project: subnet %s not removed." % subnet['subnet_id'])
                 raise Exception("Destroy project: Can not remove subnet %s."%(subnet['subnet_id']))
-        remove_network = neutron_net.remove_network(network)
+        try:
+            remove_network = neutron_net.remove_network(network)
+        except:
+            logger.sys_error("FAILED ON NET")
+            raise Exception("FAILED ON NET")
+
         if(remove_network == "OK"):
                 logger.sys_info("Network %s removed." % network['net_id'])
         else:
