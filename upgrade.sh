@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # This is the primary upgrade script for the product. This file will
 # be executed by our rpm installer after the files have been upgraded.
@@ -81,13 +81,13 @@ fi
 #Add time to live feilds to new records recorded in mongo db
 /usr/bin/openstack-config --set /etc/ceilometer/ceilometer.conf database time_to_live 604800
 
-# Ceilometer Restart Calls
-declare -a CEILO_SVCS=('compute central collector api alarm-evaluator alarm-notifier')
-
-for svc in $CEILO_SVCS
-do
-    /sbin/service openstack-ceilometer-$svc restart
-done
+## Ceilometer Restart Calls
+#declare -a CEILO_SVCS=('compute central collector api alarm-evaluator alarm-notifier')
+#
+#for svc in $CEILO_SVCS
+#do
+#    /sbin/service openstack-ceilometer-$svc restart
+#done
 
 #diable selinux
 sudo setenforce 0
