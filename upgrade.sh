@@ -151,8 +151,10 @@ else
     keystone user-create --name="shadow_admin" --pass="manbehindthecurtain"
     SHADOW_ADMIN_USER=$(keystone user-get shadow_admin | grep " id " | awk '{print $4}')
     echo $SHADOW_ADMIN_USER
+    TRANS="$(sudo cat /usr/local/lib/python2.7/transcirrus/common/config.py | grep "TRANS_DEFAULT_ID")"
+    PROJID="$(echo $TRANS |awk -F\" '$0=$2')"
     # add admin, shadow_admin and trans_default project to transcirrus db
-    /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${ID}"', 'admin', NULL);"
+    /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${PROJID}"', 'admin', NULL);"
 fi
 
 cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
