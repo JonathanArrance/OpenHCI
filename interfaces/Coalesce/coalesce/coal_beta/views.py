@@ -4612,8 +4612,11 @@ def detect_third_party_auth(request):
 
 def add_shib_to_cloud(request, sso_entity_id, mp_backing_file_path, mp_uri):
     out = {}
+    sso = sso_entity_id.replace('&47', '/')
+    mp_p = mp_backing_file_path.replace('&47', '/')
+    mp_u = mp_uri.replace('&47', '/')
     try:
-        input_dict = {"sso_entity_id": sso_entity_id, "mp_backing_file_path": mp_backing_file_path, "mp_uri": mp_uri}
+        input_dict = {"sso_entity_id": sso, "mp_backing_file_path": mp_p, "mp_uri": mp_u}
         out = add_shib.add_centos6_shib(input_dict)
         if out == "OK":
             out['status'] = "success"
