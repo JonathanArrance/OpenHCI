@@ -76,6 +76,10 @@ sys.path.append("/usr/lib/python2.6/site-packages/")
 
 import transcirrus.operations.third_party_storage.third_party_config as tpc
 from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
+import transcirrus.operations.third_party_auth.third_party_auth_util as tpa
+import transcirrus.operations.third_party_auth.shibboleth.add_shib_user as add_shib_user
+import transcirrus.operations.third_party_auth.shibboleth.add_shib_to_cloud as add_shib
+from transcirrus.common import extras as extras
 
 # Custom imports
 #from coalesce.coal_beta.models import *
@@ -87,6 +91,7 @@ phonehome_cache = None
 upgrade_cache = None
 eseries_config = None
 nfs_config = None
+default_shib_project = None
 
 def dashboard(request):
     try:
@@ -237,6 +242,7 @@ def get_third_party_storage(request):
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_storage.html', RequestContext(request, {'providers': "error", 'error': "Error: %s"%e}))
 
+
 def get_third_party_storage_license(request, provider):
     try:
         auth = request.session['auth']
@@ -266,6 +272,54 @@ def get_third_party_storage_configure(request, provider, update=None):
             return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': prov, 'update': update}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_storage_configure.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
+
+
+def get_third_party_authentication(request):
+    providers = []
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] == 0:
+            provs = tpa.detect_auth()
+            if provs['has_shib'] == True:
+                providers.append({"name": "Shibboleth", "id": "shib", "configured": 1})
+            else:
+                providers.append({"name": "Shibboleth", "id": "shib", "configured": 0})
+
+            if provs['has_ldap'] == True:
+                providers.append({"name": "LDAP", "id": "ldap", "configured": 1})
+            else:
+                providers.append({"name": "LDAP", "id": "ldap", "configured": 0})
+
+            if provs['has_other'] == True:
+                providers.append({"name": "Other", "id": "other", "configured": 1})
+            else:
+                providers.append({"name": "Other", "id": "other", "configured": 0})
+            return render_to_response('coal/dashboard_widgets/third_party_authentication.html',
+                                      RequestContext(request, {'providers': providers}))
+        else:
+            error = "You are not permitted to detect third party Authentication systems."
+            return render_to_response('coal/dashboard_widgets/third_party_authentication.html',
+                                      RequestContext(request, {'providers': providers, 'error': "Error: %s" % error}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_authentication.html',
+                                  RequestContext(request, {'providers': providers, 'error': "Error: %s" % e}))
+
+
+def get_third_party_authentication_configure(request, provider, update=None):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            prov = {}
+            if provider == 'shib':
+                prov = { 'id': provider, 'name':"Shibboleth" }
+            if provider == 'ldap':
+                prov = { 'id': provider, 'name':"LDAP" }
+            if provider == 'other':
+                prov = { 'id': provider, 'name':"Other" }
+            return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'provider': prov, 'update': update}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
+
 
 def get_metering(request):
     try:
@@ -4537,3 +4591,136 @@ def handle_uploaded_file(f):
 @never_cache
 def password_change(request):
     return render_to_response('coal/change-password.html', RequestContext(request, {  }))
+
+
+def detect_third_party_auth(request):
+    out = {}
+    try:
+        auth = request.session['auth']
+        if auth['user_level'] == 0:
+            out['providers'] = tpa.detect_auth()
+            out['status'] = "success"
+            out['message'] = "Successfully detected third party Authentication systems."
+        else:
+            out['status'] = "error"
+            out['message'] = "You are not permitted to detect third party Authentication systems."
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out['status'] = "error"
+        out['message'] = "Error: %s."%e
+        return HttpResponse(simplejson.dumps(out))
+
+def add_shib_to_cloud(request, sso_entity_id, mp_backing_file_path, mp_uri):
+    out = {}
+    try:
+        input_dict = {"sso_entity_id": sso_entity_id, "mp_backing_file_path": mp_backing_file_path, "mp_uri": mp_uri}
+        out = add_shib.add_centos6_shib(input_dict)
+        if out == "OK":
+            out['status'] = "success"
+            out['message'] = "Successfully added Shibboleth to cloud."
+            # User must logout and log back in
+        else:
+            out['status'] = "error"
+            out['message'] = "Failed to add Shibboleth to cloud."
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out['status'] = "error"
+        out['message'] = "Error: %s."%e
+        return HttpResponse(simplejson.dumps(out))
+
+def shib_enable_default_project(request, project_id):
+    global default_shib_project
+    out = {}
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        project = to.get_tenant(project_id)
+        default_shib_project = project
+        out['project'] = project
+        out['status'] = "success"
+        out['message'] = "Successfully enabled default Shibboleth Project."
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out['status'] = "error"
+        out['message'] = "Error: Failed to enable default Shibboleth Project."
+        return HttpResponse(simplejson.dumps(out))
+
+def shib_disable_default_project(request):
+    global default_shib_project
+    out = {}
+    try:
+        default_shib_project = None
+        out['status'] = "success"
+        out['message'] = "Successfully disabled default Shibboleth Project."
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out['status'] = "error"
+        out['message'] = "Error: Failed to disable default Shibboleth Project."
+        return HttpResponse(simplejson.dumps(out))
+
+def shib_add_user(request, username, email):
+    try:
+        user_dict = {'username': username, 'email': email}
+        out = add_shib_user.add_user(user_dict)
+        out['status'] = 'success'
+        out['message'] = 'The new user %s was added to cloud, and a project is being created for them.'%(username)
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def shib_add_user_to_project(request, username, email, project_id):
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        user_dict = {'username': username, 'email': email, 'project_id': project_id}
+        project = to.get_tenant(project_id)
+        out = add_shib_user.add_user(user_dict)
+        out['status'] = 'success'
+        out['message'] = 'The new user %s was added to the project %s.'%(username, project['project_name'])
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+@never_cache
+def shib_login(request):
+    global default_shib_project
+    try:
+        email = request.META['eppn']
+        user = email.split("@")[0]
+        pw = user
+        a = authorization(user, pw)
+        auth = a.get_auth()
+        if auth['token'] == None:
+            return render_to_response('coal/welcome.html', RequestContext(request, { 'error': "Error: No authorization token." }))
+        request.session['auth'] = auth
+        return render_to_response('coal/welcome.html', RequestContext(request, {  }))
+    except:
+        email = request.META['eppn']
+        user = email.split("@")[0]
+        shadow_admin = extras.shadow_auth()
+        a = authorization(shadow_admin)
+        auth = a.get_auth()
+        request.session['auth'] = auth
+        if default_shib_project == None:
+            node_id = util.get_node_id()
+            sys_vars = util.get_system_variables(node_id)
+            subnet_array = []
+            subnet_array.append(sys_vars['UPLINK_DNS'])
+            project_info = {
+                            'project_name':     user + "_project",
+                            'net_name':         user + "_network",
+                            'subnet_dns':       subnet_array,
+                            'sec_group_dict':   {
+                                                    'ports':        '',
+                                                    'group_name':   user + "_security_group",
+                                                    'group_desc':   user + "_security_group",
+                                                    'project_id':   ''
+                                                },
+                            'sec_keys_name':    user + "_security_keys",
+                            'router_name':      user + "_router"
+                       }
+        else:
+            project_info = default_shib_project
+        return render_to_response('coal/shib_create_user.html', RequestContext(request, { 'project': project_info,
+                                                                                          'shib_user': user,
+                                                                                          'shib_email': email}))

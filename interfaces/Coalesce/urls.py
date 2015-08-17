@@ -777,6 +777,36 @@ urlpatterns = patterns('',
         # --- Admin Views ----
         (r'^admin/', include(admin.site.urls)),
 
+        # --- Third Party Authentication ----
+        url(r'^third_party_authentication/get/providers/$',
+            'coalesce.coal_beta.views.detect_third_party_auth',
+            name='detect_third_party_auth'),
+
+        url(r'^third_party_authentication/get/$',
+            'coalesce.coal_beta.views.get_third_party_authentication',
+            name='get_third_party_authentication'),
+
+        url(r'^third_party_authentication/get_configure/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_authentication_configure',
+            name='get_third_party_authentication_configure'),
+
+        url(r'^third_party_authentication/get_configure/(?P<provider>[^/]+)/(?P<update>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_authentication_configure',
+            name='get_third_party_authentication_configure'),
+
+        # --- Shibboleth ----
+        url(r'^shib/config/(?P<sso_entity_id>[^/]+)/(?P<mp_backing_file_path>[^/]+)/(?P<mp_uri>[^/]+)/$',
+            'coalesce.coal_beta.views.add_shib_to_cloud',
+            name='add_shib_to_cloud'),
+
+        url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
+            'coalesce.coal_beta.views.shib_add_user',
+            name='shib_add_user'),
+
+        url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.shib_add_user_to_project',
+            name='shib_add_user_to_project'),
+
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

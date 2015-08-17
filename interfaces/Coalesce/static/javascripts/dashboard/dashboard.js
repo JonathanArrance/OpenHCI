@@ -4,6 +4,7 @@ $(function () {
         node = $("#node-container"),
         project = $("#project-container"),
         tps = $("#tps-container"),
+        tpa = $("#tpa-container"),
         metering = $("#metering-container"),
         account = $("#account-container");
 
@@ -25,6 +26,12 @@ $(function () {
         switchPageContent($(this), page, window.loading.current, tps, [], "/third_party_storage/get/");
         window.loading.current = tps;
         window.startDonutUpdateTimer();
+    });
+
+    $("#third-party-authentication").click(function (event) {
+        event.preventDefault();
+        switchPageContent($(this), page, window.loading.current, tpa, [], "/third_party_authentication/get/");
+        window.loading.current = tpa;
     });
 
     $("#metering").click(function (event) {
@@ -98,7 +105,7 @@ $(function () {
             notice = encodeURIComponent($(this).data("notice")),
             refresh = ("/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/").slashTo47(),
             async = $(this).data("async");
-        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/'+ refresh + '/' + async + '/');
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
     // Upgrade
@@ -125,6 +132,82 @@ $(function () {
         switchPageContent($("#account"), page, window.loading.current, node, [], "/user/" + PROJECT_NAME + "/" + PROJECT_ID + "/" + USERNAME + "/account_view/");
         $("#account").addClass('active');
     }
+
+    // Third Party Authentication
+    $(document).on('click', '.configure-tpa', function (event) {
+        event.preventDefault();
+        var provider = $(this).data("provider"),
+            call = '/third_party_authentication/get_configure/' + provider + '/';
+        showConfirmModal(call);
+    });
+
+    $(document).on('click', '.update-tpa', function (event) {
+        event.preventDefault();
+        var provider = $(this).data("provider"),
+            call = '/third_party_authentication/get_configure/' + provider + '/true/';
+        showConfirmModal(call);
+    });
+
+    $(document).on('click', '#confirm-configure-tpa', function (event) {
+        event.preventDefault();
+        var provider = $(this).data("provider"),
+            inputs,
+            name,
+            call,
+            buttons = $(this).parent().parent().find('button'),
+            isValid,
+            formData = new FormData(),
+            update = $(this).data("update");
+
+        if (provider == "shib") {
+            inputs = {
+                "ssoEntityID": $('#sso-entity-id'),
+                'mpBackingFilePath': $("#mp-backing-file-path"),
+                'mpURI': $("#mp-uri")
+            };
+            name = "Shibboleth";
+            isValid = true;
+        } else if (provider == "ldap") {
+            isValid = false;
+            showMessage("error", "LDAP not currently supported.");
+            return;
+        } else if (provider == "other") {
+            isValid = false;
+            showMessage("error", "Other authentication systems not currently supported");
+            return;
+        } else {
+            isValid = false;
+            showMessage("error", "Cannot determine authentication provider");
+            return;
+        }
+
+        if (isValid) {
+            showMessage('info', update == true ? "Updating " + name + " Authentication ..." : "Configuring " + name + " Authentication ...");
+            setModalButtons(false, buttons);
+            if (provider == "shib") {
+                call = 'shib/config/set/' + inputs.ssoEntityID.val() + '/' + inputs.mpBackingFilePath.val() + '/' + inputs.mpURI.val() + '/';
+                $.getJSON(call)
+                    .done(function (data) {
+                        if (data.status == 'error') {
+                            if (data.message) {
+                                showMessage('error', data.message);
+                            }
+                            setModalButtons(true, buttons);
+                        }
+                        if (data.status == 'success') {
+                            showMessage('success', update == true ? name + " Authentication Updated" : name + " Authentication Configured");
+                            setModalButtons(true, buttons);
+                            closeModal();
+                            refreshContent($("#page-content"), $("#tpa-container"), "/third_party_authentication/get/");
+                        }
+                    })
+                    .fail(function () {
+                        showMessage('error', 'Server Fault');
+                        setModalButtons(true, buttons);
+                    })
+            }
+        }
+    });
 });
 
 window.getPhoneHomeMessage = (function (load) {
