@@ -730,6 +730,32 @@ class server_actions:
                 else:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
+
+                    # make snapshot private
+                    try:
+                        # wait for snapshot creation
+                        while True:
+                            try:
+                                out = self.glance.get_image(snap_id[6])
+                                if out['status'] == "active":
+                                    break
+                            except Exception as e:
+                                time.sleep(.5)
+                                continue
+                        # update snapshot
+                        image_id = snap_id[6]
+                        # change visibility to private
+                        make_private_dict = {'operation': "replace", 'property': "visibility", 'value': "private"}
+                        # add user_level to tags[] for cascading permissions later
+                        add_user_level_dict = {'operation': "replace", 'property': "tags", 'value': [str(self.user_level)]}
+                        update_array = []
+                        update_array.append(make_private_dict)
+                        update_array.append(add_user_level_dict)
+                        self.glance.update_image(image_id,update_array)
+                    except Exception as e:
+                        logger.sys_error("Could not make snapshot %s private, error: %s"%(snap_id[6],str(e)))
+                        raise Exception("Could not make snapshot %s private, error: %s"%(snap_id[6],str(e)))
+
                     r_dict = {"snapshot_name": snap_dict['snapshot_name'],"snapshot_id": snap_id[6], "instance_id": snap_dict['server_id']}
                     return r_dict
             else:
@@ -1125,7 +1151,7 @@ class server_actions:
         
         #check if attributes are under granted quota
 
-    #Internal methodes
+    #Internal methods
     #this is a hack to overcome a system limitation
     def _check_status(self,project_id=None,server_id=None):
         try:

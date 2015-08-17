@@ -32,6 +32,7 @@ class glance_ops:
         else:
             self.username = user_dict['username']
             self.password = user_dict['password']
+            self.user_id = user_dict['user_id']
             self.project_id = user_dict['project_id']
             self.token = user_dict['token']
             self.status_level = user_dict['status_level']
@@ -144,10 +145,10 @@ class glance_ops:
 
         if('visibility' in input_dict):
             body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": input_dict['visibility'],
-                                    "os_type": input_dict['os_type']})
+                                    "os_type": input_dict['os_type'], "user_id": self.user_id, "tags": [str(self.user_level)]})
         else:
             body_json = json.dumps({"name": input_dict['image_name'], "container_format": input_dict['container_format'], "disk_format": input_dict['disk_format'], "visibility": "public",
-                                    "os_type": input_dict['os_type']})
+                                    "os_type": input_dict['os_type'], "user_id": self.user_id, "tags": [str(self.user_level)]})
 
         try:
             body = body_json
@@ -296,6 +297,7 @@ class glance_ops:
         INPUT: self object
         OUTPUT: array of r_dict - image_name
                                 - image_id
+                                - project_id
         """
         #GET v2/images
         #Check user status level for valid range
@@ -328,9 +330,22 @@ class glance_ops:
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
             img_array = []
+            check_permission_dict = {
+                                        "username":             self.username,
+                                        "user_id":              self.user_id,
+                                        "user_level":           self.user_level,
+                                        "object_user_id":       "-1",
+                                        "object_user_level":    -1
+                                    }
             for image in load['images']:
-                line = {"image_name": str(image['name']), "image_id": str(image['id']), "user_id": str(image['owner'])}
-                img_array.append(line)
+                if "user_id" in image:
+                    check_permission_dict['object_user_id'] = image['user_id']
+                if image['tags'] != []:
+                    object_user_level = int(image['tags'][0])
+                    check_permission_dict['object_user_level'] = object_user_level
+                if str(image['visibility']) == "public" or util.has_permission(check_permission_dict):
+                    line = {"image_name": str(image['name']), "image_id": str(image['id']), "project_id": str(image['owner'])}
+                    img_array.append(line)
             return img_array
         else:
             util.http_codes(rest['response'],rest['reason'])
@@ -409,22 +424,102 @@ class glance_ops:
         """
         print "not implemented"
 
-    def update_image(self,update_dict):
+    def update_image(self,image_id,update_array):
         """
-        DESC: Updates the image information. Only admins and power users can update the image info
-              for images in their projects.
-        INPUT: update_dict - image_id
-                           - "update": array of dictionaries of parameters to change and the new values
-                             example:
-                             "update": [{"x-image-meta-name": new_name, "x-image-meta-id": new_id, "x-image-meta-property-*": new_custom_property}]
-        OUTPUT: r_dict - image_name
-                       - image_id
-                       - image_status
-                       - container_format
-                       - disk_format
-                       - is_public
-                       - min_disk
-                       - size
-                       - min_ram
+        DESC:   updates the image information using an operation, property and value
+        INPUT:  image_id
+                update_array:   array of input_dicts, one for each property to modify
+                                update_dict:    {
+                                                    -   operation   -   "add", "remove" or "replace"
+                                                    -   property    -   ex: "visibility"
+                                                    -   value       -   ex: "public"
+                                                }
+        OUTPUT: 'OK' is successful, 'ERROR' if not
+        NOTES:  there is a very specific set of valid properties:
+                    checksum
+                    container_format
+                    created_at
+                    direct_url
+                    disk_format
+                    id
+                    min_disk
+                    min_ram
+                    name
+                    os_type
+                    owner
+                    protected
+                    size
+                    status
+                    tags
+                    updated_at
+                    visibility
+                    ...and others
+                    ...and custom properties
+                not all of these have been tested, nor should some of them be used
+                mostly used to update these properties:
+                    protected   -   values: True, False
+                    visibility  -   values: "public", "private", "shared", "community"
+                                    public: all users:
+                                        have this image in default image-list
+                                        can see image-detail for this image
+                                        can boot from this image
+                                    private: users with tenantId == tenantId(owner) only:
+                                        have this image in the default image-list
+                                        see image-detail for this image
+                                        can boot from this image
+                                    shared:
+                                        users with tenantId == tenantId(owner)
+                                            have this image in the default image-list
+                                            see image-detail for this image
+                                            can boot from this image
+                                        users with tenantId in the member-list of the image
+                                            can see image-detail for this image
+                                            can boot from this image
+                                        users with tenantId in the member-list with member_status == 'accepted'
+                                            have this image in their default image-list
+                                    community:
+                                        all users
+                                            can see image-detail for this image
+                                            can boot from this image
+                                        users with tenantId in the member-list of the image with member_status == 'accepted'
+                                            have this image in their default image-list
         """
-        print "not implemented"
+        if ((self.status_level > 2) or (self.status_level < 0)):
+            logger.sys_error("Invalid status level passed for user: %s" %(self.username))
+            raise Exception("Invalid status level passed for user: %s" %(self.username))
+
+        # connect to the rest api caller
+        try:
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API caller")
+            raise Exception("Could not connect to the API caller")
+
+        to_json = []
+        for dict in update_array:
+            update = {"op": dict['operation'], "path": "/%s"%(dict['property']), "value": dict['value']}
+            to_json.append(update)
+        body_json = json.dumps(to_json)
+
+        try:
+            body = body_json
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/openstack-images-v2.1-json-patch", "User-Agent": "python/glanceclient"}
+            function = 'PATCH'
+            api_path = '/v2/images/%s' %image_id
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9292'}
+            rest = api.call_rest(rest_dict)
+        except Exception as e:
+            logger.sys_error("Could not update image %s, error: %s" %(image_id,e))
+            raise Exception("Could not update image %s, error: %s" %(image_id,e))
+
+        if((rest['response'] == 200)):
+            logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+            return 'OK'
+        else:
+            util.http_codes(rest['response'],rest['reason'])
+
+        # something went wrong
+        return 'ERROR'

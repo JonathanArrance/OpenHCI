@@ -1659,3 +1659,30 @@ def restart_rabbitmq():
     subprocess.call(['sudo', 'service', 'neutron-server', 'restart'])
     subprocess.call(['sudo', 'service', 'openstack-nova-compute', 'stop'])  # a plain restart did not work in testing
     subprocess.call(['sudo', 'service', 'openstack-nova-compute', 'start'])
+
+
+def has_permission(input_dict):
+    """
+    DESC:   determines permission based on cascading user_level
+    INPUT:  input_dict: {
+                            username            -   current user's username, the one trying to get access
+                            user_id             -   current user's user_id, the one trying to get access
+                            user_level          -   current user's user_level, the one trying to get access
+                            object_user_id      -   user_id of target object trying to get access to
+                            object_user_level   -   user_level of target object trying to get access to
+                        }
+    OUTPUT: True is allowed to access, else False
+    ACCESS: wide open
+    NOTE:
+    """
+    # these guys have access to everything
+    if input_dict['username'] == "admin" or input_dict['username'] == "shadow_admin":
+        return True
+    # this object is your own
+    if input_dict['user_id'] == input_dict['object_user_id']:
+        return True
+    # you outrank the owner of this object:
+    if input_dict['user_level'] < input_dict['object_user_level']:
+        return True
+    # sorry, no access
+    return False
