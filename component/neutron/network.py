@@ -8,6 +8,7 @@ import json
 import socket
 import subprocess
 import random
+import time
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -710,6 +711,7 @@ class neutron_net_ops:
         return r_dict
 
     def remove_net_subnet(self,del_dict):
+        results = None
         """
         DESC: Remove a subnet from a network.
         INPUT: del_dict - subnet_id
@@ -755,9 +757,9 @@ class neutron_net_ops:
                 raise Exception('Users can only remove subnets they created.')
 
         try:
-            api_dict = {"username":self.username, "password":self.password, "project_id":del_dict['project_id']}
+            api_dict = {"username": self.username, "password": self.password, "project_id": self.project_id}
             if(self.project_id != del_dict['project_id']):
-                self.token = get_token(self.username,self.password,del_dict['project_id'])
+                self.token = get_token(self.username,self.password, self.project_id)
             api = caller(api_dict)
         except:
             logger.sys_error("Could not connect to the API")
@@ -774,6 +776,7 @@ class neutron_net_ops:
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
             rest = api.call_rest(rest_dict)
         except:
+
             logger.sql_error("Could not remove the subnet from Neutron.")
             raise Exception("Could not remove the subnet from Neutron.")
 
@@ -792,12 +795,19 @@ class neutron_net_ops:
                 raise Exception("Could not set the subnet to disabled in the Transcirrus DB.")
             else:
                 self.db.pg_transaction_commit()
-                return 'OK'
+                results = 'OK'
+
+        elif(rest['response'] == 409):
+            time.sleep(15)
+            results = self.remove_net_subnet(del_dict)
         else:
             #util.http_codes(rest['response'],rest['reason'])
+            #TODO MAKE THIS MORE MEANINGFUL
             ec.error_codes(rest)
+        return results
 
     def remove_net_pub_subnet(self,pub_subnet_id):
+        print "remove net pub subnet"
         """
         DESC: Remove a public subnet from a public network.
         INPUT: pub_subnet_id
