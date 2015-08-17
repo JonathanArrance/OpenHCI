@@ -4617,8 +4617,8 @@ def add_shib_to_cloud(request, sso_entity_id, mp_backing_file_path, mp_uri):
     mp_u = mp_uri.replace('&47', '/')
     try:
         input_dict = {"sso_entity_id": sso, "mp_backing_file_path": mp_p, "mp_uri": mp_u}
-        out = add_shib.add_centos6_shib(input_dict)
-        if out == "OK":
+        out['shib'] = add_shib.add_centos6_shib(input_dict)
+        if out['shib'] == "OK":
             out['status'] = "success"
             out['message'] = "Successfully added Shibboleth to cloud."
             # User must logout and log back in
