@@ -72,7 +72,7 @@ def add_centos6_shib(input_dict):
                                     SetHandler shib\n \
                                   </Location>\n \
                                   \n \
-                                  <Location />\n \
+                                  <Location /shib>\n \
                                     AuthType shibboleth\n \
                                     ShibRequestSetting requireSession 1\n \
                                     Require valid-user\n \
