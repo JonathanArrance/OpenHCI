@@ -1,0 +1,120 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Update Project Quotas</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="quota-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="cores" class="col-sm-4 control-label">Cores:</label>
+                        <input type="text" name="cores" id="cores" value="{{ quota.cores }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="ram" class="col-sm-4 control-label">Ram (mb):</label>
+                        <input type="text" name="ram" id="ram" value="{{ quota.ram }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="instances" class="col-sm-4 control-label">Instances:</label>
+                        <input type="text" name="instances" id="instances" value="{{ quota.instances }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="volumes" class="col-sm-4 control-label">Volumes:</label>
+                        <input type="text" name="volumes" id="volumes" value="{{ quota.volumes }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="gigabytes" class="col-sm-4 control-label">Storage (gb):</label>
+                        <input type="text" name="gigabytes" id="gigabytes" value="{{ quota.gigabytes }}"
+                               class="col-sm-8">
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="quota-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var page = $("#page-content"),
+                project = $("#project-container");
+        $("#quota-form").validate({
+            rules: {
+                cores: {
+                    required: true,
+                    min: 1
+                },
+                ram: {
+                    required: true,
+                    min: 1
+                },
+                instances: {
+                    required: true,
+                    min: 1
+                },
+                volumes: {
+                    required: true,
+                    min: 1
+                },
+                gigabytes: {
+                    required: true,
+                    min: 1
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Creating new network");
+                var valueString =
+                        "cores:" + $("#cores").val() + "," +
+                        "ram:" + $("#ram").val() + "," +
+                        "instances:" + $("#instances").val() + "," +
+                        "volumes:" + $("#volumes").val() + "," +
+                        "gigabytes:" + $("#gigabytes").val();
+                var url = '/projects/' + CURRENT_PROJECT_ID + '/' + valueString + '/set_project_quota/';
+                $.getJSON(url)
+                        .done(function (data) {
+                            if (data.status == 'error')
+                                showMessage('error', data.message);
+                            if (data.status == 'success')
+                                showMessage('success', data.message);
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');
+                        });
+
+                closeModal();
+                showLoader(page);
+                window.setTimeout(function () {
+                    removeLoaders();
+                    refreshContainer(page, project, "/projects/" + CURRENT_PROJECT_ID + "/get_project_panel/");
+                }, 2000);
+            }
+        });
+        $("#quota-form input, #quota-form select").on("click change focus", function () {
+            if ($("#quota-form").valid()) {
+                $('button[type=submit]').removeProp("disabled");
+            } else {
+                $('button[type=submit]').prop("disabled", true);
+            }
+        });
+    });
+</script>

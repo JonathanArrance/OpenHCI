@@ -17,20 +17,20 @@
             <td>{{ provider.name }}</td>
             {% if provider.configured == '0' and provider.licensed == '0' %}
                 <td>Unlicensed</td>
-                <td><a href="#" class="license" data-provider="{{ provider.id }}">license</a></td>
+                <td><a href="#" class="license-tps" data-provider="{{ provider.id }}">license</a></td>
             {% elif provider.configured == '0' and provider.licensed == '1' %}
                 <td>Not Configured</td>
-                <td><a href="#" class="configure" data-provider="{{ provider.id }}">configure</a></td>
+                <td><a href="#" class="configure-tps" data-provider="{{ provider.id }}">configure</a></td>
             {% elif provider.in_use == 0 %}
                 <td>Configured (no volumes)</td>
                 <td>
-                    <a href="#" class="update" data-provider="{{ provider.id }}">update</a>
+                    <a href="#" class="update-tps" data-provider="{{ provider.id }}">update</a>
                     <span> | </span>
-                    <a href="#" class="delete" data-provider="{{ provider.id }}" data-async="refreshTPS">delete</a>
+                    <a href="#" class="delete-tps" data-provider="{{ provider.id }}" data-async="refreshTPS">delete</a>
                 </td>
             {% else %}
                 <td>Configured ({{ provider.in_use }} volumes)</td>
-                <td><a href="#" class="update" data-provider="{{ provider.id }}">update</a></td>
+                <td><a href="#" class="update-tps" data-provider="{{ provider.id }}">update</a></td>
             {% endif %}
         </tr>
     {% endfor %}

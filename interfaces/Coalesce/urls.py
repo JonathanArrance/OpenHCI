@@ -114,6 +114,17 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_users_security_panel',
             name='get_users_security_panel'),
 
+        url(r'^projects/get/instance_wizard/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_instance_wizard',
+            name='get_instance_wizard'),
+
+        url(r'^projects/get/images/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_project_images',
+            name='get_project_images'),
+
+        url(r'^projects/get/keys/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_project_keys',
+            name='get_project_keys'),
 
         # --- Quotas ----
 
@@ -124,6 +135,10 @@ urlpatterns = patterns('',
         url(r'^projects/(?P<project_id>\w+)/(?P<quota_settings>[^/]+)/set_project_quota/$',
             'coalesce.coal_beta.views.set_project_quota',
             name='set_project_quota'),
+
+        url(r'^projects/get/update_quotas/(?P<project_id>\w+)/$',
+            'coalesce.coal_beta.views.get_project_update_quotas',
+            name='get_project_update_quotas'),
 
         url(r'^projects/(?P<project_id>\w+)/view/$',
             'coalesce.coal_beta.views.project_view',
@@ -270,6 +285,19 @@ urlpatterns = patterns('',
         url(r'^image/get/import/$',
             'coalesce.coal_beta.views.get_image_import',
             name='get_image_import'),
+
+        # --- Flavors ----
+        url(r'^create_vm_spec/(?P<name>[^/]+)/(?P<ram>[^/]+)/(?P<boot_disk>[^/]+)/(?P<cpus>[^/]+)/$',
+            'coalesce.coal_beta.views.create_vm_spec',
+            name='create_vm_spec'),
+
+        url(r'^delete_vm_spec/(?P<flavor_id>[^/]+)/$',
+            'coalesce.coal_beta.views.delete_vm_spec',
+            name='delete_vm_spec'),
+
+        url(r'^flavor/get/create/$',
+            'coalesce.coal_beta.views.get_flavor_create',
+            name='get_flavor_create'),
 
         # --- Floating IPs ----
         url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
@@ -748,6 +776,36 @@ urlpatterns = patterns('',
 
         # --- Admin Views ----
         (r'^admin/', include(admin.site.urls)),
+
+        # --- Third Party Authentication ----
+        url(r'^third_party_authentication/get/providers/$',
+            'coalesce.coal_beta.views.detect_third_party_auth',
+            name='detect_third_party_auth'),
+
+        url(r'^third_party_authentication/get/$',
+            'coalesce.coal_beta.views.get_third_party_authentication',
+            name='get_third_party_authentication'),
+
+        url(r'^third_party_authentication/get_configure/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_authentication_configure',
+            name='get_third_party_authentication_configure'),
+
+        url(r'^third_party_authentication/get_configure/(?P<provider>[^/]+)/(?P<update>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_authentication_configure',
+            name='get_third_party_authentication_configure'),
+
+        # --- Shibboleth ----
+        url(r'^shib/config/(?P<sso_entity_id>[^/]+)/(?P<mp_backing_file_path>[^/]+)/(?P<mp_uri>[^/]+)/$',
+            'coalesce.coal_beta.views.add_shib_to_cloud',
+            name='add_shib_to_cloud'),
+
+        url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
+            'coalesce.coal_beta.views.shib_add_user',
+            name='shib_add_user'),
+
+        url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.shib_add_user_to_project',
+            name='shib_add_user_to_project'),
 
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

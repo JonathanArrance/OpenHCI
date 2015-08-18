@@ -84,14 +84,14 @@
                         </select>
                     </div>
                 </fieldset>
-            </form>
-            <div class="col-sm-12">
-                <h5>Upload Progress: <span class="upload-percent"></span></h5>
+                <div class="col-sm-12">
+                    <h5>Upload Progress: <span class="upload-percent"></span></h5>
 
-                <div class="progress progress-striped active">
-                    <div class="progress-bar progress-bar-info upload-bar"></div>
+                    <div class="progress progress-striped active">
+                        <div class="progress-bar progress-bar-info upload-bar"></div>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -127,9 +127,18 @@
                     required: true
                 },
                 imageLocal: {
-                    file: true
+                    required: {
+                        depends: function (element) {
+                            return $("#image-type").val() == "local";
+                        }
+                    }
                 },
                 imageRemote: {
+                    required: {
+                        depends: function (element) {
+                            return $("#image-type").val() == "remote";
+                        }
+                    },
                     url: true,
                     remote: true
                 },
@@ -274,18 +283,11 @@
             }
         });
         $("#image-form input, #image-form select").change(function () {
-            if ($("#image-form").valid()) {
-                var type = $("#image-type").val() == "local"
-                        ? $("#image-local")
-                        : $("#image-remote");
-                if (type.valid()) {
+            if ($("#image-form").valid())
                     $('button[type=submit]').removeProp("disabled");
-                } else {
-                    $('button[type=submit]').prop("disabled", true);
-                }
-            } else {
+            else
                 $('button[type=submit]').prop("disabled", true);
-            }
+
         });
         $("#image-type").change(function () {
             if ($(this).val() == "local") {
@@ -295,6 +297,6 @@
                 $("input[name=imageRemote]").removeProp("disabled");
                 $("input[name=imageLocal]").prop("disabled", "disabled");
             }
-        })
+        });
     });
 </script>

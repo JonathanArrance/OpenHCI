@@ -1,0 +1,858 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Instance Wizard</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="instance-wizard" title="Instance Wizard" class="col-sm-12">
+                {% csrf_token %}
+                <div id="wizard-instance">
+                    <div class="col-sm-12">
+                        <form id="instance-form" class="form-horizontal">
+                            {% csrf_token %}
+                            <fieldset>
+                                <legend>Instance</legend>
+                                <h6>Please enter the following information to build a virtual machine instance:</h6>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-name" class="col-sm-4 control-label">Name:</label>
+                                    <input type="text" name="instanceName" id="instance-name"
+                                           placeholder="Instance Name"
+                                           class="col-sm-8">
+                                </div>
+                                <h4>Instance Options</h4>
+                                <hr class="narrow">
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-image" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Use the pulldown to select an image that has already been uploaded for you or select 'Upload Image' to upload your own image. If you are uploading a new image, the next screen will allow you to upload your new image."></i>Image:</label>
+                                    <select name="instanceImage" id="instance-image" class="col-sm-8">
+                                        {% for image in images %}
+                                            <option value="{{ image.image_id }}"
+                                                    data-name="{{ image.image_name }}">{{ image.image_name }}</option>
+                                        {% endfor %}
+                                        <option value="upload">Upload Image</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-flavor" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Use the pull down to select the size characteristics for your virtual machine. The table below defines the different settings."></i>Settings:</label>
+                                    <select name="instanceFlavor" id="instance-flavor" class="col-sm-8">
+                                        {% for flavor in flavors %}
+                                            <option value="{{ flavor.id }}">{{ flavor.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <h4>Networking Options</h4>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-network" class="col-sm-4 control-label">Network:</label>
+                                    <select name="instanceNetwork" id="instance-network" class="col-sm-8">
+                                        {% for network in networks %}
+                                            <option value="{{ network.net_name }}">{{ network.net_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-ip" class="col-sm-4 control-label">
+                                        <button type="button" id="wizard-allocate-ip" class="btn btn-xs btn-success">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                        <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                           data-title="To assign an external IP address to your new instance, select an IP address in pulldown list. If no IP addresses are available, please contact your cloud administrator."></i>
+                                        Floating IP
+                                        :</label>
+                                    <select name="instanceIP" id="instance-ip" class="col-sm-8">
+                                        <option value="none">Skip Attaching IP</option>
+                                        {% for fip in fips %}
+                                            <option value="{{ fip.floating_ip }}">{{ fip.floating_ip }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                    <div class="col-sm-12">
+                        <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
+                            <thead class="bg-primary">
+                            <tr>
+                                <th>Name</th>
+                                <th>Memory (mb)</th>
+                                <th>VCPUs</th>
+                                <th>Disk (gb)</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>m1.tiny</td>
+                                <td>512</td>
+                                <td>1</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>m1.small</td>
+                                <td>2048</td>
+                                <td>1</td>
+                                <td>20</td>
+                            </tr>
+                            <tr>
+                                <td>m1.medium</td>
+                                <td>4096</td>
+                                <td>2</td>
+                                <td>40</td>
+                            </tr>
+                            <tr>
+                                <td>m1.large</td>
+                                <td>8192</td>
+                                <td>4</td>
+                                <td>80</td>
+                            </tr>
+                            <tr>
+                                <td>m1.xlarge</td>
+                                <td>16384</td>
+                                <td>8</td>
+                                <td>160</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="wizard-image" style="display: none;">
+                    <div class="col-sm-12">
+                        <form id="image-form" class="form-horizontal" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <fieldset>
+                                <legend>Image</legend>
+                                <h6>Please enter the following information to upload your image:</h6>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="image-name" class="col-sm-4 control-label">Name:</label>
+                                    <input type="text" name="imageName" id="image-name" placeholder="Image Name"
+                                           class="col-sm-8">
+                                </div>
+                                <h4>Image Options</h4>
+                                <hr class="narrow">
+                                <div class="form-group col-sm-12">
+                                    <label for="image-container" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Use the pull down to select the container format that the image is in."></i>
+                                        Container Format:</label>
+                                    <select name="imageContainer" id="image-container" class="col-sm-8">
+                                        <option value="bare">bare</option>
+                                        <option value="ovf">ovf</option>
+                                        <option value="aki">aki</option>
+                                        <option value="ari">ari</option>
+                                        <option value="ami">ami</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="image-disk" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Use the pulldown to select disk format that the image is in."></i>
+                                        Disk Format:</label>
+                                    <select name="imageDisk" id="image-disk" class="col-sm-8">
+                                        <option value="raw">raw</option>
+                                        <option value="vhd">vhd</option>
+                                        <option value="vmdk">vmdk</option>
+                                        <option value="vdi">vdi</option>
+                                        <option value="iso">iso</option>
+                                        <option value="qcow2">qcow2</option>
+                                        <option value="aki">aki</option>
+                                        <option value="ari">ari</option>
+                                        <option value="ami">ami</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="image-type" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Select ‘local’ if the image to upload is located on your current computer/laptop. Select ‘remote’ if the image is located on another server."></i>
+                                        File Location:</label>
+                                    <select name="imageType" id="image-type" class="col-sm-8">
+                                        <option value="local" selected>local</option>
+                                        <option value="remote">remote</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="image-local" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Press the ‘Browse’ button to bring up the local browse window to select the image file to upload."></i>
+                                        Local Location:</label>
+
+                                    <div class="input-group col-sm-8">
+                                        <span class="input-group-addon"><i class="fa fa-desktop text-top"></i></span>
+                                        <input type="file" name="imageLocal" id="image-local">
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="image-remote" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Enter the URL for the location to the image file to upload. The URL must start with ‘http://’, ‘https://’, ‘ftp://’, etc."></i>
+                                        Remote Location:</label>
+                                    <input type="url" name="imageRemote" id="image-remote" class="col-sm-8" disabled>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="image-os" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Select the OS type that the image represents. If your OS is not Linux or Windows then choose ‘Other’">
+                                    </i> OS Type:</label>
+                                    <select name="imageOS" id="image-os" class="col-sm-8">
+                                        <option value="linux" selected="selected">Linux</option>
+                                        <option value="windows">Windows</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="image-visibility" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="If you would like others to use your image then choose ‘Public’ otherwise choose ‘Private’."></i>
+                                        Visibility:</label>
+                                    <select name="imageVisibility" id="image-visibility" class="col-sm-8">
+                                        <option value="public">public</option>
+                                        <option value="private">private</option>
+                                    </select>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+                <div id="wizard-volume" style="display: none;">
+                    <div class="col-sm-12">
+                        <form id="volume-form" class="form-horizontal">
+                            {% csrf_token %}
+                            <fieldset>
+                                <legend>Storage</legend>
+                                <h6>Please enter the following information to add permanent storage to your
+                                    instance:</h6>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="volume-existing" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="If you would like others to use your image then choose ‘Public’ otherwise choose ‘Private’."></i>
+                                        Select Pre-existing/Create:</label>
+                                    <select name="volumeExisting" id="volume-existing" class="col-sm-8">
+                                        <option value="none">Skip Adding Storage</option>
+                                        <option value="create">Create Volume</option>
+                                        {% for volume in volumes %}
+                                            <option value="{{ volume.volume_id }}">{{ volume.volume_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <hr>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="volume-name" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="To choose an existing volume, use the pulldown to select a volume to attach to your new instance. If no volumes exist, you can create a new volume or skip adding permanent storage to your instance."></i>
+                                        Name:</label>
+                                    <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
+                                           class="col-sm-8" disabled>
+                                </div>
+                                <h4>Volume Options</h4>
+                                <hr class="narrow">
+                                <div class="form-group col-sm-12">
+                                    <label for="volume-size" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Enter the size in GigaBytes (GB) of the volume to be created."></i>
+                                        Size (gb):</label>
+                                    <input type="text" name="volumeSize" id="volume-size"
+                                           placeholder="Volume Size in gigabytes"
+                                           class="col-sm-8" disabled>
+                                </div>
+                                <div class="col-sm-12">
+                                    <label><i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                              data-title="Your administrator has set a quota on the amount of disk space you can create. This graph shows how much of the space you have already allocated from your total allotment."></i>
+                                        Available Storage: {{ tenant_info.avail_storage }}gb</label>
+
+                                    <div class="progress">
+                                        <div class="progress-bar {% if tenant_info.avail_percent <= 30 %}progress-bar-info{% elif tenant_info.avail_percent <= 60 %}progress-bar-success{% elif tenant_info.avail_percent <= 90 %}progress-bar-warning{% elif tenant_info.avail_percent > 90 %}progress-bar-danger{% endif %}"
+                                             style="width: {{ tenant_info.avail_percent }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="volume-type" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="Select the type of storage to create your volume on. The default types are ‘ssd’ and ‘spindle’. For performance ssd is faster than spindle. If you need a large amount of storage and performance is not an issue, then ‘spindle’ may be a better option."></i>
+                                        Type:</label>
+                                    <select name="volumeType" id="volume-type" class="col-sm-8" disabled>
+                                        {% for type in volume_types %}
+                                            <option value="{{ type.name }}">{{ type.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+                <div id="wizard-security" style="display: none;">
+                    <div class="col-sm-12">
+
+                        <form id="security-form">
+                            <fieldset>
+                                <legend>Security</legend>
+                                <h6>Please enter the following security information:</h6>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-key" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="To assign a key pair to your instance, select an existing key pair in the pulldown list. Key Pairs are Public and Private RSA keys that are used to access your VM instance. The Public key will automatically be applied to your instance. You will use the Private key to login to your instance (if required). If you do not have an existing key pair or would like to create your own, then select 'Create Key' and enter the name below."></i>
+                                        Security Key:</label>
+                                    <select name="instanceKey" id="instance-key" class="col-sm-8">
+                                        {% for key in keys %}
+                                            <option value="{{ key.key_name }}">{{ key.key_name }}</option>
+                                        {% endfor %}
+                                        <option value="create">Create Key</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="key-name" class="col-sm-4 control-label">Name:</label>
+                                    <input type="text" name="keyName" id="key-name" placeholder="Security Key Name"
+                                           class="col-sm-8" {% if keys %}disabled{% endif %}>
+                                </div>
+
+                                <hr>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="instance-group" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="To assign a security group to your instance, select a security group from the pulldown list. Security Groups are network ports allowed to connect to your instance. This is similar to firewall rules. If you do not have an existing security group or would like to create your own, then choose “Create Group” in the pulldown. The next screen will then allow you to create your new security group."></i>
+                                        Security Group:</label>
+                                    <select name="instanceGroup" id="instance-group" class="col-sm-8">
+                                        {% for group in groups %}
+                                            <option value="{{ group.sec_group_name }}">{{ group.sec_group_name }}</option>
+                                        {% endfor %}
+                                        <option value="create">Create Group</option>
+                                    </select>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+                <div id="wizard-group" style="display: none;">
+                    <div class="col-sm-12">
+                        <form id="group-form" class="form-horizontal">
+                            {% csrf_token %}
+                            <fieldset>
+                                <legend>Security Group</legend>
+                                <h6>Please enter the following <i
+                                        class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                        data-title="Security Groups are similar to rules you would setup in a firewall to allow specific application/transport ports to connect to your instance."></i>
+                                    security group information:</h6>
+
+                                <div class="form-group col-sm-12">
+                                    <label for="group-name" class="col-sm-4 control-label">Name:</label>
+                                    <input type="text" name="groupName" id="group-name"
+                                           placeholder="Security Group Name"
+                                           class="col-sm-8">
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="group-desc" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="A brief description of your security group."></i>
+                                        Description:</label>
+                                    <textarea name="groupDesc" id="group-desc" placeholder="Optional Description"
+                                              maxlength="80" rows="3" class="col-sm-8">
+                                    </textarea>
+                                </div>
+                                <h4>group Options</h4>
+                                <hr class="narrow">
+                                <div class="form-group col-sm-12">
+                                    <label for="group-transport" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="The transport protocol for the security group ports."></i>
+                                        Transport:</label>
+                                    <select name="groupTransport" id="group-transport" class="col-sm-8">
+                                        <option value="tcp" selected>tcp</option>
+                                        <option value="udp">udp</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label for="group-ports" class="col-sm-4 control-label"><i
+                                            class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                                            data-title="A comma separated list of ports that are able to connect to your instance."></i>
+                                        Ports:</label>
+                                    <input type="text" name="groupPorts" id="group-ports"
+                                           placeholder="Security Group Ports"
+                                           class="col-sm-8" value="443,80,22">
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                    <div class="col-sm-12">
+                        <label>Common TCP/UDP ports:</label>
+                        <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
+                            <thead class="bg-primary">
+                            <tr>
+                                <th>ssh</th>
+                                <th>telnet</th>
+                                <th>http</th>
+                                <th>smtp</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>22</td>
+                                <td>23</td>
+                                <td>80</td>
+                                <td>25</td>
+                            </tr>
+                            </tbody>
+                            <thead class="bg-primary">
+                            <tr>
+                                <th>https</th>
+                                <th>smtps</th>
+                                <th>ftp</th>
+                                <th>nfs</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>443</td>
+                                <td>465</td>
+                                <td>20, 21</td>
+                                <td>1025</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="wizard-progress" style="display: none;">
+                    <div class="col-sm-12">
+                        <form id="progress-form">
+                            <fieldset>
+                                <legend>Progress</legend>
+                                <h6>Your Instance information:</h6>
+                                <ul class="list-unstyled wizard-info">
+                                    <li class="instance"><label>Instance Name: </label><span class="name"></span></li>
+                                    <li class="image"><label>Image Name: </label><span class="name"></span></li>
+                                    <li class="instance"><label>Instance Network: </label><span class="network"></span>
+                                    </li>
+                                    <li class="instance"><label>Instance Flavor: </label><span class="flavor"></span>
+                                    </li>
+                                    <li class="volume"><label>Volume Name: </label><span class="name"></span></li>
+                                    <li class="volume"><label>Volume Size: </label><span class="size"></span></li>
+                                    <li class="volume"><label>Volume Type: </label><span class="type"></span></li>
+                                    <li class="instance"><label>Floating IP Address: </label><span class="ip"></span>
+                                    </li>
+                                    <li class="security"><label>Security Group: </label><span class="group"></span></li>
+                                    <li class="security"><label>Security Key Pair: </label><span class="key"></span>
+                                    </li>
+                                </ul>
+
+                                <p>The progress bars will show you the status of your creation process. The Overall
+                                    Progress bar is the overall progress of the entire creation process. The Image
+                                    Upload is the progress of uploading your image.</p>
+
+                                <label>Overall Rrogress: <span id="wizard-overall-progress-label"></span></label>
+
+                                <div id="wizard-overall-progress-bar" class="progress progress-striped">
+                                    <div class="progress-bar progress-bar-info progress-bar-striped bg-active"
+                                         style="width: 0"></div>
+                                </div>
+                                <label>Upload Rrogress: <span id="wizard-image-progress-label">0%</span></label>
+
+                                <div id="wizard-image-upload-bar" class="progress progress-striped">
+                                    <div class="progress-bar progress-bar-info progress-bar-striped bg-active"
+                                         style="width: 0"></div>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+                <div id="wizard-confirm" style="display: none;">
+                    <div class="col-sm-12">
+                        <form id="confirm-form">
+                            <fieldset>
+                                <legend>Success</legend>
+                                <h6>Login/Access Information:</h6>
+
+                                <div class="col-sm-12"><p class="text-success">
+                                    Instance Name: <span class="wizard-confirm-name"></span></p>
+                                </div>
+                                <div class="col-sm-12"><p class="text-info">
+                                    External IP address: <span class="wizard-confirm-ip"></span></p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p class="text-success">Linux Device: <span>/dev/vdb</span></p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p>Please use the given information to access and login to your
+                                        new virtual machine instance. If your instance requires a key to login, you will
+                                        need to download the RSA Key file to use when logging in.</p>
+                                </div>
+                                <div class="col-sm-12 center-text">
+                                    <a class="wizard-confirm-key btn btn-primary" href="">Download RSA Key</a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p>If a password is needed, the following are common username/passwords for the
+                                        following OSes:</p>
+                                </div>
+
+                                <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
+                                    <thead class="bg-primary">
+                                    <tr>
+                                        <th>OS</th>
+                                        <th>Username/Password</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <th>Cirros</th>
+                                        <td>cirros / cubswin</td>
+                                    </tr>
+                                    <tr>
+                                        <th>CentOS 6</th>
+                                        <td>cloud-user / RSA Key</td>
+                                    </tr>
+                                    <tr>
+                                        <th>CentOS 7</th>
+                                        <td>centos / RSA Key</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ubuntu</th>
+                                        <td>ubuntu / RSA Key</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Fedora</th>
+                                        <td>fedora / RSA Key</td>
+                                    </tr>
+                                    <tr>
+                                        <th>RHEL</th>
+                                        <td>cloud-user / RSA Key</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Debian</th>
+                                        <td>admin / RSA Key</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                                <h6>You can access your like so:</h6>
+
+                                <div class="col-sm-12">
+                                    <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@204.64.2.44</p>
+                                </div>
+                                <div class="col-sm-12">
+                                    <p>If at anytime you forget this information, you can retrieve it by clicking the
+                                        name of your instance in the Project View page.</p>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-footer">
+    <button class="btn btn-primary" id="wizard-back" data-loading-text="Back" style="display: none;">Back</button>
+    <button class="btn btn-primary" id="wizard-finish" data-loading-text="Finish" style="display: none;">Finish</button>
+    <button class="btn btn-primary" id="wizard-create" data-loading-text="Create" style="display: none;">Create</button>
+    <button class="btn btn-primary" id="wizard-next" data-loading-text="Next" disabled>Next</button>
+</div>
+
+<script src="{{ STATIC_URL }}javascripts/project_view/instance-wizard.js"></script>
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        initializeBamSection();
+
+        $("#wizard-next").click(function (event) {
+            event.preventDefault();
+            changeBamSection("next");
+            var currentForm = "#" + wizardSection + "-form";
+            if ($(currentForm).valid()) {
+                $("#wizard-next").removeProp("disabled");
+            } else {
+                $("#wizard-next").prop("disabled", "disabled");
+            }
+        });
+
+        $("#wizard-back").click(function (event) {
+            event.preventDefault();
+            changeBamSection("back");
+            var currentForm = "#" + wizardSection + "-form";
+            if ($(currentForm).valid()) {
+                $("#wizard-next").removeProp("disabled");
+            } else {
+                $("#wizard-next").prop("disabled", "disabled");
+            }
+        });
+
+        $("#wizard-create").click(function (event) {
+            event.preventDefault();
+            if ($(this).prop("disabled") == false) {
+                $("#wizard-create").prop("disabled", "disabled");
+                $("#wizard-back").prop("disabled", "disabled");
+                buildInstance();
+            }
+        });
+
+        $("#wizard-finish").click(function (event) {
+            event.preventDefault();
+            wizardSection = "initialize";
+            closeModal();
+
+        });
+
+        $("#wizard-allocate-ip").click(function (event) {
+            event.preventDefault();
+            showMessage('info', "Allocating IP.");
+            $.getJSON('/allocate_floating_ip/' + CURRENT_PROJECT_ID + '/' + DEFAULT_PUBLIC + '/')
+                    .done(function (data) {
+                        if (data.status == 'error') {
+                            showMessage('error', data.message);
+                        }
+                        if (data.status == 'success') {
+                            showMessage('success', "Successfully allocated " + data.ip_info.floating_ip + ".");
+                            refreshContainer($("#page-content"), $("#networking-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                            $("#instance-ip").prepend($('<option value="' + data.ip_info.floating_ip + '">' + data.ip_info.floating_ip + '</option>'))
+                        }
+                    })
+                    .fail(function () {
+                        showMessage('error', 'Server Fault');
+                    })
+        });
+
+        $("#instance-form").validate({
+            rules: {
+                instanceName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                instanceImage: {
+                    required: true
+                },
+                instanceFlavor: {
+                    required: true
+                },
+                instanceNetwork: {
+                    required: true
+                },
+                instanceFip: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                if (wizardSection = "instance") {
+                    $("#wizard-next").removeProp("disabled");
+                }
+            },
+            invalidHandler: function () {
+                if (wizardSection = "instance") {
+                    $("#wizard-next").prop("disabled", "disabled");
+                }
+            }
+        });
+        $("#image-form").validate({
+            rules: {
+                imageName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                imageContainer: {
+                    required: true
+                },
+                imageDisk: {
+                    required: true
+                },
+                imageType: {
+                    required: true
+                },
+                imageLocal: {
+                    required: {
+                        depends: function (element) {
+                            return $("#image-type").val() == "local";
+                        }
+                    }
+                },
+                imageRemote: {
+                    required: {
+                        depends: function (element) {
+                            return $("#image-type").val() == "remote";
+                        }
+                    },
+                    url: true,
+                    remote: true
+                },
+                imageOS: {
+                    required: true
+                },
+                imageVisibility: {
+                    required: true
+                }
+
+            },
+            submitHandler: function () {
+                if (wizardSection = "image") {
+                    $("#wizard-next").removeProp("disabled");
+                }
+            },
+            invalidHandler: function () {
+                if (wizardSection = "instance") {
+                    $("#wizard-next").prop("disabled", "disabled");
+                }
+
+            }
+        });
+
+        $("#volume-form").validate({
+            rules: {
+                volumeExisting: {
+                    required: true
+                },
+                volumeName: {
+                    required: {
+                        depends: function (element) {
+                            return $("#volume-existing").val() == "create";
+                        }
+                    },
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                volumeSize: {
+                    required: {
+                        depends: function (element) {
+                            return $("#volume-existing").val() == "create";
+                        }
+                    },
+                    number: true,
+                    min: 1,
+                    max: {{ tenant_info.avail_storage }}
+                },
+                volumeType: {
+                    required: {
+                        depends: function (element) {
+                            return $("#volume-existing").val() == "create";
+                        }
+                    }
+                }
+            },
+            submitHandler: function () {
+                if (wizardSection = "volume") {
+                    $("#wizard-next").removeProp("disabled");
+                }
+            },
+            invalidHandler: function () {
+                if (wizardSection = "volume") {
+                    $("#wizard-next").prop("disabled", "disabled");
+                }
+            }
+        });
+        $("#security-form").validate({
+            rules: {
+                instanceKey: {
+                    required: true
+                },
+                keyName: {
+                    required: {
+                        depends: function (element) {
+                            return $("#instance-key").val() == "create";
+                        }
+                    },
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                instanceGroup: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                if (wizardSection = "security") {
+                    $("#wizard-next").removeProp("disabled");
+                }
+            },
+            invalidHandler: function () {
+                if (wizardSection = "security") {
+                    $("#wizard-next").prop("disabled", "disabled");
+                }
+            }
+        });
+        $("#group-form").validate({
+            rules: {
+                groupName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                groupDesc: {
+                    specialChars: true,
+                    minlength: 0,
+                    maxlength: 80
+                },
+                groupTransport: {
+                    required: true
+                },
+                groupPorts: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                if (wizardSection = "group") {
+                    $("#wizard-next").removeProp("disabled");
+                }
+            },
+            invalidHandler: function () {
+                if (wizardSection = "group") {
+                    $("#wizard-next").prop("disabled", "disabled");
+                }
+            }
+        });
+
+        $("form input, form select").on("click change focus", function () {
+            var currentForm = "#" + wizardSection + "-form";
+            if ($(currentForm).valid()) {
+                $("#wizard-next").removeProp("disabled");
+            } else {
+                $("#wizard-next").prop("disabled", "disabled");
+            }
+        });
+
+        $("#volume-existing").change(function () {
+            if ($(this).val() == "create") {
+                $("#wizard-next").prop("disabled", "disabled");
+                $("#volume-name, #volume-size, #volume-type").removeProp("disabled");
+            } else {
+                $("#volume-name, #volume-size, #volume-type").prop("disabled", "disabled");
+            }
+        });
+
+        $("#image-type").change(function () {
+            if ($(this).val() == "local") {
+                $("input[name=imageLocal]").removeProp("disabled");
+                $("input[name=imageRemote]").prop("disabled", "disabled");
+            } else {
+                $("input[name=imageRemote]").removeProp("disabled");
+                $("input[name=imageLocal]").prop("disabled", "disabled");
+            }
+        });
+
+        $("#instance-key").change(function () {
+            if ($(this).val() == "create") {
+                $("#wizard-next").prop("disabled", "disabled");
+                $("#key-name").removeProp("disabled");
+            } else {
+                $("#key-name").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>

@@ -4,14 +4,14 @@ $(function () {
 
     // Click Events
     // License
-    $(document).on('click', '.license', function (event) {
+    $(document).on('click', '.license-tps', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_license/' + provider + '/';
         showConfirmModal(call);
     });
 
-    $(document).on('click', '#confirm-license', function (event) {
+    $(document).on('click', '#confirm-license-tps', function (event) {
         event.preventDefault();
         clearUiValidation();
         var provider = $(this).data("provider"),
@@ -47,21 +47,21 @@ $(function () {
     });
 
     // Configure and Update
-    $(document).on('click', '.configure', function (event) {
+    $(document).on('click', '.configure-tps', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_configure/' + provider + '/';
         showConfirmModal(call);
     });
 
-    $(document).on('click', '.update', function (event) {
+    $(document).on('click', '.update-tps', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             call = '/third_party_storage/get_configure/' + provider + '/true/';
         showConfirmModal(call);
     });
 
-    $(document).on('click', '#confirm-configure', function (event) {
+    $(document).on('click', '#confirm-configure-tps', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             inputs,
@@ -289,7 +289,7 @@ $(function () {
         }
     });
 
-    $(document).on('click', '.delete', function (event) {
+    $(document).on('click', '.delete-tps', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
             title,

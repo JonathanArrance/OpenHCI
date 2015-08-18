@@ -85,7 +85,7 @@
                 });
                 if (isValid) {
                     showMessage('info', "Creating new group");
-                    var url = '/create_security_group/' + $("#group-name").val() + '/' + ($("#group-desc").val() == "" ? "none" : $("#group-desc").val()) + '/' + $("#group-ports").val() + '/' + $("#group-transport").val() + '/' + CURRENT_PROJECT_ID + '/';
+                    var url = '/create_security_group/' + $("#group-name").val() + '/' + ($("#group-desc").val() == "" ? "none" : encodeURIComponent($("#group-desc").val())) + '/' + $("#group-ports").val() + '/' + $("#group-transport").val() + '/' + CURRENT_PROJECT_ID + '/';
 
                     $.getJSON(url)
                             .done(function (data) {
