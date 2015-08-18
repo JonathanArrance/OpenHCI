@@ -26,7 +26,8 @@
                 </td>
             {% else %}
                 <td>Configured</td>
-                <td><a href="#" class="delete-tpa" data-provider="{{ provider.id }}" data-async="refreshTPA">delete</a>
+                <td>
+{#                    <a href="#" class="delete-tpa" data-provider="{{ provider.id }}" data-async="refreshTPA">delete</a>#}
                 </td>
             {% endif %}
         </tr>
@@ -43,10 +44,10 @@
             <div class="panel-body center-text">
                 <div id="{{ provider.id }}" class="col-sm-12 no-padding">
                     {% if provider.id == "shib" %}
-                        <button type="button" class="btn btn-lg btn-success toggle-project-settings">Toggle Project
-                            Settings
-                        </button>
-                        <button type="button" class="btn btn-lg btn-success create-default-project">Create Default
+{#                        <button type="button" class="btn btn-lg btn-success update-shib-project">Update Default Project#}
+{#                           #}
+{#                        </button>#}
+                        <button type="button" class="btn btn-lg btn-success create-shib-project">Create Default
                             Project
                         </button>
                     {% elif provider.id == "ldap" %}
