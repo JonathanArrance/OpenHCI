@@ -245,7 +245,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_instance_create',
             name='get_instance_create'),
 
-        url(r'^instance/get/resize/$',
+        url(r'^instance/get/resize/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_instance_resize',
             name='get_instance_resize'),
 
