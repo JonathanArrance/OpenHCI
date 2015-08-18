@@ -265,7 +265,7 @@
         $(".update-instance-settings").click(function (event) {
             event.preventDefault();
             $('.btn').not(this).popover('hide');
-            $(".popover-content").load("/instance/get/resize/");
+            $(".popover-content").load("/instance/get/resize/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/");
         });
 
         $(".revert-instance").click(function (event) {
