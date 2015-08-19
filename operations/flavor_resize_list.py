@@ -15,9 +15,6 @@ def get_list_of_valid_resizeable_flavors(auth_dict, project_id, instance_id):
     flavor_array = fo.list_flavors()
     for flavor in flavor_array:
         checking_flavor_disk = fo.get_flavor(flavor["id"])["disk_space(GB)"]
-        print checking_flavor_disk
-        if int(checking_flavor_disk) >= int(current_flavor_disk_size):
+        if int(checking_flavor_disk) >= int(current_flavor_disk_size) and int(flavor["id"]) != int(instance_info["flavor_id"]):
             master_list.append(flavor)
-        else:
-            print "failed" + str(flavor)
     return master_list
