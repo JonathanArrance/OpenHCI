@@ -138,22 +138,24 @@ def info_ha_primary(d, info_dict):
 
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
-    info_dict['node_name'] =        fields[0]
-    info_dict['up_ha_ip'] =         fields[1]
-    info_dict['uplink_ip'] =        fields[2]
-    info_dict['uplink_subnet'] =    fields[3]
-    info_dict['uplink_gateway'] =   fields[4]
-    info_dict['uplink_dns'] =       fields[5]
-    info_dict['uplink_domain'] =    fields[6]
-    info_dict['mgmt_ip'] =          fields[7]
-    info_dict['mgmt_subnet'] =      fields[8]
-    info_dict['mgmt_dns'] =         fields[9]
-    info_dict['mgmt_domain'] =      fields[10]
-    info_dict['vm_ip_min'] =        fields[11]
-    info_dict['vm_ip_max'] =        fields[12]
-    info_dict['pwd'] =              fields[13]
-    info_dict['cnfrm'] =            fields[14]
-    return info_dict
+
+    r_dict = dict()
+    r_dict['node_name'] =        fields[0]
+    r_dict['up_ha_ip'] =         fields[1]
+    r_dict['uplink_ip'] =        fields[2]
+    r_dict['uplink_subnet'] =    fields[3]
+    r_dict['uplink_gateway'] =   fields[4]
+    r_dict['uplink_dns'] =       fields[5]
+    r_dict['uplink_domain'] =    fields[6]
+    r_dict['mgmt_ip'] =          fields[7]
+    r_dict['mgmt_subnet'] =      fields[8]
+    r_dict['mgmt_dns'] =         fields[9]
+    r_dict['mgmt_domain'] =      fields[10]
+    r_dict['vm_ip_min'] =        fields[11]
+    r_dict['vm_ip_max'] =        fields[12]
+    r_dict['pwd'] =              fields[13]
+    r_dict['cnfrm'] =            fields[14]
+    return r_dict
 
 
 def info_ha_secondary(d, info_dict):
@@ -180,19 +182,20 @@ def info_ha_secondary(d, info_dict):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
-    info_dict['node_name'] =        fields[0]
-    info_dict['uplink_ip'] =        fields[1]
-    info_dict['uplink_subnet'] =    fields[2]
-    info_dict['uplink_gateway'] =   fields[3]
-    info_dict['uplink_dns'] =       fields[4]
-    info_dict['uplink_domain'] =    fields[5]
-    info_dict['mgmt_ip'] =          fields[6]
-    info_dict['mgmt_subnet'] =      fields[7]
-    info_dict['mgmt_dns'] =         fields[8]
-    info_dict['mgmt_domain'] =      fields[9]
-    info_dict['pwd'] =              fields[10]
-    info_dict['cnfrm'] =            fields[11]
-    return info_dict
+    r_dict = dict()
+    r_dict['node_name'] =        fields[0]
+    r_dict['uplink_ip'] =        fields[1]
+    r_dict['uplink_subnet'] =    fields[2]
+    r_dict['uplink_gateway'] =   fields[3]
+    r_dict['uplink_dns'] =       fields[4]
+    r_dict['uplink_domain'] =    fields[5]
+    r_dict['mgmt_ip'] =          fields[6]
+    r_dict['mgmt_subnet'] =      fields[7]
+    r_dict['mgmt_dns'] =         fields[8]
+    r_dict['mgmt_domain'] =      fields[9]
+    r_dict['pwd'] =              fields[10]
+    r_dict['cnfrm'] =            fields[11]
+    return r_dict
 
 
 def info_cc(d, info_dict):
@@ -221,21 +224,22 @@ def info_cc(d, info_dict):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
-    info_dict['node_name'] =        fields[0]
-    info_dict['uplink_ip'] =        fields[1]
-    info_dict['uplink_subnet'] =    fields[2]
-    info_dict['uplink_gateway'] =   fields[3]
-    info_dict['uplink_dns'] =       fields[4]
-    info_dict['uplink_domain'] =    fields[5]
-    info_dict['mgmt_ip'] =          fields[6]
-    info_dict['mgmt_subnet'] =      fields[7]
-    info_dict['mgmt_dns'] =         fields[8]
-    info_dict['mgmt_domain'] =      fields[9]
-    info_dict['vm_ip_min'] =        fields[10]
-    info_dict['vm_ip_max'] =        fields[11]
-    info_dict['pwd'] =              fields[12]
-    info_dict['cnfrm'] =            fields[13]
-    return info_dict
+    r_dict = dict()
+    r_dict['node_name'] =        fields[0]
+    r_dict['uplink_ip'] =        fields[1]
+    r_dict['uplink_subnet'] =    fields[2]
+    r_dict['uplink_gateway'] =   fields[3]
+    r_dict['uplink_dns'] =       fields[4]
+    r_dict['uplink_domain'] =    fields[5]
+    r_dict['mgmt_ip'] =          fields[6]
+    r_dict['mgmt_subnet'] =      fields[7]
+    r_dict['mgmt_dns'] =         fields[8]
+    r_dict['mgmt_domain'] =      fields[9]
+    r_dict['vm_ip_min'] =        fields[10]
+    r_dict['vm_ip_max'] =        fields[11]
+    r_dict['pwd'] =              fields[12]
+    r_dict['cnfrm'] =            fields[13]
+    return r_dict
 
 
 def info_cn(d, info_dict):
@@ -257,14 +261,15 @@ def info_cn(d, info_dict):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
-    info_dict['node_name'] =        fields[0]
-    info_dict['mgmt_ip'] =          fields[1]
-    info_dict['mgmt_subnet'] =      fields[2]
-    info_dict['mgmt_dns'] =         fields[3]
-    info_dict['mgmt_domain'] =      fields[4]
-    info_dict['pwd'] =              fields[5]
-    info_dict['cnfrm'] =            fields[6]
-    return info_dict
+    r_dict = dict()
+    r_dict['node_name'] =        fields[0]
+    r_dict['mgmt_ip'] =          fields[1]
+    r_dict['mgmt_subnet'] =      fields[2]
+    r_dict['mgmt_dns'] =         fields[3]
+    r_dict['mgmt_domain'] =      fields[4]
+    r_dict['pwd'] =              fields[5]
+    r_dict['cnfrm'] =            fields[6]
+    return r_dict
 
 
 def singleNode(d):
@@ -292,16 +297,6 @@ def dhcp(d):
         time.sleep(0.01 if params["fast_mode"] else 0.1)
 
     d.gauge_stop()
-
-
-'''
-def success_msg(d, seconds):
-    d.pause("""\
-Setup has completed successfully.  The system will now restart in %u seconds\
- and update with the information you have entered.  To connect to this unit\
- again, use the newly created IP address and login credentials."""
-% seconds, height=15, seconds=seconds)
-'''
 
 
 def success_msg(d, seconds):
@@ -389,7 +384,6 @@ def setup(d):
     else:
         d.msgbox("Continue to first time setup.")
 
-    ha_type = util.get_ha_type()
     info_dict = {
                     'node_name':        util.get_node_name(),
                     'uplink_ip':        "",
@@ -410,6 +404,7 @@ def setup(d):
 
     while (True):
         if config.NODE_TYPE == 'ha':
+            ha_type = util.get_ha_type()
             if ha_type == 'primary':
                 info_dict = info_ha_primary(d, info_dict)
             elif ha_type == 'secondary':
@@ -491,6 +486,7 @@ def setup(d):
     new_system_variables.append({"system_name": info_dict['node_name'], "parameter": "admin_api_ip", "param_value": '172.24.24.10'})
     new_system_variables.append({"system_name": info_dict['node_name'], "parameter": "int_api_ip", "param_value": '172.24.24.10'})
     if 'uplink_ip' in info_dict:
+        new_system_variables.append({"system_name": info_dict['node_name'], "parameter": "uplink_ip", "param_value": info_dict['uplink_ip']})
         new_system_variables.append({"system_name": info_dict['node_name'], "parameter": "api_ip", "param_value": info_dict['uplink_ip']})
     if 'mgmt_ip' in info_dict:
         new_system_variables.append({"system_name": info_dict['node_name'], "parameter": "mgmt_ip", "param_value": info_dict['mgmt_ip']})
