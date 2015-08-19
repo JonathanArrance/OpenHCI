@@ -490,6 +490,11 @@ footer {
     fill: rgb(235, 235, 235);
 }
 
+table {
+    border-collapse: inherit;
+    border-spacing: 0;
+}
+
 /* ICONS */
 
 /*i.fa {*/
