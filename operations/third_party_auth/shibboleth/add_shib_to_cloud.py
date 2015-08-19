@@ -2,6 +2,7 @@ import subprocess
 import xml.etree.ElementTree as etree
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
+import transcirrus.operations.third_party_auth.third_party_auth_util as auth_util
 
 
 def add_centos6_shib(input_dict):
@@ -17,6 +18,13 @@ def add_centos6_shib(input_dict):
     NOTE:   admin must upload metadata to idp after this
             metadata can be found at https://<uplink_ip>/Shibboleth.sso/Metadata
     """
+    # check to see if shibboleth is already installed
+    protocols = auth_util.detect_auth()
+    if protocols['has_shib'] == True:
+        logger.sys_error("shibboleth already installed.")
+        # shibboleth already installed
+        raise Exception("Shibboleth is already installed.")
+
     # get distro and version
     issue = subprocess.check_output(["cat", "/etc/issue"])
     issue_parts = issue.split()
@@ -27,8 +35,8 @@ def add_centos6_shib(input_dict):
             subprocess.call(["sudo", "wget", "http://download.opensuse.org/repositories/security://shibboleth/CentOS_CentOS-6/security:shibboleth.repo",  "-P", "/etc/yum.repos.d"])
             subprocess.call(["sudo", "yum", "-y", "install", "shibboleth.x86_64"])
         except Exception as e:
-            logger.sys_error("add shib error, wget section: %s" % str(e))
-            raise e
+            logger.sys_error("SHIB: add shib error, wget section: %s" % str(e))
+            raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
         # modify shibboleth config, updating:
         #   * ApplicationDefaults entityID  ->  uplink_ip
@@ -50,8 +58,8 @@ def add_centos6_shib(input_dict):
                 meta_prov.set("uri", input_dict['mp_uri'])
             shib_tree.write('/etc/shibboleth/shibboleth2.xml')
         except Exception as e:
-            logger.sys_error("add shib error, etree section: %s" % str(e))
-            raise e
+            logger.sys_error("SHIB: add shib error, etree section: %s" % str(e))
+            raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
         # sync time settings to avoid shibboleth timing errors, restart shibd after modifying config,
         # and stop httpd before modifying config
@@ -62,32 +70,32 @@ def add_centos6_shib(input_dict):
             subprocess.call(["sudo", "service", "shibd", "start"])
             subprocess.call(["sudo", "service", "httpd", "stop"])
         except Exception as e:
-            logger.sys_error("add shib error, service section: %s" % str(e))
-            raise e
+            logger.sys_error("SHIB: add shib error, service section: %s" % str(e))
+            raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
         # modify apache's httpd.conf, adding shibboleth wrapper
         try:
             with open("/etc/httpd/conf/httpd.conf", "a") as httpd_conf:
-                httpd_conf.write("<Location /Shibboleth.sso>\n \
-                                    SetHandler shib\n \
-                                  </Location>\n \
-                                  \n \
-                                  <Location /shib>\n \
-                                    AuthType shibboleth\n \
-                                    ShibRequestSetting requireSession 1\n \
-                                    Require valid-user\n \
-                                  </Location>")
+                httpd_conf.write(("<Location /Shibboleth.sso>\n"
+                                  "    SetHandler shib\n"
+                                  "</Location>\n"
+                                  "\n"
+                                  "<Location /shib>\n"
+                                  "    AuthType shibboleth\n"
+                                  "    ShibRequestSetting requireSession 1\n"
+                                  "    Require valid-user\n"
+                                  "</Location>\n"))
         except Exception as e:
-            logger.sys_error("add shib error, xml section: %s" % str(e))
-            raise e
+            logger.sys_error("SHIB: add shib error, xml section: %s" % str(e))
+            raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
 
         # restart httpd
         try:
             subprocess.call(["sudo", "service", "httpd", "start"])
         except Exception as e:
-            logger.sys_error("add shib error, httpd section: %s" % str(e))
-            raise e
+            logger.sys_error("SHIB: add shib error, httpd section: %s" % str(e))
+            raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
         return 'OK'
 

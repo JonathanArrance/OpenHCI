@@ -49,6 +49,7 @@ import transcirrus.operations.migrate_server as migration
 import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
 import transcirrus.common.memcache as memcache
+import transcirrus.operations.flavor_resize_list as flavor_resize_ops
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -994,13 +995,12 @@ def get_instance_create(request, project_id):
                                                                                                                      'volume_types': volume_types,
                                                                                                                      'error': "Error: %s"%e}))
 
-def get_instance_resize(request):
-    flavors = []
+def get_instance_resize(request, project_id, instance_id):
+    complete_flavor_list = []
     try:
         auth = request.session['auth']
         fo = flavor_ops(auth)
-
-        flavors = fo.list_flavors()
+        flavors = flavor_resize_ops.get_list_of_valid_resizeable_flavors(auth, project_id, instance_id)
         for flavor in flavors:
             f_info = fo.get_flavor(flavor['id'])
             flavor['info'] = {
@@ -1013,10 +1013,11 @@ def get_instance_resize(request):
                 'cpus': f_info['cpus'],
                 'link': f_info['link'],
                 'metadata': f_info['metadata']}
+            complete_flavor_list.append(flavor)
 
-        return render_to_response('coal/project_view_widgets/instances/instance_resize.html', RequestContext(request, {'flavors': flavors}))
+        return render_to_response('coal/project_view_widgets/instances/instance_resize.html', RequestContext(request, {'flavors': complete_flavor_list}))
     except Exception as e:
-        return render_to_response('coal/project_view_widgets/instances/instance_resize.html', RequestContext(request, {'flavors': flavors,
+        return render_to_response('coal/project_view_widgets/instances/instance_resize.html', RequestContext(request, {'flavors': complete_flavor_list,
                                                                                                                      'error': "Error: %s"%e}))
 
 def get_instance_create_snapshot(request):
