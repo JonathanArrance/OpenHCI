@@ -147,10 +147,10 @@ if [ ! /home/transuer/factory_creds ]
 then
     /bin/echo "ERROR: No factory_creds file"
 else
+    /sbin/service openstack-keystone restart
     source /home/transuser/factory_creds
     keystone user-create --name="shadow_admin" --pass="manbehindthecurtain"
     SHADOW_ADMIN_USER=$(keystone user-get shadow_admin | grep " id " | awk '{print $4}')
-    echo $SHADOW_ADMIN_USER
     TRANS="$(sudo cat /usr/local/lib/python2.7/transcirrus/common/config.py | grep "TRANS_DEFAULT_ID")"
     PROJID="$(echo $TRANS |awk -F\" '$0=$2')"
     # add admin, shadow_admin and trans_default project to transcirrus db
