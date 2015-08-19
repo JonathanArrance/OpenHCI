@@ -794,6 +794,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_third_party_authentication_configure',
             name='get_third_party_authentication_configure'),
 
+        url(r'^third_party_authentication/get_build_default_project/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_authentication_build_project',
+            name='get_third_party_authentication_build_project'),
+
         # --- Shibboleth ----
         url(r'^shib/config/(?P<sso_entity_id>[^/]+)/(?P<mp_backing_file_path>[^/]+)/(?P<mp_uri>[^/]+)/$',
             'coalesce.coal_beta.views.add_shib_to_cloud',
@@ -806,6 +810,10 @@ urlpatterns = patterns('',
         url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.shib_add_user_to_project',
             name='shib_add_user_to_project'),
+
+        url(r'^shib/build_default_project/$',
+            'coalesce.coal_beta.views.shib_build_default_project',
+            name='shib_build_default_project'),
 
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

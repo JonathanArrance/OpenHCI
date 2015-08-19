@@ -73,12 +73,12 @@ import transcirrus.operations.support_create as support_create
 import transcirrus.operations.upgrade as ug
 sys.path.append("/usr/lib/python2.6/site-packages/")
 
-
 import transcirrus.operations.third_party_storage.third_party_config as tpc
 from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
 import transcirrus.operations.third_party_auth.third_party_auth_util as tpa
 import transcirrus.operations.third_party_auth.shibboleth.add_shib_user as add_shib_user
 import transcirrus.operations.third_party_auth.shibboleth.add_shib_to_cloud as add_shib
+import transcirrus.operations.third_party_auth.shibboleth.build_shib_project as bsp
 from transcirrus.common import extras as extras
 
 # Custom imports
@@ -275,15 +275,19 @@ def get_third_party_storage_configure(request, provider, update=None):
 
 
 def get_third_party_authentication(request):
+    global default_shib_project
     providers = []
     try:
         auth = request.session['auth']
         if auth['user_level'] == 0:
             provs = tpa.detect_auth()
             if provs['has_shib'] == True:
-                providers.append({"name": "Shibboleth", "id": "shib", "configured": 1})
+                if default_shib_project is not None:
+                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": default_shib_project})
+                else:
+                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": "none"})
             else:
-                providers.append({"name": "Shibboleth", "id": "shib", "configured": 0})
+                providers.append({"name": "Shibboleth", "id": "shib", "configured": 0, "default_project": "none"})
 
             if provs['has_ldap'] == True:
                 providers.append({"name": "LDAP", "id": "ldap", "configured": 1})
@@ -319,6 +323,21 @@ def get_third_party_authentication_configure(request, provider, update=None):
             return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'provider': prov, 'update': update}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
+
+def get_third_party_authentication_build_project(request, provider):
+    try:
+        auth = request.session['auth']
+        if(auth != None and auth['is_admin'] == 1):
+            prov = {}
+            if provider == 'shib':
+                prov = { 'id': provider, 'name':"Shibboleth" }
+            if provider == 'ldap':
+                prov = { 'id': provider, 'name':"LDAP" }
+            if provider == 'other':
+                prov = { 'id': provider, 'name':"Other" }
+            return render_to_response('coal/dashboard_widgets/third_party_authentication_build_project.html', RequestContext(request, { 'provider': prov}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_authentication_build_project.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
 
 
 def get_metering(request):
@@ -574,7 +593,9 @@ def manage_projects(request):
     return render_to_response('coal/manage_projects.html', RequestContext(request, {'project_info': project_info}))
 
 def project_view(request, project_id):
+    global default_shib_project
     project = []
+    is_auth_default = 0
     default_public = []
     hosts = []
     try:
@@ -584,6 +605,9 @@ def project_view(request, project_id):
         saa = server_admin_actions
 
         project = to.get_tenant(project_id)
+        if default_shib_project is not None:
+            if project_id == default_shib_project['project_id']:
+                is_auth_default = 1
         pub_net_list  = no.list_external_networks()
 
         public_networks=[]
@@ -610,11 +634,13 @@ def project_view(request, project_id):
 
         return render_to_response('coal/project_view.html',
                                   RequestContext(request, {'project': project,
+                                                           'is_auth_default': is_auth_default,
                                                            'default_public': default_public,
                                                            'hosts': hosts}))
     except Exception as e:
         return render_to_response('coal/project_view.html',
                                   RequestContext(request, {'project': project,
+                                                           'is_auth_default': is_auth_default,
                                                            'default_public': default_public,
                                                            'hosts': hosts,
                                                            'error': "Error: %s" % e}))
@@ -4631,35 +4657,133 @@ def add_shib_to_cloud(request, sso_entity_id, mp_backing_file_path, mp_uri):
         out['message'] = "Error: %s."%e
         return HttpResponse(simplejson.dumps(out))
 
-def shib_enable_default_project(request, project_id):
+
+def shib_build_default_project(request):
     global default_shib_project
-    out = {}
-    try:
-        auth = request.session['auth']
-        to = tenant_ops(auth)
-        project = to.get_tenant(project_id)
-        default_shib_project = project
-        out['project'] = project
-        out['status'] = "success"
-        out['message'] = "Successfully enabled default Shibboleth Project."
-        return HttpResponse(simplejson.dumps(out))
-    except Exception as e:
-        out['status'] = "error"
-        out['message'] = "Error: Failed to enable default Shibboleth Project."
+    if default_shib_project is None:
+        if request.method == 'POST':
+            if request.POST.get('cancel'):
+                return HttpResponseRedirect('/')
+            try:
+                proj_name = request.POST['projectName']
+                username = request.POST['adminName']
+                password = request.POST['adminPassword']
+                email = request.POST['adminEmail']
+                group_name = request.POST['securityGroup']
+                sec_keys_name = request.POST['securityKey']
+                net_name = request.POST['networkName']
+                router_name = request.POST['routerName']
+                subnet_dns = request.POST['dnsAddress']
+                # ports[] - op
+                # get the advanced props flag
+                # advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
+                advanced = None
+                dns = []
+                dns.append(subnet_dns)
+                dns = []
+                dns.append(subnet_dns)
+                auth = request.session['auth']
+                project_dict = {
+                    'project_name': proj_name,
+                    'user_dict': {
+                        'username': username,
+                        'password': password,
+                        'user_role': 'admin',
+                        'email': email,
+                        'project_id': ''},
+                    'net_name': net_name,
+                    'subnet_dns': dns,
+                    'sec_group_dict': {
+                        'ports': '',
+                        'group_name': group_name,
+                        'group_desc': 'none',
+                        'project_id': ''},
+                    'sec_keys_name': sec_keys_name,
+                    'router_name': router_name
+                }
+                # add in the advanced quota options
+                if (advanced):
+                    cores = request.POST['core']
+                    fixed_ips = request.POST['fixed_ips']
+                    floating_ips = request.POST['floating_ips']
+                    injected_file_content_bytes = request.POST['injected_file_content_bytes']
+                    injected_file_path_bytes = request.POST['injected_file_path_bytes']
+                    injected_files = request.POST['injected_files']
+                    instances = request.POST['instances']
+                    key_pairs = request.POST['key_pairs']
+                    metadata_items = request.POST['metadata_items']
+                    ram = request.POST['ram']
+                    security_group_rules = request.POST['security_group_rules']
+                    security_groups = request.POST['security_groups']
+                    storage = request.POST['storage']
+                    snapshots = request.POST['snapshots']
+                    volumes = request.POST['volumes']
+                    subnet_quota = request.POST['subnet_quota']
+                    router_quota = request.POST['router_quota']
+                    network_quota = request.POST['network_quota']
+                    floatingip_quota = request.POST['floatingip_quota']
+                    port_quota = request.POST['port_quota']
+                    quota = {
+                        'cores': cores,
+                        'fixed_ips': fixed_ips,
+                        'floating_ips': floating_ips,
+                        'injected_file_content_bytes': injected_file_content_bytes,
+                        'injected_file_path_bytes': injected_file_path_bytes,
+                        'injected_files': injected_files,
+                        'instances': instances,
+                        'key_pairs': key_pairs,
+                        'metadata_items': metadata_items,
+                        'ram': ram,
+                        'security_group_rules': security_group_rules,
+                        'security_groups': security_groups,
+                        'storage': storage,
+                        'snapshots': snapshots,
+                        'volumes': volumes}
+                    project_dict['advanced_ops']['quota'] = quota
+                proj, admin = bsp.build_default_project(auth, project_dict)
+                default_shib_project = proj
+                out = {"status": "success", "message": "%s created as default project for shibboleth users."%proj_name, "project": proj, "admin": admin}
+                return HttpResponse(simplejson.dumps(out))
+            except Exception as e:
+                out = {"status": "error", "message": "Error: %s" % e}
+                return HttpResponse(simplejson.dumps(out))
+        else:
+            out = {"status": "error", "message": "Error: Server Fault: Please try again"}
+            return HttpResponse(simplejson.dumps(out))
+    else:
+        out = {"status": "error", "message": "Delete current default Shibboleth Project %s before creating a new one."%default_shib_project['project_name']}
         return HttpResponse(simplejson.dumps(out))
 
-def shib_disable_default_project(request):
-    global default_shib_project
-    out = {}
-    try:
-        default_shib_project = None
-        out['status'] = "success"
-        out['message'] = "Successfully disabled default Shibboleth Project."
-        return HttpResponse(simplejson.dumps(out))
-    except Exception as e:
-        out['status'] = "error"
-        out['message'] = "Error: Failed to disable default Shibboleth Project."
-        return HttpResponse(simplejson.dumps(out))
+
+# def shib_enable_default_project(request, project_id):
+#     global default_shib_project
+#     out = {}
+#     try:
+#         auth = request.session['auth']
+#         to = tenant_ops(auth)
+#         project = to.get_tenant(project_id)
+#         default_shib_project = project
+#         out['project'] = project
+#         out['status'] = "success"
+#         out['message'] = "Successfully enabled default Shibboleth Project."
+#         return HttpResponse(simplejson.dumps(out))
+#     except Exception as e:
+#         out['status'] = "error"
+#         out['message'] = "Error: Failed to enable default Shibboleth Project."
+#         return HttpResponse(simplejson.dumps(out))
+#
+# def shib_disable_default_project(request):
+#     global default_shib_project
+#     out = {}
+#     try:
+#         default_shib_project = None
+#         out['status'] = "success"
+#         out['message'] = "Successfully disabled default Shibboleth Project."
+#         return HttpResponse(simplejson.dumps(out))
+#     except Exception as e:
+#         out['status'] = "error"
+#         out['message'] = "Error: Failed to disable default Shibboleth Project."
+#         return HttpResponse(simplejson.dumps(out))
 
 def shib_add_user(request, username, email):
     try:

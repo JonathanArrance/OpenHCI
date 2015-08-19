@@ -141,6 +141,13 @@ $(function () {
         showConfirmModal(call);
     });
 
+    $(document).on('click', '.create-tpa-project', function (event) {
+        event.preventDefault();
+        var provider = $(this).data("provider"),
+            call = '/third_party_authentication/get_build_default_project/' + provider + '/';
+        showConfirmModal(call);
+    });
+
     $(document).on('click', '.update-tpa', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
