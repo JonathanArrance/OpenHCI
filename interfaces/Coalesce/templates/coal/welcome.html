@@ -1,6 +1,6 @@
 {% extends "coal/base-fluid.html" %}
 
-{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+{% if error %}<script>console.log("ERROR");showMessage('error', "{{ error }}");</script>{% endif %}
 
 {% block content %}
     <div class="row-fluid">

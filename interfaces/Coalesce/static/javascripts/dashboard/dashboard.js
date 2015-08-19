@@ -148,6 +148,17 @@ $(function () {
         showConfirmModal(call);
     });
 
+    $(document).on('click', '.delete-tpa-project, .remove-tpa', function (event) {
+        event.preventDefault();
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = "/third_party_authentication/get/".slashTo47(),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
     $(document).on('click', '.update-tpa', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
@@ -217,7 +228,7 @@ $(function () {
     });
 });
 
-window.getPhoneHomeMessage = (function (load) {
+window.getPhoneHomeMessage = function (load) {
     $("#confirm-status").html("Initializing Phone Home ...");
     gettingPhonehomeMsg = false;
     phoneHomeMsg = window.setInterval(function () {
@@ -235,9 +246,9 @@ window.getPhoneHomeMessage = (function (load) {
     $.when(load).done(function () {
         clearInterval(phoneHomeMsg);
     });
-});
+};
 
-window.getUpgradeMessage = (function (load) {
+window.getUpgradeMessage = function (load) {
     $("#confirm-status").html("Initializing Upgrade ...");
     gettingUpgradeMsg = false;
     upgradeMessage = window.setInterval(function () {
@@ -255,7 +266,18 @@ window.getUpgradeMessage = (function (load) {
     $.when(load).done(function () {
         clearInterval(upgradeMessage);
     });
-});
+};
+
+window.projectDeleteTimer = function () {
+    window.setInterval(function () {
+    }, 1000)
+};
+
+window.refreshTPA = function (load) {
+    $.when(load).done(function () {
+        refreshContent($("#page-content"), $("#tpa-container"), "/third_party_authentication/get/")
+    });
+};
 
 // --- Dashboard Charts ---
 

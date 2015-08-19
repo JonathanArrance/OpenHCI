@@ -803,6 +803,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.add_shib_to_cloud',
             name='add_shib_to_cloud'),
 
+        url(r'^shib/remove/$',
+            'coalesce.coal_beta.views.remove_shib_from_cloud',
+            name='remove_shib_from_cloud'),
+
         url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
             'coalesce.coal_beta.views.shib_add_user',
             name='shib_add_user'),

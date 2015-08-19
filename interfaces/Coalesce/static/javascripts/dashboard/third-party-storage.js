@@ -321,11 +321,11 @@ $(function () {
     });
 });
 
-window.refreshTPS = (function (load) {
+window.refreshTPS = function (load) {
     $.when(load).done(function () {
         refreshContent($("#page-content"), $("#tps-container"), "/third_party_storage/get/")
     });
-});
+};
 
 function configureEseriesUpdate(inputs) {
     if (inputs.storagePassword.length > 0)

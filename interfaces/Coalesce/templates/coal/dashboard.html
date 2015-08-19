@@ -14,7 +14,9 @@
                     <li><a href="#" id="node-stats">Node Stats</a></li>
                     <li><a href="#" id="project-stats">Project Stats</a></li>
                     <li><a href="#" id="third-party-storage">Third Party Storage</a></li>
-                    <li><a href="#" id="third-party-authentication">Third Party Authentication</a></li>
+                    {% if is_cloud_admin == 1 %}
+                        <li><a href="#" id="third-party-authentication">Third Party Authentication</a></li>
+                    {% endif %}
                     <li><a href="#" id="metering">Metering</a></li>
                     <li><a href="#" id="account">Your Account</a></li>
                 {% else %}
@@ -29,7 +31,9 @@
                 <div id="node-container"></div>
                 <div id="project-container"></div>
                 <div id="tps-container"></div>
-                <div id="tpa-container"></div>
+                {% if is_cloud_admin == 1 %}
+                    <div id="tpa-container"></div>
+                {% endif %}
                 <div id="metering-container"></div>
                 <div id="account-container"></div>
             {% else %}
