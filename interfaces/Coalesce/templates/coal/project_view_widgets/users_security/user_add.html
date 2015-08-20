@@ -68,7 +68,7 @@
                                 showMessage('error', data.message);
                             }
                             if (data.status == 'success') {
-                                showMessage('success', "Added User " + data.username + ".");
+                                showMessage('success', data.message);
                                 closeModal();
                                 refreshContainer(page, usersSecurity, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
                             }
