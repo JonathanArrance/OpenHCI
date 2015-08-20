@@ -122,7 +122,7 @@
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
                                     data-notice="Rebooting On Instance {{ instance.server_name }}"
                                     data-toggle="popover" title="Reboot Instance" data-html="true"
-                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-flash"></i> reboot
                             </button>
                         {% elif instance.server_status == "PAUSED" %}
