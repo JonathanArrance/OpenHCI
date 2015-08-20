@@ -6,8 +6,8 @@
     {% csrf_token %}
     <fieldset>
         <div class="form-group col-sm-12">
-            <label for="instance-flavor" class="col-sm-4 control-label">Settings:</label>
-            <select name="instanceFlavor" id="instance-flavor" class="col-sm-8">
+            <label for="resize-flavor" class="col-sm-4 control-label">Spec:</label>
+            <select name="instanceFlavor" id="resize-flavor" class="col-sm-8">
                 {% for flavor in flavors %}
                     <option value="{{ flavor.info.id }}">{{ flavor.info.name }}</option>
                 {% endfor %}
@@ -31,7 +31,7 @@
             },
             submitHandler: function () {
                 showMessage("info", "Resizing " + INSTANCE);
-                $.getJSON('/server/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + $("#instance-flavor").val() + '/resize_server/')
+                $.getJSON('/server/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + $("#resize-flavor").val() + '/resize_server/')
                         .done(function (data) {
                             if (data.status == "error") {
                                 showMessage('error', data.message);
