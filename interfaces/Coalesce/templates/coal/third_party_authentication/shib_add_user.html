@@ -1,0 +1,12 @@
+{% extends "coal/base-fluid.html" %}
+
+{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+
+{% block title %}New Shibboleth User{% endblock %}
+
+{% block content %}
+    <div class="col-sm-12">
+        <div class="page-header">
+            <h2>Adding Shibboleth User to Cloud</h2>
+        </div>
+{% endblock %}
