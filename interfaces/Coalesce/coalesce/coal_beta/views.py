@@ -1132,12 +1132,12 @@ def get_volume_create(request, project_id):
         avail_percent = float(float(used_storage) / float(quota['gigabytes']) * 100)
 
         tenant_info = {'used_storage': used_storage, 'avail_storage': avail_storage, 'avail_percent': avail_percent}
-
+        """
         if avail_storage < this_vol_size:
             return render_to_response('coal/project_view_widgets/storage/volume_revert.html', RequestContext(request, {
                 'quota': quota, 'volume_types': volume_types, 'tenant_info': tenant_info,
             'error': "Error: There may not be enough available storage to create this Volume"}))
-
+        """
         return render_to_response('coal/project_view_widgets/storage/volume_create.html', RequestContext(request, {
             'quota': quota, 'volume_types': volume_types, 'tenant_info': tenant_info}))
     except Exception as e:
