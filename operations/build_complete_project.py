@@ -45,6 +45,16 @@ def build_project(auth_dict, project_dict):
     gluster = gluster_ops(auth_dict)
     logger.sys_info("Instantiated Gluster object")
 
+    # list all projects
+    tenants = tenant.list_all_tenants()
+    tenant_names = []
+    for t in tenants:
+        tenant_names.append(t['project_name'])
+    # check to see if project name is same as existing project
+    if project_dict['project_name'] in tenant_names:
+        logger.sys_error("Project already exists with name %s, new project with same name can't be created." %(project_dict['project_name']))
+        raise Exception("Project already exists with name %s, new project with same name can't be created." %(project_dict['project_name']))
+
     # List out the current cloud users
     cloud_users = user.list_orphaned_users()
     x = []
@@ -77,7 +87,7 @@ def build_project(auth_dict, project_dict):
         except Exception as e:
             logger.sys_error("Couldn't add an existing project admin to the project, %s" %(str(e)))
     else:
-        #If the user does not exist create a new project power user.
+        #If the user does not exist create a new project admin.
         try:
             project_dict['user_dict']['project_id'] = proj
             pu = user.create_user(project_dict['user_dict'])

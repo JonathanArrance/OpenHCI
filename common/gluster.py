@@ -3,14 +3,11 @@
 import sys
 import subprocess
 import os
-import re
-from pprint import pprint
 
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.common.service_control as service
 import transcirrus.common.config as config
-from transcirrus.database.postgres import pgsql
 
 class gluster_ops:
     def __init__(self,user_dict):
@@ -26,8 +23,8 @@ class gluster_ops:
             self.password = user_dict['password']
             self.project_id = user_dict['project_id']
             if((self.project_id == 'NULL') or (not user_dict['project_id'])):
-                logger.sys_error("No project ID was specified in the condtructor")
-                raise Exception("No project ID was specified in the condtructor")
+                logger.sys_error("No project ID was specified in the constructor")
+                raise Exception("No project ID was specified in the constructor")
             self.token = user_dict['token']
             self.status_level = user_dict['status_level']
             self.user_level = user_dict['user_level']
@@ -129,7 +126,7 @@ class gluster_ops:
             service.gluster_swift('restart')
         else:
             logger.sys_error('Only admins can create gluster swift rings.')
-            raise Exeption('Only admins can create gluster swift rings.')
+            raise Exception('Only admins can create gluster swift rings.')
 
         return 'OK'
 
@@ -213,7 +210,7 @@ class gluster_ops:
 
         else:
             logger.sys_error('Only admins can create gluster volumes.')
-            raise Exeption('Only admins can create gluster volumes.')
+            raise Exception('Only admins can create gluster volumes.')
 
         #add everything to the 
         for brick in input_dict['bricks']:
@@ -300,7 +297,7 @@ class gluster_ops:
                     self.db.pg_transaction_commit()
         else:
             logger.sys_error('Only admins can delete Gluster volumes.')
-            raise Exeption('Only admins can delete Gluster volumes.')
+            raise Exception('Only admins can delete Gluster volumes.')
 
         return 'OK'
 
@@ -327,7 +324,7 @@ class gluster_ops:
             return r_array
         else:
             logger.sys_error('Only admins can list Gluster volumes.')
-            raise Exeption('Only admins can list Gluster volumes.')
+            raise Exception('Only admins can list Gluster volumes.')
 
     def check_gluster_volume(self, gluster_vol_name):
         get_vol = {'select':"gluster_vol_id",'from':"trans_gluster_vols",'where':"gluster_vol_name='%s'"%(gluster_vol_name)}
@@ -408,7 +405,7 @@ class gluster_ops:
                 self.rebalance_gluster_volume(input_dict['volume_name'])
         else:
             logger.sys_error('Only admins can add a gluster brick.')
-            raise Exeption('Only admins can add a gluster brick.')
+            raise Exception('Only admins can add a gluster brick.')
 
         return 'OK'
 
@@ -447,7 +444,7 @@ class gluster_ops:
             """
         else:
             logger.sys_error('Only admins can stop a Gluster volume.')
-            raise Exeption('Only admins can stop a gluster volume.')
+            raise Exception('Only admins can stop a gluster volume.')
     
     def remove_gluster_brick(self,input_dict):
         """
@@ -475,13 +472,13 @@ class gluster_ops:
                     logger.sys_error('Could not remove the gluster brick %s'%(input_dict['brick']))
                     try:
                         self.db.pg_transaction_begin()
-                        update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_sync_state='ERROR'",'where':"gluster_vol_name='%s'"%(volume_name),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
+                        update_flag = {'table':"trans_gluster_vols",'set':"gluster_vol_sync_state='ERROR'",'where':"gluster_vol_name='%s'"%(input_dict['volume_name']),"and":"gluster_brick_name='%s'"%(input_dict['brick'])}
                         self.db.pg_update(update_flag)
                     except:
-                        logger.sys_error('Sync state for %s could not be set.'%(volume_name))
+                        logger.sys_error('Sync state for %s could not be set.'%(input_dict['volume_name']))
                         self.db.pg_transaction_rollback()
                     else:
-                        logger.sys_error('Sync state for %s set to NA.'%(volume_name))
+                        logger.sys_error('Sync state for %s set to NA.'%(input_dict['volume_name']))
                         self.db.pg_transaction_commit()
                     return 'ERROR'
                 #remove the vol brick from the db
@@ -499,7 +496,7 @@ class gluster_ops:
                 return 'OK'
         else:
             logger.sys_error('Only admins can remove Gluster bricks.')
-            raise Exeption('Only admins can remove Gluster bricks.')
+            raise Exception('Only admins can remove Gluster bricks.')
 
     def rebalance_gluster_volume(self,volume_name):
         """

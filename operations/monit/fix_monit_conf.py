@@ -114,6 +114,8 @@ if __name__ == "__main__":
     else:
         node_type = sys.argv[1]
     print "node_type: %s" % node_type
+    if node_type == "ha":
+        node_type = "cc"
     fix_conf_files (node_type)
     add_storage_conf()
     sys.exit()
