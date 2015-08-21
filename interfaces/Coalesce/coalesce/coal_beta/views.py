@@ -81,6 +81,7 @@ import transcirrus.operations.third_party_auth.shibboleth.add_shib_user as add_s
 import transcirrus.operations.third_party_auth.shibboleth.add_shib_to_cloud as add_shib
 import transcirrus.operations.third_party_auth.shibboleth.remove_shib_from_cloud as remove_shib
 import transcirrus.operations.third_party_auth.shibboleth.build_shib_project as build_shib_project
+import transcirrus.operations.third_party_auth.shibboleth.shib_auth as shib_auth
 from transcirrus.common import extras as extras
 
 # Custom imports
@@ -102,21 +103,54 @@ def dashboard(request):
             to = tenant_ops(auth)
             projects = to.list_all_tenants()
             for project in projects:
-                print "IS THIS TRANS_DEFAULT???"
-                print project['project_name']
                 if project['project_name'] == "trans_default":
-                    print "trans_default ID == AUTH PROJECT ID???"
-                    print project['project_id']
-                    print auth['project_id']
                     if project['project_id'] == auth['project_id']:
-                        "YOU MUST BE THE CLOUD ADMIN!!!"
                         is_cloud_admin = 1
                 return render_to_response('coal/dashboard.html', RequestContext(request, {"is_cloud_admin": is_cloud_admin}))
         else:
-            print "BUG"
-            return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: bug"}))
+            tpa_providers = tpa.detect_auth()
+            if tpa_providers['has_shib'] != False:
+                email = request.META['eppn']
+                user = email.split("@")[0]
+                sa = shib_auth(user)
+                if sa != None:
+                    if sa['user_level'] > 0:
+                        project_id = auth['project_id']
+                        project_admin = util.get_project_admin(project_id)
+                        return render_to_response('coal/welcome.html',
+                                                  RequestContext(request, {"project_admin": project_admin}))
+                else:
+                    return render_to_response('coal/welcome.html',
+                                              RequestContext(request, {"providers": tpa_providers}))
+                    # if tpa_providers['has_ldap'] != False:
+                    #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
+                    #
+                    # if tpa_providers['has_other'] != False:
+                    #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
+            return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug"}))
     except Exception as e:
-        print "EXCEPTION"
+        tpa_providers = tpa.detect_auth()
+        if tpa_providers['has_shib'] != False:
+            try:
+                email = request.META['eppn']
+                user = email.split("@")[0]
+                sa = shib_auth(user)
+                if sa != None:
+                    if sa['user_level'] > 0:
+                        project_id = auth['project_id']
+                        project_admin = util.get_project_admin(project_id)
+                        return render_to_response('coal/welcome.html',
+                                                  RequestContext(request, {"project_admin": project_admin}))
+                else:
+                    return render_to_response('coal/welcome.html',
+                                              RequestContext(request, {"providers": tpa_providers}))
+                    # if tpa_providers['has_ldap'] != False:
+                    #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
+                    #
+                    # if tpa_providers['has_other'] != False:
+                    #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
+            except:
+                return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers, 'error': "Error: %s"%e}))
         return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: %s"%e}))
 
 def get_confirm(request, title, message, call, notice, async, refresh):
@@ -471,6 +505,7 @@ def disclaimer(request):
 def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
 
+
 def welcome(request):
     try:
         auth = request.session['auth']
@@ -482,7 +517,7 @@ def welcome(request):
         else:
             return render_to_response('coal/welcome.html', RequestContext(request,))
     except Exception as e:
-        return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: %s"%e}))
+        return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: %s" % e}))
 
 def node_view(request, node_id):
     try:
@@ -4861,47 +4896,47 @@ def shib_add_user_to_project(request, username, email, project_id):
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-@never_cache
 def shib_login(request):
-    try:
-        email = request.META['eppn']
-        user = email.split("@")[0]
-        pw = user
-        a = authorization(user, pw)
-        auth = a.get_auth()
-        if auth['token'] == None:
-            return render_to_response('coal/welcome.html', RequestContext(request, { 'error': "Error: No authorization token." }))
-        request.session['auth'] = auth
-        return render_to_response('coal/welcome.html', RequestContext(request, {  }))
-    except:
-        email = request.META['eppn']
-        user = email.split("@")[0]
-        shadow_admin = extras.shadow_auth()
-        a = authorization(shadow_admin)
-        auth = a.get_auth()
-        request.session['auth'] = auth
-        to = tenant_ops(auth)
-        default_shib_project = to.get_default_tenant()
-        if default_shib_project == None:
-            node_id = util.get_node_id()
-            sys_vars = util.get_system_variables(node_id)
-            subnet_array = []
-            subnet_array.append(sys_vars['UPLINK_DNS'])
-            project_info = {
-                            'project_name':     user + "_project",
-                            'net_name':         user + "_network",
-                            'subnet_dns':       subnet_array,
-                            'sec_group_dict':   {
-                                                    'ports':        '',
-                                                    'group_name':   user + "_security_group",
-                                                    'group_desc':   user + "_security_group",
-                                                    'project_id':   ''
-                                                },
-                            'sec_keys_name':    user + "_security_keys",
-                            'router_name':      user + "_router"
-                       }
-        else:
-            project_info = default_shib_project
-        return render_to_response('coal/shib_create_user.html', RequestContext(request, { 'project': project_info,
-                                                                                          'shib_user': user,
-                                                                                          'shib_email': email}))
+    return HttpResponseRedirect('/shib/')
+    # try:
+    #     email = request.META['eppn']
+    #     user = email.split("@")[0]
+    #     pw = user
+    #     a = authorization(user, pw)
+    #     auth = a.get_auth()
+    #     if auth['token'] == None:
+    #         return render_to_response('coal/welcome.html', RequestContext(request, { 'error': "Error: No authorization token." }))
+    #     request.session['auth'] = auth
+    #     return render_to_response('coal/welcome.html', RequestContext(request, {  }))
+    # except:
+    #     email = request.META['eppn']
+    #     user = email.split("@")[0]
+    #     shadow_admin = extras.shadow_auth()
+    #     a = authorization(shadow_admin)
+    #     auth = a.get_auth()
+    #     request.session['auth'] = auth
+    #     to = tenant_ops(auth)
+    #     default_shib_project = to.get_default_tenant()
+    #     if default_shib_project == None:
+    #         node_id = util.get_node_id()
+    #         sys_vars = util.get_system_variables(node_id)
+    #         subnet_array = []
+    #         subnet_array.append(sys_vars['UPLINK_DNS'])
+    #         project_info = {
+    #                         'project_name':     user + "_project",
+    #                         'net_name':         user + "_network",
+    #                         'subnet_dns':       subnet_array,
+    #                         'sec_group_dict':   {
+    #                                                 'ports':        '',
+    #                                                 'group_name':   user + "_security_group",
+    #                                                 'group_desc':   user + "_security_group",
+    #                                                 'project_id':   ''
+    #                                             },
+    #                         'sec_keys_name':    user + "_security_keys",
+    #                         'router_name':      user + "_router"
+    #                    }
+    #     else:
+    #         project_info = default_shib_project
+    #     return render_to_response('coal/shib_create_user.html', RequestContext(request, { 'project': project_info,
+    #                                                                                       'shib_user': user,
+    #                                                                                       'shib_email': email}))

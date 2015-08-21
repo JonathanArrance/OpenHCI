@@ -799,6 +799,10 @@ urlpatterns = patterns('',
             name='get_third_party_authentication_build_project'),
 
         # --- Shibboleth ----
+        url(r'^shib/$',
+            'coalesce.coal_beta.views.shib_login',
+            name='shib_login'),
+
         url(r'^shib/config/(?P<sso_entity_id>[^/]+)/(?P<mp_backing_file_path>[^/]+)/(?P<mp_uri>[^/]+)/$',
             'coalesce.coal_beta.views.add_shib_to_cloud',
             name='add_shib_to_cloud'),

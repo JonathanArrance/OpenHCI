@@ -1,6 +1,8 @@
 {% extends "coal/base-fluid.html" %}
 
-{% if error %}<script>console.log("ERROR");showMessage('error', "{{ error }}");</script>{% endif %}
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
 
 {% block content %}
     <div class="row-fluid">
@@ -50,6 +52,13 @@
                         {% csrf_token %}
                         <fieldset>
                             <legend>Log In</legend>
+                            {% if providers %}
+                                {% if providers.has_shib != False %}
+                                    <p class="text-warning"><i class="fa fa-warning"></i> Shibboleth Users: Shibboleth
+                                        Authorization has been enabled on this cloud, <a href="/shib">click here</a> to
+                                        log in with Shibboleth.</p>
+                                {% endif %}
+                            {% endif %}
                             <div class="col-md-12">
                                 <p>
                                     By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
