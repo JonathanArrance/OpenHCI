@@ -203,7 +203,7 @@ $(function () {
             showMessage('info', update == true ? "Updating " + name + " Authentication ..." : "Configuring " + name + " Authentication ...");
             setModalButtons(false, buttons);
             if (provider == "shib") {
-                call = 'shib/config/' + inputs.ssoEntityID.val().slashTo47() + '/' + inputs.mpBackingFilePath.val().slashTo47() + '/' + inputs.mpURI.val().slashTo47() + '/';
+                call = '/third_party_authentication/shib/config/' + inputs.ssoEntityID.val().slashTo47() + '/' + inputs.mpBackingFilePath.val().slashTo47() + '/' + inputs.mpURI.val().slashTo47() + '/';
                 $.getJSON(call)
                     .done(function (data) {
                         if (data.status == 'error') {

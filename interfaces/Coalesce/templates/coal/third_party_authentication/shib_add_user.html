@@ -1,12 +1,29 @@
 {% extends "coal/base-fluid.html" %}
 
-{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
 
 {% block title %}New Shibboleth User{% endblock %}
 
 {% block content %}
-    <div class="col-sm-12">
-        <div class="page-header">
-            <h2>Adding Shibboleth User to Cloud</h2>
+    <div class="row-fluid">
+        <div class="col-sm-12">
+            <div class="page-header">
+                <h2>Adding Shibboleth User to Cloud</h2>
+            </div>
         </div>
+        <div class="col-sm-12">
+            <div class="col-sm-6">
+                <h6>
+                    {% if is_default_shib == 1 %}
+                        You are being added to Project {{ project_info.project_name }}:
+                    {% else %}
+                        New Project {{ project_info.project_name }} is being created for you:
+                    {% endif %}
+                </h6>
+            <table class="table table-bordered table-striped table-responsive"></table>
+            </div>
+        </div>
+    </div>
 {% endblock %}

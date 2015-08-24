@@ -4914,9 +4914,10 @@ def shib_build_default_project(request):
 #         return HttpResponse(simplejson.dumps(out))
 
 def shib_add_user(request, username, email):
+    out = {}
     try:
         user_dict = {'username': username, 'email': email}
-        out = add_shib_user.add_user(user_dict)
+        out['user'] = add_shib_user.add_user(user_dict)
         out['status'] = 'success'
         out['message'] = 'The new user %s was added to cloud, and a project is being created for them.'%(username)
     except Exception as e:
@@ -4924,12 +4925,13 @@ def shib_add_user(request, username, email):
     return HttpResponse(simplejson.dumps(out))
 
 def shib_add_user_to_project(request, username, email, project_id):
+    out = {}
     try:
         auth = request.session['auth']
         to = tenant_ops(auth)
         user_dict = {'username': username, 'email': email, 'project_id': project_id}
         project = to.get_tenant(project_id)
-        out = add_shib_user.add_user(user_dict)
+        out['user'] = add_shib_user.add_user(user_dict)
         out['status'] = 'success'
         out['message'] = 'The new user %s was added to the project %s.'%(username, project['project_name'])
     except Exception as e:

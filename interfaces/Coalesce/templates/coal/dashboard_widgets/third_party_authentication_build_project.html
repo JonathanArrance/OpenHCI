@@ -190,7 +190,7 @@
                 showMessage('info', "Creating new project ...");
                 $.ajax({
                     type: 'POST',
-                    url: "/{{ provider.id }}/build_default_project/",
+                    url: "/third_party_authentication/{{ provider.id }}/build_default_project/",
                     data: $('#project-form').serialize(),
                     success: function (data) {
                         data = $.parseJSON(data);
