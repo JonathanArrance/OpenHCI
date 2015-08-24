@@ -14,7 +14,21 @@
             </div>
         </div>
         <div class="col-sm-12">
-            <div class="col-sm-6">
+            <div class="col-sm-12">
+                <h6>Your User Info:</h6>
+
+                <div class="col-sm-6">
+                    <label class="label">Username:</label>
+
+                    <p>{{ shib_user }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <label class="label">E-Mail:</label>
+
+                    <p>{{ shib_email }}</p>
+                </div>
+            </div>
+            <div class="col-sm-12">
                 <h6>
                     {% if is_default_shib == 1 %}
                         You are being added to Project {{ project_info.project_name }}:
@@ -22,7 +36,44 @@
                         New Project {{ project_info.project_name }} is being created for you:
                     {% endif %}
                 </h6>
-            <table class="table table-bordered table-striped table-responsive"></table>
+                <table class="table table-bordered table-striped table-responsive">
+                    <thead>
+                    <tr>
+                        <th>Project Details</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Name</td>
+                        <td>{{ project_info.project_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Default Network</td>
+                        <td>{{ project_info.net_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Default Router</td>
+                        <td>{{ project_info.router_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Default Security Key</td>
+                        <td>{{ project_info.sec_keys_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Default Security Group</td>
+                        <td>{{ project_info.sec_group_dict.group_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ project_info.sec_group_dict.group_name }} Ports</td>
+                        <td>{{ project_info.sec_group_dict.ports }}</td>
+                    </tr>
+                    <tr>
+                        <td>Subnet DNS</td>
+                        <td>{{ project_info.subnet_dns }}</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
