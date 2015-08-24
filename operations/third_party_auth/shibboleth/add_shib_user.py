@@ -73,6 +73,7 @@ def add_user(input_dict):
         # create project and user
         try:
             proj, user = bsp.build_project(shadow_auth, project_dict)
+            user['project_id'] = proj
         except Exception as e:
             logger.sys_error("add shib user error, build project section: %s" % str(e))
             raise e

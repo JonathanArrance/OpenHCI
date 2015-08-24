@@ -33,10 +33,10 @@
                     {% if is_default_shib == 1 %}
                         You are being added to Project {{ project_info.project_name }}:
                     {% else %}
-                        New Project {{ project_info.project_name }} is being created for you:
+                        New Project {{ project_info.project_name }} will be built for you:
                     {% endif %}
                 </h6>
-                <table class="table table-bordered table-striped table-responsive">
+                <table class="table table-bordered table-striped table-responsive table-hover">
                     <thead>
                     <tr>
                         <th>Project Details</th>
@@ -50,31 +50,65 @@
                     </tr>
                     <tr>
                         <td>Default Network</td>
-                        <td>{{ project_info.net_name }}</td>
-                    </tr>
-                    <tr>
-                        <td>Default Router</td>
-                        <td>{{ project_info.router_name }}</td>
-                    </tr>
-                    <tr>
-                        <td>Default Security Key</td>
-                        <td>{{ project_info.sec_keys_name }}</td>
+                        <td>{{ project_info.def_network_name }}</td>
                     </tr>
                     <tr>
                         <td>Default Security Group</td>
-                        <td>{{ project_info.sec_group_dict.group_name }}</td>
+                        <td>{{ project_info.def_security_group_name }}</td>
                     </tr>
                     <tr>
-                        <td>{{ project_info.sec_group_dict.group_name }} Ports</td>
-                        <td>{{ project_info.sec_group_dict.ports }}</td>
-                    </tr>
-                    <tr>
-                        <td>Subnet DNS</td>
-                        <td>{{ project_info.subnet_dns }}</td>
+                        <td>Default Security Key</td>
+                        <td>{{ project_info.def_security_key_name }}</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+        <button class="btn btn-lg btn-primary confirm-shib-user">Confirm</button>
     </div>
 {% endblock %}
+
+<script>
+    var isDefaultShib = parseInt({{ is_default_shib }}) == 1;
+    $(function () {
+        $(".confirm-shib-user").click(function () {
+            $(".confirm-shib-user").prop("disabled", "disabled");
+            if (isDefaultShib) {
+                showMessage("Adding user to {{ project_info.project_name }}.");
+                $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/{{ project_info.project_id }}/")
+                        .done(function (data) {
+                            if (data.status == "success") {
+                                showMessage('success', "Successfully added {{ shib_user }} to {{ project_info.project_name }}, redirecting to Project View ...");
+                                location.replace("/projects/{{ project_info.project_id }}/view");
+                            }
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                                $(".confirm-shib-user").removeProp("disabled");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                            $(".confirm-shib-user").removeProp("disabled");
+                        })
+            } else {
+                showMessage("Building Project {{ project_info.project_name }}.");
+                $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/")
+                        .done(function (data) {
+                            if (data.status == "success") {
+                                showMessage('success', "Successfully built {{ project_info.project_name }}, redirecting to Project View ...");
+                                location.replace("/projects/" + data.user.project_id + "/view");
+                            }
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                                $(".confirm-shib-user").removeProp("disabled");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                            $(".confirm-shib-user").removeProp("disabled");
+                        })
+
+            }
+        });
+    });
+</script>

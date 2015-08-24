@@ -163,16 +163,9 @@ def dashboard(request):
                         subnet_array.append(sys_vars['UPLINK_DNS'])
                         project_info = {
                             'project_name': user + "_project",
-                            'net_name': user + "_network",
-                            'subnet_dns': subnet_array,
-                            'sec_group_dict': {
-                                'ports': '',
-                                'group_name': user + "_security_group",
-                                'group_desc': user + "_security_group",
-                                'project_id': ''
-                            },
-                            'sec_keys_name': user + "_security_keys",
-                            'router_name': user + "_router"
+                            'def_network_name': user + "_network",
+                            'def_security_group_name': user + "_security_group",
+                            'def_security_key_name': user + "_security_keys",
                         }
                         is_default_shib = 0
                     else:
