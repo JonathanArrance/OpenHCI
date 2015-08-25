@@ -152,7 +152,10 @@ else
     keystone user-create --name="shadow_admin" --pass="manbehindthecurtain"
     SHADOW_ADMIN_USER=$(keystone user-get shadow_admin | grep " id " | awk '{print $4}')
     TRANS="$(sudo cat /usr/local/lib/python2.7/transcirrus/common/config.py | grep "TRANS_DEFAULT_ID")"
-    PROJID="$(echo $TRANS |awk -F\" '$0=$2')"
+    PROJID="$(echo ${TRANS} |awk -F\" '$0=$2')"
+    ADMIN_ROLE_ID=$(keystone role-list | grep "admin" | awk '{print $2}')
+    keystone user-role-add --user-id=${SHADOW_ADMIN_USER} --role-id=${ADMIN_ROLE_ID} --tenant-id=${PROJID}
+
     # add admin, shadow_admin and trans_default project to transcirrus db
     /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${PROJID}"', 'admin', NULL);"
 fi

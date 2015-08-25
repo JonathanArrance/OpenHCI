@@ -134,12 +134,13 @@ class layer_three_ops:
                 get info on any router.
         NOTE: this info can be gathered from the transcirrus db
         """
+        db_router = None
         try:
             if(self.is_admin == 1):
-                self.get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(router_id)}
+                db_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(router_id)}
             else:
-                self.get_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(router_id),'and':"proj_id='%s'"%(self.project_id)}
-            router = self.db.pg_select(self.get_router)
+                db_router = {'select':"*",'from':"trans_routers",'where':"router_id='%s'"%(router_id),'and':"proj_id='%s'"%(self.project_id)}
+            router = self.db.pg_select(db_router)
         except:
             logger.sql_error("Could not find router %s"%(router_id))
             raise Exception("Could not find router %s"%(router_id))
