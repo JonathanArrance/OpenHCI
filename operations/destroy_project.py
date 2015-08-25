@@ -98,21 +98,37 @@ def destroy_project(auth_dict, project_dict):
     for router in router_list:
         time.sleep(10)
         logger.sys_info("Deleting router %s"%(router['router_id']))
-        router_dict = neutron_router.get_router(router['router_id'])
-        remove_gateway = neutron_router.delete_router_gateway_interface(router_dict)
+        try:
+            router_dict = neutron_router.get_router(router['router_id'])
+        except:
+            logger.sys_error("Error: Failed to get the neutron router.")
+            raise Exception("Error: Failed to get the neutron router.")
+        try:
+            remove_gateway = neutron_router.delete_router_gateway_interface(router_dict)
+        except:
+            logger.sys_error("Error: Failed to remove the router gateway.")
+            raise Exception("Error: Failed to remove the router gateway.")
         if(remove_gateway == "OK"):
             logger.sys_info("Destroy project: Router %s gateway removed." % router_dict['router_id'])
         else:
             logger.sys_error("Destroy project: Router %s gateway not removed." % router_dict['router_id'])
             raise Exception("Destroy project: Can not remove gateway interface from router %s."%(router['router_name']))
-        remove_internal_interface = neutron_router.delete_router_internal_interface(router_dict)
+        try:
+            remove_internal_interface = neutron_router.delete_router_internal_interface(router_dict)
+        except:
+            logger.sys_error("Error: Failed to remove the router internal interface.")
+            raise Exception("Error: Failed to remove the router internal interface.")
         if(remove_internal_interface == "OK"):
             logger.sys_info("Destroy project: Router %s internal interface removed." % router_dict['router_id'])
         else:
             logger.sys_error("Destroy project: Router %s internal interface not removed." % router_dict['router_id'])
             raise Exception("Destroy project: Can not remove internal interface from router %s."%(router['router_name']))
         del_dict = {'router_id': router_dict['router_id'],'project_id': project_dict['project_id']}
-        remove_router = neutron_router.delete_router(del_dict)
+        try:
+            remove_router = neutron_router.delete_router(del_dict)
+        except:
+            logger.sys_error("Error: Failed to remove the neutron router.")
+            raise Exception("Error: Failed to remove the neutron router.")
         if(remove_router == "OK"):
             logger.sys_info("Router %s removed." % router_dict['router_id'])
         else:
@@ -154,9 +170,13 @@ def destroy_project(auth_dict, project_dict):
             logger.sys_info("Deleting subnet %s"%(subnet['subnet_id']))
             subnet['project_id'] = project_dict['project_id']
 
-            remove_subnet = neutron_net.remove_net_subnet(subnet)
+            try:
+                remove_subnet = neutron_net.remove_net_subnet(subnet)
+            except:
+                logger.sys_error("Error: Failed to remove the sub-network.")
+                raise Exception("Error: Failed to remove the sub-network.")
 
-            if(remove_subnet == "OK"):
+            if remove_subnet == "OK":
                 logger.sys_info("Destroy project: Subnet %s removed." % subnet['subnet_id'])
             else:
                 logger.sys_error("Destroy project: subnet %s not removed." % subnet['subnet_id'])
@@ -164,10 +184,10 @@ def destroy_project(auth_dict, project_dict):
         try:
             remove_network = neutron_net.remove_network(network)
         except:
-            logger.sys_error("FAILED ON NET")
-            raise Exception("FAILED ON NET")
+            logger.sys_error("Error: Failed to remove the network.")
+            raise Exception("Error: Failed to remove the network.")
 
-        if(remove_network == "OK"):
+        if remove_network == "OK":
                 logger.sys_info("Network %s removed." % network['net_id'])
         else:
             logger.sys_error("Destroy project: network %s not removed." % network['net_id'])
