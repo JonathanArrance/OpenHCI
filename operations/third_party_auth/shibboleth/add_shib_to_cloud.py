@@ -1,9 +1,9 @@
-import subprocess
+import subprocess, time
 import xml.etree.ElementTree as etree
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
 import transcirrus.operations.third_party_auth.third_party_auth_util as auth_util
-
+from multiprocessing import Process
 
 def add_centos6_shib(input_dict):
     """
@@ -34,6 +34,7 @@ def add_centos6_shib(input_dict):
         try:
             subprocess.call(["sudo", "wget", "http://download.opensuse.org/repositories/security://shibboleth/CentOS_CentOS-6/security:shibboleth.repo",  "-P", "/etc/yum.repos.d"])
             subprocess.call(["sudo", "yum", "-y", "install", "shibboleth.x86_64"])
+            logger.sys_info("add shib to cloud, yum install")
         except Exception as e:
             logger.sys_error("SHIB: add shib error, wget section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
@@ -44,6 +45,7 @@ def add_centos6_shib(input_dict):
         # and adding:
         #   * MetadataProvider              ->  input_dict['mp_backing_file_path'], input_dict['mp_uri']
         try:
+            subprocess.call(["sudo", "chmod", "777", "/etc/shibboleth/shibboleth2.xml"])
             shib_tree = etree.parse('/etc/shibboleth/shibboleth2.xml')
             shib_root = shib_tree.getroot()
             for app_def in shib_root.findall("{urn:mace:shibboleth:2.0:native:sp:config}ApplicationDefaults"):
@@ -57,6 +59,7 @@ def add_centos6_shib(input_dict):
                 meta_prov.set("type", "XML")
                 meta_prov.set("uri", input_dict['mp_uri'])
             shib_tree.write('/etc/shibboleth/shibboleth2.xml')
+            logger.sys_info("add shib to cloud, write shibboleth2.xml")
         except Exception as e:
             logger.sys_error("SHIB: add shib error, etree section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
@@ -68,13 +71,14 @@ def add_centos6_shib(input_dict):
             subprocess.call(["sudo","ntpdate", "pool.ntp.org"])
             subprocess.call(["sudo","service", "ntpd", "start"])
             subprocess.call(["sudo", "service", "shibd", "start"])
-            subprocess.call(["sudo", "service", "httpd", "stop"])
+            logger.sys_info("add shib to cloud, ntpd updated")
         except Exception as e:
             logger.sys_error("SHIB: add shib error, service section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
         # modify apache's httpd.conf, adding shibboleth wrapper
         try:
+            subprocess.call(["sudo", "chmod", "777", "/etc/httpd/conf/httpd.conf"])
             with open("/etc/httpd/conf/httpd.conf", "a") as httpd_conf:
                 httpd_conf.write(("<Location /Shibboleth.sso>\n"
                                   "    SetHandler shib\n"
@@ -85,19 +89,31 @@ def add_centos6_shib(input_dict):
                                   "    ShibRequestSetting requireSession 1\n"
                                   "    Require valid-user\n"
                                   "</Location>\n"))
+            logger.sys_info("add shib to cloud, write httpd.conf")
         except Exception as e:
             logger.sys_error("SHIB: add shib error, xml section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
 
-        # restart httpd
+        # reload httpd
         try:
-            subprocess.call(["sudo", "service", "httpd", "start"])
+            logger.sys_info("add shib to cloud, begin reload httpd")
+            p = Process(target=reload_apache)
+            p.start()
+            logger.sys_info("add shib to cloud, end reload httpd, process launched")
+            
         except Exception as e:
             logger.sys_error("SHIB: add shib error, httpd section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
+        logger.sys_info("add shib to cloud, return OK")
         return 'OK'
 
     # this means not centos6.x
     return 'ERROR'
+
+
+def reload_apache():
+    time.sleep(5)
+    out = subprocess.call(["sudo", "/etc/init.d/httpd", "reload"])
+    logger.sys_info("add shib to cloud, reload_apahce: %s" %(str(out)))
