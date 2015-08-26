@@ -794,18 +794,34 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_third_party_authentication_configure',
             name='get_third_party_authentication_configure'),
 
+        url(r'^third_party_authentication/get_build_default_project/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_third_party_authentication_build_project',
+            name='get_third_party_authentication_build_project'),
+
         # --- Shibboleth ----
-        url(r'^shib/config/(?P<sso_entity_id>[^/]+)/(?P<mp_backing_file_path>[^/]+)/(?P<mp_uri>[^/]+)/$',
+        url(r'^third_party_authentication/shib/$',
+            'coalesce.coal_beta.views.shib_login',
+            name='shib_login'),
+
+        url(r'^third_party_authentication/shib/config/(?P<sso_entity_id>[^/]+)/(?P<mp_backing_file_path>[^/]+)/(?P<mp_uri>[^/]+)/$',
             'coalesce.coal_beta.views.add_shib_to_cloud',
             name='add_shib_to_cloud'),
 
-        url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
+        url(r'^third_party_authentication/shib/remove/$',
+            'coalesce.coal_beta.views.remove_shib_from_cloud',
+            name='remove_shib_from_cloud'),
+
+        url(r'^third_party_authentication/shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
             'coalesce.coal_beta.views.shib_add_user',
             name='shib_add_user'),
 
-        url(r'^shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+        url(r'^third_party_authentication/shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.shib_add_user_to_project',
             name='shib_add_user_to_project'),
+
+        url(r'^third_party_authentication/shib/build_default_project/$',
+            'coalesce.coal_beta.views.shib_build_default_project',
+            name='shib_build_default_project'),
 
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

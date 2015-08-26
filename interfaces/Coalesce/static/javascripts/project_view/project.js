@@ -265,7 +265,7 @@ $(function () {
     $("#project").addClass('active');
 });
 
-window.deleteTimer = function () {
+window.projectDeleteTimer = function () {
     window.setInterval(function () {
     }, 1000)
 };

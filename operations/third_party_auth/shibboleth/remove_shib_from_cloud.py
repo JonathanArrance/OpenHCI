@@ -50,6 +50,7 @@ def remove_shib():
 
         # start httpd
         subprocess.call(["sudo", "service", "httpd", "start"])
+        return 'OK'
     except Exception as e:
         logger.sys_error("SHIB: could not remove shibboleth from cloud, error: %s" %(str(e)))
         raise Exception("Could not remove shibboleth from cloud, error: %s" %(str(e)))
