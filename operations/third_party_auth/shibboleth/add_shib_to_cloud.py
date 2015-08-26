@@ -64,8 +64,7 @@ def add_centos6_shib(input_dict):
             logger.sys_error("SHIB: add shib error, etree section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
 
-        # sync time settings to avoid shibboleth timing errors, restart shibd after modifying config,
-        # and stop httpd before modifying config
+        # sync time settings to avoid shibboleth timing errors, restart shibd after modifying config
         try:
             subprocess.call(["sudo","service", "ntpd", "stop"])
             subprocess.call(["sudo","ntpdate", "pool.ntp.org"])

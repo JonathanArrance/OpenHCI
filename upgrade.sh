@@ -158,6 +158,7 @@ else
 
     # add admin, shadow_admin and trans_default project to transcirrus db
     /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${PROJID}"', 'admin', NULL);"
+    /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/upgrade_resources/add_shadow_admin.py
 fi
 
 cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
