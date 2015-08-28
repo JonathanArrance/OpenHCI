@@ -200,7 +200,7 @@ class tenant_ops:
             except Exception as e:
                 logger.sys_error('Could not add the admin to %s'%(project_id))
                 raise Exception('Could not add the admin to %s'%(project_id))
-            if(self.username != 'admin'):
+            if(self.username != 'admin' and self.username != "shadow_admin"):
                 try:
                     #add the admin user to the project as an admin
                     add_projadmin = {'username':self.username,'user_role':'admin','project_id':project_id}
