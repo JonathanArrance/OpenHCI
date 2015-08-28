@@ -250,7 +250,7 @@ class snapshot_ops:
         snap_status = 0
         #if the user proj id matches the volume proj_id they can delete the volume
         if(self.is_admin == 0):
-            if(self.project_id == input_dict['snapshot_id']):
+            if(self.project_id == input_dict['project_id']):
                 #snap_status = 1 - list snap info
                 snap_status = 1
             else:
