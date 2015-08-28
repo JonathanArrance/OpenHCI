@@ -1,4 +1,4 @@
-import subprocess, time
+import subprocess
 import xml.etree.ElementTree as etree
 import transcirrus.common.util as util
 import transcirrus.common.logger as logger
@@ -33,8 +33,10 @@ def add_centos6_shib(input_dict):
     if issue_parts[0] == "CentOS" and issue_parts[2][0].startswith('6'):
         try:
             subprocess.call(["sudo", "wget", "http://download.opensuse.org/repositories/security://shibboleth/CentOS_CentOS-6/security:shibboleth.repo",  "-P", "/etc/yum.repos.d"])
-            subprocess.call(["sudo", "yum", "-y", "install", "shibboleth.x86_64"])
-            logger.sys_info("add shib to cloud, yum install")
+            yum = subprocess.call(["sudo", "yum", "-y", "install", "shibboleth.x86_64"])
+            if yum != 0:
+                yum = subprocess.call(["sudo", "yum", "-y", "install", "/usr/local/lib/python2.7/transcirrus/upgrade_resources/shibboleth-2.5.5-3.1.x86_64.rpm"])
+            logger.sys_info("add shib to cloud, yum install, %s" %(str(yum)))
         except Exception as e:
             logger.sys_error("SHIB: add shib error, wget section: %s" % str(e))
             raise Exception("Could not add shibboleth, error: %s" %(str(e)))
@@ -97,7 +99,7 @@ def add_centos6_shib(input_dict):
         # reload httpd
         try:
             logger.sys_info("add shib to cloud, begin reload httpd")
-            p = Process(target=reload_apache)
+            p = Process(target=auth_util.reload_apache)
             p.start()
             logger.sys_info("add shib to cloud, end reload httpd, process launched")
             
@@ -110,9 +112,3 @@ def add_centos6_shib(input_dict):
 
     # this means not centos6.x
     return 'ERROR'
-
-
-def reload_apache():
-    time.sleep(5)
-    out = subprocess.call(["sudo", "/etc/init.d/httpd", "reload"])
-    logger.sys_info("add shib to cloud, reload_apahce: %s" %(str(out)))

@@ -1,4 +1,5 @@
-import os.path
+import os.path, time, subprocess
+import transcirrus.common.logger as logger
 
 
 def detect_auth():
@@ -24,3 +25,8 @@ def detect_auth():
 
     r_dict = {'has_shib': has_shib, 'has_ldap': has_ldap, 'has_other': has_other}
     return r_dict
+
+
+def reload_apache():
+    time.sleep(5)
+    subprocess.call(["sudo", "/etc/init.d/httpd", "reload"])

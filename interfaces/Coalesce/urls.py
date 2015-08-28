@@ -799,7 +799,7 @@ urlpatterns = patterns('',
             name='get_third_party_authentication_build_project'),
 
         # --- Shibboleth ----
-        url(r'^third_party_authentication/shib/$',
+        url(r'^shib/$',
             'coalesce.coal_beta.views.shib_login',
             name='shib_login'),
 
