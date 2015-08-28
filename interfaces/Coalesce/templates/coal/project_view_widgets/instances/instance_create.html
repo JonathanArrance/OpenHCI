@@ -203,21 +203,25 @@
                 }
             }
         });
+
         $("#instance-form input, #instance-form select, #boot-form input, #boot-input select").on("change focus keyup", function () {
-            if ($("#instance-boot").val() == "volume") {
-                if ($("#instance-form").valid() && $("#boot-form").valid()) {
-                    $('button[type=submit]').removeProp("disabled");
+            window.setTimeout(function () {
+                if ($("#instance-boot").val() == "volume") {
+                    if ($("#instance-form").valid() && $("#boot-form").valid()) {
+                        $('button[type=submit]').removeProp("disabled");
+                    } else {
+                        $('button[type=submit]').prop("disabled", true);
+                    }
                 } else {
-                    $('button[type=submit]').prop("disabled", true);
+                    if ($("#instance-form").valid()) {
+                        $('button[type=submit]').removeProp("disabled");
+                    } else {
+                        $('button[type=submit]').prop("disabled", true);
+                    }
                 }
-            } else {
-                if ($("#instance-form").valid()) {
-                    $('button[type=submit]').removeProp("disabled");
-                } else {
-                    $('button[type=submit]').prop("disabled", true);
-                }
-            }
+            }, 1000);
         });
+
         $("#instance-boot").on("change focus keyup", function () {
             if ($(this).val() == "volume") {
                 $("#boot-form").find("input, select").removeProp("disabled");

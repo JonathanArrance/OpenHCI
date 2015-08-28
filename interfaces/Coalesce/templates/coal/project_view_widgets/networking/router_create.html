@@ -88,12 +88,15 @@
                 }, 2000);
             }
         });
-        $("#router-form input, #router-form select").on("change focus keyup", function () {
-            if ($("#router-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            } else {
-                $('button[type=submit]').prop("disabled", true);
-            }
+
+        $("form input, form select".on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#router-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
+            }, 1000);
         });
     });
 </script>
