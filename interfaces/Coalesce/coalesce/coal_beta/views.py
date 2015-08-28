@@ -81,7 +81,7 @@ import transcirrus.operations.third_party_auth.shibboleth.add_shib_user as add_s
 import transcirrus.operations.third_party_auth.shibboleth.add_shib_to_cloud as add_shib
 import transcirrus.operations.third_party_auth.shibboleth.remove_shib_from_cloud as remove_shib
 import transcirrus.operations.third_party_auth.shibboleth.build_shib_project as build_shib_project
-import transcirrus.operations.third_party_auth.shibboleth.shib_auth as shib_auth
+from transcirrus.operations.third_party_auth.shibboleth.shib_auth import shibboleth_authorization
 from transcirrus.common import extras as extras
 
 # Custom imports
@@ -119,8 +119,9 @@ def dashboard(request):
             if tpa_providers['has_shib'] != False:
                 email = request.META['eppn']
                 user = email.split("@")[0]
-                sa = shib_auth(user)
-                if sa != None:
+                sa = shibboleth_authorization(user)
+                auth = sa.get_auth()
+                if auth != None:
                     if sa['user_level'] > 0:
                         project_id = auth['project_id']
                         project_admin = util.get_project_admin(project_id)
@@ -142,8 +143,10 @@ def dashboard(request):
             try:
                 email = request.META['eppn']
                 user = email.split("@")[0]
-                sa = shib_auth(user)
-                if sa != None:
+                sa = shibboleth_authorization(user)
+                auth = sa.get_auth()
+                logger.sys_info("   ***   shib auth: %s   ***" %(str(auth)))
+                if auth != None:
                     if sa['user_level'] > 0:
                         project_id = auth['project_id']
                         project_admin = util.get_project_admin(project_id)
@@ -367,7 +370,8 @@ def get_third_party_authentication(request):
             if provs['has_shib'] == True:
                 default_shib_project = to.get_default_tenant()
                 if default_shib_project is not None:
-                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": default_shib_project})
+                    default_shib_project_info = to.get_tenant(default_shib_project['project_id'])
+                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": default_shib_project_info})
                 else:
                     providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": "none"})
             else:
@@ -4969,6 +4973,9 @@ def shib_add_user(request, username, email):
         out['user'] = add_shib_user.add_user(user_dict)
         out['status'] = 'success'
         out['message'] = 'The new user %s was added to cloud, and a project is being created for them.'%(username)
+        sa = shibboleth_authorization(username)
+        auth = sa.get_auth()
+        request.session['auth'] = auth
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
@@ -4983,9 +4990,52 @@ def shib_add_user_to_project(request, username, email, project_id):
         out['user'] = add_shib_user.add_user(user_dict)
         out['status'] = 'success'
         out['message'] = 'The new user %s was added to the project %s.'%(username, project['project_name'])
+        sa = shibboleth_authorization(username)
+        auth = sa.get_auth()
+        request.session['auth'] = auth
     except Exception as e:
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
 def shib_login(request):
-    return HttpResponseRedirect('/shib/')
+    email = request.META['eppn']
+    user = email.split("@")[0]
+    sa = shibboleth_authorization(user)
+    auth = sa.get_auth()
+    if auth != None:
+        logger.sys_info("has shib auth, already a user")
+        if auth['user_level'] > 0:
+            project_id = auth['project_id']
+            project_admin = util.get_project_admin(project_id)
+            request.session['auth'] = auth
+            return render_to_response('coal/welcome.html',
+                                      RequestContext(request, {"project_admin": project_admin}))
+        else:
+            request.session['auth'] = auth
+            return render_to_response('coal/welcome.html', RequestContext(request))
+    else:
+        logger.sys_info("has shib auth, not a user")
+        auth = extras.shadow_auth()
+        request.session['auth'] = auth
+        to = tenant_ops(auth)
+        default_shib_project = to.get_default_tenant()
+        if default_shib_project == None:
+            node_id = util.get_node_id()
+            sys_vars = util.get_system_variables(node_id)
+            subnet_array = []
+            subnet_array.append(sys_vars['UPLINK_DNS'])
+            project_info = {
+                'project_name': user + "_project",
+                'def_network_name': user + "_network",
+                'def_security_group_name': user + "_security_group",
+                'def_security_key_name': user + "_security_keys",
+            }
+            is_default_shib = 0
+        else:
+            project_info = to.get_tenant(default_shib_project['project_id'])
+            is_default_shib = 1
+        return render_to_response('coal/third_party_authentication/shib_add_user.html',
+                                  RequestContext(request, {'project': project_info,
+                                                           'shib_user': user,
+                                                           'shib_email': email,
+                                                           'is_default_shib': is_default_shib}))

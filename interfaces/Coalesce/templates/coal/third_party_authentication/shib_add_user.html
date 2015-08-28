@@ -31,9 +31,9 @@
             <div class="col-sm-12">
                 <h6>
                     {% if is_default_shib == 1 %}
-                        You are being added to Project {{ project_info.project_name }}:
+                        You are being added to Project {{ project.project_name }}:
                     {% else %}
-                        New Project {{ project_info.project_name }} will be built for you:
+                        New Project {{ project.project_name }} will be built for you:
                     {% endif %}
                 </h6>
                 <table class="table table-bordered table-striped table-responsive table-hover">
@@ -46,19 +46,19 @@
                     <tbody>
                     <tr>
                         <td>Name</td>
-                        <td>{{ project_info.project_name }}</td>
+                        <td>{{ project.project_name }}</td>
                     </tr>
                     <tr>
                         <td>Default Network</td>
-                        <td>{{ project_info.def_network_name }}</td>
+                        <td>{{ project.def_network_name }}</td>
                     </tr>
                     <tr>
                         <td>Default Security Group</td>
-                        <td>{{ project_info.def_security_group_name }}</td>
+                        <td>{{ project.def_security_group_name }}</td>
                     </tr>
                     <tr>
                         <td>Default Security Key</td>
-                        <td>{{ project_info.def_security_key_name }}</td>
+                        <td>{{ project.def_security_key_name }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -68,46 +68,48 @@
     </div>
 {% endblock %}
 
-<script>
-    var isDefaultShib = parseInt({{ is_default_shib }}) == 1;
-    $(function () {
-        $(".confirm-shib-user").click(function () {
-            $(".confirm-shib-user").prop("disabled", "disabled");
-            if (isDefaultShib) {
-                showMessage("Adding user to {{ project_info.project_name }}.");
-                $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/{{ project_info.project_id }}/")
-                        .done(function (data) {
-                            if (data.status == "success") {
-                                showMessage('success', "Successfully added {{ shib_user }} to {{ project_info.project_name }}, redirecting to Project View ...");
-                                location.replace("/projects/{{ project_info.project_id }}/view");
-                            }
-                            if (data.status == "error") {
-                                showMessage('error', data.message);
+{% block javascripts %}
+    <script>
+        var isDefaultShib = parseInt({{ is_default_shib }}) == 1;
+        $(function () {
+            $(".confirm-shib-user").click(function () {
+                $(".confirm-shib-user").prop("disabled", "disabled");
+                if (isDefaultShib) {
+                    showMessage('info', "Adding user to {{ project.project_name }}.");
+                    $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/{{ project.project_id }}/")
+                            .done(function (data) {
+                                if (data.status == "success") {
+                                    showMessage('success', "Successfully added {{ shib_user }} to {{ project.project_name }}, redirecting to Project View ...");
+                                    location.replace("/projects/{{ project.project_id }}/view");
+                                }
+                                if (data.status == "error") {
+                                    showMessage('error', data.message);
+                                    $(".confirm-shib-user").removeProp("disabled");
+                                }
+                            })
+                            .fail(function () {
+                                showMessage('error', "Server Fault");
                                 $(".confirm-shib-user").removeProp("disabled");
-                            }
-                        })
-                        .fail(function () {
-                            showMessage('error', "Server Fault");
-                            $(".confirm-shib-user").removeProp("disabled");
-                        })
-            } else {
-                showMessage("Building Project {{ project_info.project_name }}.");
-                $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/")
-                        .done(function (data) {
-                            if (data.status == "success") {
-                                showMessage('success', "Successfully built {{ project_info.project_name }}, redirecting to Project View ...");
-                                location.replace("/projects/" + data.user.project_id + "/view");
-                            }
-                            if (data.status == "error") {
-                                showMessage('error', data.message);
+                            })
+                } else {
+                    showMessage('info', "Building Project {{ project.project_name }}.");
+                    $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/")
+                            .done(function (data) {
+                                if (data.status == "success") {
+                                    showMessage('success', "Successfully built {{ project.project_name }}, redirecting to Project View ...");
+                                    location.replace("/projects/" + data.user.project_id + "/view");
+                                }
+                                if (data.status == "error") {
+                                    showMessage('error', data.message);
+                                    $(".confirm-shib-user").removeProp("disabled");
+                                }
+                            })
+                            .fail(function () {
+                                showMessage('error', "Server Fault");
                                 $(".confirm-shib-user").removeProp("disabled");
-                            }
-                        })
-                        .fail(function () {
-                            showMessage('error', "Server Fault");
-                            $(".confirm-shib-user").removeProp("disabled");
-                        })
-            }
+                            })
+                }
+            });
         });
-    });
-</script>
+    </script>
+{% endblock %}
