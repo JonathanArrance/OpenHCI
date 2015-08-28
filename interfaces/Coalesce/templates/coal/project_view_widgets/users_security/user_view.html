@@ -43,7 +43,7 @@
                     <th>Project Id</th>
                     <td>{{ user_info.project_id }}</td>
                 </tr>
-                {% if user_id == user_info.user_id or user_level == 0 and user_info.user_role == "pu" or user_level == 0 and user_info.user_role == "user" or user_level == 1 and user_info.user_role == "user" %}
+                {% if is_cloud_admin == 1 or user_id == user_info.user_id or user_level == 0 and user_info.user_role == "pu" or user_level == 0 and user_info.user_role == "user" or user_level == 1 and user_info.user_role == "user" %}
                     <tr>
                         <th>Actions</th>
                         <td>

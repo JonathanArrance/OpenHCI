@@ -2119,12 +2119,19 @@ def user_view(request, project_id, user_name):
     user_info = {}
     meter_dict = []
     stats = []
+    is_cloud_admin = 0
     try:
         auth = request.session['auth']
         uo = user_ops(auth)
         to = tenant_ops(auth)
 
         project = to.get_tenant(project_id)
+        if auth['user_level'] == 0:
+                projects = to.list_all_tenants()
+                for proj in projects:
+                    if proj['project_name'] == "trans_default":
+                        if proj['project_id'] == auth['project_id']:
+                            is_cloud_admin = 1
 
         user_dict = {'username': user_name, 'project_name': project['project_name']}
         user_info = uo.get_user_info(user_dict)
@@ -2165,11 +2172,11 @@ def user_view(request, project_id, user_name):
 
         return render_to_response('coal/project_view_widgets/users_security/user_view.html', RequestContext(request, {
             'meters': meter_dict, 'stats': stats, 'project': project, 'user_info': user_info,
-            'current_project_id': project_id}))
+            'current_project_id': project_id, 'is_cloud_admin': is_cloud_admin}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/users_security/user_view.html', RequestContext(request, {
             'meters': meter_dict, 'stats': stats, 'project': project, 'user_info': user_info,
-            'current_project_id': project_id, 'error': "Error: %s" % e}))
+            'current_project_id': project_id, 'is_cloud_admin': is_cloud_admin, 'error': "Error: %s" % e}))
 
 
 def key_view(request, sec_key_id, project_id):
