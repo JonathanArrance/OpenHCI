@@ -109,7 +109,7 @@
                 }, 2000);
             }
         });
-        $("#quota-form input, #quota-form select").on("click change focus", function () {
+        $("#quota-form input, #quota-form select").on("change focus keyup", function () {
             if ($("#quota-form").valid()) {
                 $('button[type=submit]').removeProp("disabled");
             } else {

@@ -194,7 +194,7 @@ $(function () {
         showConfirmModal('/floating_ip/get/assign/' + CURRENT_PROJECT_ID + '/' + $(this).data("ip") + '/');
     });
 
-    $(document).on('click', ".deallocate-ip, .delete-network, .delete-router", function (event) {
+    $(document).on('click', ".deallocate-ip, .unassign-ip, .delete-network, .delete-router", function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),
             message = encodeURIComponent($(this).data("message")),

@@ -27,10 +27,10 @@
                             {% else %}
                                 {% if user_level == 1 %}
                                     To manage your project, follow the
-                                    <a href="/projects/{{ project_id }}/pu_project_view/">My Project</a> link.
+                                    <a href="/projects/{{ project_id }}/view/">My Project</a> link.
                                 {% else %}
                                     To manage your project, follow the
-                                    <a href="/projects/{{ project_id }}/basic_project_view/">My Project</a> link.
+                                    <a href="/projects/{{ project_id }}/view/">My Project</a> link.
                                 {% endif %}
                             {% endif %}
                         </h4>
@@ -164,9 +164,9 @@
                                 }
                             } else {
                                 if (data.user_level == 1) {
-                                    location.replace("/projects/" + data.project_id + "/pu_project_view/");
+                                    location.replace("/projects/" + data.project_id + "/view/");
                                 } else {
-                                    location.replace("/projects/" + data.project_id + "/basic_project_view/");
+                                    location.replace("/projects/" + data.project_id + "/view/");
                                 }
                             }
                         }

@@ -1,6 +1,7 @@
 {% extends "coal/base-fluid.html" %}
 
-{% if error %}<script>showMessage('error', "{{ error }}");</script>{% endif %}
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>{% endif %}
 
 {% block title %}Cloud Management{% endblock %}
 
@@ -55,15 +56,17 @@
         <div class="page-header">
             <h2>Projects</h2>
 
-            <div class="btn-group actions-dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                    Actions
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#" id="build-project">Build Project</a></li>
-                </ul>
-            </div>
+            {% if user_level == 0 %}
+                <div class="btn-group actions-dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                        Actions
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="build-project">Build Project</a></li>
+                    </ul>
+                </div>
+            {% endif %}
         </div>
         <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
             <thead>
@@ -98,12 +101,12 @@
 {% block javascripts %}
     <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
     <script>
-    $(function(){
-       $(document).on('click', '#build-project', function(event){
-           event.preventDefault();
-        var call = '/projects/get/build/';
-        showConfirmModal(call);
-       });
-    });
+        $(function () {
+            $(document).on('click', '#build-project', function (event) {
+                event.preventDefault();
+                var call = '/projects/get/build/';
+                showConfirmModal(call);
+            });
+        });
     </script>
 {% endblock %}

@@ -13,11 +13,10 @@ $(function () {
 
     $(document).on('click', '#confirm-license-tps', function (event) {
         event.preventDefault();
-        clearUiValidation();
         var provider = $(this).data("provider"),
             input = $("#license-input"),
             button = $(this),
-            isValid = checkRequired(input, "License Key");
+            isValid = input.val() != "";
 
         if (isValid) {
             button.button('loading');

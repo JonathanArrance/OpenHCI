@@ -818,7 +818,7 @@
             }
         });
 
-        $("form input, form select").on("click change focus", function () {
+        $("form input, form select").on("change focus keyup", function () {
             var currentForm = "#" + wizardSection + "-form";
             if ($(currentForm).valid()) {
                 $("#wizard-next").removeProp("disabled");
@@ -827,7 +827,7 @@
             }
         });
 
-        $("#volume-existing").change(function () {
+        $("#volume-existing").on("change focus keyup", function () {
             if ($(this).val() == "create") {
                 $("#wizard-next").prop("disabled", "disabled");
                 $("#volume-name, #volume-size, #volume-type").removeProp("disabled");
@@ -836,7 +836,7 @@
             }
         });
 
-        $("#image-type").change(function () {
+        $("#image-type").on("change focus keyup", function () {
             if ($(this).val() == "local") {
                 $("input[name=imageLocal]").removeProp("disabled");
                 $("input[name=imageRemote]").prop("disabled", "disabled");
@@ -846,7 +846,7 @@
             }
         });
 
-        $("#instance-key").change(function () {
+        $("#instance-key").on("change focus keyup", function () {
             if ($(this).val() == "create") {
                 $("#wizard-next").prop("disabled", "disabled");
                 $("#key-name").removeProp("disabled");

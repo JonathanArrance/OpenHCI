@@ -75,7 +75,7 @@
                 closeModal();
             }
         });
-        $("#volume-name").change(function () {
+        $("#volume-name").on("change focus keyup", function () {
             if ($("#volume-form").valid()) {
                 $('button[type=submit]').removeProp("disabled");
             }

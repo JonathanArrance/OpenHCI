@@ -75,7 +75,7 @@
         });
     });
 
-    $("form input, form select").on("change", function () {
+    $("form input, form select").on("change focus keyup", function () {
         if ("{{ provider.id }}" == "shib") {
             if ($("#shib-config").valid()) {
                 $("#confirm-configure-tpa").removeProp("disabled");

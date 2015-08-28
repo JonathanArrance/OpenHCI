@@ -108,18 +108,9 @@
                         refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
                     }, 2000);
                 }
-            },
-            invalidHandler: function (event, validator) {
-                var errors = validator.numberOfInvalids();
-                if (errors) {
-                    var message = errors == 1
-                            ? 'You missed 1 field. It has been highlighted'
-                            : 'You missed ' + errors + ' fields. They have been highlighted';
-                    showMessage('error', message)
-                }
             }
         });
-        $("#group-form input, #group-form select").change(function () {
+        $("#group-form input, #group-form select").on("change focus keyup", function () {
             if ($("#group-form").valid()) {
                 var isValid = true;
                 $($("#group-ports").val().split(',')).each(function (index, element) {

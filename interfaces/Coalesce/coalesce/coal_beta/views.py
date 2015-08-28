@@ -101,14 +101,19 @@ def dashboard(request):
     try:
         auth = request.session['auth']
         if auth:
-            to = tenant_ops(auth)
-            projects = to.list_all_tenants()
-            for project in projects:
-                if project['project_name'] == "trans_default":
-                    if project['project_id'] == auth['project_id']:
-                        is_cloud_admin = 1
+            if auth['user_level'] == 0:
+                to = tenant_ops(auth)
+                projects = to.list_all_tenants()
+                for project in projects:
+                    if project['project_name'] == "trans_default":
+                        if project['project_id'] == auth['project_id']:
+                            is_cloud_admin = 1
+                    return render_to_response('coal/dashboard.html',
+                                              RequestContext(request, {"is_cloud_admin": is_cloud_admin}))
+            else:
                 return render_to_response('coal/dashboard.html',
                                           RequestContext(request, {"is_cloud_admin": is_cloud_admin}))
+
         else:
             tpa_providers = tpa.detect_auth()
             if tpa_providers['has_shib'] != False:
@@ -135,13 +140,9 @@ def dashboard(request):
         tpa_providers = tpa.detect_auth()
         if tpa_providers['has_shib'] != False:
             try:
-                print "trying shib auth"
                 email = request.META['eppn']
-                print "email = %s" % email
                 user = email.split("@")[0]
-                print "user = %s" % email
                 sa = shib_auth(user)
-                print "shib auth = %s" % sa
                 if sa != None:
                     if sa['user_level'] > 0:
                         project_id = auth['project_id']
@@ -149,7 +150,6 @@ def dashboard(request):
                         return render_to_response('coal/welcome.html',
                                                   RequestContext(request, {"project_admin": project_admin}))
                 else:
-                    print "has shib auth, not a user"
                     shadow_admin = extras.shadow_auth()
                     a = authorization(shadow_admin)
                     auth = a.get_auth()
@@ -1164,22 +1164,32 @@ def get_storage_panel(request, project_id):
 
         quota = qo.get_project_quotas(project_id)
 
-        volumes = vo.list_volumes(project_id)
-        num_vols = len(volumes)
-        for volume in volumes:
+        vols = vo.list_volumes(project_id)
+        num_vols = len(vols)
+        for volume in vols:
             v_dict = {'volume_id': volume['volume_id'], 'project_id': project_id}
             volume['info'] = vo.get_volume_info(v_dict)
+
             if volume['info']['volume_attached'] == 'true':
                 i_dict = {'server_id': volume['info']['volume_instance'], 'project_id': project_id}
                 instance = so.get_server(i_dict)
                 volume['info']['volume_instance'] = instance
+
             if (volume['info']['volume_set_bootable'] == 'true'):
                 boot_volumes.append(volume)
+            else:
+                volumes.append(volume)
+
             used_storage += volume['info']['volume_size']
 
         snapshots = sno.list_snapshots(project_id)
         for snapshot in snapshots:
             for volume in volumes:
+                if snapshot['volume_name'] == volume['volume_name']:
+                    if not 'snapshots' in volume['info']:
+                        volume['info']['snapshots'] = []
+                    volume['info']['snapshots'].append(snapshot)
+            for volume in boot_volumes:
                 if snapshot['volume_name'] == volume['volume_name']:
                     if not 'snapshots' in volume['info']:
                         volume['info']['snapshots'] = []
@@ -1205,6 +1215,7 @@ def get_storage_panel(request, project_id):
                                       'limits': limits,
                                       'tenant_info': tenant_info,
                                       'volumes': volumes,
+                                      'boot_volumes': boot_volumes,
                                       'snapshots': snapshots,
                                       'volume_types': volume_types}))
     except Exception as e:
@@ -1596,7 +1607,6 @@ def get_networking_panel(request, project_id):
             i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
             instance = so.get_server(i_dict)
             if instance['server_public_ips'] == "None":
-                print instance
                 avail_instances.append(instance)
         num_instances = len(instances)
 
@@ -1638,9 +1648,7 @@ def get_ip_assign(request, project_id, floating_ip):
         so = server_ops(auth)
 
         instances = so.list_servers(project_id)
-        print instances
         for instance in instances:
-            print instance
             i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
             instance = so.get_server(i_dict)
             if instance['server_public_ips'] != None:
@@ -1706,7 +1714,8 @@ def get_users_security_panel(request, project_id):
             user['info'] = user_info
         num_users = len(users)
 
-        orphaned_users = uo.list_orphaned_users()
+        if auth['user_level'] == 0:
+            orphaned_users = uo.list_orphaned_users()
 
         sec_groups = so.list_sec_group(project_id)
         num_groups = len(sec_groups)
@@ -1759,6 +1768,9 @@ def get_user_add(request):
         return render_to_response('coal/project_view_widgets/users_security/user_add.html', RequestContext(request, {'ouserinfo': ouserinfo}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/users_security/user_add.html', RequestContext(request, {'ouserinfo': ouserinfo, 'error': "Error: %s"%e}))
+
+def get_user_update_password(request, is_self):
+    return render_to_response('coal/project_view_widgets/users_security/user_update_password.html', RequestContext(request, {'updating_self': is_self}))
 
 def get_security_key_create(request):
     try:
@@ -3127,7 +3139,7 @@ def unassign_floating_ip(request, floating_ip_id):
         out['status'] = "success"
         out['message'] = "Floating IP address %s was unassigned from %s." %(ip['floating_ip'],out['instance_name'])
     except Exception as e:
-        out = {'status' : "error", 'message' : "Error unassigning Floating IP %s address, error: %s" % (ip['floating_ip'], e)}
+        out = {'status' : "error", 'message' : "Error unassigning Floating IP address, error: %s"%e}
     return HttpResponse(simplejson.dumps(out))
 
 def toggle_user(request, username, toggle):
@@ -3204,6 +3216,41 @@ def update_user_password(request, user_id, project_id, current_password, new_pas
                        'message': "Could not validate user password, please re-enter current password."}
                 return HttpResponse(simplejson.dumps(out))
             else:
+                out = private_reset_user_password(auth, passwd_dict)
+                request.session['auth']['password'] = passwd_dict['new_password']
+                a = authorization(request.session['auth']['username'], request.session['auth']['password'])
+                auth2 = a.get_auth()
+                request.session['auth']['token'] = auth2['token']
+                request.session.cycle_key()
+                request.session.save()
+        elif auth['username'] == "admin":
+            out = private_reset_user_password(auth, passwd_dict)
+        else:
+            out = {'status': "error", 'message': "Could not update the user password."}
+            return HttpResponse(simplejson.dumps(out))
+
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not update the user password.: %s" % e}
+
+    return HttpResponse(simplejson.dumps(out))
+
+
+def set_user_password(request, user_id, new_password, project_id):
+    out = {}
+    try:
+        # Get current users auth session
+        auth = request.session['auth']
+        # print auth
+
+        # Get info for user that is about to be changed
+        uo = user_ops(auth)
+        user_info_dict = {"user_id": user_id, "project_id": project_id}
+        selected_user_info = uo.get_user_id_info(user_info_dict)
+        passwd_dict = {'user_id': user_id, 'project_id':project_id, 'new_password': new_password}
+
+        if auth['user_level'] < selected_user_info['user_level']:  # ADMIN can reset children
+            out = private_reset_user_password(auth, passwd_dict)
+        elif auth['user_id'] == selected_user_info['user_id']:
                 out = private_reset_user_password(auth, passwd_dict)
                 request.session['auth']['password'] = passwd_dict['new_password']
                 a = authorization(request.session['auth']['username'], request.session['auth']['password'])
@@ -4663,7 +4710,7 @@ def login(request):
 
 @never_cache
 def logout(request, next_page=None,
-           template_name='coal/welcome.html',
+           template_name='/',
            redirect_field_name=REDIRECT_FIELD_NAME,
            current_app=None, extra_context=None):
     """
@@ -4680,17 +4727,19 @@ def logout(request, next_page=None,
     if next_page:
         # Redirect to this page until the session has been cleared.
         return HttpResponseRedirect(next_page)
+    else:
+        return HttpResponseRedirect("/")
 
-    current_site = get_current_site(request)
-    context = {
-        'site': current_site,
-        'site_name': current_site.name,
-        'title': ('Logged out')
-    }
-    if extra_context is not None:
-        context.update(extra_context)
-    return TemplateResponse(request, template_name, context,
-        current_app=current_app)
+    # current_site = get_current_site(request)
+    # context = {
+    #     'site': current_site,
+    #     'site_name': current_site.name,
+    #     'title': ('Logged out')
+    # }
+    # if extra_context is not None:
+    #     context.update(extra_context)
+    # return TemplateResponse(request, template_name, context,
+    #     current_app=current_app)
 
 
 def handle_uploaded_file(f):

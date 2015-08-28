@@ -57,7 +57,6 @@ $(function () {
 
     $(document).on('click', '#update-account-password', function (event) {
         event.preventDefault();
-        clearUiValidation();
         var user = $(this).data("user"),
             level = $(this).data("user-level"),
             project = $(this).data("project"),
@@ -66,34 +65,31 @@ $(function () {
                 'new': $("#new-password"),
                 'confirm': $("#confirm-password")
             },
-            button = $(this),
-            isValid = checkPassword(inputs.new) && checkPasswordMatch(inputs.new, inputs.confirm);
-        if (isValid) {
-            button.button('loading');
-            button.prop("disabled", "disabled");
-            showMessage('info', "Updating password ...");
-            var call =
-                level == 0
-                    ? '/update_admin_password/' + inputs.current.val() + '/' + inputs.new.val() + '/'
-                    : '/update_user_password/' + user + '/' + inputs.current.val() + '/' + inputs.new.val() + '/' + project + '/';
-            $.getJSON(call)
-                .done(function (data) {
-                    if (data.status == 'error') {
-                        showMessage('error', data.message);
-                    }
-                    if (data.status == 'success') {
-                        showMessage('success', data.message);
-                        closeModal();
-                    }
-                })
-                .fail(function () {
-                    showMessage('error', 'Server Fault');
-                })
-                .always(function () {
-                    button.button('reset');
-                    button.removeProp("disabled");
-                });
-        }
+            button = $(this);
+        button.button('loading');
+        button.prop("disabled", "disabled");
+        showMessage('info', "Updating password ...");
+        var call =
+            level == 0
+                ? '/update_admin_password/' + inputs.current.val() + '/' + inputs.new.val() + '/'
+                : '/update_user_password/' + user + '/' + inputs.current.val() + '/' + inputs.new.val() + '/' + project + '/';
+        $.getJSON(call)
+            .done(function (data) {
+                if (data.status == 'error') {
+                    showMessage('error', data.message);
+                }
+                if (data.status == 'success') {
+                    showMessage('success', data.message);
+                    closeModal();
+                }
+            })
+            .fail(function () {
+                showMessage('error', 'Server Fault');
+            })
+            .always(function () {
+                button.button('reset');
+                button.removeProp("disabled");
+            });
     });
 
     // Phone Home
@@ -285,48 +281,53 @@ charts = {};
 
 function generateDashBars(meters, stats) {
     meters = JSON.parse(meters.jsonify());
-    stats = JSON.parse(stats.jsonify());
-    var counters = [],
-        groups = [];
-    $(stats).each(function (index, stat) {
-        if (stat.chartType == "counter") {
-            counters.push(stat);
-        }
-    });
-    var barGroups = {};
-    $(counters).each(function (index, element) {
-        if (barGroups[element['meterName'].split(".")[0]] === undefined) {
-            barGroups[element['meterName'].split(".")[0]] = [];
-        }
-        barGroups[element['meterName'].split(".")[0]].push(element);
-    });
-    for (var bar in barGroups) {
-        var data = [],
-            units,
-            id;
-        $(barGroups[bar]).each(function (a, statsMeter) {
-            $(meters).each(function (b, meterGroup) {
-                $(meterGroup.meters).each(function (c, meter) {
-                    if (meter.meterType == statsMeter.meterName) {
-                        data.push([meter.label, statsMeter.utilization]);
-                        units = statsMeter.unitMeasurement;
-                        id = meterGroup.id;
-                    }
+    console.log(stats.jsonify());
+    if (stats != "empty dataset") {
+        stats = JSON.parse(stats.jsonify());
+        var counters = [],
+            groups = [];
+        $(stats).each(function (index, stat) {
+            if (stat.chartType == "counter") {
+                counters.push(stat);
+            }
+        });
+        var barGroups = {};
+        $(counters).each(function (index, element) {
+            if (barGroups[element['meterName'].split(".")[0]] === undefined) {
+                barGroups[element['meterName'].split(".")[0]] = [];
+            }
+            barGroups[element['meterName'].split(".")[0]].push(element);
+        });
+        for (var bar in barGroups) {
+            var data = [],
+                units,
+                id;
+            $(barGroups[bar]).each(function (a, statsMeter) {
+                $(meters).each(function (b, meterGroup) {
+                    $(meterGroup.meters).each(function (c, meter) {
+                        if (meter.meterType == statsMeter.meterName) {
+                            data.push([meter.label, statsMeter.utilization]);
+                            units = statsMeter.unitMeasurement;
+                            id = meterGroup.id;
+                        }
+                    });
                 });
             });
-        });
-        units = units === undefined ? "" :
-            units == "B/s" ? "bytes/second" : units;
-        id = id === undefined ? console.log("Bar group id never defined.") : id;
-        groups.push([bar, units, data, id]);
-    }
-    $(groups).each(function (c, d) {
-        if (document.getElementById(d[0]) === null) {
-            var groupId = "#" + d[3];
-            $(groupId).append($($('<div id="' + d[0] + '" class="col-sm-6 no-padding" style="margin-left:-15px;"></div>')));
-            charts[d[0]] = generateBar(d[0], d[1], d[2]);
+            units = units === undefined ? "" :
+                units == "B/s" ? "bytes/second" : units;
+            id = id === undefined ? console.log("Bar group id never defined.") : id;
+            groups.push([bar, units, data, id]);
         }
-    });
+        $(groups).each(function (c, d) {
+            if (document.getElementById(d[0]) === null) {
+                var groupId = "#" + d[3];
+                $(groupId).append($($('<div id="' + d[0] + '" class="col-sm-6 no-padding" style="margin-left:-15px;"></div>')));
+                charts[d[0]] = generateBar(d[0], d[1], d[2]);
+            }
+        });
+    } else {
+        showMessage('warning', "No data returned.")
+    }
 }
 
 window.getCeilometerStats = function () {

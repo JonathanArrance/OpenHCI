@@ -239,7 +239,7 @@
                                 $("#image-visibility").val() + '/' +
                                 $("#image-os").val() + '/' +
                                 progressID + '/';
-                        window.loading.ad("importing");
+                        window.loading.add("importing");
                         startProgressBarUpdate(progressID, $("#image-form"));
                         $.ajax(
                                 {
@@ -282,14 +282,14 @@
                 }
             }
         });
-        $("#image-form input, #image-form select").change(function () {
+        $("#image-form input, #image-form select").on("change focus keyup", function () {
             if ($("#image-form").valid())
                     $('button[type=submit]').removeProp("disabled");
             else
                 $('button[type=submit]').prop("disabled", true);
 
         });
-        $("#image-type").change(function () {
+        $("#image-type").on("change focus keyup", function () {
             if ($(this).val() == "local") {
                 $("input[name=imageLocal]").removeProp("disabled");
                 $("input[name=imageRemote]").prop("disabled", "disabled");
