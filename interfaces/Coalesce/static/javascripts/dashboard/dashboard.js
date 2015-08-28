@@ -281,7 +281,6 @@ charts = {};
 
 function generateDashBars(meters, stats) {
     meters = JSON.parse(meters.jsonify());
-    console.log(stats.jsonify());
     if (stats != "empty dataset") {
         stats = JSON.parse(stats.jsonify());
         var counters = [],
