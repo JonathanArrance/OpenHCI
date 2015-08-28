@@ -194,6 +194,9 @@ class tenant_ops:
                 #add the "cloud" admin to the project as an admin - admin gets added to all projects in the system
                 add_admin = {'username':'admin','user_role':'admin','project_id':project_id}
                 admin = self.keystone_users.add_user_to_project(add_admin)
+                # add the shadow_admin
+                add_shadow_admin = {'username':'shadow_admin','user_role':'admin','project_id':project_id}
+                shadow_admin = self.keystone_users.add_user_to_project(add_shadow_admin)
             except Exception as e:
                 logger.sys_error('Could not add the admin to %s'%(project_id))
                 raise Exception('Could not add the admin to %s'%(project_id))
@@ -342,7 +345,7 @@ class tenant_ops:
 
             #query the DB and get the list of projects in the OpenStack Environment
             projects=None
-            if(self.username == 'admin'):
+            if(self.username == 'admin' or self.username == 'shadow_admin'):
                 try:
                     #insert the new project into the db
                     select_dict = {"select":'proj_name,proj_id',"from":'projects'}
