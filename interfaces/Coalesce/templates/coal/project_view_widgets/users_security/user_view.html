@@ -48,7 +48,13 @@
                         <th>Actions</th>
                         <td>
                             <div class="center-buttons">
-                                <a href="#" id="update-user-password" class="btn">Update Password</a>
+                                <button class="btn btn-info update-user-password"
+                                        data-update-self="{% if user_id == user_info.user_id %}true{% else %}false{% endif %}"
+                                        data-toggle="popover" title="Update Password" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="bottom">
+                                    Update Password
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -67,25 +73,48 @@
                     </h3>
                 </div>
                 <div class="panel-body center-text">
-                {% if stats != "empty dataset" %}
-                    {% for group in meters %}
-                        {% for meter in group.meters %}
-                            {% for stat in stats %}
-                                {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
-                                    <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
+                    {% if stats != "empty dataset" %}
+                        {% for group in meters %}
+                            {% for meter in group.meters %}
+                                {% for stat in stats %}
+                                    {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
+                                        <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
                                         <script>
                                             charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
                                         </script>
                                     </span>
-                                {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                             {% endfor %}
                         {% endfor %}
-                    {% endfor %}
-                {% else %}
-                <p class="text-warning">no data returned for user</p>
-                {% endif %}
+                    {% else %}
+                        <p class="text-warning">no data returned for user</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    var CURRENT_USER_ID = "{{ user_info.user_id }}";
+    $(function () {
+        var view = $(".info-content");
+
+        window.loading.current = view;
+        if (window.instanceViewTimer) {
+            window.clearInterval(window.instanceViewTimer);
+        }
+        window.instanceViewTimer = setInterval(function () {
+            stealthRefreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+        }, 60000);
+
+        $('[data-toggle="popover"]').popover();
+
+        $(".update-user-password").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/user/get/update_password/" + $(this).data("update-self") + "/");
+        });
+    });
+</script>

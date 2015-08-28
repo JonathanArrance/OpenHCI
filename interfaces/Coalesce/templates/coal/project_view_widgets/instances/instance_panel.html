@@ -2,7 +2,7 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-<div class="row-fluid">
+<div class="row-fluid col-sm-12">
     <h3 class="row-header col-sm-12">Instances</h3>
 
     <div class="col-sm-6" data-toggle="table" data-height="200">
@@ -47,16 +47,18 @@
                                                onClick="window.open('{{ instance.info.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
                                                 <i class="fa fa-desktop"></i> console</a>
                                         </li>
-                                        <li><a href="#" class="pause-instance" data-title="Pause Instance"
-                                               data-message="Pause {{ instance.server_name }}"
-                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
-                                               data-notice="Pausing Instance {{ instance.server_name }}"><i
-                                                class="fa fa-pause"></i> pause</a></li>
-                                        <li><a href="#" class="suspend-instance" data-title="Suspend Instance"
-                                               data-message="Suspend {{ instance.server_name }}"
-                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
-                                               data-notice="Suspending Instance {{ instance.server_name }}"><i
+                                        {% if user_level == 0 %}
+                                            <li><a href="#" class="pause-instance" data-title="Pause Instance"
+                                                   data-message="Pause {{ instance.server_name }}"
+                                                   data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
+                                                   data-notice="Pausing Instance {{ instance.server_name }}"><i
+                                                    class="fa fa-pause"></i> pause</a></li>
+                                            <li><a href="#" class="suspend-instance" data-title="Suspend Instance"
+                                                   data-message="Suspend {{ instance.server_name }}"
+                                                   data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
+                                                   data-notice="Suspending Instance {{ instance.server_name }}"><i
                                                 class="fa fa-stop"></i> suspend</a>
+                                        {% endif %}
                                         <li><a href="#" class="power-off-instance" data-title="Power Off Instance"
                                                data-message="Power Off {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
@@ -73,19 +75,23 @@
                                                data-notice="Rebooting On Instance {{ instance.server_name }}"><i
                                                 class="fa fa-flash"></i> Reboot</a></li>
                                     {% elif instance.status == "PAUSED" %}
-                                        <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
-                                               data-message="Unpause {{ instance.server_name }}"
-                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
-                                               data-notice="Unpausing Instance {{ instance.server_name }}"><i
-                                                class="fa fa-play"></i> unpause</a>
-                                        </li>
+                                        {% if user_level == 0 %}
+                                            <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
+                                                   data-message="Unpause {{ instance.server_name }}"
+                                                   data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
+                                                   data-notice="Unpausing Instance {{ instance.server_name }}"><i
+                                                    class="fa fa-play"></i> unpause</a>
+                                            </li>
+                                        {% endif %}
                                     {% elif instance.status == "SUSPENDED" %}
-                                        <li><a href="#" class="resume-instance" data-title="Resume Instance"
-                                               data-message="Resume {{ instance.server_name }}"
-                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
-                                               data-notice="Resuming Instance {{ instance.server_name }}"><i
-                                                class="fa fa-play-circle"></i> resume</a>
-                                        </li>
+                                        {% if user_level == 0 %}
+                                            <li><a href="#" class="resume-instance" data-title="Resume Instance"
+                                                   data-message="Resume {{ instance.server_name }}"
+                                                   data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
+                                                   data-notice="Resuming Instance {{ instance.server_name }}"><i
+                                                    class="fa fa-play-circle"></i> resume</a>
+                                            </li>
+                                        {% endif %}
                                     {% endif %}
 
                                     {% if instance.status == "SHUTOFF" %}
@@ -99,7 +105,7 @@
                                     <li class="bg-danger"><a href="#" class="delete-instance"
                                                              data-title="Delete Instance"
                                                              data-message="Delete {{ instance.server_name }}?"
-                                                             data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.info.boot_from_vol }}/delete_instance/"
+                                                             data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/false/delete_instance/"
                                                              data-notice="Deleting Instance {{ instance.server_name }}"><i
                                             class="fa fa-trash-o"></i> delete</a></li>
                                 </ul>
@@ -133,7 +139,7 @@
     </div>
 </div>
 
-<div class="row-fluid">
+<div class="row-fluid col-sm-12">
     <div class="col-sm-6 no-padding">
 
         <h3 class="row-header col-sm-12">Images</h3>
@@ -187,10 +193,12 @@
                     <th>Memory (mb)</th>
                     <th>Space (gb)</th>
                     <th>CPUs</th>
-                    <th>
-                        <button class="btn btn-xs btn-success pull-right create-flavor"><i class="fa fa-plus"></i>
-                        </button>
-                    </th>
+                    {% if user_level == 0 %}
+                        <th>
+                            <button class="btn btn-xs btn-success pull-right create-flavor"><i class="fa fa-plus"></i>
+                            </button>
+                        </th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -209,14 +217,16 @@
                             <td class="flavor-cpus">
                                 {{ flavor.info.cpus }}
                             </td>
-                            <td class="flavor-actions">
-                                <button type='button' class="delete-flavor btn btn-xs btn-danger pull-right"
-                                        data-title="Delete Machine Type" data-message="Delete {{ flavor.name }}?"
-                                        data-call="/delete_vm_spec/{{ flavor.id }}/"
-                                        data-notice="Deleting Machine Type {{ flavor.name }}">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </td>
+                            {% if user_level == 0 %}
+                                <td class="flavor-actions">
+                                    <button type='button' class="delete-flavor btn btn-xs btn-danger pull-right"
+                                            data-title="Delete Machine Type" data-message="Delete {{ flavor.name }}?"
+                                            data-call="/delete_vm_spec/{{ flavor.id }}/"
+                                            data-notice="Deleting Machine Type {{ flavor.name }}">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -225,7 +235,9 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td></td>
+                        {% if user_level == 0 %}
+                            <td></td>
+                        {% endif %}
                     </tr>
                 {% endif %}
                 </tbody>

@@ -106,7 +106,7 @@
                         });
             }
         });
-        $("#user-form input, #user-form select").change(function () {
+        $("#user-form input, #user-form select").on("change focus keyup", function () {
             if ($("#user-form").valid()) {
                 $('button[type=submit]').removeProp("disabled");
             } else {

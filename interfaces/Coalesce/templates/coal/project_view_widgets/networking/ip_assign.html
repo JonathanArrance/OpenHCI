@@ -60,7 +60,7 @@
                             }
                             if (data.status == 'success') {
                                 showMessage('success', data.message);
-                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
                                 stealthRefreshContainer(page, $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instances_panel/");
                             }
                         })

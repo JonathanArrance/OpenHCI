@@ -536,6 +536,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_update_account_password',
             name='get_update_account_password'),
 
+        url(r'^user/get/update_password/(?P<is_self>[^/]+)/$',
+            'coalesce.coal_beta.views.get_user_update_password',
+            name='get_user_update_password'),
+
         url(r'^user/get/create/$',
             'coalesce.coal_beta.views.get_user_create',
             name='get_user_create'),
@@ -543,6 +547,10 @@ urlpatterns = patterns('',
         url(r'^user/get/add/$',
             'coalesce.coal_beta.views.get_user_add',
             name='get_user_add'),
+
+        url(r'^user/set/password/(?P<user_id>[^/]+)/(?P<new_password>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.set_user_password',
+            name='set_user_password'),
 
         # --- Security Groups ----
         url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<transport>[^/]+)/(?P<project_id>[^/]+)/$',

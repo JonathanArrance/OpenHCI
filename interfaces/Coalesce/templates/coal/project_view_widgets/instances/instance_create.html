@@ -184,15 +184,6 @@
                         refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
                     }, 2000);
                 }
-            },
-            invalidHandler: function (event, validator) {
-                var errors = validator.numberOfInvalids();
-                if (errors) {
-                    var message = errors == 1
-                            ? 'You missed 1 field. It has been highlighted'
-                            : 'You missed ' + errors + ' fields. They have been highlighted';
-                    showMessage('error', message)
-                }
             }
         });
         $("#boot-form").validate({
@@ -210,18 +201,9 @@
                     required: true,
                     range: [1, (parseInt("{{ quota.gigabytes }}") - parseInt("{{ used_storage }}"))]
                 }
-            },
-            invalidHandler: function (event, validator) {
-                var errors = validator.numberOfInvalids();
-                if (errors) {
-                    var message = errors == 1
-                            ? 'You missed 1 field. It has been highlighted'
-                            : 'You missed ' + errors + ' fields. They have been highlighted';
-                    showMessage('error', message)
-                }
             }
         });
-        $("#instance-form input, #instance-form select, #bam-form input, #bam-input select").change(function () {
+        $("#instance-form input, #instance-form select, #boot-form input, #boot-input select").on("change focus keyup", function () {
             if ($("#instance-boot").val() == "volume") {
                 if ($("#instance-form").valid() && $("#boot-form").valid()) {
                     $('button[type=submit]').removeProp("disabled");
@@ -236,7 +218,7 @@
                 }
             }
         });
-        $("#instance-boot").change(function () {
+        $("#instance-boot").on("change focus keyup", function () {
             if ($(this).val() == "volume") {
                 $("#boot-form").find("input, select").removeProp("disabled");
             } else {

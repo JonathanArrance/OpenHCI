@@ -74,10 +74,10 @@
                             </li>
                         {% endif %}
                     {% elif user_level == 1 %}
-                        <li><a href="/projects/{{ project_id }}/pu_project_view/" data-toggle="collapse"
+                        <li><a href="/projects/{{ project_id }}/view/" data-toggle="collapse"
                                data-target=".navbar-collapse">My Project</a></li>
                     {% else %}
-                        <li><a href="/projects/{{ project_id }}/basic_project_view/" data-toggle="collapse"
+                        <li><a href="/projects/{{ project_id }}/view/" data-toggle="collapse"
                                data-target=".navbar-collapse">My Project</a></li>
                     {% endif %}
                 {% endif %}
@@ -100,20 +100,24 @@
 <!-- FOOTER ================================================== -->
 <footer class="navbar-fixed-bottom">
     <div class="container-fluid">
-        <ul class="footer-links small">
-            <li>
-                <a href="#">Back to Top</a>
-            </li>
-            <li>
-                <a href={% url 'logout' %}>Log Out</a>
-            </li>
-            <li>
-                <a href={% url 'terms-of-use' %}>Terms of Use</a>
-            </li>
-            <li>
-                <a href={% url 'privacy-policy' %}>Privacy Policy</a>
-            </li>
-        </ul>
+        <div class="row-fluid">
+            <div class="col-sm-12 footer-links small">
+                <div class="col-sm-8 pull-left">
+                    <div class="col-sm-3">
+                        <a href="#">Back to Top</a>
+                    </div>
+                    <div class="col-sm-3">
+                        <a href={% url 'logout' %}>Log Out</a>
+                    </div>
+                    <div class="col-sm-3">
+                        <a href={% url 'terms-of-use' %}>Terms of Use</a>
+                    </div>
+                    <div class="col-sm-3">
+                        <a href={% url 'privacy-policy' %}>Privacy Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <span class="version-label small pull-right">version: {{ version }}</span>
 </footer>

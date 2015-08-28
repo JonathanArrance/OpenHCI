@@ -199,14 +199,14 @@
                 }
             }
         });
-        eseriesControllerInputs.change(function () {
+        eseriesControllerInputs.on("change focus keyup", function () {
             if (eseriesControllerInputs.valid()) {
                 console.log(eseriesControllerInputs.valid());
                 $("#eseries-discover-controllers").removeProp("disabled").css("cursor", "pointer");
             }
         });
 
-        $("input[name='eseriesTransport']").change(function () {
+        $("input[name='eseriesTransport']").on("change focus keyup", function () {
             if ($("input[name='eseriesTransport']:checked").val() == "http") {
                 $("#eseries-server-port").val("8080");
             } else {
@@ -214,7 +214,7 @@
             }
         });
 
-        $("#eseries-mgmt-hostnames-ips").change(function () {
+        $("#eseries-mgmt-hostnames-ips").on("change focus keyup", function () {
             if ($(this).find('option').length == 0 || $(this).find('option:selected').length == 0) {
                 $("#eseries-discover-disk-pools").prop("disabled", "disabled").css("cursor", "not-allowed!important");
             } else {

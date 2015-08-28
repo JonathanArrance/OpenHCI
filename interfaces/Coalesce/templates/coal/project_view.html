@@ -28,12 +28,13 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="#" id="instance-wizard">Instance Wizard</a></li>
-                        {% if is_auth_default == 0 %}
+                        {% if is_auth_default == 0 and user_level == 0 %}
                             <li class="bg-danger">
                                 <a href="#" id="delete-project" data-title="Delete Project"
                                    data-message="Delete {{ project.project_name }}?"
                                    data-call="/projects/{{ project.project_id }}/{{ project.project_name }}/delete/"
-                                   data-notice="Deleting Project {{ project.project_name }}" data-async="projectDeleteTimer">
+                                   data-notice="Deleting Project {{ project.project_name }}"
+                                   data-async="projectDeleteTimer">
                                     Delete Project
                                 </a>
                             </li>

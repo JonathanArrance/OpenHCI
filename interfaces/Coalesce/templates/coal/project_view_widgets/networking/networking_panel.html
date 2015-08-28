@@ -2,7 +2,7 @@
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
 
-<div class="row-fluid">
+<div class="row-fluid col-sm-12">
     <div class="col-sm-6">
         <h3 class="row-header">Floating IP Addresses</h3>
         <table class="table table-striped table-hover table-responsive table-bordered">
@@ -25,7 +25,7 @@
                     <tr id="{{ fip.floating_ip_id }}"
                         class="ip">
                         <td class="ip-address">{{ fip.floating_ip }}</td>
-                        <td class="ip-instance {% if fip.instance_name != '' %}bg-info{% endif %}">
+                        <td class="ip-instance center-text {% if fip.instance_name != '' %}bg-info{% endif %}">
                             {% if fip.instance_name == '' %}
                                 No Assigned Instance
                             {% else %}
@@ -48,20 +48,27 @@
                                 </a>
                                 <ul class="dropdown-menu table-dropdown">
                                     {% if fip.floating_in_use == 'true' %}
-                                        <li><a href="#" class="unassign-ip"><i class="fa fa-map-o"></i> unassign</a>
+                                        <li><a href="#" class="unassign-ip"
+                                                                 data-title="Unassign Floating IP Address"
+                                                                 data-message="Unassign {{ fip.floating_ip }}?"
+                                                                 data-call="/unassign_floating_ip/{{ fip.floating_ip_id }}/"
+                                                                 data-notice="Unassigning {{ fip.floating_ip }}">
+                                            <i class="fa fa-map-signs text-danger"></i> unassign</a>
                                         </li>
                                     {% else %}
                                         {% if instances %}
                                             <li><a href="#" class="assign-ip" data-ip="{{ fip.floating_ip }}"><i
                                                     class="fa fa-map-signs"></i> assign</a></li>
                                         {% endif %}
-                                        <li class="bg-danger"><a href="#" class="deallocate-ip"
-                                                                 data-title="Deallocate Floating IP Address"
-                                                                 data-message="Deallocate {{ fip.floating_ip }}?"
-                                                                 data-call="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/"
-                                                                 data-notice="Deallocating {{ fip.floating_ip }}">
-                                            <i class="fa fa-trash-o"></i> deallocate</a>
-                                        </li>
+                                        {% if user_level <= 1 %}
+                                            <li class="bg-danger"><a href="#" class="deallocate-ip"
+                                                                     data-title="Deallocate Floating IP Address"
+                                                                     data-message="Deallocate {{ fip.floating_ip }}?"
+                                                                     data-call="/deallocate_floating_ip/{{ project.project_id }}/{{ fip.floating_ip }}/"
+                                                                     data-notice="Deallocating {{ fip.floating_ip }}">
+                                                <i class="fa fa-trash-o"></i> deallocate</a>
+                                            </li>
+                                        {% endif %}
                                     {% endif %}
                                 </ul>
                             </div>
@@ -98,7 +105,7 @@
 
 </div>
 
-<div class="row-fluid">
+<div class="row-fluid col-sm-12">
     <div class="col-sm-6">
         <h3 class="row-header">Private Networks</h3>
         <table class="table table-striped table-hover table-responsive table-bordered">
@@ -110,10 +117,12 @@
                     /
                     <span class="label label-success label-lg label-condensed middle">Admin State</span></th>
                 <th>Subnets</th>
-                <th>
-                    <button class="btn btn-xs btn-success pull-right create-network"><i class="fa fa-plus"></i>
-                    </button>
-                </th>
+                {% if user_level == 0 %}
+                    <th>
+                        <button class="btn btn-xs btn-success pull-right create-network"><i class="fa fa-plus"></i>
+                        </button>
+                    </th>
+                {% endif %}
             </tr>
             </thead>
             <tbody>
@@ -141,15 +150,17 @@
                                 <span id="{{ subnet }}" class="subnet">{{ subnet.subnet_name }}</span><br>
                             {% endfor %}
                         </td>
-                        <td class="network-actions">
-                            <button type='button' class="btn btn-xs btn-danger pull-right delete-network"
-                                    data-title="Delete Private Network"
-                                    data-message="Delete {{ network.info.net_name }}?"
-                                    data-call="/delete_private_network/{{ project.project_id }}/{{ network.info.net_id }}/"
-                                    data-notice="Deleting Private Network {{ network.info.net_name }}">
-                                <i class="fa fa-minus"></i>
-                            </button>
-                        </td>
+                        {% if user_level == 0 %}
+                            <td class="network-actions">
+                                <button type='button' class="btn btn-xs btn-danger pull-right delete-network"
+                                        data-title="Delete Private Network"
+                                        data-message="Delete {{ network.info.net_name }}?"
+                                        data-call="/delete_private_network/{{ project.project_id }}/{{ network.info.net_id }}/"
+                                        data-notice="Deleting Private Network {{ network.info.net_name }}">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             {% else %}
@@ -157,7 +168,9 @@
                     <td><p><i>This project has no private networks</i></p></td>
                     <td></td>
                     <td></td>
-                    <td></td>
+                    {% if user_level == 0 %}
+                        <td></td>
+                    {% endif %}
                 </tr>
             {% endif %}
             </tbody>
@@ -171,12 +184,15 @@
             <tr>
                 <th>Router</th>
                 <th>Status</th>
-                <th>
-                    {% if open_networks %}
-                        <button class="btn btn-xs btn-success pull-right create-router"><i class="fa fa-plus"></i>
-                        </button>
-                    {% endif %}
-                </th>
+                {% if user_level == 0 %}
+                    <th>
+                        {% if open_networks %}
+                            <button class="btn btn-xs btn-success pull-right create-router">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        {% endif %}
+                    </th>
+                {% endif %}
             </tr>
             </thead>
             <tbody>
@@ -195,21 +211,25 @@
                         <td class="router-status center-text {% if router.router_status == "ACTIVE" %}bg-success{% elif router.router_status == "ERROR" %}bg-danger{% else %}bg-warning{% endif %}">
                             {{ router.router_status }}
                         </td>
-                        <td class="router-actions">
-                            <button type='button' class="btn btn-xs btn-danger pull-right delete-router"
-                                    data-title="Delete Router" data-message="Delete {{ router.router_name }}?"
-                                    data-call="/delete_router/{{ project.project_id }}/{{ router.router_id }}/"
-                                    data-notice="Deleting Router {{ router.router_name }}">
-                                <i class="fa fa-minus"></i>
-                            </button>
-                        </td>
+                        {% if user_level == 0 %}
+                            <td class="router-actions">
+                                <button type='button' class="btn btn-xs btn-danger pull-right delete-router"
+                                        data-title="Delete Router" data-message="Delete {{ router.router_name }}?"
+                                        data-call="/delete_router/{{ project.project_id }}/{{ router.router_id }}/"
+                                        data-notice="Deleting Router {{ router.router_name }}">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             {% else %}
                 <tr class="router-placeholder text-warning">
                     <td><p><i>This project has no routers</i></p></td>
                     <td></td>
-                    <td></td>
+                    {% if user_level == 0 %}
+                        <td></td>
+                    {% endif %}
                 </tr>
             {% endif %}
             </tbody>
