@@ -95,12 +95,15 @@
                 }, 2000);
             }
         });
-        $("#network-form input, #network-form select").on("change focus keyup", function () {
-            if ($("#network-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            } else {
-                $('button[type=submit]').prop("disabled", true);
-            }
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#network-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
+            }, 1000);
         });
     });
 </script>

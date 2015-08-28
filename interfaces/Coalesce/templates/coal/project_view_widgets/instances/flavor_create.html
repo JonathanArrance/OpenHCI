@@ -33,7 +33,7 @@
                                class="col-sm-8">
                     </div>
                     <div class="form-group col-sm-12">
-                        <label for="machine-cpus" class="col-sm-4 control-label">CPUs:ss</label>
+                        <label for="machine-cpus" class="col-sm-4 control-label">CPUs:</label>
                         <input type="text" name="machineCpus" id="machine-cpus" placeholder="Number of CPUs"
                                class="col-sm-8">
                     </div>
@@ -99,12 +99,15 @@
                 closeModal();
             }
         });
-        $("#machine-form input, #machine-form select").change(function () {
-            if ($("#machine-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            } else {
-                $('button[type=submit]').prop("disabled", "disabled");
-            }
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#machine-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
+            }, 1000);
         });
     });
 </script>

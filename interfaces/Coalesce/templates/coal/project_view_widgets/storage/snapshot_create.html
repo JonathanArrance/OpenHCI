@@ -64,10 +64,13 @@
                 closeModal();
             }
         });
-        $("#snap-name").on("change focus keyup", function () {
-            if ($("#snap-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            }
-        })
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#snap-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                }
+            }, 1000);
+        });
     });
 </script>
