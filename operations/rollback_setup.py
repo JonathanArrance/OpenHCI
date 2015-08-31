@@ -20,6 +20,13 @@ from transcirrus.database import node_db
 #app = Celery('rollback_setup')
 #@app.task()
 def rollback(auth_dict):
+    null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
+    # save the current file descriptors to a tuple
+    save = os.dup(1), os.dup(2)
+    # put /dev/null fds on 1 and 2
+    os.dup2(null_fds[0], 1)
+    os.dup2(null_fds[1], 2)
+
     net = neutron_net_ops(auth_dict)
     glance = glance_ops(auth_dict)
     auth_dict['api_ip'] = util.get_api_ip()
@@ -144,7 +151,7 @@ def rollback(auth_dict):
     logger.sys_info('Reseting the network cards to factory default.')
     try:
         links = util.set_network_variables(net_input)
-        print links
+        logger.sys_info(str(links))
         for link in links:
             write_net_config = util.write_new_config_file(link)
             time.sleep(1)
@@ -212,8 +219,7 @@ def rollback(auth_dict):
     logger.sys_info('Removeing the node from the Transcirrus DB.')
     try:
         del_node = node_db.delete_node(config.NODE_ID)
-        print "delnode"
-        print del_node
+        logger.sys_info("delnode: %s" %(str(del_node)))
     except:
         pass
 
@@ -238,7 +244,7 @@ def rollback(auth_dict):
             input_dict = {'cloud_name':'TransCirrusCloud','service_name':'keystone'}
             create_keystone = endpoint.create_endpoint(input_dict)
             if(create_keystone['endpoint_id']):
-                print "Keystone endpoint set up complete."
+                logger.sys_info("Keystone endpoint set up complete.")
             else:
                 return "Keystone error."
     except:
@@ -253,7 +259,7 @@ def rollback(auth_dict):
             input_dict = {'cloud_name':'TransCirrusCloud','service_name':'swift'}
             create_swift = endpoint.create_endpoint(input_dict)
             if(create_swift['endpoint_id']):
-                print "Swift endpoint set up complete."
+                logger.sys_info("Swift endpoint set up complete.")
             else:
                 return "Swift error."
     except:
@@ -296,4 +302,10 @@ def rollback(auth_dict):
     os.system('sudo touch /var/log/caclogs/system.log')
     os.system('sudo chmod 777 /var/log/caclogs/system.log')
 
+    # restore file descriptors so I can print the results
+    os.dup2(save[0], 1)
+    os.dup2(save[1], 2)
+    # close the temporary fds
+    os.close(null_fds[0])
+    os.close(null_fds[1])
     return 'OK'
