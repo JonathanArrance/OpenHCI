@@ -5,7 +5,7 @@ from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.operations.build_complete_project import build_project
 from transcirrus.operations.destroy_project import destroy_project
-from transcirrus.operations.rollback_setup import rollback
+from transcirrus.operations.rollback_setup import rollback as rb
 from transcirrus.database import node_db as node_op
 
 progname = os.path.basename(sys.argv[0])
@@ -1443,24 +1443,10 @@ def clear_screen(d):
 
 
 def temp_dash(d, auth_dict):
-    selection = temp_dashboard(d)
-    if selection == "Rollback":
-        p = Process(target=rollback, args=[auth_dict])
-        p.start()
-        fill_text = "Restoring factory defaults...\n\nPlease be patient."
-        spinner = ["[|] ", "[/] ", "[-] ", "[\\] "]
-        spin = 0
-        while 1:
-            spin = (spin + 1) % 4
-            time.sleep(1)
-            d.infobox(spinner[spin]+fill_text, height=6, width=50)
-            if not p.is_alive():
-                p.join()
-                break
-
-        if p.exitcode == 0:
-            success_msg(d, 10)
-            clear_screen(d)
+    while True:
+        selection = temp_dashboard(d)
+        if selection == "Rollback":
+            rollback(d, auth_dict)
 
 
 def temp_dashboard(d):
@@ -1472,6 +1458,35 @@ def temp_dashboard(d):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
+
+
+def rollback(d, auth_dict):
+    if rollback_confirm(d) == d.DIALOG_OK:
+        return
+    else:
+        p = Process(target=rb, args=[auth_dict])
+        p.start()
+        fill_text = "Restoring factory defaults...\n\nPlease be patient."
+        spinner = ["[|] ", "[/] ", "[-] ", "[\\] "]
+        spin = 0
+        while 1:
+            spin = (spin + 1) % 4
+            time.sleep(1)
+            d.infobox(spinner[spin] + fill_text, height=6, width=50)
+            if not p.is_alive():
+                p.join()
+                break
+
+        if p.exitcode == 0:
+            success_msg(d, 10)
+            clear_screen(d)
+            exit()
+
+
+def rollback_confirm(d):
+    # reversing the yes/no labels so the default is no
+    return d.yesno("Are you sure you'd like to perform a rollback to factory defaults?\n\n"
+                   "This cannot be undone.", yes_label="No", no_label="Yes", height=9, width=50)
 
 
 def success_msg(d, seconds):
