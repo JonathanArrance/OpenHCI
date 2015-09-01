@@ -89,7 +89,7 @@
             }
         });
 
-        $("form input, form select".on("change focus keyup", function () {
+        $("form input, form select").on("change focus keyup", function () {
             window.setTimeout(function () {
                 if ($("#router-form").valid()) {
                     $('button[type=submit]').removeProp("disabled");

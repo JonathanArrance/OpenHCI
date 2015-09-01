@@ -690,26 +690,28 @@ def project_view(request, project_id):
         auth = request.session['auth']
         to = tenant_ops(auth)
         no = neutron_net_ops(auth)
-        saa = server_admin_actions
+
+        if auth['user_level'] == 0:
+            saa = server_admin_actions(auth)
+            host_dict = {'project_id': project_id, 'zone': 'nova'}
+            hosts = saa.list_compute_hosts(host_dict)
+
+            default_shib_project = to.get_default_tenant()
+            if default_shib_project is not None:
+                if project_id == default_shib_project['project_id']:
+                    is_auth_default = 1
 
         project = to.get_tenant(project_id)
-        default_shib_project = to.get_default_tenant()
-        if default_shib_project is not None:
-            if project_id == default_shib_project['project_id']:
-                is_auth_default = 1
-        pub_net_list  = no.list_external_networks()
 
-        public_networks=[]
+        pub_net_list = no.list_external_networks()
+        public_networks = []
         for net in pub_net_list:
             try:
                 public_networks.append(no.get_network(net['net_id'])['net_id'])
+                if net['net_name'] == "DefaultPublic":
+                    default_public = no.get_network(net['net_id'])['net_id']
             except:
                 pass
-
-        try:
-            default_public = public_networks[0] # <<< THIS NEEDS TO CHANGE IF MULTIPLE PUB NETWORKS EXIST
-        except:
-            default_public = "NO PUBLIC NETWORK"
 
         #do not call until version2
         #try:
@@ -717,9 +719,6 @@ def project_view(request, project_id):
         #except:
         #    containers = []
         # containers = []
-
-        host_dict     = {'project_id': project_id, 'zone': 'nova'}
-        hosts         = saa.list_compute_hosts(host_dict)
 
         return render_to_response('coal/project_view.html',
                                   RequestContext(request, {'project': project,
