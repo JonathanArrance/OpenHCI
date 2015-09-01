@@ -110,7 +110,9 @@
                 }
             }
         });
-        $("#group-form input, #group-form select").on("change focus keyup", function () {
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
             if ($("#group-form").valid()) {
                 var isValid = true;
                 $($("#group-ports").val().split(',')).each(function (index, element) {
@@ -126,6 +128,7 @@
             } else {
                 $('button[type=submit]').prop("disabled", true);
             }
+            }, 1000);
         });
     });
 </script>

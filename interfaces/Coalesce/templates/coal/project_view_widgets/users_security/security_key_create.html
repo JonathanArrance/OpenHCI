@@ -64,12 +64,15 @@
                         });
             }
         });
-        $("#key-name").on("change focus keyup", function () {
-            if ($("#key-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            } else {
-                $('button[type=submit]').prop("disabled", "disabled");
-            }
-        })
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#key-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", "disabled");
+                }
+            }, 1000);
+        });
     });
 </script>

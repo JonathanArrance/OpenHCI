@@ -570,54 +570,54 @@ def run_setup(new_system_variables, auth_dict):
 
     # setup the pre-installed images
     logger.sys_info('SETUP50:Importing Default Glance images...')
-    glance = glance_ops(auth_dict)
+    # glance = glance_ops(auth_dict)
     logger.sys_info('SETUP51:Importing Cirros image...')
-    cirros_input = {
-        'image_name': "Cirros-x86_64-0-3-1",
-        'container_format': "bare",
-        'disk_format': "qcow2",
-        'visibility': 'public',
-        'image_type': 'image_file',
-        'image_location': "/transcirrus/cirros-0.3.1-x86_64-disk.img",
-        'os_type': "linux"
-    }
-    import_cirros = glance.import_image(cirros_input)
-    if ('image_id' not in import_cirros):
-        logger.sys_warning('Could not import the default cirros image.')
-    else:
-        logger.sys_info("SETUP:Added the cirros image...")
+    # cirros_input = {
+    #     'image_name': "Cirros-x86_64-0-3-1",
+    #     'container_format': "bare",
+    #     'disk_format': "qcow2",
+    #     'visibility': 'public',
+    #     'image_type': 'image_file',
+    #     'image_location': "/transcirrus/cirros-0.3.1-x86_64-disk.img",
+    #     'os_type': "linux"
+    # }
+    # import_cirros = glance.import_image(cirros_input)
+    # if ('image_id' not in import_cirros):
+    #     logger.sys_warning('Could not import the default cirros image.')
+    # else:
+    #     logger.sys_info("SETUP:Added the cirros image...")
 
     logger.sys_info('SETUP52:Importing Ubuntu 12.04 image...')
-    ubuntu_input = {
-        'image_name': "Ubuntu-12-04-x86_64",
-        'container_format': "bare",
-        'disk_format': "qcow2",
-        'visibility': 'public',
-        'image_type': 'image_file',
-        'image_location': "/transcirrus/precise-server-cloudimg-amd64-disk1.img",
-        'os_type': "linux"
-    }
-    import_ubuntu = glance.import_image(ubuntu_input)
-    if ('image_id' not in import_ubuntu):
-        logger.sys_warning('Could not import the default Ubuntu Precise image.')
-    else:
-        logger.sys_info("SETUP:Added the Ubuntu 12.04 image...")
+    # ubuntu_input = {
+    #     'image_name': "Ubuntu-12-04-x86_64",
+    #     'container_format': "bare",
+    #     'disk_format': "qcow2",
+    #     'visibility': 'public',
+    #     'image_type': 'image_file',
+    #     'image_location': "/transcirrus/precise-server-cloudimg-amd64-disk1.img",
+    #     'os_type': "linux"
+    # }
+    # import_ubuntu = glance.import_image(ubuntu_input)
+    # if ('image_id' not in import_ubuntu):
+    #     logger.sys_warning('Could not import the default Ubuntu Precise image.')
+    # else:
+    #     logger.sys_info("SETUP:Added the Ubuntu 12.04 image...")
 
     logger.sys_info('SETUP53:Importing CentOS 6.5 image...')
-    fedora_input = {
-        'image_name': "CentOS-65-x86_64",
-        'container_format': "bare",
-        'disk_format': "qcow2",
-        'visibility': 'public',
-        'image_type': 'image_file',
-        'image_location': "/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
-        'os_type': "linux"
-    }
-    import_fedora = glance.import_image(fedora_input)
-    if ('image_id' not in import_fedora):
-        logger.sys_warning('Could not import the default Fedora image.')
-    else:
-        logger.sys_info("SETUP:Added the CentOS 6.5 image...")
+    # fedora_input = {
+    #     'image_name': "CentOS-65-x86_64",
+    #     'container_format': "bare",
+    #     'disk_format': "qcow2",
+    #     'visibility': 'public',
+    #     'image_type': 'image_file',
+    #     'image_location': "/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
+    #     'os_type': "linux"
+    # }
+    # import_fedora = glance.import_image(fedora_input)
+    # if ('image_id' not in import_fedora):
+    #     logger.sys_warning('Could not import the default Fedora image.')
+    # else:
+    #     logger.sys_info("SETUP:Added the CentOS 6.5 image...")
 
     # set the first time boot flag
     # first_boot = node_util.set_first_time_boot('UNSET')

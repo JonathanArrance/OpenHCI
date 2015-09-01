@@ -109,12 +109,15 @@
                 }, 2000);
             }
         });
-        $("#quota-form input, #quota-form select").on("change focus keyup", function () {
-            if ($("#quota-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            } else {
-                $('button[type=submit]').prop("disabled", true);
-            }
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#quota-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
+            }, 1000);
         });
     });
 </script>

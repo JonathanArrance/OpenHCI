@@ -86,10 +86,13 @@
                 closeModal();
             }
         });
-        $("#volume-form input").on("change focus keyup", function () {
-            if ($("#volume-form").valid()) {
-                $('button[type=submit]').removeProp("disabled");
-            }
-        })
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#volume-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                }
+            }, 1000);
+        });
     });
 </script>

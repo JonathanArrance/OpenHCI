@@ -1652,23 +1652,31 @@ class server_ops:
         #This only queries the transcirrus db
         #get the security group info from the db.
         get_group_dict = None
+        def_group_info = None
 
         if(self.is_admin == 1):
             proj_id = project_id
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(proj_id),"and":"user_id='%s'"%(self.user_id)}
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(proj_id)}
         elif(self.user_level == 1):
             proj_id = self.project_id
-            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(proj_id),"and":"user_id='%s'"%(self.user_id)}
+            get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'" %(proj_id)}
         elif(self.user_level == 2):
             proj_id = self.project_id
-            #HACK: we need to make it so that only the defaults are shown for a standard user until they make their own groups.
-            #get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(self.project_id),"and":"user_id='%s'" %(self.user_id)}
+
+            # get the default security group
+            get_default_group_dict = {"select":'def_security_group_id',"from":'projects',"where":"proj_id='%s'"%(proj_id)}
+            def_group = self.db.pg_select(get_default_group_dict)
+            get_def_group_info_dict = {"select":'*',"from":'trans_security_group',"where":"sec_group_id='%s'"%(def_group[0][0])}
+            def_group_info = self.db.pg_select(get_def_group_info_dict)
+
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(proj_id),"and":"user_id='%s'"%(self.user_id)}
         else:
             logger.sys_error('Could not determin user type for sysgroup listing.')
 
         try:
             groups = self.db.pg_select(get_group_dict)
+            if def_group_info is not None:
+                groups.append(def_group_info[0])
         except:
             logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(get_group_dict[0][3],proj_id))
             raise Exception("Could not get the security key info for sec_key: %s in project: %s" %(get_group_dict[0][3],proj_id))

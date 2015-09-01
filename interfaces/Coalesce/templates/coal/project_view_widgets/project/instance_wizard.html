@@ -819,12 +819,14 @@
         });
 
         $("form input, form select").on("change focus keyup", function () {
-            var currentForm = "#" + wizardSection + "-form";
-            if ($(currentForm).valid()) {
-                $("#wizard-next").removeProp("disabled");
-            } else {
-                $("#wizard-next").prop("disabled", "disabled");
-            }
+            window.setTimeout(function () {
+                var currentForm = "#" + wizardSection + "-form";
+                if ($(currentForm).valid()) {
+                    $("#wizard-next").removeProp("disabled");
+                } else {
+                    $("#wizard-next").prop("disabled", "disabled");
+                }
+            }, 1000);
         });
 
         $("#volume-existing").on("change focus keyup", function () {

@@ -1,9 +1,11 @@
 from __future__ import nested_scopes, division
 import sys, os, stat, time, getopt, subprocess, dialog
+from multiprocessing import Process
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.component.keystone.keystone_users import user_ops
 from transcirrus.operations.build_complete_project import build_project
 from transcirrus.operations.destroy_project import destroy_project
+from transcirrus.operations.rollback_setup import rollback as rb
 from transcirrus.database import node_db as node_op
 
 progname = os.path.basename(sys.argv[0])
@@ -1440,79 +1442,74 @@ def clear_screen(d):
     return -1
 
 
-def process_command_line():
-    global params
+def temp_dash(d, auth_dict):
+    while True:
+        selection = temp_dashboard(d)
+        if selection == "Rollback":
+            rollback(d, auth_dict)
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "ft",
-                                   ["test-suite",
-                                    "fast",
-                                    "help",
-                                    "version"])
-    except getopt.GetoptError, message:
-        sys.stderr.write(usage + "\n")
-        return ("exit", 1)
 
-    # Let's start with the options that don't require any non-option argument
-    # to be present
-    for option, value in opts:
-        if option == "--help":
-            print usage
-            return ("exit", 0)
-        elif option == "--version":
-            print "%s %s\n%s" % (progname, progversion, version_blurb)
-            return ("exit", 0)
+def temp_dashboard(d):
+    while True:
+        (code, tag) = d.radiolist(
+            "Dashboard - Select Option",
+            width=65,
+            choices=[("Rollback", "Restore factory defaults", 1)])
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    return tag
 
-    # Now, require a correct invocation.
-    if len(args) != 0:
-        sys.stderr.write(usage + "\n")
-        return ("exit", 1)
 
-    # Default values for parameters
-    params = {"fast_mode": False,
-              "testsuite_mode": False}
+def rollback(d, auth_dict):
+    if rollback_confirm(d) == d.DIALOG_OK:
+        return
+    else:
+        p = Process(target=rb, args=[auth_dict])
+        p.start()
+        fill_text = "Restoring factory defaults...\n\nPlease be patient."
+        spinner = ["[|] ", "[/] ", "[-] ", "[\\] "]
+        spin = 0
+        while 1:
+            spin = (spin + 1) % 4
+            time.sleep(1)
+            d.infobox(spinner[spin] + fill_text, height=6, width=50)
+            if not p.is_alive():
+                p.join()
+                break
 
-    # Get the home directory, if any, and store it in params (often useful).
-    root_dir = os.sep           # This is OK for Unix-like systems
-    params["home_dir"] = os.getenv("HOME", root_dir)
+        if p.exitcode == 0:
+            success_msg(d, 10)
+            clear_screen(d)
+            exit()
 
-    # General option processing
-    for option, value in opts:
-        if option in ("-t", "--test-suite"):
-            params["testsuite_mode"] = True
-            # --test-suite implies --fast
-            params["fast_mode"] = True
-        elif option in ("-f", "--fast"):
-            params["fast_mode"] = True
-        else:
-            # The options (such as --help) that cause immediate exit
-            # were already checked, and caused the function to return.
-            # Therefore, if we are here, it can't be due to any of these
-            # options.
-            assert False, "Unexpected option received from the " \
-                "getopt module: '%s'" % option
 
-    return ("continue", None)
+def rollback_confirm(d):
+    # reversing the yes/no labels so the default is no
+    return d.yesno("Are you sure you'd like to perform a rollback to factory defaults?\n\n"
+                   "This cannot be undone.", yes_label="No", no_label="Yes", height=9, width=50)
+
+
+def success_msg(d, seconds):
+    d.pause("""\
+Rollback has completed successfully. The system has been restored to\
+ factory defaults.  You may now set up your cloud again using the\
+ shell installer.\
+ """, height=15, seconds=seconds)
 
 
 def main(auth_dict):
-    what_to_do, code = process_command_line()
-    if what_to_do == "exit":
-        sys.exit(code)
-
     try:
         # If you want to use Xdialog (pathnames are also OK for the 'dialog'
         # argument), you can use:
         #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
         d = dialog.Dialog(dialog="dialog")
         d.add_persistent_args(["--backtitle", "TransCirrus - CoalesceShell"])
-        
 
         # Show the additional widgets before the "normal demo", so that I can
         # test new widgets quickly and simply hit Ctrl-C once they've been
         # shown.
 
-        dash(d, auth_dict)
+        temp_dash(d, auth_dict)
     except dialog.error, exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)
