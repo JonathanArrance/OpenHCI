@@ -25,6 +25,7 @@
                         class="volume">
                         <td class="volume-name">
                             <button data-call="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_storage_panel/"
                                     data-toggle="tooltip" data-placement="bottom"
                                     title="ID: {{ volume.info.volume_id }}"
                                     class="btn btn-12 btn-xs btn-social btn-light">
@@ -212,9 +213,13 @@
                     <tr id="{{ volume.info.volume_id }}"
                         class="volume">
                         <td class="volume-name">
-                            <a href="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
-                               data-toggle="tooltip" data-placement="right"
-                               title="ID: {{ volume.info.volume_id }}">{{ volume.info.volume_name }}</a>
+                            <button data-call="/projects/{{ project.project_id }}/volumes/{{ volume.info.volume_id }}/view/"
+                                    data-refresh="/projects/{{ project.project_id }}/get_storage_panel/"
+                                    data-toggle="tooltip" data-placement="bottom"
+                                    title="ID: {{ volume.info.volume_id }}"
+                                    class="btn btn-xs btn-12 btn-social btn-light">
+                                <i class="fa fa-info-circle"></i>{{ volume.info.volume_name }}
+                            </button>
                         </td>
                         <td class="volume-attached center-text
 
