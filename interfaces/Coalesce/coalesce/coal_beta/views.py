@@ -2337,7 +2337,12 @@ def delete_sec_group(request, sec_group_id, project_id):
             out['status'] = 'success'
             out['message'] = 'Successfully removed security group.'
     except Exception as e:
-        out = {'status' : "error", 'message' : "Could not delete security group: %s"%(e)}
+        if "SecurityGroupInUse" in str(e):
+            out = {'status' : "error", 'message' : "Could not delete security group: security group in use, if the "
+                                                   "instance using this security group was recently deleted, try again in "
+                                                   "a minute or two."}
+        else:
+            out = {'status' : "error", 'message' : "Could not delete security group: %s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
 def security_group_view(request, groupid, project_id):
