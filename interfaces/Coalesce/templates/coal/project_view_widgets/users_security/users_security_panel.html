@@ -156,12 +156,10 @@
             <tr>
                 <th>Security Group</th>
                 <th>Owner</th>
-                {% if user_level == 0 %}
-                    <th>
-                        <button class="btn btn-xs btn-success pull-right create-group"><i class="fa fa-plus"></i>
-                        </button>
-                    </th>
-                {% endif %}
+                <th>
+                    <button class="btn btn-xs btn-success pull-right create-group"><i class="fa fa-plus"></i>
+                    </button>
+                </th>
             </tr>
             </thead>
             <tbody>
@@ -180,7 +178,7 @@
                         <td class="group-owner">
                             {{ group.username }}
                         </td>
-                        {% if user_level == 0 %}
+                        {% if user_level == 0 or username == group.username %}
                             <td class="group-actions">
                                 <div class="btn-group actions-dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
