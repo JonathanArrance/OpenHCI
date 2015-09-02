@@ -453,8 +453,8 @@ class server_ops:
                           - project_id
         OUTPUT: r_dict - server_name
                        - server_id
-                       - sec_key_name
-                       - sec_group_name
+                       - server_key_name
+                       - server_group_name
                        - server_flavor
                        - flavor_id
                        - server_os

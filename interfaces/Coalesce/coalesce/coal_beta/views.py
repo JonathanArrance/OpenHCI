@@ -1700,6 +1700,10 @@ def get_users_security_panel(request, project_id):
         uo = user_ops(auth)
         so = server_ops(auth)
 
+        shadow_auth = extras.shadow_auth()
+        sso = server_ops(shadow_auth)
+        servers = sso.list_all_servers()
+
         project = to.get_tenant(project_id)
 
         limits = al.get_absolute_limit_for_tenant(auth['project_id'])
@@ -1724,6 +1728,14 @@ def get_users_security_panel(request, project_id):
         num_groups = len(sec_groups)
 
         sec_keys = so.list_sec_keys(project_id)
+        for key in sec_keys:
+            key['in_use'] = False
+            for server in servers:
+                server_dict = {'server_id': server['server_id'], 'project_id': project_id}
+                server_info = sso.get_server(server_dict)
+                if key['key_name'] == server_info['server_key_name']:
+                    key['in_use'] = True
+                    break
         num_keys = len(sec_keys)
 
         tenant_info = {'num_users': num_users,

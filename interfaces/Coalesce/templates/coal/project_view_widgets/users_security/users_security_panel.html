@@ -242,14 +242,20 @@
                         <td class="key-owner">
                             <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
                         </td>
-                        <td class="key-actions">
-                            <button type='button' class="delete-key btn btn-xs btn-danger pull-right"
+                        {% if key.in_use == False %}
+                            <td class="key-actions">
+                                <button type='button' class="delete-key btn btn-xs btn-danger pull-right"
                                     data-title="Delete Security Key" data-message="Delete {{ key.key_name }}?"
                                     data-call="/key_pair/{{ key.key_name }}/{{ project.project_id }}/delete/"
                                     data-notice="Deleting Security Key {{ key.key_name }}">
-                                <i class="fa fa-minus"></i>
-                            </button>
-                        </td>
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                            </td>
+                        {% else %}
+                            <td class="key-in-use center-text bg-info">
+                                IN USE
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             {% else %}
