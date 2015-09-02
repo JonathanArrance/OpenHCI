@@ -1733,9 +1733,10 @@ def get_users_security_panel(request, project_id):
             for server in servers:
                 server_dict = {'server_id': server['server_id'], 'project_id': project_id}
                 server_info = sso.get_server(server_dict)
-                if key['key_name'] == server_info['server_key_name']:
-                    key['in_use'] = True
-                    break
+                if 'server_key_name' in server_info:
+                    if key['key_name'] == server_info['server_key_name']:
+                        key['in_use'] = True
+                        break
         num_keys = len(sec_keys)
 
         tenant_info = {'num_users': num_users,
