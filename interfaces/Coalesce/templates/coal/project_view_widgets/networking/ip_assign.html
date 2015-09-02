@@ -42,7 +42,7 @@
     $(function () {
         var buttons = $(this).parent().parent().find('button'),
                 page = $("#page-content"),
-                storage = $("#storage-container");
+                networking = $("#networking-container");
         $("#ip-form").validate({
             rules: {
                 ipInstance: {
@@ -60,7 +60,7 @@
                             }
                             if (data.status == 'success') {
                                 showMessage('success', data.message);
-                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                                refreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
                                 stealthRefreshContainer(page, $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instances_panel/");
                             }
                         })
