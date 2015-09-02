@@ -23,7 +23,6 @@ def shadow_auth():
     NOTE:   need to consider the fact of hard-coding the password here
     """
     a = authorization('shadow_admin', 'manbehindthecurtain')
-    #a = authorization('admin', 'password')
     auth_dict = a.get_auth()
     return auth_dict
 
