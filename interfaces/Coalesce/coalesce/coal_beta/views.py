@@ -1609,7 +1609,7 @@ def get_networking_panel(request, project_id):
         for instance in instances:
             i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
             inst = so.get_server(i_dict)
-            if instance['public_ip'] == "None":
+            if instance['public_ip'] is None:
                 avail_instances.append(inst)
         num_instances = len(instances)
 
@@ -1653,9 +1653,9 @@ def get_ip_assign(request, project_id, floating_ip):
         instances = so.list_servers(project_id)
         for instance in instances:
             i_dict = {'server_id': instance['server_id'], 'project_id': project_id}
-            instance = so.get_server(i_dict)
-            if instance['server_public_ips'] != None:
-                avail_instances.append(instance)
+            inst = so.get_server(i_dict)
+            if instance['public_ip'] is None:
+                avail_instances.append(inst)
 
         return render_to_response('coal/project_view_widgets/networking/ip_assign.html', RequestContext(request, {
             'floating_ip': floating_ip, 'instances': avail_instances}))
