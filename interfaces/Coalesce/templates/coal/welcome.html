@@ -27,10 +27,10 @@
                             {% else %}
                                 {% if user_level == 1 %}
                                     To manage your project, follow the
-                                    <a href="/projects/{{ project_id }}/view/">My Project</a> link.
+                                    <a href="/projects/{{ project_id }}/view/">Your Project</a> link.
                                 {% else %}
                                     To manage your project, follow the
-                                    <a href="/projects/{{ project_id }}/view/">My Project</a> link.
+                                    <a href="/projects/{{ project_id }}/view/">Your Project</a> link.
                                 {% endif %}
                             {% endif %}
                         </h4>
@@ -48,44 +48,78 @@
                 </div>
             {% else %}
                 <div class="well well-sm col-md-12">
-                    <form class="form-horizontal" id="login-form" method="post">
-                        {% csrf_token %}
-                        <fieldset>
-                            <legend>Log In</legend>
-                            {% if providers %}
-                                {% if providers.has_shib != False %}
-                                    <p class="text-warning"><i class="fa fa-warning"></i> Shibboleth Users: Shibboleth
-                                        Authorization has been enabled on this cloud, <a href="/shib">click here</a> to
-                                        log in with Shibboleth.</p>
-                                {% endif %}
+                    <div class="col-md-12">
+                        <legend>Log In</legend>
+                        <p>
+                            By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
+                                href="/terms-of-use">Terms of Use</a>.
+                            If you do not agree to these terms of use, you should exit the website. By entering
+                            logon
+                            information and accessing the website contents, you are stating full acceptance of
+                            the
+                            terms.
+                        </p>
+                    </div>
+                    <ul class="nav nav-tabs">
+                        {% if providers %}
+                            {% if providers.has_shib != False and providers.has_ldap == False and providers.has_other == False %}
+                                <li class="active"><a data-toggle="tab" href="#shibboleth-login">Shibboleth</a></li>
+                                <li><a data-toggle="tab" href="#standard-login">Standard</a></li>
                             {% endif %}
-                            <div class="col-md-12">
-                                <p>
-                                    By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
-                                        href="/terms-of-use">Terms of Use</a>.
-                                    If you do not agree to these terms of use, you should exit the website. By entering
-                                    logon
-                                    information and accessing the website contents, you are stating full acceptance of
-                                    the
-                                    terms.
-                                </p>
+                        {% else %}
+                            <li class="active"><a data-toggle="tab" href="#standard-login">Standard</a></li>
+                        {% endif %}
+                    </ul>
+                    <div class="tab-content">
+                        {% if providers.has_shib != False and providers.has_ldap == False and providers.has_other == False %}
+                            <div id="shibboleth-login" class="tab-pane fade in active">
+                                <a href="/shib"><button class="center-block btn-primary btn-lg btn-success">Log In Via Shibboleth</button></a>
                             </div>
-                            <div class="form-group col-md-12">
-                                <label class="col-md-2" for="username">Username:</label>
-                                <input class="col-md-10" type="text" name="username" id="username"
-                                       placeholder="Your Username"/>
-                            </div>
-                            <div class="form-group col-md-12">
-                                <label class="col-md-2" for="password">Password:</label>
-                                <input class="col-md-10" type="password" name="password" id="password"
-                                       placeholder="Your Password"/>
-                            </div>
+                            <div id="standard-login" class="tab-pane fade">
+                                <form class="form-horizontal" id="login-form" method="post">
+                                    {% csrf_token %}
+                                    <fieldset>
+                                        <div class="form-group col-md-12">
+                                            <label class="col-md-2" for="username">Username:</label>
+                                            <input class="col-md-10" type="text" name="username" id="username"
+                                                   placeholder="Your Username"/>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <label class="col-md-2" for="password">Password:</label>
+                                            <input class="col-md-10" type="password" name="password" id="password"
+                                                   placeholder="Your Password"/>
+                                        </div>
 
-                            <div class="form-group col-md-12">
-                                <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
+                                        <div class="form-group col-md-12">
+                                            <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
+                                        </div>
+                                    </fieldset>
+                                </form>
                             </div>
-                        </fieldset>
-                    </form>
+                        {% else %}
+                            <div id="standard-login" class="tab-pane fade in active">
+                                <form class="form-horizontal" id="login-form" method="post">
+                                    {% csrf_token %}
+                                    <fieldset>
+                                        <div class="form-group col-md-12">
+                                            <label class="col-md-2" for="username">Username:</label>
+                                            <input class="col-md-10" type="text" name="username" id="username"
+                                                   placeholder="Your Username"/>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <label class="col-md-2" for="password">Password:</label>
+                                            <input class="col-md-10" type="password" name="password" id="password"
+                                                   placeholder="Your Password"/>
+                                        </div>
+
+                                        <div class="form-group col-md-12">
+                                            <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
+                                        </div>
+                                    </fieldset>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             {% endif %}
 
