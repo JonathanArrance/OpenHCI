@@ -92,36 +92,14 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>m1.tiny</td>
-                                <td>512</td>
-                                <td>1</td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <td>m1.small</td>
-                                <td>2048</td>
-                                <td>1</td>
-                                <td>20</td>
-                            </tr>
-                            <tr>
-                                <td>m1.medium</td>
-                                <td>4096</td>
-                                <td>2</td>
-                                <td>40</td>
-                            </tr>
-                            <tr>
-                                <td>m1.large</td>
-                                <td>8192</td>
-                                <td>4</td>
-                                <td>80</td>
-                            </tr>
-                            <tr>
-                                <td>m1.xlarge</td>
-                                <td>16384</td>
-                                <td>8</td>
-                                <td>160</td>
-                            </tr>
+                            {% for flavor in flavors %}
+                                <tr>
+                                    <td>{{ flavor.info.name }}</td>
+                                    <td>{{ flavor.info.memory }}</td>
+                                    <td>{{ flavor.info.cpus }}</td>
+                                    <td>{{ flavor.info.disk_space }}</td>
+                                </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
