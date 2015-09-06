@@ -92,36 +92,14 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>m1.tiny</td>
-                                <td>512</td>
-                                <td>1</td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <td>m1.small</td>
-                                <td>2048</td>
-                                <td>1</td>
-                                <td>20</td>
-                            </tr>
-                            <tr>
-                                <td>m1.medium</td>
-                                <td>4096</td>
-                                <td>2</td>
-                                <td>40</td>
-                            </tr>
-                            <tr>
-                                <td>m1.large</td>
-                                <td>8192</td>
-                                <td>4</td>
-                                <td>80</td>
-                            </tr>
-                            <tr>
-                                <td>m1.xlarge</td>
-                                <td>16384</td>
-                                <td>8</td>
-                                <td>160</td>
-                            </tr>
+                            {% for flavor in flavors %}
+                                <tr>
+                                    <td>{{ flavor.info.name }}</td>
+                                    <td>{{ flavor.info.memory }}</td>
+                                    <td>{{ flavor.info.cpus }}</td>
+                                    <td>{{ flavor.info.disk_space }}</td>
+                                </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -433,20 +411,16 @@
                                 <legend>Progress</legend>
                                 <h6>Your Instance information:</h6>
                                 <ul class="list-unstyled wizard-info">
-                                    <li class="instance"><label>Instance Name: </label><span class="name"></span></li>
-                                    <li class="image"><label>Image Name: </label><span class="name"></span></li>
-                                    <li class="instance"><label>Instance Network: </label><span class="network"></span>
-                                    </li>
-                                    <li class="instance"><label>Instance Flavor: </label><span class="flavor"></span>
-                                    </li>
-                                    <li class="volume"><label>Volume Name: </label><span class="name"></span></li>
-                                    <li class="volume"><label>Volume Size: </label><span class="size"></span></li>
-                                    <li class="volume"><label>Volume Type: </label><span class="type"></span></li>
-                                    <li class="instance"><label>Floating IP Address: </label><span class="ip"></span>
-                                    </li>
-                                    <li class="security"><label>Security Group: </label><span class="group"></span></li>
-                                    <li class="security"><label>Security Key Pair: </label><span class="key"></span>
-                                    </li>
+                                    <li class="instance"><label>Instance Name: </label> <span class="name"></span></li>
+                                    <li class="image"><label>Image Name: </label> <span class="name"></span></li>
+                                    <li class="instance"><label>Instance Network: </label> <span class="network"></span></li>
+                                    <li class="instance"><label>Instance Specification: </label> <span class="flavor"></span> </li>
+                                    <li class="volume"><label>Volume Name: </label> <span class="name"></span></li>
+                                    <li class="volume"><label>Volume Size: </label> <span class="size"></span></li>
+                                    <li class="volume"><label>Volume Type: </label> <span class="type"></span></li>
+                                    <li class="instance"><label>Floating IP Address: </label> <span class="ip"></span></li>
+                                    <li class="security"><label>Security Group: </label> <span class="group"></span></li>
+                                    <li class="security"><label>Security Key Pair: </label> <span class="key"></span></li>
                                 </ul>
 
                                 <p>The progress bars will show you the status of your creation process. The Overall
@@ -476,14 +450,14 @@
                                 <legend>Success</legend>
                                 <h6>Login/Access Information:</h6>
 
-                                <div class="col-sm-12"><p class="text-success">
+                                <div class="col-sm-12"><p>
                                     Instance Name: <span class="wizard-confirm-name"></span></p>
                                 </div>
-                                <div class="col-sm-12"><p class="text-info">
+                                <div class="col-sm-12"><p>
                                     External IP address: <span class="wizard-confirm-ip"></span></p>
                                 </div>
-                                <div class="col-sm-12">
-                                    <p class="text-success">Linux Device: <span>/dev/vdb</span></p>
+                                <div class="col-sm-12"><p>
+                                    Linux Device: <span>/dev/vdb</span></p>
                                 </div>
                                 <div class="col-sm-12">
                                     <p>Please use the given information to access and login to your

@@ -345,6 +345,7 @@ function buildInstance() {
                     updateProgress(step, steps, "Key Created");
                     key = data.key_name;
                     keyId = data.key_id;
+                    createKey.resolve();
                 }
             })
             .fail(function () {
@@ -360,10 +361,10 @@ function buildInstance() {
                 $(data).each(function (index, element) {
                     if (element.key_name == key) {
                         keyId = element.key_id;
+                        createKey.resolve();
                     }
                 });
             });
-        createKey.resolve();
     }
 
     $.when(createSecGroup, createKey).done(function () {

@@ -329,6 +329,32 @@ input[type=file] {
     text-decoration: none;
 }
 
+.nav-tabs {
+    border-bottom: 1px solid #2b3e50;
+}
+
+.nav-tabs > li > a {
+    background-color: #4e5d6c;
+    border: 1px solid #405162;
+    border-bottom-color: #2b3e50
+}
+
+.nav-tabs > li > a:hover {
+    background-color: #2b3e50
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+    color: #ebebeb;
+    background-color: #4e5d6c;
+    border: 1px solid #2b3e50;
+    border-bottom-color: transparent;
+    cursor: default
+}
+
+.tab-content {
+    padding: 15px;
+}
+
 footer {
     background-color: rgb(214, 214, 214);
 }
@@ -431,11 +457,11 @@ footer {
 /* INSTANCE WIZARD */
 
 .wizard-info > li:nth-child(even) {
-    color: rgb(92, 184, 92)
+    color: rgb(255, 255, 255)
 }
 
 .wizard-info > li:nth-child(odd) {
-    color: rgb(91, 192, 222)
+    color: rgb(255, 255, 255)
 }
 
 /* CHARTS */

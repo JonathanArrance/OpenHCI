@@ -75,10 +75,10 @@
                         {% endif %}
                     {% elif user_level == 1 %}
                         <li><a href="/projects/{{ project_id }}/view/" data-toggle="collapse"
-                               data-target=".navbar-collapse">My Project</a></li>
+                               data-target=".navbar-collapse">Your Project</a></li>
                     {% else %}
                         <li><a href="/projects/{{ project_id }}/view/" data-toggle="collapse"
-                               data-target=".navbar-collapse">My Project</a></li>
+                               data-target=".navbar-collapse">Your Project</a></li>
                     {% endif %}
                 {% endif %}
                 <li><a href="{% url 'logout' %}" data-toggle="collapse" data-target=".navbar-collapse">Log Out</a></li>

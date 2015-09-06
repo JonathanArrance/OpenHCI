@@ -770,6 +770,18 @@ def get_instance_wizard(request, project_id):
 
         images = go.list_images()
         flavors = fo.list_flavors()
+        for flavor in flavors:
+            f_info = fo.get_flavor(flavor['id'])
+            flavor['info'] = {
+                'name': f_info['flavor_name'],
+                'id': f_info['flav_id'],
+                'memory': f_info['memory(MB)'],
+                'disk_space': f_info['disk_space(GB)'],
+                'ephemeral': f_info['ephemeral(GB)'],
+                'swap': f_info['swap(GB)'],
+                'cpus': f_info['cpus'],
+                'link': f_info['link'],
+                'metadata': f_info['metadata']}
         networks = no.list_internal_networks(project_id)
         fips = l3.list_floating_ips(project_id)
 
@@ -791,16 +803,16 @@ def get_instance_wizard(request, project_id):
         return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
-                                                           'fips': fips, 'volumes': volumes,
+                                                           'fips': fips, 'volumes': volumes, 
                                                            'volume_types': volume_types, 'groups': sec_groups,
                                                            'keys': sec_keys, 'tenant_info': tenant_info}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
-                                                           'fips': fips, 'volumes': volumes,
-                                                           'volume_types': volume_types, 'sec_groups': sec_groups,
-                                                           'sec_keys': sec_keys, 'tenant_info': tenant_info,
+                                                           'fips': fips, 'volumes': volumes, 
+                                                           'volume_types': volume_types, 'groups': sec_groups,
+                                                           'keys': sec_keys, 'tenant_info': tenant_info,
                                                            'error': "Error: %s" % e}))
 
 

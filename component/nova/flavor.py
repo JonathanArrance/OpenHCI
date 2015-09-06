@@ -60,8 +60,8 @@ class flavor_ops:
               users and admin can only get flavors associated with their
               projects
         INPUT: self object
-        OUTPUT: array of r_dict - flavor_name
-                                - flav_id
+        OUTPUT: array of r_dict - name
+                                - id
         ACCESS: All users can use this function
         """
         #connec to the rest api caller.
