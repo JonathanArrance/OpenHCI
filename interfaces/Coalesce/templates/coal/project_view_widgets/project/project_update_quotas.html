@@ -26,8 +26,28 @@
                                class="col-sm-8">
                     </div>
                     <div class="form-group col-sm-12">
+                        <label for="gigabytes" class="col-sm-4 control-label">Storage (gb):</label>
+                        <input type="text" name="gigabytes" id="gigabytes" value="{{ quota.gigabytes }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
                         <label for="instances" class="col-sm-4 control-label">Instances:</label>
                         <input type="text" name="instances" id="instances" value="{{ quota.instances }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="snapshots" class="col-sm-4 control-label">Snapshots:</label>
+                        <input type="text" name="snapshots" id="snapshots" value="{{ quota.snapshots }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="fixed_ips" class="col-sm-4 control-label">Fixed IPs:</label>
+                        <input type="text" name="fixed_ips" id="fixed_ips" value="{{ quota.fixed_ips }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="floating_ips" class="col-sm-4 control-label">Floating IPs:</label>
+                        <input type="text" name="floating_ips" id="floating_ips" value="{{ quota.floating_ips }}"
                                class="col-sm-8">
                     </div>
                     <div class="form-group col-sm-12">
@@ -36,8 +56,18 @@
                                class="col-sm-8">
                     </div>
                     <div class="form-group col-sm-12">
-                        <label for="gigabytes" class="col-sm-4 control-label">Storage (gb):</label>
-                        <input type="text" name="gigabytes" id="gigabytes" value="{{ quota.gigabytes }}"
+                        <label for="security_groups" class="col-sm-4 control-label">Security Groups:</label>
+                        <input type="text" name="security_groups" id="security_groups" value="{{ quota.security_groups }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="security_group_rules" class="col-sm-4 control-label">Security Group Rules:</label>
+                        <input type="text" name="security_group_rules" id="security_group_rules" value="{{ quota.security_group_rules }}"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="key_pairs" class="col-sm-4 control-label">Security Keys:</label>
+                        <input type="text" name="key_pairs" id="key_pairs" value="{{ quota.cores }}"
                                class="col-sm-8">
                     </div>
                 </fieldset>
@@ -68,27 +98,57 @@
                     required: true,
                     min: 1
                 },
+                gigabytes: {
+                    required: true,
+                    min: 1
+                },
                 instances: {
                     required: true,
                     min: 1
+                },
+                snapshots: {
+                    required: true,
+                    min: 1
+                },
+                fixed_ips: {
+                    required: true,
+                    min: -1
+                },
+                floating_ips: {
+                    required: true,
+                    min: -1
                 },
                 volumes: {
                     required: true,
                     min: 1
                 },
-                gigabytes: {
+                security_groups: {
                     required: true,
-                    min: 1
+                    min: -1
+                },
+                security_group_rules: {
+                    required: true,
+                    min: -1
+                },
+                key_pairs: {
+                    required: true,
+                    min: -1
                 }
             },
             submitHandler: function () {
-                showMessage('info', "Creating new network");
+                showMessage('info', "Updating project quotas");
                 var valueString =
                         "cores:" + $("#cores").val() + "," +
                         "ram:" + $("#ram").val() + "," +
+                        "gigabytes:" + $("#gigabytes").val() + "," +
                         "instances:" + $("#instances").val() + "," +
+                        "snapshots:" + $("#snapshots").val() + "," +
+                        "fixed_ips:" + $("#fixed_ips").val() + "," +
+                        "floating_ips:" + $("#floating_ips").val() + "," +
                         "volumes:" + $("#volumes").val() + "," +
-                        "gigabytes:" + $("#gigabytes").val();
+                        "security_groups:" + $("#security_groups").val() + "," +
+                        "security_group_rules:" + $("#security_group_rules").val() + "," +
+                        "key_pairs:" + $("#key_pairs").val();
                 var url = '/projects/' + CURRENT_PROJECT_ID + '/' + valueString + '/set_project_quota/';
                 $.getJSON(url)
                         .done(function (data) {

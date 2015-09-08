@@ -640,7 +640,13 @@ def set_project_quota(request, project_id, quota_settings):
     settings_dict['project_id'] = project_id
     try:
         proj_out = qo.update_project_quotas(settings_dict)
-        net_out = ao.update_net_quota(settings_dict)
+        net_update_dict = {
+                            "project_id": project_id,
+                            "security_group_rule_quota": settings_dict['security_group_rules'],
+                            "security_group_quota": settings_dict['security_groups'],
+                            "floatingip_quota": settings_dict['floating_ips']
+                          }
+        net_out = ao.update_net_quota(net_update_dict)
         out = {}
         out['project'] = proj_out
         out['net'] = net_out
