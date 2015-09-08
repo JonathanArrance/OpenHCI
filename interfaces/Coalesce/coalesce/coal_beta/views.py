@@ -1712,7 +1712,7 @@ def get_users_security_panel(request, project_id):
         uo = user_ops(auth)
         so = server_ops(auth)
 
-        servers = so.list_servers()
+        servers = so.list_servers(project_id)
 
         project = to.get_tenant(project_id)
 
