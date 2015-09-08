@@ -1712,9 +1712,7 @@ def get_users_security_panel(request, project_id):
         uo = user_ops(auth)
         so = server_ops(auth)
 
-        shadow_auth = extras.shadow_auth()
-        sso = server_ops(shadow_auth)
-        servers = sso.list_all_servers()
+        servers = so.list_servers()
 
         project = to.get_tenant(project_id)
 
@@ -1744,7 +1742,7 @@ def get_users_security_panel(request, project_id):
             key['in_use'] = False
             for server in servers:
                 server_dict = {'server_id': server['server_id'], 'project_id': project_id}
-                server_info = sso.get_server(server_dict)
+                server_info = so.get_server(server_dict)
                 if 'server_key_name' in server_info:
                     if key['key_name'] == server_info['server_key_name']:
                         key['in_use'] = True
