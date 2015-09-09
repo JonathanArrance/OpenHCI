@@ -4780,6 +4780,14 @@ def logout(request, next_page=None,
     #     current_app=current_app)
 
 
+@never_cache
+def shadow_logout(request):
+    """
+    Logs out the user.
+    """
+    auth_logout(request)
+
+
 def handle_uploaded_file(f):
     with open('/tmp/upload.img', 'wb+') as destination:
         for chunk in f.chunks():

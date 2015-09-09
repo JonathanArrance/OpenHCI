@@ -774,6 +774,10 @@ urlpatterns = patterns('',
             {'template_name': 'coal/welcome.html'},
             name='logout'),
 
+        url(r'^shadow_logout/$',
+            'coalesce.coal_beta.views.shadow_logout',
+            name='shadow_logout'),
+
         url(r'^coal/change-password/$',
             'coalesce.coal_beta.views.password_change',
             name='change-password'),

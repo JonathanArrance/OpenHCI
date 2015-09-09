@@ -26,21 +26,6 @@
 
 <body>
 
-<div id="confirm-modal" class="modal" role="dialog" aria-labelledby="modal-label"
-     data-controls-modal="confirm-modal" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="confirm-content">
-        </div>
-    </div>
-</div>
-
-<div id="info-modal" class="modal">
-    <div class="modal-dialog modal-wide">
-        <div class="info-content">
-        </div>
-    </div>
-</div>
-
 
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
@@ -163,6 +148,10 @@
             }
         });
     });
+
+    window.onbeforeunload = function () {
+        $.getJSON("/shadow_logout/");
+    }
 </script>
 </body>
 </html>
