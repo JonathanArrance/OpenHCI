@@ -151,13 +151,13 @@
                                 <i class="fa fa-power-off"></i> power on
                             </button>
                         {% endif %}
-                        <button type="button" class="btn btn-xs btn-danger delete-instance-from-view"
-                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"
-                                data-notice="Deleting Instance {{ instance.server_name }}"
-                                data-toggle="popover" title="Delete Instance" data-html="true"
-                                data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
-                            <i class="fa fa-trash-o"></i> delete
-                        </button>
+{#                        <button type="button" class="btn btn-xs btn-danger delete-instance-from-view"#}
+{#                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"#}
+{#                                data-notice="Deleting Instance {{ instance.server_name }}"#}
+{#                                data-toggle="popover" title="Delete Instance" data-html="true"#}
+{#                                data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">#}
+{#                            <i class="fa fa-trash-o"></i> delete#}
+{#                        </button>#}
                     </th>
                 </tr>
                 </tbody>

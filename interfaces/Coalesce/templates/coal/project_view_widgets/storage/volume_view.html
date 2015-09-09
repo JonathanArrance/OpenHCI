@@ -82,14 +82,14 @@
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>"
                                     data-placement="bottom"><i class="fa fa-clone"></i> revert
                             </button>
-                        {% else %}
-                            <button type="button" class="btn btn-xs btn-danger delete-volume-from-view"
-                                    data-call="/delete_volume/{{ volume_info.volume_id }}/{{ current_project_id }}/"
-                                    data-notice="Deleting Volume {{ volume_info.volume_name }}"
-                                    data-toggle="popover" title="Delete Volume" data-html="true"
-                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
-                                <i class="fa fa-trash-o"></i> delete
-                            </button>
+{#                        {% else %}#}
+{#                            <button type="button" class="btn btn-xs btn-danger delete-volume-from-view"#}
+{#                                    data-call="/delete_volume/{{ volume_info.volume_id }}/{{ current_project_id }}/"#}
+{#                                    data-notice="Deleting Volume {{ volume_info.volume_name }}"#}
+{#                                    data-toggle="popover" title="Delete Volume" data-html="true"#}
+{#                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">#}
+{#                                <i class="fa fa-trash-o"></i> delete#}
+{#                            </button>#}
                         {% endif %}
                     </td>
                 </tr>
