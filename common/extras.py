@@ -35,7 +35,7 @@ def make_password(length=16):
     ACCESS: wide open, but with great power comes great responsibility
     NOTE:
     """
-    char_set = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ^!\$%&/()=?{[]}+~#-_.:,;<>|\\'
+    char_set = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!()-._`@'
     pwd = []
     while len(pwd) < length:
         next = choice(char_set)
