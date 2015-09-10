@@ -427,13 +427,13 @@
                                     Progress bar is the overall progress of the entire creation process. The Image
                                     Upload is the progress of uploading your image.</p>
 
-                                <label>Overall Rrogress: <span id="wizard-overall-progress-label"></span></label>
+                                <label>Overall Progress: <span id="wizard-overall-progress-label"></span></label>
 
                                 <div id="wizard-overall-progress-bar" class="progress progress-striped">
                                     <div class="progress-bar progress-bar-info progress-bar-striped bg-active"
                                          style="width: 0"></div>
                                 </div>
-                                <label>Upload Rrogress: <span id="wizard-image-progress-label">0%</span></label>
+                                <label>Upload Progress: <span id="wizard-image-progress-label">0%</span></label>
 
                                 <div id="wizard-image-upload-bar" class="progress progress-striped">
                                     <div class="progress-bar progress-bar-info progress-bar-striped bg-active"
@@ -514,7 +514,7 @@
                                 <h6>You can access your like so:</h6>
 
                                 <div class="col-sm-12">
-                                    <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@204.64.2.44</p>
+                                    <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@<span class="wizard-confirm-ip example"></span></p>
                                 </div>
                                 <div class="col-sm-12">
                                     <p>If at anytime you forget this information, you can retrieve it by clicking the
@@ -541,11 +541,11 @@
 <script>
     $('[data-toggle="tooltip"]').tooltip();
     $(function () {
-        initializeBamSection();
+        initializeInstanceWizard();
 
         $("#wizard-next").click(function (event) {
             event.preventDefault();
-            changeBamSection("next");
+            changeWizardSection("next");
             var currentForm = "#" + wizardSection + "-form";
             if ($(currentForm).valid()) {
                 $("#wizard-next").removeProp("disabled");
@@ -556,7 +556,7 @@
 
         $("#wizard-back").click(function (event) {
             event.preventDefault();
-            changeBamSection("back");
+            changeWizardSection("back");
             var currentForm = "#" + wizardSection + "-form";
             if ($(currentForm).valid()) {
                 $("#wizard-next").removeProp("disabled");

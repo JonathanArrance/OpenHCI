@@ -26,11 +26,11 @@ var wizardSection = "initialize",
         "groupPorts": $("#group-ports")
     };
 
-function initializeBamSection() {
+function initializeInstanceWizard() {
     switchSections(wizardSection, "instance");
 }
 
-function changeBamSection(button) {
+function changeWizardSection(button) {
     var nextSection = getNextSection(wizardSection, button);
     switchSections(wizardSection, nextSection);
 }
@@ -508,6 +508,8 @@ function buildInstance() {
                                 return false;
                             })
                     } else {
+                        $(".wizard-confirm-ip").html("None");
+                        $(".wizard-confirm-ip.example").html("204.64.2.44");
                         assignIp.resolve();
                         step++;
                     }
