@@ -236,6 +236,11 @@ $(function () {
         showConfirmModal('/security_group/get/create/');
     });
 
+    $(document).on('click', '.update-group', function (event) {
+        event.preventDefault();
+        showConfirmModal($(this).data("call"));
+    });
+
     $(document).on('click', '.create-key', function (event) {
         event.preventDefault();
         showConfirmModal('/key_pair/get/create/');

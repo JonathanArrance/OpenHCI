@@ -178,8 +178,8 @@
                         <td class="group-owner">
                             {{ group.username }}
                         </td>
-                        {% if user_level == 0 or username == group.username %}
-                            <td class="group-actions">
+                        <td class="group-actions">
+                            {% if user_level == 0 or username == group.username %}
                                 <div class="btn-group actions-dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                                        aria-expanded="false">
@@ -187,7 +187,10 @@
                                         <span class="caret"></span>
                                     </a>
                                     <ul class="dropdown-menu table-dropdown">
-                                        <!--<li><a href="#" class="update-group"><i class="fa fa-cog"></i> update</a></li>-->
+                                        <li><a href="#" class="update-group"
+                                                                data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
+                                                                data-call="/security_group/get/update/{{ group.sec_group_id }}/{{ project.project_id }}/"
+                                                                ><i class="fa fa-cog"></i> update</a></li>
                                         <li class="bg-danger"><a href="#" class="delete-group"
                                                                  data-title="Delete Security Group"
                                                                  data-message="Delete {{ group.sec_group_name }}?"
@@ -197,8 +200,8 @@
                                         </li>
                                     </ul>
                                 </div>
-                            </td>
                         {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             {% else %}

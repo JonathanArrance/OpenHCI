@@ -573,6 +573,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_security_group_create',
             name='get_security_group_create'),
 
+        url(r'^security_group/get/update/(?P<sec_group_id>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_security_group_update',
+            name='get_security_group_update'),
+
         url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_keypair',
             name='create_keypair'),

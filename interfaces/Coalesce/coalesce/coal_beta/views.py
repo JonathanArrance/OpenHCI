@@ -2335,6 +2335,39 @@ def create_security_group(request, groupname, groupdesc, ports, transport, proje
         out = {'status' : "error", 'message' : "Could not create security group %s: %s" %(groupname,e)}
     return HttpResponse(simplejson.dumps(out))
 
+
+def get_security_group_update(request, sec_group_id, project_id):
+    sec_group = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        sec_dict = {'sec_group_id': sec_group_id, 'project_id': project_id}
+        sec_group = so.get_sec_group(sec_dict)
+        tcp = []
+        udp = []
+        # icmp = []
+        ports = ""
+        for port in sec_group['ports']:
+            if port['transport'] == 'tcp':
+                tcp.append(int(port['to_port']))
+            if port['transport'] == 'udp':
+                udp.append(int(port['to_port']))
+            # if port['transport'] == 'icmp':
+                # icmp.append(int(port['to_port']))
+        if len(tcp) != 0:
+            transport = sorted(tcp)
+            transport_tag = "tcp"
+        else:
+            transport = sorted(udp)
+            transport_tag = "udp"
+        for port in transport:
+            ports += str(port) + ","
+        ports = ports[:-1]
+        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports, 'transport_tag': transport_tag}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group,'error': "Error: %s"%e}))
+
+
 def update_security_group(request, groupid, project_id, ports, enable_ping, transport):
     output = {}
     try:
@@ -2385,11 +2418,14 @@ def security_group_view(request, groupid, project_id):
     sec_group = so.get_sec_group(grp)
     for port in sec_group['ports']:
         if port['transport'] == 'tcp':
-            tcp.append(port)
+            tcp.append(int(port['to_port']))
         if port['transport'] == 'udp':
-            udp.append(port)
-        if port['transport'] == 'icmp':
-            icmp.append(port)
+            udp.append(int(port['to_port']))
+        # if port['transport'] == 'icmp':
+            # icmp.append(int(port['to_port']))
+    tcp = sorted(tcp)
+    udp = sorted(udp)
+    icmp = sorted(icmp)
     ports = {'tcp': tcp, 'udp': udp, 'icmp':icmp}
     return render_to_response('coal/project_view_widgets/users_security/security_group_view.html',
                                RequestContext(request, {'sec_group': sec_group, 'ports':ports}))
