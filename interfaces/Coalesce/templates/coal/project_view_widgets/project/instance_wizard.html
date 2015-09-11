@@ -64,9 +64,12 @@
                                 </div>
                                 <div class="form-group col-sm-12">
                                     <label for="instance-ip" class="col-sm-4 control-label">
-                                        <button type="button" id="wizard-allocate-ip" class="btn btn-xs btn-success">
-                                            <i class="fa fa-plus"></i>
-                                        </button>
+                                        {% if user_level <= 1 %}
+                                            <button type="button" id="wizard-allocate-ip"
+                                                    class="btn btn-xs btn-success">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        {% endif %}
                                         <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
                                            data-title="To assign an external IP address to your new instance, select an IP address in pulldown list. If no IP addresses are available, please contact your cloud administrator."></i>
                                         Floating IP
@@ -413,14 +416,19 @@
                                 <ul class="list-unstyled wizard-info">
                                     <li class="instance"><label>Instance Name: </label> <span class="name"></span></li>
                                     <li class="image"><label>Image Name: </label> <span class="name"></span></li>
-                                    <li class="instance"><label>Instance Network: </label> <span class="network"></span></li>
-                                    <li class="instance"><label>Instance Specification: </label> <span class="flavor"></span> </li>
+                                    <li class="instance"><label>Instance Network: </label> <span class="network"></span>
+                                    </li>
+                                    <li class="instance"><label>Instance Specification: </label> <span
+                                            class="flavor"></span></li>
                                     <li class="volume"><label>Volume Name: </label> <span class="name"></span></li>
                                     <li class="volume"><label>Volume Size: </label> <span class="size"></span></li>
                                     <li class="volume"><label>Volume Type: </label> <span class="type"></span></li>
-                                    <li class="instance"><label>Floating IP Address: </label> <span class="ip"></span></li>
-                                    <li class="security"><label>Security Group: </label> <span class="group"></span></li>
-                                    <li class="security"><label>Security Key Pair: </label> <span class="key"></span></li>
+                                    <li class="instance"><label>Floating IP Address: </label> <span class="ip"></span>
+                                    </li>
+                                    <li class="security"><label>Security Group: </label> <span class="group"></span>
+                                    </li>
+                                    <li class="security"><label>Security Key Pair: </label> <span class="key"></span>
+                                    </li>
                                 </ul>
 
                                 <p>The progress bars will show you the status of your creation process. The Overall
@@ -514,7 +522,8 @@
                                 <h6>You can access your like so:</h6>
 
                                 <div class="col-sm-12">
-                                    <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@<span class="wizard-confirm-ip example"></span></p>
+                                    <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@<span
+                                            class="wizard-confirm-ip example"></span></p>
                                 </div>
                                 <div class="col-sm-12">
                                     <p>If at anytime you forget this information, you can retrieve it by clicking the

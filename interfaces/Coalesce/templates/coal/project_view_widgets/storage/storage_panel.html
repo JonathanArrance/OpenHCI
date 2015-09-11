@@ -126,6 +126,13 @@
                         generateQuotaPie("storage-stats", [['used', "{{ tenant_info.used_storage }}"], ['available', "{{ quota.gigabytes }}"]], "Storage (gb)");
                     </script>
                 </span>
+                <div class="col-sm-12">
+                    <p class="small pull-left">
+                        <label>Legend:</label>
+                        <span class="label label-info">Used</span>
+                        <span class="label label-success">Available</span>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -223,6 +230,7 @@
                             </button>
                         </td>
                         <td class="volume-attached center-text
+
 
 
                                 {% if volume.info.volume_attached == 'true' %}{% if volume.info.volume_instance.server_name %} bg-info{% else %} bg-danger{% endif %}{% endif %}">

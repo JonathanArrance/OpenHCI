@@ -330,8 +330,8 @@ function generateQuotaPie(id, data, label) {
         }
     }
     charts[id] = generatePie(id, data, label);
-
 }
+
 function generateInstanceBars(meters, stats) {
     meters = JSON.parse(meters.jsonify());
     stats = JSON.parse(stats.jsonify());
