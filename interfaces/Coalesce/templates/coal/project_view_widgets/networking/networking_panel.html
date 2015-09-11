@@ -100,6 +100,13 @@
                         generateQuotaPie("fip-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
                     </script>
                 </span>
+                <div class="col-sm-12">
+                    <p class="small pull-left">
+                        <label>Legend:</label>
+                        <span class="label label-info">Used</span>
+                        <span class="label label-success">Available</span>
+                    </p>
+                </div>
             </div>
         </div>
     </div>

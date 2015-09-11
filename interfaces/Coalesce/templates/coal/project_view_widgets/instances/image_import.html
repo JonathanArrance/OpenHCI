@@ -249,6 +249,22 @@
                                     cache: false,
                                     processData: false,
                                     async: true,                    // must be true to get updated with the progress of the upload
+                                    xhr: function () {
+                                        window.loading.add("importing");
+                                        // This function will be called during the upload to update the progress of the upload.
+                                        var bar = $(".upload-bar"),
+                                                percent = $(".upload-percent");
+                                        var xhr = $.ajaxSettings.xhr();
+                                        xhr.upload.onprogress = function (e) {
+                                            if (e.lengthComputable) {
+                                                var percentage = Math.floor(100 * parseInt(e.loaded) / parseInt(e.total));
+                                                percentage = percentage + "%";
+                                                bar.css("width", percentage);
+                                                percent.html(percentage);
+                                            }
+                                        };
+                                        return xhr;
+                                    },
                                     success: function (data) {
                                         // This function is called if the post was successful to the server (not the upload).
                                         // Convert the data into something we can use.

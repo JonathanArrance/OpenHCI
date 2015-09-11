@@ -134,6 +134,13 @@
                         generateQuotaPie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
                     </script>
                 </span>
+                <div class="col-sm-12">
+                    <p class="small pull-left">
+                        <label>Legend:</label>
+                        <span class="label label-info">Used</span>
+                        <span class="label label-success">Available</span>
+                    </p>
+                </div>
             </div>
         </div>
     </div>

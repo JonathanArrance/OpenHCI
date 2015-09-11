@@ -172,7 +172,10 @@ function generatePie(id, data, label, pattern) {
         },
         pie: {
             label: {
-                show: false
+                show: true,
+                format: function (value, ratio, id) {
+                    return value;
+                }
             }
         },
         color: {
