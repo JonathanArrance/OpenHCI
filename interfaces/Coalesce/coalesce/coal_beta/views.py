@@ -524,8 +524,10 @@ def user_account_view(request, project_name, project_id, user_name):
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/account_view.html', RequestContext(request, {'user_info': "error", 'project_info': "error", 'error': "Error: %s"%e}))
 
+
 def get_update_account_password(request):
     return render_to_response('coal/dashboard_widgets/update_account_password.html', RequestContext(request))
+
 
 def get_build_project(request):
     try:
@@ -533,14 +535,27 @@ def get_build_project(request):
     except Exception as e:
         return render_to_response('coal/build_project.html', RequestContext(request, {'error': "Error: %s"%e}))
 
+
 def privacy_policy(request):
     return render_to_response('coal/privacy-policy.html', RequestContext(request,))
+
 
 def disclaimer(request):
     return render_to_response('coal/website-disclaimer.html', RequestContext(request,))
 
+
 def terms_of_use(request):
     return render_to_response('coal/terms-of-use.html', RequestContext(request,))
+
+
+def logging_in_to_instances(request):
+    return render_to_response('coal/quick_guides/logging_in_to_instances.html',
+                               RequestContext(request))
+
+
+def creating_instances(request):
+    return render_to_response('coal/quick_guides/creating_instances.html',
+                               RequestContext(request))
 
 
 def welcome(request):
