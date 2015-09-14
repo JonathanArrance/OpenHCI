@@ -81,6 +81,24 @@
                                data-target=".navbar-collapse">Your Project</a></li>
                     {% endif %}
                 {% endif %}
+                <li>
+                    <div class="dropdown">
+                        <button class="btn bg-primary dropdown-toggle nav-dropdown" type="button" id="quick-guides"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            Quick Guides
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu bg-primary" aria-labelledby="quick-guides">
+                            <li class="dropdown-header">Using Your Cloud</li>
+                            <li><a href="#">Logging in to Instances</a></li>
+                            <li><a href="#">Adding Storage to Instances</a></li>
+                            <li class="dropdown-header">Building Your Cloud</li>
+                            <li><a href="#">Creating Instances</a></li>
+                            <li><a href="#">Uploading Images</a></li>
+                            <li><a href="#">Separated link</a></li>
+                        </ul>
+                    </div>
+                </li>
                 <li><a href="{% url 'logout' %}" data-toggle="collapse" data-target=".navbar-collapse">Log Out</a></li>
             {% endif %}
         </ul>
