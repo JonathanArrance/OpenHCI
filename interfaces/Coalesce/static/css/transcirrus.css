@@ -10,6 +10,8 @@ COLORS:
     alt-dark: rgb(63, 82, 100)
     hover: rgb(72, 85, 99) [dull]
     primary: rgb(223, 105, 26)
+    primary-hover: rgb(200, 94, 23)
+    primary-active: rgb(177, 83, 21)
     success: rgb(92, 184, 92)
     info: rgb(91, 192, 222)
     warning: rgb(240, 173, 78)
@@ -259,6 +261,7 @@ hr.narrow {
 select {
     color: rgb(43, 62, 80);
     height: 25px;
+    border: 1px solid rgb(72, 85, 99);
 }
 
 input[type=file] {
@@ -305,6 +308,10 @@ input[type=file] {
 
 .btn-light:hover {
     background-color: rgb(78, 93, 108);
+}
+
+.btn-primary {
+    color: rgb(235, 235, 235)
 }
 
 /* NAVIGATION */
@@ -382,12 +389,39 @@ footer {
 
 .dropdown-toggle.bg-primary {
     background-color: rgb(223, 105, 26);
-    color: rgb(255, 255, 255)
+    color: rgb(235, 235, 235);
+}
+
+.dropdown.open > .dropdown-toggle.bg-primary {
+    background-color: rgb(177, 83, 21);
+    border-color: rgba(0, 0, 0, 0);
+    color: rgb(235, 235, 235);
+}
+
+.dropdown-toggle.nav-dropdown {
+    font-size: 12px;
+    line-height: 21px;
+    padding-bottom: 8.5px;
+    padding-top: 8.5px;
+    text-align: left;
+    width: 100%;
 }
 
 .dropdown-menu.bg-primary {
     background-color: rgb(223, 105, 26);
-    color: rgb(255, 255, 255)
+    color: rgb(235, 235, 235);
+}
+
+.dropdown-menu.bg-primary > .dropdown-header {
+    border-bottom: 1px solid rgb(177, 83, 21);
+    color: rgb(235, 235, 235);
+    font-weight: bold;
+}
+
+.dropdown-menu.bg-primary > li > a:hover, .dropdown-menu > li > a:focus {
+    background-color: rgb(200, 94, 23);
+    color: rgb(235, 235, 235);
+    text-decoration: none;
 }
 
 .dropdown-menu.table-dropdown, .dropdown-menu.panel-dropdown {

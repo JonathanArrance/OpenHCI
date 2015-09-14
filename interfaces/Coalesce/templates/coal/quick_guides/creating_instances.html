@@ -1,0 +1,59 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">Creating Instances</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-12">
+            <h4>The following information is required to build a virtual machine instance:</h4>
+
+            <div class="col-sm-12">
+                <strong>Name:</strong>
+
+                <p>A name for your virtual machine instance to help you describe and identify your machine.</p>
+            </div>
+            <div class="col-sm-12">
+                <strong>Image:</strong>
+
+                <p>An image to use for you virtual machine instance. Centos, Cirros and Ubuntu images are
+                    generally pre-loaded on your cloud.</p>
+            </div>
+            <div class="col-sm-12">
+                <strong>Instance Specifications:</strong>
+
+                <p>The size characteristics for your virtual machine. Certain images required larger sized
+                    instances.</p>
+            </div>
+            <div class="col-sm-12">
+                <strong>Network:</strong>
+
+                <p>A private network for your instance to reside on.</p>
+            </div>
+            <div class="col-sm-12">
+                <strong>Security Group:</strong>
+
+                <p>Similar to rules you would setup in a firewall to allow specific application/transport ports
+                    to connect to your instance.</p>
+            </div>
+            <div class="col-sm-12">
+                <strong>Security Key:</strong>
+
+                <p>Public and Private RSA keys that are used to access your virtual machine instance. The Public
+                    key will automatically be applied to your instance. You will use the Private key to login to
+                    your instance (if required).</p>
+            </div>
+            <div class="col-sm-12">
+                <strong>Boot Options:</strong>
+
+                <p>Booting an instance from a volume will store all instance data on physical storage. If an
+                    instance is booted ephemerally then all instance data will be lost when it is deleted.</p>
+            </div>
+        </div>
+    </div>
+</div>

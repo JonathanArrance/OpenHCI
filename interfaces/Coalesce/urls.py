@@ -58,6 +58,16 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_confirm',
             name='get_confirm'),
 
+        # --- Quick Guides ----
+
+        url(r'^guides/get/logging_in_to_instances/$',
+            'coalesce.coal_beta.views.logging_in_to_instances',
+            name='logging_in_to_instances'),
+
+        url(r'^guides/get/creating_instances/$',
+            'coalesce.coal_beta.views.creating_instances',
+            name='creating_instances'),
+
         # --- Nodes ----
 
         url(r'^nodes/(?P<node_id>[-\w]+)/view/$',

@@ -1,0 +1,77 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">Logging in to Instances</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="col-sm-12">
+                <p>To log in to a virtual machine instance, the instance must be accessed with its assigned IP
+                    address.
+                    If your instance requires a key to login, you will need to download the RSA Key file to use
+                    when
+                    logging in.</p>
+            </div>
+
+            <div class="col-sm-12">
+                <p>If a password is needed, the following are common username/passwords for the
+                    following OSes:</p>
+            </div>
+
+            <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
+                <thead class="bg-primary">
+                <tr>
+                    <th>OS</th>
+                    <th>Username/Password</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Cirros</th>
+                    <td>cirros / cubswin</td>
+                </tr>
+                <tr>
+                    <th>CentOS 6</th>
+                    <td>cloud-user / RSA Key</td>
+                </tr>
+                <tr>
+                    <th>CentOS 7</th>
+                    <td>centos / RSA Key</td>
+                </tr>
+                <tr>
+                    <th>Ubuntu</th>
+                    <td>ubuntu / RSA Key</td>
+                </tr>
+                <tr>
+                    <th>Fedora</th>
+                    <td>fedora / RSA Key</td>
+                </tr>
+                <tr>
+                    <th>RHEL</th>
+                    <td>cloud-user / RSA Key</td>
+                </tr>
+                <tr>
+                    <th>Debian</th>
+                    <td>admin / RSA Key</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <h6>You can access your like so:</h6>
+
+            <div class="col-sm-12">
+                <p>Linux: &#62; ssh -I &#60;RSA Key file&#62; fedora@&#60;Instance IP Address&#62;</p>
+            </div>
+            <div class="col-sm-12">
+                <p>If at anytime you forget this information, you can retrieve it by clicking the
+                    name of your instance in the Project View page.</p>
+            </div>
+        </div>
+    </div>
+</div>

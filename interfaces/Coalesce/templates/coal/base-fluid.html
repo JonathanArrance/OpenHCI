@@ -81,6 +81,24 @@
                                data-target=".navbar-collapse">Your Project</a></li>
                     {% endif %}
                 {% endif %}
+                <li>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle nav-dropdown" type="button" id="quick-guides"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            Quick Guides
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu bg-primary" aria-labelledby="quick-guides">
+                            <li class="dropdown-header">Using Your Cloud</li>
+                            <li><a href="#" id="logging-in-to-instances">Logging in to Instances</a></li>
+{#                            <li><a href="#" id="adding-storage-to-instances">Adding Storage to Instances</a></li>#}
+                            <li class="dropdown-header">Building Your Cloud</li>
+                            <li><a href="#" id="creating-instances">Creating Instances</a></li>
+{#                            <li><a href="#" id="uploading-instances">Uploading Images</a></li>#}
+{#                            <li><a href="#" id="understanding-">Separated link</a></li>#}
+                        </ul>
+                    </div>
+                </li>
                 <li><a href="{% url 'logout' %}" data-toggle="collapse" data-target=".navbar-collapse">Log Out</a></li>
             {% endif %}
         </ul>
@@ -90,7 +108,7 @@
 
 <!-- MAIN CONTENT WELL  ====================================== -->
 <section>
-    <div class="container-fluid">
+    <div class="container-fluid" id="main-page-content">
         {% block content %}
             PAGE CONTENT GOES HERE
         {% endblock %}
@@ -130,6 +148,7 @@
 <script src="{{ STATIC_URL }}javascripts/external/toastr.min.js"></script>
 <script src="{{ STATIC_URL }}javascripts/extensions.js"></script>
 <script src="{{ STATIC_URL }}javascripts/messages.js"></script>
+<script src="{{ STATIC_URL }}javascripts/quick-guides.js"></script>
 
 <!--HTML5 shim, for IE6-8 support of HTML elements -->
 <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
