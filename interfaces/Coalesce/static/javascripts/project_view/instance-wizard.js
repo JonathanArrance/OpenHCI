@@ -345,7 +345,6 @@ function buildInstance() {
                     updateProgress(step, steps, "Key Created");
                     key = data.key_name;
                     keyId = data.key_id;
-                    createKey.resolve();
                 }
             })
             .fail(function () {
