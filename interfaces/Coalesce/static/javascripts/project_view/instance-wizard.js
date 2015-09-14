@@ -164,10 +164,51 @@ function updateProgressSection() {
     });
     $(".wizard-info .instance .network").html($("#instance-network").val());
     $(".wizard-info .instance .flavor").html($("#instance-flavor").val());
-    $(".wizard-info .volume .name").html($("#volume-name").val());
-    $(".wizard-info .volume .type").html($("#volume-type").val());
-    $(".wizard-info .volume .size").html($("#volume-size").val());
-    $(".wizard-info .instance .ip").html($("#instance-ip").val());
+    $(".wizard-info .volume .name").html(function () {
+        if ($("#volume-existing").val() == "create") {
+            $(this).parent().show();
+            return $("#volume-name").val();
+        } else if ($("#volume-existing").val() == "none") {
+            $(this).parent().hide();
+            return "Skipped Adding Volume";
+        } else {
+            $(this).parent().show();
+            return $("#volume-existing").find("option:selected").html()
+        }
+    });
+    $(".wizard-info .volume .type").html(function () {
+        if ($("#volume-existing").val() == "create") {
+            $(this).parent().show();
+            return $("#volume-type").val();
+        } else if ($("#volume-existing").val() == "none") {
+            $(this).parent().hide();
+            return "Skipped Adding Volume";
+        } else {
+            $(this).parent().show();
+            return "Selected Pre-Existing Volume"
+        }
+    });
+    $(".wizard-info .volume .size").html(function () {
+        if ($("#volume-existing").val() == "create") {
+            $(this).parent().show();
+            return $("#volume-size").val();
+        } else if ($("#volume-existing").val() == "none") {
+            $(this).parent().hide();
+            return "Skipped Adding Volume";
+        } else {
+            $(this).parent().show();
+            return "Selected Pre-Existing Volume"
+        }
+    });
+    $(".wizard-info .instance .ip").html(function () {
+        if ($("#instance-ip").val() == "none") {
+            $(this).parent().hide();
+            return "Skipped Attaching IP";
+        } else {
+            $(this).parent().show();
+            return $("#instance-ip").val()
+        }
+    });
     $(".wizard-info .security .group").html(function () {
         return $("#instance-group").val() == "create" ? $("#group-name").val() : $("#instance-group").val();
     });
@@ -345,7 +386,6 @@ function buildInstance() {
                     updateProgress(step, steps, "Key Created");
                     key = data.key_name;
                     keyId = data.key_id;
-                    createKey.resolve();
                 }
             })
             .fail(function () {
