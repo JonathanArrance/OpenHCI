@@ -310,6 +310,10 @@ input[type=file] {
     background-color: rgb(78, 93, 108);
 }
 
+.btn-primary {
+    color: rgb(235, 235, 235)
+}
+
 /* NAVIGATION */
 
 .navbar-logo {
@@ -388,16 +392,10 @@ footer {
     color: rgb(235, 235, 235);
 }
 
-.dropdown-toggle.bg-primary:hover {
-    background-color: rgb(200, 94, 23);
-    color: rgb(235, 235, 235);
-    text-decoration: none;
-}
-
 .dropdown.open > .dropdown-toggle.bg-primary {
     background-color: rgb(177, 83, 21);
     border-color: rgba(0, 0, 0, 0);
-    color: rgb(255, 255, 255);
+    color: rgb(235, 235, 235);
 }
 
 .dropdown-toggle.nav-dropdown {
@@ -405,6 +403,8 @@ footer {
     line-height: 21px;
     padding-bottom: 8.5px;
     padding-top: 8.5px;
+    text-align: left;
+    width: 100%;
 }
 
 .dropdown-menu.bg-primary {
