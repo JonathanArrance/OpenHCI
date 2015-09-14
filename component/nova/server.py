@@ -1218,7 +1218,7 @@ class server_ops:
         update_sec['update'] = 'true'
 
         # Delete all the rules for the transport (tcp or udp) for the group we are updating.
-        self.delete_sec_group_rules(update_sec)
+        self.delete_sec_group_rules(update_sec, False, True)
 
         if (update_sec['enable_ping'] == "false"):
             # Delete the rule for icmp.
@@ -1496,8 +1496,8 @@ class server_ops:
             logger.sys_error ("Security group id %s does not belong to the project id %s" % (rule_dict['group_id'], rule_dict['project_id']))
             raise Exception ("Security group id %s does not belong to the project id %s" % (rule_dict['group_id'], rule_dict['project_id']))
 
-        # If the group does not belong to the user raise exception.
-        if (get_group[0][2] != self.username):
+        # If the group does not belong to the user raise exception and the user in not an admin.
+        if (get_group[0][2] != self.username and self.user_level != 0):
             logger.sys_error ("The security group %s does not belong to the user %s" % (get_group[0][4], self.username))
             raise Exception ("The security group %s does not belong to the user %s" % (get_group[0][4], self.username))
 
@@ -1779,6 +1779,14 @@ class server_ops:
             else:
                 get_group_dict = {'select':"*",'from':"trans_security_group",'where':"sec_group_id='%s'" %(str(sec_dict['sec_group_id'])),'and':"proj_id='%s'" %(sec_dict['project_id'])}
             get_group = self.db.pg_select(get_group_dict)
+
+            # let power user / user see default security group for project
+            if len(get_group) == 0 and self.user_level != 0:
+                # get the default security group
+                get_default_group_dict = {"select":'def_security_group_id',"from":'projects',"where":"proj_id='%s'"%(sec_dict['project_id'])}
+                def_group = self.db.pg_select(get_default_group_dict)
+                get_def_group_info_dict = {"select":'*',"from":'trans_security_group',"where":"sec_group_id='%s'"%(def_group[0][0])}
+                get_group = self.db.pg_select(get_def_group_info_dict)
         except:
             logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(sec_dict['sec_group_id'],sec_dict['project_id']))
             raise Exception("Could not get the security group info for sec_group: %s in project: %s" %(sec_dict['sec_group_id'],sec_dict['project_id']))
@@ -1786,11 +1794,11 @@ class server_ops:
         # If we didn't get any data back then we have a bad sec_group_id or user_id.
         if (len(get_group) == 0):
             if(self.user_level != 0):
-                logger.sys_error ("Security group id %s does not belong to the user id %s" % (sec_dict['group_id'], self.user_id))
-                raise Exception ("Security group id %s does not belong to the user id %s" % (sec_dict['group_id'], self.user_id))
+                logger.sys_error ("Security group id %s does not belong to the user id %s" % (sec_dict['sec_group_id'], self.user_id))
+                raise Exception ("Security group id %s does not belong to the user id %s" % (sec_dict['sec_group_id'], self.user_id))
             else:
-                logger.sys_error ("Security group id %s does not belong to the project id %s" % (sec_dict['group_id'], sec_dict['project_id']))
-                raise Exception ("Security group id %s does not belong to the project id %s" % (sec_dict['group_id'], sec_dict['project_id']))
+                logger.sys_error ("Security group id %s does not belong to the project id %s" % (sec_dict['sec_group_id'], sec_dict['project_id']))
+                raise Exception ("Security group id %s does not belong to the project id %s" % (sec_dict['sec_group_id'], sec_dict['project_id']))
 
         sec_group_name = get_group[0][5]
 
