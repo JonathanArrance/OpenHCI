@@ -6,35 +6,35 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title " id="modal-label">Create Machine Type</h4>
+    <h4 class="modal-title " id="modal-label">Create Instance Specification</h4>
 </div>
 
 <div class="modal-body bg-default-light">
     <div class="container-fluid">
         <div class="row-fluid">
-            <form id="machine-form" class="form-horizontal">
+            <form id="flavor-form" class="form-horizontal">
                 {% csrf_token %}
                 <fieldset>
                     <div class="form-group col-sm-12">
-                        <label for="machine-name" class="col-sm-4 control-label">Name:</label>
-                        <input type="text" name="machineName" id="machine-name" placeholder="Machine Name"
+                        <label for="flavor-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="flavorName" id="flavor-name" placeholder="Specification Name"
                                class="col-sm-8">
                     </div>
-                    <h4>Machine Options</h4>
+                    <h4>Specification Options</h4>
                     <hr class="narrow">
                     <div class="form-group col-sm-12">
-                        <label for="machine-ram" class="col-sm-4 control-label">Memory (mb):</label>
-                        <input type="text" name="machineRam" id="machine-ram" placeholder="Memory in megabytes"
+                        <label for="flavor-ram" class="col-sm-4 control-label">Memory (mb):</label>
+                        <input type="text" name="flavorRam" id="flavor-ram" placeholder="Memory in megabytes"
                                class="col-sm-8">
                     </div>
                     <div class="form-group col-sm-12">
-                        <label for="machine-disk" class="col-sm-4 control-label">Space (gb):</label>
-                        <input type="text" name="machineDisk" id="machine-disk" placeholder="Space in gigabytes"
+                        <label for="flavor-disk" class="col-sm-4 control-label">Space (gb):</label>
+                        <input type="text" name="flavorDisk" id="flavor-disk" placeholder="Space in gigabytes"
                                class="col-sm-8">
                     </div>
                     <div class="form-group col-sm-12">
-                        <label for="machine-cpus" class="col-sm-4 control-label">CPUs:</label>
-                        <input type="text" name="machineCpus" id="machine-cpus" placeholder="Number of CPUs"
+                        <label for="flavor-cpus" class="col-sm-4 control-label">CPUs:</label>
+                        <input type="text" name="flavorCpus" id="flavor-cpus" placeholder="Number of CPUs"
                                class="col-sm-8">
                     </div>
                 </fieldset>
@@ -45,7 +45,7 @@
 
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
-    <button type="submit" form="machine-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+    <button type="submit" form="flavor-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
         Confirm
     </button>
 </div>
@@ -55,25 +55,25 @@
         var buttons = $(this).parent().parent().find('button'),
                 page = $("#page-content"),
                 instances = $("#instance-container");
-        $("#machine-form").validate({
+        $("#flavor-form").validate({
             rules: {
-                machineName: {
+                flavorName: {
                     required: true,
                     charField: true,
                     minlength: standardStringMin,
                     maxlength: standardStringMax
                 },
-                machineRam: {
+                flavorRam: {
                     required: true,
                     number: true,
                     min: 1
                 },
-                machineDisk: {
+                flavorDisk: {
                     required: true,
                     number: true,
                     min: 1
                 },
-                machineCpus: {
+                flavorCpus: {
                     required: true,
                     number: true,
                     min: 1
@@ -81,15 +81,15 @@
             },
             submitHandler: function () {
                 setModalButtons(false, buttons);
-                showMessage('info', "Creating new Machine");
+                showMessage('info', "Creating new Instance Specification");
 
-                $.getJSON('/create_vm_spec/' + $("#machine-name").val() + '/' + $("#machine-ram").val() + '/' + $("#machine-disk").val() + '/' + $("#machine-cpus").val() + '/')
+                $.getJSON('/create_vm_spec/' + $("#flavor-name").val() + '/' + $("#flavor-ram").val() + '/' + $("#flavor-disk").val() + '/' + $("#flavor-cpus").val() + '/')
                         .done(function (data) {
                             if (data.status == 'error') {
                                 showMessage('error', data.message);
                             }
                             if (data.status == 'success') {
-                                showMessage('success', "Created Machine Type" + data.flavor_name + ".");
+                                showMessage('success', "Created Instance Specification " + data.flavor_name + ".");
                                 refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
                             }
                         })
@@ -102,7 +102,7 @@
 
         $("form input, form select").on("change focus keyup", function () {
             window.setTimeout(function () {
-                if ($("#machine-form").valid()) {
+                if ($("#flavor-form").valid()) {
                     $('button[type=submit]').removeProp("disabled");
                 } else {
                     $('button[type=submit]').prop("disabled", true);
