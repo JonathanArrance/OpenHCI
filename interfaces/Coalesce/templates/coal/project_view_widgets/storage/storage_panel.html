@@ -42,12 +42,11 @@
                         </td>
                         <td class="volume-actions">
                             <div class="btn-group actions-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
+                                    <i class="fa fa-caret-down"></i>
+                                </button>
+                                <ul class="dropdown-menu bg-alt-dark">
                                     {% if volume.info.volume_attached == 'true' %}
                                         <li><a href="#" class="detach-volume" data-title="Detach Volume"
                                                data-message="Detach {{ volume.info.volume_name }} from {{ volume.info.volume_instance.server_name }}?"
@@ -170,12 +169,11 @@
                         </td>
                         <td class="snapshot-actions">
                             <div class="btn-group actions-dropdown dropup">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
+                                    <i class="fa fa-caret-up"></i>
+                                </button>
+                                <ul class="dropdown-menu bg-alt-dark">
                                     <li>
                                         <a href="#" class="create-volume-from-snapshot"
                                            data-snapshot="{{ snapshot.snapshot_id }}"><i class="fa fa-hdd-o"></i> create
@@ -247,12 +245,11 @@
                         <td class="volume-actions">
                             {% if volume.info.volume_attached != 'true' %}
                                 <div class="btn-group actions-dropdown dropup">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                       aria-expanded="false">
-                                        actions
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu table-dropdown">
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    <i class="fa fa-caret-up"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right bg-alt-dark">
                                         {% if tenant_info.num_instances > 0 %}
                                             <li>
                                                 <a href="#" class="attach-volume"

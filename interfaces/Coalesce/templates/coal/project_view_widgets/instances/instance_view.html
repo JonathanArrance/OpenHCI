@@ -44,7 +44,7 @@
                                 title="Update Specification" data-html="true"
                                 data-content="Loading <i class='fa fa-cog fa-spin'></i>"
                                 data-placement="bottom">
-                            <i class="fa fa-cog"></i> Resize Instance
+                            <i class="fa fa-cog"></i>
                         </button>
                     </td>
                 </tr>
@@ -90,20 +90,24 @@
                                         data-placement="bottom"><i class="fa fa-fast-backward"></i> revert
                                 </button>
                             {% endif %}
-                            <button type="button" class="btn btn-xs btn-warning pause-instance-from-view"
-                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
-                                    data-notice="Pausing Instance {{ instance.server_name }}"
-                                    data-toggle="popover" title="Pause Instance" data-html="true"
-                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
-                                <i class="fa fa-pause"></i> pause
-                            </button>
-                            <button type="button" class="btn btn-xs btn-warning suspend-instance-from-view"
-                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
-                                    data-notice="Suspending Instance {{ instance.server_name }}"
-                                    data-toggle="popover" title="Suspend Instance" data-html="true"
-                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
-                                <i class="fa fa-stop"></i> suspend
-                            </button>
+                            {% if user_level == 0 %}
+                                <button type="button" class="btn btn-xs btn-warning pause-instance-from-view"
+                                        data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
+                                        data-notice="Pausing Instance {{ instance.server_name }}"
+                                        data-toggle="popover" title="Pause Instance" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="bottom">
+                                    <i class="fa fa-pause"></i> pause
+                                </button>
+                                <button type="button" class="btn btn-xs btn-warning suspend-instance-from-view"
+                                        data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
+                                        data-notice="Suspending Instance {{ instance.server_name }}"
+                                        data-toggle="popover" title="Suspend Instance" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="bottom">
+                                    <i class="fa fa-stop"></i> suspend
+                                </button>
+                            {% endif %}
                             <button type="button" class="btn btn-xs btn-warning power-off-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
                                     data-notice="Powering Off Instance {{ instance.server_name }}"
@@ -125,7 +129,7 @@
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-flash"></i> reboot
                             </button>
-                        {% elif instance.server_status == "PAUSED" %}
+                        {% elif instance.server_status == "PAUSED" and user_level == 0 %}
                             <button type="button" class="btn btn-xs btn-success unpause-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
                                     data-notice="Unpausing Instance {{ instance.server_name }}"
@@ -133,7 +137,7 @@
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom"><i
                                     class="fa fa-play"></i> unpause
                             </button>
-                        {% elif instance.server_status == "SUSPENDED" %}
+                        {% elif instance.server_status == "SUSPENDED" and user_level == 0 %}
                             <button type="button" class="btn btn-xs btn-success resume-instance-from-view"
                                     data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
                                     data-notice="Resuming Instance {{ instance.server_name }}"
@@ -151,13 +155,13 @@
                                 <i class="fa fa-power-off"></i> power on
                             </button>
                         {% endif %}
-{#                        <button type="button" class="btn btn-xs btn-danger delete-instance-from-view"#}
-{#                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"#}
-{#                                data-notice="Deleting Instance {{ instance.server_name }}"#}
-{#                                data-toggle="popover" title="Delete Instance" data-html="true"#}
-{#                                data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">#}
-{#                            <i class="fa fa-trash-o"></i> delete#}
-{#                        </button>#}
+                        {#                        <button type="button" class="btn btn-xs btn-danger delete-instance-from-view"#}
+                        {#                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/{{ instance.boot_from_vol }}/delete_instance/"#}
+                        {#                                data-notice="Deleting Instance {{ instance.server_name }}"#}
+                        {#                                data-toggle="popover" title="Delete Instance" data-html="true"#}
+                        {#                                data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">#}
+                        {#                            <i class="fa fa-trash-o"></i> delete#}
+                        {#                        </button>#}
                     </th>
                 </tr>
                 </tbody>
@@ -169,12 +173,12 @@
                 <tr>
                     <th>Snapshot</th>
                     <th>Description</th>
-                    <th>Created</th>
+                    {#                    <th>Created</th>#}
                     <th>
                         <button type="button" class="create-instance-snapshot btn btn-xs btn-success pull-right"
                                 data-toggle="popover" title="Create Instance Snapshot" data-html="true"
                                 data-content="<div class='col-sm-12'><h1>Loading <i class='fa fa-cog fa-spin'></i></h1></div>"
-                                    data-placement="auto bottom" data-viewport=".info-content">
+                                data-placement="auto bottom" data-viewport=".info-content">
                             <i class="fa fa-plus text-top"></i>
                         </button>
                     </th>
@@ -190,9 +194,9 @@
                             <td>
                                 {{ snapshot.info.description }}
                             </td>
-                            <td>
-                                {{ snapshot.info.date_created }}
-                            </td>
+                            {#                            <td>#}
+                            {#                                {{ snapshot.info.date_created }}#}
+                            {#                            </td>#}
                             <td class="snapshot-actions">
                                 <button type='button'
                                         class="delete-instance-snapshot-from-view btn btn-xs btn-danger pull-right"
@@ -209,7 +213,7 @@
                     <tr class="snapshot-placeholder text-warning">
                         <td><p><i>This project has no instance snapshots.</i></p></td>
                         <td></td>
-                        <td></td>
+                        {#                        <td></td> <!-- Created column placeholder -->#}
                         <td></td>
                     </tr>
                 {% endif %}
@@ -217,38 +221,41 @@
             </table>
         </div>
     </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        Last 24hrs: Average Instance Meters
-                    </h3>
-                </div>
-                <div class="panel-body center-text">
-                    {% for group in meters %}
-                        {% for meter in group.meters %}
-                            {% for stat in stats %}
-                                {% if stat.meterName == meter.meterType and stat.chartType == "radial" %}
-                                    <span id="{{ stat.htmlID }}" class="no-padding" style="margin-left:-15px;">
-                                        <script>
-                                            charts["{{ stat.htmlID }}"] = generateGauge("{{ stat.htmlID }}", "{{ stat.minValue }}", "{{ stat.maxValue }}", "{{ meter.label }}", "{{ stat.unitMeasurement }}", parseInt("{{ stat.utilization }}").toFixed(0));
-                                        </script>
-                                    </span>
-                                {% endif %}
-                            {% endfor %}
-                        {% endfor %}
-                    {% endfor %}
+    {% if stats != "empty dataset" %}
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 id="meters-title" class="panel-title"></h3>
+                    </div>
+                    <div id="instance-view-stats" class="panel-body center-text"></div>
                 </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 </div>
+<!-- Load Charts -->
+<script>
+    var meters = JSON.parse("{{ meters }}".jsonify())[0];
+    var stats = JSON.parse("{{ stats }}".jsonify());
+    $("#meters-title").html(meters.title);
+    $(function () {
+        $(meters.meters).each(function (index, element) {
+            $(stats).each(function (key, value) {
+                if (value.meterName == element.meterType && value.chartType == "radial") {
+                    $('<span id="' + value.htmlID + '"></span>').appendTo("#instance-view-stats");
+                    charts[value.htmlID] = generateGauge(value.htmlID, value.minValue, value.maxValue, element.label, value.unitMeasurement, parseInt(value.utilization).toFixed(0));
+                }
+            })
+        });
+    });
+</script>
 
 <script>
     var INSTANCE_ID = "{{instance.server_id}}",
             INSTANCE = "{{instance.server_name}}",
             ATTACHED_IP = "{{instance.server_public_ips}}";
+
     $(function () {
         var view = $(".info-content");
 
