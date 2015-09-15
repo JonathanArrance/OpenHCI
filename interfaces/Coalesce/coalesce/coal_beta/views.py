@@ -3446,6 +3446,7 @@ def instance_view(request, project_id, server_id):
         so = server_ops(auth)
         sa = server_actions(auth)
         fo = flavor_ops(auth)
+        go = glance_ops(auth)
 
         meter_dict = meters.get_instance_meters()
         meter_list = []
@@ -3495,8 +3496,11 @@ def instance_view(request, project_id, server_id):
         flavors = fo.list_flavors()
         snapshots = sa.list_instance_snaps(server_id)
         for snapshot in snapshots:
-            snap_dict = {'snapshot_id': snapshot['snapshot_id'], 'project_id': project_id}
-            snapshot['info'] = sa.get_instance_snap_info(snap_dict)
+            img_dict = go.get_image(snapshot['snapshot_id'])
+            snapshot['visibility'] = img_dict['visibility']
+            snapshot['created_at'] = img_dict['created_at']
+        #     snap_dict = {'snapshot_id': snapshot['snapshot_id'], 'project_id': project_id}
+        #     snapshot['info'] = sa.get_instance_snap_info(snap_dict)
 
         return render_to_response('coal/project_view_widgets/instances/instance_view.html',
                                   RequestContext(request, {

@@ -172,8 +172,9 @@
                 <thead class="bg-primary">
                 <tr>
                     <th>Snapshot</th>
-                    <th>Description</th>
-                    {#                    <th>Created</th>#}
+                    <th>Visibility</th>
+                    {#                    <th>Description</th>#}
+                    <th>Created</th>
                     <th>
                         <button type="button" class="create-instance-snapshot btn btn-xs btn-success pull-right"
                                 data-toggle="popover" title="Create Instance Snapshot" data-html="true"
@@ -191,12 +192,26 @@
                             <td class="snapshot-name">
                                 {{ snapshot.snapshot_name }}
                             </td>
-                            <td>
-                                {{ snapshot.info.description }}
+                            <td class="snapshot-visibility">
+                                {{ snapshot.visibility }}
+                                <button type="button" class="btn btn-info btn-xs">
+                                    <i class="fa fa-cog"></i>
+                                </button>
                             </td>
                             {#                            <td>#}
-                            {#                                {{ snapshot.info.date_created }}#}
+                            {#                                {{ snapshot.info.description }}#}
                             {#                            </td>#}
+                            <td class="snapshot-created">
+                                <span class="snapshot-created-date"></span>
+                                <script>
+                                    var date = new Date("{{ snapshot.created_at }}"),
+                                            d = date.toLocaleDateString(),
+                                            t = date.toLocaleTimeString(),
+                                            dateString = d + " " + t,
+                                            id = "tr#{{ snapshot.snapshot_id }} td.snapshot-created span.snapshot-created-date";
+                                    $(id).empty().append(dateString);
+                                </script>
+                            </td>
                             <td class="snapshot-actions">
                                 <button type='button'
                                         class="delete-instance-snapshot-from-view btn btn-xs btn-danger pull-right"
@@ -212,8 +227,8 @@
                 {% else %}
                     <tr class="snapshot-placeholder text-warning">
                         <td><p><i>This project has no instance snapshots.</i></p></td>
+                        {#                        <td></td> <!-- Description column placeholder -->#}
                         <td></td>
-                        {#                        <td></td> <!-- Created column placeholder -->#}
                         <td></td>
                     </tr>
                 {% endif %}
