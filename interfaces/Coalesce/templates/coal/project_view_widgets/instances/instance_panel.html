@@ -165,14 +165,28 @@
                                 <span>{{ image.image_name }}</span>
                             </td>
                             <td class="image-actions">
-                                <button type='button' class="delete-image btn btn-xs btn-danger pull-right"
-                                        data-title="Delete Image" data-message="Delete {{ image.image_name }}?"
-                                        data-call="/delete_image/{{ project.project_id }}/{{ image.image_id }}/"
-                                        data-notice="Deleting Image {{ image.image_name }}">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </td>
-                        </tr>
+                            {% if user_level == 0 or user_id == image.info.user_id %}
+                                <div class="btn-group actions-dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                       aria-expanded="false">
+                                        actions
+                                        <span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu table-dropdown">
+                                        <li><a href="#" class="update-group"
+                                                data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
+                                                data-call="/image/get/update/{{ image.image_id }}/">
+                                                <i class="fa fa-cog"></i> update</a>
+                                        </li>
+                                        <li class="bg-danger"><a href="#" class="delete-image"
+                                                data-title="Delete Image" data-message="Delete {{ image.image_name }}?"
+                                                data-call="/delete_image/{{ project.project_id }}/{{ image.image_id }}/"
+                                                data-notice="Deleting Image {{ image.image_name }}">
+                                                <i class="fa fa-trash-o"></i> delete</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                        {% endif %}
                     {% endfor %}
                 {% else %}
                     <tr class="image-placeholder text-warning">

@@ -193,15 +193,16 @@
                                 </button>
                                 <ul class="dropdown-menu bg-alt-dark">
                                         <li><a href="#" class="update-group"
-                                                                data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
-                                                                data-call="/security_group/get/update/{{ group.sec_group_id }}/{{ project.project_id }}/"
-                                                                ><i class="fa fa-cog"></i> update</a></li>
+                                                data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
+                                                data-call="/security_group/get/update/{{ group.sec_group_id }}/{{ project.project_id }}/">
+                                                <i class="fa fa-cog"></i> update</a>
+                                        </li>
                                         <li class="bg-danger"><a href="#" class="delete-group"
-                                                                 data-title="Delete Security Group"
-                                                                 data-message="Delete {{ group.sec_group_name }}?"
-                                                                 data-call="/delete_sec_group/{{ group.sec_group_id }}/{{ project.project_id }}/"
-                                                                 data-notice="Deleting Security Group {{ group.sec_group_name }}"><i
-                                                class="fa fa-trash-o"></i> delete</a>
+                                                data-title="Delete Security Group"
+                                                data-message="Delete {{ group.sec_group_name }}?"
+                                                data-call="/delete_sec_group/{{ group.sec_group_id }}/{{ project.project_id }}/"
+                                                data-notice="Deleting Security Group {{ group.sec_group_name }}">
+                                                <i class="fa fa-trash-o"></i> delete</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -213,9 +214,7 @@
                 <tr class="group-placeholder text-warning">
                     <td><p><i>This project has no security groups</i></p></td>
                     <td></td>
-                    {% if user_level == 0 %}
-                        <td></td>
-                    {% endif %}
+                    <td></td>
                 </tr>
             {% endif %}
             </tbody>
@@ -250,20 +249,14 @@
                         <td class="key-owner">
                             <span id="{{ key.key_id }}-user-text">{{ key.username }}</span>
                         </td>
-                        {% if key.in_use == False %}
-                            <td class="key-actions">
-                                <button type='button' class="delete-key btn btn-xs btn-danger pull-right"
-                                        data-title="Delete Security Key" data-message="Delete {{ key.key_name }}?"
-                                        data-call="/key_pair/{{ key.key_name }}/{{ project.project_id }}/delete/"
-                                        data-notice="Deleting Security Key {{ key.key_name }}">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </td>
-                        {% else %}
-                            <td class="key-in-use center-text bg-info">
-                                IN USE
-                            </td>
-                        {% endif %}
+                        <td class="key-actions">
+                            <button type='button' class="delete-key btn btn-xs btn-danger pull-right"
+                                data-title="Delete Security Key" data-message="Delete {{ key.key_name }}?  Security keys are needed to log into instances.  Please verify you no longer need this key before deleting."
+                                data-call="/key_pair/{{ key.key_name }}/{{ project.project_id }}/delete/"
+                                data-notice="Deleting Security Key {{ key.key_name }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
                     </tr>
                 {% endfor %}
             {% else %}
