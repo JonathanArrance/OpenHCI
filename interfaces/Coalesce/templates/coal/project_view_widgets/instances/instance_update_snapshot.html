@@ -9,11 +9,9 @@
             <label for="snapshot-visibility" class="col-sm-4 control-label">Visibility:</label>
             <select name="snapshotVisibility" id="snapshot-visibility" class="col-sm-8">
                 {% if snapshot.visibility == "private" %}
-                    <option value="private" selected>private</option>
-                    <option value="public">public</option>
-                {% else %}
                     <option value="public" selected>public</option>
-                    <option value="private">private</option>
+                {% else %}
+                    <option value="private" selected>private</option>
                 {% endif %}
             </select>
         </div>
