@@ -912,13 +912,9 @@ def get_project_panel(request, project_id):
         num_users = len(users)
 
         sec_groups = so.list_sec_group(project_id)
-        if sec_groups == []:
-            sec_groups.append(project['def_security_group_id'])
         num_groups = len(sec_groups)
 
         sec_keys = so.list_sec_keys(project_id)
-        if sec_keys == []:
-            sec_keys.append(project['def_security_key_id'])
         num_keys = len(sec_keys)
 
         tenant_info = {'num_instances': num_instances,
@@ -1162,6 +1158,17 @@ def get_image_import(request):
         return render_to_response('coal/project_view_widgets/instances/image_import.html', RequestContext(request))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instances/image_import.html', RequestContext(request, {'error': "Error: %s"%e}))
+
+
+def get_image_update(request, image_id):
+    image = {}
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        image = go.get_image(image_id)
+        return render_to_response('coal/project_view_widgets/instances/image_update.html', RequestContext(request, {'image': image}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/image_update.html', RequestContext(request, {'image': image,'error': "Error: %s"%e}))
 
 
 def get_flavor_create(request):
@@ -1759,15 +1766,6 @@ def get_users_security_panel(request, project_id):
         num_groups = len(sec_groups)
 
         sec_keys = so.list_sec_keys(project_id)
-        for key in sec_keys:
-            key['in_use'] = False
-            for server in servers:
-                server_dict = {'server_id': server['server_id'], 'project_id': project_id}
-                server_info = so.get_server(server_dict)
-                if 'server_key_name' in server_info:
-                    if key['key_name'] == server_info['server_key_name']:
-                        key['in_use'] = True
-                        break
         num_keys = len(sec_keys)
 
         tenant_info = {'num_users': num_users,
@@ -2586,11 +2584,29 @@ def delete_image (request, image_id, project_id):
             out = {'status' : "error", 'message' : "Error deleting image: %s" % e}
     return HttpResponse(simplejson.dumps(out))
 
-def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description):
+
+def update_image(request, image_id, visibility):
+    out = {}
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        update_array = [{'operation': "replace", 'property': "visibility", 'value': visibility}]
+        updated = go.update_image(image_id, update_array)
+        if updated == "OK":
+            out['status'] = "success"
+            out['message'] = "Image was updated."
+        else:
+            out = {'status' : "error", 'message' : "Error updating image."}
+    except Exception, e:
+        out = {'status' : "error", 'message' : "Error updating image: %s" % e}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def create_instance_snapshot(request, project_id, server_id, snapshot_name, snapshot_description, snapshot_visibility):
     try:
         auth = request.session['auth']
         sa = server_actions(auth)
-        create = {'project_id': project_id, 'server_id': server_id, 'snapshot_name': snapshot_name, 'snapshot_description': snapshot_description}
+        create = {'project_id': project_id, 'server_id': server_id, 'snapshot_name': snapshot_name, 'snapshot_description': snapshot_description, 'visibility': snapshot_visibility}
         out = sa.create_instance_snapshot(create)
         out['status'] = 'success'
         out['message'] = "Snapshot %s has been created."%(snapshot_name)

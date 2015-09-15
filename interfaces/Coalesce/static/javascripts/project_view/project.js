@@ -88,6 +88,11 @@ $(function () {
         showConfirmModal('/image/get/import/');
     });
 
+    $(document).on('click', '.update-image', function (event) {
+        event.preventDefault();
+        showConfirmModal($(this).data("call"));
+    });
+
     $(document).on('click', '.delete-image', function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),

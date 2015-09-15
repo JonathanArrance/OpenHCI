@@ -630,6 +630,7 @@ class server_actions:
                          - project_id - REQ
                          - snapshot_name - OP
                          - snapshot_description - OP
+                         - visibility - OP - public/private, defaults to private
         OUTPUT: r_dict - snapshot_name
                        - snapshot_id
         ACCESS: Cloud Admin - can snashot any vm
@@ -731,7 +732,7 @@ class server_actions:
                     self.db.pg_transaction_commit()
                     self.db.pg_close_connection()
 
-                    # make snapshot private
+                    # update snapshot visibility and user_level tags
                     try:
                         # wait for snapshot creation
                         while True:
@@ -744,12 +745,17 @@ class server_actions:
                                 continue
                         # update snapshot
                         image_id = snap_id[6]
-                        # change visibility to private
-                        make_private_dict = {'operation': "replace", 'property': "visibility", 'value': "private"}
+                        update_array = []
+
+                        if 'visibility' not in snap_dict:
+                            # default to private
+                            snap_dict['visibility'] = "private"
+                        # change visibility
+                        make_private_dict = {'operation': "replace", 'property': "visibility", 'value': snap_dict['visibility']}
+                        update_array.append(make_private_dict)
+
                         # add user_level to tags[] for cascading permissions later
                         add_user_level_dict = {'operation': "replace", 'property': "tags", 'value': [str(self.user_level)]}
-                        update_array = []
-                        update_array.append(make_private_dict)
                         update_array.append(add_user_level_dict)
                         self.glance.update_image(image_id,update_array)
                     except Exception as e:
