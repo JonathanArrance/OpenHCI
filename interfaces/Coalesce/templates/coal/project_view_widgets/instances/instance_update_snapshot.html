@@ -35,7 +35,7 @@
             },
             submitHandler: function () {
                 showMessage('info', "Updating Instance Snapshot");
-                $("#update-instance-snapshot").removeProp("disabled");
+                $(".update-instance-snapshot-from-view").removeProp("disabled");
                 $.getJSON('/update_image/' + '{{ snapshot.image_id }}' +  '/' + $("#snapshot-visibility").val() + '/')
                         .done(function (data) {
                             if (data.status == "error") {
@@ -54,10 +54,10 @@
                         });
 
                 $(".popover").popover('hide');
-                $("#update-instance-snapshot").addClass("bg-active bg-striped").prop("disabled", "disabled");
+                $(".update-instance-snapshot-from-view").addClass("bg-active bg-striped").prop("disabled", "disabled");
             },
             invalidHandler: function () {
-                $("#update-instance-snapshot").prop("disabled", "disabled");
+                $(".update-instance-snapshot-from-view").prop("disabled", "disabled");
             }
         });
     });

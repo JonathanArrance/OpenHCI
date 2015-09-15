@@ -52,7 +52,7 @@
             },
             submitHandler: function () {
                 showMessage('info', "Creating Instance Snapshot");
-                $("#create-instance-snapshot").removeProp("disabled");
+                $(".create-instance-snapshot").removeProp("disabled");
                 $.getJSON('/create_instance_snapshot/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + ($("#snapshot-name").val() == "" ? "none" : $("#snapshot-name").val()) + '/none/' + $("#snapshot-vis").val() + '/')
                         .done(function (data) {
                             if (data.status == "error") {
@@ -71,10 +71,10 @@
                         });
 
                 $(".popover").popover('hide');
-                $("#create-instance-snapshot").addClass("bg-active bg-striped").prop("disabled", "disabled");
+                $(".create-instance-snapshot").addClass("bg-active bg-striped").prop("disabled", "disabled");
             },
             invalidHandler: function () {
-                $("#create-instance-snapshot").prop("disabled", "disabled");
+                $(".create-instance-snapshot").prop("disabled", "disabled");
             }
         });
     });
