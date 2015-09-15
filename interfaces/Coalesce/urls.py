@@ -274,7 +274,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.delete_image',
             name='delete_image'),
 
-        url(r'^create_instance_snapshot/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<snapshot_name>[^/]+)/(?P<snapshot_description>[^/]+)/$',
+        url(r'^create_instance_snapshot/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<snapshot_name>[^/]+)/(?P<snapshot_description>[^/]+)/(?P<snapshot_visibility>[^/]+)/$',
             'coalesce.coal_beta.views.create_instance_snapshot',
             name='create_instance_snapshot'),
 
@@ -285,6 +285,14 @@ urlpatterns = patterns('',
         url(r'^image/get/import/$',
             'coalesce.coal_beta.views.get_image_import',
             name='get_image_import'),
+
+        url(r'^update_image/(?P<image_id>[^/]+)/(?P<visibility>[^/]+)/$',
+            'coalesce.coal_beta.views.update_image',
+            name='update_image'),
+
+        url(r'^image/get/update/(?P<image_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_image_update',
+            name='get_image_update'),
 
         # --- Flavors ----
         url(r'^create_vm_spec/(?P<name>[^/]+)/(?P<ram>[^/]+)/(?P<boot_disk>[^/]+)/(?P<cpus>[^/]+)/$',

@@ -357,6 +357,7 @@ class glance_ops:
         INPUT: image_id
         OUTPUT: r_dict - image_name
                        - image_id
+                       - user_id - if available, if not user_id will be "-1"
                        - project_id
                        - status
                        - visibility
@@ -396,7 +397,9 @@ class glance_ops:
         if((rest['response'] == 200)):
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
+            if 'user_id' not in load:
+                load['user_id'] = "-1"
+            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['user_id'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])

@@ -1,0 +1,99 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Update Image {{ image.image_name }}</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="image-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <h4>Image Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="image-visibility" class="col-sm-4 control-label">Visibility:</label>
+                        <select name="imageVisibility" id="image-visibility" class="col-sm-8">
+                            {% if image.visibility == "private" %}
+                                <option value="private" selected>private</option>
+                                <option value="public">public</option>
+                            {% else %}
+                                <option value="public" selected>public</option>
+                                <option value="private">private</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="image-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var page = $("#page-content"),
+                instances = $("#instances-container");
+        $("#image-form").validate({
+            rules: {
+                imageVisibility: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                var isValid = true;
+                if (isValid) {
+                    showMessage('info', "Updating image");
+                    var url = '/update_image/' + '{{ image.image_id }}' +  '/' + $("#image-visibility").val() + '/';
+
+                    $.getJSON(url)
+                            .done(function (data) {
+                                if (data.status == 'error')
+                                    showMessage('error', data.message);
+                                if (data.status == 'success')
+                                    showMessage('success', data.message);
+                            })
+                            .fail(function () {
+                                showMessage('error', 'Server Fault');
+                            })
+                            .always(function () {
+                                refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                            });
+
+                    closeModal();
+                    showLoader(page);
+                    window.setTimeout(function () {
+                        removeLoaders();
+                        refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                    }, 2000);
+                }
+            }
+        });
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+            if ($("#image-form").valid()) {
+                var isValid = true;
+                if (isValid)
+                    $('button[type=submit]').removeProp("disabled");
+                else
+                    $('button[type=submit]').prop("disabled", true);
+
+            } else {
+                $('button[type=submit]').prop("disabled", true);
+            }
+            }, 1000);
+        });
+    });
+</script>

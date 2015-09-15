@@ -1664,10 +1664,13 @@ class server_ops:
             proj_id = self.project_id
 
             # get the default security group
-            get_default_group_dict = {"select":'def_security_group_id',"from":'projects',"where":"proj_id='%s'"%(proj_id)}
-            def_group = self.db.pg_select(get_default_group_dict)
-            get_def_group_info_dict = {"select":'*',"from":'trans_security_group',"where":"sec_group_id='%s'"%(def_group[0][0])}
-            def_group_info = self.db.pg_select(get_def_group_info_dict)
+            try:
+                get_default_group_dict = {"select":'def_security_group_id',"from":'projects',"where":"proj_id='%s'"%(proj_id)}
+                def_group = self.db.pg_select(get_default_group_dict)
+                get_def_group_info_dict = {"select":'*',"from":'trans_security_group',"where":"sec_group_id='%s'"%(def_group[0][0])}
+                def_group_info = self.db.pg_select(get_def_group_info_dict)
+            except:
+                logger.sys_info("No default security group found")
 
             get_group_dict = {"select":'*',"from":'trans_security_group',"where":"proj_id='%s'"%(proj_id),"and":"user_id='%s'"%(self.user_id)}
         else:
@@ -1675,7 +1678,7 @@ class server_ops:
 
         try:
             groups = self.db.pg_select(get_group_dict)
-            if def_group_info is not None:
+            if def_group_info is not None and len(def_group_info) > 0:
                 groups.append(def_group_info[0])
         except:
             logger.sql_error("Could not get the security group info for sec_group: %s in project: %s" %(get_group_dict[0][3],proj_id))
