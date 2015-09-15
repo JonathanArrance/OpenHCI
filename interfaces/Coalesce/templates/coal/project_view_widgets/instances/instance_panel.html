@@ -36,7 +36,7 @@
                         <td class="instance-actions">
                             <div class="btn-group actions-dropdown">
                                 <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
-                                   aria-expanded="false">
+                                        aria-expanded="false">
                                     <i class="fa fa-caret-down"></i>
                                 </button>
                                 <ul class="dropdown-menu bg-alt-dark">
@@ -74,19 +74,19 @@
                                                data-notice="Rebooting On Instance {{ instance.server_name }}"><i
                                                 class="fa fa-flash"></i> Reboot</a></li>
                                     {% elif instance.status == "PAUSED"  and user_level == 0 %}
-                                            <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
-                                                   data-message="Unpause {{ instance.server_name }}"
-                                                   data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
-                                                   data-notice="Unpausing Instance {{ instance.server_name }}"><i
-                                                    class="fa fa-play"></i> unpause</a>
-                                            </li>
+                                        <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
+                                               data-message="Unpause {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
+                                               data-notice="Unpausing Instance {{ instance.server_name }}"><i
+                                                class="fa fa-play"></i> unpause</a>
+                                        </li>
                                     {% elif instance.status == "SUSPENDED" and user_level == 0 %}
-                                            <li><a href="#" class="resume-instance" data-title="Resume Instance"
-                                                   data-message="Resume {{ instance.server_name }}"
-                                                   data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
-                                                   data-notice="Resuming Instance {{ instance.server_name }}"><i
-                                                    class="fa fa-play-circle"></i> resume</a>
-                                            </li>
+                                        <li><a href="#" class="resume-instance" data-title="Resume Instance"
+                                               data-message="Resume {{ instance.server_name }}"
+                                               data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
+                                               data-notice="Resuming Instance {{ instance.server_name }}"><i
+                                                class="fa fa-play-circle"></i> resume</a>
+                                        </li>
                                     {% endif %}
 
                                     {% if instance.status == "SHUTOFF" %}
@@ -129,6 +129,7 @@
                         generateQuotaPie("instance-stats", [['used', "{{ tenant_info.num_instances }}"], ['available', "{{ quota.instances }}"]], "# Instances");
                     </script>
                 </span>
+
                 <div class="col-sm-12">
                     <p class="small pull-left">
                         <label>Legend:</label>
@@ -161,31 +162,31 @@
                 {% if images %}
                     {% for image in images %}
                         <tr id="{{ image.image_id }}" class="image">
-                            <td class="image-name">
-                                <span>{{ image.image_name }}</span>
-                            </td>
-                            <td class="image-actions">
-                            {% if user_level == 0 or user_id == image.info.user_id %}
-                                <div class="btn-group actions-dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                       aria-expanded="false">
-                                        actions
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu table-dropdown">
-                                        <li><a href="#" class="update-group"
-                                                data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
-                                                data-call="/image/get/update/{{ image.image_id }}/">
-                                                <i class="fa fa-cog"></i> update</a>
-                                        </li>
-                                        <li class="bg-danger"><a href="#" class="delete-image"
-                                                data-title="Delete Image" data-message="Delete {{ image.image_name }}?"
-                                                data-call="/delete_image/{{ project.project_id }}/{{ image.image_id }}/"
-                                                data-notice="Deleting Image {{ image.image_name }}">
-                                                <i class="fa fa-trash-o"></i> delete</a>
-                                        </li>
-                                    </ul>
-                                </div>
+                        <td class="image-name">
+                            <span>{{ image.image_name }}</span>
+                        </td>
+                        <td class="image-actions">
+                        {% if user_level == 0 or user_id == image.info.user_id %}
+                            <div class="btn-group actions-dropdown">
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
+                                        aria-expanded="false">
+                                    <i class="fa fa-caret-down"></i>
+                                </button>
+                                <ul class="dropdown-menu bg-alt-dark">
+                                    <li><a href="#" class="update-group"
+                                           data-refresh="/projects/{{ project.project_id }}/get_instance_panel/"
+                                           data-call="/image/get/update/{{ image.image_id }}/">
+                                        <i class="fa fa-cog"></i> update</a>
+                                    </li>
+                                    <li class="bg-danger"><a href="#" class="delete-image"
+                                                             data-title="Delete Image"
+                                                             data-message="Delete {{ image.image_name }}?"
+                                                             data-call="/delete_image/{{ project.project_id }}/{{ image.image_id }}/"
+                                                             data-notice="Deleting Image {{ image.image_name }}">
+                                        <i class="fa fa-trash-o"></i> delete</a>
+                                    </li>
+                                </ul>
+                            </div>
                         {% endif %}
                     {% endfor %}
                 {% else %}

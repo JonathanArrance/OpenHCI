@@ -1142,6 +1142,16 @@ def get_instance_create_snapshot(request):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instances/instance_create_snapshot.html', RequestContext(request, {'error': "Error: %s"%e}))
 
+def get_instance_update_snapshot(request, snapshot_id):
+    snapshot = {}
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        snapshot = go.get_image(snapshot_id)
+        return render_to_response('coal/project_view_widgets/instances/instance_update_snapshot.html', RequestContext(request, {'snapshot': snapshot}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/instance_update_snapshot.html', RequestContext(request, {'snapshot': snapshot,'error': "Error: %s"%e}))
+
 def get_instance_revert(request, server_id):
     snapshots = []
     try:
