@@ -1142,6 +1142,16 @@ def get_instance_create_snapshot(request):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/instances/instance_create_snapshot.html', RequestContext(request, {'error': "Error: %s"%e}))
 
+def get_instance_update_snapshot(request, snapshot_id):
+    snapshot = {}
+    try:
+        auth = request.session['auth']
+        go = glance_ops(auth)
+        snapshot = go.get_image(snapshot_id)
+        return render_to_response('coal/project_view_widgets/instances/instance_update_snapshot.html', RequestContext(request, {'snapshot': snapshot}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/instances/instance_update_snapshot.html', RequestContext(request, {'snapshot': snapshot,'error': "Error: %s"%e}))
+
 def get_instance_revert(request, server_id):
     snapshots = []
     try:
@@ -3462,6 +3472,7 @@ def instance_view(request, project_id, server_id):
         so = server_ops(auth)
         sa = server_actions(auth)
         fo = flavor_ops(auth)
+        go = glance_ops(auth)
 
         meter_dict = meters.get_instance_meters()
         meter_list = []
@@ -3511,8 +3522,11 @@ def instance_view(request, project_id, server_id):
         flavors = fo.list_flavors()
         snapshots = sa.list_instance_snaps(server_id)
         for snapshot in snapshots:
-            snap_dict = {'snapshot_id': snapshot['snapshot_id'], 'project_id': project_id}
-            snapshot['info'] = sa.get_instance_snap_info(snap_dict)
+            img_dict = go.get_image(snapshot['snapshot_id'])
+            snapshot['visibility'] = img_dict['visibility']
+            snapshot['created_at'] = img_dict['created_at']
+        #     snap_dict = {'snapshot_id': snapshot['snapshot_id'], 'project_id': project_id}
+        #     snapshot['info'] = sa.get_instance_snap_info(snap_dict)
 
         return render_to_response('coal/project_view_widgets/instances/instance_view.html',
                                   RequestContext(request, {

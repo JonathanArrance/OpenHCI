@@ -39,12 +39,12 @@
                 </tr>
                 <tr>
                     <td>Specification</td>
-                    <td class="center-text">{{ instance.server_flavor }}
+                    <td class="center-text">
                         <button type="button" class="btn btn-xs btn-info update-instance-settings" data-toggle="popover"
                                 title="Update Specification" data-html="true"
                                 data-content="Loading <i class='fa fa-cog fa-spin'></i>"
                                 data-placement="bottom">
-                            <i class="fa fa-cog"></i>
+                            {{ instance.server_flavor }} <i class="fa fa-cog"></i>
                         </button>
                     </td>
                 </tr>
@@ -172,8 +172,9 @@
                 <thead class="bg-primary">
                 <tr>
                     <th>Snapshot</th>
-                    <th>Description</th>
-                    {#                    <th>Created</th>#}
+                    <th>Visibility</th>
+                    {#                    <th>Description</th>#}
+                    <th>Created</th>
                     <th>
                         <button type="button" class="create-instance-snapshot btn btn-xs btn-success pull-right"
                                 data-toggle="popover" title="Create Instance Snapshot" data-html="true"
@@ -191,19 +192,37 @@
                             <td class="snapshot-name">
                                 {{ snapshot.snapshot_name }}
                             </td>
-                            <td>
-                                {{ snapshot.info.description }}
+                            <td class="snapshot-visibility">
+                                <button type="button" class="update-instance-snapshot-from-view btn btn-info btn-xs"
+                                        data-toggle="popover" title="Update Instance Snapshot Visibility"
+                                        data-html="true" data-placement="auto bottom" data-viewport=".info-content"
+                                        data-content="<div class='col-sm-12'><h1>Loading <i class='fa fa-cog fa-spin'></i></h1></div>"
+                                        data-snapshot-id="{{ snapshot.snapshot_id }}">
+                                    {{ snapshot.visibility }} <i class="fa fa-cog"></i>
+                                </button>
                             </td>
                             {#                            <td>#}
-                            {#                                {{ snapshot.info.date_created }}#}
+                            {#                                {{ snapshot.info.description }}#}
                             {#                            </td>#}
+                            <td class="snapshot-created">
+                                <span class="snapshot-created-date"></span>
+                                <script>
+                                    var date = new Date("{{ snapshot.created_at }}"),
+                                            d = date.toLocaleDateString(),
+                                            t = date.toLocaleTimeString(),
+                                            dateString = d + " " + t,
+                                            id = "tr#{{ snapshot.snapshot_id }} td.snapshot-created span.snapshot-created-date";
+                                    $(id).empty().append(dateString);
+                                </script>
+                            </td>
                             <td class="snapshot-actions">
                                 <button type='button'
                                         class="delete-instance-snapshot-from-view btn btn-xs btn-danger pull-right"
                                         data-call="/server/{{ snapshot.snapshot_id }}/delete_instance_snapshot/"
                                         data-notice="Deleting Instance Snapshot {{ snapshot.snapshot_name }}"
                                         data-toggle="popover" title="Delete Instance Snapshot" data-html="true"
-                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="left">
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="auto bottom" data-viewport=".info-content">
                                     <i class="fa fa-minus"></i>
                                 </button>
                             </td>
@@ -212,8 +231,8 @@
                 {% else %}
                     <tr class="snapshot-placeholder text-warning">
                         <td><p><i>This project has no instance snapshots.</i></p></td>
+                        {#                        <td></td> <!-- Description column placeholder -->#}
                         <td></td>
-                        {#                        <td></td> <!-- Created column placeholder -->#}
                         <td></td>
                     </tr>
                 {% endif %}
@@ -285,6 +304,12 @@
             event.preventDefault();
             $('.btn').not(this).popover('hide');
             $(".popover-content").load("/instance/get/create_snapshot/");
+        });
+
+        $(".update-instance-snapshot-from-view").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/image/get/update_snapshot/" + $(this).data("snapshot-id") + "/");
         });
 
         $(document).on('click', '.delete-instance-snapshot-from-view', function (event) {
