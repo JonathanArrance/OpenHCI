@@ -440,6 +440,16 @@ footer {
     right: -15px;
 }
 
+.dropdown-menu.bg-alt-dark > li > a:hover {
+    background-color: rgb(98, 113, 128);
+    color: rgb(235, 235, 235);
+    text-decoration: none;
+}
+
+.dropup .dropdown-menu {
+    margin-bottom: 0;
+}
+
 .instance .actions .dropdown-menu.table-dropdown {
     margin-right: -1px;
 }

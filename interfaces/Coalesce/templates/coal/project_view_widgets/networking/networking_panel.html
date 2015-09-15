@@ -42,12 +42,11 @@
                         </td>
                         <td class="ip-actions">
                             <div class="btn-group actions-dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
-                                    actions
-                                    <span class="caret"></span>
-                                </a>
-                                <ul class="dropdown-menu table-dropdown">
+                                    <i class="fa fa-caret-down"></i>
+                                </button>
+                                <ul class="dropdown-menu bg-alt-dark">
                                     {% if fip.floating_in_use == 'true' %}
                                         <li><a href="#" class="unassign-ip"
                                                data-title="Unassign Floating IP Address"

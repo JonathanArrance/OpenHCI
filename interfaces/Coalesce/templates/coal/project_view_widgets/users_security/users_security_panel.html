@@ -57,12 +57,11 @@
                         {% if user_level == 0 %}
                             <td class="user-actions">
                                 <div class="btn-group actions-dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                       aria-expanded="false">
-                                        actions
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu table-dropdown">
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    <i class="fa fa-caret-down"></i>
+                                </button>
+                                <ul class="dropdown-menu bg-alt-dark">
                                         {% if user.info.user_enabled == "TRUE" %}
                                             <li>
                                                 <a href="#" class="disable-user" data-title="Disable User"
@@ -188,12 +187,11 @@
                         {% if user_level == 0 or username == group.username %}
                             <td class="group-actions">
                                 <div class="btn-group actions-dropdown dropup">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                       aria-expanded="false">
-                                        actions
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu table-dropdown">
+                                <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false">
+                                    <i class="fa fa-caret-up"></i>
+                                </button>
+                                <ul class="dropdown-menu bg-alt-dark">
                                         <li><a href="#" class="update-group"
                                                                 data-refresh="/projects/{{ project.project_id }}/get_users_security_panel/"
                                                                 data-call="/security_group/get/update/{{ group.sec_group_id }}/{{ project.project_id }}/"
