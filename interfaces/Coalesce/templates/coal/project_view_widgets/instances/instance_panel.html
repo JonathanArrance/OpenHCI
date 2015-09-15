@@ -73,24 +73,20 @@
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
                                                data-notice="Rebooting On Instance {{ instance.server_name }}"><i
                                                 class="fa fa-flash"></i> Reboot</a></li>
-                                    {% elif instance.status == "PAUSED" %}
-                                        {% if user_level == 0 %}
+                                    {% elif instance.status == "PAUSED"  and user_level == 0 %}
                                             <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
                                                    data-message="Unpause {{ instance.server_name }}"
                                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
                                                    data-notice="Unpausing Instance {{ instance.server_name }}"><i
                                                     class="fa fa-play"></i> unpause</a>
                                             </li>
-                                        {% endif %}
-                                    {% elif instance.status == "SUSPENDED" %}
-                                        {% if user_level == 0 %}
+                                    {% elif instance.status == "SUSPENDED" and user_level == 0 %}
                                             <li><a href="#" class="resume-instance" data-title="Resume Instance"
                                                    data-message="Resume {{ instance.server_name }}"
                                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"
                                                    data-notice="Resuming Instance {{ instance.server_name }}"><i
                                                     class="fa fa-play-circle"></i> resume</a>
                                             </li>
-                                        {% endif %}
                                     {% endif %}
 
                                     {% if instance.status == "SHUTOFF" %}

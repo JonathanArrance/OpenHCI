@@ -520,7 +520,7 @@ footer {
 
 .c3-chart-arcs-gauge-min, .c3-chart-arcs-gauge-max, .c3-chart-arcs-gauge-unit, .c3-gauge-value {
     fill: rgb(235, 235, 235) !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
 }
 
 .c3-chart-arcs-gauge-unit, .c3-gauge-value {
