@@ -101,6 +101,248 @@ class server_actions:
         #close any open db connections
         self.db.close_connection()
 
+    def pause_server(self,input_dict):
+        """
+        DESC: Pause a running virtual server. Pauseing saves vm state to memory.
+        INPUT: input_dict - project_id
+                         - instance_id
+        OUTPUT: 'OK' - pass
+                'ERROR' - fail
+                'NA' - unknown
+        ACCESS: Users can pause an instance in the cloud based on user_level.
+        NOTES: This is not the same as suspend.
+        """
+        logger.sys_info('\n**Server action pause. Component: Nova Def: pause_server**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+            if(value == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only pause virtual servers in their project.")
+                raise Exception("Users can only pause virtual servers in their project.")
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+        # construct request header and body
+            body='{"pause": null}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json", "X-Auth-Project-Id": "newproj"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+        # check the response code
+        except:
+            logger.sys_error("Error in server pause request.")
+            raise Exception("Error in server pause request")
+
+        if(rest['response'] == 202):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+        else:
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            nova_ec.error_codes(rest)
+
+        return 'OK'
+
+    def unpause_server(self,input_dict):
+        """
+        DESC: Unpause a running virtual server. Resume the virtual server from memory.
+        INPUT: input_dict - project_id
+                         - instance_id
+        OUTPUT: 'OK' - pass
+                'ERROR' - fail
+                'NA' - unknown
+        ACCESS: Users can unpause an instance in the cloud based on user_level.
+        NOTES: This is not the same as resume.
+        """
+        logger.sys_info('\n**Server action unpause. Component: Nova Def: unpause_server**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+            if(value == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only unpause virtual servers in their project.")
+                raise Exception("Users can only unpause virtual servers in their project.")
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            body='{"unpause": null}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except:
+            logger.sys_error("Error in server unpause request.")
+            raise Exception("Error in server unpause request")
+
+        if(rest['response'] == 202):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s Data: %s" % (rest['response'],rest['reason'],rest['data']))
+        else:
+            #util.http_codes(rest['response'],rest['reason'],rest['data'])
+            nova_ec.error_codes(rest)
+
+        return 'OK'
+
+    def suspend_server(self,input_dict):
+        """
+        DESC: Suspend a running virtual server. Suspending saves the vm state to disk.
+        INPUT: input_dict - project_id
+                         - instance_id
+        OUTPUT: 'OK' - pass
+                'ERROR' - fail
+                'NA' - unknown
+        ACCESS: Users can suspend an instance in the cloud based on user_level.
+        NOTES: This is not the same as pause.
+        """
+        logger.sys_info('\n**Server action suspend. Component: Nova Def: suspend_server**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+            if(value == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only suspend virtual servers in their project.")
+                raise Exception("Users can only suspend virtual servers in their project.")
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            body='{"suspend": null}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except:
+            logger.sys_error("Error in server suspend request.")
+            raise Exception("Error in server suspend request")
+
+        if(rest['response'] == 202):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+        else:
+            #util.http_codes(rest['response'],rest['reason'])
+            nova_ec.error_codes(rest)
+
+        return 'OK'
+
+
+    def resume_server(self,input_dict):
+        """
+        DESC: Resume a suspended server from disc.
+        INPUT: input_dict - project_id
+                         - instance_id
+        OUTPUT: 'OK' - pass
+                'ERROR' - fail
+                'NA' - unknown
+        ACCESS: Users can resume an instance in the cloud based on user_level.
+        NOTES: This is not the same as unpause.
+        """
+        logger.sys_info('\n**Server action resume. Component: Nova Def: resume_server**\n')
+        for key,value in input_dict.items():
+            if(key == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+            if(value == ''):
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
+
+        if(self.is_admin == 0):
+            if(self.project_id != input_dict['project_id']):
+                logger.sys_error("Users can only resume virtual servers in their project.")
+                raise Exception("Users can only resume virtual servers in their project.")
+
+        # Create an API connection with the Admin
+        try:
+            # build an API connection for the admin user
+            api_dict = {"username":self.username, "password":self.password, "project_id":self.project_id}
+            if(self.project_id != input_dict['project_id']):
+                self.token = get_token(self.username,self.password,input_dict['project_id'])
+            api = caller(api_dict)
+        except:
+            logger.sys_error("Could not connect to the API")
+            raise Exception("Could not connect to the API")
+
+        try:
+            # construct request header and body
+            body='{"resume": null}'
+            header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
+            function = 'POST'
+            api_path = '/v2/%s/servers/%s/action' % (input_dict['project_id'],input_dict['instance_id'])
+            token = self.token
+            sec = self.sec
+            rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'8774'}
+            rest = api.call_rest(rest_dict)
+            # check the response code
+        except:
+            logger.sys_error("Error in server resume request.")
+            raise Exception("Error in server resume request")
+
+        if(rest['response'] == 202):
+                # this method does not return any response body
+                logger.sys_info("Response %s with Reason %s" % (rest['response'],rest['reason']))
+        else:
+            #util.http_codes(rest['response'],rest['reason'])
+            nova_ec.error_codes(rest)
+
+        return 'OK'
+
+
     def server_power_control(self,input_dict):
         """
         DESC: Power on or off an instance
@@ -143,8 +385,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != input_dict['project_id']):
-                logger.sys_error("Users can only power on/off virtual serves in their project.")
-                raise Exception("Users can only power on/off virtual serves in their project.")
+                logger.sys_error("Users can only power on/off virtual servers in their project.")
+                raise Exception("Users can only power on/off virtual servers in their project.")
 
         #check to make sure non admins can perofrm the task
         if(self.is_admin == 0):
@@ -305,8 +547,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != input_dict['project_id']):
-                logger.sys_error("Users can only reboot virtual serves in their project.")
-                raise Exception("Users can only reboot virtual serves in their project.")
+                logger.sys_error("Users can only reboot virtual servers in their project.")
+                raise Exception("Users can only reboot virtual servers in their project.")
 
         # check if the server_id is in the power user project: TODO
         if(self.is_admin == 0):
@@ -386,8 +628,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != input_dict['project_id']):
-                logger.sys_error("Users can only reboot virtual serves in their project.")
-                raise Exception("Users can only reboot virtual serves in their project.")
+                logger.sys_error("Users can only reboot virtual servers in their project.")
+                raise Exception("Users can only reboot virtual servers in their project.")
         
         #Make it so all users can resize an instance
         #if(self.user_level <= 1):
@@ -484,8 +726,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != confirm_dict['project_id']):
-                logger.sys_error("Users can only reboot virtual serves in their project.")
-                raise Exception("Users can only reboot virtual serves in their project.")
+                logger.sys_error("Users can only reboot virtual servers in their project.")
+                raise Exception("Users can only reboot virtual servers in their project.")
 
         #check to make sure non admins can perofrm the task
         if(self.is_admin == 0):
@@ -569,8 +811,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != revert_dict['project_id']):
-                logger.sys_error("Users can only reboot virtual serves in their project.")
-                raise Exception("Users can only reboot virtual serves in their project.")
+                logger.sys_error("Users can only reboot virtual servers in their project.")
+                raise Exception("Users can only reboot virtual servers in their project.")
 
         #check to make sure non admins can perofrm the task
         if(self.is_admin == 0):
@@ -656,8 +898,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != snap_dict['project_id']):
-                logger.sys_error("Users can only snapshot virtual serves in their project.")
-                raise Exception("Users can only snapshot virtual serves in their project.")
+                logger.sys_error("Users can only snapshot virtual servers in their project.")
+                raise Exception("Users can only snapshot virtual servers in their project.")
 
         #check to make sure non admins can perofrm the task
         self.get_server = None
@@ -912,8 +1154,8 @@ class server_actions:
 
         if(self.is_admin == 0):
             if(self.project_id != backup_dict['project_id']):
-                logger.sys_error("Users can only backup virtual serves in their project.")
-                raise Exception("Users can only backup virtual serves in their project.")
+                logger.sys_error("Users can only backup virtual servers in their project.")
+                raise Exception("Users can only backup virtual servers in their project.")
 
         #check to make sure non admins can perofrm the task
         self.get_server = None
@@ -992,11 +1234,11 @@ class server_actions:
         logger.sys_info('\n**Server get console. Component: Nova Def: get_instance_console**\n')
         for key,value in input_dict.items():
             if(key == ''):
-                logger.sys_error('Reguired value not passed.')
-                raise Exception('Reguired value not passed.')
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
             if(value == ''):
-                logger.sys_error('Reguired value not passed.')
-                raise Exception('Reguired value not passed.')
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
 
         # Create an API connection with the Admin
         try:
@@ -1050,11 +1292,11 @@ class server_actions:
         logger.sys_info('\n**Server action update security group. Component: Nova Def: update_instance_secgroup**\n')
         for key,value in input_dict.items():
             if(key == ''):
-                logger.sys_error('Reguired value not passed.')
-                raise Exception('Reguired value not passed.')
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
             if(value == ''):
-                logger.sys_error('Reguired value not passed.')
-                raise Exception('Reguired value not passed.')
+                logger.sys_error('Required value not passed.')
+                raise Exception('Required value not passed.')
 
         try:
             get_proj = {'select':'proj_name','from':'projects','where':"proj_id='%s'"%(input_dict['project_id'])}
