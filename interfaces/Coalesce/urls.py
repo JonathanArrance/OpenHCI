@@ -304,6 +304,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_image_update',
             name='get_image_update'),
 
+        url(r'^image/get/update_snapshot/(?P<snapshot_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_instance_update_snapshot',
+            name='get_instance_update_snapshot'),
+
         # --- Flavors ----
         url(r'^create_vm_spec/(?P<name>[^/]+)/(?P<ram>[^/]+)/(?P<boot_disk>[^/]+)/(?P<cpus>[^/]+)/$',
             'coalesce.coal_beta.views.create_vm_spec',

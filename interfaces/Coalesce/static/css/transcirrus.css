@@ -314,6 +314,10 @@ input[type=file] {
     color: rgb(235, 235, 235)
 }
 
+.update-instance-snapshot-from-view {
+    min-width: 65px;
+}
+
 /* NAVIGATION */
 
 .navbar-logo {

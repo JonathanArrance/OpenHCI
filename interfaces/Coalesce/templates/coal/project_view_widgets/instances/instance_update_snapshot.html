@@ -1,0 +1,62 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<form id="update-snapshot-form" class="form-horizontal">
+    {% csrf_token %}
+    <fieldset>
+        <div class="form-group col-sm-12">
+            <label for="snapshot-visibility" class="col-sm-4 control-label">Visibility:</label>
+            <select name="snapshotVisibility" id="snapshot-visibility" class="col-sm-8">
+                {% if snapshot.visibility == "private" %}
+                    <option value="public" selected>public</option>
+                {% else %}
+                    <option value="private" selected>private</option>
+                {% endif %}
+            </select>
+        </div>
+
+        <button type="submit" form="update-snapshot-form" id="update-instance-snapshot" class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+            Confirm
+        </button>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        var view = $(".info-content");
+        $("#update-snapshot-form").validate({
+            rules: {
+                snapshotVisibility: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Updating Instance Snapshot");
+                $(".update-instance-snapshot-from-view").removeProp("disabled");
+                $.getJSON('/update_image/' + '{{ snapshot.image_id }}' +  '/' + $("#snapshot-visibility").val() + '/')
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', "Snapshot has been updated.");
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                        })
+                        .always(function () {
+                            $("#update-instance-snapshot").removeClass("bg-active bg-striped").removeProp("disabled");
+                        });
+
+                $(".popover").popover('hide');
+                $(".update-instance-snapshot-from-view").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            },
+            invalidHandler: function () {
+                $(".update-instance-snapshot-from-view").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>
