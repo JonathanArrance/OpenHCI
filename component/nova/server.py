@@ -1005,7 +1005,10 @@ class server_ops:
         DESC: Create a new security group with ports the ports specified,
               if no ports are specifed the default ports 22,80,443,3389 are used
               users can create security groups on in their project
-        INPUT: dictionary create_sec - ports[] - op
+        INPUT: dictionary create_sec - ports[] - op - each element should be an individual port or range of ports 
+                                               - ex: ['22','80','433','1100-1200','3389']
+                                               - ranges must be of the form <min>-<max>
+                                               - relies on front-end validation
                                      - transport - op - tcp/udp
                                      - enable_ping - op - true/false
                                      - group_name - req
@@ -1059,7 +1062,7 @@ class server_ops:
                 logger.sys_error("Users can only create security groups in their project.")
                 raise Exception("Users can only create security groups in their project.")
 
-        #determin if pings should be enabled.
+        #determine if pings should be enabled.
         if(('enable_ping' not in create_sec) or (create_sec['enable_ping'] == 'true')):
             create_sec['enable_ping'] = 'true'
         else:
@@ -1076,6 +1079,15 @@ class server_ops:
             ports = [443,80,22,3389]
         else:
             ports = create_sec['ports']
+
+        # break ports up into singles and ranged
+        single_ports = []
+        ranged_ports = []
+        for port in ports:
+            try:
+                single_ports.append(int(port))
+            except:
+                ranged_ports.append(str(port).split("-"))
 
         #the transport protocol for the group tcp/udp
         transport = 'tcp'
@@ -1145,8 +1157,8 @@ class server_ops:
         #add the ports to the sec group NOTE need to determin if we move this to the
         #network libs, it uses the quantum REST API for time sake keeping function here
         try:
-            for i in range(len(ports)):
-                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(ports[i],create_sec['project_id'],ports[i],transport,self.sec_group_id)
+            for sp in single_ports:
+                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(sp,create_sec['project_id'],sp,transport,self.sec_group_id)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
                 function = 'POST'
                 api_path = '/v2.0/security-group-rules'
@@ -1158,11 +1170,31 @@ class server_ops:
                 if((rest['response'] == 200) or (rest['response'] == 201)):
                     #build up the return dictionary and return it if everythig is good to go
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+                    logger.sys_info("Added port %s to security group %s." %(sp,self.sec_group_id))
                 elif(rest['response'] == 409):
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 else:
                     util.http_codes(rest['response'],rest['reason'],rest['body'])
+
+            for rp in ranged_ports:
+                body = '{"security_group_rule": {"direction": "ingress", "port_range_min": "%s", "tenant_id": "%s", "ethertype": "IPv4", "port_range_max": "%s", "protocol": "%s", "security_group_id": "%s"}}' %(rp[0],create_sec['project_id'],rp[1],transport,self.sec_group_id)
+                header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
+                function = 'POST'
+                api_path = '/v2.0/security-group-rules'
+                token = self.token
+                sec = self.sec
+                rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec, "port":'9696'}
+                rest = api.call_rest(rest_dict)
+                #check the response and make sure it is a 200 or 201
+                if((rest['response'] == 200) or (rest['response'] == 201)):
+                    #build up the return dictionary and return it if everythig is good to go
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                    logger.sys_info("Added port %s to security group %s." %(rp,self.sec_group_id))
+                elif(rest['response'] == 409):
+                    logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
+                else:
+                    util.http_codes(rest['response'],rest['reason'],rest['body'])
+
             if(create_sec['enable_ping'] == 'true'):
                 body = '{"security_group_rule": {"ethertype": "IPv4", "direction": "ingress", "tenant_id": "%s", "protocol": "icmp", "security_group_id": "%s"}}' %(create_sec['project_id'],self.sec_group_id)
                 header = {"X-Auth-Token":self.token, "Content-Type": "application/json", "Accept": "application/json"}
@@ -1175,7 +1207,7 @@ class server_ops:
                 if((rest['response'] == 200) or (rest['response'] == 201)):
                     #build up the return dictionary and return it if everythig is good to go
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
-                    logger.sys_info("Added port %s to security group %s." %(ports[i],self.sec_group_id))
+                    logger.sys_info("Enabled ping on security group %s." %(self.sec_group_id))
                 elif(rest['response'] == 409):
                     logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
                 else:
@@ -1194,7 +1226,10 @@ class server_ops:
     def update_sec_group(self,update_sec):
         """
         DESC: Update an exisitng security group with new tcp/udp ports or enable pings
-        INPUT: dictionary update_sec - ports[] - op
+        INPUT: dictionary update_sec - ports[] - op - each element should be an individual port or range of ports 
+                                               - ex: ['22','80','433','1100-1200','3389']
+                                               - ranges must be of the form <min>-<max>
+                                               - relies on front-end validation
                                      - transport - op - tcp/udp
                                      - enable_ping - op - true/false
                                      - group_id - req
