@@ -1,6 +1,6 @@
 import subprocess
 import transcirrus.common.logger as logger
-import transcirrus.operations.third_party_auth.third_party_auth_util as auth_util
+import transcirrus.operations.third_party_auth.util as auth_util
 from multiprocessing import Process
 
 

@@ -7,7 +7,7 @@ from transcirrus.database.postgres import pgsql
 from transcirrus.component.keystone.keystone_users import user_ops
 
 
-class shibboleth_authorization:
+class tp_authorization:
     """
     DESC:   initialize the connection to the DB and set the username
     INPUT:  username
