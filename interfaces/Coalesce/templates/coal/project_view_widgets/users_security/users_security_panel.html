@@ -184,8 +184,8 @@
                         <td class="group-owner">
                             {{ group.username }}
                         </td>
-                        {% if user_level == 0 or username == group.username %}
-                            <td class="group-actions">
+                        <td class="group-actions">
+                            {% if user_level == 0 or username == group.username %}
                                 <div class="btn-group actions-dropdown dropup">
                                 <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
                                    aria-expanded="false">
@@ -206,7 +206,7 @@
                                         </li>
                                     </ul>
                                 </div>
-                        {% endif %}
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

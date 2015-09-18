@@ -76,13 +76,13 @@ sys.path.append("/usr/lib/python2.6/site-packages/")
 
 import transcirrus.operations.third_party_storage.third_party_config as tpc
 from transcirrus.operations.third_party_storage.eseries.mgmt import eseries_mgmt
-import transcirrus.operations.third_party_auth.third_party_auth_util as tpa
-import transcirrus.operations.third_party_auth.shibboleth.add_shib_user as add_shib_user
+import transcirrus.operations.third_party_auth.util as auth_util
+from transcirrus.operations.third_party_auth import tpa_users
+from transcirrus.operations.third_party_auth import tpa_tenants
 import transcirrus.operations.third_party_auth.shibboleth.add_shib_to_cloud as add_shib
 import transcirrus.operations.third_party_auth.shibboleth.remove_shib_from_cloud as remove_shib
-import transcirrus.operations.third_party_auth.shibboleth.build_shib_project as build_shib_project
-from transcirrus.operations.third_party_auth.shibboleth.shib_auth import shibboleth_authorization
-from transcirrus.common import extras as extras
+from transcirrus.operations.third_party_auth.auth import tp_authorization
+from transcirrus.common import extras
 
 # Custom imports
 #from coalesce.coal_beta.models import *
@@ -115,11 +115,11 @@ def dashboard(request):
                                           RequestContext(request, {"is_cloud_admin": is_cloud_admin}))
 
         else:
-            tpa_providers = tpa.detect_auth()
+            tpa_providers = auth_util.detect_auth()
             if tpa_providers['has_shib'] != False:
                 email = request.META['eppn']
                 user = email.split("@")[0]
-                sa = shibboleth_authorization(user)
+                sa = tp_authorization(user)
                 auth = sa.get_auth()
                 if auth != None:
                     if sa['user_level'] > 0:
@@ -138,12 +138,12 @@ def dashboard(request):
             return render_to_response('coal/welcome.html',
                                       RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug"}))
     except Exception as e:
-        tpa_providers = tpa.detect_auth()
+        tpa_providers = auth_util.detect_auth()
         if tpa_providers['has_shib'] != False:
             try:
                 email = request.META['eppn']
                 user = email.split("@")[0]
-                sa = shibboleth_authorization(user)
+                sa = tp_authorization(user)
                 auth = sa.get_auth()
                 logger.sys_info("   ***   shib auth: %s   ***" %(str(auth)))
                 if auth != None:
@@ -366,7 +366,7 @@ def get_third_party_authentication(request):
         auth = request.session['auth']
         if auth['user_level'] == 0:
             to = tenant_ops(auth)
-            provs = tpa.detect_auth()
+            provs = auth_util.detect_auth()
             if provs['has_shib'] == True:
                 default_shib_project = to.get_default_tenant()
                 if default_shib_project is not None:
@@ -4891,7 +4891,7 @@ def detect_third_party_auth(request):
     try:
         auth = request.session['auth']
         if auth['user_level'] == 0:
-            out['providers'] = tpa.detect_auth()
+            out['providers'] = auth_util.detect_auth()
             out['status'] = "success"
             out['message'] = "Successfully detected third party Authentication systems."
         else:
@@ -5037,7 +5037,7 @@ def shib_build_default_project(request):
                             'snapshots': snapshots,
                             'volumes': volumes}
                         project_dict['advanced_ops']['quota'] = quota
-                    proj, admin = build_shib_project.build_default_project(auth, project_dict)
+                    proj, admin = tpa_tenants.build_default_project(auth, project_dict)
                     out = {"status": "success",
                            "message": "%s created as default Project for Shibboleth users." % proj_name,
                            "project": proj, "admin": admin}
@@ -5092,10 +5092,10 @@ def shib_add_user(request, username, email):
     out = {}
     try:
         user_dict = {'username': username, 'email': email}
-        out['user'] = add_shib_user.add_user(user_dict)
+        out['user'] = tpa_users.add_user(user_dict)
         out['status'] = 'success'
         out['message'] = 'The new user %s was added to cloud, and a project is being created for them.'%(username)
-        sa = shibboleth_authorization(username)
+        sa = tp_authorization(username)
         auth = sa.get_auth()
         request.session['auth'] = auth
     except Exception as e:
@@ -5109,10 +5109,10 @@ def shib_add_user_to_project(request, username, email, project_id):
         to = tenant_ops(auth)
         user_dict = {'username': username, 'email': email, 'project_id': project_id}
         project = to.get_tenant(project_id)
-        out['user'] = add_shib_user.add_user(user_dict)
+        out['user'] = tpa_users.add_user(user_dict)
         out['status'] = 'success'
         out['message'] = 'The new user %s was added to the project %s.'%(username, project['project_name'])
-        sa = shibboleth_authorization(username)
+        sa = tp_authorization(username)
         auth = sa.get_auth()
         request.session['auth'] = auth
     except Exception as e:
@@ -5122,7 +5122,7 @@ def shib_add_user_to_project(request, username, email, project_id):
 def shib_login(request):
     email = request.META['eppn']
     user = email.split("@")[0]
-    sa = shibboleth_authorization(user)
+    sa = tp_authorization(user)
     auth = sa.get_auth()
     if auth != None:
         logger.sys_info("has shib auth, already a user")

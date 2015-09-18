@@ -2,7 +2,7 @@ import transcirrus.common.util as util
 import transcirrus.common.extras as extras
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
-import transcirrus.operations.third_party_auth.shibboleth.build_shib_project as bsp
+from transcirrus.operations.third_party_auth import tpa_tenants
 
 from transcirrus.database.postgres import pgsql
 from transcirrus.component.keystone.keystone_users import user_ops
@@ -72,7 +72,7 @@ def add_user(input_dict):
                        }
         # create project and user
         try:
-            proj, user = bsp.build_project(shadow_auth, project_dict)
+            proj, user = tpa_tenants.build_project(shadow_auth, project_dict)
             user['project_id'] = proj
         except Exception as e:
             logger.sys_error("add shib user error, build project section: %s" % str(e))
