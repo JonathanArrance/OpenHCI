@@ -99,6 +99,12 @@ then
     /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/lxml-3.4.4.tar.gz
 fi
 
+# Install python ldap lib "Offline"
+if [ ! -f /usr/local/lib/python2.7/site-packages/ldap/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/python-ldap-2.4.20.tar.gz
+fi
+
 # Remove old ceilometer memory patch daemon.
 /sbin/service ceilometer_memory_patch stop
 /sbin/chkconfig --level 235 ceilometer_memory_patch off
