@@ -18,7 +18,7 @@ def detect_auth():
     has_shib = os.path.exists("/etc/shibboleth")
 
     # check LDAP
-    has_ldap = False
+    has_ldap = os.path.isfile("/usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py")
 
     # check other
     has_other = False
