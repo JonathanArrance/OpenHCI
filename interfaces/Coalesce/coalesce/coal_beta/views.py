@@ -1850,7 +1850,9 @@ def get_security_group_update(request, sec_group_id, project_id):
         tcp = []
         udp = []
         # icmp = []
-        ports = ""
+        ports = {}
+        ports_tcp = ""
+        ports_udp = ""
         for port in sec_group['ports']:
             if port['transport'] == 'tcp':
                 tcp.append((int(port['from_port']),int(port['to_port'])))
@@ -1858,19 +1860,25 @@ def get_security_group_update(request, sec_group_id, project_id):
                 udp.append((int(port['from_port']),int(port['to_port'])))
             # if port['transport'] == 'icmp':
                 # icmp.append(int(port['to_port']))
-        if len(tcp) != 0:
-            transport = sorted(tcp,key=lambda x: x[0])
-            transport_tag = "tcp"
-        else:
-            transport = sorted(udp,key=lambda x: x[0])
-            transport_tag = "udp"
-        for port in transport:
+        tcp = sorted(tcp,key=lambda x: x[0])
+        udp = sorted(udp,key=lambda x: x[0])
+        for port in tcp:
             if port[0] == port[1]:
-                ports += str(port[0]) + ","
+                ports_tcp += str(port[0]) + ","
             else:
-                ports += str(port[0]) + "-" + str(port[1]) + ","
-        ports = ports[:-1]
-        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports, 'transport_tag': transport_tag}))
+                ports_tcp += str(port[0]) + "-" + str(port[1]) + ","
+        if len(ports_tcp) > 0:
+            ports_tcp = ports_tcp[:-1]
+        for port in udp:
+            if port[0] == port[1]:
+                ports_udp += str(port[0]) + ","
+            else:
+                ports_udp += str(port[0]) + "-" + str(port[1]) + ","
+        if len(ports_udp) > 0:
+            ports_udp = ports_udp[:-1]
+        ports['tcp'] = ports_tcp
+        ports['udp'] = ports_udp
+        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group,'error': "Error: %s"%e}))
 
