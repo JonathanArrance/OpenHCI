@@ -26,6 +26,7 @@ class admin_ops:
                is_admin
                sec - optional - use HTTPS sec = TRUE defaults to FALSE
         """
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
@@ -224,6 +225,8 @@ class admin_ops:
                           - network_quota - op
                           - floatingip_quota - op
                           - port_quota - op
+                          - security_group_rule_quota - op
+                          - security_group_quota - op
         OUTPUT: r_dict - r_dict - subnet
                        - network
                        - floatingip
@@ -248,16 +251,20 @@ class admin_ops:
         if(self.is_admin == 1):
             #get the current quota vals
             current_quota = self.get_net_quota(input_dict['project_id'])
-            if(input_dict['subnet_quota'] == '' or 'subnet_quota' not in input_dict):
-                input_dict['subnet_quota'] == current_quota['quota']['subnet']
-            if(input_dict['router_quota'] == '' or 'router_quota' not in input_dict):
-                input_dict['router_quota'] == current_quota['quota']['router']
-            if(input_dict['network_quota'] == '' or 'network_quota' not in input_dict):
-                input_dict['network_quota'] == current_quota['quota']['network']
-            if(input_dict['floatingip_quota'] == '' or 'floatingip_quota' not in input_dict):
-                input_dict['floatingip_quota'] == current_quota['quota']['floatingip']
-            if(input_dict['port_quota'] == '' or 'port_quota' not in input_dict):
-                input_dict['port_quota'] == current_quota['quota']['port']
+            if('subnet_quota' not in input_dict or input_dict['subnet_quota'] == ''):
+                input_dict['subnet_quota'] = current_quota['subnet']
+            if('router_quota' not in input_dict or input_dict['router_quota'] == ''):
+                input_dict['router_quota'] = current_quota['router']
+            if('network_quota' not in input_dict or input_dict['network_quota'] == ''):
+                input_dict['network_quota'] = current_quota['network']
+            if('floatingip_quota' not in input_dict or input_dict['floatingip_quota'] == ''):
+                input_dict['floatingip_quota'] = current_quota['floatingip']
+            if('port_quota' not in input_dict or input_dict['port_quota'] == ''):
+                input_dict['port_quota'] = current_quota['port']
+            if('security_group_rule_quota' not in input_dict or input_dict['security_group_rule_quota'] == ''):
+                input_dict['security_group_rule_quota'] = current_quota['security_group_rule']
+            if('security_group_quota' not in input_dict or input_dict['security_group_quota'] == ''):
+                input_dict['security_group_quota'] = current_quota['security_group']
 
             #Create an API connection with the admin
             try:
@@ -271,8 +278,8 @@ class admin_ops:
                 raise Exception("Could not connect to the API")
 
             try:
-                body = '{"quota": {"subnet": %d,"router": %d,"network": %d,"floatingip": %d,"port": %d}}'%(int(input_dict['subnet_quota']),int(input_dict['router_quota']),int(input_dict['network_quota']),
-                                                                                                          int(input_dict['floatingip_quota']),int(input_dict['port_quota']))
+                body = '{"quota": {"subnet": %d,"router": %d,"network": %d,"floatingip": %d,"port": %d, "security_group_rule": %d, "security_group": %d}}'%(int(input_dict['subnet_quota']),int(input_dict['router_quota']),int(input_dict['network_quota']),
+                                                                                                          int(input_dict['floatingip_quota']),int(input_dict['port_quota']),int(input_dict['security_group_rule_quota']),int(input_dict['security_group_quota']))
                 header = {"X-Auth-Token":self.token}
                 function = 'PUT'
                 api_path = '/v2.0/quotas/%s'%(input_dict['project_id'])

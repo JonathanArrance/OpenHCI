@@ -369,8 +369,21 @@ def update_cloud_controller_name(update_dict):
         update_name = {'table':"trans_system_settings",'set':"param_value='%s'" %(update_dict['new_name']),'where':"parameter='cloud_controller'"}
         db.pg_update(update_name)
 
+        update_name = {'table':"trans_system_settings",'set':"param_value='%s'" %(update_dict['new_name']),'where':"parameter='node_name'"}
+        db.pg_update(update_name)
+
         update_name = {'table':"trans_system_settings",'set':"host_system='%s'" %(update_dict['new_name']),'where':"host_system='%s'" %(update_dict['old_name'])}
         db.pg_update(update_name)
+
+        update_name = {'table':"projects",'set':"host_system_name='%s'" %(update_dict['new_name']),'where':"host_system_name='%s'" %(update_dict['old_name'])}
+        db.pg_update(update_name)
+
+        update_name = {'table':"net_adapter_settings",'set':"system_name='%s'" %(update_dict['new_name']),'where':"system_name='%s'" %(update_dict['old_name'])}
+        db.pg_update(update_name)
+
+        os.system('sudo sed -i \'s/%s/%s/g\' /etc/sysconfig/network' %(update_dict['old_name'], update_dict['new_name']))
+        os.system('sudo sed -i \'s/%s/%s/g\' /etc/hosts' %(update_dict['old_name'], update_dict['new_name']))
+        os.system('sudo hostname %s' %(update_dict['new_name']))
 
     except:
         db.pg_transaction_rollback()
@@ -420,7 +433,7 @@ def get_cloud_controller_name():
     NOTE: The cloud controller is also the ciac node system name. These are human readable names. This
           is not the same as the node id.
     """
-
+    reload(config)
     if(config.NODE_TYPE == 'cc'):
         return config.CLOUD_CONTROLLER
     else:
@@ -431,7 +444,7 @@ def get_cloud_controller_name():
         except:
             logger.sql_error("Could not retrieve cloud controller name from the Transcirrus db.")
             raise Exception("Could not retrieve cloud controller name from the Transcirrus db.")
-        return conroller_name[0][0]
+        return controller_name[0][0]
 
 def get_spindle_node_enabled():
     """
@@ -454,9 +467,11 @@ def get_spindle_node_enabled():
     return spindle[0][0]
 
 def get_default_pub_net_id():
+    reload(config)
     return config.DEFAULT_PUB_NET_ID
 
 def get_default_pub_subnet_id():
+    reload(config)
     return config.DEFAULT_PUB_SUBNET_ID
 
 def get_service_tenant_id():
@@ -496,6 +511,7 @@ def get_cloud_controller_id():
     ACCESS: Wide open
     NOTE: The cloud controller name and the system name on a ciac node will be the same.
     """
+    reload(config)
     return config.CLOUD_CONTROLLER_ID
 
 def get_cloud_controller_uplink_ip():
@@ -534,6 +550,7 @@ def get_node_name():
     ACCESS: Wide open
     NOTE: node name is the factory default, which can be changed later.
     """
+    reload(config)
     return config.NODE_NAME
 
 def get_node_id():
@@ -544,6 +561,7 @@ def get_node_id():
     ACCESS: Wide open
     NOTE: node id is the factory default unique which can NOT be changed later.
     """
+    reload(config)
     return config.NODE_ID
 
 def get_def_mem_role():
@@ -554,6 +572,7 @@ def get_def_mem_role():
     ACCESS: Wide open
     NOTE: All users except admins get this role. Need to be able to remove it from users at create time.
     """
+    reload(config)
     return config.DEF_MEMBER_ROLE_ID
 
 def get_node_type():
@@ -565,6 +584,7 @@ def get_node_type():
     NOTE: node type may be compute(cn)/storage(sn)/hybrid(hd) and its a
     factory default
     """
+    reload(config)
     return config.NODE_TYPE
 
 def get_node_data_ip():
@@ -587,6 +607,7 @@ def get_api_ip():
     ACCESS: Wide open
     NOTE: The cloud controller name and the system name on a ciac node will be the same.
     """
+    reload(config)
     return config.API_IP
 
 def get_mgmt_ip():
@@ -600,6 +621,7 @@ def get_mgmt_ip():
     """
     #mgmt_network = get_adapter_ip('bond0')
     #return mgmt_network['net_ip']
+    reload(config)
     return config.MGMT_IP
 
 def is_node_phy():
@@ -634,6 +656,7 @@ def get_cloud_name():
         logger.sql_error("Could not retrieve cloud name from the Transcirrus db.")
         raise Exception("Could not retrieve cloud name from the Transcirrus db.")
     '''
+    reload(config)
     return config.CLOUD_NAME
 
 def get_system_name():
@@ -644,6 +667,7 @@ def get_system_name():
     ACCESS: Wide open
     NOTE: The cloud controller name and the system name on a ciac node will be the same.
     """
+    reload(config)
     return config.NODE_NAME
 
 def get_gluster_brick():
@@ -655,6 +679,7 @@ def get_gluster_brick():
     NOTE: note the name returned will be gluster-sn-1111, and the brick name will be constructed
           172.334.28.x:/data/gluster-sn-1111
     """
+    reload(config)
     return config.GLUSTER_BRICK
 
 def get_disk_type():
@@ -665,6 +690,7 @@ def get_disk_type():
     ACCESS: Wide open
     NOTE:
     """
+    reload(config)
     return config.DISK_TYPE
 
 def get_uplink_ip():
@@ -1606,3 +1632,57 @@ def getCPUInfo():
               'cpu_model':proc[11],'cpu_stepping':proc[12],'cpu_speed':proc[13]}
 
     return r_dict
+
+
+def restart_rabbitmq():
+    """
+    DESC:   restarts rabbitmq-server service and rabbitmqctl, necessary after a hostname change
+    INPUT:  none
+    OUTPUT: none
+    ACCESS: need to have sudo privileges to run this
+    NOTE:   currently does not check for privileged access
+    """
+    # rabbitmq fixes
+    epmd_pid = subprocess.check_output(['sudo', 'pgrep', '[e]pmd']).strip()
+    subprocess.call(['sudo', 'kill', epmd_pid])
+    rabbitmq_pid = subprocess.check_output(['sudo', 'lsof', '-t', '-i', ':25672']).strip()
+    subprocess.call(['sudo', 'kill', rabbitmq_pid])
+    subprocess.call(['sudo', 'service', 'rabbitmq-server', 'restart'])
+
+    # rabbitmqctl fixes
+    d = dict(os.environ)
+    d['HOSTNAME'] = config.NODE_NAME
+    subprocess.Popen('sudo rabbitmqctl change_password guest transcirrus1', shell=True, env=d).wait()
+    subprocess.call(['sudo', 'service', 'rabbitmq-server', 'restart'])
+
+    # restart some openstack services as well
+    subprocess.call(['sudo', 'service', 'neutron-server', 'restart'])
+    subprocess.call(['sudo', 'service', 'openstack-nova-compute', 'stop'])  # a plain restart did not work in testing
+    subprocess.call(['sudo', 'service', 'openstack-nova-compute', 'start'])
+
+
+def has_permission(input_dict):
+    """
+    DESC:   determines permission based on cascading user_level
+    INPUT:  input_dict: {
+                            username            -   current user's username, the one trying to get access
+                            user_id             -   current user's user_id, the one trying to get access
+                            user_level          -   current user's user_level, the one trying to get access
+                            object_user_id      -   user_id of target object trying to get access to
+                            object_user_level   -   user_level of target object trying to get access to
+                        }
+    OUTPUT: True is allowed to access, else False
+    ACCESS: wide open
+    NOTE:
+    """
+    # these guys have access to everything
+    if input_dict['username'] == "admin" or input_dict['username'] == "shadow_admin":
+        return True
+    # this object is your own
+    if input_dict['user_id'] == input_dict['object_user_id']:
+        return True
+    # you outrank the owner of this object:
+    if input_dict['user_level'] < input_dict['object_user_level']:
+        return True
+    # sorry, no access
+    return False

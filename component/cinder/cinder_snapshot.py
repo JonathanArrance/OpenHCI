@@ -29,6 +29,7 @@ class snapshot_ops:
     #           is_admin
     #           sec - optional - use HTTPS sec = TRUE defaults to FALSE
     def __init__(self,user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
@@ -249,7 +250,7 @@ class snapshot_ops:
         snap_status = 0
         #if the user proj id matches the volume proj_id they can delete the volume
         if(self.is_admin == 0):
-            if(self.project_id == input_dict['snapshot_id']):
+            if(self.project_id == input_dict['project_id']):
                 #snap_status = 1 - list snap info
                 snap_status = 1
             else:

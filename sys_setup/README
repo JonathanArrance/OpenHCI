@@ -1,4 +1,0 @@
-All of the stuff in this file applies to the system after a base Ubuntu is installed
-
-Run devsetup only once to set up your user in the sudoers file and run psql add user commands. Do not run this 
-command again unless you rebuild the dev system.

@@ -19,7 +19,7 @@ RemoteRPMPath = "/tmp"                                  # Location on the remote
 RemoteInstallPath = "/usr/local/lib/python2.7"          # Location to install the software in
 RemoteInstallDir = RemoteInstallPath + "/transcirrus"   # Full path to transcirrus softare
 WgetDownloadToDir = "/tmp"                              # Location to put retrieved rpm files
-WgetURL = "http://transuser:transcirrus1@www.transcirrus.com/download/repo/" # URL for retrieving rpm files
+WgetURL = "http://transuser:transcirrus1@download.transcirrus.com/download/repo/" # URL for retrieving rpm files
 
 # Global vars that are used throughout the module and in unit testing.
 AllNodes = True                     # Should all nodes be updated or just a single node

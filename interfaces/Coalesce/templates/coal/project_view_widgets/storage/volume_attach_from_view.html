@@ -1,0 +1,68 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<form id="volume-form" class="form-horizontal">
+    {% csrf_token %}
+    <fieldset>
+        <div class="form-group col-sm-12">
+            <label for="volume-instance" class="col-sm-4 control-label">Instance:</label>
+            <select name="volumeInstance" id="volume-instance" class="col-sm-8">
+                {% for instance in instances %}
+                    {% if instance.server_status != "BUILDING" and instance.server_status != "ERROR" %}
+                        <option value="{{ instance.server_id }}">{{ instance.server_name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" form="volume-form" id="attach-volume-from-view"
+                class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+            Confirm
+        </button>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        var view = $(".info-content"),
+                page = $("#page-content"),
+                storage = $("#storage-container");
+        $("#volume-form").validate({
+            rules: {
+                volumeInstance: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                $("#attach-volume-from-view").removeProp("disabled");
+                showMessage('info', "Attaching Volume to Instance");
+
+                $.getJSON('/attach_volume/' + CURRENT_PROJECT_ID + '/' + $("#volume-instance").val() + '/{{ volume_id }}/')
+                        .done(function (data) {
+                            if (data.status == 'error') {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+                                showMessage('success', data.message);
+                                window.loading.loadFromView = true;
+                                stealthRefreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                stealthRefreshContainer(page, $("#instances-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_instances_panel/");
+                                refreshContainer(view, view, "/projects/" + CURRENT_PROJECT_ID + "/volumes/" + VOLUME_ID + "/view/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');	// Flag server fault message
+                        })
+                        .always(function () {
+                            $(".attach-volume-from-view").removeClass("bg-active bg-striped").removeProp("disabled");
+                        });
+
+                $(".popover").popover('hide');
+                $(".attach-volume-from-view").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            },
+            invalidHandler: function () {
+                $("#attach-volume-from-view").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>

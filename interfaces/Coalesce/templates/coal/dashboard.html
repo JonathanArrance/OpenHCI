@@ -1,0 +1,55 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/external/c3.min.css">
+{% endblock %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <div class="row-fluid">
+        <div class="col-md-2 sidebar">
+            <ul class="nav nav-sidebar navbar-default nav-pills nav-stacked">
+                {% if user_level == 0 %}
+                    <li><a href="#" id="node-stats">Node Stats</a></li>
+                    <li><a href="#" id="project-stats">Project Stats</a></li>
+                    <li><a href="#" id="third-party-storage">Third Party Storage</a></li>
+                    {% if is_cloud_admin == 1 %}
+                        <li><a href="#" id="third-party-authentication">Third Party Authentication</a></li>
+                    {% endif %}
+                    <li><a href="#" id="metering">Metering</a></li>
+                    <li><a href="#" id="account">Your Account</a></li>
+                {% else %}
+                    <li><a href="#" id="account">Your Account</a></li>
+                    <li><a href="#" id="metering">Metering</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div id="page-content" class="col-md-10 main"></div>
+        <div class="col-md-10 main" style="position:fixed; bottom: 100%;">
+            {% if user_level == 0 %}
+                <div id="node-container"></div>
+                <div id="project-container"></div>
+                <div id="tps-container"></div>
+                {% if is_cloud_admin == 1 %}
+                    <div id="tpa-container"></div>
+                {% endif %}
+                <div id="metering-container"></div>
+                <div id="account-container"></div>
+            {% else %}
+                <div id="metering-container"></div>
+                <div id="account-container"></div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    <script src="{{ STATIC_URL }}javascripts/external/d3.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/external/c3.min.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/charts.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/dashboard/dashboard.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/dashboard/third-party-storage.js"></script>
+{% endblock %}

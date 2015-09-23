@@ -45,6 +45,29 @@ def build_project(auth_dict, project_dict):
     gluster = gluster_ops(auth_dict)
     logger.sys_info("Instantiated Gluster object")
 
+    # list all projects
+    tenants = tenant.list_all_tenants()
+    tenant_names = []
+    for t in tenants:
+        tenant_names.append(t['project_name'])
+    # check to see if project name is same as existing project
+    if project_dict['project_name'] in tenant_names:
+        logger.sys_error("Project already exists with name %s, new project with same name can't be created." %(project_dict['project_name']))
+        raise Exception("Project already exists with name %s, new project with same name can't be created." %(project_dict['project_name']))
+
+    # List out the current cloud users
+    cloud_users = user.list_orphaned_users()
+    x = []
+    for y in cloud_users:
+        x.append(y['username'])
+    userset = set(x)
+
+    # check to see if user is an active user, if so, raise exception
+    all_users = user.list_cloud_user_names()
+    if project_dict['user_dict']['username'] in all_users and project_dict['user_dict']['username'] not in userset:
+        logger.sys_error("User %s already exists in a project, cannot be added to this one." %(project_dict['user_dict']['username']))
+        raise Exception("User %s already exists in a project, cannot be added to this one." %(project_dict['user_dict']['username']))
+
     proj = None
     net = None
     router = None
@@ -56,13 +79,6 @@ def build_project(auth_dict, project_dict):
     except Exception as e:
         logger.sys_error("Couldn't create a project, %s" %(str(e)))
 
-    # List out the current cloud users
-    cloud_users = user.list_orphaned_users()
-    x = []
-    for y in cloud_users:
-        x.append(y['username'])
-
-    userset = set(x)
     #If the user specifed already exists and is not attached to another project just add him to the project as power user.
     if('%s'%(project_dict['user_dict']['username']) in userset):
         try:
@@ -71,7 +87,7 @@ def build_project(auth_dict, project_dict):
         except Exception as e:
             logger.sys_error("Couldn't add an existing project admin to the project, %s" %(str(e)))
     else:
-        #If the user does not exist create a new project power user.
+        #If the user does not exist create a new project admin.
         try:
             project_dict['user_dict']['project_id'] = proj
             pu = user.create_user(project_dict['user_dict'])

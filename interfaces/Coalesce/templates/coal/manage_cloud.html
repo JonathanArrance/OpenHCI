@@ -1,16 +1,18 @@
 {% extends "coal/base-fluid.html" %}
 
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>{% endif %}
+
 {% block title %}Cloud Management{% endblock %}
 
 {% block content %}
-
-<div class="row-fluid">
-    <div class="well">
-        <div class="legend">
-            Nodes
+    <div class="col-sm-12">
+        <div class="page-header">
+            <h2>Nodes</h2>
         </div>
-        <table class="paleblue widget-table">
-            <tr>
+        <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+            <tr class="bg-primary">
                 <th>Name</th>
                 <th>Type</th>
                 <th>Data IP</th>
@@ -20,74 +22,91 @@
                 <th>Zone</th>
                 <th>Status</th>
             </tr>
+            </thead>
+            <tbody>
             {% for node in node_info %}
-            <tr>
-                <td><a href="/nodes/{{ node.node_id|urlencode}}/view/">{{node.node_name}}</a></td>
-                <td>
-                    {% if node.node_type == "cc" %}
-                    core node
-                    {% elif node.node_type == "cn" %}
-                    compute node
-                    {% elif node.node_type == "sn" %}
-                    storage node
-                    {% endif %}
-                </td>
-                <td {% if node.data_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_data_ip}}</td>
-                <td {% if node.mgmt_ip_issue %} bgcolor="#FF1919" {% endif %}>{{node.node_mgmt_ip}}</td>
-                <td>{{node.node_controller}}</td>
-                <td>{{node.node_cloud_name}}</td>
-                <td>{{node.node_nova_zone}}</td>
-                <td {% if node.status == "Down" %} bgcolor="#FF1919"  {% elif node.status == "Issue" %} bgcolor="#FFCC00" {% endif %}>{{node.status}}</td>
-            </tr>
+                <tr>
+                    <td>{{ node.node_name }}</td>
+                    <td>
+                        {% if node.node_type == "cc" %}
+                            core node
+                        {% elif node.node_type == "cn" %}
+                            compute node
+                        {% elif node.node_type == "sn" %}
+                            storage node
+                        {% endif %}
+                    </td>
+                    <td {% if node.data_ip_issue %} bgcolor="#FF1919" {% endif %}>{{ node.node_data_ip }}</td>
+                    <td {% if node.mgmt_ip_issue %} bgcolor="#FF1919" {% endif %}>{{ node.node_mgmt_ip }}</td>
+                    <td>{{ node.node_controller }}</td>
+                    <td>{{ node.node_cloud_name }}</td>
+                    <td>{{ node.node_nova_zone }}</td>
+                    <td {% if node.status == "Down" %}class="bg-error"
+                        {% elif node.status == "Issue" %}class="bg-warning"
+                        {% elif node.status == "Up" %}class="bg-success"
+                        {% endif %}>
+                        {{ node.status }}
+                    </td>
+                </tr>
             {% endfor %}
+            </tbody>
         </table>
     </div>
-    <!-- end span6-->
-</div><!-- end row-fluid-->
-<div class="row-fluid">
-    <div class="well">
-        <div class="legend">
-            Projects
-            <a href="/projects/build" id="create-project" class="btn" style="float:right">New Project</a>
+    <div class="col-sm-12">
+        <div class="page-header">
+            <h2>Projects</h2>
 
+            {% if user_level == 0 %}
+                <div class="btn-group actions-dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                        Actions
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="build-project">Build Project</a></li>
+                    </ul>
+                </div>
+            {% endif %}
         </div>
-        <div class="well-wide">
-            <table class="table-wide">
-                <tr>
-                    <th>Project Name</th>
-                    <th>Project Id</th>
-                    <th>Host System Name</th>
-                    <th>Host System IP</th>
-                    <th>Security Group Name</th>
-                    <th>Security Group ID</th>
-                    <th>Security Key Name</th>
-                    <th>Security Key ID</th>
-                    <th>Network Name</th>
-                    <th>Network ID</th>
-                </tr>
-                {% for proj in project_info %}
+        <table class="table table-striped table-hover table-responsive table-bordered table-condensed">
+            <thead>
+            <tr class="bg-primary">
+                <th>Project Name</th>
+                <th>Host System Name</th>
+                <th>Host System IP</th>
+                <th>Security Group Name</th>
+                <th>Security Key Name</th>
+                <th>Network Name</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for proj in project_info %}
                 {% if proj.project_name != "trans_default" %}
-                <tr>
-                    <td><a href="/projects/{{proj.project_id}}/view">{{proj.project_name}}</a></td>
-                    <td>{{proj.project_id}}</td>
-                    <td>{{proj.host_system_name}}</td>
-                    <td>{{proj.host_system_ip}}</td>
-                    <td>{{proj.def_security_group_name}}</td>
-                    <td>{{proj.def_security_group_id}}</td>
-                    <td>{{proj.def_security_key_name}}</td>
-                    <td>{{proj.def_security_key_id}}</td>
-                    <td>{{proj.def_network_name}}</td>
-                    <td>{{proj.def_network_id}}</td>
-
-                </tr>
+                    <tr>
+                        <td><a href="/projects/{{ proj.project_id }}/view">{{ proj.project_name }}</a></td>
+                        <td>{{ proj.host_system_name }}</td>
+                        <td>{{ proj.host_system_ip }}</td>
+                        <td>{{ proj.def_security_group_name }}</td>
+                        <td>{{ proj.def_security_key_name }}</td>
+                        <td>{{ proj.def_network_name }}</td>
+                    </tr>
                 {% endif %}
-                {% endfor %}
-            </table>
-        </div>
-
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <!-- end span6-->
 
-</div><!-- end row-fluid-->
+{% endblock %}
 
+{% block javascripts %}
+    <script src="{{ STATIC_URL }}javascripts/utilities.js"></script>
+    <script>
+        $(function () {
+            $(document).on('click', '#build-project', function (event) {
+                event.preventDefault();
+                var call = '/projects/get/build/';
+                showConfirmModal(call);
+            });
+        });
+    </script>
 {% endblock %}

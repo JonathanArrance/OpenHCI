@@ -1,0 +1,76 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create Snapshot</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="snap-form" class="form-horizontal">
+                {% csrf_token %}
+                <div class="form-group col-sm-12">
+                    <label for="snap-name" class="col-sm-4 control-label">Name:</label>
+                    <input type="text" name="snapName" id="snap-name" placeholder="Snapshot Name" class="col-sm-8">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="snap-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $(function () {
+        var buttons = $(this).parent().parent().find('button'),
+                page = $("#page-content"),
+                storage = $("#storage-container");
+        $("#snap-form").validate({
+            rules: {
+                snapName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                }
+            },
+            submitHandler: function () {
+                setModalButtons(false, buttons);
+                showMessage('info', "Creating new snapshot ...");
+
+                $.getJSON('/create_snapshot/' + CURRENT_PROJECT_ID + '/' + $("#snap-name").val() + '/{{ volume_id }}/No Description/')
+                        .done(function (data) {
+                            if (data.status == 'error') {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+                                showMessage('success', "Created snapshot " + data.snapshot_name + ".");
+                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');	// Flag server fault message
+                        });
+                closeModal();
+            }
+        });
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#snap-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                }
+            }, 1000);
+        });
+    });
+</script>

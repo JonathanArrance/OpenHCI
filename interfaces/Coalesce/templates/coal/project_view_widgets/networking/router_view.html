@@ -1,0 +1,58 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ nw.net_name }} View</h5>
+</div>
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-8 col-sm-offset-2">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Router Details</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td class="center-text">{{ router.router_name }}</td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td class="center-text">{{ router.router_id }}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td class="center-text">{{ router.router_status }}</td>
+                </tr>
+                <tr>
+                    <th>Network Id</th>
+                    <td class="center-text">{{ router.network_id }}</td>
+                </tr>
+                <tr>
+                    <th>External Gateway</th>
+                    <td class="center-text">{{ router.external_gateway }}</td>
+                </tr>
+                <tr>
+                    <th>External IP</th>
+                    <td class="center-text">{{ router.external_ip }}</td>
+                </tr>
+                <tr>
+                    <th>Admin State Up</th>
+                    <td class="center-text">{{ router.admin_state_up }}</td>
+                </tr>
+                <tr>
+                    <th>Project Id</th>
+                    <td class="center-text">{{ router.project_id }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,69 @@
+<h1 class="page-header">Third Party Storage</h1>
+
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>{% endif %}
+
+<table class="table table-striped table-hover table-responsive">
+    <thead>
+    <tr class="bg-primary">
+        <th>Provider</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for provider in providers %}
+        <tr>
+            <td>{{ provider.name }}</td>
+            {% if provider.configured == '0' and provider.licensed == '0' %}
+                <td>Unlicensed</td>
+                <td><a href="#" class="license-tps" data-provider="{{ provider.id }}">license</a></td>
+            {% elif provider.configured == '0' and provider.licensed == '1' %}
+                <td>Not Configured</td>
+                <td><a href="#" class="configure-tps" data-provider="{{ provider.id }}">configure</a></td>
+            {% elif provider.in_use == 0 %}
+                <td>Configured (no volumes)</td>
+                <td>
+                    <a href="#" class="update-tps" data-provider="{{ provider.id }}">update</a>
+                    <span> | </span>
+                    <a href="#" class="delete-tps" data-provider="{{ provider.id }}" data-async="refreshTPS">delete</a>
+                </td>
+            {% else %}
+                <td>Configured ({{ provider.in_use }} volumes)</td>
+                <td><a href="#" class="update-tps" data-provider="{{ provider.id }}">update</a></td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% for provider in providers %}
+    {% if provider.configured == '1' and provider.id == "eseries" %} <!-- TODO: Add NFS and Nimble stats call -->
+        <div class="panel panel-primary loadable donuts">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    {% if provider.id == "eseries" %}
+                        E-Series
+                    {% elif provider.id == "nfs" %}
+                        NFS
+                    {% elif provider.id == "nimble" %}
+                        Nimble
+                    {% endif %} Storage (in mb)
+                </h3>
+            </div>
+            <div class="panel-body center-text">
+                <div id="{{ provider.id }}" class="col-sm-12 no-padding">
+                    {% if provider.id == "eseries" %}
+                        {% if eseries_stats %}
+                            <script>
+                                generateEseriesDonuts("{{ eseries_stats }}");
+                            </script>
+                        {% endif %}
+                    {% elif provider.id == "nfs" %}
+                    {% elif provider.id == "nimble" %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}

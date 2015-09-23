@@ -1,0 +1,233 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create Instance</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="instance-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="instance-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="instanceName" id="instance-name" placeholder="Instance Name"
+                               class="col-sm-8">
+                    </div>
+                    <h4>Instance Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="instance-image" class="col-sm-4 control-label">Image:</label>
+                        <select name="instanceImage" id="instance-image" class="col-sm-8">
+                            {% for image in images %}
+                                <option value="{{ image.image_id }}">{{ image.image_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="instance-flavor" class="col-sm-4 control-label">Settings:</label>
+                        <select name="instanceFlavor" id="instance-flavor" class="col-sm-8">
+                            {% for flavor in flavors %}
+                                <option value="{{ flavor.info.id }}">{{ flavor.info.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="instance-network" class="col-sm-4 control-label">Network:</label>
+                        <select name="instanceNetwork" id="instance-network" class="col-sm-8">
+                            {% for network in networks %}
+                                <option value="{{ network.net_name }}">{{ network.net_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="instance-group" class="col-sm-4 control-label">Security Group:</label>
+                        <select name="instanceGroup" id="instance-group" class="col-sm-8">
+                            {% for group in groups %}
+                                <option value="{{ group.sec_group_name }}">{{ group.sec_group_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="instance-key" class="col-sm-4 control-label">Security Key:</label>
+                        <select name="instanceKey" id="instance-key" class="col-sm-8">
+                            {% for key in keys %}
+                                <option value="{{ key.key_name }}">{{ key.key_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="instance-boot" class="col-sm-4 control-label"><i class="fa fa-info-circle"
+                                                                                     data-toggle="tooltip"
+                                                                                     data-placement="bottom"
+                                                                                     title="To store all instance data on a physical volume, choose 'Boot From Volume'; otherwise, all instance data will be lost on instance deletion."></i>
+                            Boot Options :</label>
+                        <select name="instanceBoot" id="instance-boot" class="col-sm-8">
+                            <option value="ephemeral">Boot Ephemeral</option>
+                            <option value="volume">Boot From Volume</option>
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+            <form id="boot-form" class="form-horizontal">
+                <fieldset>
+                    <h4>Boot Volume Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="boot-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="bootName" id="boot-name" placeholder="Volume Name"
+                               class="col-sm-8" disabled="disabled">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="boot-type" class="col-sm-4 control-label">Type:</label>
+                        <select name="bootType" id="boot-type" class="col-sm-8" disabled="disabled">
+                            {% for type in volume_types %}
+                                <option value="{{ type.name }}">{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="boot-size" class="col-sm-4 control-label">size:</label>
+                        <input type="text" name="bootSize" id="boot-size" placeholder="Volume Size"
+                               class="col-sm-8" disabled="disabled">
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="instance-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var buttons = $(this).parent().parent().find('button'),
+                page = $("#page-content"),
+                instances = $("#instances-container");
+        $("#instance-form").validate({
+            rules: {
+                instanceName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                instanceImage: {
+                    required: true
+                },
+                instanceFlavor: {
+                    required: true
+                },
+                instanceNetwork: {
+                    required: true
+                },
+                instanceGroup: {
+                    required: true
+                },
+                instanceKey: {
+                    required: true
+                },
+                instanceBoot: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                var isValid = $("#instance-boot").val() == "volume" ? ($("#instance-form").valid() && $("#boot-form").valid()) : ($("#instance-form").valid());
+                if (isValid) {
+                    setModalButtons(false, buttons);
+                    showMessage('info', "Creating new instance");
+
+                    var url =
+                            '/create_instance/' +
+                            $("#instance-name").val() + '/' +
+                            $("#instance-group").val() + '/nova/' +
+                            $("#instance-flavor").val() + '/' +
+                            $("#instance-key").val() + '/' +
+                            $("#instance-image").val() + '/' +
+                            $("#instance-network").val() + '/' +
+                            CURRENT_PROJECT_ID + '/' +
+                            ($("#instance-boot").val() == "volume" ? 'true' : 'false') + '/' +
+                            ($("#instance-boot").val() == "volume" ? $("#boot-size").val() : 'none') + '/' +
+                            ($("#instance-boot").val() == "volume" ? $("#boot-name").val() : 'none') + '/' +
+                            ($("#instance-boot").val() == "volume" ? $("#boot-type").val() : 'none') + '/';
+
+                    $.getJSON(url)
+                            .done(function (data) {
+                                if (data.status == 'error')
+                                    showMessage('error', data.message);
+                                if (data.status == 'success')
+                                    showMessage('success', data.message);
+                            })
+                            .fail(function () {
+                                showMessage('error', 'Server Fault');
+                            })
+                            .always(function () {
+                                refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                            });
+
+                    closeModal();
+                    showLoader(page);
+                    window.setTimeout(function () {
+                        removeLoaders();
+                        refreshContainer(page, instances, "/projects/" + CURRENT_PROJECT_ID + "/get_instance_panel/");
+                    }, 2000);
+                }
+            }
+        });
+        $("#boot-form").validate({
+            rules: {
+                bootName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                bootType: {
+                    required: true
+                },
+                bootSize: {
+                    required: true,
+                    range: [1, (parseInt("{{ quota.gigabytes }}") - parseInt("{{ used_storage }}"))]
+                }
+            }
+        });
+
+        $("#instance-form input, #instance-form select, #boot-form input, #boot-input select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#instance-boot").val() == "volume") {
+                    if ($("#instance-form").valid() && $("#boot-form").valid()) {
+                        $('button[type=submit]').removeProp("disabled");
+                    } else {
+                        $('button[type=submit]').prop("disabled", true);
+                    }
+                } else {
+                    if ($("#instance-form").valid()) {
+                        $('button[type=submit]').removeProp("disabled");
+                    } else {
+                        $('button[type=submit]').prop("disabled", true);
+                    }
+                }
+            }, 1000);
+        });
+
+        $("#instance-boot").on("change focus keyup", function () {
+            if ($(this).val() == "volume") {
+                $("#boot-form").find("input, select").removeProp("disabled");
+            } else {
+                $("#boot-form").find("input, select").prop("disabled", true);
+            }
+        });
+    });
+</script>

@@ -288,6 +288,16 @@ def add_voltype (auth, name):
     vo = volume_ops(auth)
     vol_type = vo.create_volume_type (name)
 
+    if vol_type == None:
+        # the volume type already exist so we need to get the info we need
+        vol_type = {}
+        types = vo.list_volume_types()
+        for type in types:
+            if type['name'].lower() == name.lower():
+                vol_type['volume_type_id'] = type['id']
+                vol_type['volume_type_name'] = type['name']
+                break
+
     type_dict = {}
     type_dict['volume_type_id'] = vol_type['volume_type_id']
     type_dict['volume_backend_name'] = vol_type['volume_type_name']

@@ -1,0 +1,299 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h5 class="modal-title" id="modal-label">{{ volume_info.volume_name }} View</h5>
+</div>
+
+<div class="modal-body well bg">
+    <div class="row">
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Volume Details</th>
+                    <th>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td class="volume-name">{{ volume_info.volume_name }}</td>
+                </tr>
+                <tr>
+                    <td>Id</td>
+                    <td class="volume-id">{{ volume_info.volume_id }}</td>
+                </tr>
+                <tr>
+                    <td>Size</td>
+                    <td class="volume-size">{{ volume_info.volume_size }}GB</td>
+                </tr>
+                <tr>
+                    <td>Type</td>
+                    <td class="volume-type">{{ volume_info.volume_type }}</td>
+                </tr>
+                <!--<tr>
+                    <td>Mountpoint</td>
+                    <td class="volume-mountpoint">{{ volume_info.volume_mount_location }}</td>
+                </tr>-->
+                <tr>
+                    <td>Attached</td>
+                    <td class="volume-attached">
+                        {% if volume_info.volume_attached == 'true' %}
+                            {{ volume_info.volume_instance.server_name }}
+                        {% else %}
+                            No Attached Instance
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Actions</td>
+                    <td>
+                        {% if volume_info.volume_attached != 'true' %}
+                            {% if instances %}
+                                <button type="button" class="btn btn-xs btn-info attach-volume-from-view"
+                                        data-toggle="popover" title="Attach Volume" data-html="true"
+                                        data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                        data-placement="bottom"><i class="fa fa-chain"></i> attach
+                                </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-xs btn-info clone-volume-from-view"
+                                    data-toggle="popover" title="Clone Volume" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                    data-placement="bottom"><i class="fa fa-clone"></i> clone
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn btn-xs btn-warning detach-volume-from-view"
+                                    data-call="/detach_volume/{{ current_project_id }}/{{ volume_info.volume_id }}/"
+                                    data-notice="Detaching Volume {{ volume_info.volume_name }} from instance {{ volume_info.volume_instance.server_name }}"
+                                    data-toggle="popover" title="Detach Volume" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-chain-broken"></i> detach
+                            </button>
+                        {% endif %}
+                        {% if snapshots %}
+                            <button type="button" class="btn btn-xs btn-info revert-volume-from-view"
+                                    data-toggle="popover" title="Revert Volume" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                    data-placement="bottom"><i class="fa fa-clone"></i> revert
+                            </button>
+{#                        {% else %}#}
+{#                            <button type="button" class="btn btn-xs btn-danger delete-volume-from-view"#}
+{#                                    data-call="/delete_volume/{{ volume_info.volume_id }}/{{ current_project_id }}/"#}
+{#                                    data-notice="Deleting Volume {{ volume_info.volume_name }}"#}
+{#                                    data-toggle="popover" title="Delete Volume" data-html="true"#}
+{#                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">#}
+{#                                <i class="fa fa-trash-o"></i> delete#}
+{#                            </button>#}
+                        {% endif %}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-6">
+            <table class="table table-striped table-hover table-responsive table-bordered">
+                <thead class="bg-primary">
+                <tr>
+                    <th>Snapshot</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>
+                        {% if volume_info.volume_attached != 'true' %}
+                            <button type="button" class="create-snapshot-from-view btn btn-xs btn-success pull-right"
+                                    data-toggle="popover" title="Create Snapshot" data-html="true"
+                                    data-content="<div class='col-sm-12'><h1>Loading <i class='fa fa-cog fa-spin'></i></h1></div>"
+                                    data-placement="auto bottom" data-viewport=".info-content">
+                                <i class="fa fa-plus text-top"></i>
+                            </button>
+                        {% endif %}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if snapshots %}
+                    {% for snapshot in snapshots %}
+                        {% if snapshot.volume_id == volume_info.volume_id %}
+                            <tr id="{{ snapshot.image_id }}" class="snapshot">
+                                <td class="snapshot-name">
+                                    {{ snapshot.snapshot_name }}
+                                </td>
+                                <td class="snapshot-status center-text">
+                                    {{ snapshot.snapshot_status }}
+                                </td>
+                                <td class="snapshot-created center-text">
+                                    {{ snapshot.create_time }}
+                                </td>
+                                <td class="snapshot-actions">
+                                    <button type='button'
+                                            class="create-volume-from-snapshot-from-view btn btn-xs btn-info pull-right"
+                                            data-call="/snapshot/get/create_volume_from_view/{{ current_project_id }}/{{ snapshot.snapshot_id }}/"
+                                            data-notice="Creating Volume from Snapshot {{ snapshot.snapshot_name }}"
+                                            data-toggle="popover" title="Create Volume From Snapshot" data-html="true"
+                                            data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                            data-placement="left">
+                                        <i class="fa fa-hdd-o"></i>
+                                    </button>
+                                    <button type='button'
+                                            class="delete-snapshot-from-view btn btn-xs btn-danger pull-right"
+                                            data-call="/delete_snapshot/{{ current_project_id }}/{{ snapshot.snapshot_id }}/"
+                                            data-notice="Deleting Snapshot {{ snapshot.snapshot_name }}"
+                                            data-toggle="popover" title="Delete Snapshot" data-html="true"
+                                            data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                            data-placement="left">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <tr class="snapshot-placeholder text-warning">
+                        <td><p><i>This volume has no snapshots.</i></p></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    var VOLUME_ID = "{{ volume_info.volume_id }}",
+            VOLUME = "{{volume_info.volume_name}}";
+
+    $(function () {
+        var view = $(".info-content");
+
+        window.loading.current = view;
+        if (window.instanceViewTimer) {
+            window.clearInterval(window.instanceViewTimer);
+        }
+        window.instanceViewTimer = setInterval(function () {
+            stealthRefreshContainer(view, view, "/projects/" + CURRENT_PROJECT_ID + "/volumes/" + VOLUME_ID + "/view/");
+        }, 60000);
+
+        $('[data-toggle="popover"]').popover();
+
+        $(".attach-volume-from-view").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/volume/get/attach_from_view/" + CURRENT_PROJECT_ID + "/" + VOLUME_ID + "/");
+        });
+
+        $(".clone-volume-from-view").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/volume/get/clone_from_view/" + CURRENT_PROJECT_ID + "/" + VOLUME_ID + "/");
+        });
+
+        $(".revert-volume-from-view").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/volume/get/revert_from_view/" + CURRENT_PROJECT_ID + "/" + VOLUME_ID + "/");
+        });
+
+        $(document).on('click', '.delete-volume-from-view', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="delete-volume-from-view" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-volume-from-view").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                window.loading.loadFromView = true;
+                                stealthRefreshContainer($("#page-content"), $("#storage-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/")
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+                closeModal()
+            });
+        });
+
+        $(".create-snapshot-from-view").click(function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load("/snapshot/get/create_from_view/");
+        });
+
+        $(".create-volume-from-snapshot-from-view").click(function (event) {
+            event.preventDefault();
+            var call = $(this).data("call");
+            $('.btn').not(this).popover('hide');
+            $(".popover-content").load(call);
+        });
+
+        $(document).on('click', '.detach-volume-from-view, .delete-snapshot-from-view', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="confirm-action" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#confirm-action").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                window.loading.loadFromView = true;
+                                refreshContainer(view, view, "/projects/" + CURRENT_PROJECT_ID + "/volumes/" + VOLUME_ID + "/view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+
+        $(".close").click(function () {
+            window.clearInterval(window.instanceViewTimer);
+            window.loading.current = $("#storage-container");
+            if (window.loading.loadFromView == true) {
+                refreshContainer($("#page-content"), $("#storage-container"), "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/")
+            }
+        });
+    });
+</script>
+
+{#    <div id="volume-view-attach-dialog-form" title="Attach volume to instance">#}
+{#        <p class="validateTips">Attach {{ volume_info.volume_name }} to an instance. </p>#}
+{##}
+{#        <form>#}
+{#            {% csrf_token %}#}
+{#            <fieldset>#}
+{#                <label for="att_instance">Instance</label>#}
+{#                <select name="att_instance" id="att_instance">#}
+{#                    {% for server in instances %}#}
+{#                        <option value="{{ server.server_id }}">{{ server.server_name }}</option>#}
+{#                    {% endfor %}#}
+{#                </select>#}
+{#            </fieldset>#}
+{#            <label for="att_mount_point">Mount Point</label>#}
+{#            <input type="text" name="att_mount_point" id="att_mount_point"#}
+{#                   class="text ui-widget-content ui-corner-all"/>#}
+{#        </form>#}
+{#    </div>#}

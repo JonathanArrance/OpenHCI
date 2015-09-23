@@ -1,0 +1,113 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create Volume</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="volume-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="volume-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
+                               class="col-sm-8">
+                    </div>
+                    <h4>Volume Options</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="volume-size" class="col-sm-4 control-label">Size (gb):</label>
+                        <input type="text" name="volumeSize" id="volume-size" placeholder="Volume Size in gigabytes"
+                               class="col-sm-8">
+                    </div>
+                    <div class="col-sm-12">
+                        <label>Available Storage: {{ tenant_info.avail_storage }}gb</label>
+
+                        <div class="progress">
+                            <div class="progress-bar {% if tenant_info.avail_percent <= 30 %}progress-bar-info{% elif tenant_info.avail_percent <= 60 %}progress-bar-success{% elif tenant_info.avail_percent <= 90 %}progress-bar-warning{% elif tenant_info.avail_percent > 90 %}progress-bar-danger{% endif %}"
+                                 style="width: {{ tenant_info.avail_percent }}%"></div>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="volume-type" class="col-sm-4 control-label">Type:</label>
+                        <select name="volumeType" id="volume-type" class="col-sm-8">
+                            {% for type in volume_types %}
+                                <option value="{{ type.name }}">{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="volume-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $(function () {
+        var buttons = $(this).parent().parent().find('button'),
+                page = $("#page-content"),
+                storage = $("#storage-container");
+        $("#volume-form").validate({
+            rules: {
+                volumeName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                volumeSize: {
+                    required: true,
+                    number: true,
+                    min: 1,
+                    max: {{ tenant_info.avail_storage }}
+                },
+                volumeType: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                setModalButtons(false, buttons);
+                showMessage('info', "Creating new Volume");
+
+                $.getJSON('/create_volume/' + $("#volume-name").val() + '/' + $("#volume-size").val() + '/' + $("#volume-type").val() + '/' + CURRENT_PROJECT_ID + '/')
+                        .done(function (data) {
+                            if (data.status == 'error') {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+                                showMessage('success', "Created Volume " + data.volume_name + ".");
+                                refreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');	// Flag server fault message
+                        });
+                closeModal();
+            }
+        });
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#volume-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", "disabled");
+                }
+            }, 1000);
+        });
+    });
+</script>

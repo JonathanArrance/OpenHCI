@@ -1,0 +1,73 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+            <form id="volume-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group col-sm-12">
+                        <label for="volume-name" class="col-sm-4 control-label">Name:</label>
+                        <input type="text" name="volumeName" id="volume-name" placeholder="Volume Name"
+                               class="col-sm-8">
+                    </div>
+                    <div class="col-sm-12">
+                        <label>Available Storage: {{ tenant_info.avail_storage }}gb</label>
+
+                        <div class="progress">
+                            <div class="progress-bar {% if tenant_info.avail_percent <= 30 %}progress-bar-info{% elif tenant_info.avail_percent <= 60 %}progress-bar-success{% elif tenant_info.avail_percent <= 90 %}progress-bar-warning{% elif tenant_info.avail_percent > 90 %}progress-bar-danger{% endif %}"
+                                 style="width: {{ tenant_info.avail_percent }}%"></div>
+                        </div>
+                    </div>
+                    <button type="submit" form="volume-form" id="clone-volume-from-view"
+                            class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+                        Confirm
+                    </button>
+                </fieldset>
+            </form>
+
+<script>
+    $(function () {
+        var view = $(".info-content"),
+                page = $("#page-content"),
+                storage = $("#storage-container");
+        $("#volume-form").validate({
+            rules: {
+                volumeName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                }
+            },
+            submitHandler: function () {
+                $("#clone-volume-from-view").removeProp("disabled");
+                showMessage('info', "Cloning Volume");
+
+                $.getJSON('/create_vol_clone/' + CURRENT_PROJECT_ID + '/{{ volume_id }}/' + $("#volume-name").val() + '/')
+                        .done(function (data) {
+                            if (data.status == 'error') {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == 'success') {
+                                showMessage('success', data.message);
+                                window.loading.loadFromView = true;
+                                stealthRefreshContainer(page, storage, "/projects/" + CURRENT_PROJECT_ID + "/get_storage_panel/");
+                                refreshContainer(view, view, "/projects/" + CURRENT_PROJECT_ID + "/volumes/" + VOLUME_ID + "/view/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');	// Flag server fault message
+                        })
+                        .always(function () {
+                            $(".clone-volume-from-view").removeClass("bg-active bg-striped").removeProp("disabled");
+                        });
+
+                $(".popover").popover('hide');
+                $(".clone-volume-from-view").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            },
+            invalidHandler: function () {
+                $("#clone-volume-from-view").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>

@@ -31,6 +31,7 @@ class volume_ops:
     #           is_admin
     #           sec - optional - use HTTPS sec = TRUE defaults to FALSE
     def __init__(self,user_dict):
+        reload(config)
         if(not user_dict):
             logger.sys_warning("No auth settings passed.")
             raise Exception("No auth settings passed")
@@ -138,14 +139,13 @@ class volume_ops:
 
         ## DEBUG ONLY!! Need to determine why list_volume_types is not working in this case.
         #This needs to be fixed, it is broken for some reason all of the sudden.
-        #voltype_list = self.list_volume_types()
+        #vol_type_list = self.list_volume_types()
         #vol_type_found = False
         #for v_type in vol_type_list:
-        #    raw = vol_type['name']
-        #    if raw.lower() == voltype.lower():
+        #    if v_type['name'].lower() == voltype.lower():
         #        vol_type_found = True
         #        break
-
+#
         #if not vol_type_found:
         #    raise Exception ("Volume Type %s was not found for volume creation" % voltype)
 
@@ -763,6 +763,8 @@ class volume_ops:
         INPUT:  volume_type_name - req
         OUTPUT: r_dict - volume_type_name
                        - volume_type_id
+                None - if the volume type already exists
+                Exception  - everything else
         ACCESS: Admins can create volume types.
         """
         logger.sys_info('\n**Create a new volume type. Component: Cinder Def: get_volume_info**\n')
@@ -808,6 +810,10 @@ class volume_ops:
                 vol_type_id = str(load['volume_type']['id'])
                 r_dict = {"volume_type_name": vol_type_name, "volume_type_id": vol_type_id}
                 return r_dict
+            elif(rest['response'] == 409):
+                # the volume type is already defined so return none to indicate this
+                logger.sys_info("New volume type %s already exists" % volume_type_name)
+                return None
             else:
                 logger.sys_error("Could not create new volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
                 raise Exception ("Could not create new volume type %s, error: %s - %s" % (volume_type_name, rest['response'], rest['reason']))
@@ -842,13 +848,12 @@ class volume_ops:
                 logger.sys_error ("Could not connect to the API")
                 raise Exception ("Could not connect to the API")
 
-            #raw = vol_type['name']
-            #vol_type_list = self.list_volume_types()
-            #vol_type_id = None
-            #for v_type in vol_type_list:
-            #    if raw.lower() == volume_type_name.lower():
-            #        vol_type_id = vol_type['id']
-            #        break
+            vol_type_list = self.list_volume_types()
+            vol_type_id = None
+            for v_type in vol_type_list:
+                if volume_type_name.lower() == v_type['name'].lower():
+                    vol_type_id = v_type['id']
+                    break
 
             if vol_type_id == None:
                 raise Exception ("Volume Type %s was not found for deletion" % volume_type_name)

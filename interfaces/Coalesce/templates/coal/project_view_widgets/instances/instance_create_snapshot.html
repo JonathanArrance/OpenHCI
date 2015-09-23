@@ -1,0 +1,81 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<form id="snapshot-form" class="form-horizontal">
+    {% csrf_token %}
+    <fieldset>
+        <div class="form-group col-sm-12">
+            <label for="snapshot-name" class="col-sm-4 control-label">Name:</label>
+            <input type="text" name="snapshotName" id="snapshot-name" class="col-sm-8" placeholder="Optional Name">
+        </div>
+        
+{#        <div class="form-group col-sm-12">#}
+{#            <label for="snapshot-desc" class="col-sm-4 control-label">Description:</label>#}
+{#            <textarea name="snapshotDesc" id="snapshot-desc" class="col-sm-8" placeholder="Optional Description"#}
+{#                      maxlength="80" rows="3"></textarea>#}
+{#        </div>#}
+        
+        <div class="form-group col-sm-12">
+            <label for="snapshot-vis" class="col-sm-4 control-label">Visibility:</label>
+            <select name="snapshotVis" id="snapshot-vis" class="col-sm-8">
+                <option value="private">private</option>
+                <option value="public">public</option>
+            </select>
+        </div>
+
+        <button type="submit" form="snapshot-form" id="create-instance-snapshot" class="btn btn-xs btn-primary" data-loading-text="Loading ...">
+            Confirm
+        </button>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        var view = $(".info-content");
+        $("#snapshot-form").validate({
+            rules: {
+                snapshotName: {
+                    charField: true,
+                    minlength: 0,
+                    maxlength: standardStringMax
+                }
+{#                ,#}
+{#                snapshotDesc: {#}
+{#                    specialChars: true,#}
+{#                    minlength: 0,#}
+{#                    maxlength: 80#}
+{#                }#},
+                snapshotVis: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Creating Instance Snapshot");
+                $(".create-instance-snapshot").removeProp("disabled");
+                $.getJSON('/create_instance_snapshot/' + CURRENT_PROJECT_ID + '/' + INSTANCE_ID + '/' + ($("#snapshot-name").val() == "" ? "none" : $("#snapshot-name").val()) + '/none/' + $("#snapshot-vis").val() + '/')
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', "Snapshot " + data.snapshot_name + " has been created.");
+                                refreshContainer(view, view, "/" + CURRENT_PROJECT_ID + "/" + INSTANCE_ID + "/instance_view/");
+                            }
+                        })
+                        .fail(function () {
+                            showMessage('error', "Server Fault");
+                        })
+                        .always(function () {
+                            $("#create-instance-snapshot").removeClass("bg-active bg-striped").removeProp("disabled");
+                        });
+
+                $(".popover").popover('hide');
+                $(".create-instance-snapshot").addClass("bg-active bg-striped").prop("disabled", "disabled");
+            },
+            invalidHandler: function () {
+                $(".create-instance-snapshot").prop("disabled", "disabled");
+            }
+        });
+    });
+</script>

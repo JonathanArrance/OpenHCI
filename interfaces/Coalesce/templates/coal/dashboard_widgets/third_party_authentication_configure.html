@@ -1,0 +1,89 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title" id="modal-label">Configure {{ provider.name }}</h4>
+</div>
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <!-- ===== SHIBBOLETH ===== -->
+            {% if provider.id == 'shib' %}
+                <form class="form-horizontal" id="shib-config" method="post" enctype="multipart/form-data">
+                    <div class="form-group col-sm-12">
+                        <label for="sso-entity-id" class="col-sm-4">SSO Entity ID:</label>
+                        <input type="url" name="ssoEntityID" id="sso-entity-id"
+                               placeholder="ex: https://idp.yourshibboleth.com/idp/shibboleth"
+                               class="col-sm-8">
+                    </div>
+
+                    <div class="form-group col-sm-12">
+                        <label for="mp-backing-file-path" class="col-sm-4">Metadata Provider File:</label>
+                        <input type="text" name="mpBackingFilePath" id="mp-backing-file-path"
+                               placeholder="ex: shibboleth-metadata.xml"
+                               class="col-sm-8">
+                    </div>
+
+                    <div class="form-group col-sm-12">
+                        <label for="mp-uri" class="col-sm-4">Metadata Provider URI:</label>
+                        <input type="url" name="mpURI" id="mp-uri"
+                               placeholder="http://www.yourshibboleth.com/metadata/shibboleth-providers.xml"
+                               class="col-sm-8">
+                    </div>
+                </form>
+                <!-- ===== LDAP ===== -->
+            {% elif provider.id == 'nfs' %}
+                <form class="form-horizontal">
+                </form>
+                <!-- ===== NIMBLE ===== -->
+            {% elif provider.id == 'nimble' %}
+                <form class="form-horizontal">
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="button" class="btn btn-primary" data-loading-text="Loading ..." data-provider="{{ provider.id }}"
+            data-update="{{ update }}" id="confirm-configure-tpa" disabled>
+        Configure
+    </button>
+</div>
+
+<script>
+    $(function () {
+        // E-Series
+        $("#shib-config").validate({
+            rules: {
+                ssoEntityID: {
+                    required: true,
+                    url: true
+                },
+                mpBackingFilePath: {
+                    required: true
+                },
+                mpURI: {
+                    required: true,
+                    url: true
+                }
+            }
+        });
+    });
+
+    $("form input, form select").on("change focus keyup", function () {
+        window.setTimeout(function () {
+            if ("{{ provider.id }}" == "shib") {
+                if ($("#shib-config").valid()) {
+                    $("#confirm-configure-tpa").removeProp("disabled");
+                } else {
+                    $("#confirm-configure-tpa").prop("disabled", "disabled");
+                }
+            }
+        }, 1000);
+    });
+</script>
