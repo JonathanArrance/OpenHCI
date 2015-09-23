@@ -1839,6 +1839,39 @@ def get_security_group_create(request):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/users_security/security_group_create.html', RequestContext(request, {'error': "Error: %s"%e}))
 
+
+def get_security_group_update(request, sec_group_id, project_id):
+    sec_group = {}
+    try:
+        auth = request.session['auth']
+        so = server_ops(auth)
+        sec_dict = {'sec_group_id': sec_group_id, 'project_id': project_id}
+        sec_group = so.get_sec_group(sec_dict)
+        tcp = []
+        udp = []
+        # icmp = []
+        ports = ""
+        for port in sec_group['ports']:
+            if port['transport'] == 'tcp':
+                tcp.append(int(port['to_port']))
+            if port['transport'] == 'udp':
+                udp.append(int(port['to_port']))
+            # if port['transport'] == 'icmp':
+                # icmp.append(int(port['to_port']))
+        if len(tcp) != 0:
+            transport = sorted(tcp)
+            transport_tag = "tcp"
+        else:
+            transport = sorted(udp)
+            transport_tag = "udp"
+        for port in transport:
+            ports += str(port) + ","
+        ports = ports[:-1]
+        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports, 'transport_tag': transport_tag}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group,'error': "Error: %s"%e}))
+
+
 def pu_project_view(request, project_id):
     auth = request.session['auth']
     to = tenant_ops(auth)
@@ -2359,45 +2392,13 @@ def create_security_group(request, groupname, groupdesc, ports, transport, proje
     return HttpResponse(simplejson.dumps(out))
 
 
-def get_security_group_update(request, sec_group_id, project_id):
-    sec_group = {}
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        sec_dict = {'sec_group_id': sec_group_id, 'project_id': project_id}
-        sec_group = so.get_sec_group(sec_dict)
-        tcp = []
-        udp = []
-        # icmp = []
-        ports = ""
-        for port in sec_group['ports']:
-            if port['transport'] == 'tcp':
-                tcp.append(int(port['to_port']))
-            if port['transport'] == 'udp':
-                udp.append(int(port['to_port']))
-            # if port['transport'] == 'icmp':
-                # icmp.append(int(port['to_port']))
-        if len(tcp) != 0:
-            transport = sorted(tcp)
-            transport_tag = "tcp"
-        else:
-            transport = sorted(udp)
-            transport_tag = "udp"
-        for port in transport:
-            ports += str(port) + ","
-        ports = ports[:-1]
-        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports, 'transport_tag': transport_tag}))
-    except Exception as e:
-        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group,'error': "Error: %s"%e}))
-
-
 def update_security_group(request, groupid, project_id, ports, enable_ping, transport):
     output = {}
     try:
         portstrings = ports.split(',')
         portlist = []
         for port in portstrings:
-            portlist.append(int(port))
+            portlist.append(port)
         auth = request.session['auth']
         so = server_ops(auth)
         update_sec = {'group_id': groupid, 'enable_ping': enable_ping, 'ports': portlist, 'project_id': project_id, 'transport': transport, 'update':'true'}
@@ -3039,11 +3040,11 @@ def pause_server(request, project_id, instance_id):
     out = {}
     try:
         auth = request.session['auth']
-        saa = server_admin_actions(auth)
+        sa = server_actions(auth)
         so = server_ops(auth)
         input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
         serv_info = so.get_server(input_dict)
-        pause = saa.pause_server(input_dict)
+        pause = sa.pause_server(input_dict)
         if(pause == 'OK'):
             out['status'] = 'success'
             out['message'] = 'Successfully paused instance %s.'%(serv_info['server_name'])
@@ -3055,12 +3056,12 @@ def unpause_server(request, project_id, instance_id):
     out = {}
     try:
         auth = request.session['auth']
-        saa = server_admin_actions(auth)
+        sa = server_actions(auth)
         so = server_ops(auth)
         #input_dict = {'project_id':project_id, 'instance_id':instance_id}
         input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
         serv_info = so.get_server(input_dict)
-        unpause = saa.unpause_server(input_dict)
+        unpause = sa.unpause_server(input_dict)
         if(unpause == 'OK'):
             out['status'] = 'success'
             out['message'] = 'Successfully unpaused instance %s.'%(serv_info['server_name'])
@@ -3072,10 +3073,10 @@ def suspend_server(request, project_id, instance_id):
     out = {}
     try:
         auth = request.session['auth']
-        saa = server_admin_actions(auth)
+        sa = server_actions(auth)
         so = server_ops(auth)
         input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
-        suspend = saa.suspend_server(input_dict)
+        suspend = sa.suspend_server(input_dict)
         serv_info = so.get_server(input_dict)
         if(suspend == 'OK'):
             out['status'] = 'success'
@@ -3088,10 +3089,10 @@ def resume_server(request, project_id, instance_id):
     out = {}
     try:
         auth = request.session['auth']
-        saa = server_admin_actions(auth)
+        sa = server_actions(auth)
         so = server_ops(auth)
         input_dict = {'project_id':project_id, 'instance_id':instance_id, 'server_id':instance_id}
-        resume = saa.resume_server(input_dict)
+        resume = sa.resume_server(input_dict)
         serv_info = so.get_server(input_dict)
         if(resume == 'OK'):
             out['status'] = 'success'
