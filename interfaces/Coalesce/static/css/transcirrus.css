@@ -120,10 +120,6 @@ hr.narrow {
     margin: 0;
 }
 
-.help-block {
-    margin-bottom: 0;
-}
-
 .list-hover *:hover {
     background-color: rgb(72, 85, 99);
 }
@@ -280,7 +276,11 @@ input[type=file] {
 }
 
 .help-block {
-    padding: inherit;
+    background-color: rgb(217, 83, 79);
+    color: rgb(235, 235, 235)!important;
+    display: inline-block;
+    margin: 0;
+    padding: 3px 5px 0;
 }
 
 /* BUTTONS */

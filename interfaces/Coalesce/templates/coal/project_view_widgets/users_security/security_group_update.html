@@ -57,19 +57,15 @@
                     required: true
                 },
                 groupPorts: {
-                    required: true
+                    required: true,
+                    ports: true
                 }
             },
             submitHandler: function () {
-                var isValid = true;
-                $($("#group-ports").val().split(',')).each(function (index, element) {
-                    if (!parseInt(element).between(1, 65535))
-                        isValid = false;
-                });
+                var isValid = $("#group-ports").val().toString().formatPorts() != "error";
                 if (isValid) {
                     showMessage('info', "Updating security group");
-                    var url = '/update_security_group/' + '{{ sec_group.sec_group_id }}' +  '/' + CURRENT_PROJECT_ID + '/' + $("#group-ports").val() + '/' + 'true' + '/' + $("#group-transport").val() + '/';
-
+                    var url = '/update_security_group/' + '{{ sec_group.sec_group_id }}' + '/' + CURRENT_PROJECT_ID + '/' + $("#group-ports").val().toString().formatPorts() + '/' + 'true' + '/' + $("#group-transport").val() + '/';
                     $.getJSON(url)
                             .done(function (data) {
                                 if (data.status == 'error')
@@ -90,27 +86,29 @@
                         removeLoaders();
                         refreshContainer(page, security, "/projects/" + CURRENT_PROJECT_ID + "/get_users_security_panel/");
                     }, 2000);
+                } else {
+                    showMessage('warning', $("#group-ports").val().testPorts() == true ? "Unexpected error, please check your Ports input." : $("#group-ports").val().testPorts());
                 }
             }
         });
 
         $("form input, form select").on("change focus keyup", function () {
             window.setTimeout(function () {
-            if ($("#group-form").valid()) {
-                var isValid = true;
-                $($("#group-ports").val().split(',')).each(function (index, element) {
-                    if (!parseInt(element).between(1, 65535)) {
-                        isValid = false;
-                    }
-                });
-                if (isValid)
-                    $('button[type=submit]').removeProp("disabled");
-                else
-                    $('button[type=submit]').prop("disabled", true);
+                if ($("#group-form").valid()) {
+                    var isValid = true;
+                    $($("#group-ports").val().split(',')).each(function (index, element) {
+                        if (!parseInt(element).between(1, 65535)) {
+                            isValid = false;
+                        }
+                    });
+                    if (isValid)
+                        $('button[type=submit]').removeProp("disabled");
+                    else
+                        $('button[type=submit]').prop("disabled", true);
 
-            } else {
-                $('button[type=submit]').prop("disabled", true);
-            }
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
             }, 1000);
         });
     });
