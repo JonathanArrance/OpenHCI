@@ -37,7 +37,11 @@
                         {% if ports.tcp %}
                             {% for port in ports.tcp %}
                                 <p>
-                                    {{ port }}
+                                    {% if port.0 == port.1 %}
+                                        {{ port.0 }}
+                                    {% else %}
+                                        {{ port.0 }}-{{ port.1 }}
+                                    {% endif %}
                                 </p>
                             {% endfor %}
                         {% else %}
@@ -51,7 +55,11 @@
                         {% if ports.udp %}
                             {% for port in ports.udp %}
                                 <p>
-                                    {{ port }}
+                                    {% if port.0 == port.1 %}
+                                        {{ port.0 }}
+                                    {% else %}
+                                        {{ port.0 }}-{{ port.1 }}
+                                    {% endif %}
                                 </p>
                             {% endfor %}
                         {% else %}
