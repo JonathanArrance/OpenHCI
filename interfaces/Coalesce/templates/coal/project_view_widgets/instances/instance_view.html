@@ -231,7 +231,7 @@
                 {% else %}
                     <tr class="snapshot-placeholder text-warning">
                         <td><p><i>This project has no instance snapshots.</i></p></td>
-                        {#                        <td></td> <!-- Description column placeholder -->#}
+                        <td></td>
                         <td></td>
                         <td></td>
                     </tr>
@@ -251,24 +251,24 @@
                 </div>
             </div>
         </div>
+        <!-- Load Charts -->
+        <script>
+            var meters = JSON.parse("{{ meters }}".jsonify())[0];
+            var stats = JSON.parse("{{ stats }}".jsonify());
+            $("#meters-title").html(meters.title);
+            $(function () {
+                $(meters.meters).each(function (index, element) {
+                    $(stats).each(function (key, value) {
+                        if (value.meterName == element.meterType && value.chartType == "radial") {
+                            $('<span id="' + value.htmlID + '"></span>').appendTo("#instance-view-stats");
+                            charts[value.htmlID] = generateGauge(value.htmlID, value.minValue, value.maxValue, element.label, value.unitMeasurement, parseInt(value.utilization).toFixed(0));
+                        }
+                    })
+                });
+            });
+        </script>
     {% endif %}
 </div>
-<!-- Load Charts -->
-<script>
-    var meters = JSON.parse("{{ meters }}".jsonify())[0];
-    var stats = JSON.parse("{{ stats }}".jsonify());
-    $("#meters-title").html(meters.title);
-    $(function () {
-        $(meters.meters).each(function (index, element) {
-            $(stats).each(function (key, value) {
-                if (value.meterName == element.meterType && value.chartType == "radial") {
-                    $('<span id="' + value.htmlID + '"></span>').appendTo("#instance-view-stats");
-                    charts[value.htmlID] = generateGauge(value.htmlID, value.minValue, value.maxValue, element.label, value.unitMeasurement, parseInt(value.utilization).toFixed(0));
-                }
-            })
-        });
-    });
-</script>
 
 <script>
     var INSTANCE_ID = "{{instance.server_id}}",
@@ -301,6 +301,7 @@
         });
 
         $(".create-instance-snapshot").click(function (event) {
+            window.loading.loadFromView = true;
             event.preventDefault();
             $('.btn').not(this).popover('hide');
             $(".popover-content").load("/instance/get/create_snapshot/");

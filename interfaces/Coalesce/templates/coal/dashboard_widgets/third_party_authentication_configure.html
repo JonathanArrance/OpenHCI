@@ -6,14 +6,24 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title" id="modal-label">Configure {{ provider.name }}</h4>
+    <h4 class="modal-title" id="modal-label">Configure Third Party Authentication</h4>
 </div>
 <div class="modal-body bg-default-light">
     <div class="container-fluid">
         <div class="row-fluid">
-            <!-- ===== SHIBBOLETH ===== -->
-            {% if provider.id == 'shib' %}
-                <form class="form-horizontal" id="shib-config" method="post" enctype="multipart/form-data">
+            <div class="col-sm-12">
+                <form class="form-horizontal">
+                    <div class="form-group col-sm-12">
+                        <label for="providers" class="col-sm-4">Provider:</label>
+                        <select name="Providers" id="providers" class="col-sm-8">
+                            {% for provider in providers %}
+                                <option value="{{ provider.value }}">{{ provider.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+        <!-- ===== SHIBBOLETH ===== -->
+                <form style="display:none" class="form-horizontal" id="shib-config" method="post" enctype="multipart/form-data">
                     <div class="form-group col-sm-12">
                         <label for="sso-entity-id" class="col-sm-4">SSO Entity ID:</label>
                         <input type="url" name="ssoEntityID" id="sso-entity-id"
@@ -35,15 +45,61 @@
                                class="col-sm-8">
                     </div>
                 </form>
-                <!-- ===== LDAP ===== -->
-            {% elif provider.id == 'nfs' %}
-                <form class="form-horizontal">
+        <!-- ===== LDAP ===== -->
+                <form style="display:none" class="form-horizontal" id="ldap-config" method="post" enctype="multipart/form-data">
+                    <div class="form-group col-sm-12">
+                        <label for="hostname" class="col-sm-4">Host:</label>
+                        <input type="text" name="Hostname" id="hostname"
+                               placeholder="ex: ldap://ldap.example.com"
+                               class="col-sm-8">
+                    </div>
+
+                    <div class="form-group col-sm-12">
+                        <label for="use-ssl" class="col-sm-4">Security Layer:</label>
+                        <select name="useSSL" id="use-ssl" class="col-sm-8">
+                            <option value="False">none</option>
+                            <option value="True">TSL/SSL</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-sm-12">
+                        <label for="base-dn" class="col-sm-4">Base DN:</label>
+                        <input type="text" name="baseDN" id="base-dn"
+                               placeholder="ex: dc=example,dc=com"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="uid-attr" class="col-sm-4">
+                            <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                               title="Attribute name for 'jsmith' type of login name.">
+                            </i>User Name Attribute:</label>
+                        <input type="text" name="uidATTR" id="uid-attr"
+                               placeholder="ex: uid"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="binding-type" class="col-sm-4">Binding Type:</label>
+                        <select name="bindingType" id="binding-type" class="col-sm-8">
+                            <option value="anonymous">Anonymous</option>
+                            <option value="manager">Manager Account</option>
+                        </select>
+                    </div>
+                    <div style="display:none" class="form-group col-sm-12" id="manager-dn-config">
+                        <label for="manager-dn" class="col-sm-4">Manager DN:</label>
+                        <input type="text" name="managerDN" id="manager-dn"
+                               placeholder="ex: cn=Manager,dc=example,dc=com"
+                               class="col-sm-8">
+                    </div>
+                    <div style="display:none" class="form-group col-sm-12" id="manager-pw-config">
+                        <label for="manager-pw" class="col-sm-4">Manager Password:</label>
+                        <input type="password" name="managerPW" id="manager-pw"
+                               class="col-sm-8">
+                    </div>
                 </form>
-                <!-- ===== NIMBLE ===== -->
-            {% elif provider.id == 'nimble' %}
-                <form class="form-horizontal">
+        <!-- ===== OTHER ===== -->
+                <form style="display:none" class="form-horizontal">
                 </form>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -56,8 +112,40 @@
 </div>
 
 <script>
+    // show initial form
     $(function () {
-        // E-Series
+        if ($("#providers").val() == "shib") {
+            $("#shib-config").show()
+        }
+        if ($("#providers").val() == "ldap") {
+            $("#ldap-config").show()
+        }
+    });
+
+    // switch provider forms
+    $("#providers").on("change keyup", function () {
+        if ($("#providers").val() == "shib") {
+            $("#shib-config").show()
+            $("#ldap-config").hide()
+        }
+        if ($("#providers").val() == "ldap") {
+            $("#ldap-config").show()
+            $("#shib-config").hide()
+        }
+    });
+
+    // show/hide extra binding-type inputs
+    $("#binding-type").on("change keyup", function () {
+        if ($("#binding-type").val() == "anonymous") {
+            $("#manager-dn-config, #manager-pw-config").hide()
+        }
+        if ($("#binding-type").val() == "manager") {
+            $("#manager-dn-config, #manager-pw-config").show()
+        }
+    });
+
+    // shibboleth validation
+    $(function () {
         $("#shib-config").validate({
             rules: {
                 ssoEntityID: {
@@ -75,10 +163,43 @@
         });
     });
 
+    // ldap validation
+    $(function () {
+        $("#ldap-config").validate({
+            rules: {
+                Hostname: {
+                    required: true
+                },
+                useSSL: {
+                    required: true
+                },
+                baseDN: {
+                    required: true
+                },
+                uidATTR: {
+                    required: true
+                },
+                managerDN: {
+                    required: true
+                },
+                managerPW: {
+                    required: true
+                }
+            }
+        });
+    });
+
     $("form input, form select").on("change focus keyup", function () {
         window.setTimeout(function () {
-            if ("{{ provider.id }}" == "shib") {
+            if ($("#providers").val() == "shib") {
                 if ($("#shib-config").valid()) {
+                    $("#confirm-configure-tpa").removeProp("disabled");
+                } else {
+                    $("#confirm-configure-tpa").prop("disabled", "disabled");
+                }
+            }
+            if ($("#providers").val() == "ldap") {
+                if ($("#ldap-config").valid()) {
                     $("#confirm-configure-tpa").removeProp("disabled");
                 } else {
                     $("#confirm-configure-tpa").prop("disabled", "disabled");

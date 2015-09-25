@@ -824,7 +824,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_third_party_authentication',
             name='get_third_party_authentication'),
 
-        url(r'^third_party_authentication/get_configure/(?P<provider>[^/]+)/$',
+        url(r'^third_party_authentication/get_configure/$',
             'coalesce.coal_beta.views.get_third_party_authentication_configure',
             name='get_third_party_authentication_configure'),
 
@@ -835,6 +835,14 @@ urlpatterns = patterns('',
         url(r'^third_party_authentication/get_build_default_project/(?P<provider>[^/]+)/$',
             'coalesce.coal_beta.views.get_third_party_authentication_build_project',
             name='get_third_party_authentication_build_project'),
+
+        url(r'^third_party_authentication/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
+            'coalesce.coal_beta.views.tpa_add_user',
+            name='tpa_add_user'),
+
+        url(r'^third_party_authentication/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.tpa_add_user_to_project',
+            name='tpa_add_user_to_project'),
 
         # --- Shibboleth ----
         url(r'^shib/$',
@@ -849,17 +857,30 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.remove_shib_from_cloud',
             name='remove_shib_from_cloud'),
 
-        url(r'^third_party_authentication/shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
-            'coalesce.coal_beta.views.shib_add_user',
-            name='shib_add_user'),
-
-        url(r'^third_party_authentication/shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
-            'coalesce.coal_beta.views.shib_add_user_to_project',
-            name='shib_add_user_to_project'),
-
         url(r'^third_party_authentication/shib/build_default_project/$',
             'coalesce.coal_beta.views.shib_build_default_project',
             name='shib_build_default_project'),
+
+        # --- LDAP ----
+        url(r'^third_party_authentication/ldap/config/(?P<hostname>[^/]+)/(?P<use_ssl>[^/]+)/(?P<base_dn>[^/]+)/(?P<uid_attr>[^/]+)/(?P<binding_type>[^/]+)/(?P<manager_dn>[^/]+)/(?P<manager_pw>[^/]+)/$',
+            'coalesce.coal_beta.views.add_ldap_to_cloud',
+            name='add_ldap_to_cloud'),
+
+        url(r'^third_party_authentication/ldap/remove/$',
+            'coalesce.coal_beta.views.remove_ldap_from_cloud',
+            name='remove_ldap_from_cloud'),
+
+        url(r'^ldap/auth/$',
+            'coalesce.coal_beta.views.ldap_auth',
+            name='ldap_auth'),
+
+        url(r'^ldap/login/(?P<username>[^/]+)/$',
+            'coalesce.coal_beta.views.ldap_login',
+            name='ldap_login'),
+
+        url(r'^third_party_authentication/ldap/build_default_project/$',
+            'coalesce.coal_beta.views.ldap_build_default_project',
+            name='ldap_build_default_project'),
 
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

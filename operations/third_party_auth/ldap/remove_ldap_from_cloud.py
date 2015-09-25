@@ -1,4 +1,4 @@
-import os
+import subprocess
 import transcirrus.common.logger as logger
 import transcirrus.operations.third_party_auth.util as auth_util
 
@@ -18,8 +18,8 @@ def remove_ldap():
         
         # remove ldap_config.py
         try:
-            removed = os.remove("/usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py")
-            if removed is None:
+            removed = subprocess.call(["sudo", "rm", "-f", "/usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py"])
+            if removed == 0:
                 return 'OK'
         except Exception as e:
             # problem removing ldap_config.py

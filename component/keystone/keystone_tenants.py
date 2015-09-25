@@ -78,13 +78,13 @@ class tenant_ops:
 
     def create_tenant(self,project_name, is_default=False):
         """
-        DESC: create a new project in Openstack. Only admins can perform this operation.
-              calls the rest api in OpenStack and updates applicable fields in Transcirrus
-              database
-        INPUT: self object
-               project_name -   what you want to call the new project - Required
-               is_default   -   op, if true, will be used as default project for adding third party authentication users
-                            -   THERE CAN ONLY BE ONE per cloud, TODO below as to where to check for this
+        DESC:   create a new project in Openstack. Only admins can perform this operation.
+                calls the rest api in OpenStack and updates applicable fields in Transcirrus
+                database
+        INPUT:  self object
+                project_name    - what you want to call the new project
+                is_default      - op - "SHIB" for default shibboleth project, "LDAP" for default ldap project
+                                - THERE CAN ONLY BE ONE of each per cloud, TODO below as to where to check for this
         OUTPUT project_id
         """
         logger.sys_info('\n**Creating new Keystone project. Component: Keystone Def: create_tenant**\n')
@@ -127,9 +127,12 @@ class tenant_ops:
             # added for custom third party configuration, now we can check description to determine cloud behavior
             description = project_name
 
-            # TODO: determine if "THERE CAN ONLY BE ONE" check should be done in frontend or backend, currently relying on frontend
-            if is_default == True:
-                description = "DEFAULT"
+            # TODO: determine if "THERE CAN ONLY BE ONE" of each check should be done in frontend or backend, currently relying on front-end
+            if is_default is not False:
+                if is_default != "SHIB" and is_default != "LDAP":
+                    logger.sys_error("incorrect value for default project passed")
+                    raise Exception("Incorrect value for default project passed, must be 'SHIB' or 'LDAP'.")
+                description = is_default
 
             try:
                 #Build the new project in OpenStack
@@ -160,8 +163,8 @@ class tenant_ops:
                 self.db.pg_transaction_begin()
                 #insert the new project into the db
                 proj_ins_dict = {"proj_id":project_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
-                if description == "DEFAULT":
-                    proj_ins_dict["is_default"] = "TRUE"
+                if description != project_name:
+                    proj_ins_dict["is_default"] = description
                 self.db.pg_insert("projects",proj_ins_dict)
             except Exception as e:
                 logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
@@ -469,35 +472,56 @@ class tenant_ops:
         pass
 
 
-    def get_default_tenant(self):
+    def get_default_tenants(self):
         """
-        DESC:   returns the default project used in third party authentication, or None if none exists
+        DESC:   returns the default projects used in third party authentication, or None if none exists
         INPUT:  none
-        OUTPUT: tenant_dict:    {
-                                    project_id
-                                    project_name
-                                    def_security_key_name
-                                    def_security_key_id
-                                    def_security_group_id
-                                    def_security_group_name
-                                    host_system_name
-                                    host_system_ip
-                                    def_network_name
-                                    def_network_id
-                                    is_default
-                                }
+        OUTPUT: array of:
+                    tenant_dict:    {
+                                        project_id
+                                        project_name
+                                        def_security_key_name
+                                        def_security_key_id
+                                        def_security_group_id
+                                        def_security_group_name
+                                        host_system_name
+                                        host_system_ip
+                                        def_network_name
+                                        def_network_id
+                                        is_default
+                                    }
                     - OR -
                 None
         ACCESS: wide open, but with great power comes great responsibility
         NOTE:
         """
-        # list all tenants
-        tenants = self.list_all_tenants()
-        for tenant in tenants:
-            # get each tenant's info
-            info = self.get_tenant(tenant['project_id'])
-            if info['is_default'] == "TRUE":
-                # if default, return this tenant
-                return tenant
-        #else return None
+        # try to connect to the transcirrus db
+        try:
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sys_error("Could not connect to db with error: %s" %(e))
+            raise Exception("Could not connect to db with error: %s" %(e))
+
+        # get the default project info
+        proj = []
+        try:
+            get = {"select":'*', "from":'projects', "where":"is_default is not null"}
+            proj = self.db.pg_select(get)
+        except:
+            logger.sql_error("Could not get the default project info")
+            raise Exception("Could not get the default project info.")
+
+        # make sure a default project exists
+        if len(proj) != 0:
+            r_array = []
+            for p in proj:
+                # build the dictionary up
+                r_dict = {"project_id":p[0],"project_name":p[1],"def_security_key_name":p[2],"def_security_key_id":p[3],"def_security_group_id":p[4],
+                          "def_security_group_name":p[5], "host_system_name":p[6], "host_system_ip":p[7], "def_network_name":p[8], "def_network_id":p[9],
+                          "is_default":p[10]}
+                r_array.append(r_dict)
+            # return default project info
+            return r_array
+
+        # else return None
         return None
