@@ -101,6 +101,7 @@ nfs_config = None
 
 def dashboard(request):
     is_cloud_admin = 0
+    tpa_providers = auth_util.detect_auth()
     try:
         auth = request.session['auth']
         if auth:
@@ -117,7 +118,6 @@ def dashboard(request):
                 return render_to_response('coal/dashboard.html',
                                           RequestContext(request, {"is_cloud_admin": is_cloud_admin}))
         else:
-            tpa_providers = auth_util.detect_auth()
             if tpa_providers['has_shib'] != False:
                 email = request.META['eppn']
                 user = email.split("@")[0]
@@ -140,7 +140,6 @@ def dashboard(request):
             return render_to_response('coal/welcome.html',
                                       RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug"}))
     except Exception as e:
-        tpa_providers = auth_util.detect_auth()
         if tpa_providers['has_shib'] != False:
             try:
                 email = request.META['eppn']
@@ -195,7 +194,7 @@ def dashboard(request):
         #
         # if tpa_providers['has_other'] != False:
         #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
-        return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: %s" % e}))
+        return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers, 'error': "Error: %s" % e}))
 
 def get_confirm(request, title, message, call, notice, async, refresh):
     t = urllib.unquote(title)
