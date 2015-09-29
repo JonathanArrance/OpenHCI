@@ -35,7 +35,7 @@
         <div class="row-fluid">
             <div class="col-sm-12">
                 <div class="page-header">
-                    <h2>Adding Shibboleth User to Cloud</h2>
+                    <h2>Adding LDAP User to Cloud</h2>
                 </div>
             </div>
             <div class="col-sm-12">
@@ -45,17 +45,17 @@
                     <div class="col-sm-6">
                         <label class="label">Username:</label>
 
-                        <p>{{ shib_user }}</p>
+                        <p>{{ ldap_user }}</p>
                     </div>
                     <div class="col-sm-6">
                         <label class="label">E-Mail:</label>
 
-                        <p>{{ shib_email }}</p>
+                        <p>{{ ldap_email }}</p>
                     </div>
                 </div>
                 <div class="col-sm-12">
                     <h6>
-                        {% if is_default_shib == 1 %}
+                        {% if is_default_ldap == 1 %}
                             You are being added to Project {{ project.project_name }}:
                         {% else %}
                             New Project {{ project.project_name }} will be built for you:
@@ -89,7 +89,7 @@
                     </table>
                 </div>
             </div>
-            <button class="btn btn-lg btn-primary confirm-shib-user">Confirm</button>
+            <button class="btn btn-lg btn-primary confirm-ldap-user">Confirm</button>
         </div>
     </div>
 </section>
@@ -107,30 +107,30 @@
 <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
 <script>
-    var isDefaultShib = parseInt({{ is_default_shib }}) == 1;
+    var isDefaultShib = parseInt({{ is_default_ldap }}) == 1;
     $(function () {
-        $(".confirm-shib-user").click(function () {
-            $(".confirm-shib-user").prop("disabled", "disabled");
+        $(".confirm-ldap-user").click(function () {
+            $(".confirm-ldap-user").prop("disabled", "disabled");
             if (isDefaultShib) {
                 showMessage('info', "Adding user to {{ project.project_name }}.");
-                $.getJSON("/third_party_authentication/add_user/{{ shib_user }}/{{ shib_email }}/{{ project.project_id }}/")
+                $.getJSON("/third_party_authentication/add_user/{{ ldap_user }}/{{ ldap_email }}/{{ project.project_id }}/")
                         .done(function (data) {
                             if (data.status == "success") {
-                                showMessage('success', "Successfully added {{ shib_user }} to {{ project.project_name }}, redirecting to Project View ...");
+                                showMessage('success', "Successfully added {{ ldap_user }} to {{ project.project_name }}, redirecting to Project View ...");
                                 location.replace("/projects/{{ project.project_id }}/view");
                             }
                             if (data.status == "error") {
                                 showMessage('error', data.message);
-                                $(".confirm-shib-user").removeProp("disabled");
+                                $(".confirm-ldap-user").removeProp("disabled");
                             }
                         })
                         .fail(function () {
                             showMessage('error', "Server Fault");
-                            $(".confirm-shib-user").removeProp("disabled");
+                            $(".confirm-ldap-user").removeProp("disabled");
                         })
             } else {
                 showMessage('info', "Building Project {{ project.project_name }}.");
-                $.getJSON("/third_party_authentication/add_user/{{ shib_user }}/{{ shib_email }}/")
+                $.getJSON("/third_party_authentication/add_user/{{ ldap_user }}/{{ ldap_email }}/")
                         .done(function (data) {
                             if (data.status == "success") {
                                 showMessage('success', "Successfully built {{ project.project_name }}, redirecting to Project View ...");
@@ -138,12 +138,12 @@
                             }
                             if (data.status == "error") {
                                 showMessage('error', data.message);
-                                $(".confirm-shib-user").removeProp("disabled");
+                                $(".confirm-ldap-user").removeProp("disabled");
                             }
                         })
                         .fail(function () {
                             showMessage('error', "Server Fault");
-                            $(".confirm-shib-user").removeProp("disabled");
+                            $(".confirm-ldap-user").removeProp("disabled");
                         })
             }
         });

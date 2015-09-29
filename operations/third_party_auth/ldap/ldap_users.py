@@ -13,15 +13,15 @@ def validate_user(username, password):
     NOTE:
     """
     # initialize, check ssl usage and bind
-    l = ldap.initialize("ldap://%s" %ldap_config.HOSTNAME)
+    l = ldap.initialize(ldap_config.HOSTNAME)
     if ldap_config.USE_SSL == "True":
         l.start_tls_s()
     if ldap_config.MANAGER_DN == "ANONYMOUS":
         # bind anonymously
-        l.bind_s("","")
+        l.simple_bind_s("","")
     else:
         # bind as manager
-        l.bind_s( ldap_config.MANAGER_DN, ldap_config.MANAGER_PW )
+        l.simple_bind_s( ldap_config.MANAGER_DN, ldap_config.MANAGER_PW )
 
     # search for user dn based on uid
     uid = '(%s=%s)' %(ldap_config.UID_ATTR,username)
@@ -34,7 +34,7 @@ def validate_user(username, password):
         user_pw = password
         success = (-1,-1)
         try: 
-            success = l.bind_s(user_dn, user_pw)
+            success = l.simple_bind_s(user_dn, user_pw)
         # invalid credentials
         except ldap.INVALID_CREDENTIALS:
             logger.sys_error("ldap username or password is incorrect")
@@ -55,3 +55,24 @@ def validate_user(username, password):
     else:
         logger.sys_error("ldap user %s not found" %username)
         raise Exception("LDAP user %s not found." %username)
+
+
+def generate_email(username):
+    """
+    DESC:   best effort to try to guess ldap user email based on BASE_DN, if not possible default to username@transcirrus.com
+    INPUT:  username    - ldap username     - ex: nbrust
+    OUTPUT: email       - in the form of:   username@<base_dn_first_part>.<base_dn_second_part>
+                                            - OR -
+                                            usernaem@transcirrus.com 
+    ACCESS: 
+    NOTE:
+    """
+    base_dn_parts = ldap_config.BASE_DN.split(",")
+    dc_parts = []
+    for part in base_dn_parts:
+        if part.startswith("dc="):
+            dc_parts.append(part[3:])
+    if len(dc_parts) == 2:
+        return username+"@"+dc_parts[0]+"."+dc_parts[1]
+    else:
+        return username+"@transcirrus.com"

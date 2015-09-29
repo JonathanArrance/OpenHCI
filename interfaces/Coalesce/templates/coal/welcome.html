@@ -61,64 +61,64 @@
                         </p>
                     </div>
                     <ul class="nav nav-tabs">
-                        {% if providers %}
-                            {% if providers.has_shib != False and providers.has_ldap == False and providers.has_other == False %}
-                                <li class="active"><a data-toggle="tab" href="#shibboleth-login">Shibboleth</a></li>
-                                <li><a data-toggle="tab" href="#standard-login">Standard</a></li>
-                            {% endif %}
-                        {% else %}
-                            <li class="active"><a data-toggle="tab" href="#standard-login">Standard</a></li>
+                        <li class="active"><a data-toggle="tab" href="#standard-login"><strong>Standard</strong></a></li>
+                        {% if providers.has_shib %}
+                            <li><a data-toggle="tab" href="#shibboleth-login"><strong>Shibboleth</strong></a></li>
+                        {% endif %}
+                        {% if providers.has_ldap %}
+                            <li><a data-toggle="tab" href="#ldap-login"><strong>LDAP</strong></a></li>
                         {% endif %}
                     </ul>
                     <div class="tab-content">
-                        {% if providers.has_shib != False and providers.has_ldap == False and providers.has_other == False %}
-                            <div id="shibboleth-login" class="tab-pane fade in active">
+                        {% if providers.has_shib == True %}
+                            <div id="shibboleth-login" class="tab-pane fade">
                                 <a href="/shib"><button class="center-block btn-primary btn-lg btn-success">Log In Via Shibboleth</button></a>
                             </div>
-                            <div id="standard-login" class="tab-pane fade">
-                                <form class="form-horizontal" id="login-form" method="post">
+                        {% endif %}
+                        {% if providers.has_ldap == True %}
+                            <div id="ldap-login" class="tab-pane fade">
+                                <form class="form-horizontal" id="ldap-login-form" method="post">
                                     {% csrf_token %}
                                     <fieldset>
                                         <div class="form-group col-md-12">
-                                            <label class="col-md-2" for="username">Username:</label>
-                                            <input class="col-md-10" type="text" name="username" id="username"
-                                                   placeholder="Your Username"/>
+                                            <label class="col-md-2" for="ldap-username">Username:</label>
+                                            <input class="col-md-10" type="text" name="ldapUsername" id="ldap-username"
+                                                   placeholder="Your LDAP Username"/>
                                         </div>
                                         <div class="form-group col-md-12">
-                                            <label class="col-md-2" for="password">Password:</label>
-                                            <input class="col-md-10" type="password" name="password" id="password"
-                                                   placeholder="Your Password"/>
-                                        </div>
-
-                                        <div class="form-group col-md-12">
-                                            <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
-                                        </div>
-                                    </fieldset>
-                                </form>
-                            </div>
-                        {% else %}
-                            <div id="standard-login" class="tab-pane fade in active">
-                                <form class="form-horizontal" id="login-form" method="post">
-                                    {% csrf_token %}
-                                    <fieldset>
-                                        <div class="form-group col-md-12">
-                                            <label class="col-md-2" for="username">Username:</label>
-                                            <input class="col-md-10" type="text" name="username" id="username"
-                                                   placeholder="Your Username"/>
-                                        </div>
-                                        <div class="form-group col-md-12">
-                                            <label class="col-md-2" for="password">Password:</label>
-                                            <input class="col-md-10" type="password" name="password" id="password"
-                                                   placeholder="Your Password"/>
+                                            <label class="col-md-2" for="ldap-password">Password:</label>
+                                            <input class="col-md-10" type="password" name="ldapPassword" id="ldap-password"
+                                                   placeholder="Your LDAP Password"/>
                                         </div>
 
                                         <div class="form-group col-md-12">
-                                            <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
+                                            <button class="btn-primary" id="ldap-log-in" type="submit" form="ldap-login-form">Log In</button>
                                         </div>
                                     </fieldset>
                                 </form>
                             </div>
                         {% endif %}
+                        <div id="standard-login" class="tab-pane fade in active">
+                            <form class="form-horizontal" id="login-form" method="post">
+                                {% csrf_token %}
+                                <fieldset>
+                                    <div class="form-group col-md-12">
+                                        <label class="col-md-2" for="username">Username:</label>
+                                        <input class="col-md-10" type="text" name="username" id="username"
+                                               placeholder="Your Username"/>
+                                    </div>
+                                    <div class="form-group col-md-12">
+                                        <label class="col-md-2" for="password">Password:</label>
+                                        <input class="col-md-10" type="password" name="password" id="password"
+                                               placeholder="Your Password"/>
+                                    </div>
+
+                                    <div class="form-group col-md-12">
+                                        <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
+                                    </div>
+                                </fieldset>
+                            </form>
+                        </div>
                     </div>
                 </div>
             {% endif %}
@@ -212,6 +212,36 @@
                     error: function () {
                         showMessage('error', "Server Fault");
                         $("#log-in").prop("disabled", false);
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            var ldap_form = $('#ldap-login-form');
+            ldap_form.submit(function () {
+                $("#ldap-log-in").prop("disabled", true);
+                $.ajax({
+                    type: ldap_form.attr('method'),
+                    url: "/ldap/auth/",
+                    data: ldap_form.serialize(),
+                    success: function (data) {
+                        data = $.parseJSON(data);
+                        if (data.status == "success") {
+                            showMessage('success', "Successfully logged in, redirecting ...");
+                            $("#ldap-log-in").prop("disabled", false);
+                            location.replace("/ldap/login/" + $("#ldap-username").val());
+                        }
+                        if (data.status == "error") {
+                            showMessage('error', data.message);
+                            $("#ldap-log-in").removeProp("disabled");
+                        }
+                    },
+                    error: function () {
+                        showMessage('error', "Server Fault");
+                        $("#ldap-log-in").prop("disabled", false);
                     }
                 });
                 return false;

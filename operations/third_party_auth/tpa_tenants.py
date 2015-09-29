@@ -154,5 +154,10 @@ def build_project(auth_dict, project_dict, is_default=False):
 
     return proj, r_user
 
-def build_default_project(auth_dict, project_dict):
-    build_project(auth_dict, project_dict, True)
+
+def build_default_shib_project(auth_dict, project_dict):
+    return build_project(auth_dict, project_dict, "SHIB")
+
+
+def build_default_ldap_project(auth_dict, project_dict):
+    return build_project(auth_dict, project_dict, "LDAP")
