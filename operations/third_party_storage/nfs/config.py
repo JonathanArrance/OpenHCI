@@ -40,6 +40,9 @@ def add_nfs_stanza():
     outfile.writelines ("volume_driver=cinder.volume.drivers.nfs.NfsDriver\n")
     outfile.writelines ("nfs_shares_config=" + NFS_SHARES_CONF + "\n")
     outfile.writelines ("nfs_mount_point_base=" + NFS_MOUNTPOINT_BASE + "\n")
+    outfile.writelines ("nfs_sparsed_volumes=true\n")
+    outfile.writelines ("nfs_oversub_ratio=1.5\n")      # over provision by 150%
+    outfile.writelines ("nfs_used_ratio=0.92\n")        # no new volumes when >= 92% utilization
 
     outfile.close()
     return
