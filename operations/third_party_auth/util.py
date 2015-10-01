@@ -1,5 +1,6 @@
 import os.path, time, subprocess
 import transcirrus.common.logger as logger
+from transcirrus.operations.third_party_auth.ldap import ldap_config
 
 
 def detect_auth():
@@ -18,7 +19,7 @@ def detect_auth():
     has_shib = os.path.exists("/etc/shibboleth")
 
     # check LDAP
-    has_ldap = os.path.isfile("/usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py")
+    has_ldap = ldap_config.CONFIGURED
 
     # check other
     has_other = False

@@ -99,12 +99,6 @@ then
     /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/lxml-3.4.4.tar.gz
 fi
 
-# Install python ldap lib "Offline"
-if [ ! -f /usr/local/lib/python2.7/site-packages/ldap/__init__.py ]
-then
-    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/python-ldap-2.4.20.tar.gz
-fi
-
 # Remove old ceilometer memory patch daemon.
 /sbin/service ceilometer_memory_patch stop
 /sbin/chkconfig --level 235 ceilometer_memory_patch off
@@ -171,3 +165,24 @@ cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; 
 cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
 
 /sbin/service ceilometer_third_party_meters restart
+
+######################################################
+#
+#---------------------2.4 Patches---------------------
+#
+######################################################
+
+# Install python ldap lib "Offline"
+if [ ! -f /usr/local/lib/python2.7/site-packages/ldap/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/python-ldap-2.4.20.tar.gz
+fi
+
+# Write ldap_config.py if it doesn't already exist
+if [ ! -f /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py ]
+then
+    /bin/echo "Writing ldap_config.py..."
+    /bin/touch /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
+    /bin/echo 'CONFIGURED=False' >> /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
+    /bin/chmod 777 /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
+fi
