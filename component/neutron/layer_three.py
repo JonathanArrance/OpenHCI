@@ -913,6 +913,8 @@ class layer_three_ops:
                        - internal_net_name
                        - internal_net_id
                        - project_id
+                - OR -
+                None if floating ip does not exist
         NOTE: none
         """
         if(floating_ip_id == ''):
@@ -942,14 +944,17 @@ class layer_three_ops:
                 logger.sys_error("Could not get of floating ip with id %s."%(floating_ip_id))
                 raise Exception("Could not get of floating ip with id %s."%(floating_ip_id))
             floating = self.db.pg_select(get_floating)
-            r_dict = {'floating_ip':floating[0][0],
-                      'floating_ip_id':floating_ip_id,
-                      'instance_name':'',
-                      'instance_id':'',
-                      'internal_net_name':'',
-                      'internal_net_id':'',
-                      'project_id':floating[0][1]
-                    }
+            if len(floating) > 0:
+                r_dict = {'floating_ip':floating[0][0],
+                          'floating_ip_id':floating_ip_id,
+                          'instance_name':'',
+                          'instance_id':'',
+                          'internal_net_name':'',
+                          'internal_net_id':'',
+                          'project_id':floating[0][1]
+                        }
+            else:
+                return None
         elif(len(floating) == 1):
             r_dict = {'floating_ip':floating[0][3],
               'floating_ip_id':floating[0][4],

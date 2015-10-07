@@ -17,12 +17,14 @@ from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 #get the nova libs
-from transcirrus.component.nova.image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.storage import server_storage_ops
+from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+# get glance lib
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
 
 #######Special imports#######
 
@@ -74,6 +76,8 @@ class server_ops:
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
         self.keystone = tenant_ops(user_dict)
+        self.flavor = flavor_ops(user_dict)
+        self.image = glance_ops(user_dict)
 
         #random number used if sec group or key name taken
         self.rannum = random.randrange(1000,9000)
@@ -334,8 +338,9 @@ class server_ops:
             #get the default security group from the transcirrus db
             try:
                 select_net = {"select":'def_network_id', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
-                net = self.db.pg_select(select_key)
+                net = self.db.pg_select(select_net)
                 self.net_id = net[0][0]
+                create_dict['network_name'] = self.net.get_network(self.net_id)['net_name']
             except:
                 logger.sql_error("Could not find the specified network for create_server operation %s" %(create_dict['network_name']))
                 raise Exception("Could not find the specified network for create_server operation %s" %(create_dict['network_name']))
@@ -351,24 +356,21 @@ class server_ops:
 
         #verify the availability zone
         #NOTE: for the prototype zone will always be nova
-        if('avail_zone' in create_dict):
+        if('avail_zone' in create_dict and create_dict['avail_zone'] is not None):
             try:
                 select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(create_dict['avail_zone'])}
                 get_zone = self.db.pg_select(select_zone)
             except:
                 logger.sql_error('The specifed zone is not defined.')
                 raise Exception('The specifed zone is not defined.')
-        elif(create_dict['avail_zone'] is None):
-            create_dict['avail_zone'] = 'nova'
         else:
-            #hack
             create_dict['avail_zone'] = 'nova'
 
         if('flavor_name' not in create_dict):
-            create_dict['flavor_name'] = "flavor_id_" + create_dict['flavor_id']
+            create_dict['flavor_name'] = self.flavor.get_flavor(create_dict['flavor_id'])['flavor_name']
 
         if('image_name' not in create_dict):
-            create_dict['image_name'] = "image_id_" + create_dict['image_id']
+            create_dict['image_name'] = self.image.get_image( create_dict['image_id'])['image_name']
 
         #check to see if the name is in the project
         servers = self.list_servers(create_dict['project_id'])
