@@ -468,6 +468,7 @@ class server_ops:
                        - server_node
                        - server_public_ips
                        - floating_ip_id
+                       - project_id
                        - novnc_console
                        - date_created
                        - boot_from_vol
@@ -1892,6 +1893,8 @@ class server_ops:
                        - user_name
                        - sec_key_id
                        - rsa_public_key
+                - OR -
+                None if security key does not exist
         ACCESS: Admins can get info on all keys in the project,
                 users and power users can only get info on the keys they own
         """
@@ -1914,14 +1917,18 @@ class server_ops:
             get_key_dict = None
             if(self.is_admin == 0):
                 #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"user_id='%s' and sec_key_id='%s'" %(self.user_id,input_dict['sec_key_id'])}
-                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name,user_id",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
             else:
                 #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
-                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name,user_id",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
             get_key = self.db.pg_select(get_key_dict)
         except:
             logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(get_key[0][0],input_dict['project_id']))
             raise Exception("Could not get the security group info for sec_key_name: %s in project: %s" %(get_key[0][0],input_dict['project_id']))
 
-        r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2]}
-        return r_dict
+        # make sure key exists
+        if len(get_key) > 0:
+            r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2],'user_id':get_key[0][4]}
+            return r_dict
+        else:
+            return None

@@ -193,7 +193,10 @@ class neutron_net_ops:
                        - net_shared
                        - net_internal
                        - net_subnet_id[{subnet_id: subnet_name:}]
+                       - project_id
                        - router_id
+                - OR -
+                None if network does not exist
         ACCESS: Admins can get info on any network, power users and users can get info
                 for networks in their project.
         """
@@ -214,34 +217,39 @@ class neutron_net_ops:
             logger.sql_error("Could not get the net_id %s from from the Transcirrus db."%(net_id))
             raise Exception("Could not get the net_id %s from from the Transcirrus db."%(net_id))
 
-        #add router to return 
-        get_use = {'select': "router_id",'from': "trans_routers",'where':"net_id='%s'"%(net_id)}
-        in_use = self.db.pg_select(get_use)
-        if(in_use):
-            router_id = in_use[0][0]
-        else:
-            router_id=''
+        # make sure network exists
+        if len(net) > 0:
+            #add router to return 
+            get_use = {'select': "router_id",'from': "trans_routers",'where':"net_id='%s'"%(net_id)}
+            in_use = self.db.pg_select(get_use)
+            if(in_use):
+                router_id = in_use[0][0]
+            else:
+                router_id=''
 
-        #get the subnets
-        get_sub = None
-        try:
-            if(net[0][4] == 'false'):
-                get_sub = {'select':"subnet_id,subnet_name",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
-            elif(net[0][4] == 'true'):
-                get_sub = {'select':"subnet_id,subnet_name",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
-            subs = self.db.pg_select(get_sub)
-        except:
-            logger.sys_error('Could not get the subnets for net_id %s'%(net_id))
-            raise Exception('Could not get the subnets for net_id %s'%(net_id))
+            #get the subnets
+            get_sub = None
+            try:
+                if(net[0][4] == 'false'):
+                    get_sub = {'select':"subnet_id,subnet_name",'from':"trans_public_subnets",'where':"net_id='%s'"%(net_id)}
+                elif(net[0][4] == 'true'):
+                    get_sub = {'select':"subnet_id,subnet_name",'from':"trans_subnets",'where':"net_id='%s'"%(net_id)}
+                subs = self.db.pg_select(get_sub)
+            except:
+                logger.sys_error('Could not get the subnets for net_id %s'%(net_id))
+                raise Exception('Could not get the subnets for net_id %s'%(net_id))
 
-        #build a better array
-        new_array = []
-        for sub in subs:
-            r_dict = {'subnet_id':sub[0], 'subnet_name':sub[1]}
-            new_array.append(r_dict)
+            #build a better array
+            new_array = []
+            for sub in subs:
+                r_dict = {'subnet_id':sub[0], 'subnet_name':sub[1]}
+                new_array.append(r_dict)
 
-        r_dict = {'net_name':net[0][0],'net_id':net[0][1],'net_creator_id':net[0][2],'net_admin_state':net[0][3],'net_shared':net[0][5],'net_internal':net[0][4],'net_subnet_id':new_array,'project_id':net[0][6], 'router_id': router_id}
-        return r_dict
+            r_dict = {'net_name':net[0][0],'net_id':net[0][1],'net_creator_id':net[0][2],'net_admin_state':net[0][3],'net_shared':net[0][5],'net_internal':net[0][4],'net_subnet_id':new_array,'project_id':net[0][6], 'router_id': router_id}
+            return r_dict
+        # network does not exist
+        return None
+
 
     def add_private_network(self,create_dict):
         """

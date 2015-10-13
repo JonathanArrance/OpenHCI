@@ -18,17 +18,23 @@ from transcirrus.common import extras
 # projects
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.operations import build_complete_project
-# instances
+# instances, security groups and security keys
 from transcirrus.component.nova.server import server_ops
 from transcirrus.operations import boot_new_instance as boot_from_vol_ops
 # flavors
 from transcirrus.component.nova.flavor import flavor_ops
-# floating ips
+# floating ips, routers
 from transcirrus.component.neutron.layer_three import layer_three_ops
 # volumes
 from transcirrus.component.cinder.cinder_volume import volume_ops
+from transcirrus.component.nova.storage import server_storage_ops
+from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 # networks
 from transcirrus.component.neutron.network import neutron_net_ops
+# users
+from transcirrus.component.keystone.keystone_users import user_ops
+# images
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
 
 
 # --- API Setup ----
@@ -44,25 +50,31 @@ api_ip = util.get_system_variables(node_id)['MGMT_IP']
 # 400, bad request
 @app.errorhandler(400)
 def bad_request(error):
-    return make_response(jsonify({'error': {'message': "Bad Request.  Check your request parameters", 'number': 400}}), 400)
+    return make_response(jsonify({'error': {'message': error.description, 'number': 400}}), 400)
 
 
 # 401, not authorized
 @app.errorhandler(401)
 def not_authorized(error):
-    return make_response(jsonify({'error': {'message': "Not authorized.  Check your credentials and user privileges.", 'number': 401}}), 401)
+    return make_response(jsonify({'error': {'message': error.description, 'number': 401}}), 401)
 
 
 # 404, not found
 @app.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify({'error': {'message': "Not found.", 'number': 404}}), 404)
+    return make_response(jsonify({'error': {'message': error.description, 'number': 404}}), 404)
+
+
+# 409, confict
+@app.errorhandler(409)
+def confict(error):
+    return make_response(jsonify({'error': {'message': error.description, 'number': 409}}), 409)
 
 
 # 500, internal server error
 @app.errorhandler(500)
 def internal_error(error):
-    return make_response(jsonify({'error': {'message': "Internal server error.", 'number': 500}}), 500)
+    return make_response(jsonify({'error': {'message': error.description, 'number': 500}}), 500)
 
 
 # --- Version Info ----
@@ -84,7 +96,7 @@ def get_version():
 def get_projects():
     """
     Lists all projects.
-    Only returns projects to which the specified user has access.
+    Only returns projects to which the requesting user has access.
     ---
     tags:
       - projects
@@ -93,7 +105,7 @@ def get_projects():
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -133,19 +145,22 @@ def get_projects():
         to = tenant_ops(auth)
         projects = []
         if auth['is_admin'] == 1:
-            projects = to.list_all_tenants()
+            projects_info = to.list_all_tenants()
         else:
-            project = to.get_tenant(auth['project_id'])
-            projects = [{
-                            'name': project['project_name'],
-                            'id':   project['project_id']
-                       }]
-        projects[:] = [p for p in projects if p.get('project_name') != "trans_default"]
+            projects_info = [to.get_tenant(auth['project_id'])]
+        for info in projects_info:
+            project =   {
+                            'name': info['project_name'],
+                            'id':   info['project_id']
+                        }
+            projects.append(project)
+        # remove trans_default
+        projects[:] = [p for p in projects if p.get('name') != "trans_default"]
         return jsonify({'projects': projects})
     except HTTPException as e:
         raise e
-    except:
-        abort(500)
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all projects.' %(fe))
 
 
 # get
@@ -153,7 +168,7 @@ def get_projects():
 def get_project(project_id):
     """
     Gets detailed information about a specified project by ID.
-    Only returns project information to which the specified user has access.
+    Only returns project information to which the requesting user has access.
     ---
     tags:
       - projects
@@ -162,7 +177,7 @@ def get_project(project_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -222,7 +237,7 @@ def get_project(project_id):
                         default: transcirrus-core
                     host_system_ip:
                         type: string
-                        description: ip address of host system
+                        description: IP address of host system
                         default: 127.0.0.1
                     network_name:
                         type: string
@@ -247,8 +262,8 @@ def get_project(project_id):
         username = request.headers.get('username')
         password = request.headers.get('password')
         auth = authorize(username, password)
-        to = tenant_ops(auth)
-        project_info = to.get_tenant(project_id)
+        # check project_id
+        project_info = validate_project(project_id, auth)
         if project_info is not None:
             project = {
                             'name':                     project_info['project_name'],
@@ -287,7 +302,7 @@ def create_project():
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -425,8 +440,8 @@ def create_project():
 @app.route('/v1.0/instances', methods=['GET'])
 def get_all_instances():
     """
-    Lists all instances in cloud.
-    Only returns instances to which the specified user has access.
+    Lists all instances.
+    Only returns instances to which the requesting user has access.
     ---
     tags:
       - instances
@@ -435,7 +450,7 @@ def get_all_instances():
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -473,7 +488,7 @@ def get_all_instances():
                                 default: abcd12e3f456789012345a678b9cde01
                             floating_ip:
                                 type: string
-                                description: floating ip address of instance
+                                description: floating IP address of instance
                                 default: 127.0.0.1
                             status:
                                 type: string
@@ -519,8 +534,8 @@ def get_all_instances():
 @app.route('/v1.0/<string:project_id>/instances', methods=['GET'])
 def get_instances(project_id):
     """
-    Lists all instances in specified project.
-    Only returns instances to which the specified user has access.
+    Lists all instances in specified project by ID.
+    Only returns instances to which the requesting user has access.
     ---
     tags:
       - instances
@@ -529,7 +544,7 @@ def get_instances(project_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -539,7 +554,7 @@ def get_instances(project_id):
         in: path
         type: string
         required: true
-        description: ID of project the instance resides in
+        description: ID of target project
     responses:
         200:
             description: Instances listed.
@@ -584,7 +599,7 @@ def get_instances(project_id):
 def get_instance(project_id, instance_id):
     """
     Gets detailed information about a specified instance by ID.
-    Only returns project information to which the specified user has access.
+    Only returns project information to which the requesting user has access.
     ---
     tags:
       - instances
@@ -593,7 +608,7 @@ def get_instance(project_id, instance_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -634,7 +649,7 @@ def get_instance(project_id, instance_id):
                     - floating_ip_id
                     - novnc_console
                     - date_created
-                    - boot_from_volume
+                    - is_boot_from_volume
                     - fault
                 properties:
                     name:
@@ -676,15 +691,16 @@ def get_instance(project_id, instance_id):
                             type: object
                             id: NetworkInfo
                             required:
-                              - InternalNetworks
-                              - ExternalNetworks
+                              - internal
+                              - external
                             properties:
-                                InternalNetworks:
+                                internal:
                                     type: array
+                                    id: InstanceInternalNetworks
                                     items:
                                         schema:
                                             type: object
-                                            id: InternalNetwork
+                                            id: InstanceInternalNetwork
                                             required:
                                               - name
                                               - id
@@ -711,18 +727,19 @@ def get_instance(project_id, instance_id):
                                                     default: fixed
                                                 addr:
                                                     type: string
-                                                    description: ip address of instance
+                                                    description: IP address of instance
                                                     default: 10.0.1.7
                                                 version:
                                                     type: integer
                                                     description: ip version
                                                     default: 4
-                                ExternalNetworks:
+                                external:
                                     type: array
+                                    id: InstanceExternalNetworks
                                     items:
                                         schema:
                                             type: object
-                                            id: ExternalNetwork
+                                            id: InstanceExternalNetwork
                                             required:
                                               - name
                                               - id
@@ -749,7 +766,7 @@ def get_instance(project_id, instance_id):
                                                     default: floating
                                                 addr:
                                                     type: string
-                                                    description: ip address of instance
+                                                    description: IP address of instance
                                                     default: 10.0.1.7
                                                 version:
                                                     type: integer
@@ -773,11 +790,11 @@ def get_instance(project_id, instance_id):
                         default: abc1def2ab34567890cd12ef34abc56d789012ef3456a78901bc2de3
                     floating_ip:
                         type: string
-                        description: floating ip address of instance
+                        description: floating IP address of instance
                         default: 127.0.0.1
                     floating_ip_id:
                         type: string
-                        description: ID of instance's floating ip address
+                        description: ID of instance's floating IP address
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
                     novnc_console:
                         type: string
@@ -787,7 +804,7 @@ def get_instance(project_id, instance_id):
                         type: string
                         description: date of instance creation
                         default: "2015-10-02T19:28:33Z"
-                    boot_from_volume:
+                    is_boot_from_volume:
                         type: boolean
                         description: conveying if instance boots from volume
                         default: false
@@ -812,9 +829,8 @@ def get_instance(project_id, instance_id):
                             'server_id':    instance_id,
                             'project_id':   project_id
                         }
-        instance_info = []
+        instance_info = {}
         instance_info = so.get_server(server_get)
-        print instance_info
         internal = []
         external = []
         if 'server_net_id' in instance_info:
@@ -829,9 +845,10 @@ def get_instance(project_id, instance_id):
                     info['name'] = net_name
                     info['id'] = net_id
                     external.append(info)
-            boot_from_volume = False
             if 'boot_from_vol' in instance_info and instance_info['boot_from_vol'] == "true":
-                boot_from_volume = True
+                instance_info['boot_from_vol'] = True
+            else:
+                instance_info['boot_from_vol'] = False
             instance = {
                             'name':                 instance_info['server_name'],
                             'id':                   instance_info['server_id'],
@@ -853,7 +870,7 @@ def get_instance(project_id, instance_id):
                             'floating_ip':          instance_info['server_public_ips'],
                             'novnc_console':        instance_info['novnc_console'],
                             'date_created':         instance_info['date_created'],
-                            'boot_from_volume':     boot_from_volume
+                            'is_boot_from_volume':  instance_info['boot_from_vol']
                        }
             return jsonify({'instance': instance})
         else:
@@ -878,7 +895,7 @@ def create_instance(project_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -931,7 +948,7 @@ def create_instance(project_id):
                     type: string
                     description: availability zone for instance, uses nova is not specified
                     default: nova
-                boot_from_volume:
+                is_boot_from_volume:
                     type: boolean
                     description: conveying if instance boots from volume desired, false if not specified
                     default: false
@@ -1009,8 +1026,8 @@ def create_instance(project_id):
             instance_create['network_name'] = json_data['network_name']
         if 'zone' in json_data:
             instance_create['avail_zone'] = json_data['zone']
-        if 'boot_from_volume' in json_data:
-            instance_create['boot_from_vol'] = json_data['boot_from_volume']
+        if 'is_boot_from_volume' in json_data:
+            instance_create['boot_from_vol'] = json_data['is_boot_from_volume']
         if 'volume_size' in json_data:
             instance_create['volume_size'] = json_data['volume_size']
         if 'volume_name' in json_data:
@@ -1039,7 +1056,7 @@ def create_instance(project_id):
 def delete_instance(project_id, instance_id):
     """
     Deletes a specified instance by ID.
-    Only able to delete if specified user has access.
+    Only able to delete if requesting user has access.
     ---
     tags:
       - instances
@@ -1048,7 +1065,7 @@ def delete_instance(project_id, instance_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1072,16 +1089,11 @@ def delete_instance(project_id, instance_id):
                 type: object
                 required:
                   - id
-                  - status
                 properties:
                     id:
                         type: string
                         description: ID of target object
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
-                    status:
-                        type: string
-                        description: OK if success, ERROR if failure
-                        default: OK
         401:
             description: Not authorized.
         500:
@@ -1097,11 +1109,13 @@ def delete_instance(project_id, instance_id):
                                 'server_id':    instance_id
                             }
         instance_info = so.delete_server(instance_delete)
-        instance =  {
-                        'id':       instance_id,
-                        'status':   instance_info
-                    }
-        return jsonify({'instance': instance})
+        if instance_info == "OK":
+            instance =  {
+                            'id':       instance_id
+                        }
+            return jsonify({'instance': instance})
+        else:
+            abort(500)
     except HTTPException as e:
         raise e
     except Exception as fe:
@@ -1124,7 +1138,7 @@ def create_flavor(project_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1227,7 +1241,7 @@ def create_flavor(project_id):
 def get_floating_ips():
     """
     Lists all floating IPs.
-    Only returns floating IPs to which the specified user has access.
+    Only returns floating IPs to which the requesting user has access.
     ---
     tags:
       - floating ips
@@ -1236,7 +1250,7 @@ def get_floating_ips():
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1255,7 +1269,7 @@ def get_floating_ips():
                         required:
                           - address
                           - id
-                          - in_use
+                          - is_in_use
                         properties:
                             address:
                                 type: string
@@ -1265,7 +1279,7 @@ def get_floating_ips():
                                 type: string
                                 description: ID of floating IP
                                 default: 1234a56b-8901-2345-67c8-90de12f34ab5
-                            in_use:
+                            is_in_use:
                                 type: boolean
                                 description: conveying if floating IP is in use
                                 default: false
@@ -1283,14 +1297,15 @@ def get_floating_ips():
         floating_ips = []
         floating_ips_info = l3.list_floating_ips()
         for info in floating_ips_info:
-            floating_ip =   {
-                                "address":   info['floating_ip'],
-                                "id":        info['floating_ip_id']
-                            }
             if info['floating_in_use'] == "true":
-                floating_ip['in_use'] = True
+                info['floating_in_use'] = True
             else:
-                floating_ip['in_use'] = False
+                info['floating_in_use'] = False
+            floating_ip =   {
+                                'address':      info['floating_ip'],
+                                'id':           info['floating_ip_id'],
+                                'is_in_use':    info['floating_in_use']
+                            }
             floating_ips.append(floating_ip)
         return jsonify({'floating_ips': floating_ips})
     except HTTPException as e:
@@ -1304,7 +1319,7 @@ def get_floating_ips():
 def get_floating_ip(floating_ip_id):
     """
     Gets detailed information about a specified floating IP by ID.
-    Only returns floating IP information to which the specified user has access.
+    Only returns floating IP information to which the requesting user has access.
     ---
     tags:
       - floating ips
@@ -1313,7 +1328,7 @@ def get_floating_ip(floating_ip_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1336,7 +1351,7 @@ def get_floating_ip(floating_ip_id):
                     - instance_name
                     - instance_id
                     - network_name
-                    - netowrk_id
+                    - network_id
                     - project_id
                 properties:
                     address:
@@ -1349,11 +1364,11 @@ def get_floating_ip(floating_ip_id):
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
                     instance_name:
                         type: string
-                        description: name of instance to which the floating IP is associated
+                        description: name of instance with which the floating IP is associated
                         default: Instance_1
                     instance_id:
                         type: string
-                        description: ID of instance to which the floating IP is associated
+                        description: ID of instance with which the floating IP is associated
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
                     network_name:
                         type: string
@@ -1405,7 +1420,7 @@ def get_floating_ip(floating_ip_id):
 def create_floating_ip():
     """
     Creates a floating IP address within a specified project.
-    Admin and power user only.
+    Only available to admins and power users.
     ---
     tags:
       - floating ips
@@ -1414,7 +1429,7 @@ def create_floating_ip():
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1492,13 +1507,13 @@ def create_floating_ip():
         abort(500)
 
 
-# update
-@app.route('/v1.0/floating_ips/<string:floating_ip_id>', methods=['PUT'])
-def update_floating_ip(floating_ip_id):
+# action
+@app.route('/v1.0/floating_ips/<string:floating_ip_id>/action', methods=['POST'])
+def action_floating_ip(floating_ip_id):
     """
-    Updates a specified floating IP by ID.
-    Associate or disassociate floating IP with an instance.
-    Only updates floating IP information to which the specified user has access.
+    Performs an action with a specified floating IP by ID.
+    Associate floating IP with or disassociate floating IP from an instance.
+    Only performs floating IP action if the requesting user has access.
     ---
     tags:
       - floating ips
@@ -1507,7 +1522,7 @@ def update_floating_ip(floating_ip_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1518,17 +1533,17 @@ def update_floating_ip(floating_ip_id):
         type: string
         required: true
         description: ID of target floating IP
-      - name: floating_ip_update
+      - name: floating_ip_action
         in: body
-        description: parameters for floating IP update
+        description: parameters for floating IP action
         required: true
         schema:
-            id: FloatingIPUpdate
+            id: FloatingIPAction
             type: object
             required:
               - project_id
               - instance_id
-              - operation
+              - action
             properties:
                 project_id:
                     type: string
@@ -1536,18 +1551,18 @@ def update_floating_ip(floating_ip_id):
                     default: abcd12e3f456789012345a678b9cde01
                 instance_id:
                     type: string
-                    description: ID of instance to associate with the floating IP
+                    description: ID of instance with which the floating IP action will be performed
                     default: 1234a56b-8901-2345-67c8-90de12f34ab5
-                operation:
+                action:
                     type: string
                     description: add to associate, remove to disassociate
                     default: add
     responses:
         200:
-            description: Floating IP updated.
+            description: Floating IP action performed.
             schema:
                 type: object
-                id: FloatingIPUpdated
+                id: FloatingIPActionSuccess
                 required:
                     - address
                     - id
@@ -1564,16 +1579,20 @@ def update_floating_ip(floating_ip_id):
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
                     instance_name:
                         type: string
-                        description: name of instance to which the floating IP is associated
+                        description: name of instance with which the floating IP action was performed
                         default: Instance_1
                     instance_id:
                         type: string
-                        description: ID of instance to which the floating IP is associated
+                        description: ID of instance with which the floating IP action was performed
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
         400:
             description: Bad request.
         401:
             description: Not authorized.
+        404:
+            description: Not found.
+        409:
+            description: Conflict.
         500:
             description: Internal server error.
     """
@@ -1583,25 +1602,32 @@ def update_floating_ip(floating_ip_id):
         auth = authorize(username, password)
         data = request.get_data()
         json_data = json.loads(data)
-        floating_ip_update = {}
+        floating_ip_action = {}
         # required
-        floating_ip_update['project_id'] = json_data['project_id']
-        floating_ip_update['instance_id'] = json_data['instance_id']
+        floating_ip_action['project_id'] = json_data['project_id']
+        floating_ip_action['instance_id'] = json_data['instance_id']
         # check operation
-        if json_data['operation'] != "add" and json_data['operation'] != "remove":
+        if json_data['action'] != "add" and json_data['action'] != "remove":
             abort(400)
-        floating_ip_update['action'] = json_data['operation']
+        floating_ip_action['action'] = json_data['action']
         l3 = layer_three_ops(auth)
-        floating_ip_update['floating_ip'] = l3.get_floating_ip(floating_ip_id)['floating_ip']
-        floating_ip_info = l3.update_floating_ip(floating_ip_update)
-        print floating_ip_info
-        floating_ip =   {
-                            'address':          floating_ip_info['floating_ip'],
-                            'id':               floating_ip_info['floating_ip_id'],
-                            'instance_name':    floating_ip_info['instance_name'],
-                            'instance_id':      floating_ip_info['instance_id']
-                        }
-        return jsonify({'floating_ip': floating_ip})
+        floating_ip_details = l3.get_floating_ip(floating_ip_id)
+        if floating_ip_details is not None:
+            # make sure action is viable
+            if floating_ip_action['action'] == "add" and floating_ip_details['instance_id'] == "" or floating_ip_action['action'] == "remove" and floating_ip_details['instance_id'] != "":
+                floating_ip_action['floating_ip'] = floating_ip_details['floating_ip']
+                floating_ip_info = l3.update_floating_ip(floating_ip_action)
+                floating_ip =   {
+                                    'address':          floating_ip_info['floating_ip'],
+                                    'id':               floating_ip_info['floating_ip_id'],
+                                    'instance_name':    floating_ip_info['instance_name'],
+                                    'instance_id':      floating_ip_info['instance_id']
+                                }
+                return jsonify({floating_ip_action['action']: floating_ip})
+            else:
+                abort(409)
+        else:
+            abort(404)
     except HTTPException as e:
         raise e
     except Exception as fe:
@@ -1614,7 +1640,7 @@ def update_floating_ip(floating_ip_id):
 def delete_floating_ip(floating_ip_id):
     """
     Deletes a specified floating IP by ID.
-    Admin and power user only.
+    Only available to admins and power users.
     ---
     tags:
       - floating ips
@@ -1623,7 +1649,7 @@ def delete_floating_ip(floating_ip_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1655,11 +1681,13 @@ def delete_floating_ip(floating_ip_id):
         l3 = layer_three_ops(auth)
         floating_ip_delete = l3.get_floating_ip(floating_ip_id)
         floating_ip_info = l3.deallocate_floating_ip(floating_ip_delete)
-        floating_ip =   {
-                            'id':               floating_ip_id,
-                            'status':           floating_ip_info
-                        }
-        return jsonify({'floating_ip': floating_ip})
+        if floating_ip_info == "OK":
+            floating_ip =   {
+                                'id':               floating_ip_id
+                            }
+            return jsonify({'floating_ip': floating_ip})
+        else:
+            abort(500)
     except HTTPException as e:
         raise e
     except Exception as fe:
@@ -1671,10 +1699,10 @@ def delete_floating_ip(floating_ip_id):
 
 # get all in cloud
 @app.route('/v1.0/volumes', methods=['GET'])
-def get_volumes():
+def get_all_volumes():
     """
     Lists all volumes.
-    Only returns volumes to which the specified user has access.
+    Only returns volumes to which the requesting user has access.
     ---
     tags:
       - volumes
@@ -1683,7 +1711,7 @@ def get_volumes():
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1715,13 +1743,12 @@ def get_volumes():
                                 default: 1234a56b-8901-2345-67c8-90de12f34ab5
                             type:
                                 type: string
-                                description: ssd or spindle
+                                description: type of volume, ssd or spindle
                                 default: ssd
                             project_id:
                                 type: string
                                 description: ID of volumes's project
                                 default: abcd12e3f456789012345a678b9cde01
-
         401:
             description: Not authorized.
         500:
@@ -1749,12 +1776,12 @@ def get_volumes():
         abort(500)
 
 
-# get
-@app.route('/v1.0/<string:project_id>/volumes/<string:volume_id>', methods=['GET'])
-def get_volume(project_id, volume_id):
+# get all in project
+@app.route('/v1.0/<string:project_id>/volumes', methods=['GET'])
+def get_volumes(project_id):
     """
-    Gets detailed information about a specified volume by ID.
-    Only returns volume information to which the specified user has access.
+    Lists all volumes in specified project by ID.
+    Only returns volumes to which the requesting user has access.
     ---
     tags:
       - volumes
@@ -1763,7 +1790,65 @@ def get_volume(project_id, volume_id):
         in: header
         type: string
         required: true
-        description: useranme of user making request
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+    responses:
+        200:
+            description: Volumes listed.
+            schema:
+                type: array
+                id: Volumes
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        username = request.headers.get('username')
+        password = request.headers.get('password')
+        auth = authorize(username, password)
+        vo = volume_ops(auth)
+        volumes = []
+        volumes_info = vo.list_volumes(project_id)
+        for info in volumes_info:
+            volume =    {
+                            "name":         info['volume_name'],
+                            "id":           info['volume_id'],
+                            "type":         info['volume_type'],
+                            "project_id":   info['project_id']
+                        }
+            volumes.append(volume)
+        return jsonify({'volumes': volumes})
+    except HTTPException as e:
+        raise e
+    except:
+        abort(500)
+
+
+# get
+@app.route('/v1.0/<string:project_id>/volumes/<string:volume_id>', methods=['GET'])
+def get_volume(project_id, volume_id):
+    """
+    Gets detailed information about a specified volume by ID.
+    Only returns volume information to which the requesting user has access.
+    ---
+    tags:
+      - volumes
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
       - name: password
         in: header
         type: string
@@ -1793,7 +1878,7 @@ def get_volume(project_id, volume_id):
                     - is_attached
                     - instance_name
                     - instance_id
-                    - mountpoint
+                    - mount_point
                 properties:
                     name:
                         type: string
@@ -1805,7 +1890,7 @@ def get_volume(project_id, volume_id):
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
                     type:
                         type: string
-                        description: ssd or spindle
+                        description: type of volume, ssd or spindle
                         default: ssd
                     size:
                         type: integer
@@ -1823,9 +1908,9 @@ def get_volume(project_id, volume_id):
                         type: string
                         description: ID of instance to which the volume is attached
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
-                    mountpoint:
+                    mount_point:
                         type: string
-                        description: mountpoint of volume on instance
+                        description: mount point of volume on instance
                         default: /vda
         401:
             description: Not authorized.
@@ -1839,25 +1924,25 @@ def get_volume(project_id, volume_id):
         password = request.headers.get('password')
         auth = authorize(username, password)
         vo = volume_ops(auth)
-        volume_get =    {
-                            'project_id':   project_id,
-                            'volume_id':    volume_id
-                        }
-        volume_info = vo.get_volume_info(volume_get)
+        # check project_id
+        validate_project(project_id, auth)
+        # check volume_id
+        volume_info = validate_volume(volume_id, project_id, auth)
         if volume_info is not None:
+            if volume_info['volume_attached'] == "true":
+                volume_info['volume_attached'] = True
+            else:
+                volume_info['volume_attached'] = False
             volume =   {
                             'name':             volume_info['volume_name'],
                             'id':               volume_info['volume_id'],
                             'type':             volume_info['volume_type'],
                             'size':             volume_info['volume_size'],
+                            'is_attached':      volume_info['volume_attached'],
                             'instance_name':    volume_info['volume_instance_name'],
                             'instance_id':      volume_info['volume_instance'],
-                            'mountpoint':       volume_info['volume_mount_location']
+                            'mount_point':      volume_info['volume_mount_location']
                         }
-            if volume_info['volume_attached'] == "true":
-                volume['is_attached'] = True
-            else:
-                volume['is_attached'] = False
             return jsonify({'volume': volume})
         else:
             abort(404)
@@ -1868,18 +1953,2807 @@ def get_volume(project_id, volume_id):
         abort(500)
 
 
+# === BEGIN PROPER ERROR HANDLING ====
+
+# create
+@app.route('/v1.0/<string:project_id>/volumes', methods=['POST'])
+def create_volume(project_id):
+    """
+    Creates a volume within a specified project.
+    May only specify image_id, snapshot_id or volume_id, not any combination of these parameters.
+    If image_id is specified, the volume will be created as a bootable volume.
+    ---
+    tags:
+      - volumes
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of project the volume will reside in
+      - name: volume_parameters
+        in: body
+        description: parameters for volume creation
+        required: true
+        schema:
+            id: VolumeParameters
+            type: object
+            required:
+              - name
+              - size
+            properties:
+                name:
+                    type: string
+                    description: name for volume
+                    default: Volume_1
+                size:
+                    type: integer
+                    description: size for volume in GB
+                    default: 10
+                type:
+                    type: string
+                    description: type for volume, ssd or spindle, uses ssd if not specified
+                    default: ssd
+                snapshot_id:
+                    type: string
+                    description: ID of volume snapshot from which to create volume if creating volume from snapshot
+                    default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                volume_id:
+                    type: string
+                    description: ID of volume from which to clone volume if cloning volume
+                    default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                zone:
+                    type: string
+                    description: availability zone for volume, uses nova if not specified
+                    default: nova
+                image_id:
+                    type: string
+                    description: ID of image to use when creating bootable volume
+                    default: 1234a56b-8901-2345-67c8-90de12f34ab5
+    responses:
+        200:
+            description: Volume created.
+            schema:
+                type: object
+                id: VolumeCreated
+                required:
+                    - name
+                    - id
+                    - type
+                    - size
+                properties:
+                    name:
+                        type: string
+                        description: name of volume
+                        default: Volume_1
+                    id:
+                        type: string
+                        description: ID of volume
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    type:
+                        type: string
+                        description: type of volume, ssd or spindle
+                        default: ssd
+                    size:
+                        type: integer
+                        description: size of volume in GB
+                        default: 10
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        vo = volume_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        volume_create = {}
+        # required
+        try:
+            # check project_id
+            validate_project(project_id, auth)
+            volume_create['project_id'] = project_id
+            volume_create['volume_name'] = json_data['name']
+            volume_create['volume_size'] = json_data['size']
+        except HTTPException as e:
+            raise e
+        except:
+            abort(400, 'Bad request. Body must contain name and size.')
+        # optional
+        if 'type' in json_data:
+            volume_create['volume_type'] = json_data['type']
+        if 'snapshot_id' in json_data:
+            # check volume snapshot_id
+            validate_volume_snapshot(json_data['snapshot_id'], auth)
+            volume_create['snapshot_id'] = json_data['snapshot_id']
+        if 'volume_id' in json_data:
+            # check volume_id
+            validate_volume(json_data['volume_id'], project_id, auth)
+            volume_create['source_vol_id'] = json_data['volume_id']
+        if 'zone' in json_data:
+            volume_create['volume_zone'] = json_data['zone']
+        if 'image_id' in json_data:
+            validate_image(json_data['image_id'], auth)
+            volume_create['image_id'] = json_data['image_id']
+            volume_create['volume_bootable'] = "true"
+        # check optional paramters
+        if 'image_id' in volume_create and 'snapshot_id' in volume_create or 'snapshot_id' in volume_create and 'volume_id' in volume_create or 'volume_id' in volume_create and 'image_id' in volume_create:
+            abort(400, 'Bad request. May only specify image_id, snapshot_id or volume_id, not any combination of these parameters.')
+        try:
+            volume_info = vo.create_volume(volume_create)
+            volume =    {
+                            'name': volume_info['volume_name'],
+                            'id':   volume_info['volume_id'],
+                            'type': volume_info['volume_type'],
+                            'size': volume_info['volume_size']
+                        }
+            return jsonify({'volume': volume})
+        except Exception as e:
+            abort(500, 'Internal error. Error <%s> occurred during volume creation.' %(e))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500)
+
+
+# action
+@app.route('/v1.0/<string:project_id>/volumes/<string:volume_id>/action', methods=['POST'])
+def action_volume(project_id, volume_id):
+    """
+    Performs an action with a specified volume by ID.
+    Attach volume to or detach volume from an instance.
+    Only performs volume action if the requesting user has access.
+    ---
+    tags:
+      - volumes
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of project the volume resides in
+      - name: volume_id
+        in: path
+        type: string
+        required: true
+        description: ID of target volume
+      - name: volume_action
+        in: body
+        description: parameters for volume action
+        required: true
+        schema:
+            id: VolumeAction
+            type: object
+            required:
+              - instance_id
+              - action
+            properties:
+                instance_id:
+                    type: string
+                    description: ID of instance with which the volume action will be performed
+                    default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                action:
+                    type: string
+                    description: add to attach, remove to detach
+                    default: add
+    responses:
+        200:
+            description: Volume action performed.
+            schema:
+                type: object
+                id: VolumeActionSuccess
+                required:
+                    - name
+                    - id
+                    - instance_name
+                    - instance_id
+                properties:
+                    name:
+                        type: string
+                        description: name of volume
+                        default: Volume_1
+                    id:
+                        type: string
+                        description: ID of volume
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    instance_name:
+                        type: string
+                        description: name of instance with which the volume action was performed
+                        default: Instance_1
+                    instance_id:
+                        type: string
+                        description: ID of instance with which the volume action was performed
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        409:
+            description: Conflict.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        sso = server_storage_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        # required
+        volume_action = {}
+        try:
+            # check project_id
+            validate_project(project_id, auth)
+            volume_action['project_id'] = project_id
+            # check volume_id
+            volume_details = validate_volume(volume_id, project_id, auth)
+            volume_action['volume_id'] = volume_id
+            # check instance_id
+            instance_info = validate_instance(json_data['instance_id'], project_id, auth)
+            volume_action['instance_id'] = json_data['instance_id']
+            volume_action['mount_point'] = "/dev/vdc"
+            # check action
+            if json_data['action'] != "add" and json_data['action'] != "remove":
+                abort(400, 'Bad request. Volume action must be add or remove.')
+            volume_action['action'] = json_data['action']
+        except HTTPException as e:
+            raise e
+        except:
+            abort(400, 'Bad request. Body must contain instance_id, mount_point and action.')
+        # check resources in same project
+        if instance_info['project_id'] != project_id:
+            abort(400, 'Bad request. Volume and instance must reside in the same project.')
+        # check action is viable
+        if volume_action['action'] == "add" and volume_details['volume_attached'] == "false":
+            volume_info = sso.attach_vol_to_server(volume_action)
+        elif volume_action['action'] == "remove" and volume_details['volume_attached'] == "true":
+            volume_info = sso.detach_vol_from_server(volume_action)
+        else:
+            abort(409, 'Conflict. Unable to perform %s using volume %s and instance %s because is_attached = %s.' %(json_data['action'], volume_id, json_data['instance_id'], volume_details['volume_attached']))
+        # check action success
+        if volume_info == "OK":
+            volume =    {
+                            'name':             volume_details['volume_name'],
+                            'id':               volume_id,
+                            'instance_name':    instance_info['server_name'],
+                            'instance_id':      instance_info['server_id']
+                        }
+            return jsonify({volume_action['action']: volume})
+        else:
+            abort(500, 'Internal error. Volume %s using volume %s and instance %s was unsuccessful.' %(json_data['action'], volume_id, json_data['instance_id']))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during volume action.' %(fe))
+
+
+# delete
+@app.route('/v1.0/<string:project_id>/volumes/<string:volume_id>', methods=['DELETE'])
+def delete_volume(project_id, volume_id):
+    """
+    Deletes a specified volume by ID.
+    Only able to delete if requesting user has access.
+    ---
+    tags:
+      - volumes
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of project the volume resides in
+      - name: volume_id
+        in: path
+        type: string
+        required: true
+        description: ID of target volume
+    responses:
+        200:
+            description: Volume deleted.
+            schema:
+                id: ObjectDeleted
+                type: object
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        vo = volume_ops(auth)
+        # required
+        volume_delete = {}
+        # check project_id
+        validate_project(project_id, auth)
+        volume_delete['project_id'] = project_id
+        # check volume_id
+        validate_volume(volume_id, project_id, auth)
+        volume_delete['volume_id'] = volume_id
+        volume_info = vo.delete_volume(volume_delete)
+        # check action success
+        if volume_info == "OK":
+            volume =    {
+                            'id':   volume_id
+                        }
+            return jsonify({'volume': volume})
+        else:
+            abort(500, 'Internal error. Volume %s deletion was unsuccessful.' %(volume_id))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during volume deletion.' %(fe))
+
+
+# --- Networks ----
+
+# get all
+# NOTE: removed project_id from external networks
+@app.route('/v1.0/networks', methods=['GET'])
+def get_networks():
+    """
+    Lists all networks.
+    Only returns networks to which the requesting user has access.
+    ---
+    tags:
+      - networks
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+    responses:
+        200:
+            description: Networks listed.
+            schema:
+                type: object
+                id: Networks
+                required:
+                  - internal
+                  - external
+                properties:
+                    internal:
+                        type: array
+                        id: InternalNetworks
+                        items:
+                            schema:
+                                type: object
+                                id: InternalNetwork
+                                required:
+                                  - name
+                                  - id
+                                  - project_id
+                                properties:
+                                    name:
+                                        type: string
+                                        description: name of network
+                                        default: Project_1
+                                    id:
+                                        type: string
+                                        description: ID of network
+                                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                                    project_id:
+                                        type: string
+                                        description: ID of networks's project
+                                        default: abcd12e3f456789012345a678b9cde01
+                                    is_in_use:
+                                        type: boolean
+                                        description: conveying if network is in use
+                                        default: false
+                                    router_id:
+                                        type: string
+                                        description: ID of router attached to network
+                                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    external:
+                        type: array
+                        id: ExternalNetworks
+                        items:
+                            schema:
+                                type: object
+                                id: ExternalNetwork
+                                required:
+                                  - name
+                                  - id
+                                  - project_id
+                                properties:
+                                    name:
+                                        type: string
+                                        description: name of network
+                                        default: Network_1
+                                    id:
+                                        type: string
+                                        description: ID of network
+                                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        nno = neutron_net_ops(auth)
+        internal = []
+        external = []
+        networks =  {
+                        'internal': internal,
+                        'external': external
+                    }
+        internal_info = nno.list_internal_networks()
+        for info in internal_info:
+            # normalize outputs
+            if info['router_id'] == "":
+                info['router_id'] = None
+            if info['in_use'] == "true":
+                info['in_use'] = True
+            else:
+                info['in_use'] = False
+            internal_network =  {
+                                    'name':         info['net_name'],
+                                    'id':           info['net_id'],
+                                    'project_id':   info['project_id'],
+                                    'is_in_use':    info['in_use'],
+                                    'router_id':    info['router_id']
+                                }
+            internal.append(internal_network)
+        external_info = nno.list_external_networks()
+        for info in external_info:
+            external_network =  {
+                                    'name':         info['net_name'],
+                                    'id':           info['net_id']
+                                }
+            external.append(external_network)
+        return jsonify({'networks': networks})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all networks.' %(fe))
+
+
+# get
+@app.route('/v1.0/networks/<string:network_id>', methods=['GET'])
+def get_network(network_id):
+    """
+    Gets detailed information about a specified network by ID.
+    Only returns network information to which the requesting user has access.
+    ---
+    tags:
+      - networks
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: network_id
+        in: path
+        type: string
+        required: true
+        description: ID of target network
+    responses:
+        200:
+            description: Network found.
+            schema:
+                type: object
+                id: NetworkDetails
+                required:
+                  - name
+                  - id
+                  - user_id
+                  - is_up
+                  - is_shared
+                  - type
+                  - subnets
+                  - project_id
+                  - router_id
+                properties:
+                    name:
+                        type: string
+                        description: name of network
+                        default: Project_1
+                    id:
+                        type: string
+                        description: ID of network
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    user_id:
+                        type: string
+                        description: ID of network's creator
+                        default: abcd12e3f456789012345a678b9cde01
+                    is_up:
+                        type: boolean
+                        description: conveying if administrative state of the network is up (true) or down (false)
+                        default: true
+                    is_shared:
+                        type: boolean
+                        description: conveying if the network is shared across projects
+                        default: false
+                    type:
+                        type: string
+                        description: type of network, internal or external
+                        default: internal
+                    subnets:
+                        type: array
+                        description: subnets of network
+                        items:
+                            schema:
+                                type: object
+                                id: SubnetInfo
+                                required:
+                                  - name
+                                  - id
+                                properties:
+                                    name:
+                                        type: string
+                                        description: name of subnet
+                                        default: Subnet_1
+                                    id:
+                                        type: string
+                                        description: ID of subnet
+                                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    project_id:
+                        type: string
+                        description: ID of networks's project
+                        default: abcd12e3f456789012345a678b9cde01
+                    router_id:
+                        type: string
+                        description: ID of networks's router
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        network_info = validate_network(network_id, auth)
+        # normalize outputs
+        if network_info['net_admin_state'] == "true":
+            network_info['net_admin_state'] = True
+        else:
+            network_info['net_admin_state'] = False
+        if network_info['net_shared'] == "true":
+            network_info['net_shared'] = True
+        else:
+            network_info['net_shared'] = False
+        if network_info['net_internal'] == "true":
+            network_info['net_internal'] = "internal"
+        else:
+            network_info['net_internal'] = "external"
+            # NOTE: removing project_id from external networks
+            network_info['project_id'] = None
+        subnets = []
+        for info in network_info['net_subnet_id']:
+            subnet =    {
+                            'name': info['subnet_name'],
+                            'id':   info['subnet_id']
+                        }
+            subnets.append(subnet)
+        network =   {
+                        'name':         network_info['net_name'],
+                        'id':           network_info['net_id'],
+                        'user_id':      network_info['net_creator_id'],
+                        'is_up':        network_info['net_admin_state'],
+                        'is_shared':    network_info['net_shared'],
+                        'type':         network_info['net_internal'],
+                        'subnets':      subnets,
+                        'project_id':   network_info['project_id'],
+                        'router_id':    network_info['router_id']
+                    }
+        return jsonify({'network': network})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during getting network details.' %(fe))
+
+
+# --- Routers ----
+
+# get all
+@app.route('/v1.0/routers', methods=['GET'])
+def get_routers():
+    """
+    Lists all routers.
+    Only returns routers to which the requesting user has access.
+    ---
+    tags:
+      - routers
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+    responses:
+        200:
+            description: Routers listed.
+            schema:
+                type: array
+                id: Routers
+                items:
+                    schema:
+                        type: object
+                        id: Router
+                        required:
+                          - name
+                          - id
+                          - status
+                        properties:
+                            name:
+                                type: string
+                                description: name of router
+                                default: Router_1
+                            id:
+                                type: string
+                                description: ID of router
+                                default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                            status:
+                                type: string
+                                description: status of router
+                                default: ACTIVE
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        l3 = layer_three_ops(auth)
+        routers = []
+        router_info = l3.list_routers()
+        for info in router_info:
+            # normalize outputs
+            router =    {
+                            'name':     info['router_name'],
+                            'id':       info['router_id'],
+                            'status':   info['router_status']
+                        }
+            routers.append(router)
+        return jsonify({'routers': routers})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all routers.' %(fe))
+
+
+# get
+@app.route('/v1.0/routers/<string:router_id>', methods=['GET'])
+def get_router(router_id):
+    """
+    Gets detailed information about a specified router by ID.
+    Only returns router information to which the requesting user has access.
+    ---
+    tags:
+      - routers
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: router_id
+        in: path
+        type: string
+        required: true
+        description: ID of target router
+    responses:
+        200:
+            description: Router found.
+            schema:
+                type: object
+                id: RouterDetails
+                required:
+                  - name
+                  - id
+                  - status
+                  - project_id
+                  - network_id
+                  - internal_subnet_id
+                  - internal_port_id
+                  - external_gateway_id
+                  - external_address
+                  - is_up
+                properties:
+                    name:
+                        type: string
+                        description: name of router
+                        default: Project_1
+                    id:
+                        type: string
+                        description: ID of router
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    status:
+                        type: string
+                        description: status of router
+                        default: ACTIVE
+                    project_id:
+                        type: string
+                        description: ID of routers's project
+                        default: abcd12e3f456789012345a678b9cde01
+                    network_id:
+                        type: string
+                        description: ID of router's network
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    internal_subnet_id:
+                        type: string
+                        description: ID of router's internal subnet
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    internal_port_id:
+                        type: string
+                        description: ID of router's internal port
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    external_gateway_id:
+                        type: string
+                        description: ID of routers's external gateway
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    external_address:
+                        type: string
+                        description: external IP address of router
+                        default: 127.0.0.1
+                    is_up:
+                        type: boolean
+                        description: conveying if administrative state of the network is up (true) or down (false)
+                        default: true
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        router_info = validate_router(router_id, auth)
+        # normalize outputs
+        if router_info['admin_state_up'] == "true":
+            router_info['admin_state_up'] = True
+        else:
+            router_info['admin_state_up'] = False
+        router =   {
+                        'name':                 router_info['router_name'],
+                        'id':                   router_info['router_id'],
+                        'status':               router_info['router_status'],
+                        'project_id':           router_info['project_id'],
+                        'network_id':           router_info['network_id'],
+                        'internal_subnet_id':   router_info['router_int_sub_id'],
+                        'internal_port_id':     router_info['internal_port'],
+                        'external_gateway_id':  router_info['external_gateway'],
+                        'external_address':     router_info['external_ip'],
+                        'is_up':                router_info['admin_state_up']
+                    }
+        return jsonify({'router': router})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during getting router details.' %(fe))
+
+
+# --- Users ----
+# this will need revision once we clean up the back-end,
+# will move to /vX.Y/users for everything
+
+# get all in cloud
+@app.route('/v1.0/users', methods=['GET'])
+def get_all_users():
+    """
+    Lists all users.
+    Only returns users to which the requesting user has access.
+    ---
+    tags:
+      - users
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+    responses:
+        200:
+            description: Users listed.
+            schema:
+                type: array
+                id: Users
+                items:
+                    schema:
+                        type: object
+                        id: User
+                        required:
+                          - name
+                          - id
+                        properties:
+                            name:
+                                type: string
+                                description: name of user
+                                default: User_1
+                            id:
+                                type: string
+                                description: ID of user
+                                default: abcd12e3f456789012345a678b9cde01
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        uo = user_ops(auth)
+        to = tenant_ops(auth)
+        users = []
+        if auth['user_level'] != 2:
+            user_info = uo.list_cloud_users()
+        else:
+            user_info = to.list_tenant_users(auth['project_id'])
+        for info in user_info:
+            # normalize outputs
+            if 'keystone_user_id' in info:
+                info['user_id'] = info['keystone_user_id']
+            user =    {
+                            'name':         info['username'],
+                            'id':           info['user_id']
+                        }
+            users.append(user)
+        # remove admin and shadow_admin
+        users[:] = [u for u in users if u.get('name') != "admin" and u.get('name') != "shadow_admin"]
+        return jsonify({'users': users})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all users.' %(fe))
+
+
+# get all in project
+@app.route('/v1.0/<string:project_id>/users', methods=['GET'])
+def get_users(project_id):
+    """
+    Lists all users in a specified project by ID.
+    Only returns users to which the requesting user has access.
+    ---
+    tags:
+      - users
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+    responses:
+        200:
+            description: Users listed.
+            schema:
+                id: Users
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        validate_project(project_id, auth)
+        to = tenant_ops(auth)
+        users = []
+        user_info = to.list_tenant_users(project_id)
+        for info in user_info:
+            # normalize outputs
+            user =    {
+                            'name':         info['username'],
+                            'id':           info['user_id']
+                        }
+            users.append(user)
+        return jsonify({'users': users})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing users in project.' %(fe))
+
+
+# get
+@app.route('/v1.0/<string:project_id>/users/<string:user_id>', methods=['GET'])
+def get_user(project_id, user_id):
+    """
+    Gets detailed information about a specified user by ID.
+    Only returns user information to which the requesting user has access.
+    ---
+    tags:
+      - users
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: user_id
+        in: path
+        type: string
+        required: true
+        description: ID of target user
+    responses:
+        200:
+            description: User found.
+            schema:
+                type: object
+                id: UserDetails
+                required:
+                    - name
+                    - id
+                    - project_name
+                    - project_id
+                    - role
+                    - email
+                    - is_enabled
+                properties:
+                    name:
+                        type: string
+                        description: name of user
+                        default: User_1
+                    id:
+                        type: string
+                        description: ID of user
+                        default: abcd12e3f456789012345a678b9cde01
+                    project_name:
+                        type: string
+                        description: name of user's project
+                        default: Project_1
+                    project_id:
+                        type: string
+                        description: ID of user's project
+                        default: abcd12e3f456789012345a678b9cde01
+                    role:
+                        type: string
+                        description: role of user in cloud, admin, power user or user
+                        default: user
+                    email:
+                        type: string
+                        description: email of user
+                        default: user_1@email.com
+                    is_enabled:
+                        type: boolean
+                        description: conveying if user is enabled
+                        default: true
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        # check project_id
+        validate_project(project_id, auth)
+        # check user_id
+        user_info = validate_user(user_id, project_id, auth)
+        # normalize outputs
+        if user_info['user_enabled'] == "TRUE":
+            user_info['user_enabled'] = True
+        else:
+            user_info['user_enabled'] = False
+        user =    {
+                        'name':         user_info['username'],
+                        'id':           user_info['user_id'],
+                        'project_name': user_info['project_name'],
+                        'project_id':   user_info['project_id'],
+                        'role':         user_info['user_role'],
+                        'email':        user_info['email'],
+                        'is_enabled':   user_info['user_enabled']
+                    }
+        return jsonify({'user': user})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing users in project.' %(fe))
+
+
+# create
+@app.route('/v1.0/<string:project_id>/users', methods=['POST'])
+def create_user(project_id):
+    """
+    Creates a specified user.
+    Only available to admins.
+    ---
+    tags:
+      - users
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: user_parameters
+        in: body
+        description: parameters for user creation
+        required: true
+        schema:
+            id: UserParameters
+            type: object
+            required:
+              - name
+              - password
+              - role
+              - email
+            properties:
+                name:
+                    type: string
+                    description: name for user
+                    default: User_1
+                password:
+                    type: string
+                    description: password for user
+                    default: password
+                role:
+                    type: string
+                    description: role for user, admin (admin), pu (power user) or user (user)
+                    default: user
+                email:
+                    type: string
+                    description: email for user
+                    default: user_1@email.com
+    responses:
+        200:
+            description: User created.
+            schema:
+                id: UserCreated
+                type: object
+                required:
+                  - name
+                  - id
+                  - project_id
+                properties:
+                    name:
+                        type: string
+                        description: name of user
+                        default: Project_1
+                    id:
+                        type: string
+                        description: ID of user
+                        default: abcd12e3f456789012345a678b9cde01
+                    project_id:
+                        type: string
+                        description: ID of user's project_id
+                        default: abcd12e3f456789012345a678b9cde01
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        # check is_admin
+        if auth['is_admin'] != 1:
+            abort(401, 'Not authroized. Only admins can create users.')
+        uo = user_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        user_create = {}
+        # required
+        try:
+            # check project_id
+            validate_project(project_id, auth)
+            user_create['project_id'] = project_id
+            user_create['username'] = json_data['name']
+            user_create['password'] = json_data['password']
+            # check role
+            if json_data['role'] != "admin" and json_data['role'] != "pu" and json_data['role'] != "user":
+                abort(400, 'Bad request. User role must be admin, pu or user.')
+            user_create['user_role'] = json_data['role']
+            user_create['email'] = json_data['email']
+        except HTTPException as e:
+            raise e
+        except:
+            abort(400, 'Bad request. Body must contain name and size.')
+        try:
+            user_info = uo.create_user(user_create)
+            user =  {
+                        'name':         user_info['username'],
+                        'id':           user_info['user_id'],
+                        'project_id':   user_info['project_id']
+                    }
+            return jsonify({'user': user})
+        except Exception as e:
+            abort(500, 'Internal error. Error <%s> occurred during user creation.' %(e))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500)
+
+
+# action
+@app.route('/v1.0/<string:project_id>/users/<string:user_id>/action', methods=['POST'])
+def action_user(project_id, user_id):
+    """
+    Performs an action with a specified user by ID.
+    Add existing user to or remove user from a project.
+    To add a user, the user must exist and not be in a project.
+    To remove a user, the user must exists and be in a project.
+    Only available to admins.
+    ---
+    tags:
+      - users
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project_id
+      - name: user_id
+        in: path
+        type: string
+        required: true
+        description: ID of target user_id
+      - name: user_action
+        in: body
+        description: parameters for user action
+        required: true
+        schema:
+            id: UserAction
+            type: object
+            required:
+              - action
+            properties:
+                role:
+                    type: string
+                    description: role for user when adding to a project (this can be different from user's original role), admin (admin), pu (power user) or user (user), required when adding a user to a project
+                    default: user
+                is_primary:
+                    type: boolean
+                    description: conveying if the user's primary project should be updated when adding to a project (this should only be true when adding an admin to a project and this is explicitly desired), uses false is not specified
+                    default: false
+                action:
+                    type: string
+                    description: user action, add or remove
+                    default: add
+    responses:
+        200:
+            description: User action performed.
+            schema:
+                type: object
+                id: UserActionSuccess
+                required:
+                    - name
+                    - id
+                    - project_name
+                    - project_id
+                properties:
+                    name:
+                        type: string
+                        description: name of user
+                        default: User_1
+                    id:
+                        type: string
+                        description: ID of user
+                        default: abcd12e3f456789012345a678b9cde01
+                    project_name:
+                        type: string
+                        description: name of project with which the user action was performed
+                        default: Project_1
+                    project_id:
+                        type: string
+                        description: ID of project with which the user action was performed
+                        default: abcd12e3f456789012345a678b9cde01
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        409:
+            description: Conflict.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        # check is_admin
+        if auth['is_admin'] != 1:
+            abort(401, 'Not authroized. Only admins can perform user actions.')
+        uo = user_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        # required
+        user_action = {}
+        try:
+            # check project_id
+            project_info = validate_project(project_id, auth)
+            user_action['project_id'] = project_id
+            # check action
+            if json_data['action'] != "add" and json_data['action'] != "remove":
+                abort(400, 'Bad request. user action must be add or remove.')
+            user_action['action'] = json_data['action']
+            # check user_id
+            if user_action['action'] == "remove":
+                user_details = validate_user(user_id, project_id, auth)
+                user_action['user_id'] = user_id
+                user_action['username'] = user_details['username']
+        except HTTPException as e:
+            raise e
+        except:
+            abort(400, 'Bad request. Body must contain action.')
+        # get orphans to verify user action
+        orphans = uo.list_orphaned_users()
+        is_orphan = False
+        for orphan in orphans:
+            if user_id == orphan['keystone_user_id']:
+                is_orphan = True
+                user_action['username'] = orphan['username']
+                break
+        # optional
+        if 'role' in json_data:
+            # check role
+            if json_data['role'] != "admin" and json_data['role'] != "pu" and json_data['role'] != "user":
+                abort(400, 'Bad request. User role must be admin, pu or user.')
+            user_action['user_role'] = json_data['role']
+        if 'is_primary' in json_data:
+            user_action['update_primary'] = json_data['is_primary']
+        # check action is viable
+        if user_action['action'] == "add" and 'user_role' in user_action and is_orphan is True:
+            user_info = uo.add_user_to_project(user_action)
+        elif user_action['action'] == "remove" and is_orphan is False:
+            user_info = uo.remove_user_from_project(user_action)
+        else:
+            abort(409, 'Conflict. Unable to perform %s using user %s and project %s because user is ineligible or not enough parameters were specified for the action.' %(json_data['action'], user_id, project_id))
+        # check action success
+        if user_action['action'] == "add" or user_action['action'] == "remove" and user_info == "OK":
+            user =  {
+                        'name':         user_action['username'],
+                        'id':           user_id,
+                        'project_name': project_info['project_name'],
+                        'project_id':   project_info['project_id']
+                    }
+            return jsonify({str(user_action['action']): user})
+        else:
+            abort(500, 'Internal error. User %s using user %s and project %s was unsuccessful.' %(json_data['action'], user_id, project_id))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during user action.' %(fe))
+
+
+# delete
+@app.route('/v1.0/users/<string:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """
+    Deletes a specified user by ID.
+    Only available to admins.
+    ---
+    tags:
+      - users
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: user_id
+        in: path
+        type: string
+        required: true
+        description: ID of target user
+    responses:
+        200:
+            description: User deleted.
+            schema:
+                id: ObjectDeleted
+                type: object
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        # check is_admin
+        if auth['is_admin'] != 1:
+            abort(401, 'Not authroized. Only admins can perform user actions.')
+        uo = user_ops(auth)
+        user_delete = {}
+        user_delete['user_id'] = user_id
+        # check user_id
+        users = uo.list_cloud_users()
+        for user in users:
+            if user_id == user['keystone_user_id']:
+                user_delete['username'] = user['username']
+                break
+        if 'username' not in user_delete:
+            abort(404, 'Not found. Could not find user %s.' %(user_id))
+        user_info = uo.delete_user(user_delete)
+        # check action success
+        if user_info == "OK":
+            user =  {
+                        'id':   user_id
+                    }
+            return jsonify({'user': user})
+        else:
+            abort(500, 'Internal error. User %s deletion was unsuccessful.' %(user_id))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during user deletion.' %(fe))
+
+
+# --- Security Groups ----
+
+# get all in cloud
+@app.route('/v1.0/security_groups', methods=['GET'])
+def get_all_security_groups():
+    """
+    Lists all security groups.
+    Only returns security groups to which the requesting user has access.
+    ---
+    tags:
+      - security groups
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+    responses:
+        200:
+            description: Security groups listed.
+            schema:
+                type: array
+                id: SecurityGroups
+                items:
+                    schema:
+                        type: object
+                        id: SecurityGroup
+                        required:
+                          - name
+                          - id
+                        properties:
+                            name:
+                                type: string
+                                description: name of security group
+                                default: Security_Group_1
+                            id:
+                                type: string
+                                description: ID of security group
+                                default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        to = tenant_ops(auth)
+        security_groups = []
+        if auth['is_admin'] == 1:
+            security_group_info = []
+            projects = to.list_all_tenants()
+            for project in projects:
+                security_group_info.extend(so.list_sec_group(project['project_id']))
+        else:
+            security_group_info = so.list_sec_group(auth['project_id'])
+        for info in security_group_info:
+            # normalize outputs
+            security_group =    {
+                                    'name': info['sec_group_name'],
+                                    'id':   info['sec_group_id']
+                                }
+            security_groups.append(security_group)
+        return jsonify({'security_groups': security_groups})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all security groups.' %(fe))
+
+
+# get all in project
+@app.route('/v1.0/<string:project_id>/security_groups', methods=['GET'])
+def get_security_groups(project_id):
+    """
+    Lists all security groups in a project specified by ID.
+    Only returns security groups to which the requesting user has access.
+    ---
+    tags:
+      - security groups
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+    responses:
+        200:
+            description: Security groups listed.
+            schema:
+                type: array
+                id: SecurityGroups
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        # check project_id
+        validate_project(project_id, auth)
+        security_groups = []
+        security_group_info = so.list_sec_group(project_id)
+        for info in security_group_info:
+            # normalize outputs
+            security_group =    {
+                                    'name': info['sec_group_name'],
+                                    'id':   info['sec_group_id']
+                                }
+            security_groups.append(security_group)
+        return jsonify({'security_groups': security_groups})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all security groups.' %(fe))
+
+
+# get
+@app.route('/v1.0/<string:project_id>/security_groups/<string:security_group_id>', methods=['GET'])
+def get_security_group(project_id, security_group_id):
+    """
+    Gets detailed information about a specified security group by ID.
+    Only returns security group information to which the requesting user has access.
+    ---
+    tags:
+      - security groups
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_group_id
+        in: path
+        type: string
+        required: true
+        description: ID of target security group
+    responses:
+        200:
+            description: Security groups listed.
+            schema:
+                type: object
+                id: SecurityGroupDetails
+                required:
+                  - name
+                  - id
+                  - rules
+                properties:
+                    name:
+                        type: string
+                        description: name of security group
+                        default: Security_Group_1
+                    id:
+                        type: string
+                        description: ID of security group
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    rules:
+                        type: object
+                        description: security group rules
+                        schema:
+                            type: object
+                            id: Rules
+                            required:
+                              - tcp
+                              - udp
+                            properties:
+                                tcp:
+                                    type: array
+                                    id: TCPRules
+                                    items:
+                                        schema:
+                                            type: object
+                                            id: Rule
+                                            required:
+                                              - id
+                                              - start
+                                              - end
+                                              - cidr
+                                            properties:
+                                                id:
+                                                    type: string
+                                                    description: ID of security group rule
+                                                    default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                                                start:
+                                                    type: integer
+                                                    description: first port in security group rule
+                                                    default: 22
+                                                end:
+                                                    type: integer
+                                                    description: last port in security group rule
+                                                    default: 22
+                                                cidr:
+                                                    type: string
+                                                    description: cidr address representation of security group rule
+                                                    default: 127.0.0.1/18
+                                udp:
+                                    type: array
+                                    id: UDPRules
+                                    items:
+                                        schema:
+                                            type: object
+                                            id: Rule
+                                            required:
+                                              - id
+                                              - start
+                                              - end
+                                              - cidr
+                                            properties:
+                                                id:
+                                                    type: string
+                                                    description: ID of security group rule
+                                                    default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                                                start:
+                                                    type: integer
+                                                    description: first port in security group rule
+                                                    default: 22
+                                                end:
+                                                    type: integer
+                                                    description: last port in security group rule
+                                                    default: 22
+                                                cidr:
+                                                    type: string
+                                                    description: cidr address representation of security group rule
+                                                    default: 127.0.0.1/18
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        # check project_id
+        validate_project(project_id, auth)
+        # check security_group_id
+        security_group_info = validate_security_group(security_group_id, project_id, auth)
+        # normalize outputs
+        tcp = []
+        udp = []
+        rules = {}
+        for port in security_group_info['ports']:
+            for key in port:
+                if port[key] == "None":
+                    port[key] = None
+            if port['transport'] == 'tcp':
+                tcp_port =  {
+                                'id':       port['rule_id'],
+                                'start':    int(port['from_port']),
+                                'end':      int(port['to_port']),
+                                'cidr':     port['cidr']
+                            }
+                tcp.append(tcp_port)
+            if port['transport'] == 'udp':
+                udp_port =  {
+                                'id':       port['rule_id'],
+                                'start':    int(port['from_port']),
+                                'end':      int(port['to_port']),
+                                'cidr':     port['cidr']
+                            }
+                udp.append(udp_port)
+        rules['tcp'] = tcp
+        rules['udp'] = udp
+        security_group =    {
+                                'name':     security_group_info['sec_group_name'],
+                                'id':       security_group_info['sec_group_id'],
+                                'rules':    rules
+                            }
+        return jsonify({'security_group': security_group})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during getting security group details.' %(fe))
+
+
+# create
+@app.route('/v1.0/<string:project_id>/security_groups', methods=['POST'])
+def create_security_group(project_id):
+    """
+    Creates a security group within a specified project.
+    May only create a security group with one type of transport.  Other transports can be added later.
+    Only creates security group if the requesting user has access.
+    ---
+    tags:
+      - security groups
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_group_parameters
+        in: body
+        description: parameters for security group creation
+        required: true
+        schema:
+            id: SecurityGroupParameters
+            type: object
+            required:
+              - name
+            properties:
+                name:
+                    type: string
+                    description: name for security group
+                    default: Security_Group_1
+                type:
+                    type: string
+                    description: transport type for security group rules, tcp or udp, uses tcp if not specified
+                    default: tcp
+                ports:
+                    type: array
+                    description: allowed ports for security group, uses ['22', '80', '443', '3389'] if not specified, rules in the form of <mix>-<max> are allowed (ex = ['22', '80', '443', '1100-1200', '3389'])
+                    default: ['22', '80', '443', '3389']
+                    items:
+                        type: string
+                        description: allowed port for security group
+    responses:
+        200:
+            description: Security group created.
+            schema:
+                type: object
+                id: SecurityGroupCreated
+                required:
+                    - name
+                    - id
+                properties:
+                    name:
+                        type: string
+                        description: name of security_group
+                        default: Security_Group_1
+                    id:
+                        type: string
+                        description: ID of security_group
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        security_group_create = {}
+        # required
+        try:
+            # check project_id
+            validate_project(project_id, auth)
+            security_group_create['project_id'] = project_id
+            security_group_create['group_name'] = json_data['name']
+        except HTTPException as e:
+            raise e
+        except:
+            abort(400, 'Bad request. Body must contain name.')
+        # optional
+        if 'type' in json_data:
+            security_group_create['transport'] = json_data['type']
+        if 'ports' in json_data:
+            # check ports format
+            validate_ports(json_data['ports'])
+            security_group_create['ports'] = json_data['ports']
+        try:
+            security_group_info = so.create_sec_group(security_group_create)
+            security_group =    {
+                                    'name': security_group_info['sec_group_name'],
+                                    'id':   security_group_info['sec_group_id']
+                                }
+            return jsonify({'security_group': security_group})
+        except Exception as e:
+            abort(500, 'Internal error. Error <%s> occurred during security group creation.' %(e))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500, 'Internal error. Error <%s> occurred during security group creation.' %(e))
+
+
+# update
+@app.route('/v1.0/<string:project_id>/security_groups/<string:security_group_id>', methods=['PUT'])
+def update_security_group(project_id, security_group_id):
+    """
+    Updates a security group specified by ID.
+    Update existing transport rules or add new ones.
+    To modify existing transport rules, specify the same transport type and the updated full set of ports.
+    Note that you must specify the full set of ports when modifying existing transport rules, you cannot add a single port rule while maintaining existing ones.
+    To add rules for other transports, specify the other transport type and the set of ports.
+    Only updates security group if the requesting user has access.
+    ---
+    tags:
+      - security groups
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_group_id
+        in: path
+        type: string
+        required: true
+        description: ID of target security group.
+      - name: security_group_update
+        in: body
+        description: parameters for security group updating
+        required: true
+        schema:
+            id: SecurityGroupUpdate
+            type: object
+            properties:
+                type:
+                    type: string
+                    description: transport type for security group rules, tcp or udp, uses tcp if not specified
+                    default: tcp
+                ports:
+                    type: array
+                    description: allowed ports for security group, uses ['22', '80', '443', '3389'] if not specified, rules in the form of <mix>-<max> are allowed (ex = ['22', '80', '443', '1100-1200', '3389'])
+                    default: ['22', '80', '443', '3389']
+                    items:
+                        type: string
+                        description: allowed port for security group
+    responses:
+        200:
+            description: Security group created.
+            schema:
+                type: object
+                id: SecurityGroupUpdated
+                required:
+                    - name
+                    - id
+                properties:
+                    name:
+                        type: string
+                        description: name of security_group
+                        default: Security_Group_1
+                    id:
+                        type: string
+                        description: ID of security_group
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        security_group_update = {}
+        # required            
+        # check project_id
+        validate_project(project_id, auth)
+        security_group_update['project_id'] = project_id
+        # check security_group_id
+        security_group_details = validate_security_group(security_group_id, project_id, auth)
+        security_group_update['group_id'] = security_group_id
+        # optional
+        if 'type' in json_data:
+            security_group_update['transport'] = json_data['type']
+        if 'ports' in json_data:
+            # check ports format
+            validate_ports(json_data['ports'])
+            security_group_update['ports'] = json_data['ports']
+        security_group_info = so.update_sec_group(security_group_update)
+        # check update success
+        if security_group_info == "OK":
+            security_group =    {
+                                    'name': security_group_details['sec_group_name'],
+                                    'id':   security_group_details['sec_group_id']
+                                }
+            return jsonify({'security_group': security_group})
+        else:
+            abort(500, 'Internal error. Unable to update security group %s.' %(security_group_id))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500, 'Internal error. Error <%s> occurred during security group update.' %(fe))
+
+
+# delete
+@app.route('/v1.0/<string:project_id>/security_groups/<string:security_group_id>', methods=['DELETE'])
+def delete_security_group(project_id, security_group_id):
+    """
+    Deletes a security group specified by ID.
+    Only deletes security group if the requesting user has access.
+    ---
+    tags:
+      - security groups
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_group_id
+        in: path
+        type: string
+        required: true
+        description: ID of target security group.
+    responses:
+        200:
+            description: Security group created.
+            schema:
+                type: object
+                id: ObjectDeleted
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        security_group_delete = {}
+        # required            
+        # check project_id
+        validate_project(project_id, auth)
+        security_group_delete['project_id'] = project_id
+        # check security_group_id
+        security_group_details = validate_security_group(security_group_id, project_id, auth)
+        security_group_delete['sec_group_id'] = security_group_id
+        security_group_info = so.delete_sec_group(security_group_delete)
+        # check delete success
+        if security_group_info == "OK":
+            security_group =    {
+                                    'name': security_group_details['sec_group_name'],
+                                    'id':   security_group_details['sec_group_id']
+                                }
+            return jsonify({'security_group': security_group})
+        else:
+            abort(500, 'Internal error. Unable to delete security group %s.' %(security_group_id))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500, 'Internal error. Error <%s> occurred during security group delete.' %(fe))
+
+
+# --- Security Keys ----
+
+# get all in cloud
+@app.route('/v1.0/security_keys', methods=['GET'])
+def get_all_security_keys():
+    """
+    Lists all security keys.
+    Only returns security keys to which the requesting user has access.
+    ---
+    tags:
+      - security keys
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+    responses:
+        200:
+            description: Security keys listed.
+            schema:
+                type: array
+                id: SecurityKeys
+                items:
+                    schema:
+                        type: object
+                        id: SecurityKey
+                        required:
+                          - name
+                          - id
+                        properties:
+                            name:
+                                type: string
+                                description: name of security key
+                                default: Security_Key_1
+                            id:
+                                type: string
+                                description: ID of security key
+                                default: a1:23:45:b6:78:90:12:34:5c:d6:e7:fa:bc:de:fa:89
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        to = tenant_ops(auth)
+        security_keys = []
+        if auth['is_admin'] == 1:
+            security_key_info = []
+            projects = to.list_all_tenants()
+            for project in projects:
+                security_key_info.extend(so.list_sec_keys(project['project_id']))
+        else:
+            security_key_info = so.list_sec_keys(auth['project_id'])
+        for info in security_key_info:
+            # normalize outputs
+            security_key =    {
+                                    'name': info['key_name'],
+                                    'id':   info['key_id']
+                                }
+            security_keys.append(security_key)
+        return jsonify({'security_keys': security_keys})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all security keys.' %(fe))
+
+
+# get all in project
+@app.route('/v1.0/<string:project_id>/security_keys', methods=['GET'])
+def get_security_keys(project_id):
+    """
+    Lists all security keys in a project specified by ID.
+    Only returns security keys to which the requesting user has access.
+    ---
+    tags:
+      - security keys
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+    responses:
+        200:
+            description: Security keys listed.
+            schema:
+                type: array
+                id: SecurityKeys
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        # check project_id
+        validate_project(project_id, auth)
+        security_keys = []
+        security_key_info = so.list_sec_keys(project_id)
+        for info in security_key_info:
+            # normalize outputs
+            security_key =    {
+                                    'name': info['key_name'],
+                                    'id':   info['key_id']
+                                }
+            security_keys.append(security_key)
+        return jsonify({'security_keys': security_keys})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during listing all security keys.' %(fe))
+
+
+# get
+@app.route('/v1.0/<string:project_id>/security_keys/<string:security_key_id>', methods=['GET'])
+def get_security_key(project_id, security_key_id):
+    """
+    Gets detailed information about a specified security key by ID.
+    Only returns security key information to which the requesting user has access.
+    ---
+    tags:
+      - security keys
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_key_id
+        in: path
+        type: string
+        required: true
+        description: ID of target security key
+    responses:
+        200:
+            description: Security keys listed.
+            schema:
+                type: object
+                id: SecurityKeyDetails
+                required:
+                  - name
+                  - id
+                  - username
+                  - user_id
+                  - rsa_public_key
+                properties:
+                    name:
+                        type: string
+                        description: name of security key
+                        default: Security_Key_1
+                    id:
+                        type: string
+                        description: ID of security key
+                        default: a1:23:45:b6:78:90:12:34:5c:d6:e7:fa:bc:de:fa:89
+                    username:
+                        type: string
+                        description: username of security key's owner
+                        default: User_1
+                    user_id:
+                        type: string
+                        description: ID of security key's owner
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+                    rsa_private_key:
+                        type: string
+                        description: security key's RSA private key
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        404:
+            description: Not found.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        # check project_id
+        validate_project(project_id, auth)
+        # check security_key_id
+        security_key_info = validate_security_key(security_key_id, project_id, auth)
+        # normalize outputs
+        security_key =  {
+                            'name':             security_key_info['sec_key_name'],
+                            'id':               security_key_info['sec_key_id'],
+                            'username':         security_key_info['user_name'],
+                            'user_id':          security_key_info['user_id'],
+                            'rsa_private_key':  security_key_info['public_key']
+                        }
+        return jsonify({'security_key': security_key})
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during getting security key details.' %(fe))
+
+
+# create
+@app.route('/v1.0/<string:project_id>/security_keys', methods=['POST'])
+def create_security_key(project_id):
+    """
+    Creates a security key within a specified project.
+    Only creates security key if the requesting user has access.
+    ---
+    tags:
+      - security keys
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_key_parameters
+        in: body
+        description: parameters for security key creation
+        required: true
+        schema:
+            id: SecurityKeyParameters
+            type: object
+            required:
+              - name
+            properties:
+                name:
+                    type: string
+                    description: name for security key
+                    default: Security_Key_1
+    responses:
+        200:
+            description: Security key created.
+            schema:
+                type: object
+                id: SecurityKeyCreated
+                required:
+                    - name
+                    - id
+                properties:
+                    name:
+                        type: string
+                        description: name of security_key
+                        default: Security_Key_1
+                    id:
+                        type: string
+                        description: ID of security_key
+                        default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        security_key_create = {}
+        # required
+        try:
+            # check project_id
+            validate_project(project_id, auth)
+            security_key_create['project_id'] = project_id
+            security_key_create['key_name'] = json_data['name']
+        except HTTPException as e:
+            raise e
+        except:
+            abort(400, 'Bad request. Body must contain name.')
+        try:
+            security_key_info = so.create_sec_keys(security_key_create)
+            security_key =  {
+                                'name': security_key_info['key_name'],
+                                'id':   security_key_info['key_id']
+                            }
+            return jsonify({'security_key': security_key})
+        except Exception as e:
+            abort(500, 'Internal error. Error <%s> occurred during security key creation.' %(e))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500, 'Internal error. Error <%s> occurred during security key creation.' %(e))
+
+
+# delete
+@app.route('/v1.0/<string:project_id>/security_keys/<string:security_key_id>', methods=['DELETE'])
+def delete_security_key(project_id, security_key_id):
+    """
+    Deletes a security key specified by ID.
+    Only deletes security key if the requesting user has access.
+    ---
+    tags:
+      - security keys
+    parameters:
+      - name: username
+        in: header
+        type: string
+        required: true
+        description: username of user making request
+      - name: password
+        in: header
+        type: string
+        required: true
+        description: password of user making request
+      - name: project_id
+        in: path
+        type: string
+        required: true
+        description: ID of target project
+      - name: security_key_id
+        in: path
+        type: string
+        required: true
+        description: ID of target security key.
+    responses:
+        200:
+            description: Security key created.
+            schema:
+                type: object
+                id: ObjectDeleted
+        400:
+            description: Bad request.
+        401:
+            description: Not authorized.
+        500:
+            description: Internal server error.
+    """
+    try:
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
+        auth = authorize(username, password)
+        so = server_ops(auth)
+        security_key_delete = {}
+        # required            
+        # check project_id
+        validate_project(project_id, auth)
+        security_key_delete['project_id'] = project_id
+        # check security_key_id
+        security_key_details = validate_security_key(security_key_id, project_id, auth)
+        security_key_delete['sec_key_name'] = security_key_details['sec_key_name']
+        security_key_info = so.delete_sec_keys(security_key_delete)
+        # check delete success
+        if security_key_info == "OK":
+            security_key =    {
+                                    'name': security_key_details['sec_key_name'],
+                                    'id':   security_key_details['sec_key_id']
+                                }
+            return jsonify({'security_key': security_key})
+        else:
+            abort(500, 'Internal error. Unable to delete security key %s.' %(security_key_id))
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        print fe
+        abort(500, 'Internal error. Error <%s> occurred during security key delete.' %(fe))
+
+
 # --- Helper Functions ----
 
+# check credentials and return auth
 def authorize(username, password):
     try:
         a = authorization(username,password)
         auth = a.get_auth()
-        if auth['token'] != None and auth['token'] != "":
-            return auth
-        abort(401)
-    except:
-        abort(401)
+        if  'token' in auth and auth['token'] == "error":
+            abort(401, 'Not authroized. User is orphaned or disabled.')
+        if auth is None or auth == "ERROR" or 'token' not in auth or auth['token'] == None or auth['token'] == "":
+            abort(401, 'Not authorized. Invalid username and/or password.')
+        return auth
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during authorization.' %(fe))
 
+
+# check cascading permissions
+def validate_permissions(project_id, auth):
+    if auth['is_admin'] == 0 and project_id != auth['project_id']:
+        abort(401, 'Not authorized. Users and power users can only access resources within their own projects.')
+
+
+# check project_id and return project_info
+def validate_project(project_id, auth):
+    try:
+        validate_permissions(project_id, auth)
+        to = tenant_ops(auth)
+        project_info = to.get_tenant(project_id)
+        if project_info is None:
+            abort(404, 'Not found. Could not find project %s.' %(project_id))
+        return project_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during project_id validation.' %(fe))
+
+
+# check instance_id and return instance_info
+def validate_instance(instance_id, project_id, auth):
+    try:
+        validate_permissions(project_id, auth)
+        so = server_ops(auth)
+        server_get =    {
+                            'server_id':    instance_id,
+                            'project_id':   project_id
+                        }
+        try:
+            instance_info = so.get_server(server_get)
+        except:
+            abort(404, 'Not found. Could not find instance %s in project %s.' %(instance_id, project_id))
+        return instance_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during instance_id validation.' %(fe))
+
+
+# check floating_ip_id and return floating_ip_info
+def validate_floating_ip(floating_ip_id, project_id, auth):
+    pass
+
+
+# check volume_id and return volume_info
+def validate_volume(volume_id, project_id, auth):
+    try:
+        validate_permissions(project_id, auth)
+        vo = volume_ops(auth)
+        volume_get =    {
+                            'volume_id':    volume_id,
+                            'project_id':   project_id
+                        }
+        volume_info = vo.get_volume_info(volume_get)
+        if volume_info is None:
+            abort(404, 'Not found. Could not find volume %s in project %s.' %(volume_id, project_id))
+        return volume_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during volume_id validation.' %(fe))
+
+
+# check snapshot_id and return snapshot_info
+def validate_volume_snapshot(snapshot_id, auth):
+    try:
+        vso = snapshot_ops(auth)
+        snapshot_info = vso.get_snapshot(snapshot_id)
+        if snapshot_info is None:
+            abort(404, 'Not found. Could not find volume snapshot %s.' %(snapshot_id))
+        validate_permissions(snapshot_info['project_id'], auth)
+        return snapshot_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during volume snapshot_id validation.' %(fe))
+
+
+# check network_id and return network_info
+def validate_network(network_id, auth):
+    try:
+        nno = neutron_net_ops(auth)
+        network_info = nno.get_network(network_id)
+        if network_info is None:
+            abort(404, 'Not found. Could not find network %s.' %(network_id))
+        if network_info['net_shared'] == "false":
+            validate_permissions(network_info['project_id'], auth)
+        return network_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during network validation.' %(fe))
+
+
+# check router_id and return router_info
+def validate_router(router_id, auth):
+    try:
+        l3 = layer_three_ops(auth)
+        router_info = l3.get_router(router_id)
+        if router_info is None:
+            abort(404, 'Not found. Could not find router %s.' %(router_id))
+        if 'network_id' in router_info and router_info['network_id'] is not None and router_info['network_id'] != "":
+            validate_network(router_info['network_id'], auth)
+        else:
+            validate_permissions(router_info['project_id'], auth)
+        return router_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during router validation.' %(fe))
+
+
+# check user_id and return user_info
+def validate_user(user_id, project_id, auth):
+    try:
+        validate_permissions(project_id, auth)
+        uo = user_ops(auth)
+        user_get =  {
+                        'user_id':      user_id,
+                        'project_id':   project_id
+                    }
+        user_info = uo.get_user_id_info(user_get)
+        if user_info is None:
+            abort(404, 'Not found. Could not find user %s in project %s.' %(user_id, project_id))
+        return user_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during user validation.' %(fe))
+
+
+# check security_group_id and return security_group_info
+def validate_security_group(security_group_id, project_id, auth):
+    try:
+        validate_permissions(project_id, auth)
+        so = server_ops(auth)
+        security_group_get =    {
+                                    'sec_group_id': security_group_id,
+                                    'project_id':   project_id
+                                }
+        try:
+            security_group_info = so.get_sec_group(security_group_get)
+        except:
+            abort(404, 'Not found. Could not find security group %s in project %s.' %(security_group_id, project_id))
+        return security_group_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during security group validation.' %(fe))
+
+
+# check ports format
+def validate_ports(ports):
+    try:
+        for port in ports:
+            port_parts = port.split('-')
+            if len(port_parts) != 1 and len(port_parts) != 2:
+                abort(400, 'Bad request. Improper ports format. Specified ports must be indiviual ports or port ranges.')
+            if len(port_parts) == 2:
+                if int(port_parts[0]) > int(port_parts[1]):
+                    abort(400, 'Bad request. Improper ports format. Ranged ports must be of the form <min>-<max>.')
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during port format validation.' %(fe))
+
+
+# check security_key_id and return security_key_info
+def validate_security_key(security_key_id, project_id, auth):
+    try:
+        validate_permissions(project_id, auth)
+        so = server_ops(auth)
+        security_key_get =  {
+                                'sec_key_id':   security_key_id,
+                                'project_id':   project_id
+                            }
+        security_key_info = so.get_sec_keys(security_key_get)
+        if security_key_info is None:
+            abort(404, 'Not found. Could not find security key %s in project %s.' %(security_key_id, project_id))
+        return security_key_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during security key validation.' %(fe))
+
+
+# check image_id and return image_info
+def validate_image(image_id, auth):
+    try:
+        go = glance_ops(auth)
+        try:
+            image_info = go.get_image(image_id)
+        except:
+            abort(404, 'Not found. Could not find image %s.' %(image_id))
+        if image_info['visibility'] == "private":
+            validate_permissions(image_info['project_id'], auth)
+        return image_info
+    except HTTPException as e:
+        raise e
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred during image_id validation.' %(fe))
+
+
+# --- App ----
 
 if __name__ == '__main__':
     app.run(host=api_ip, port=6969, debug=True)
