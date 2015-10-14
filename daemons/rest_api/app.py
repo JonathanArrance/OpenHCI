@@ -4,13 +4,6 @@ import ast, json, sys
 from flask import Flask, jsonify, abort, make_response, request
 from werkzeug.exceptions import HTTPException
 from flasgger import Swagger
-# django
-from django.conf import settings
-from transcirrus.interfaces.Coalesce import settings as tc_settings
-settings.configure(default_settings=tc_settings, DEBUG=True, LOGGING_CONFIG=None, DATABASE_ROUTERS=[], USE_TZ=False, DEFAULT_INDEX_TABLESPACE="", CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',}},
-                   DEFAULT_TABLESPACE="", USE_L10N=True, LOCALE_PATHS=(), FORMAT_MODULE_PATH=None, DEFAULT_CHARSET="utf-8", DEFAULT_CONTENT_TYPE="text/html")
-sys.path.append("/usr/local/lib/python2.7/transcirrus/interfaces/Coalesce/")
-from transcirrus.interfaces.Coalesce.coalesce.coal_beta import views
 # common
 from transcirrus.common import util
 from transcirrus.common.auth import authorization
