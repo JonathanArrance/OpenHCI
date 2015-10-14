@@ -1255,7 +1255,7 @@ class server_ops:
         update_sec['update'] = 'true'
 
         # Delete all the rules for the transport (tcp or udp) for the group we are updating.
-        self.delete_sec_group_rules(update_sec, False, True)
+        self.delete_sec_group_rules(update_sec)
 
         if (update_sec['enable_ping'] == "false"):
             # Delete the rule for icmp.
