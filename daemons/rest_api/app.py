@@ -4,17 +4,12 @@ import ast, json, sys
 from flask import Flask, jsonify, abort, make_response, request
 from werkzeug.exceptions import HTTPException
 from flasgger import Swagger
-# django
-from django.conf import settings
-from transcirrus.interfaces.Coalesce import settings as tc_settings
-settings.configure(default_settings=tc_settings, DEBUG=True, LOGGING_CONFIG=None, DATABASE_ROUTERS=[], USE_TZ=False, DEFAULT_INDEX_TABLESPACE="", CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',}},
-                   DEFAULT_TABLESPACE="", USE_L10N=True, LOCALE_PATHS=(), FORMAT_MODULE_PATH=None, DEFAULT_CHARSET="utf-8", DEFAULT_CONTENT_TYPE="text/html")
-sys.path.append("/usr/local/lib/python2.7/transcirrus/interfaces/Coalesce/")
-from transcirrus.interfaces.Coalesce.coalesce.coal_beta import views
 # common
 from transcirrus.common import util
 from transcirrus.common.auth import authorization
 from transcirrus.common import extras
+# version
+from transcirrus.common import version 
 # projects
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.operations import build_complete_project
@@ -82,11 +77,57 @@ def internal_error(error):
 # get
 @app.route('/v1.0/version', methods=['GET'])
 def get_version():
-    request = ""
-    ver_json = views.get_version(request)
-    ver_dict = ast.literal_eval(ver_json.content)
-    version = {'release': ver_dict['data']['release'], 'major': ver_dict['data']['major'], 'full_str': ver_dict['data']['full_str'], 'short_str': ver_dict['data']['short_str'], 'minor': ver_dict['data']['minor']}
-    return jsonify({'version': version})
+    """
+    Gets version information.
+    ---
+    tags:
+      - version
+    responses:
+        200:
+            description: Version found.
+            schema:
+                type: object
+                id: VersionDetails
+                required:
+                  - major
+                  - minor
+                  - release
+                  - full
+                  - short
+                properties:
+                    major:
+                        type: integer
+                        description: Major version number
+                        default: 2
+                    minor:
+                        type: integer
+                        description: Minor version number
+                        default: 3
+                    release:
+                        type: integer
+                        description: Release version number
+                        default: 1
+                    full:
+                        type: string
+                        description: Fully qualified version number, (major.minor-relase)
+                        default: 2.3-1
+                    short:
+                        type: string
+                        description: Short version number, (major.minor)
+                        default: 2.3
+        500:
+            description: Internal server error.
+    """
+    try:
+        version_info = {}
+        version_info['major']   = int(version.VERSION_MAJOR)
+        version_info['minor']   = int(version.VERSION_MINOR)
+        version_info['release'] = int(version.VERSION_RELEASE)
+        version_info['full']    = version.VERSION_FULL_STR
+        version_info['short']   = version.VERSION_SHORT_STR
+        return jsonify({'version': version_info})
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred getting version details.' %(fe))
 
 
 # --- Projects ----
@@ -4675,9 +4716,20 @@ def authorize(username, password):
 
 # check cascading permissions
 def validate_permissions(project_id, auth):
+    # power users / users
     if auth['is_admin'] == 0 and project_id != auth['project_id']:
         abort(401, 'Not authorized. Users and power users can only access resources within their own projects.')
-
+    # project admins
+    elif auth['is_admin'] == 1 and auth['username'] != "admin" and auth['username'] != "shadow_admin":
+        to = tenant_ops(auth)
+        projects = to.list_all_tenants()
+        have_access = False
+        for project in projects:
+            if project_id == project['project_id']:
+                have_access = True
+                break
+        if have_access is False:
+            abort(401, 'Not authorized. Project admins can only access resources within their own projects.')
 
 # check project_id and return project_info
 def validate_project(project_id, auth):
