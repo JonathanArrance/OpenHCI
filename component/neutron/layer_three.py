@@ -130,6 +130,8 @@ class layer_three_ops:
                        - admin_state_up
                        - internal_port
                        - subnet_id (NICK ADDED REDUNDANT KEY FOR router_int_sub_id)
+                - OR -
+                None if router does not exist
         ACCESS: All user types can get the information for a router in their project. Admin can
                 get info on any router.
         NOTE: this info can be gathered from the transcirrus db
@@ -145,10 +147,14 @@ class layer_three_ops:
             logger.sql_error("Could not find router %s"%(router_id))
             raise Exception("Could not find router %s"%(router_id))
 
-        r_dict = {'router_name':router[0][1],'router_status':router[0][5],'router_id':router[0][2],'project_id':router[0][4],'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][10],
-                  'external_ip':router[0][11],'admin_state_up':router[0][9],'internal_port':router[0][8], 'subnet_id': router[0][6]}
+        # make sure router exists
+        if len(router) > 0:
+            r_dict = {'router_name':router[0][1],'router_status':router[0][5],'router_id':router[0][2],'project_id':router[0][4],'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][10],
+                      'external_ip':router[0][11],'admin_state_up':router[0][9],'internal_port':router[0][8], 'subnet_id': router[0][6]}
 
-        return r_dict
+            return r_dict
+        # router does not exist
+        return None
 
     def add_router(self,router_dict):
         """
