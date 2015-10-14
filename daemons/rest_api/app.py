@@ -133,21 +133,29 @@ def get_projects():
                                 type: string
                                 description: ID of project
                                 default: abcd12e3f456789012345a678b9cde01
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         to = tenant_ops(auth)
         projects = []
+        # admins can list all projects
         if auth['is_admin'] == 1:
             projects_info = to.list_all_tenants()
+        # otherwise list user's own project
         else:
             projects_info = [to.get_tenant(auth['project_id'])]
+        # normalize output
         for info in projects_info:
             project =   {
                             'name': info['project_name'],
@@ -157,10 +165,10 @@ def get_projects():
         # remove trans_default
         projects[:] = [p for p in projects if p.get('name') != "trans_default"]
         return jsonify({'projects': projects})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all projects.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing projects.' %(fe))
 
 
 # get
@@ -259,33 +267,33 @@ def get_project(project_id):
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         # check project_id
         project_info = validate_project(project_id, auth)
-        if project_info is not None:
-            project = {
-                            'name':                     project_info['project_name'],
-                            'id':                       project_info['project_id'],
-                            'security_key_name':        project_info['def_security_key_name'],
-                            'security_key_id':          project_info['def_security_key_id'],
-                            'security_group_name':      project_info['def_security_group_name'],
-                            'security_group_id':        project_info['def_security_group_id'],
-                            'host_system_name':         project_info['host_system_name'],
-                            'host_system_ip':           project_info['host_system_ip'],
-                            'network_name':             project_info['def_network_name'],
-                            'network_id':               project_info['def_network_id'],
-                            'is_default':               project_info['is_default']
-                       }
-            return jsonify({'project': project})
-        else:
-            abort(404)
-    except HTTPException as e:
-        raise e
+        # normalize output
+        project = {
+                        'name':                     project_info['project_name'],
+                        'id':                       project_info['project_id'],
+                        'security_key_name':        project_info['def_security_key_name'],
+                        'security_key_id':          project_info['def_security_key_id'],
+                        'security_group_name':      project_info['def_security_group_name'],
+                        'security_group_id':        project_info['def_security_group_id'],
+                        'host_system_name':         project_info['host_system_name'],
+                        'host_system_ip':           project_info['host_system_ip'],
+                        'network_name':             project_info['def_network_name'],
+                        'network_id':               project_info['def_network_id'],
+                        'is_default':               project_info['is_default']
+                   }
+        return jsonify({'project': project})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred getting details for project %s.' %(fe, project_id))
 
 
 # create
@@ -330,15 +338,15 @@ def create_project():
                     type: string
                     description: name for project
                     default: Project_1
-                admin_username:
+                username:
                     type: string
                     description: username for project admin
                     default: Admin_Project_1
-                admin_password:
+                password:
                     type: string
                     description: password for project admin
                     default: password
-                admin_email:
+                email:
                     type: string
                     description: email for project admin
                     default: admin_project_1@email.com
@@ -380,58 +388,66 @@ def create_project():
                         type: string
                         description: ID of project
                         default: abcd12e3f456789012345a678b9cde01
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        data = request.get_data()
-        json_data = json.loads(data)
-        project_name = json_data['name']
-        admin_username = json_data['admin_username']
-        admin_password = json_data['admin_password']
-        admin_email = json_data['admin_email']
-        security_group_name = json_data['security_group_name']
-        security_key_name = json_data['security_key_name']
-        network_name = json_data['network_name']
-        router_name = json_data['router_name']
+        # check is_admin
+        if auth['is_admin'] != 1:
+            abort(401, 'Not authroized. Only admins can create projects.')
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
+        project_create = {}
+        user_dict = {}
+        sec_group_dict = {}
         dns_address = []
-        dns_address.append(json_data['dns_address'])
-        project_create =   {
-                                'project_name':     project_name,
-                                'user_dict':        {
-                                                        'username':     admin_username,
-                                                        'password':     admin_password,
-                                                        'user_role':    "admin",
-                                                        'email':        admin_email,
-                                                        'project_id':   ""
-                                                    },
-                                'net_name':         network_name,
-                                'subnet_dns':       dns_address,
-                                'sec_group_dict':   {
-                                                        'ports':        "",
-                                                        'group_name':   security_group_name,
-                                                        'group_desc':   "none",
-                                                        'project_id':   ""
-                                                    },
-                                'sec_keys_name':    security_key_name,
-                                'router_name':      router_name
-                            }
-        project_id = build_complete_project.build_project(auth, project_create)
+        project_create['user_dict'] = user_dict
+        project_create['sec_group_dict'] = sec_group_dict
+        # required
+        try:
+            # project info
+            project_create['project_name'] = json_data['name']
+            project_create['net_name'] = json_data['network_name']
+            project_create['subnet_dns'] = dns_address.append(json_data['dns_address'])
+            project_create['sec_keys_name'] = json_data['security_key_name']
+            project_create['router_name'] = json_data['router_name']
+            # user info
+            user_dict['username'] = json_data['username']
+            user_dict['password'] = json_data['password']
+            user_dict['email'] = json_data['email']
+            user_dict['user_role'] = "admin"
+            user_dict['project_id'] = ""
+            # security info
+            sec_group_dict['group_name'] = json_data['security_group_name']
+            sec_group_dict['ports'] = ""
+            sec_group_dict['group_desc'] = "none"
+            sec_group_dict['project_id'] = ""
+        except:
+            abort(400, 'Bad request. Body must contain name, network_name, dns_address, router_name, username, password, email, security_group_name, and security_key_name.')
+        project_info = build_complete_project.build_project(auth, project_create)
+        # normalize output
         project =   {
-                        'name': project_name,
-                        'id':   project_id
+                        'name': project_create['project_name'],
+                        'id':   project_info
                     }
         return jsonify({'project': project})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred creating project.' %(fe))
 
 
 # --- Instances ----
@@ -498,21 +514,29 @@ def get_all_instances():
                                 type: string
                                 description: availability zone of instance
                                 default: nova
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         so = server_ops(auth)
         instances = []
+        # admins can list all intances
         if auth['is_admin'] == 1:
             instances_info = so.list_all_servers()
+        # otherwise list all user has access to
         else:
             instances_info = so.list_servers()
+        # normalize output
         for info in instances_info:
             instance =  {
                             "project_id":   info['project_id'],
@@ -524,10 +548,10 @@ def get_all_instances():
                         }
             instances.append(instance)
         return jsonify({'instances': instances})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except:
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred listing instances.' %(fe))
 
 
 # get all in project
@@ -565,18 +589,28 @@ def get_instances(project_id):
                     schema:
                         type: object
                         id: Instance
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
+        404:
+            description: Not found.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         so = server_ops(auth)
+        # check project_id
+        validate_project(project_id, auth)
         instances = []
         instances_info = so.list_servers(project_id)
+        # normalize output
         for instance in instances_info:
             instance =  {
                             "project_id":   instance['project_id'],
@@ -588,10 +622,10 @@ def get_instances(project_id):
                         }
             instances.append(instance)
         return jsonify({'instances': instances})
-    except HTTPException as e:
-        raise e
-    except:
-        abort(500)
+    except HTTPException as he:
+        raise he
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred listing instances in project %s.' %(fe, project_id))
 
 
 # get
@@ -618,7 +652,7 @@ def get_instance(project_id, instance_id):
         in: path
         type: string
         required: true
-        description: ID of project the instance resides in
+        description: ID of target project
       - name: instance_id
         in: path
         type: string
@@ -812,6 +846,8 @@ def get_instance(project_id, instance_id):
                         type: string
                         description: fault of instance
                         default: None
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         404:
@@ -820,66 +856,64 @@ def get_instance(project_id, instance_id):
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        so = server_ops(auth)
         nno = neutron_net_ops(auth)
-        server_get =    {
-                            'server_id':    instance_id,
-                            'project_id':   project_id
-                        }
-        instance_info = {}
-        instance_info = so.get_server(server_get)
+        # check project_id
+        validate_project(project_id, auth)
+        # check instance_id
+        instance_info = validate_instance(instance_id, project_id, auth)
         internal = []
         external = []
-        if 'server_net_id' in instance_info:
-            net_id = instance_info['server_net_id']
-            net_name = nno.get_network(net_id)['net_name']
-            for info in instance_info['server_int_net'][net_name]:
-                if info['OS-EXT-IPS:type'] == "fixed":
-                    info['name'] = net_name
-                    info['id'] = net_id
-                    internal.append(info)
-                elif info['OS-EXT-IPS:type'] == "floating":
-                    info['name'] = net_name
-                    info['id'] = net_id
-                    external.append(info)
-            if 'boot_from_vol' in instance_info and instance_info['boot_from_vol'] == "true":
-                instance_info['boot_from_vol'] = True
-            else:
-                instance_info['boot_from_vol'] = False
-            instance = {
-                            'name':                 instance_info['server_name'],
-                            'id':                   instance_info['server_id'],
-                            'project_id':           instance_info['project_id'],
-                            'security_key_name':    instance_info['server_key_name'],
-                            'security_group_name':  instance_info['server_group_name'],
-                            'specification_id':     instance_info['flavor_id'],
-                            'specification_name':   instance_info['server_flavor'],
-                            'os':                   instance_info['server_os'],
-                            'network_info':         {
-                                                        'internal': internal,
-                                                        'external': external
-                                                    },
-                            'zone':                 instance_info['server_zone'],
-                            'status':               instance_info['server_status'],
-                            'state':                instance_info['server_state'],
-                            'physical_node_id':     instance_info['server_node'],
-                            'floating_ip_id':       instance_info['floating_ip_id'],
-                            'floating_ip':          instance_info['server_public_ips'],
-                            'novnc_console':        instance_info['novnc_console'],
-                            'date_created':         instance_info['date_created'],
-                            'is_boot_from_volume':  instance_info['boot_from_vol']
-                       }
-            return jsonify({'instance': instance})
+        # get instance's network info
+        net_id = instance_info['server_net_id']
+        net_name = nno.get_network(net_id)['net_name']
+        # normalize output
+        for info in instance_info['server_int_net'][net_name]:
+            if info['OS-EXT-IPS:type'] == "fixed":
+                info['name'] = net_name
+                info['id'] = net_id
+                internal.append(info)
+            elif info['OS-EXT-IPS:type'] == "floating":
+                info['name'] = net_name
+                info['id'] = net_id
+                external.append(info)
+        if 'boot_from_vol' in instance_info and instance_info['boot_from_vol'] == "true":
+            instance_info['boot_from_vol'] = True
         else:
-            abort(404)
-    except HTTPException as e:
-        raise e
+            instance_info['boot_from_vol'] = False
+        instance = {
+                        'name':                 instance_info['server_name'],
+                        'id':                   instance_info['server_id'],
+                        'project_id':           instance_info['project_id'],
+                        'security_key_name':    instance_info['server_key_name'],
+                        'security_group_name':  instance_info['server_group_name'],
+                        'specification_id':     instance_info['flavor_id'],
+                        'specification_name':   instance_info['server_flavor'],
+                        'os':                   instance_info['server_os'],
+                        'network_info':         {
+                                                    'internal': internal,
+                                                    'external': external
+                                                },
+                        'zone':                 instance_info['server_zone'],
+                        'status':               instance_info['server_status'],
+                        'state':                instance_info['server_state'],
+                        'physical_node_id':     instance_info['server_node'],
+                        'floating_ip_id':       instance_info['floating_ip_id'],
+                        'floating_ip':          instance_info['server_public_ips'],
+                        'novnc_console':        instance_info['novnc_console'],
+                        'date_created':         instance_info['date_created'],
+                        'is_boot_from_volume':  instance_info['boot_from_vol']
+                   }
+        return jsonify({'instance': instance})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred getting details for instance %s.' %(fe, instance_id))
 
 
 # create
@@ -905,7 +939,7 @@ def create_instance(project_id):
         in: path
         type: string
         required: true
-        description: ID of project the instance will reside in
+        description: ID of target project
       - name: instance_parameters
         in: body
         description: parameters for instance creation
@@ -1002,25 +1036,36 @@ def create_instance(project_id):
                         type: string
                         description: name of instance's creator
                         default: User_1
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        data = request.get_data()
-        json_data = json.loads(data)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
         instance_create = {}
         # required
-        instance_create['project_id'] = project_id
-        instance_create['instance_name'] = json_data['name']
-        instance_create['image_id'] = json_data['image_id']
-        instance_create['flavor_id'] = json_data['specification_id']
-        instance_create['sec_group_name'] = json_data['security_group_name']
-        instance_create['sec_key_name'] = json_data['security_key_name']
+        try:
+            instance_create['project_id'] = project_id
+            instance_create['instance_name'] = json_data['name']
+            instance_create['image_id'] = json_data['image_id']
+            instance_create['flavor_id'] = json_data['specification_id']
+            instance_create['sec_group_name'] = json_data['security_group_name']
+            instance_create['sec_key_name'] = json_data['security_key_name']
+        except:
+            abort(400, 'Bad request. Body must contain name, image_id, specification_id, security_group_name and security_key_name.')
         # optional
         if 'network_name' in json_data:
             instance_create['network_name'] = json_data['network_name']
@@ -1035,20 +1080,24 @@ def create_instance(project_id):
         if 'volume_type' in json_data:
             instance_create['volume_type'] = json_data['volume_type']
         instance_info = boot_from_vol_ops.boot_instance(instance_create, auth)['instance']
-        instance =  {
-                        'name':                 instance_info['vm_name'],
-                        'id':                   instance_info['vm_id'],
-                        'security_key_name':    instance_info['sec_key_name'],
-                        'security_group_name':  instance_info['sec_group_name'],
-                        'project_id':           instance_info['project_id'],
-                        'username':             instance_info['created_by'],
-                    }
-        return jsonify({'instance': instance})
-    except HTTPException as e:
-        raise e
+        # check instace create success
+        if instance_info is not None:
+            # normalize output
+            instance =  {
+                            'name':                 instance_info['vm_name'],
+                            'id':                   instance_info['vm_id'],
+                            'security_key_name':    instance_info['sec_key_name'],
+                            'security_group_name':  instance_info['sec_group_name'],
+                            'project_id':           instance_info['project_id'],
+                            'username':             instance_info['created_by'],
+                        }
+            return jsonify({'instance': instance})
+        else:
+            abort(500, 'Internal error. Unable to create instance.')
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred creating instance.' %(fe))
 
 
 # delete
@@ -1056,7 +1105,7 @@ def create_instance(project_id):
 def delete_instance(project_id, instance_id):
     """
     Deletes a specified instance by ID.
-    Only able to delete if requesting user has access.
+    Only deletes instance if requesting user has access.
     ---
     tags:
       - instances
@@ -1075,7 +1124,7 @@ def delete_instance(project_id, instance_id):
         in: path
         type: string
         required: true
-        description: ID of project the instance resides in
+        description: ID of target project
       - name: instance_id
         in: path
         type: string
@@ -1094,33 +1143,43 @@ def delete_instance(project_id, instance_id):
                         type: string
                         description: ID of target object
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         so = server_ops(auth)
+        # check project_id
+        validate_project(project_id, auth)
+        # check instance_id
+        validate_instance(instance_id, project_id, auth)
         instance_delete =   {
                                 'project_id':   project_id,
                                 'server_id':    instance_id
                             }
         instance_info = so.delete_server(instance_delete)
+        # check instance delete success
         if instance_info == "OK":
+            # normalize output
             instance =  {
                             'id':       instance_id
                         }
             return jsonify({'instance': instance})
         else:
-            abort(500)
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Unable to delete instance.')
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred deleting instance %s.' %(fe, instance_id))
 
 
 # --- Flavors ----
@@ -1148,7 +1207,7 @@ def create_flavor(project_id):
         in: path
         type: string
         required: true
-        description: ID of project the instance specification will reside in
+        description: ID of target project
       - name: instance_specification_parameters
         in: body
         description: parameters for instance specification creation
@@ -1200,38 +1259,55 @@ def create_flavor(project_id):
                         type: string
                         description: name of instance specification
                         default: Instance_Specification_1
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        data = request.get_data()
-        json_data = json.loads(data)
+        fo = flavor_ops(auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
         instance_specification_create = {}
+        # check project_id
+        validate_project(project_id, auth)
         # required
-        instance_specification_create['name'] = json_data['name']
-        instance_specification_create['ram'] = json_data['ram']
-        instance_specification_create['boot_disk'] = json_data['disk']
-        instance_specification_create['cpus'] = json_data['cpus']
+        try:
+            instance_specification_create['name'] = json_data['name']
+            instance_specification_create['ram'] = json_data['ram']
+            instance_specification_create['boot_disk'] = json_data['disk']
+            instance_specification_create['cpus'] = json_data['cpus']
+        except:
+            abort(400, 'Bad request. Body must contain name, ram, disk and cpus.')
         # optional
         if 'visibility' in json_data and json_data['visibility'] == "public":
             instance_specification_create['public'] = "True"
-        fo = flavor_ops(auth)
         instance_specification_info = fo.create_flavor(instance_specification_create)
-        instance_specification =    {
-                                        'id':   instance_specification_info['flav_id'],
-                                        'name': instance_specification_info['flavor_name']
-                                    }
-        return jsonify({'instance_specification': instance_specification})
-    except HTTPException as e:
-        raise e
+        # check flavor create success
+        if instance_specification_info['status'] == "OK":
+            # normalize output
+            instance_specification =    {
+                                            'id':   instance_specification_info['flav_id'],
+                                            'name': instance_specification_info['flavor_name']
+                                        }
+            return jsonify({'instance_specification': instance_specification})
+        else:
+            abort(500, 'Internal error. Unable to create instance specification.')
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred creating instance specification.' %(fe))
 
 
 # --- Floating IPs ----
@@ -1283,19 +1359,24 @@ def get_floating_ips():
                                 type: boolean
                                 description: conveying if floating IP is in use
                                 default: false
-
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         l3 = layer_three_ops(auth)
         floating_ips = []
         floating_ips_info = l3.list_floating_ips()
+        # normalize output
         for info in floating_ips_info:
             if info['floating_in_use'] == "true":
                 info['floating_in_use'] = True
@@ -1308,10 +1389,10 @@ def get_floating_ips():
                             }
             floating_ips.append(floating_ip)
         return jsonify({'floating_ips': floating_ips})
-    except HTTPException as e:
-        raise e
-    except:
-        abort(500)
+    except HTTPException as he:
+        raise he
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred listing floating IPs.' %(fe))
 
 
 # get
@@ -1382,6 +1463,8 @@ def get_floating_ip(floating_ip_id):
                         type: string
                         description: ID of floating IP's project
                         default: abcd12e3f456789012345a678b9cde01
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         404:
@@ -1390,29 +1473,29 @@ def get_floating_ip(floating_ip_id):
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        l3 = layer_three_ops(auth)
-        floating_ip_info = l3.get_floating_ip(floating_ip_id)
-        if floating_ip_info is not None:
-            floating_ip =   {
-                                'address':          floating_ip_info['floating_ip'],
-                                'id':               floating_ip_info['floating_ip_id'],
-                                'instance_name':    floating_ip_info['instance_name'],
-                                'instance_id':      floating_ip_info['instance_id'],
-                                'network_name':     floating_ip_info['internal_net_name'],
-                                'network_id':       floating_ip_info['internal_net_id'],
-                                'project_id':       floating_ip_info['project_id'],
-                            }
-            return jsonify({'floating_ip': floating_ip})
-        else:
-            abort(404)
-    except HTTPException as e:
-        raise e
+        # check floating_ip_id
+        floating_ip_info = validate_floating_ip(floating_ip_id, auth)
+        # normalize output
+        floating_ip =   {
+                            'address':          floating_ip_info['floating_ip'],
+                            'id':               floating_ip_info['floating_ip_id'],
+                            'instance_name':    floating_ip_info['instance_name'],
+                            'instance_id':      floating_ip_info['instance_id'],
+                            'network_name':     floating_ip_info['internal_net_name'],
+                            'network_id':       floating_ip_info['internal_net_id'],
+                            'project_id':       floating_ip_info['project_id'],
+                        }
+        return jsonify({'floating_ip': floating_ip})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred getting details for floating IP %s.' %(fe, floating_ip_id))
 
 
 # create
@@ -1471,40 +1554,59 @@ def create_floating_ip():
                         type: string
                         description: ID of floating IP
                         default: 1234a56b-8901-2345-67c8-90de12f34ab5
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
+        l3 = layer_three_ops(auth)
         # admin / power user only
         if auth['user_level'] == 2:
-            abort(401)
-        data = request.get_data()
-        json_data = json.loads(data)
+            abort(401, 'Not authroized. Only admins and power users can create floating IPs.')
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
         floating_ip_create = {}
         # required
-        floating_ip_create['project_id'] = json_data['project_id']
+        try:
+            floating_ip_create['project_id'] = json_data['project_id']
+            # check project_id
+            validate_project(floating_ip_create['project_id'], auth)
+        except HTTPException as he:
+            raise he
+        except:
+            abort(400, 'Bad request. Body must contain project_id.')
         # optional
         if 'network_id' in json_data:
             floating_ip_create['ext_net_id'] = json_data['network_id']
         else:
             floating_ip_create['ext_net_id'] = util.get_default_pub_net_id()
-        l3 = layer_three_ops(auth)
         floating_ip_info = l3.allocate_floating_ip(floating_ip_create)
-        floating_ip =   {
-                            'address':          floating_ip_info['floating_ip'],
-                            'id':               floating_ip_info['floating_ip_id']
-                        }
-        return jsonify({'floating_ip': floating_ip})
-    except HTTPException as e:
-        raise e
+        # check floating ip creation succes
+        if floating_ip_info is not None:
+            # normalize output
+            floating_ip =   {
+                                'address':          floating_ip_info['floating_ip'],
+                                'id':               floating_ip_info['floating_ip_id']
+                            }
+            return jsonify({'floating_ip': floating_ip})
+        else:
+            abort(500, 'Internal error. Unable to create floating IP.')
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred creating floating IP.' %(fe))
 
 
 # action
@@ -1513,7 +1615,8 @@ def action_floating_ip(floating_ip_id):
     """
     Performs an action with a specified floating IP by ID.
     Associate floating IP with or disassociate floating IP from an instance.
-    Only performs floating IP action if the requesting user has access.
+    The response key will be the action, add or remove.
+    Only performs floating IP action if the requesting user has access and the action is viable.
     ---
     tags:
       - floating ips
@@ -1597,42 +1700,51 @@ def action_floating_ip(floating_ip_id):
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        data = request.get_data()
-        json_data = json.loads(data)
+        l3 = layer_three_ops(auth)
+        # check floating_ip_id
+        floating_ip_details = validate_floating_ip(floating_ip_id, auth)
+        try:
+            data = request.get_data()
+            json_data = json.loads(data)
+        except:
+            abort(400, 'Bad request. Body must be in JSON format.')
         floating_ip_action = {}
         # required
-        floating_ip_action['project_id'] = json_data['project_id']
-        floating_ip_action['instance_id'] = json_data['instance_id']
-        # check operation
-        if json_data['action'] != "add" and json_data['action'] != "remove":
-            abort(400)
-        floating_ip_action['action'] = json_data['action']
-        l3 = layer_three_ops(auth)
-        floating_ip_details = l3.get_floating_ip(floating_ip_id)
-        if floating_ip_details is not None:
-            # make sure action is viable
-            if floating_ip_action['action'] == "add" and floating_ip_details['instance_id'] == "" or floating_ip_action['action'] == "remove" and floating_ip_details['instance_id'] != "":
-                floating_ip_action['floating_ip'] = floating_ip_details['floating_ip']
-                floating_ip_info = l3.update_floating_ip(floating_ip_action)
-                floating_ip =   {
-                                    'address':          floating_ip_info['floating_ip'],
-                                    'id':               floating_ip_info['floating_ip_id'],
-                                    'instance_name':    floating_ip_info['instance_name'],
-                                    'instance_id':      floating_ip_info['instance_id']
-                                }
-                return jsonify({floating_ip_action['action']: floating_ip})
-            else:
-                abort(409)
+        try:
+            floating_ip_action['project_id'] = json_data['project_id']
+            floating_ip_action['instance_id'] = json_data['instance_id']
+            # check action
+            if json_data['action'] != "add" and json_data['action'] != "remove":
+                abort(400, 'Bad request. Floating IP action must be add or remove.')
+            floating_ip_action['action'] = json_data['action']
+        except HTTPException as he:
+            raise he
+        except:
+            abort(400, 'Bad request. Body must contain project_id, instance_id and action.')
+        # make sure action is viable
+        if floating_ip_action['action'] == "add" and floating_ip_details['instance_id'] == "" or floating_ip_action['action'] == "remove" and floating_ip_details['instance_id'] != "":
+            floating_ip_action['floating_ip'] = floating_ip_details['floating_ip']
+            floating_ip_info = l3.update_floating_ip(floating_ip_action)
+            # normalize output
+            floating_ip =   {
+                                'address':          floating_ip_info['floating_ip'],
+                                'id':               floating_ip_info['floating_ip_id'],
+                                'instance_name':    floating_ip_info['instance_name'],
+                                'instance_id':      floating_ip_info['instance_id']
+                            }
+            return jsonify({floating_ip_action['action']: floating_ip})
         else:
-            abort(404)
-    except HTTPException as e:
-        raise e
+            abort(409, 'Conflict. Unable to perform %s using floating IP %s because the action is not viable, either associating when already associated or disassociating when already disassociated.' %(floating_ip_action['action'], floating_ip_id))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred performing %s using floating IP %s.' %(fe, floating_ip_action['action'], floating_ip_id))
 
 
 # delete
@@ -1672,27 +1784,32 @@ def delete_floating_ip(floating_ip_id):
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
+        l3 = layer_three_ops(auth)
         # admin / power user only
         if auth['user_level'] == 2:
-            abort(401)
-        l3 = layer_three_ops(auth)
-        floating_ip_delete = l3.get_floating_ip(floating_ip_id)
+            abort(401, 'Not authorized. Only admins and power users can delete floating IPs.')
+        # check floating_ip_id
+        floating_ip_delete = validate_floating_ip(floating_ip_id, auth)
         floating_ip_info = l3.deallocate_floating_ip(floating_ip_delete)
+        # check floating ip deletion success
         if floating_ip_info == "OK":
+            # normalize output
             floating_ip =   {
                                 'id':               floating_ip_id
                             }
             return jsonify({'floating_ip': floating_ip})
         else:
-            abort(500)
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Unable to delete floating IP %s.' %(floating_ip_id))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred deleting floating IP %s.' %(fe, floating_ip_id))
 
 
 # --- Volumes ----
@@ -1749,18 +1866,24 @@ def get_all_volumes():
                                 type: string
                                 description: ID of volumes's project
                                 default: abcd12e3f456789012345a678b9cde01
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         vo = volume_ops(auth)
         volumes = []
         volumes_info = vo.list_volumes()
+        # normalize output
         for info in volumes_info:
             volume =    {
                             "name":         info['volume_name'],
@@ -1770,10 +1893,10 @@ def get_all_volumes():
                         }
             volumes.append(volume)
         return jsonify({'volumes': volumes})
-    except HTTPException as e:
-        raise e
-    except:
-        abort(500)
+    except HTTPException as he:
+        raise he
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred listing volumes.' %(fe))
 
 
 # get all in project
@@ -1807,18 +1930,26 @@ def get_volumes(project_id):
             schema:
                 type: array
                 id: Volumes
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         500:
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         vo = volume_ops(auth)
+        # check project_id
+        validate_project(project_id, auth)
         volumes = []
         volumes_info = vo.list_volumes(project_id)
+        # normalize output
         for info in volumes_info:
             volume =    {
                             "name":         info['volume_name'],
@@ -1828,10 +1959,10 @@ def get_volumes(project_id):
                         }
             volumes.append(volume)
         return jsonify({'volumes': volumes})
-    except HTTPException as e:
-        raise e
-    except:
-        abort(500)
+    except HTTPException as he:
+        raise he
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred listing volumes in project %s.' %(fe))
 
 
 # get
@@ -1858,7 +1989,7 @@ def get_volume(project_id, volume_id):
         in: path
         type: string
         required: true
-        description: ID of project the volume resides in
+        description: ID of target project
       - name: volume_id
         in: path
         type: string
@@ -1912,6 +2043,8 @@ def get_volume(project_id, volume_id):
                         type: string
                         description: mount point of volume on instance
                         default: /vda
+        400:
+            description: Bad request.
         401:
             description: Not authorized.
         404:
@@ -1920,40 +2053,39 @@ def get_volume(project_id, volume_id):
             description: Internal server error.
     """
     try:
-        username = request.headers.get('username')
-        password = request.headers.get('password')
+        try:
+            username = request.headers.get('username')
+            password = request.headers.get('password')
+        except:
+            abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         vo = volume_ops(auth)
         # check project_id
         validate_project(project_id, auth)
         # check volume_id
         volume_info = validate_volume(volume_id, project_id, auth)
-        if volume_info is not None:
-            if volume_info['volume_attached'] == "true":
-                volume_info['volume_attached'] = True
-            else:
-                volume_info['volume_attached'] = False
-            volume =   {
-                            'name':             volume_info['volume_name'],
-                            'id':               volume_info['volume_id'],
-                            'type':             volume_info['volume_type'],
-                            'size':             volume_info['volume_size'],
-                            'is_attached':      volume_info['volume_attached'],
-                            'instance_name':    volume_info['volume_instance_name'],
-                            'instance_id':      volume_info['volume_instance'],
-                            'mount_point':      volume_info['volume_mount_location']
-                        }
-            return jsonify({'volume': volume})
+        # normalize output
+        if volume_info['volume_attached'] == "true":
+            volume_info['volume_attached'] = True
         else:
-            abort(404)
-    except HTTPException as e:
-        raise e
+            volume_info['volume_attached'] = False
+        volume =   {
+                        'name':             volume_info['volume_name'],
+                        'id':               volume_info['volume_id'],
+                        'type':             volume_info['volume_type'],
+                        'size':             volume_info['volume_size'],
+                        'is_attached':      volume_info['volume_attached'],
+                        'instance_name':    volume_info['volume_instance_name'],
+                        'instance_id':      volume_info['volume_instance'],
+                        'mount_point':      volume_info['volume_mount_location']
+                    }
+        return jsonify({'volume': volume})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred getting details for volume %s.' %(fe, volume_id))
 
-
-# === BEGIN PROPER ERROR HANDLING ====
+# TODO
 
 # create
 @app.route('/v1.0/<string:project_id>/volumes', methods=['POST'])
@@ -1980,7 +2112,7 @@ def create_volume(project_id):
         in: path
         type: string
         required: true
-        description: ID of project the volume will reside in
+        description: ID of target project
       - name: volume_parameters
         in: body
         description: parameters for volume creation
@@ -2067,15 +2199,13 @@ def create_volume(project_id):
         except:
             abort(400, 'Bad request. Body must be in JSON format.')
         volume_create = {}
+        # check project_id
+        validate_project(project_id, auth)
+        volume_create['project_id'] = project_id
         # required
         try:
-            # check project_id
-            validate_project(project_id, auth)
-            volume_create['project_id'] = project_id
             volume_create['volume_name'] = json_data['name']
             volume_create['volume_size'] = json_data['size']
-        except HTTPException as e:
-            raise e
         except:
             abort(400, 'Bad request. Body must contain name and size.')
         # optional
@@ -2100,6 +2230,7 @@ def create_volume(project_id):
             abort(400, 'Bad request. May only specify image_id, snapshot_id or volume_id, not any combination of these parameters.')
         try:
             volume_info = vo.create_volume(volume_create)
+            # normalize output
             volume =    {
                             'name': volume_info['volume_name'],
                             'id':   volume_info['volume_id'],
@@ -2108,12 +2239,11 @@ def create_volume(project_id):
                         }
             return jsonify({'volume': volume})
         except Exception as e:
-            abort(500, 'Internal error. Error <%s> occurred during volume creation.' %(e))
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Error <%s> occurred creating volume.' %(e))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred creating volume.' %(fe))
 
 
 # action
@@ -2141,7 +2271,7 @@ def action_volume(project_id, volume_id):
         in: path
         type: string
         required: true
-        description: ID of project the volume resides in
+        description: ID of target project
       - name: volume_id
         in: path
         type: string
@@ -2218,15 +2348,15 @@ def action_volume(project_id, volume_id):
             json_data = json.loads(data)
         except:
             abort(400, 'Bad request. Body must be in JSON format.')
-        # required
         volume_action = {}
+        # check project_id
+        validate_project(project_id, auth)
+        volume_action['project_id'] = project_id
+        # check volume_id
+        volume_details = validate_volume(volume_id, project_id, auth)
+        volume_action['volume_id'] = volume_id
+        # required
         try:
-            # check project_id
-            validate_project(project_id, auth)
-            volume_action['project_id'] = project_id
-            # check volume_id
-            volume_details = validate_volume(volume_id, project_id, auth)
-            volume_action['volume_id'] = volume_id
             # check instance_id
             instance_info = validate_instance(json_data['instance_id'], project_id, auth)
             volume_action['instance_id'] = json_data['instance_id']
@@ -2235,10 +2365,10 @@ def action_volume(project_id, volume_id):
             if json_data['action'] != "add" and json_data['action'] != "remove":
                 abort(400, 'Bad request. Volume action must be add or remove.')
             volume_action['action'] = json_data['action']
-        except HTTPException as e:
+        except HTTPException as he:
             raise e
         except:
-            abort(400, 'Bad request. Body must contain instance_id, mount_point and action.')
+            abort(400, 'Bad request. Body must contain instance_id and action.')
         # check resources in same project
         if instance_info['project_id'] != project_id:
             abort(400, 'Bad request. Volume and instance must reside in the same project.')
@@ -2248,9 +2378,10 @@ def action_volume(project_id, volume_id):
         elif volume_action['action'] == "remove" and volume_details['volume_attached'] == "true":
             volume_info = sso.detach_vol_from_server(volume_action)
         else:
-            abort(409, 'Conflict. Unable to perform %s using volume %s and instance %s because is_attached = %s.' %(json_data['action'], volume_id, json_data['instance_id'], volume_details['volume_attached']))
+            abort(409, 'Conflict. Unable to perform %s using volume %s and instance %s because is_attached = %s.' %(volume_action['action'], volume_id, volume_action['instance_id'], volume_details['volume_attached']))
         # check action success
         if volume_info == "OK":
+            # normalize output
             volume =    {
                             'name':             volume_details['volume_name'],
                             'id':               volume_id,
@@ -2259,11 +2390,11 @@ def action_volume(project_id, volume_id):
                         }
             return jsonify({volume_action['action']: volume})
         else:
-            abort(500, 'Internal error. Volume %s using volume %s and instance %s was unsuccessful.' %(json_data['action'], volume_id, json_data['instance_id']))
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Unable to perform %s using volume %s and instance %s.' %(volume_action['action'], volume_id, volume_action['instance_id']))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during volume action.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred performing %s using volume %s and instance %s.' %(fe, volume_action['action'], volume_id, volume_action['instance_id']))
 
 
 # delete
@@ -2271,7 +2402,7 @@ def action_volume(project_id, volume_id):
 def delete_volume(project_id, volume_id):
     """
     Deletes a specified volume by ID.
-    Only able to delete if requesting user has access.
+    Only deletes volume if requesting user has access.
     ---
     tags:
       - volumes
@@ -2290,7 +2421,7 @@ def delete_volume(project_id, volume_id):
         in: path
         type: string
         required: true
-        description: ID of project the volume resides in
+        description: ID of target project
       - name: volume_id
         in: path
         type: string
@@ -2319,7 +2450,6 @@ def delete_volume(project_id, volume_id):
             abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         vo = volume_ops(auth)
-        # required
         volume_delete = {}
         # check project_id
         validate_project(project_id, auth)
@@ -2330,16 +2460,17 @@ def delete_volume(project_id, volume_id):
         volume_info = vo.delete_volume(volume_delete)
         # check action success
         if volume_info == "OK":
+            # normalize output
             volume =    {
                             'id':   volume_id
                         }
             return jsonify({'volume': volume})
         else:
-            abort(500, 'Internal error. Volume %s deletion was unsuccessful.' %(volume_id))
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Unable to delete volume %s.' %(volume_id))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during volume deletion.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred deleting volume %s.' %(fe, volume_id))
 
 
 # --- Networks ----
@@ -2447,8 +2578,8 @@ def get_networks():
                         'external': external
                     }
         internal_info = nno.list_internal_networks()
+        # normalize output
         for info in internal_info:
-            # normalize outputs
             if info['router_id'] == "":
                 info['router_id'] = None
             if info['in_use'] == "true":
@@ -2471,10 +2602,10 @@ def get_networks():
                                 }
             external.append(external_network)
         return jsonify({'networks': networks})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all networks.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing networks.' %(fe))
 
 
 # get
@@ -2584,8 +2715,9 @@ def get_network(network_id):
         except:
             abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
+        # check network_id
         network_info = validate_network(network_id, auth)
-        # normalize outputs
+        # normalize output
         if network_info['net_admin_state'] == "true":
             network_info['net_admin_state'] = True
         else:
@@ -2619,10 +2751,10 @@ def get_network(network_id):
                         'router_id':    network_info['router_id']
                     }
         return jsonify({'network': network})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during getting network details.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred getting details for network %s.' %(fe, network_id))
 
 
 # --- Routers ----
@@ -2689,8 +2821,8 @@ def get_routers():
         l3 = layer_three_ops(auth)
         routers = []
         router_info = l3.list_routers()
+        # normalize output
         for info in router_info:
-            # normalize outputs
             router =    {
                             'name':     info['router_name'],
                             'id':       info['router_id'],
@@ -2698,10 +2830,10 @@ def get_routers():
                         }
             routers.append(router)
         return jsonify({'routers': routers})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all routers.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing routers.' %(fe))
 
 
 # get
@@ -2801,8 +2933,9 @@ def get_router(router_id):
         except:
             abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
+        # check router_id
         router_info = validate_router(router_id, auth)
-        # normalize outputs
+        # normalize output
         if router_info['admin_state_up'] == "true":
             router_info['admin_state_up'] = True
         else:
@@ -2820,10 +2953,10 @@ def get_router(router_id):
                         'is_up':                router_info['admin_state_up']
                     }
         return jsonify({'router': router})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during getting router details.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred getting details for router %s.' %(fe, router_id))
 
 
 # --- Users ----
@@ -2887,12 +3020,14 @@ def get_all_users():
         uo = user_ops(auth)
         to = tenant_ops(auth)
         users = []
+        # admins can list all users
         if auth['user_level'] != 2:
             user_info = uo.list_cloud_users()
+        # otherwise list all user has access to
         else:
             user_info = to.list_tenant_users(auth['project_id'])
+        # normalize output
         for info in user_info:
-            # normalize outputs
             if 'keystone_user_id' in info:
                 info['user_id'] = info['keystone_user_id']
             user =    {
@@ -2903,10 +3038,10 @@ def get_all_users():
         # remove admin and shadow_admin
         users[:] = [u for u in users if u.get('name') != "admin" and u.get('name') != "shadow_admin"]
         return jsonify({'users': users})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all users.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing all users.' %(fe))
 
 
 # get all in project
@@ -2953,22 +3088,23 @@ def get_users(project_id):
         except:
             abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
-        validate_project(project_id, auth)
         to = tenant_ops(auth)
+        # check project_id
+        validate_project(project_id, auth)
         users = []
         user_info = to.list_tenant_users(project_id)
+        # normalize output
         for info in user_info:
-            # normalize outputs
             user =    {
                             'name':         info['username'],
                             'id':           info['user_id']
                         }
             users.append(user)
         return jsonify({'users': users})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing users in project.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing users in project %s.' %(fe, project_id))
 
 
 # get
@@ -3062,7 +3198,7 @@ def get_user(project_id, user_id):
         validate_project(project_id, auth)
         # check user_id
         user_info = validate_user(user_id, project_id, auth)
-        # normalize outputs
+        # normalize output
         if user_info['user_enabled'] == "TRUE":
             user_info['user_enabled'] = True
         else:
@@ -3077,10 +3213,10 @@ def get_user(project_id, user_id):
                         'is_enabled':   user_info['user_enabled']
                     }
         return jsonify({'user': user})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing users in project.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred getting details for user %s.' %(fe, user_id))
 
 
 # create
@@ -3186,11 +3322,11 @@ def create_user(project_id):
         except:
             abort(400, 'Bad request. Body must be in JSON format.')
         user_create = {}
+        # check project_id
+        validate_project(project_id, auth)
+        user_create['project_id'] = project_id
         # required
         try:
-            # check project_id
-            validate_project(project_id, auth)
-            user_create['project_id'] = project_id
             user_create['username'] = json_data['name']
             user_create['password'] = json_data['password']
             # check role
@@ -3198,25 +3334,22 @@ def create_user(project_id):
                 abort(400, 'Bad request. User role must be admin, pu or user.')
             user_create['user_role'] = json_data['role']
             user_create['email'] = json_data['email']
-        except HTTPException as e:
+        except HTTPException as he:
             raise e
         except:
-            abort(400, 'Bad request. Body must contain name and size.')
-        try:
-            user_info = uo.create_user(user_create)
-            user =  {
-                        'name':         user_info['username'],
-                        'id':           user_info['user_id'],
-                        'project_id':   user_info['project_id']
-                    }
-            return jsonify({'user': user})
-        except Exception as e:
-            abort(500, 'Internal error. Error <%s> occurred during user creation.' %(e))
-    except HTTPException as e:
-        raise e
+            abort(400, 'Bad request. Body must contain name, password, role and email.')
+        user_info = uo.create_user(user_create)
+        # normalize output
+        user =  {
+                    'name':         user_info['username'],
+                    'id':           user_info['user_id'],
+                    'project_id':   user_info['project_id']
+                }
+        return jsonify({'user': user})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500)
+        abort(500, 'Internal error. Error <%s> occurred creating user.' %(fe))
 
 
 # action
@@ -3329,12 +3462,12 @@ def action_user(project_id, user_id):
             json_data = json.loads(data)
         except:
             abort(400, 'Bad request. Body must be in JSON format.')
-        # required
         user_action = {}
+        # check project_id
+        project_info = validate_project(project_id, auth)
+        user_action['project_id'] = project_id
+        # required
         try:
-            # check project_id
-            project_info = validate_project(project_id, auth)
-            user_action['project_id'] = project_id
             # check action
             if json_data['action'] != "add" and json_data['action'] != "remove":
                 abort(400, 'Bad request. user action must be add or remove.')
@@ -3344,7 +3477,7 @@ def action_user(project_id, user_id):
                 user_details = validate_user(user_id, project_id, auth)
                 user_action['user_id'] = user_id
                 user_action['username'] = user_details['username']
-        except HTTPException as e:
+        except HTTPException as he:
             raise e
         except:
             abort(400, 'Bad request. Body must contain action.')
@@ -3371,8 +3504,9 @@ def action_user(project_id, user_id):
             user_info = uo.remove_user_from_project(user_action)
         else:
             abort(409, 'Conflict. Unable to perform %s using user %s and project %s because user is ineligible or not enough parameters were specified for the action.' %(json_data['action'], user_id, project_id))
-        # check action success
+        # check user action success
         if user_action['action'] == "add" or user_action['action'] == "remove" and user_info == "OK":
+            # normalize output
             user =  {
                         'name':         user_action['username'],
                         'id':           user_id,
@@ -3381,11 +3515,11 @@ def action_user(project_id, user_id):
                     }
             return jsonify({str(user_action['action']): user})
         else:
-            abort(500, 'Internal error. User %s using user %s and project %s was unsuccessful.' %(json_data['action'], user_id, project_id))
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Unable to perform %s using user %s and project %s.' %(user_action['action'], user_id, project_id))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during user action.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred performing %s using user %s and project %s.' %(fe, user_action['action'], user_id, project_id))
 
 
 # delete
@@ -3450,18 +3584,19 @@ def delete_user(user_id):
         if 'username' not in user_delete:
             abort(404, 'Not found. Could not find user %s.' %(user_id))
         user_info = uo.delete_user(user_delete)
-        # check action success
+        # check user delete success
         if user_info == "OK":
+            # normalize output
             user =  {
                         'id':   user_id
                     }
             return jsonify({'user': user})
         else:
-            abort(500, 'Internal error. User %s deletion was unsuccessful.' %(user_id))
-    except HTTPException as e:
-        raise e
+            abort(500, 'Internal error. Unable to delete user %s.' %(user_id))
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during user deletion.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred deleting user %s.' %(fe, user_id))
 
 
 # --- Security Groups ----
@@ -3525,25 +3660,27 @@ def get_all_security_groups():
         so = server_ops(auth)
         to = tenant_ops(auth)
         security_groups = []
+        # admins can list all security groups
         if auth['is_admin'] == 1:
             security_group_info = []
             projects = to.list_all_tenants()
             for project in projects:
                 security_group_info.extend(so.list_sec_group(project['project_id']))
+        # otherwise list all user has acces to
         else:
             security_group_info = so.list_sec_group(auth['project_id'])
+        # normalize output
         for info in security_group_info:
-            # normalize outputs
             security_group =    {
                                     'name': info['sec_group_name'],
                                     'id':   info['sec_group_id']
                                 }
             security_groups.append(security_group)
         return jsonify({'security_groups': security_groups})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all security groups.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing security groups.' %(fe))
 
 
 # get all in project
@@ -3596,18 +3733,18 @@ def get_security_groups(project_id):
         validate_project(project_id, auth)
         security_groups = []
         security_group_info = so.list_sec_group(project_id)
+        # normalize output
         for info in security_group_info:
-            # normalize outputs
             security_group =    {
                                     'name': info['sec_group_name'],
                                     'id':   info['sec_group_id']
                                 }
             security_groups.append(security_group)
         return jsonify({'security_groups': security_groups})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all security groups.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing security groups in project %s.' %(fe, project_id))
 
 
 # get
@@ -3747,7 +3884,7 @@ def get_security_group(project_id, security_group_id):
         validate_project(project_id, auth)
         # check security_group_id
         security_group_info = validate_security_group(security_group_id, project_id, auth)
-        # normalize outputs
+        # normalize output
         tcp = []
         udp = []
         rules = {}
@@ -3779,10 +3916,10 @@ def get_security_group(project_id, security_group_id):
                                 'rules':    rules
                             }
         return jsonify({'security_group': security_group})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during getting security group details.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred getting details for security group %s.' %(fe, security_group_id))
 
 
 # create
@@ -3875,14 +4012,12 @@ def create_security_group(project_id):
         except:
             abort(400, 'Bad request. Body must be in JSON format.')
         security_group_create = {}
+        # check project_id
+        validate_project(project_id, auth)
+        security_group_create['project_id'] = project_id
         # required
         try:
-            # check project_id
-            validate_project(project_id, auth)
-            security_group_create['project_id'] = project_id
             security_group_create['group_name'] = json_data['name']
-        except HTTPException as e:
-            raise e
         except:
             abort(400, 'Bad request. Body must contain name.')
         # optional
@@ -3892,20 +4027,17 @@ def create_security_group(project_id):
             # check ports format
             validate_ports(json_data['ports'])
             security_group_create['ports'] = json_data['ports']
-        try:
-            security_group_info = so.create_sec_group(security_group_create)
-            security_group =    {
-                                    'name': security_group_info['sec_group_name'],
-                                    'id':   security_group_info['sec_group_id']
-                                }
-            return jsonify({'security_group': security_group})
-        except Exception as e:
-            abort(500, 'Internal error. Error <%s> occurred during security group creation.' %(e))
-    except HTTPException as e:
-        raise e
+        security_group_info = so.create_sec_group(security_group_create)
+        # normalize output
+        security_group =    {
+                                'name': security_group_info['sec_group_name'],
+                                'id':   security_group_info['sec_group_id']
+                            }
+        return jsonify({'security_group': security_group})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500, 'Internal error. Error <%s> occurred during security group creation.' %(e))
+        abort(500, 'Internal error. Error <%s> occurred creating security group.' %(e))
 
 
 # update
@@ -4024,11 +4156,10 @@ def update_security_group(project_id, security_group_id):
             return jsonify({'security_group': security_group})
         else:
             abort(500, 'Internal error. Unable to update security group %s.' %(security_group_id))
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500, 'Internal error. Error <%s> occurred during security group update.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred updating security group %s.' %(fe, security_group_id))
 
 
 # delete
@@ -4083,7 +4214,6 @@ def delete_security_group(project_id, security_group_id):
         auth = authorize(username, password)
         so = server_ops(auth)
         security_group_delete = {}
-        # required            
         # check project_id
         validate_project(project_id, auth)
         security_group_delete['project_id'] = project_id
@@ -4100,11 +4230,10 @@ def delete_security_group(project_id, security_group_id):
             return jsonify({'security_group': security_group})
         else:
             abort(500, 'Internal error. Unable to delete security group %s.' %(security_group_id))
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500, 'Internal error. Error <%s> occurred during security group delete.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred deleting security group %s.' %(fe, security_group_id))
 
 
 # --- Security Keys ----
@@ -4168,25 +4297,27 @@ def get_all_security_keys():
         so = server_ops(auth)
         to = tenant_ops(auth)
         security_keys = []
+        # admin can list all security keys
         if auth['is_admin'] == 1:
             security_key_info = []
             projects = to.list_all_tenants()
             for project in projects:
                 security_key_info.extend(so.list_sec_keys(project['project_id']))
+        # otherwise list all user has access to
         else:
             security_key_info = so.list_sec_keys(auth['project_id'])
+        # normalize output
         for info in security_key_info:
-            # normalize outputs
             security_key =    {
                                     'name': info['key_name'],
                                     'id':   info['key_id']
                                 }
             security_keys.append(security_key)
         return jsonify({'security_keys': security_keys})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all security keys.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing security keys.' %(fe))
 
 
 # get all in project
@@ -4239,18 +4370,18 @@ def get_security_keys(project_id):
         validate_project(project_id, auth)
         security_keys = []
         security_key_info = so.list_sec_keys(project_id)
+        # normalize output
         for info in security_key_info:
-            # normalize outputs
             security_key =    {
                                     'name': info['key_name'],
                                     'id':   info['key_id']
                                 }
             security_keys.append(security_key)
         return jsonify({'security_keys': security_keys})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during listing all security keys.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred listing security keys in project %s.' %(fe, project_id))
 
 
 # get
@@ -4335,7 +4466,7 @@ def get_security_key(project_id, security_key_id):
         validate_project(project_id, auth)
         # check security_key_id
         security_key_info = validate_security_key(security_key_id, project_id, auth)
-        # normalize outputs
+        # normalize output
         security_key =  {
                             'name':             security_key_info['sec_key_name'],
                             'id':               security_key_info['sec_key_id'],
@@ -4344,10 +4475,10 @@ def get_security_key(project_id, security_key_id):
                             'rsa_private_key':  security_key_info['public_key']
                         }
         return jsonify({'security_key': security_key})
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        abort(500, 'Internal error. Error <%s> occurred during getting security key details.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred getting details for security key %s.' %(fe, security_key_id))
 
 
 # create
@@ -4428,30 +4559,25 @@ def create_security_key(project_id):
         except:
             abort(400, 'Bad request. Body must be in JSON format.')
         security_key_create = {}
+        # check project_id
+        validate_project(project_id, auth)
+        security_key_create['project_id'] = project_id
         # required
         try:
-            # check project_id
-            validate_project(project_id, auth)
-            security_key_create['project_id'] = project_id
             security_key_create['key_name'] = json_data['name']
-        except HTTPException as e:
-            raise e
         except:
             abort(400, 'Bad request. Body must contain name.')
-        try:
-            security_key_info = so.create_sec_keys(security_key_create)
-            security_key =  {
-                                'name': security_key_info['key_name'],
-                                'id':   security_key_info['key_id']
-                            }
-            return jsonify({'security_key': security_key})
-        except Exception as e:
-            abort(500, 'Internal error. Error <%s> occurred during security key creation.' %(e))
-    except HTTPException as e:
-        raise e
+        security_key_info = so.create_sec_keys(security_key_create)
+        # normalize output
+        security_key =  {
+                            'name': security_key_info['key_name'],
+                            'id':   security_key_info['key_id']
+                        }
+        return jsonify({'security_key': security_key})
+    except HTTPException as he:
+        raise he
     except Exception as fe:
-        print fe
-        abort(500, 'Internal error. Error <%s> occurred during security key creation.' %(e))
+        abort(500, 'Internal error. Error <%s> occurred creating security key.' %(fe))
 
 
 # delete
@@ -4506,7 +4632,6 @@ def delete_security_key(project_id, security_key_id):
         auth = authorize(username, password)
         so = server_ops(auth)
         security_key_delete = {}
-        # required            
         # check project_id
         validate_project(project_id, auth)
         security_key_delete['project_id'] = project_id
@@ -4514,7 +4639,7 @@ def delete_security_key(project_id, security_key_id):
         security_key_details = validate_security_key(security_key_id, project_id, auth)
         security_key_delete['sec_key_name'] = security_key_details['sec_key_name']
         security_key_info = so.delete_sec_keys(security_key_delete)
-        # check delete success
+        # check security key delete success
         if security_key_info == "OK":
             security_key =    {
                                     'name': security_key_details['sec_key_name'],
@@ -4523,11 +4648,11 @@ def delete_security_key(project_id, security_key_id):
             return jsonify({'security_key': security_key})
         else:
             abort(500, 'Internal error. Unable to delete security key %s.' %(security_key_id))
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         print fe
-        abort(500, 'Internal error. Error <%s> occurred during security key delete.' %(fe))
+        abort(500, 'Internal error. Error <%s> occurred deleting security key %s.' %(fe, security_key_id))
 
 
 # --- Helper Functions ----
@@ -4542,8 +4667,8 @@ def authorize(username, password):
         if auth is None or auth == "ERROR" or 'token' not in auth or auth['token'] == None or auth['token'] == "":
             abort(401, 'Not authorized. Invalid username and/or password.')
         return auth
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during authorization.' %(fe))
 
@@ -4563,8 +4688,8 @@ def validate_project(project_id, auth):
         if project_info is None:
             abort(404, 'Not found. Could not find project %s.' %(project_id))
         return project_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during project_id validation.' %(fe))
 
@@ -4583,16 +4708,25 @@ def validate_instance(instance_id, project_id, auth):
         except:
             abort(404, 'Not found. Could not find instance %s in project %s.' %(instance_id, project_id))
         return instance_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during instance_id validation.' %(fe))
 
 
 # check floating_ip_id and return floating_ip_info
 def validate_floating_ip(floating_ip_id, project_id, auth):
-    pass
-
+    try:
+        l3 = layer_three_ops(auth)
+        floating_ip_info = l3.get_floating_ip(floating_ip_id)
+        if floating_ip_info is None:
+            abort(404, 'Not found. Could not find floating IP %s.' %(floating_ip_id))
+        validate_permissions(floating_ip_info['project_id'], auth)
+        return floating_ip_info
+    except HTTPException as he:
+        raise he
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred validating floating IP %s.' %(fe, floating_ip_id))
 
 # check volume_id and return volume_info
 def validate_volume(volume_id, project_id, auth):
@@ -4607,8 +4741,8 @@ def validate_volume(volume_id, project_id, auth):
         if volume_info is None:
             abort(404, 'Not found. Could not find volume %s in project %s.' %(volume_id, project_id))
         return volume_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during volume_id validation.' %(fe))
 
@@ -4622,8 +4756,8 @@ def validate_volume_snapshot(snapshot_id, auth):
             abort(404, 'Not found. Could not find volume snapshot %s.' %(snapshot_id))
         validate_permissions(snapshot_info['project_id'], auth)
         return snapshot_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during volume snapshot_id validation.' %(fe))
 
@@ -4638,8 +4772,8 @@ def validate_network(network_id, auth):
         if network_info['net_shared'] == "false":
             validate_permissions(network_info['project_id'], auth)
         return network_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during network validation.' %(fe))
 
@@ -4656,8 +4790,8 @@ def validate_router(router_id, auth):
         else:
             validate_permissions(router_info['project_id'], auth)
         return router_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during router validation.' %(fe))
 
@@ -4675,8 +4809,8 @@ def validate_user(user_id, project_id, auth):
         if user_info is None:
             abort(404, 'Not found. Could not find user %s in project %s.' %(user_id, project_id))
         return user_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during user validation.' %(fe))
 
@@ -4695,8 +4829,8 @@ def validate_security_group(security_group_id, project_id, auth):
         except:
             abort(404, 'Not found. Could not find security group %s in project %s.' %(security_group_id, project_id))
         return security_group_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during security group validation.' %(fe))
 
@@ -4711,8 +4845,8 @@ def validate_ports(ports):
             if len(port_parts) == 2:
                 if int(port_parts[0]) > int(port_parts[1]):
                     abort(400, 'Bad request. Improper ports format. Ranged ports must be of the form <min>-<max>.')
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during port format validation.' %(fe))
 
@@ -4730,8 +4864,8 @@ def validate_security_key(security_key_id, project_id, auth):
         if security_key_info is None:
             abort(404, 'Not found. Could not find security key %s in project %s.' %(security_key_id, project_id))
         return security_key_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during security key validation.' %(fe))
 
@@ -4747,8 +4881,8 @@ def validate_image(image_id, auth):
         if image_info['visibility'] == "private":
             validate_permissions(image_info['project_id'], auth)
         return image_info
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception as fe:
         abort(500, 'Internal error. Error <%s> occurred during image_id validation.' %(fe))
 
