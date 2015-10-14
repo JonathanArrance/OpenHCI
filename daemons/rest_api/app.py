@@ -4716,9 +4716,20 @@ def authorize(username, password):
 
 # check cascading permissions
 def validate_permissions(project_id, auth):
+    # power users / users
     if auth['is_admin'] == 0 and project_id != auth['project_id']:
         abort(401, 'Not authorized. Users and power users can only access resources within their own projects.')
-
+    # project admins
+    elif auth['is_admin'] == 1 and auth['username'] != "admin" and auth['username'] != "shadow_admin":
+        to = tenant_ops(auth)
+        projects = to.list_all_tenants()
+        have_access = False
+        for project in projects:
+            if project_id == project['project_id']:
+                have_access = True
+                break
+        if have_access is False:
+            abort(401, 'Not authorized. Project admins can only access resources within their own projects.')
 
 # check project_id and return project_info
 def validate_project(project_id, auth):
