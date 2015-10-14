@@ -15,6 +15,8 @@ from transcirrus.interfaces.Coalesce.coalesce.coal_beta import views
 from transcirrus.common import util
 from transcirrus.common.auth import authorization
 from transcirrus.common import extras
+# version
+from transcirrus.common import version 
 # projects
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 from transcirrus.operations import build_complete_project
@@ -82,11 +84,57 @@ def internal_error(error):
 # get
 @app.route('/v1.0/version', methods=['GET'])
 def get_version():
-    request = ""
-    ver_json = views.get_version(request)
-    ver_dict = ast.literal_eval(ver_json.content)
-    version = {'release': ver_dict['data']['release'], 'major': ver_dict['data']['major'], 'full_str': ver_dict['data']['full_str'], 'short_str': ver_dict['data']['short_str'], 'minor': ver_dict['data']['minor']}
-    return jsonify({'version': version})
+    """
+    Gets version information.
+    ---
+    tags:
+      - version
+    responses:
+        200:
+            description: Version found.
+            schema:
+                type: object
+                id: VersionDetails
+                required:
+                  - major
+                  - minor
+                  - release
+                  - full
+                  - short
+                properties:
+                    major:
+                        type: integer
+                        description: Major version number
+                        default: 2
+                    minor:
+                        type: integer
+                        description: Minor version number
+                        default: 3
+                    release:
+                        type: integer
+                        description: Release version number
+                        default: 1
+                    full:
+                        type: string
+                        description: Fully qualified version number, (major.minor-relase)
+                        default: 2.3-1
+                    short:
+                        type: string
+                        description: Short version number, (major.minor)
+                        default: 2.3
+        500:
+            description: Internal server error.
+    """
+    try:
+        version_info = {}
+        version_info['major']   = int(version.VERSION_MAJOR)
+        version_info['minor']   = int(version.VERSION_MINOR)
+        version_info['release'] = int(version.VERSION_RELEASE)
+        version_info['full']    = version.VERSION_FULL_STR
+        version_info['short']   = version.VERSION_SHORT_STR
+        return jsonify({'version': version_info})
+    except Exception as fe:
+        abort(500, 'Internal error. Error <%s> occurred getting version details.' %(fe))
 
 
 # --- Projects ----
