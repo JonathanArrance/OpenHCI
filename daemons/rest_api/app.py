@@ -4767,7 +4767,7 @@ def validate_instance(instance_id, project_id, auth):
 
 
 # check floating_ip_id and return floating_ip_info
-def validate_floating_ip(floating_ip_id, project_id, auth):
+def validate_floating_ip(floating_ip_id, auth):
     try:
         l3 = layer_three_ops(auth)
         floating_ip_info = l3.get_floating_ip(floating_ip_id)
