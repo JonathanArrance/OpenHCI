@@ -275,12 +275,30 @@ input[type=file] {
     padding: 1px 5px 2px;
 }
 
+.form-inline {
+    margin-bottom: 1rem;
+}
+
+.form-group .control-label {
+    min-width: 6rem;
+}
+
+.form-inline .form-group label {
+    text-align: center;
+}
+
+.form-group.has-error {
+    background-color: rgb(217, 83, 79);
+}
+
+.form-group.has-error label {
+    color: rgb(235, 235, 235)!important;
+}
+
 .help-block {
     background-color: rgb(217, 83, 79);
     color: rgb(235, 235, 235)!important;
-    display: inline-block;
     margin: 0;
-    padding: 3px 5px 0;
 }
 
 /* BUTTONS */
