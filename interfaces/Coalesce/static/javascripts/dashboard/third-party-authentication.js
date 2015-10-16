@@ -73,7 +73,6 @@ $(function () {
                     setModalButtons(true, buttons);
                 })
         } else if (provider == "ldap") {
-            console.log("IN LDAP");
             inputs = {
                 "Hostname": $('#hostname'),
                 'useSSL': $("#use-ssl"),
@@ -85,7 +84,6 @@ $(function () {
             };
             name = "LDAP";
             var hostname = "ldap://".slashTo47() + inputs.Hostname.val().slashTo47();
-            console.log(hostname);
             if (inputs.bindingType.val() == "anonymous") {
                 inputs.managerDN.val("anonymous");
                 inputs.managerPW.val("anonymous");
