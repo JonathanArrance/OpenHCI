@@ -96,7 +96,7 @@
                             </tbody>
                         </table>
                         <button type="button" class="btn btn-lg btn-danger delete-tpa-project"
-                                data-title="Delete Default Shibboleth Project"
+                                data-title="Delete Default {{ provider.name }} Project"
                                 data-message="Delete {{ provider.default_project.project_name }}?"
                                 data-call="/projects/{{ provider.default_project.project_id }}/{{ provider.default_project.project_name }}/delete/"
                                 data-notice="Deleting Project {{ provider.default_project.project_name }}"
