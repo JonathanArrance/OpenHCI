@@ -4731,14 +4731,28 @@ def validate_permissions(project_id, auth):
         if have_access is False:
             abort(401, 'Not authorized. Project admins can only access resources within their own projects.')
 
+
+# check if really exists
+def validate_shadow(component, function, *args):
+    shadow_auth = extras.shadow_auth()
+    comp = component(shadow_auth)
+    try:
+        ret_val = function(comp,*args)
+    except:
+        abort(401, 'Not authorized. Resource not within own projects.')
+    if ret_val is not None:
+        abort(401, 'Not authorized. Resource not within own projects.')
+
+
 # check project_id and return project_info
 def validate_project(project_id, auth):
     try:
-        validate_permissions(project_id, auth)
         to = tenant_ops(auth)
         project_info = to.get_tenant(project_id)
         if project_info is None:
+            validate_shadow(tenant_ops, tenant_ops.get_tenant, project_id)
             abort(404, 'Not found. Could not find project %s.' %(project_id))
+        validate_permissions(project_id, auth)
         return project_info
     except HTTPException as he:
         raise he
@@ -4749,7 +4763,6 @@ def validate_project(project_id, auth):
 # check instance_id and return instance_info
 def validate_instance(instance_id, project_id, auth):
     try:
-        validate_permissions(project_id, auth)
         so = server_ops(auth)
         server_get =    {
                             'server_id':    instance_id,
@@ -4758,7 +4771,9 @@ def validate_instance(instance_id, project_id, auth):
         try:
             instance_info = so.get_server(server_get)
         except:
+            validate_shadow(server_ops, server_ops.get_server, server_get)
             abort(404, 'Not found. Could not find instance %s in project %s.' %(instance_id, project_id))
+        validate_permissions(project_id, auth)
         return instance_info
     except HTTPException as he:
         raise he
@@ -4772,6 +4787,7 @@ def validate_floating_ip(floating_ip_id, auth):
         l3 = layer_three_ops(auth)
         floating_ip_info = l3.get_floating_ip(floating_ip_id)
         if floating_ip_info is None:
+            validate_shadow(layer_three_ops, layer_three_ops.get_floating_ip, floating_ip_id)
             abort(404, 'Not found. Could not find floating IP %s.' %(floating_ip_id))
         validate_permissions(floating_ip_info['project_id'], auth)
         return floating_ip_info
@@ -4783,7 +4799,6 @@ def validate_floating_ip(floating_ip_id, auth):
 # check volume_id and return volume_info
 def validate_volume(volume_id, project_id, auth):
     try:
-        validate_permissions(project_id, auth)
         vo = volume_ops(auth)
         volume_get =    {
                             'volume_id':    volume_id,
@@ -4791,7 +4806,9 @@ def validate_volume(volume_id, project_id, auth):
                         }
         volume_info = vo.get_volume_info(volume_get)
         if volume_info is None:
+            validate_shadow(volume_ops, volume_ops.get_volume_info, volume_get)
             abort(404, 'Not found. Could not find volume %s in project %s.' %(volume_id, project_id))
+        validate_permissions(project_id, auth)
         return volume_info
     except HTTPException as he:
         raise he
@@ -4805,6 +4822,7 @@ def validate_volume_snapshot(snapshot_id, auth):
         vso = snapshot_ops(auth)
         snapshot_info = vso.get_snapshot(snapshot_id)
         if snapshot_info is None:
+            validate_shadow(snapshot_ops, snapshot_ops.get_snapshot, snapshot_id)
             abort(404, 'Not found. Could not find volume snapshot %s.' %(snapshot_id))
         validate_permissions(snapshot_info['project_id'], auth)
         return snapshot_info
@@ -4820,6 +4838,7 @@ def validate_network(network_id, auth):
         nno = neutron_net_ops(auth)
         network_info = nno.get_network(network_id)
         if network_info is None:
+            validate_shadow(neutron_net_ops, neutron_net_ops.get_network, network_id)
             abort(404, 'Not found. Could not find network %s.' %(network_id))
         if network_info['net_shared'] == "false":
             validate_permissions(network_info['project_id'], auth)
@@ -4836,6 +4855,7 @@ def validate_router(router_id, auth):
         l3 = layer_three_ops(auth)
         router_info = l3.get_router(router_id)
         if router_info is None:
+            validate_shadow(layer_three_ops, layer_three_ops.get_router, router_id)
             abort(404, 'Not found. Could not find router %s.' %(router_id))
         if 'network_id' in router_info and router_info['network_id'] is not None and router_info['network_id'] != "":
             validate_network(router_info['network_id'], auth)
@@ -4851,7 +4871,6 @@ def validate_router(router_id, auth):
 # check user_id and return user_info
 def validate_user(user_id, project_id, auth):
     try:
-        validate_permissions(project_id, auth)
         uo = user_ops(auth)
         user_get =  {
                         'user_id':      user_id,
@@ -4859,7 +4878,9 @@ def validate_user(user_id, project_id, auth):
                     }
         user_info = uo.get_user_id_info(user_get)
         if user_info is None:
+            validate_shadow(user_ops, user_ops.get_user_id_info, user_get)
             abort(404, 'Not found. Could not find user %s in project %s.' %(user_id, project_id))
+        validate_permissions(project_id, auth)
         return user_info
     except HTTPException as he:
         raise he
@@ -4870,7 +4891,6 @@ def validate_user(user_id, project_id, auth):
 # check security_group_id and return security_group_info
 def validate_security_group(security_group_id, project_id, auth):
     try:
-        validate_permissions(project_id, auth)
         so = server_ops(auth)
         security_group_get =    {
                                     'sec_group_id': security_group_id,
@@ -4879,7 +4899,9 @@ def validate_security_group(security_group_id, project_id, auth):
         try:
             security_group_info = so.get_sec_group(security_group_get)
         except:
+            validate_shadow(server_ops, server_ops.get_sec_group, security_group_get)
             abort(404, 'Not found. Could not find security group %s in project %s.' %(security_group_id, project_id))
+        validate_permissions(project_id, auth)
         return security_group_info
     except HTTPException as he:
         raise he
@@ -4906,7 +4928,6 @@ def validate_ports(ports):
 # check security_key_id and return security_key_info
 def validate_security_key(security_key_id, project_id, auth):
     try:
-        validate_permissions(project_id, auth)
         so = server_ops(auth)
         security_key_get =  {
                                 'sec_key_id':   security_key_id,
@@ -4914,7 +4935,9 @@ def validate_security_key(security_key_id, project_id, auth):
                             }
         security_key_info = so.get_sec_keys(security_key_get)
         if security_key_info is None:
+            validate_shadow(server_ops, server_ops.get_sec_keys, security_key_get)
             abort(404, 'Not found. Could not find security key %s in project %s.' %(security_key_id, project_id))
+        validate_permissions(project_id, auth)
         return security_key_info
     except HTTPException as he:
         raise he
@@ -4929,6 +4952,7 @@ def validate_image(image_id, auth):
         try:
             image_info = go.get_image(image_id)
         except:
+            validate_shadow(glance_ops, glance_ops.get_image, image_id)
             abort(404, 'Not found. Could not find image %s.' %(image_id))
         if image_info['visibility'] == "private":
             validate_permissions(image_info['project_id'], auth)
