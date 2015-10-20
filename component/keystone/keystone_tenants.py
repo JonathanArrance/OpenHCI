@@ -429,7 +429,8 @@ class tenant_ops:
                 if(self.project_id == proj[0][0]):
                     return r_dict
                 else:
-                    raise Exception("Users can only get information on their own projects.")
+                    return None
+                    # raise Exception("Users can only get information on their own projects.")
         else:
             return None
 
