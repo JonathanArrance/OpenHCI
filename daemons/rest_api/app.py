@@ -4336,17 +4336,8 @@ def get_all_security_keys():
             abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         so = server_ops(auth)
-        to = tenant_ops(auth)
         security_keys = []
-        # admin can list all security keys
-        if auth['is_admin'] == 1:
-            security_key_info = []
-            projects = to.list_all_tenants()
-            for project in projects:
-                security_key_info.extend(so.list_sec_keys(project['project_id']))
-        # otherwise list all user has access to
-        else:
-            security_key_info = so.list_sec_keys(auth['project_id'])
+        security_key_info = so.list_sec_keys(auth['project_id'])
         # normalize output
         for info in security_key_info:
             security_key =    {
