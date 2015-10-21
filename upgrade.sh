@@ -186,3 +186,9 @@ then
     /bin/echo 'CONFIGURED=False' >> /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
     /bin/chmod 777 /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
 fi
+
+# Install flasgger package
+if [ ! -f /usr/local/lib/python2.7/site-packages/flasgger/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install flasgger
+fi
