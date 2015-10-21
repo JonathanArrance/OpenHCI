@@ -4336,7 +4336,6 @@ def get_all_security_keys():
             abort(400, 'Bad request. Headers must contain username and password.')
         auth = authorize(username, password)
         so = server_ops(auth)
-        to = tenant_ops(auth)
         security_keys = []
         security_key_info = so.list_sec_keys(auth['project_id'])
         # normalize output
