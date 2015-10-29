@@ -202,7 +202,9 @@ class user_ops:
                 load = json.loads(rest['data'])
                 new_user_id = load['user']['id']
             else:
-                #util.http_codes(rest['response'],rest['reason'])
+                # duplicate username
+                if rest['response'] == 409 and "user_dom_name_unique" in rest['data']:
+                    raise Exception("User with specified username already exists.  Usernames must be unique.")
                 ec.error_codes(rest)
 
             if(self.new_user_proj_id == "NULL"):
@@ -216,7 +218,15 @@ class user_ops:
                 ins_dict = {"user_name":new_user_dict['username'],"user_group_membership":new_user_dict['user_role'],"user_group_id":group_id,"user_enabled":'TRUE',"keystone_role":key_role,"user_primary_project":self.proj_name,"user_project_id":self.new_user_proj_id,"keystone_user_uuid":new_user_id,"user_email":new_user_dict['email']}
                 insert = self.db.pg_insert("trans_user_info",ins_dict)
             except Exception as e:
+                # failed to add to db, rollback our db and remove from openstack
                 self.db.pg_transaction_rollback()
+                try:
+                    self.delete_user({'username': new_user_dict['username'], 'user_id': new_user_id})
+                except:
+                    pass
+                # duplicate email
+                if "trans_user_info_user_email_key" in e.message:
+                    e.args = ("User with specified email already exists.  User emails must be unique.",)
                 #back the user out if an exception is thrown
                 raise e
             else:

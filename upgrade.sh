@@ -186,3 +186,7 @@ then
     /bin/echo 'CONFIGURED=False' >> /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
     /bin/chmod 777 /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
 fi
+
+# aPersona unique email update
+sudo service postgresql restart
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info ADD CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
