@@ -25,6 +25,7 @@ from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
 # get glance lib
 from transcirrus.component.glance.glance_ops_v2 import glance_ops
+import transcirrus.component.nova.metadata as metadata
 
 #######Special imports#######
 
@@ -380,6 +381,9 @@ class server_ops:
                 #rand_id = random.randrange(0,100000)
                 create_dict['instance_name'] = create_dict['instance_name']+'_%s'%(str(self.rannum))
 
+        # get the user-data if it exists; returns "" if it doesn't exist
+        user_data = metadata.get_user_data(create_dict['image_id'])
+
         #connect to the rest api caller
         try:
             api_dict = {"username":self.username, "password":self.password, "project_id":create_dict['project_id']}
@@ -393,11 +397,11 @@ class server_ops:
         try:
             self.body = None
             if('volume_id' in create_dict):
-                self.body = '{"server": {"name": "%s", "imageRef": "%s", "block_device_mapping":[{"volume_id": "%s", "delete_on_termination": "1", "device_name": "vda"}], "flavorRef": "%s", "max_count": 1, "min_count": 1,"key_name": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}'%(create_dict['instance_name'],create_dict['image_id'],create_dict['volume_id'],
-                                                                                                                                                                                                                                                                                                                                            create_dict['flavor_id'],create_dict['sec_key_name'],self.net_id,create_dict['sec_group_name'],
+                self.body = '{"server": {"name": "%s", "imageRef": "%s", "block_device_mapping":[{"volume_id": "%s", "delete_on_termination": "1", "device_name": "vda"}], "flavorRef": "%s", "max_count": 1, "min_count": 1,"key_name": "%s","user_data": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}'%(create_dict['instance_name'],create_dict['image_id'],create_dict['volume_id'],
+                                                                                                                                                                                                                                                                                                                                            create_dict['flavor_id'],create_dict['sec_key_name'],user_data,self.net_id,create_dict['sec_group_name'],
                                                                                                                                                                                                                                                                                                                                             create_dict['avail_zone'])
             else:
-                self.body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['instance_name'],create_dict['image_id'],create_dict['sec_key_name'],create_dict['flavor_id'],self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+                self.body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"user_data": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['instance_name'],create_dict['image_id'],create_dict['sec_key_name'],create_dict['flavor_id'],user_data,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
             api_path = '/v2/%s/servers' %(create_dict['project_id'])
