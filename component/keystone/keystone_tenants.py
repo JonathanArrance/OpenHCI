@@ -390,6 +390,8 @@ class tenant_ops:
                        - def_network_name
                        - def_network_id
                        - is_default
+                - OR -
+                None if project does not exist
         ACCESS: Admins can get any project, users can only view the primary project
               they belong to.
         NOTE: If any of the project variables are empty a None will be returned for that variable.
@@ -417,16 +419,20 @@ class tenant_ops:
 
         logger.sys_info('%s proj stuff' %(proj))
         #build the dictionary up
-        r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
-                  "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9],
-                  "is_default":proj[0][10]}
-        if(self.is_admin == 1):
-            return r_dict
-        else:
-            if(self.project_id == proj[0][0]):
+        if len(proj) > 0:
+            r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
+                      "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9],
+                      "is_default":proj[0][10]}
+            if(self.is_admin == 1):
                 return r_dict
             else:
-                raise Exception("Users can only get information on their own projects.")
+                if(self.project_id == proj[0][0]):
+                    return r_dict
+                else:
+                    return None
+                    # raise Exception("Users can only get information on their own projects.")
+        else:
+            return None
 
     def list_tenant_users(self,project_id):
         """
