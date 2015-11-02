@@ -1,9 +1,5 @@
 {% extends "coal/base-fluid.html" %}
-{% block asmscript %}
-<script type="text/javascript" src="{{ STATIC_URL }}javascripts/apersona.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}javascripts/sha1.js"></script>
 
-{% endblock %}
 {% if error %}
     <script>showMessage('error', "{{ error }}");</script>
 {% endif %}
@@ -181,6 +177,9 @@
 {% endblock %}
 
 {% block javascripts %}
+<script type="text/javascript" src="{{ STATIC_URL }}javascripts/apersona.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}javascripts/sha1.js"></script>
+
     <script>
         $(function () {
             var form = $('#login-form');
