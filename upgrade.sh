@@ -192,3 +192,12 @@ if [ ! -f /usr/local/lib/python2.7/site-packages/flasgger/__init__.py ]
 then
     /usr/local/bin/pip2.7 install flasgger
 fi
+
+# Commands to setup our rest api daemon
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api /etc/init.d
+/bin/chmod 755 /etc/init.d/transcirrus_api
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api
+/bin/chown root:root /etc/init.d/transcirrus_api
+/sbin/chkconfig --levels 235 transcirrus_api on
+/sbin/chkconfig --add /etc/init.d/transcirrus_api
+/sbin/service transcirrus_api restart
