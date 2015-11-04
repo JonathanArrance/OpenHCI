@@ -2980,6 +2980,15 @@ ALTER TABLE ONLY trans_user_info
 
 
 --
+-- TOC entry 2164 (class 2606 OID 16696)
+-- Name: trans_user_info_email_name_key; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
+--
+
+ALTER TABLE ONLY trans_user_info
+    ADD CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);
+
+
+--
 -- TOC entry 2165 (class 2606 OID 16698)
 -- Name: trans_user_info_user_name_key; Type: CONSTRAINT; Schema: public; Owner: transuser; Tablespace: 
 --

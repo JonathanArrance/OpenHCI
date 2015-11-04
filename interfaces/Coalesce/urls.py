@@ -795,6 +795,14 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.login',
             name='login'),
 
+        url(r'^otp/$',
+            'coalesce.coal_beta.views.otp',
+            name='otp'),
+        
+        url(r'^resend_otp/$',
+            'coalesce.coal_beta.views.resend_otp',
+            name='resend_otp'),
+
         url(r'^coal/logout/$',
             'coalesce.coal_beta.views.logout',
             {'template_name': 'coal/welcome.html'},
