@@ -153,7 +153,8 @@ def MakeRequestToApersona(url, data):
     try:
         return opener.open(request)
     except urllib2.HTTPError, e:
-        return e
+        print "raising exception: %s" % e
+        raise e
 
 
 def dashboard(request):
@@ -4925,173 +4926,212 @@ def login(request):
         if auth['token'] == None:
             out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
             return HttpResponse(simplejson.dumps(out))
-        else:
-            #--- user login successful, perform ASM validation ---
-            request.session['username']=username
-            request.session['auth_staging']=auth
-            #--- get parameters required for validation ---
-            hostname = request.get_host()
-            cookie_name = GetCookieName(username, hostname)
-            cookie_value = request.COOKIES.get(cookie_name)
-            user_email = get_user_email(auth)
-            data_for_apersona_request = {
-                          properties.RequestAttributes.USERNAME: user_email,
-                          properties.RequestAttributes.ID: '',
-                          properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
-                          properties.RequestAttributes.AUTH_PARAM: request.POST.get(
-                                'authParam', constants.AUTH_PARAM),
-                          properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
-                          properties.RequestAttributes.HOSTNAME: hostname,
-                          properties.RequestAttributes.REQUEST_URL: request.get_full_path(),
-                          properties.RequestAttributes.COOKIE_VALUE: cookie_value
-            }
-            response = MakeRequestToApersona(
-                      properties.ASM_URL.format(path='extAuthenticate.kv'),
-                      data_for_apersona_request)
-            response = json.loads(response.read())
-            code = response.get('code', '')
-            if code == 202:
-                #--- ASM requires OTP to validate user ---
-                emailParts = user_email.split("@")
-                out = {'status': "otp", 'message': response.get('message', '')}
-                return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out = {'status': "error", 'message': "Login failed. Exception msg: %s" % e}
+        return HttpResponse(simplejson.dumps(out)) 
 
-            #if code != 200:
-            #--- ASM validation failed because of some issue. TODO: Need to alert admin
-            #--- but let the user proceed
+    try:
+        #--- user login successful, perform ASM validation ---
+        request.session['username']=username
+        request.session['auth_staging']=auth
+
+        #--- get parameters required for validation ---
+        hostname = request.get_host()
+        cookie_name = GetCookieName(username, hostname)
+        cookie_value = request.COOKIES.get(cookie_name)
+        user_email = get_user_email(auth)
+        data_for_apersona_request = {
+                        properties.RequestAttributes.USERNAME: user_email,
+                        properties.RequestAttributes.ID: '',
+                        properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
+                        properties.RequestAttributes.AUTH_PARAM: request.POST.get(
+                            'authParam', constants.AUTH_PARAM),
+                        properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
+                        properties.RequestAttributes.HOSTNAME: hostname,
+                        properties.RequestAttributes.REQUEST_URL: request.get_full_path(),
+                        properties.RequestAttributes.COOKIE_VALUE: cookie_value
+        }
+        response = MakeRequestToApersona(
+                    properties.ASM_URL.format(path='extAuthenticate.kv'),
+                    data_for_apersona_request)
+        response = json.loads(response.read())
+        code = response.get('code', '')
+        if code == 202:
+            #--- ASM requires OTP to validate user ---
+            emailParts = user_email.split("@")
+            out = {'status': "otp", 'message': response.get('message', '')}
+            return HttpResponse(simplejson.dumps(out))
+
+        #if code != 200:
+        #--- ASM validation failed because of some issue. TODO: Need to alert admin
+        #--- but let the user proceed
             
-            #--- ASM validation done, let user proceed ---
+        #--- ASM validation done, let user proceed ---
 
-            request.session['auth'] = auth
-            request.session['auth_staging'] = None
-            out = {}
-            out['status'] = "success"
-            out['message'] = "Successfully logged in."
-            out['user_level'] = auth['user_level']
-            if auth['user_level'] > 0:
-                out['project_id'] = auth['project_id']
-            else:
-                boot = node_util.check_first_time_boot()
-                first_time = boot['first_time_boot']
-                out['first_time'] = first_time
-            http_resp = HttpResponse(simplejson.dumps(out))
+        request.session['auth'] = auth
+        request.session['auth_staging'] = None
+        out = {}
+        out['status'] = "success"
+        out['message'] = "Successfully logged in."
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
+        http_resp = HttpResponse(simplejson.dumps(out))
+        print "login success, code: %s" % code
 
-            if code == 200:
-                    #--- ASM validation successful, set ASM cookie ---
-                    identifier = response.get('identifier', '')
-                    cookie_name = GetCookieName(username, request.get_host())
-                    http_resp.set_cookie(cookie_name, identifier)
+        if code == 200:
+                #--- ASM validation successful, set ASM cookie ---
+                identifier = response.get('identifier', '')
+                cookie_name = GetCookieName(username, request.get_host())
+                http_resp.set_cookie(cookie_name, identifier)
 
-            return http_resp
-                     
-    except:
-        out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+        return http_resp
+    except Exception as e:
+        request.session['auth'] = auth
+        out = {}
+        out['status'] = "info"
+        out['message'] = "aPersona error: %s -- please contact your administrator. Click OK to continue." % e
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
+        print "login exception: %s" % out
         return HttpResponse(simplejson.dumps(out)) 
 
 @never_cache
 def otp(request):
-  try:
-    username = request.session['username']
-    auth = request.session['auth_staging']
-    user_email = get_user_email(auth)
-    out = {}
-    if request.method == 'GET':
-        email_parts = user_email.split("@")
-        email_mask = email_parts[0][:2]+"******"+email_parts[0][-1:]+"@"+email_parts[1]
-        # TODO -> if username is not in session, then redirect to login page
-        # either session expired or someone it trying to access OTP page directly        
-        return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
+    try:
+        username = request.session['username']
+        auth = request.session['auth_staging']
+        user_email = get_user_email(auth)
+        out = {}
+        if request.method == 'GET':
+            email_parts = user_email.split("@")
+            email_mask = email_parts[0][:2]+"******"+email_parts[0][-1:]+"@"+email_parts[1]
+            # TODO -> if username is not in session, then redirect to login page
+            # either session expired or someone it trying to access OTP page directly        
+            return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
 
-    #-- OTP Validation -- 
-    otp = request.POST['otp']
-    hostname = request.get_host()
-    cookie_name = GetCookieName(username, hostname)
-    cookie_value = request.COOKIES.get(cookie_name)
-    data_for_apersona_request = {
-                  properties.RequestAttributes.USERNAME: user_email,
-                  properties.RequestAttributes.ID: '',
-                  properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
-                  properties.RequestAttributes.AUTH_PARAM: request.POST.get(
-                        'authParam', constants.AUTH_PARAM),
-                  properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
-                  properties.RequestAttributes.HOSTNAME: hostname,
-                  properties.RequestAttributes.REQUEST_URL: request.get_full_path(),
-                  properties.RequestAttributes.COOKIE_VALUE: cookie_value,
-                  properties.RequestAttributes.OTP: otp
-    }
-    response = MakeRequestToApersona(
-              properties.ASM_URL.format(path='extVerifyOtp.kv'),
-              data_for_apersona_request)
-    response = json.loads(response.read())
-    code = response.get('code', '')
-    otpMsg = response.get('message', '')
+        #-- OTP Validation -- 
+        otp = request.POST['otp']
+        hostname = request.get_host()
+        cookie_name = GetCookieName(username, hostname)
+        cookie_value = request.COOKIES.get(cookie_name)
+        data_for_apersona_request = {
+                      properties.RequestAttributes.USERNAME: user_email,
+                      properties.RequestAttributes.ID: '',
+                      properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
+                      properties.RequestAttributes.AUTH_PARAM: request.POST.get(
+                            'authParam', constants.AUTH_PARAM),
+                      properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
+                      properties.RequestAttributes.HOSTNAME: hostname,
+                      properties.RequestAttributes.REQUEST_URL: request.get_full_path(),
+                      properties.RequestAttributes.COOKIE_VALUE: cookie_value,
+                      properties.RequestAttributes.OTP: otp
+        }
+        response = MakeRequestToApersona(
+                  properties.ASM_URL.format(path='extVerifyOtp.kv'),
+                  data_for_apersona_request)
+        response = json.loads(response.read())
+        code = response.get('code', '')
+        otpMsg = response.get('message', '')
 
 
-    if code == 202:
-        out = {'status': "otp", 'message': otpMsg}
-        return HttpResponse(simplejson.dumps(out))
+        if code == 202:
+            out = {'status': "otp", 'message': otpMsg}
+            return HttpResponse(simplejson.dumps(out))
 
-    if code == 401:
-        #--- User exceeded maximum attempts for OTP, direct him back to login page
-        out = {'status': "login", 'message': otpMsg}
-        return HttpResponse(simplejson.dumps(out))
+        if code == 401:
+            #--- User exceeded maximum attempts for OTP, direct him back to login page
+            out = {'status': "login", 'message': otpMsg}
+            return HttpResponse(simplejson.dumps(out))
 
-    if code is not None:
-            request.session['auth'] = auth
-            request.session['auth_staging'] = None
-            out = {}
-            out['status'] = "success"
-            out['message'] = "Successfully logged in."
-            out['user_level'] = auth['user_level']
-            if auth['user_level'] > 0:
-                out['project_id'] = auth['project_id']
-            else:
-                boot = node_util.check_first_time_boot()
-                first_time = boot['first_time_boot']
-                out['first_time'] = first_time
-            http_resp = HttpResponse(simplejson.dumps(out))
+        if code is not None:
+                request.session['auth'] = auth
+                request.session['auth_staging'] = None
+                out = {}
+                out['status'] = "success"
+                out['message'] = "Successfully logged in."
+                out['user_level'] = auth['user_level']
+                if auth['user_level'] > 0:
+                    out['project_id'] = auth['project_id']
+                else:
+                    boot = node_util.check_first_time_boot()
+                    first_time = boot['first_time_boot']
+                    out['first_time'] = first_time
+                http_resp = HttpResponse(simplejson.dumps(out))
 
-            if code == 200:
-                    #--- ASM validation successful, set ASM cookie ---
-                    identifier = response.get('identifier', '')
-                    cookie_name = GetCookieName(username, request.get_host())
-                    http_resp.set_cookie(cookie_name, identifier)
+                if code == 200:
+                        #--- ASM validation successful, set ASM cookie ---
+                        identifier = response.get('identifier', '')
+                        cookie_name = GetCookieName(username, request.get_host())
+                        http_resp.set_cookie(cookie_name, identifier)
 
-            return http_resp
-            #--- In case of 500 or other return codes ASM validation failed because of some issue.
-            #--- TODO: Need to alert admin, but let the user proceed
-    
-  except:
-        out = {'status': "error", 'message': "OTP validation failed.  Please try again."}
+                return http_resp
+                #--- In case of 500 or other return codes ASM validation failed because of some issue.
+                #--- TODO: Need to alert admin, but let the user proceed
+    except Exception as e:
+        request.session['auth'] = auth
+        out = {}
+        out['status'] = "info"
+        out['message'] = "aPersona OTP validation error: %s -- please contact your administrator. Click OK to continue." % e
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
         return HttpResponse(simplejson.dumps(out))
 
 @never_cache
 def resend_otp(request):
-    username = request.session['username']
-    auth = request.session['auth_staging']
-    user_email = get_user_email(auth)
-    email_parts = user_email.split("@")
-    out = {}
-    email_mask = email_parts[0][:2]+"******"+email_parts[0][-1:]+"@"+email_parts[1]
-    hostname = request.get_host()
-    data_for_apersona_request = {
-                  properties.RequestAttributes.USERNAME: user_email,
-                  properties.RequestAttributes.ID: '',
-                  properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
-                  properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
-                  properties.RequestAttributes.HOSTNAME: hostname,
-                  properties.RequestAttributes.REQUEST_URL: request.get_full_path()
-    }
+    try:
+        username = request.session['username']
+        auth = request.session['auth_staging']
+        user_email = get_user_email(auth)
+        email_parts = user_email.split("@")
+        out = {}
+        email_mask = email_parts[0][:2]+"******"+email_parts[0][-1:]+"@"+email_parts[1]
+        hostname = request.get_host()
+        data_for_apersona_request = {
+                      properties.RequestAttributes.USERNAME: user_email,
+                      properties.RequestAttributes.ID: '',
+                      properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
+                      properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
+                      properties.RequestAttributes.HOSTNAME: hostname,
+                      properties.RequestAttributes.REQUEST_URL: request.get_full_path()
+        }
 
-    response = MakeRequestToApersona(
-              properties.ASM_URL.format(path='extResendOtp.kv'),
-              data_for_apersona_request)
-    response = json.loads(response.read())
-    code = response.get('code', '')
-    otpMsg = response.get('message', '')
-    out = {'status': "otp", 'message': otpMsg}
+        response = MakeRequestToApersona(
+                  properties.ASM_URL.format(path='extResendOtp.kv'),
+                  data_for_apersona_request)
+        response = json.loads(response.read())
+        code = response.get('code', '')
+        otpMsg = response.get('message', '')
+        out = {'status': "otp", 'message': otpMsg}
 
-    return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
+        return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
+    except Exception as e:
+        request.session['auth'] = auth
+        out = {}
+        out['status'] = "info"
+        out['message'] = "aPersona OTP resend validation error: %s -- please contact your administrator. Click OK to continue." % e
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
+        return HttpResponse(simplejson.dumps(out)) 
 
 @never_cache
 def logout(request, next_page=None,
