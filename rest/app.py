@@ -463,7 +463,8 @@ def create_project():
             # project info
             project_create['project_name'] = json_data['name']
             project_create['net_name'] = json_data['network_name']
-            project_create['subnet_dns'] = dns_address.append(json_data['dns_address'])
+            dns_address.append(json_data['dns_address'])
+            project_create['subnet_dns'] = dns_address
             project_create['sec_keys_name'] = json_data['security_key_name']
             project_create['router_name'] = json_data['router_name']
             # user info

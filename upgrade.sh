@@ -205,4 +205,3 @@ sudo service postgresql restart
 /sbin/chkconfig --levels 235 transcirrus_api on
 /sbin/chkconfig --add /etc/init.d/transcirrus_api
 /sbin/service transcirrus_api restart
->>>>>>> 5ff7a0b6892ddae92379fc06bf9dac910e3349e0
