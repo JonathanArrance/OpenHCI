@@ -192,8 +192,10 @@
                     success: function (data) {
                         $("#log-in").removeProp("disabled"); 
                         data = $.parseJSON(data);
-                        if (data.status == "success") {
-                            showMessage('success', "Successfully logged in, redirecting ...");
+                        if (data.status == "success" || data.status == "info") {
+                            showMessage(data.status, data.message);
+                            if (data.status == "info")
+                                alert(data.message)
                             if (data.user_level == 0) {
                                 if (data.first_time == "TRUE") {
                                     location.reload()
@@ -207,7 +209,7 @@
                                     location.replace("/projects/" + data.project_id + "/view/");
                                 }
                             }
-                        }else if(data.status == "otp"){
+                        } else if (data.status == "otp") {
                            location.replace("/otp/"); 
                         }
                         if (data.status == "error") {
