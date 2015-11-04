@@ -22,6 +22,8 @@ cp -Rf interfaces /usr/local/lib/python2.7/transcirrus/
 echo 'Adding ha to Transcirrus dir'
 cp -Rf ha /usr/local/lib/python2.7/transcirrus/
 cp -f __init__.py /usr/local/lib/python2.7/transcirrus/
+echo 'Adding rest to Transcirrus dir'
+cp -Rf rest /usr/local/lib/python2.7/transcirrus/
 
 #check to see if the log file exists
 if [ -e /var/log/caclogs/system.log ]
