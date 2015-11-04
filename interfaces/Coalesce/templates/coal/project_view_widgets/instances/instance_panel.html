@@ -46,7 +46,6 @@
                                                onClick="window.open('{{ instance.info.novnc_console }}','', 'toolbar=no, location=no, status=no, menubar=no, titlebar = no, scrollbars=yes, resizable=yes, width=720, height=435');return false;">
                                                 <i class="fa fa-desktop"></i> console</a>
                                         </li>
-                                        {% if user_level == 0 %}
                                             <li><a href="#" class="pause-instance" data-title="Pause Instance"
                                                    data-message="Pause {{ instance.server_name }}"
                                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/pause_server/"
@@ -57,7 +56,6 @@
                                                    data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/suspend_server/"
                                                    data-notice="Suspending Instance {{ instance.server_name }}"><i
                                                 class="fa fa-stop"></i> suspend</a>
-                                        {% endif %}
                                         <li><a href="#" class="power-off-instance" data-title="Power Off Instance"
                                                data-message="Power Off {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/power_off_server/"
@@ -73,14 +71,14 @@
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/reboot/"
                                                data-notice="Rebooting On Instance {{ instance.server_name }}"><i
                                                 class="fa fa-flash"></i> Reboot</a></li>
-                                    {% elif instance.status == "PAUSED"  and user_level == 0 %}
+                                    {% elif instance.status == "PAUSED"%}
                                         <li><a href="#" class="unpause-instance" data-title="Unpause Instance"
                                                data-message="Unpause {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/unpause_server/"
                                                data-notice="Unpausing Instance {{ instance.server_name }}"><i
                                                 class="fa fa-play"></i> unpause</a>
                                         </li>
-                                    {% elif instance.status == "SUSPENDED" and user_level == 0 %}
+                                    {% elif instance.status == "SUSPENDED"%}
                                         <li><a href="#" class="resume-instance" data-title="Resume Instance"
                                                data-message="Resume {{ instance.server_name }}"
                                                data-call="/server/{{ project.project_id }}/{{ instance.server_id }}/resume_server/"

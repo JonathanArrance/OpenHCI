@@ -12,89 +12,97 @@
 <div class="modal-body bg-default-light">
     <div class="container-fluid">
         <div class="row-fluid">
-            <form id="tag-form" class="form-horizontal">
-                <fieldset class="form-inline">
-                    <div class="form-group col-sm-12">
-                        <div class="col-sm-4">
+            <form id="tag-form" class="form">
+                <fieldset>
+                    <div class="form-group">
+                        <label for="tag" class="control-label">Auto-Fill:</label>
+
+                        <div class="input-group">
+                            <span class="input-group-btn">
                             <button type="submit" form="tag-form" id="tag-fill"
-                                    class="btn btn-sm btn-success center-block"
-                                    data-loading-text="Tag Fill &check;" data-toggle="tooltip" data-placement="top"
+                                    class="btn btn-success"
+                                    data-loading-text="&check;" data-toggle="tooltip" data-placement="bottom"
                                     title="Use this to automatically fill in all applicable fields (project_[tag])">
-                                <span aria-hidden="true">Auto-Fill &check;</span>
+                                &check;
                             </button>
+                            </span>
+                            <input type="text" name="tag" id="tag" value="" class="form-control"
+                                   placeholder="ex: my_team, thisProject, 001">
                         </div>
-                        <input type="text" name="tag" id="tag" value="" class="col-sm-8"
-                               placeholder="Example tags: my_team, thisProject, 001">
                     </div>
                 </fieldset>
             </form>
-            <hr>
-            <form id="project-form" class="form-horizontal">
+            <form id="project-form" class="form">
                 {% csrf_token %}
-                <fieldset id="project-settings" class="form-inline">
-                    <legend>Project Settings</legend>
-                    <div class="form-group col-sm-12">
-                        <label for="project-name" class="col-sm-4 control-label">Project:</label>
+                <fieldset>
+                    <div class="form-group">
+                        <label for="project-name" class="control-label">Project:</label>
                         <input type="text" name="projectName" id="project-name" value=""
-                               placeholder="Project Name" class="col-sm-8" data-tag="project">
+                               placeholder="Project Name" class="form-control" data-tag="project">
                     </div>
-                    <div class="form-group col-sm-12">
-                        <label for="project-admin" class="col-sm-4 control-label">Admin:</label>
-                        <input type="text" name="adminName" id="project-admin" value=""
-                               placeholder="Admin Name" class="col-sm-8" data-tag="admin">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="project-admin" class="control-label">Admin:</label>
+                            <input type="text" name="adminName" id="project-admin" value=""
+                                   placeholder="Admin Name" class="form-control" data-tag="admin">
+                        </div>
+                        <div class="form-group">
+                            <label for="project-admin-email" class="control-label">E-Mail:</label>
+                            <input type="email" name="adminEmail" id="project-admin-email" value=""
+                                   placeholder="admin@email.com" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group col-sm-12">
-                        <label for="project-admin-email" class="col-sm-4 control-label">Admin E-Mail:</label>
-                        <input type="email" name="adminEmail" id="project-admin-email" value=""
-                               placeholder="admin@email.com" class="col-sm-8">
-                    </div>
-                    <div class="form-group col-sm-12">
-                        <label for="project-admin-password" class="col-sm-4 control-label">Admin Password:</label>
-                        <input type="password" name="adminPassword" id="project-admin-password" value=""
-                               placeholder="********" class="col-sm-8">
-                    </div>
-                    <div class="form-group col-sm-12">
-                        <label for="project-admin-password-confirm" class="col-sm-4 control-label">
-                            Confirm Password:</label>
-                        <input type="password" name="adminPasswordConfirm"
-                               id="project-admin-password-confirm" value=""
-                               placeholder="********" class="col-sm-8">
-                    </div>
-                </fieldset>
-                <hr>
-                <fieldset id="security-settings" class="form-inline">
-                    <legend>Security Settings</legend>
-                    <div class="form-group col-sm-12">
-                        <label for="security-group" class="col-sm-4 control-label">Security Group:</label>
-                        <input type="text" name="securityGroup" id="security-group" value=""
-                               placeholder="Security Group Name" class="col-sm-8" data-tag="secgroup">
-                    </div>
-
-                    <div class="form-group col-sm-12">
-                        <label for="security-key" class="col-sm-4 control-label">Security Key:</label>
-                        <input type="text" name="securityKey" id="security-key" value=""
-                               placeholder="Security Key Name" class="col-sm-8" data-tag="seckey">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="project-admin-password" class="control-label">Password:</label>
+                            <input type="password" name="adminPassword" id="project-admin-password" value=""
+                                   placeholder="********" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="project-admin-password-confirm" class="control-label">
+                                Confirm:</label>
+                            <input type="password" name="adminPasswordConfirm"
+                                   id="project-admin-password-confirm" value=""
+                                   placeholder="********" class="form-control">
+                        </div>
                     </div>
                 </fieldset>
                 <hr>
-                <fieldset id="network-settings" class="form-inline">
-                    <legend>Network Settings</legend>
-                    <div class="form-group col-sm-12">
-                        <label for="network-name" class="col-sm-4 control-label">Private Network:</label>
-                        <input type="text" name="networkName" id="network-name" value=""
-                               placeholder="Private Network Name" class="col-sm-8" data-tag="network">
+                <fieldset>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="security-group" class="control-label">Group:</label>
+                            <input type="text" name="securityGroup" id="security-group" value=""
+                                   placeholder="Security Group Name" class="form-control" data-tag="secgroup">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="security-key" class="control-label">Key:</label>
+                            <input type="text" name="securityKey" id="security-key" value=""
+                                   placeholder="Security Key Name" class="form-control" data-tag="seckey">
+                        </div>
+                    </div>
+                </fieldset>
+                <hr>
+                <fieldset>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="network-name" class="control-label">Network:</label>
+                            <input type="text" name="networkName" id="network-name" value=""
+                                   placeholder="Private Network Name" class="form-control" data-tag="network">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="router-name" class="control-label">Router:</label>
+                            <input type="text" name="routerName" id="router-name" value=""
+                                   placeholder="Router Name" class="form-control" data-tag="router">
+                        </div>
                     </div>
 
-                    <div class="form-group col-sm-12">
-                        <label for="router-name" class="col-sm-4 control-label">Router:</label>
-                        <input type="text" name="routerName" id="router-name" value=""
-                               placeholder="Router Name" class="col-sm-8" data-tag="router">
-                    </div>
-
-                    <div class="form-group col-sm-12">
-                        <label for="dns-address" class="col-sm-4 control-label">Subnet DNS:</label>
+                    <div class="form-group">
+                        <label for="dns-address" class="control-label">Subnet DNS:</label>
                         <input type="text" name="dnsAddress" id="dns-address" value=""
-                               placeholder="IP Address (ex: 192.168.0.1)" class="col-sm-8">
+                               placeholder="IP Address (ex: 192.168.0.1)" class="form-control">
                     </div>
                 </fieldset>
             </form>
@@ -104,12 +112,14 @@
 
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
-    <button type="submit" form="project-form" class="btn btn-primary" data-loading-text="Loading ...">
+    <button type="submit" id="confirm-default-project" form="project-form" class="btn btn-primary"
+            data-loading-text="Loading ..." disabled>
         Build Project
     </button>
 </div>
 
 <script>
+    var defProjValidator;
     $(function () {
         $('[data-toggle="tooltip"]').tooltip();
         $("#tag-form").validate({
@@ -127,9 +137,15 @@
                         $(element).val($(element).data("tag") + "_" + $("#tag").val());
                     }
                 });
+            },
+            invalidHandler: function (event, validator) {
+                var errors = validator.numberOfInvalids();
+                if (errors) {
+                    showMessage('error', 'Invalid tag')
+                }
             }
         });
-        $("#project-form").validate({
+        defProjValidator = $("#project-form").validate({
             rules: {
                 projectName: {
                     required: true,
@@ -206,16 +222,17 @@
                     }
                 });
                 return false;
-            },
-            invalidHandler: function (event, validator) {
-                var errors = validator.numberOfInvalids();
-                if (errors) {
-                    var message = errors == 1
-                            ? 'You missed 1 field. It has been highlighted'
-                            : 'You missed ' + errors + ' fields. They have been highlighted';
-                    showMessage('error', message)
-                }
             }
         });
+    });
+
+    // enable/disable confirm button
+    $("form input, form select").on("change focus keyup", function () {
+        var confirm = $("#confirm-default-project");
+        if (defProjValidator.checkForm()) {
+            confirm.removeProp("disabled");
+        } else {
+            confirm.prop("disabled", "disabled");
+        }
     });
 </script>
