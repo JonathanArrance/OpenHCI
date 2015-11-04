@@ -1,3 +1,4 @@
+#!/usr/bin/python2.7
 # base
 import ast, json, sys
 # flask
@@ -4955,6 +4956,10 @@ def validate_image(image_id, auth):
 
 
 # --- App ----
+
+def launch():
+    app.run(host=api_ip, port=6969, debug=False)
+
 
 if __name__ == '__main__':
     app.run(host=api_ip, port=6969, debug=True)

@@ -192,6 +192,17 @@ if [ ! -f /usr/local/lib/python2.7/site-packages/flasgger/__init__.py ]
 then
     /usr/local/bin/pip2.7 install flasgger
 fi
+
 # aPersona unique email update
 sudo service postgresql restart
 /usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info ADD CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
+
+# Commands to setup our rest api daemon
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api /etc/init.d
+/bin/chmod 755 /etc/init.d/transcirrus_api
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api
+/bin/chown root:root /etc/init.d/transcirrus_api
+/sbin/chkconfig --levels 235 transcirrus_api on
+/sbin/chkconfig --add /etc/init.d/transcirrus_api
+/sbin/service transcirrus_api restart
+>>>>>>> 5ff7a0b6892ddae92379fc06bf9dac910e3349e0
