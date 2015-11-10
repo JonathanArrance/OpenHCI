@@ -205,3 +205,20 @@ sudo service postgresql restart
 /sbin/chkconfig --levels 235 transcirrus_api on
 /sbin/chkconfig --add /etc/init.d/transcirrus_api
 /sbin/service transcirrus_api restart
+
+# Commands to build and install gmp which fixes some security issues
+# which also requires pycrpto to be re-installed.
+if [ ! -f "/usr/local/lib/libgmp.a" ]
+then
+  cwd=$(pwd)
+  cd /tmp
+  tar -xvjpf /usr/local/lib/python2.7/transcirrus/upgrade_resources/gmp-6.1.0.tar.bz2
+  cd gmp-6.1.0
+  ./configure
+  make
+  make check
+  make install
+
+  /usr/local/bin/pip2.7 install --ignore-installed /usr/local/lib/python2.7/transcirrus/upgrade_resources/pycrypto-2.6.1.tar.gz
+  cd $cwd
+fi
