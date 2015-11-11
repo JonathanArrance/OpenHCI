@@ -110,20 +110,22 @@ def run_setup(new_system_variables, auth_dict):
     # create an enpoint object
     endpoint = endpoint_ops(auth_dict)
 
-    logger.sys_info('SETUP2:Re-building Swift endpoints...')
-    # reset the swift
-    del_swift = endpoint.delete_endpoint('swift')
-
-    if (del_swift == 'OK'):
-        input_dict = {'cloud_name': sys_vars['CLOUD_NAME'], 'service_name': 'swift'}
-        create_swift = endpoint.create_endpoint(input_dict)
-
-        if (create_swift['endpoint_id']):
-            logger.sys_info("Swift endpoint set up complete.")
-        else:
-            logger.sys_error("Could not create Swift endpoint - %s, %s" % (input_dict, create_swift))
-            logger.sys_error("SETUPERROR:could not create Swift endpoint")
-            return "Swift error."
+    logger.sys_info('SETUP2:Building endpoints...')
+    # Remove the comments when we support Swift
+    ##logger.sys_info('SETUP2:Re-building Swift endpoints...')
+    ### reset the swift
+    ##del_swift = endpoint.delete_endpoint('swift')
+    ##
+    ##if (del_swift == 'OK'):
+    ##    input_dict = {'cloud_name': sys_vars['CLOUD_NAME'], 'service_name': 'swift'}
+    ##    create_swift = endpoint.create_endpoint(input_dict)
+    ##
+    ##    if (create_swift['endpoint_id']):
+    ##        logger.sys_info("Swift endpoint set up complete.")
+    ##    else:
+    ##        logger.sys_error("Could not create Swift endpoint - %s, %s" % (input_dict, create_swift))
+    ##        logger.sys_error("SETUPERROR:could not create Swift endpoint")
+    ##        return "Swift error."
 
     logger.sys_info('SETUP3:Re-building Keystone endpoints...')
     # reset the keystone endpoint
