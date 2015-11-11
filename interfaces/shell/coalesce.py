@@ -535,6 +535,7 @@ def setup(d):
     d.gauge_start(text=fill_text)
     fill = 0
     count = 0
+    last_message = "No message"
     while (1):
         spin = (spin + 1) % 4
         out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s' % (count), shell=True,
@@ -574,19 +575,30 @@ def setup(d):
                     os.waitpid (pid, os.WNOHANG)
                     break
             break
+        elif fill_text == "SETUPERROR":
+            last_message = stat
+            d.gauge_update(100, text=spinner[spin]+fill_text, update_text=1)
+            p.exitcode = 2
+            break
         else:
             d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
     d.gauge_stop()
 
     timeout = 10
 
-    if (p.exitcode == 0):
+    if p.exitcode == 0:
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if (flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
         success_msg(d, timeout)
         clear_screen(d)
+    elif p.exitcode == 2:
+        d.msgbox("An error has occurred: " + last_message)
+        rollback_msg(d, timeout)
+        clear_screen(d)
+        rollback(user_dict)
+        util.reboot_system()
     else:
         rollback_msg(d, timeout)
         clear_screen(d)
