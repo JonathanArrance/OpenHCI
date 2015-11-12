@@ -1,6 +1,6 @@
 #!/bin/bash
 # transcirrus_api daemon
-# chkconfig: 345 20 80
+# chkconfig: 345 80 80
 # description: transcirrus_api daemon
 # processname: transcirrus_api
 
