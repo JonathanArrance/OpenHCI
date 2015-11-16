@@ -63,7 +63,7 @@ def rollback(auth_dict):
     logger.sys_info('Getting the node ID and factory default settings.')
     factory_defaults = None
     try:
-        factory_defaults = util.get_system_defaults(config.NODE_ID)
+        factory_defaults = util.get_system_defaults()
         logger.sys_info("factory_defaults: %s" % str(factory_defaults))
     except Exception as e:
         logger.sys_error('Could not get the factory_defaults')
