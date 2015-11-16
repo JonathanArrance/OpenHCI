@@ -1,7 +1,7 @@
 #!/usr/local/bin/python2.7
-import os
-import time
-import subprocess
+import os, time, subprocess
+
+from fnmatch import fnmatch
 
 import transcirrus.common.config as config
 import transcirrus.common.util as util
@@ -47,7 +47,7 @@ def rollback(auth_dict):
                 if(remove == 'OK'):
                     logger.sys_info('Removed project %s completed during rollback.'%(project_info['project_name']))
                 else:
-                    logger.sys_info('Removed project %s failed during rollback.'%(project_info['project_name']))
+                    logger.sys_error('Removed project %s failed during rollback.'%(project_info['project_name']))
                     pass
     else:
         logger.sys_info('No projects to roll back.')
@@ -64,18 +64,20 @@ def rollback(auth_dict):
     factory_defaults = None
     try:
         factory_defaults = util.get_system_defaults(config.NODE_ID)
-    except:
+        logger.sys_info("factory_defaults: %s" % str(factory_defaults))
+    except Exception as e:
         logger.sys_error('Could not get the factory_defaults')
-        raise Exception('Could not get the factory_defaults')
+        raise e
 
     #get trans_default
     try:
         get_project = {'select':"*",'from':"projects",'where':"proj_name='trans_default'"}
         proj_info = db.pg_select(get_project)
     except:
+        logger.sys_error('Could not get the trans_default')
         pass
     """
-    logger.sys_info("Removeing the default glance images.")
+    logger.sys_info("Removing the default glance images.")
     try:
         #remove the default glance images if they were created
         images = glance.list_images()
@@ -86,7 +88,7 @@ def rollback(auth_dict):
         pass
 
     #remove the iptables settings and the config file
-    logger.sys_info("Removeing iptables entries.")
+    logger.sys_info("Removing iptables entries.")
     try:
         os.system('sudo iptables -F')
         os.system('sudo rm /transcirrus/iptables.conf')
@@ -100,6 +102,7 @@ def rollback(auth_dict):
     try:
         t = net.list_external_networks()
     except:
+        logger.sys_error('Could not get the external networks')
         pass
 
     #get default subnet and net id
@@ -108,25 +111,26 @@ def rollback(auth_dict):
         network = db.pg_select(get_net)
         logger.sys_info("%s" %(network))
     except:
+        logger.sys_error('Could not get the default subnet and net id')
         pass
 
     #remove the public subnet
-    logger.sys_info("Removeing the public subnet.")
+    logger.sys_info("Removing the public subnet.")
     try:
         pub_sub = net.remove_net_pub_subnet(network[0][0])
         logger.sys_info("%s"%(pub_sub))
     except:
-        logger.sys_info("No public subnet to remove.")
+        logger.sys_error("No public subnet to remove.")
         pass
 
     #remove the public network
-    logger.sys_info("Removeing the public net.")
+    logger.sys_info("Removing the public net.")
     try:
         net_dict = {'net_id':t[0]['net_id'],'project_id':proj_info[0][0]}
         pub_net = net.remove_network(net_dict)
         logger.sys_info("%s"%(pub_net))
     except:
-        logger.sys_info("No public net to remove.")
+        logger.sys_error("No public net to remove.")
         pass
 
     #set all of the netadpters to default IPS
@@ -161,10 +165,11 @@ def rollback(auth_dict):
             else:
                 logger.sys_info("Net config file written.")
     except:
+        logger.sys_error('Could not reset network')
         pass
 
     #remove all of the endpoints except keystone
-    logger.sys_info('Deleteing the OpenStack API endpoints.')
+    logger.sys_info('Deleting the OpenStack API endpoints.')
     try:
         endpoint.delete_endpoint('nova')
         endpoint.delete_endpoint('cinder')
@@ -176,6 +181,7 @@ def rollback(auth_dict):
         endpoint.delete_endpoint('ec2')
         endpoint.delete_endpoint('s3')
     except:
+        logger.sys_error('Could not delete endpoints')
         pass
 
     #stop all of the openstack services
@@ -188,10 +194,11 @@ def rollback(auth_dict):
         ceilometer_stop = service.ceilometer('stop')
         neutron_stop = service.neutron('stop')
     except:
+        logger.sys_error('Could not stop services')
         pass
 
     #set nova,glance,cinder,neutron config files to defaults
-    logger.sys_info('Removeing the OpenStack configs.')
+    logger.sys_info('Removing the OpenStack configs.')
     try:
         os.system('sudo rm -rf /etc/nova')
         os.system('sudo rm -rf /etc/cinder')
@@ -199,12 +206,9 @@ def rollback(auth_dict):
         os.system('sudo rm -rf /etc/heat')
         os.system('sudo rm -rf /etc/ceilometer')
         os.system('sudo rm -rf /etc/neutron')
-        if os.path.exists("/etc/os_configs.tar"):
-            os.system('sudo tar -xvf /etc/os_configs.tar -C /etc')
-        elif os.path.exists("/etc/os_configs_nightly.tar"):
-            os.system('sudo tar -xvf /etc/os_configs_nightly.tar -C /etc')
-        else:
-            return "OS Configs File Missing"
+        for f in os.listdir('/etc'):
+            if fnmatch(f, 'os_configs*.tar'):
+                os.system('sudo tar -xvf %s -C /etc' %f)
         os.system('sudo chown -R nova:nova /etc/nova')
         os.system('sudo chown -R cinder:cinder /etc/cinder')
         os.system('sudo chown -R glance:glance /etc/glance')
@@ -213,27 +217,33 @@ def rollback(auth_dict):
         os.system('sudo chown -R neutron:neutron /etc/neutron')
         os.system('sudo chmod -R 770 /etc/nova /etc/neutron /etc/glance /etc/cinder /etc/ceilometer /etc/heat')
     except:
+        logger.sys_error('Could not remove configs')
         pass
 
     #remove the node entry
-    logger.sys_info('Removeing the node from the Transcirrus DB.')
+    logger.sys_info('Removing the node from the Transcirrus DB.')
     try:
         del_node = node_db.delete_node(config.NODE_ID)
         logger.sys_info("delnode: %s" %(str(del_node)))
     except:
+        logger.sys_error('Could not remove node entry')
         pass
 
 
     #copy all of the factory defaults to trans_system_settings
+    logger.sys_info("\n   ---   config.NODE_NAME: %s   ---\n" %(str(config.NODE_NAME)))
     rollback_array = []
     for key,value in factory_defaults.items():
-        dictionary = {"system_name":factory_defaults['node_name'],"parameter":key,"param_value":value}
+        dictionary = {"system_name":config.NODE_NAME,"parameter":key,"param_value":value}
         rollback_array.append(dictionary)
 
+    logger.sys_info("\n   ---   rollback_array: %s   ---\n" %(str(rollback_array)))
     logger.sys_info('Resetting the factory system defaults.')
     try:
         up = util.update_system_variables(rollback_array)
+        util.update_cloud_controller_name({"old_name":config.NODE_NAME,"new_name":factory_defaults['node_name']})
     except:
+        logger.sys_error('Could not reset factory defaults')
         pass
 
     try:
@@ -248,6 +258,7 @@ def rollback(auth_dict):
             else:
                 return "Keystone error."
     except:
+        logger.sys_error('Could not reset keystone')
         pass
 
     #may have to hack endpoint not deleted for some reason, however the default endpoint is created ???????
@@ -263,6 +274,7 @@ def rollback(auth_dict):
             else:
                 return "Swift error."
     except:
+        logger.sys_error('Could not reset swift')
         pass
 
     #reset the config file
@@ -287,6 +299,7 @@ def rollback(auth_dict):
                        }
         util.write_new_config_file(config_dict)
     except:
+        logger.sys_error('Could not reset config file')
         pass
 
     #set the admin password back to password
