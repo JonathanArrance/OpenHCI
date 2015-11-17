@@ -304,7 +304,7 @@ class endpoint_ops:
         try:
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
             get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='api_ip'"}
-            self.api_ips = self.db.pg_select(get_ips)
+            self.api_ip = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
             raise Exception("Could not retrieve the api ips to create endpoints with.")
