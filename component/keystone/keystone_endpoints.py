@@ -203,8 +203,8 @@ class endpoint_ops:
             token = self.adm_token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-            if(self.api_ip):
-                rest_dict['api_ip'] = self.api_ip
+            if(self.ep_ip):
+                rest_dict['api_ip'] = self.ep_ip[0][0]
             rest = api.call_rest(rest_dict)
         except:
             logger.sys_error("Could not add a new service catalog entry.")
@@ -341,7 +341,7 @@ class endpoint_ops:
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             if(self.api_ip):
-                rest_dict['api_ip'] = self.api_ip
+                rest_dict['api_ip'] = self.api_ip[0][0]
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not delete the %s endpoint. %s"%(service_name,e))
