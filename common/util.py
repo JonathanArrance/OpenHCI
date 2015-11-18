@@ -741,10 +741,10 @@ def get_project_admin(project_id):
     r_dict = {'admin_name':admin[0][1],'admin_email':admin[0][0]}
     return r_dict
 
-def get_system_defaults(node_id):
+def get_system_defaults():
     """
     DESC: Return the system settings from the transcirrus system settings db.
-    INPUT: system_name
+    INPUT: None
     OUTPUT: r_dict - TRANSCIRRUS_DB
                    - TRAN_DB_USER
                    - TRAN_DB_PASS
@@ -769,22 +769,9 @@ def get_system_defaults(node_id):
     NOTE: This returns the variables in regarding the transcirrus system. It is used for information and to create the
           config.py file descriptor to write out the config.py that is in transcirrus.common by calling write_new_config.py
     """
-    if(node_id == ""):
-        logger.sys_error("System node_id can not be blank when getting system variables.")
-        raise Exception("System node_id can not be blank when getting system variables.")
-
     db = db_connect()
-    #get the system name
-    #try:
-    #    get_sys_name = {'select':'host_system', 'from':'trans_system_settings','where':"parameter='node_id'", 'and':"param_value='%s'"%(node_id)}
-    #    node_name = db.pg_select(get_sys_name)
-    #except:
-    #    logger.sql_error("Could not get the system name/node name for node id %s" %(node_id))
-    #    raise Exception("Could not get the system name/node name for node id %s" %(node_id))
-
-    node_name = get_system_name()
     try:
-        find_node_dict = {'select':"parameter,param_value",'from':"factory_defaults",'where':"host_system='%s'" %(node_name)}
+        find_node_dict = {'select':"parameter,param_value",'from':"factory_defaults"}
         sys = db.pg_select(find_node_dict)
     except:
         logger.sql_error("Could not find the system with name %s in the Transcirrus DB." %(system_name))
