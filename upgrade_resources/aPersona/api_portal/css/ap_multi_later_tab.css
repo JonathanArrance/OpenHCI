@@ -1,0 +1,100 @@
+#ap_multiTab .ui-tabs-panel {
+    /*background: #fff;*/
+	border-top: 1px solid #97a5b0;
+	padding: 1em 8px
+}
+
+#ap_multiTab .ui-tabs-nav {
+    font-family: "Trebuchet MS",  Trebuchet,  Verdana,  Helvetica,  Arial,  sans-serif;
+    font-size: 12px
+}
+
+#ap_multiTab .ui-tabs-nav li {
+    margin: 0 0 0 1px
+}
+
+#ap_multiTab .ui-tabs-nav a{
+    display: block;
+    background-color: grey; #url( "./tab_top1.png" ) no-repeat
+}
+#ap_multiTab .ui-tabs-nav a span  {
+    display: block;
+#   background-color: grey; #( "./tab_top1.png" ) no-repeat
+}
+#ap_multiTab .ui-tabs-nav a {
+    color: #27537a;
+    font-weight: bold
+}
+
+#ap_multiTab .ui-tabs-nav a span  {
+    padding-top: 6px
+}
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-selected a span  {
+    padding-bottom: 1px
+}
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-selected a{
+    background-position: 100% -150px
+}
+
+#ap_multiTab .ui-tabs-nav a:hover{
+    background-position: 100% -150px
+}
+
+#ap_multiTab .ui-tabs-nav a:focus{
+    background-position: 100% -150px
+}
+
+#ap_multiTab .ui-tabs-nav a:active {
+    background-position: 100% -150px
+}
+#ap_multiTab .ui-tabs-nav a{
+    background-position: 100% -100px
+}
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-disabled a:hover{
+    background-position: 100% -100px
+}
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-disabled a:focus{
+    background-position: 100% -100px
+}
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-disabled a:active {
+    background-position: 100% -100px
+}
+#ap_multiTab .ui-tabs-nav .ui-tabs-selected a span {
+    background-position: 0 -50px
+}
+
+#ap_multiTab .ui-tabs-nav a:hover span{
+    background-position: 0 -50px
+}
+
+#ap_multiTab .ui-tabs-nav a:focus span{
+    background-position: 0 -50px
+}
+
+#ap_multiTab .ui-tabs-nav a:active span {
+    background-position: 0 -50px
+}
+#ap_multiTab .ui-tabs-nav a span {
+    background-position: 0 0
+}
+/*@component-end}*/
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-disabled a:hover span{
+    background-position: 0 0
+}
+/*@component-end}*/
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-disabled a:focus span{
+    background-position: 0 0
+}
+/*@component-end}*/
+
+#ap_multiTab .ui-tabs-nav .ui-tabs-disabled a:active span {
+    background-position: 0 0
+}
+/*@component-end}*/

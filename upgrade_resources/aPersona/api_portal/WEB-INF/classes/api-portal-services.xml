@@ -1,0 +1,33 @@
+<beans 
+	   xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd          
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+            http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+	    
+       <import resource="classpath:api-portal-entity-manager-factory.xml"/>       
+       <context:annotation-config/>
+       <context:component-scan base-package="com.apersona.portal.api"/>
+       <context:property-placeholder location="classpath:api-portal.properties,
+                                            classpath:version.properties,
+       										classpath:apersona-db.properties"/>
+       <tx:annotation-driven/>
+       
+       <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.Md5PasswordEncoder"/>
+       
+  <bean id="stringEncryptor"  class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor" lazy-init="false">
+    <property name="algorithm" value="PBEWithMD5AndDES" />
+    <property name="password" value="ap-12-enc" />
+  </bean>
+   
+  <bean id="hibernateEncryptor" class="org.jasypt.hibernate.encryptor.HibernatePBEStringEncryptor" lazy-init="false">
+    <!-- This property value must match "encryptorRegisteredName" used when defining hibernate user types -->
+    <property name="registeredName" value="jasyptHibernateEncryptor" />
+    <property name="encryptor" ref="stringEncryptor" />
+  </bean>
+  
+</beans>
