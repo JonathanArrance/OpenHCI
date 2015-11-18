@@ -97,14 +97,14 @@ def boot_instance(input_dict,auth_dict):
     #initialize create_vol
     create_vol = {}
 
-    if(input_dict['boot_from_vol'] == 'true' or input_dict['boot_from_vol'] == 'True'):
-        if('volume_type' not in input_dict or 'volume_type' == "none"):
+    if(input_dict['boot_from_vol'] == 'true' or input_dict['boot_from_vol'] == 'True' or input_dict['boot_from_vol'] is True):
+        if('volume_type' not in input_dict or input_dict['volume_type'] == "none"):
             input_dict['volume_type'] = 'spindle'
 
         disk_size_needed = flavor_details['disk_space(GB)'] + flavor_details['swap(GB)']
-        if('volume_size' in input_dict and 'volume_size' != "none"):
+        if('volume_size' in input_dict and input_dict['volume_size'] != "none"):
             logger.sys_info("Setting user select volume size to boot instance from.")
-            if(disk_size_needed >= input_dict['volume_size']):
+            if(int(disk_size_needed) >= int(input_dict['volume_size'])):
                 input_dict['volume_size'] = disk_size_needed
         else:
             input_dict['volume_size'] = disk_size_needed

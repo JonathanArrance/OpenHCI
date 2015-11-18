@@ -17,12 +17,15 @@ from transcirrus.common.auth import get_token
 from transcirrus.database.postgres import pgsql
 
 #get the nova libs
-from transcirrus.component.nova.image import nova_image_ops
 from transcirrus.component.neutron.network import neutron_net_ops
 from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.nova.server_action import server_actions
 from transcirrus.component.nova.storage import server_storage_ops
+from transcirrus.component.nova.flavor import flavor_ops
 from transcirrus.component.keystone.keystone_tenants import tenant_ops
+# get glance lib
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
+import transcirrus.component.nova.metadata as metadata
 
 #######Special imports#######
 
@@ -74,6 +77,8 @@ class server_ops:
         self.server_actions = server_actions(user_dict)
         self.server_storage_ops = server_storage_ops(user_dict)
         self.keystone = tenant_ops(user_dict)
+        self.flavor = flavor_ops(user_dict)
+        self.image = glance_ops(user_dict)
 
         #random number used if sec group or key name taken
         self.rannum = random.randrange(1000,9000)
@@ -334,8 +339,9 @@ class server_ops:
             #get the default security group from the transcirrus db
             try:
                 select_net = {"select":'def_network_id', "from":'projects', "where":"proj_id='%s'" %(create_dict['project_id'])}
-                net = self.db.pg_select(select_key)
+                net = self.db.pg_select(select_net)
                 self.net_id = net[0][0]
+                create_dict['network_name'] = self.net.get_network(self.net_id)['net_name']
             except:
                 logger.sql_error("Could not find the specified network for create_server operation %s" %(create_dict['network_name']))
                 raise Exception("Could not find the specified network for create_server operation %s" %(create_dict['network_name']))
@@ -351,24 +357,21 @@ class server_ops:
 
         #verify the availability zone
         #NOTE: for the prototype zone will always be nova
-        if('avail_zone' in create_dict):
+        if('avail_zone' in create_dict and create_dict['avail_zone'] is not None):
             try:
                 select_zone = {'select':'index','from':'trans_zones','where':"zone_name='%s'"%(create_dict['avail_zone'])}
                 get_zone = self.db.pg_select(select_zone)
             except:
                 logger.sql_error('The specifed zone is not defined.')
                 raise Exception('The specifed zone is not defined.')
-        elif(create_dict['avail_zone'] is None):
-            create_dict['avail_zone'] = 'nova'
         else:
-            #hack
             create_dict['avail_zone'] = 'nova'
 
         if('flavor_name' not in create_dict):
-            create_dict['flavor_name'] = "flavor_id_" + create_dict['flavor_id']
+            create_dict['flavor_name'] = self.flavor.get_flavor(create_dict['flavor_id'])['flavor_name']
 
         if('image_name' not in create_dict):
-            create_dict['image_name'] = "image_id_" + create_dict['image_id']
+            create_dict['image_name'] = self.image.get_image( create_dict['image_id'])['image_name']
 
         #check to see if the name is in the project
         servers = self.list_servers(create_dict['project_id'])
@@ -377,6 +380,9 @@ class server_ops:
                 random.seed()
                 #rand_id = random.randrange(0,100000)
                 create_dict['instance_name'] = create_dict['instance_name']+'_%s'%(str(self.rannum))
+
+        # get the user-data if it exists; returns "" if it doesn't exist
+        user_data = metadata.get_user_data(create_dict['image_id'])
 
         #connect to the rest api caller
         try:
@@ -391,11 +397,11 @@ class server_ops:
         try:
             self.body = None
             if('volume_id' in create_dict):
-                self.body = '{"server": {"name": "%s", "imageRef": "%s", "block_device_mapping":[{"volume_id": "%s", "delete_on_termination": "1", "device_name": "vda"}], "flavorRef": "%s", "max_count": 1, "min_count": 1,"key_name": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}'%(create_dict['instance_name'],create_dict['image_id'],create_dict['volume_id'],
-                                                                                                                                                                                                                                                                                                                                            create_dict['flavor_id'],create_dict['sec_key_name'],self.net_id,create_dict['sec_group_name'],
+                self.body = '{"server": {"name": "%s", "imageRef": "%s", "block_device_mapping":[{"volume_id": "%s", "delete_on_termination": "1", "device_name": "vda"}], "flavorRef": "%s", "max_count": 1, "min_count": 1,"key_name": "%s","user_data": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}'%(create_dict['instance_name'],create_dict['image_id'],create_dict['volume_id'],
+                                                                                                                                                                                                                                                                                                                                            create_dict['flavor_id'],create_dict['sec_key_name'],user_data,self.net_id,create_dict['sec_group_name'],
                                                                                                                                                                                                                                                                                                                                             create_dict['avail_zone'])
             else:
-                self.body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['instance_name'],create_dict['image_id'],create_dict['sec_key_name'],create_dict['flavor_id'],self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
+                self.body = '{"server": {"name": "%s", "imageRef": "%s", "key_name": "%s", "flavorRef": "%s", "max_count": 1, "min_count": 1,"user_data": "%s","networks": [{"uuid": "%s"}],"security_groups": [{"name": "%s"}],"availability_zone":"%s"}}' %(create_dict['instance_name'],create_dict['image_id'],create_dict['sec_key_name'],create_dict['flavor_id'],user_data,self.net_id,create_dict['sec_group_name'],create_dict['avail_zone'])
             header = {"X-Auth-Token":self.token, "Content-Type": "application/json"}
             function = 'POST'
             api_path = '/v2/%s/servers' %(create_dict['project_id'])
@@ -466,6 +472,7 @@ class server_ops:
                        - server_node
                        - server_public_ips
                        - floating_ip_id
+                       - project_id
                        - novnc_console
                        - date_created
                        - boot_from_vol
@@ -1890,6 +1897,8 @@ class server_ops:
                        - user_name
                        - sec_key_id
                        - rsa_public_key
+                - OR -
+                None if security key does not exist
         ACCESS: Admins can get info on all keys in the project,
                 users and power users can only get info on the keys they own
         """
@@ -1912,14 +1921,18 @@ class server_ops:
             get_key_dict = None
             if(self.is_admin == 0):
                 #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"user_id='%s' and sec_key_id='%s'" %(self.user_id,input_dict['sec_key_id'])}
-                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name,user_id",'from':"trans_security_keys",'where':"user_id='%s'"%(self.user_id),'and':"sec_key_id='%s'" %(input_dict['sec_key_id'])}
             else:
                 #get_key_dict = {'select':"sec_key_name,sec_key_id,public_key,user_name",'from':"trans_security_keys",'where':"proj_id='%s'" %(input_dict['project_id']),'and':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
-                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
+                get_key_dict = {'select':"sec_key_name,sec_key_id,private_key,user_name,user_id",'from':"trans_security_keys",'where':"sec_key_id='%s'"%(input_dict['sec_key_id'])}
             get_key = self.db.pg_select(get_key_dict)
         except:
             logger.sql_error("Could not get the security group info for sec_key_name: %s in project: %s" %(get_key[0][0],input_dict['project_id']))
             raise Exception("Could not get the security group info for sec_key_name: %s in project: %s" %(get_key[0][0],input_dict['project_id']))
 
-        r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2]}
-        return r_dict
+        # make sure key exists
+        if len(get_key) > 0:
+            r_dict = {'sec_key_name':get_key[0][0],'user_name':get_key[0][3],'sec_key_id':get_key[0][1],'public_key':get_key[0][2],'user_id':get_key[0][4]}
+            return r_dict
+        else:
+            return None

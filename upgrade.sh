@@ -182,6 +182,12 @@ then
     /bin/chmod 777 /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
 fi
 
+# Install flasgger package
+if [ ! -f /usr/local/lib/python2.7/site-packages/flasgger/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install flasgger
+fi
+
 # aPersona unique email update
 sudo service postgresql restart
 /usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info ADD CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
@@ -201,6 +207,32 @@ then
     /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
     /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_postgres.sql
     # TODO : config aPersona
+fi
+
+# Commands to setup our rest api daemon
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api /etc/init.d
+/bin/chmod 755 /etc/init.d/transcirrus_api
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api
+/bin/chown root:root /etc/init.d/transcirrus_api
+/sbin/chkconfig --levels 235 transcirrus_api on
+/sbin/chkconfig --add /etc/init.d/transcirrus_api
+/sbin/service transcirrus_api restart
+
+# Commands to build and install gmp which fixes some security issues
+# which also requires pycrpto to be re-installed.
+if [ ! -f "/usr/local/lib/libgmp.a" ]
+then
+  cwd=$(pwd)
+  cd /tmp
+  tar -xvjpf /usr/local/lib/python2.7/transcirrus/upgrade_resources/gmp-6.1.0.tar.bz2
+  cd gmp-6.1.0
+  ./configure
+  make
+  make check
+  make install
+
+  /usr/local/bin/pip2.7 install --ignore-installed /usr/local/lib/python2.7/transcirrus/upgrade_resources/pycrypto-2.6.1.tar.gz
+  cd $cwd
 fi
 
 ######################################################

@@ -428,6 +428,8 @@ class snapshot_ops:
                 create_time
                 snapshot_name
                 project_id
+                - OR -
+                None if snapshot does not exist
         ACCESS: Admins can get snapshots in any project, users and power users can get snapshots in their
                 project only
         NOTE: This need to be changed to incorporate project_id
@@ -457,6 +459,10 @@ class snapshot_ops:
         except:
             logger.sql_error("Could not get the snap id from Transcirrus DB.")
             raise Exception("Could not get the snap id from Transcirrus DB.")
+
+        # verify snapshot exists
+        if len(proj_id) == 0:
+            return None
 
         try:
             select_proj = {'select':"proj_name",'from':"projects",'where':"proj_id='%s'" %(proj_id[0][0])}

@@ -11,6 +11,7 @@ import transcirrus.common.logger as logger
 import transcirrus.common.config as config
 import transcirrus.common.util as util
 import transcirrus.component.cinder.error as ec
+from transcirrus.component.nova.storage import server_storage_ops
 
 from transcirrus.common.api_caller import caller
 from transcirrus.common.auth import get_token
@@ -79,6 +80,7 @@ class volume_ops:
 
         #get the db object
         self.db = util.db_connect()
+        self.server_storage_ops = server_storage_ops(user_dict)
 
     def create_volume(self,create_vol):
         """
@@ -468,8 +470,8 @@ class volume_ops:
 
         if('volume_name' not in input_dict or input_dict['volume_name'] == None):
             input_dict['volume_name'] = input_dict['image_id'] + '_boot_%s'%(str(self.rannum))
-        else:
-            input_dict['volume_name'] = input_dict['volume_name'] + '_boot_%s'%(str(self.rannum))
+        # else:
+        #     input_dict['volume_name'] = input_dict['volume_name'] + '_boot_%s'%(str(self.rannum))
 
         input_dict = {'volume_name':input_dict['volume_name'],'volume_size':input_dict['volume_size'],'project_id':input_dict['project_id'],
                       'volume_zone':input_dict['volume_zone'],'image_id':input_dict['image_id'],'volume_type':input_dict['volume_type']
@@ -608,6 +610,14 @@ class volume_ops:
                 logger.sys_error("Could not connect to the Keystone API")
                 raise Exception("Could not connect to the Keystone API")
 
+            # if volume is attached, detach first
+            get_vol = {'project_id': delete_vol['project_id'], 'volume_id': delete_vol['volume_id']}
+            vol_info = self.get_volume_info(get_vol)
+            if vol_info['volume_attached'] == "true":
+                get_vol['instance_id'] = vol_info['volume_instance']
+                self.server_storage_ops.detach_vol_from_server(get_vol)
+                time.sleep(1)
+
             try:
                 #add the new user to openstack 
                 body = ""
@@ -696,7 +706,9 @@ class volume_ops:
                        - volume_attached
                        - volume_instance
                        - volume_instance_name
-                       - volume_mount
+                       - volume_mount_location
+                - OR - 
+                None if volume does not exist
         ACCESS: Admins can list all volumes, users can only list the volumes in their project
         """
         logger.sys_info('\n**Get specific info on a volume. Component: Cinder Def: get_volume_info**\n')
@@ -744,17 +756,21 @@ class volume_ops:
             logger.sql_error("Could not get the volume info for %s" %(vol_dict['volume_id']))
             raise Exception("Could not get the volume info for %s" %(vol_dict['volume_id']))
 
-        instance_name = None
-        if(get_vol[0][8]):
-            try:
-                get_server = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(get_vol[0][8])}
-                inst_name = self.db.pg_select(get_server)
-                instance_name = inst_name[0][0]
-            except Exception as e:
-                logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
+        # make sure volume exists
+        if len(get_vol) > 0:
+            instance_name = None
+            if(get_vol[0][8]):
+                try:
+                    get_server = {'select':'inst_name','from':'trans_instances','where':"inst_id='%s'"%(get_vol[0][8])}
+                    inst_name = self.db.pg_select(get_server)
+                    instance_name = inst_name[0][0]
+                except Exception as e:
+                    logger.sql_error("Could not get the instance name for instance id %s, %s"%(get_vol[0][8],e))
 
-        r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name, 'volume_mount_location': get_vol[0][9], 'volume_set_bootable':get_vol[0][6]}
-        return r_dict
+            r_dict = {'volume_name':get_vol[0][3],'volume_type':get_vol[0][10],'volume_id':get_vol[0][0],'volume_size':get_vol[0][4],'volume_attached':get_vol[0][7],'volume_instance':get_vol[0][8],'volume_instance_name':instance_name, 'volume_mount_location': get_vol[0][9], 'volume_set_bootable':get_vol[0][6]}
+            return r_dict
+        # volume does not exist
+        return None
 
     def create_volume_type(self,volume_type_name):
         """

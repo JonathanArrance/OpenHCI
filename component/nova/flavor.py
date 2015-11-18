@@ -162,7 +162,7 @@ class flavor_ops:
                         - public - op - default false (true/false)
                         - description - op
         OUTPUT: r_dict - status - ok (may change after proto)
-                         flav_name
+                         flavor_name
                          flav_id
         """
         #connect to the rest api caller.

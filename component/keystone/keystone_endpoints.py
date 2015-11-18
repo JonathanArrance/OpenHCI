@@ -119,7 +119,7 @@ class endpoint_ops:
             #this will need to be chabged if we use different ips for endpoints
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
             #HACK - we need to use the api ip - better yet use the api ips for admin, public,internal
-            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='int_api_ip'"}#was api_ip caused error in multinde system. Needs to be locked to 172.24.24.10
+            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='cluster_ip'"}#was api_ip caused error in multinde system. Needs to be locked to 172.24.24.10
             self.ep_ip = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
@@ -203,8 +203,8 @@ class endpoint_ops:
             token = self.adm_token
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
-            if(self.api_ip):
-                rest_dict['api_ip'] = self.api_ip
+            if(self.ep_ip):
+                rest_dict['api_ip'] = self.ep_ip[0][0]
             rest = api.call_rest(rest_dict)
         except:
             logger.sys_error("Could not add a new service catalog entry.")
@@ -303,8 +303,8 @@ class endpoint_ops:
         #get ip info from the DB for the endpoint creaton
         try:
             #get_ips = {'select':"admin_api_ip,int_api_ip,api_ip",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller)}
-            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='api_ip'"}
-            self.api_ips = self.db.pg_select(get_ips)
+            get_ips = {'select':"param_value",'from':"trans_system_settings",'where':"host_system='%s'" %(self.controller),'and':"parameter='cluster_ip'"}
+            self.api_ip = self.db.pg_select(get_ips)
         except:
             logger.sql_error("Could not retrieve the api ips to create endpoints with.")
             raise Exception("Could not retrieve the api ips to create endpoints with.")
@@ -341,7 +341,7 @@ class endpoint_ops:
             sec = 'FALSE'
             rest_dict = {"body": body, "header": header, "function":function, "api_path":api_path, "token": token, "sec": sec}
             if(self.api_ip):
-                rest_dict['api_ip'] = self.api_ip
+                rest_dict['api_ip'] = self.api_ip[0][0]
             rest = api.call_rest(rest_dict)
         except Exception as e:
             logger.sys_error("Could not delete the %s endpoint. %s"%(service_name,e))

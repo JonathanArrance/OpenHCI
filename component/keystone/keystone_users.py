@@ -832,6 +832,8 @@ class user_ops:
                        - user_role
                        - email
                        - user_enabled
+                - OR -
+                None if user does not exist
         ACCESS: Only admins can get specific user information
         NOTE: none
         """
@@ -872,10 +874,12 @@ class user_ops:
                 logger.sql_error("Could not find user information in Transcirrus DB., %s" % (e))
                 raise
 
-            r_dict = {"username": user_info[0][1], "user_id": user_info[0][5], "project_name": user_info[0][6],
-                      "project_id": user_info[0][7], "user_role": user_info[0][2], "email": user_info[0][9],
-                      "user_enabled": user_info[0][4], "user_level": user_info[0][3]}
-            return r_dict
+            if len(user_info) > 0:
+                r_dict = {"username": user_info[0][1], "user_id": user_info[0][5], "project_name": user_info[0][6],
+                          "project_id": user_info[0][7], "user_role": user_info[0][2], "email": user_info[0][9],
+                          "user_enabled": user_info[0][4], "user_level": user_info[0][3]}
+                return r_dict
+            return None
         else:
             logger.sys_error("Admin flag not set, could not create the new user.")
 
@@ -1228,7 +1232,8 @@ class user_ops:
         DESC: List all of the users that are in the cloud sysytem.
         INPUT: none
         OUTPUT: array of r_dict - username
-                                - user_project
+                                - user_projects
+                                - user_project_id
                                 - user_group
                                 - user_enabled
                                 - keystone_user_id
@@ -1263,7 +1268,7 @@ class user_ops:
 
         r_array = []
         for user in users:
-            r_dict = {'username':user[1],'user_projects':user[6],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
+            r_dict = {'username':user[1],'user_projects':user[6],'user_project_id':user[7],'user_group':user[2],'user_enabled':user[4],'keystone_user_id':user[5],'user_email':user[9]}
             r_array.append(r_dict)
 
         return r_array
