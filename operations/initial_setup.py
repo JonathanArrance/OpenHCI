@@ -53,7 +53,7 @@ def run_setup(new_system_variables, auth_dict):
     # retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
     #node_name = util.get_system_name()
-    #auth_dict['api_ip'] = util.get_api_ip()
+    auth_dict['api_ip'] = util.get_api_ip()
 
     # new_cloud_name = new_system_variables['cloud_name']
     # get the original system vars from the DB - used in case we need to rollback
