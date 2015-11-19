@@ -207,7 +207,7 @@ def rollback(auth_dict):
         os.system('sudo rm -rf /etc/ceilometer')
         os.system('sudo rm -rf /etc/neutron')
         for f in os.listdir('/etc'):
-            if fnmatch(f, 'os_configs*.tar'):
+            if fnmatch(f, 'os_configs*'):
                 os.system('sudo tar -xvf %s -C /etc' %f)
         os.system('sudo chown -R nova:nova /etc/nova')
         os.system('sudo chown -R cinder:cinder /etc/cinder')
