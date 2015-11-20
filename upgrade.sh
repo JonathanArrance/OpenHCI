@@ -205,8 +205,7 @@ then
     /usr/bin/yum update --skip-broken -y
     /bin/rm -rf /var/lib/tomcat6/webapps/*
     /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
-    /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_postgres.sql
-    # TODO : config aPersona
+    /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_configured.sql
 fi
 
 # Commands to setup our rest api daemon
@@ -234,6 +233,9 @@ then
   /usr/local/bin/pip2.7 install --ignore-installed /usr/local/lib/python2.7/transcirrus/upgrade_resources/pycrypto-2.6.1.tar.gz
   cd $cwd
 fi
+
+# downgrade websockify to work with noVNC console
+/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
 
 ######################################################
 #
