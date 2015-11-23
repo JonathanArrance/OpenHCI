@@ -206,6 +206,8 @@ then
     /bin/rm -rf /var/lib/tomcat6/webapps/*
     /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
     /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_configured.sql
+    sed -i 's/8080/8090/g' /usr/share/tomcat6/conf/server.xml
+    /sbin/service tomcat6 restart
 fi
 
 # Commands to setup our rest api daemon
