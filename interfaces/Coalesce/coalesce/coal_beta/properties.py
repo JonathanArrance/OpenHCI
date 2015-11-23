@@ -1,6 +1,6 @@
 """User specific properties to communicate with ASM."""
 
-ASM_URL = 'http://172.24.24.10:8080/apkv/{path}'
+ASM_URL = 'http://172.24.24.10:8090/apkv/{path}'
 
 COOKIE_NAME = 'trans-asm-py-d1a2n3c4e5%s%s'
 

@@ -1,0 +1,34 @@
+<beans 
+	   xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd          
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+            http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+       		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+	     
+       <import resource="classpath:apersona-rest-email-entity-manager-factory.xml"/>       
+       <context:annotation-config/>
+       <context:component-scan base-package="com.apersona.kv"/>
+       <context:property-placeholder location="classpath:apersona-rest-email.properties,
+       										   classpath:apersona-db.properties"/>
+       <tx:annotation-driven/>
+       <task:annotation-driven/>
+	   <bean id="licSchedular" class="com.apersona.kv.service.LicSyncScheduler"></bean>
+       
+       <bean id="decryptionService" class="com.apersona.kv.service.DecryptionService" init-method="init" />
+       
+       <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+	    <property name="messageConverters">
+        <list>
+            <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+        </list>
+    	</property>
+	</bean>
+
+       <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.Md5PasswordEncoder"/>
+</beans>

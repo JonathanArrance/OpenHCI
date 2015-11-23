@@ -161,11 +161,6 @@ else
     /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/upgrade_resources/add_shadow_admin.py
 fi
 
-cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
-cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
-
-/sbin/service ceilometer_third_party_meters restart
-
 ######################################################
 #
 #---------------------2.4 Patches---------------------
@@ -197,6 +192,24 @@ fi
 sudo service postgresql restart
 /usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info ADD CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
 
+# add aPersona application to cloud if it isn't already there
+if [ ! -f /var/lib/tomcat6/webapps/api_portal/WEB-INF/api-portal-dispatcher-servlet.xml ]
+then
+    /usr/bin/yum update --skip-broken -y
+    /usr/bin/yum install java-1.7.0-openjdk -y
+    /usr/bin/yum install tomcat6 -y
+    /sbin/service tomcat6 start
+    /sbin/chkconfig tomcat6 on
+    /usr/bin/yum install tomcat6-webapps -y
+    /sbin/service tomcat6 restart
+    /usr/bin/yum update --skip-broken -y
+    /bin/rm -rf /var/lib/tomcat6/webapps/*
+    /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
+    /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_configured.sql
+    sed -i 's/8080/8090/g' /usr/share/tomcat6/conf/server.xml
+    /sbin/service tomcat6 restart
+fi
+
 # Commands to setup our rest api daemon
 /bin/cp /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api /etc/init.d
 /bin/chmod 755 /etc/init.d/transcirrus_api
@@ -222,3 +235,18 @@ then
   /usr/local/bin/pip2.7 install --ignore-installed /usr/local/lib/python2.7/transcirrus/upgrade_resources/pycrypto-2.6.1.tar.gz
   cd $cwd
 fi
+
+# downgrade websockify to work with noVNC console
+/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
+
+######################################################
+#
+#------------------Restart Services-------------------
+#
+######################################################
+
+cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
+cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
+
+/sbin/service ceilometer_third_party_meters restart
+/sbin/service transcirrus_api restart
