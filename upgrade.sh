@@ -237,7 +237,7 @@ then
 fi
 
 # downgrade websockify to work with noVNC console
-/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
+##/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
 
 ######################################################
 #
