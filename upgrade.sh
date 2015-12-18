@@ -159,6 +159,8 @@ else
     # add admin, shadow_admin and trans_default project to transcirrus db
     /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${PROJID}"', 'admin', NULL);"
     /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/upgrade_resources/add_shadow_admin.py
+    # add email for shadow_admin
+    python2.7 -c "from transcirrus.common import extras; from transcirrus.component.keystone.keystone_users import user_ops; auth = extras.shadow_auth(); uo = user_ops(auth); uo.update_user({'username': 'shadow_admin', 'email': 'bugs@transcirrus.com'})"
 fi
 
 ######################################################

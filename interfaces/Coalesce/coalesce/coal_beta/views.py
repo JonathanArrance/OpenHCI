@@ -4900,7 +4900,7 @@ def get_user_email(auth):
 	email = selected_user_info['email']
         if email == None:
            #Not able to retrieve email from auth for 'admin' user, hardcoding for testing
-           return 'nickbrust@gmail.com'
+           return 'bugs@transcirrus.com'
         else:
            return email
 
