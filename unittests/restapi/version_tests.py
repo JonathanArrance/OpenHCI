@@ -26,11 +26,11 @@ class VersionTestCases(unittest.TestCase):
         path = "/version"
         data = self.rest.invoke('GET', path)
         version = data['version']
-        self.assertEqual(version['major'], ver.VERSION_MAJOR, "version major mismatch")
-        self.assertEqual(version['minor'], ver.VERSION_MINOR, "version minor mismatch")
-        self.assertEqual(version['release'], ver.VERSION_RELEASE, "version release mismatch")
-        self.assertEqual(version['full_str'], ver.VERSION_FULL_STR, "version full_str mismatch")
-        self.assertEqual(version['short_str'], ver.VERSION_SHORT_STR, "version short_str mismatch")
+        self.assertEqual(str(version['major']), str(ver.VERSION_MAJOR), "version major mismatch: got %s | excepted %s" % (version['major'], ver.VERSION_MAJOR))
+        self.assertEqual(str(version['minor']), str(ver.VERSION_MINOR), "version minor mismatch: got %s | excepted %s" % (version['minor'], ver.VERSION_MINOR))
+        self.assertEqual(str(version['release']), str(ver.VERSION_RELEASE), "version release mismatch: got %s | excepted %s" % (version['release'], ver.VERSION_RELEASE))
+        self.assertEqual(str(version['full']), str(ver.VERSION_FULL_STR), "version full_str mismatch: got %s | excepted %s" % (version['full'], ver.VERSION_FULL_STR))
+        self.assertEqual(str(version['short']), str(ver.VERSION_SHORT_STR), "version short_str mismatch: got %s | excepted %s" % (version['short'], ver.VERSION_SHORT_STR))
         return
 
 if __name__ == "__main__":
