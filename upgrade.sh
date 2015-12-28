@@ -241,14 +241,37 @@ fi
 # downgrade websockify to work with noVNC console
 ##/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
 
+
+# Install Openswan and Openstack VPN packages
+if [ ! -f "/usr/sbin/ipsec" ]
+then
+    yum install -y openswan
+fi
+
+if [ ! -f "/etc/init.d/neutron-vpn-agent" ]
+then
+    yum install -y openstack-neutron-vpn-agent
+    /bin/chown neutron:neutron /etc/neutron/vpn_agent.ini
+    /bin/chmod 770 /etc/neutron/vpn_agent.ini
+fi
+
+# Setup VPNaaS Neutron Config
+/usr/bin/openstack-config --set /etc/neutron/neutron.conf DEFAULT service_plugins router,metering,vpnaas
+
+/usr/bin/openstack-config --set /etc/neutron/vpn_agent.ini vpnagent vpn_device_driver neutron.services.vpn.device_drivers.ipsec.OpenSwanDriver
+/usr/bin/openstack-config --set /etc/neutron/vpn_agent.ini ipsec ipsec_status_check_interval 60
+
 ######################################################
 #
 #------------------Restart Services-------------------
 #
 ######################################################
 
+/sbin/service ipsec restart
+
 cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
 cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
 
 /sbin/service ceilometer_third_party_meters restart
 /sbin/service transcirrus_api restart
+
