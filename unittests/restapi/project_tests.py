@@ -70,8 +70,15 @@ class ProjectTestCases(unittest.TestCase):
     # Test getting all projects.
     def testA_GetProjects(self):
         path = "/projects"
-        
+
         # Test that we raise an exception for no authorization.
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('GET', path)
+        e = cm.exception
+        self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
+
+        # Test that we raise an exception for invalid password.
+        headers = {'username': ut_config.admin, 'password': "invalid"}
         with self.assertRaises(Exception) as cm:
             data = self.rest.invoke('GET', path)
         e = cm.exception
@@ -177,6 +184,13 @@ class ProjectTestCases(unittest.TestCase):
         e = cm.exception
         self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
 
+        # Test that we raise an exception for invalid password.
+        headers = {'username': ut_config.admin, 'password': "invalid"}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('GET', path, **proj)
+        e = cm.exception
+        self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
+
         # Test as the cloud admin.
         headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
         data = self.rest.invoke('GET', path, headers=headers, **proj)
@@ -247,6 +261,13 @@ class ProjectTestCases(unittest.TestCase):
         e = cm.exception
         self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
 
+        # Test that we raise an exception for invalid password.
+        headers = {'username': ut_config.admin, 'password': "invalid"}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers)
+        e = cm.exception
+        self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
+
         # Test as the cloud admin.
         index = 4
         body = self.project.create_project_body(index)
@@ -255,30 +276,164 @@ class ProjectTestCases(unittest.TestCase):
         proj = data['project']
         project = self.project.get_project_data(proj['id'])
         proj_data = self.project.create_project_rest_dict(index)
-        print project
-        #self.validate_project(project, proj_data)
+        self.validate_project(proj_data, project)
         self.project.delete_project_by_id(proj['id'])
 
         # Test as a project admin.
+        index = 5
+        body = self.project.create_project_body(index)
+        headers = {'username': Proj.USERNAME_PREFIX + "0", 'password': Proj.PASSWORD_PREFIX + "0"}
+        data = self.rest.invoke('POST', path, headers=headers, data=body)
+        proj = data['project']
+        project = self.project.get_project_data(proj['id'])
+        proj_data = self.project.create_project_rest_dict(index)
+        self.validate_project(proj_data, project)
+        self.project.delete_project_by_id(proj['id'])
+
         # Test that we raise an exception for a power-user attempting to create a project
+        index = 6
+        body = self.project.create_project_body(index)
+        headers = {'username': Usr.PWR_USER_PREFIX + "0", 'password': Usr.PWR_USER_PWD_PREFIX + "0"}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
+
         # Test that we raise an exception for a user attempting to create a project
-        # Test that we raise an exception for bad data
+        index = 6
+        body = self.project.create_project_body(index)
+        headers = {'username': Usr.USER_PREFIX + "0", 'password': Usr.USER_PWD_PREFIX + "0"}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
+
+        # Test that we raise an exceptions for bad data
+        index = 6
+
+        ##### ENABLE once this is fixed!!
+
+        # Bad project name
+        ##body = self.project.create_project_body(index, name="?")
+        ##headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        ##with self.assertRaises(Exception) as cm:
+        ##    data = self.rest.invoke('POST', path, headers=headers, data=body)
+        ##e = cm.exception
+        ##self.assertEqual(e.error_code, 401, "should have raised an exception, got error code %s" % e.error_code)
+
+        # Missing project name
+        body = self.project.create_project_body(index, name="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing project name), got error code %s" % e.error_code)
+
+        # Bad username
+
+        # Missing username
+        body = self.project.create_project_body(index, username="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing username), got error code %s" % e.error_code)
+
+        # Bad password
+
+        # Missing password
+        body = self.project.create_project_body(index, password="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing password), got error code %s" % e.error_code)
+
+        # Bad email address
+
+        # Missing email address
+        body = self.project.create_project_body(index, email="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing email), got error code %s" % e.error_code)
+
+        ##### ENABLE once this is fixed!!
+
+        # Duplicate email address
+        ##body = self.project.create_project_body(index, email="UT_Admin_0@tc.com")
+        ##headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        ##with self.assertRaises(Exception) as cm:
+        ##    data = self.rest.invoke('POST', path, headers=headers, data=body)
+        ##e = cm.exception
+        ##self.assertEqual(e.error_code, 400, "should have raised an exception (dup email), got error code %s" % e.error_code)
+
+        # Bad network name
+
+        # Missing network name
+        body = self.project.create_project_body(index, network_name="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing network name), got error code %s" % e.error_code)
+
+        # Bad router name
+
+        # Missing router name
+        body = self.project.create_project_body(index, router_name="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing router name), got error code %s" % e.error_code)
+
+        # Bad dns address
+
+        # Missing dns address
+        body = self.project.create_project_body(index, dns_address="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing dns), got error code %s" % e.error_code)
+
+        # Bad security group name
+
+        # Missing security group name
+        body = self.project.create_project_body(index, security_group_name="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing secgroup name), got error code %s" % e.error_code)
+
+        # Bad security_key name
+
+        # Missing security key name
+        body = self.project.create_project_body(index, security_key_name="drop")
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        with self.assertRaises(Exception) as cm:
+            data = self.rest.invoke('POST', path, headers=headers, data=body)
+        e = cm.exception
+        self.assertEqual(e.error_code, 400, "should have raised an exception (missing seckey name), got error code %s" % e.error_code)
 
         return
 
     # Helper routine to validate a project dictionary.
     def validate_project(self, rest_proj, valid_proj):
-        self.assertEquals(valid_proj['project_id'], rest_proj['id'], "project_id do not match %s | %s" % (valid_proj['project_id'], rest_proj['id']))
-        self.assertEquals(valid_proj['project_name'], rest_proj['name'], "project_name do not match %s | %s" % (valid_proj['project_name'], rest_proj['name']))
-        self.assertEquals(valid_proj['def_security_key_name'] != rest_proj['security_key_name'], "security_key_name do not match %s | %s" % (valid_proj['def_security_key_name'], rest_proj['security_key_name']))
-        self.assertEquals(valid_proj['def_security_key_id'], rest_proj['security_key_id'], "security_key_id do not match %s | %s" % (valid_proj['def_security_key_id'], rest_proj['security_key_id']))
-        self.assertEquals(valid_proj['def_security_group_id'], rest_proj['security_group_id'], "security_group_id do not match %s | %s" % (valid_proj['def_security_group_id'], rest_proj['security_group_id']))
-        self.assertEquals(valid_proj['def_security_group_name'], rest_proj['security_group_name'], "security_group_name do not match %s | %s" % (valid_proj['def_security_group_name'], rest_proj['security_group_name']))
-        self.assertEquals(valid_proj['host_system_name'], rest_proj['host_system_name'], "host_system_name do not match %s | %s" % (valid_proj['host_system_name'], rest_proj['host_system_name']))
-        self.assertEquals(valid_proj['host_system_ip'], rest_proj['host_system_ip'], "host_system_ip do not match %s | %s" % (valid_proj['host_system_ip'], rest_proj['host_system_ip']))
-        self.assertEquals(valid_proj['def_network_name'], rest_proj['network_name'], "network_name do not match %s | %s" % (valid_proj['def_network_name'], rest_proj['network_name']))
-        self.assertEquals(valid_proj['def_network_id'], rest_proj['network_id'], "network_id do not match %s | %s" % (valid_proj['def_network_id'], rest_proj['network_id']))
-        self.assertEquals(valid_proj['is_default'], rest_proj['is_default'], "is_default do not match %s | %s" % (valid_proj['is_default'], rest_proj['is_default']))
+        self.assertEquals(str(valid_proj['project_id']), str(rest_proj['id']), "project_id do not match %s | %s" % (valid_proj['project_id'], rest_proj['id']))
+        self.assertEquals(str(valid_proj['project_name']), str(rest_proj['name']), "project_name do not match %s | %s" % (valid_proj['project_name'], rest_proj['name']))
+        self.assertEquals(str(valid_proj['def_security_key_id']), str(rest_proj['security_key_id']), "security_key_id do not match %s | %s" % (valid_proj['def_security_key_id'], rest_proj['security_key_id']))
+        self.assertEquals(str(valid_proj['def_security_group_id']), str(rest_proj['security_group_id']), "security_group_id do not match %s | %s" % (valid_proj['def_security_group_id'], rest_proj['security_group_id']))
+        self.assertEquals(str(valid_proj['host_system_name']), str(rest_proj['host_system_name']), "host_system_name do not match %s | %s" % (valid_proj['host_system_name'], rest_proj['host_system_name']))
+        self.assertEquals(str(valid_proj['host_system_ip']), str(rest_proj['host_system_ip']), "host_system_ip do not match %s | %s" % (valid_proj['host_system_ip'], rest_proj['host_system_ip']))
+        self.assertEquals(str(valid_proj['def_network_name']), str(rest_proj['network_name']), "network_name do not match %s | %s" % (valid_proj['def_network_name'], rest_proj['network_name']))
+        self.assertEquals(str(valid_proj['def_network_id']), str(rest_proj['network_id']), "network_id do not match %s | %s" % (valid_proj['def_network_id'], rest_proj['network_id']))
+        self.assertEquals(str(valid_proj['is_default']), str(rest_proj['is_default']), "is_default do not match %s | %s" % (valid_proj['is_default'], rest_proj['is_default']))
+        self.assertTrue(str(valid_proj['def_security_key_name']).startswith(str(rest_proj['security_key_name'])),  "security_key_name did not start with %s | %s" % (valid_proj['def_security_key_name'], rest_proj['security_key_name']))
+        self.assertTrue(str(valid_proj['def_security_group_name']).startswith(str(rest_proj['security_group_name'])), "security_group_name did not start with %s | %s" % (valid_proj['def_security_group_name'], rest_proj['security_group_name']))
         return
 
 if __name__ == "__main__":
