@@ -93,7 +93,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -132,7 +132,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -171,7 +171,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -210,7 +210,8 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             # load = json.loads(rest['data'])
-            print "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            # return "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            return rest['response']
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -249,7 +250,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -288,7 +289,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -327,7 +328,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -366,7 +367,8 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             # load = json.loads(rest['data'])
-            print "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            # return "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            return rest['response']
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -405,7 +407,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -444,7 +446,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -483,7 +485,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -522,7 +524,8 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             # load = json.loads(rest['data'])
-            print "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            # return "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            return rest['response']
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -563,7 +566,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -602,7 +605,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -641,7 +644,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             load = json.loads(rest['data'])
-            print load
+            return load
         else:
             util.http_codes(rest['response'], rest['reason'])
 
@@ -680,6 +683,7 @@ class vpn_ops:
             # read the json that is returned.
             logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
             # load = json.loads(rest['data'])
-            print "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            # return "Response %s with Reason %s" % (rest['response'], rest['reason'])
+            return rest['response']
         else:
             util.http_codes(rest['response'], rest['reason'])
