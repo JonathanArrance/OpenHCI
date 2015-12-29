@@ -503,6 +503,16 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_private_network_create',
             name='get_private_network_create'),
 
+        # --- IPSec VPN Tunnels ----
+
+        url(r'^add_vpn_tunnel/(?P<project_id>[^/]+)/(?P<ike_policy_name>[^/]+)/(?P<ipsec_policy_name>[^/]+)/(?P<service_name>[^/]+)/(?P<service_description>[^/]+)/(?P<subnet_id>[^/]+)/(?P<router_id>[^/]+)/(?P<peer_cidrs>[^/]+)/(?P<peer_address>[^/]+)/(?P<peer_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
+            'coalesce.coal_beta.views.add_vpn_tunnel',
+            name='add_vpn_tunnel'),
+
+        url(r'^delete_vpn_tunnel/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
+            'coalesce.coal_beta.views.delete_vpn_tunnel',
+            name='delete_vpn_tunnel'),
+
         # --- Routers ----
         url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_router',

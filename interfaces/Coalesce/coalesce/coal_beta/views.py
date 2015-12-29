@@ -51,6 +51,7 @@ import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
 import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
+import transcirrus.operations.vpn_manager as vpn_operation
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -3635,6 +3636,41 @@ def instance_view(request, project_id, server_id):
                                       'snapshots': snapshots,
                                       'current_project_id': project_id,
                                       'error': "Error: %s" % e}))
+
+
+def add_vpn_tunnel(request, project_id, ike_policy_name, ipsec_policy_name, service_name, service_description, subnet_id, router_id, peer_cidrs, peer_address, peer_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+        vpn_dict = {
+            "project_id": project_id,
+            "ike_policy_name": ike_policy_name,
+            "ipsec_policy_name": ipsec_policy_name,
+            "service_name": service_name,
+            "service_description": service_description,
+            "subnet_id": subnet_id,
+            "router_id": router_id,
+            "peer_cidrs": peer_cidrs,
+            "peer_address": peer_address,
+            "peer_id": peer_id,
+            "tunnel_name": tunnel_name
+        }
+        out = vpn_operation.create_vpn_tunnel(auth, vpn_dict)
+        out['status'] = 'success'
+        out['message'] = 'The IPSec VPN Tunnel: %s has been created.' % tunnel_name
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not add the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def delete_vpn_tunnel(request, project_id, tunnel_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+        out = vpn_operation.delete_vpn_tunnel(auth, project_id, tunnel_id)
+        out['status'] = 'success'
+        out['message'] = 'The IPSec VPN Tunnel: %s has been deleted.' % tunnel_name
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not delete the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
 
 
 def add_private_network(request, net_name, admin_state, shared, project_id):
