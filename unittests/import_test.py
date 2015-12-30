@@ -22,6 +22,8 @@ io = import_ops(b)
 
 disks = io.extract_package({'package_name':'windows.ova','path':'/home/transuser/jon'})
 print disks
+
+
 convert = io.convert_vdisk(disks)
 
 print convert

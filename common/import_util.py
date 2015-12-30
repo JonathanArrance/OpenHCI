@@ -2,7 +2,7 @@
 import subprocess
 import os
 from fnmatch import fnmatch
-import xml.sax
+from xml.dom import minidom
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -76,6 +76,8 @@ class import_ops:
                           - path - REQ
         OUTPUT: array of r_dict - disk_type
                                 - disk
+                                - path
+                                - order
         ACCESS: Admins - can extract in any project
                 PU - can extract only in their project
                 User - can extract only in their project
@@ -97,9 +99,16 @@ class import_ops:
 
         r_array = []
         r_dict = {}
+        itemlist = None
         for x in contents:
+            if(fnmatch(x,'*.ovf')):
+                #get the ovf xml
+                xmldoc = minidom.parse('%s'%(input_dict['path']+'/'+package_split[0]+'/'+x))
+                itemlist = xmldoc.getElementsByTagName('File')
             if(fnmatch(x,'*.vmdk')):
                 r_dict = {'disk_type':'vmdk','disk':x,'path':input_dict['path']+'/'+package_split[0]}
+                if(itemlist[0].attributes['ovf:href'].value == x):
+                    r_dict['order'] = itemlist[0].attributes['ovf:id'].value
                 r_array.append(r_dict)
             if(fnmatch(x,'*.vhd')):
                 r_dict = {'disk_type':'vhd','disk':x,'path':input_dict['path']+'/'+package_split[0]}
@@ -114,7 +123,7 @@ class import_ops:
                                    - disk
                                    - path
         OUTPUT: r_array of dict - path
-                                -convert_disk
+                                - convert_disk
         ACCESS: Admins - can extract in any project
                 PU - can extract only in their project
                 User - can extract only in their project
@@ -171,24 +180,6 @@ class import_ops:
         #Remove the OVF/OVA/VMDK once it is imported into glance
         pass
 
-    """
-    def import_vdisk(auth_dict,input_dict):
-        status = _set_up_ovf_tool()
-        if(status == 'ERROR'):
-            logger.sys_error('Could not install the OVFTool please check your settings.')
-            raise Exception('Could not install the OVFTool please check your settings.')
-    
-        extract = migration.extract_packaged_vm(package_name)
-    
-        input_dict = {'format':'qcow2','image_name':input_dict['image_name']}
-        convert = migration.convert_vmdk(input_dict)
-    
-        glance = glance_ops(auth_dict)
-    
-        glance_import = {'image_name':input_dict['image_name'],'container_formet':'bare','disk_format':'qcow2','image_type':'image_file','visibility':'private','image_location':''}
-        import_image = glance.import_image(glance_import)
-    """
-
     def set_up_ovf_tool():
         pass
         """
@@ -224,45 +215,3 @@ class import_ops:
             p.sendline()
             break
         """
-
-class ovfHandler( xml.sax.ContentHandler ):
-    def __init__(self):
-        self.CurrentData = ""
-        self.disk = ""
-
-    # Call when an element starts
-    def startElement(self, tag, attributes):
-        self.CurrentData = tag
-        if tag == "References":
-            disk_order = attributes["ovf:id"]
-
-    # Call when an elements ends
-    def endElement(self, tag):
-        if self.CurrentData == "type":
-            print "Type:", self.type
-        elif self.CurrentData == "format":
-            print "Format:", self.format
-        elif self.CurrentData == "year":
-            print "Year:", self.year
-        elif self.CurrentData == "rating":
-            print "Rating:", self.rating
-        elif self.CurrentData == "stars":
-            print "Stars:", self.stars
-        elif self.CurrentData == "description":
-            print "Description:", self.description
-        self.CurrentData = ""
-
-    # Call when a character is read
-    def characters(self, content):
-        if self.CurrentData == "type":
-            self.type = content
-        elif self.CurrentData == "format":
-            self.format = content
-        elif self.CurrentData == "year":
-            self.year = content
-        elif self.CurrentData == "rating":
-            self.rating = content
-        elif self.CurrentData == "stars":
-            self.stars = content
-        elif self.CurrentData == "description":
-            self.description = content

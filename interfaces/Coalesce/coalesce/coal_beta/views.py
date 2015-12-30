@@ -2563,10 +2563,17 @@ def import_local (request, image_name, container_format, disk_format, image_type
         go = glance_ops(auth)
         content_type = request.FILES['imageLocal'].content_type
 
-        # Create a temp file to hold the image contents until we give it to glance.
-        download_dir   = "/tmp/"
-        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-        download_file  = download_dir + download_fname
+        download_dir = download_fname = download_file = None
+        if(container_format == 'ovf'):
+            download_dir = "/transcirrus/%s/%s/%s"%(auth['project_id'],auth['user_id'],image_name)
+            os.mkdir(download_dir, 0755)
+            download_fname = image_name + "." + container_format
+            download_file  = download_dir + download_fname
+        else:
+            # Create a temp file to hold the image contents until we give it to glance.
+            download_dir   = "/tmp/"
+            download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+            download_file  = download_dir + download_fname
 
         # Transfer the content from the temp location to our own file.
         try:
@@ -2576,6 +2583,12 @@ def import_local (request, image_name, container_format, disk_format, image_type
         except Exception as e:
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
+
+        if(container_format == 'ovf'):
+            #we need to pull the virtual disks out and convert them
+            io = import_ops(auth)
+            extract = io.extract_package({'project_id':auth['project_id'],'package_name':download_fname,'path':download_dir,'disk_format':disk_format})
+            #convert_out = vmw.extract_package({'project_id':auth['project_id'],'package_name':download_fname,'path':download_dir,'disk_format':disk_format})
 
         # Add the image to glance.
         import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
