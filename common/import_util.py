@@ -224,7 +224,7 @@ class import_ops:
             p.sendline()
             break
         """
-"""
+
 class ovfHandler( xml.sax.ContentHandler ):
     def __init__(self):
         self.CurrentData = ""
@@ -266,4 +266,3 @@ class ovfHandler( xml.sax.ContentHandler ):
             self.stars = content
         elif self.CurrentData == "description":
             self.description = content
-"""
