@@ -54,6 +54,7 @@ import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
 import transcirrus.operations.vpn_manager as vpn_operation
 import transcirrus.operations.import_workload as import_workload
+from transcirrus.component.neutron.vpn import vpn_ops
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -3679,6 +3680,26 @@ def instance_view(request, project_id, server_id):
                                       'current_project_id': project_id,
                                       'error': "Error: %s" % e}))
 
+def list_vpn_tunnels(request, project_id):
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        out = vpnops.list_vpn_ipsec_site_connection(project_id)
+        out['status'] = 'success'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not display the IPSec VPN Tunnel list for the project: %s" % (e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def show_vpn_tunnel(request, project_id, tunnel_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        out = vpnops.show_vpn_ipsec_site_connection(project_id,tunnel_id)
+        out['status'] = 'success'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not display the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def add_vpn_tunnel(request, project_id, ike_policy_name, ipsec_policy_name, service_name, service_description, subnet_id, router_id, peer_cidrs, peer_address, peer_id, tunnel_name):
     try:
