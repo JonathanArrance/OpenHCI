@@ -2,38 +2,45 @@
 import subprocess
 import os
 
-import transcirrus.common.migration as migration
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
-from transcirrus.component.glance.glance_ops_v2.py import glance_ops
+from transcirrus.common.import_util import import_ops
+from transcirrus.component.glance.glance_ops_v2 import glance_ops
 
-def importvmdk(auth_dict,input_dict):
-
-    status = _set_up_ovf_tool()
-    if(status == 'ERROR'):
-        logger.sys_error('Could not install the OVFTool please check your settings.')
-        raise Exception('Could not install the OVFTool please check your settings.')
-
-    extract = migration.extract_packaged_vm(package_name)
-
-    input_dict = {'format':'qcow2','image_name':input_dict['image_name']}
-    convert = migration.convert_vmdk(input_dict)
-
+def import_vmware(auth_dict,input_dict):
+    """
+    DESC: Extract and import ovf virtual disks. Then attempt to rebuild the virtual machine.
+    INPUT: input_dict - package_name - REQ
+                      - path - REQ
+    OUTPUT: array of r_dict - disk_type
+                            - disk
+                            - path
+                            - order
+    ACCESS: Admins - can extract in any project
+            PU - can extract only in their project
+            User - can extract only in their project
+    NOTE:
+    """
+    io = import_ops(auth_dict)
     glance = glance_ops(auth_dict)
 
-    glance_import = {'image_name':input_dict['image_name'],'container_formet':'bare','disk_format':'qcow2','image_type':'image_file','visibility':'private','image_location':''}
-    import_image = glance.import_image(glance_import)
+    image_name = input_dict['package_name'].split('.')
 
+    #extract the ovf/ova package
+    extract = io.extract_package({'package_name':input_dict['package_name'],'path':input_dict['path']})
 
-Do you agree? [yes/no]: y
+    #convert the disk(s)
+    convert = io.convert_vdisk(extract)
 
-The product is ready to be installed.  Press Enter to begin
-installation or Ctrl-C to cancel.
+    #import each one of the disk images to glance.
+    #for x in convert:
+    #    glance_import = {'image_name':image_name[0],'container_format':image_name[1],'disk_format':'qcow2','image_type':'image_file','visibility':'private','image_location':''}
+    #    import_image = glance.import_image(glance_import)
 
-                
-                pass
-            else:
-                continue
-            if(len(directory) == (index - 1)):
-                logger.sys_error('Could not find the OVFtool, please upload it and retry.')
-                raise Exception('Could not find the OVFtool, please upload it and retry.')
+    #recreate the data disk(s) images to cinder volumes and keep the order
+    #for disk in extract:
+    #    if(disk)
+
+    #connect the data(s) to the instance
+    
+

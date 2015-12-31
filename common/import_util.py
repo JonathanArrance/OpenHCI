@@ -119,11 +119,13 @@ class import_ops:
     def convert_vdisk(self,input_array):
         """
         DESC: Pull the vmdks out of the OVA or OVF based package and convert to qcow2 or raw.
-        INPUT: input_array of dict - disk_type
-                                   - disk
-                                   - path
+        INPUT: input_array of dict - disk_type - REQ
+                                   - disk - REQ
+                                   - path - REQ
+                                   - order - OP
         OUTPUT: r_array of dict - path
                                 - convert_disk
+                                - order
         ACCESS: Admins - can extract in any project
                 PU - can extract only in their project
                 User - can extract only in their project
@@ -139,12 +141,15 @@ class import_ops:
             logger.sys_info('Can not extract the VMware OVF/OVA package. Invalid User.')
             raise Exception('Can not extract the VMware OVF/OVA package. Invalid User.')
 
+        #if array brough in from extract order will be included with it.
         r_array = []
         if(flag == 1):
             for item in input_array:
+                if(order not in item):
+                    item['order'] = 'NULL'
                 command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0])
                 out = os.popen('%s'%(command))
-                r_array.append({'path':item['path'],'convert_disk':item['disk'].split('.')[0] +".qcow2"})
+                r_array.append({'path':item['path'],'convert_disk':item['disk'].split('.')[0] +".qcow2",'order':item['order']})
 
         print r_array
 

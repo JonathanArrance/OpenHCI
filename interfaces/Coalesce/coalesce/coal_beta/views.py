@@ -11,6 +11,7 @@ import time
 import os
 import sys
 import hashlib
+from multiprocessing import Process
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
@@ -52,6 +53,7 @@ import transcirrus.common.version as ver
 import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
 import transcirrus.operations.vpn_manager as vpn_operation
+import transcirrus.operations.import_workload as import_workload
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -2563,10 +2565,11 @@ def import_local (request, image_name, container_format, disk_format, image_type
         go = glance_ops(auth)
         content_type = request.FILES['imageLocal'].content_type
 
-        download_dir = download_fname = download_file = None
+        download_dir = download_fname = download_file = out = None
         if(container_format == 'ovf'):
-            download_dir = "/transcirrus/%s/%s/%s"%(auth['project_id'],auth['user_id'],image_name)
-            os.mkdir(download_dir, 0755)
+            download_dir = "/transcirrus/workload_import/%s/%s/%s"%(auth['project_id'],auth['user_id'],image_name)
+            #os.mkdir(download_dir, 0755)
+            os.popen('sudo mkdir -p %s'%(download_dir))
             download_fname = image_name + "." + container_format
             download_file  = download_dir + download_fname
         else:
@@ -2585,17 +2588,43 @@ def import_local (request, image_name, container_format, disk_format, image_type
             return HttpResponse(simplejson.dumps(out))
 
         if(container_format == 'ovf'):
+            #p = Process(target=run_setup, args=(new_system_variables, user_dict))
+            #p.start()
             #we need to pull the virtual disks out and convert them
-            io = import_ops(auth)
-            extract = io.extract_package({'project_id':auth['project_id'],'package_name':download_fname,'path':download_dir,'disk_format':disk_format})
-            #convert_out = vmw.extract_package({'project_id':auth['project_id'],'package_name':download_fname,'path':download_dir,'disk_format':disk_format})
+            import_workload.import_vmware(auth,{'package_name':download_fname,'path':download_dir})
 
-        # Add the image to glance.
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
-        import_dict['image_location'] = download_file
-        out = go.import_image(import_dict)
-        out['status'] = "success"
-        out['message'] = "Local image %s was uploaded." % image_name
+            #if p.exitcode == 0:
+            #    """
+            #    restart_services()
+            #    flag_set = node_util.set_first_time_boot('UNSET')
+            #    if (flag_set['first_time_boot'] != 'OK'):
+            #        d.msgbox("An error has occured in setting the first time boot flag.")
+            #    success_msg(d, timeout)
+            #    clear_screen(d)
+            #    """
+            #elif p.exitcode == 2:
+            #    """
+            #    d.msgbox("An error has occurred: " + last_message)
+            #    rollback_msg(d, timeout)
+            #    clear_screen(d)
+            #    rollback(user_dict)
+            #    util.reboot_system()
+            #    """
+            #else:
+            #    """
+            #    rollback_msg(d, timeout)
+            #    clear_screen(d)
+            #    rollback(user_dict)
+            #    util.reboot_system()
+            #    """
+
+        else:
+            # Add the image to glance.
+            import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
+            import_dict['image_location'] = download_file
+            out = go.import_image(import_dict)
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
     except Exception as e:
         out = {'status' : "error", 'message' : "Error uploading local file: %s" % e}
     return HttpResponse(simplejson.dumps(out))
