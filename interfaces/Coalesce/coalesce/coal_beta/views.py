@@ -2567,10 +2567,12 @@ def import_local (request, image_name, container_format, disk_format, image_type
         content_type = request.FILES['imageLocal'].content_type
 
         download_dir = download_fname = download_file = out = None
-        if(container_format == 'ovf'):
-            download_dir = "/transcirrus/workload_import/%s/%s/%s"%(auth['project_id'],auth['user_id'],image_name)
+        if(container_format == 'ovf' or container_format == 'ova'):
+            #download_dir = "/transcirrus/workload_import/%s/%s/%s"%(auth['project_id'],auth['user_id'],image_name)
             #os.mkdir(download_dir, 0755)
-            os.popen('sudo mkdir -p %s'%(download_dir))
+            #os.popen('sudo mkdir -p %s'%(download_dir))
+            #os.popen('sudo chmod 777 %s'%(download_dir))
+            download_dir   = "/tmp/"
             download_fname = image_name + "." + container_format
             download_file  = download_dir + download_fname
         else:
@@ -2588,37 +2590,11 @@ def import_local (request, image_name, container_format, disk_format, image_type
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
 
-        if(container_format == 'ovf'):
-            #p = Process(target=run_setup, args=(new_system_variables, user_dict))
-            #p.start()
+        if(container_format == 'ovf' or container_format == 'ova'):
             #we need to pull the virtual disks out and convert them
-            import_workload.import_vmware(auth,{'package_name':download_fname,'path':download_dir})
-
-            #if p.exitcode == 0:
-            #    """
-            #    restart_services()
-            #    flag_set = node_util.set_first_time_boot('UNSET')
-            #    if (flag_set['first_time_boot'] != 'OK'):
-            #        d.msgbox("An error has occured in setting the first time boot flag.")
-            #    success_msg(d, timeout)
-            #    clear_screen(d)
-            #    """
-            #elif p.exitcode == 2:
-            #    """
-            #    d.msgbox("An error has occurred: " + last_message)
-            #    rollback_msg(d, timeout)
-            #    clear_screen(d)
-            #    rollback(user_dict)
-            #    util.reboot_system()
-            #    """
-            #else:
-            #    """
-            #    rollback_msg(d, timeout)
-            #    clear_screen(d)
-            #    rollback(user_dict)
-            #    util.reboot_system()
-            #    """
-
+            out = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type})
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
         else:
             # Add the image to glance.
             import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}

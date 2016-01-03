@@ -77,44 +77,47 @@ class import_ops:
         OUTPUT: array of r_dict - disk_type
                                 - disk
                                 - path
+                                - disk_size
                                 - order
         ACCESS: Admins - can extract in any project
                 PU - can extract only in their project
                 User - can extract only in their project
         NOTE:
         """
+        #check user levels
+        flag = 0
+        if(self.user_level == 0):
+            flag = 1
+        elif(self.user_level >= 1 and self.project_id == input_dict['project_id']):
+            flag == 1
+        else:
+            logger.sys_info('Can not extract the VMware OVF/OVA package. Invalid User.')
+            raise Exception('Can not extract the VMware OVF/OVA package. Invalid User.')
+
         #extract and convert to raw or qcow2
         package_split = input_dict['package_name'].split('.')
-        contents = None
         if(package_split[1] == 'ova'):
             os.mkdir(input_dict['path']+'/'+package_split[0])
             out = subprocess.call(["tar", "-xvf", input_dict['path']+'/'+input_dict['package_name'],"-C",input_dict['path']+'/'+package_split[0]])
             if(out == 0):
-                contents = os.listdir(input_dict['path']+'/'+package_split[0])
+                self.contents = os.listdir(input_dict['path']+'/'+package_split[0])
         elif(package_split[1] == 'ovf'):
-            contents = os.listdir(input_dict['path']+'/'+input_dict['package_name'])
+            self.contents = os.listdir(input_dict['path']+'/'+input_dict['package_name'])
         else:
             logger.sys_error("Invalid package type. %s not supported"%(package_split[1]))
             raise Exception("Invalid package type. %s not supported"%(package_split[1]))
 
-        r_array = []
-        r_dict = {}
-        itemlist = None
-        for x in contents:
+        for x in self.contents:
             if(fnmatch(x,'*.ovf')):
                 #get the ovf xml
-                xmldoc = minidom.parse('%s'%(input_dict['path']+'/'+package_split[0]+'/'+x))
-                itemlist = xmldoc.getElementsByTagName('File')
-            if(fnmatch(x,'*.vmdk')):
-                r_dict = {'disk_type':'vmdk','disk':x,'path':input_dict['path']+'/'+package_split[0]}
-                if(itemlist[0].attributes['ovf:href'].value == x):
-                    r_dict['order'] = itemlist[0].attributes['ovf:id'].value
-                r_array.append(r_dict)
-            if(fnmatch(x,'*.vhd')):
-                r_dict = {'disk_type':'vhd','disk':x,'path':input_dict['path']+'/'+package_split[0]}
-                r_array.append(r_dict)
+                self.attribs = self.get_import_specs('%s'%(input_dict['path']+'/'+package_split[0]+'/'+x))
 
-        return r_array
+        self.r_array = []
+        for y in self.attribs['disks']:
+            self.r_dict = {'disk_type':'vmdk','disk':str(y['disk']),'path':input_dict['path']+'/'+package_split[0],'disk_size':str(y['size']),'order':str(y['order'])}
+            self.r_array.append(self.r_dict)
+
+        return self.r_array
 
     def convert_vdisk(self,input_array):
         """
@@ -122,6 +125,7 @@ class import_ops:
         INPUT: input_array of dict - disk_type - REQ
                                    - disk - REQ
                                    - path - REQ
+                                   - disk_size - OP
                                    - order - OP
         OUTPUT: r_array of dict - path
                                 - convert_disk
@@ -145,13 +149,75 @@ class import_ops:
         r_array = []
         if(flag == 1):
             for item in input_array:
-                if(order not in item):
+                if('order' not in item):
                     item['order'] = 'NULL'
-                command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0])
-                out = os.popen('%s'%(command))
-                r_array.append({'path':item['path'],'convert_disk':item['disk'].split('.')[0] +".qcow2",'order':item['order']})
+                #if('disk_size' in item):
+                    #self.command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2 -o size=%sG'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0],item['disk_size'])
+                #else:
+                self.command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0])
+                out = os.popen('%s'%(self.command))
+                r_array.append({'path':item['path'],'convert_disk':item['disk'].split('.')[0] +".qcow2",'order':str(item['order']),'disk_size':item['disk_size']})
 
-        print r_array
+        return r_array
+
+    def get_import_specs(self,path):
+        """
+        DESC: Pull the relevent spec info from the .ovf(xml) file.
+        INPUT: path - REQ
+        OUTPUT: r_dict - inst_name
+                       - memory
+                       - num_cpu
+                       - disks - array or r_dict - disk
+                                                 - order
+                                                 - size
+        ACCESS: Admins - can extract in any project
+                PU - can extract only in their project
+                User - can extract only in their project
+        NOTE: This will be used to build out a new spec if needed.
+        """
+        #check user levels
+        flag = 0
+        if(self.user_level == 0):
+            flag = 1
+        elif(self.user_level >= 1 and self.project_id == input_dict['project_id']):
+            flag == 1
+        else:
+            logger.sys_info('Can not get the extracted package spec. Invalid User.')
+            raise Exception('Can not get the extracted package spec. Invalid User.')
+
+        r_dict = {}
+        xmldoc = minidom.parse('%s'%(path))
+        files = xmldoc.getElementsByTagName('File')
+        disks = []
+        for f in files:
+            disk_dict = {}
+            disk_dict['disk'] = f.getAttribute('ovf:href')
+            disk_dict['order'] = f.getAttribute('ovf:id')
+            storage = xmldoc.getElementsByTagName('Disk')
+            for s in storage:
+                if(s.getAttribute('ovf:fileRef') == disk_dict['order']):
+                    disk_dict['size'] = s.getAttribute('ovf:capacity')
+            disks.append(disk_dict)
+        r_dict['disks'] = disks
+
+        vs = xmldoc.getElementsByTagName('VirtualSystem')[0]
+        r_dict['inst_name'] = vs.getAttribute('ovf:id')
+
+        items = xmldoc.getElementsByTagName('Item')
+        for item in items:
+            description = item.getElementsByTagName('rasd:Description')
+            values = item.getElementsByTagName('rasd:VirtualQuantity')
+            for desc in description:
+                out = desc.childNodes[0].nodeValue
+                if(out == 'Number of Virtual CPUs'):
+                    for val in values:
+                        out2 = val.childNodes[0].nodeValue
+                        r_dict['num_cpu'] = out2
+                if(out == 'Memory Size'):
+                    for val in values:
+                        out2 = val.childNodes[0].nodeValue
+                        r_dict['memory'] = out2
+        return r_dict
 
     def list_imports(self):
         """

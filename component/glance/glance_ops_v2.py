@@ -88,6 +88,7 @@ class glance_ops:
         """
         DESC: Import a pre-made glance image .img file
         INPUT: input_dict - image_name - req
+                          -input_type - op linux/windows
                           - container_format - req (bare, ovf, aki, ari, ami)
                           - disk_format - req (raw, vhd, vmdk, vdi, iso, qcow2, aki, ari, ami)
                           - image_type - must specify EITHER image_file OR image_url
