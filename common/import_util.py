@@ -3,6 +3,7 @@ import subprocess
 import os
 from fnmatch import fnmatch
 from xml.dom import minidom
+import random
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config
@@ -54,6 +55,7 @@ class import_ops:
             logger.sys_error("Invalid status level passed for user: %s" %(self.username))
             raise Exception("Invalid status level passed for user: %s" %(self.username))
 
+        self.rannum = random.randrange(1000,9000)
         #attach to the DB
         #try:
             #Try to connect to the transcirrus db
@@ -97,10 +99,17 @@ class import_ops:
         #extract and convert to raw or qcow2
         package_split = input_dict['package_name'].split('.')
         if(package_split[1] == 'ova'):
-            os.mkdir(input_dict['path']+'/'+package_split[0])
-            out = subprocess.call(["tar", "-xvf", input_dict['path']+'/'+input_dict['package_name'],"-C",input_dict['path']+'/'+package_split[0]])
+            fqp = input_dict['path']+'/'+package_split[0]
+            if(os.path.exists(fqp)):
+                fqp = fqp+'_%s'%(str(self.rannum))
+                os.mkdir(fqp)
+            else:
+                os.mkdir(fqp)
+            #out = subprocess.call(["tar", "-xvf", input_dict['path']+'/'+input_dict['package_name'],"-C",input_dict['path']+'/'+package_split[0]])
+            out = subprocess.call(["tar", "-xvf", input_dict['path']+'/'+input_dict['package_name'],"-C",fqp])
             if(out == 0):
-                self.contents = os.listdir(input_dict['path']+'/'+package_split[0])
+                #self.contents = os.listdir(input_dict['path']+'/'+package_split[0])
+                self.contents = os.listdir(fqp)
         elif(package_split[1] == 'ovf'):
             self.contents = os.listdir(input_dict['path']+'/'+input_dict['package_name'])
         else:
@@ -130,6 +139,7 @@ class import_ops:
         OUTPUT: r_array of dict - path
                                 - convert_disk
                                 - order
+                                - disk_size
         ACCESS: Admins - can extract in any project
                 PU - can extract only in their project
                 User - can extract only in their project
@@ -154,10 +164,14 @@ class import_ops:
                 #if('disk_size' in item):
                     #self.command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2 -o size=%sG'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0],item['disk_size'])
                 #else:
-                self.command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0])
-                out = os.popen('%s'%(self.command))
-                r_array.append({'path':item['path'],'convert_disk':item['disk'].split('.')[0] +".qcow2",'order':str(item['order']),'disk_size':item['disk_size']})
-
+                #need to see if we can fork a ne process for every disk to do all of them in parallel
+                try:
+                    self.command = 'cd %s; sudo qemu-img convert -f %s -O qcow2 %s %s.qcow2'%(item['path'],item['disk_type'],item['disk'],item['disk'].split('.')[0])
+                    out = os.popen('%s'%(self.command))
+                    r_array.append({'path':item['path'],'convert_disk':item['disk'].split('.')[0] +".qcow2",'order':str(item['order']),'disk_size':item['disk_size']})
+                except:
+                    logger.sys_error('Could not convert disk %s.'%(item['disk']))
+                    raise Exception('Could not convert disk %s.'%(item['disk']))
         return r_array
 
     def get_import_specs(self,path):

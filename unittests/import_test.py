@@ -13,7 +13,7 @@ from transcirrus.common.auth import authorization
 import transcirrus.operations.import_workload as import_workload
 
 print "Instantiating authorization object for an default admin"
-c= authorization("admin","password")
+c= authorization("admin_keven","password")
 
 
 print "Get admin authorization dictionary"
@@ -27,5 +27,5 @@ io = import_ops(b)
 #print r
 
 
-out = import_workload.import_vmware(b,{'image_name': 'import_windows','package_name':'windows-multidisk.ova','path':'/home/transuser/jon','os_type':'windows'})
+out = import_workload.import_vmware(b,{'image_name': 'import_windows2','package_name':'windows-multi.ova','path':'/home/transuser/jon','os_type':'windows'})
 print out
