@@ -1,0 +1,14 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div id="vpn-info" class="col-sm-12">
+    <ul class="list-unstyled small">
+        <li>
+            <strong>External IP:</strong> {{ router.external_ip }}
+        </li>
+        <li>
+            <strong>Subnet Network cidr:</strong> {{ subnet.subnet_cidr }}
+        </li>
+    </ul>
+</div>

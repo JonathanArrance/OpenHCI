@@ -170,7 +170,7 @@ $(function () {
     });
 
     // Networking
-    $(document).on('click', '.network-name button, .router-name button', function (event) {
+    $(document).on('click', '.network-name button, .router-name button, .vpn-name button', function (event) {
         event.preventDefault();
         showInfoModal(page, $(this).data("call"));
     });
@@ -199,7 +199,7 @@ $(function () {
         showConfirmModal('/floating_ip/get/assign/' + CURRENT_PROJECT_ID + '/' + $(this).data("ip") + '/');
     });
 
-    $(document).on('click', ".deallocate-ip, .unassign-ip, .delete-network, .delete-router", function (event) {
+    $(document).on('click', ".deallocate-ip, .unassign-ip, .delete-network, .delete-router, .delete-vpn", function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),
             message = encodeURIComponent($(this).data("message")),
@@ -218,6 +218,17 @@ $(function () {
     $(document).on('click', '.create-router', function (event) {
         event.preventDefault();
         showConfirmModal('/router/get/create/' + CURRENT_PROJECT_ID + "/");
+    });
+
+    $(document).on('click', '.create-vpn', function (event) {
+        event.preventDefault();
+        showConfirmModal('/vpn/get/create/' + CURRENT_PROJECT_ID + "/");
+    });
+
+    $(document).on('click', '.vpn-info', function (event) {
+        event.preventDefault();
+        $('.btn').not(this).popover('hide');
+        $(".popover-content").load("/vpn/get/info/" + CURRENT_PROJECT_ID + "/");
     });
 
     // Users/Security
