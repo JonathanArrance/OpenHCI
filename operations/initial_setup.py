@@ -137,7 +137,7 @@ def run_setup(new_system_variables, auth_dict):
             logger.sys_info("SETUP4:Keystone endpoint set up complete...")
         else:
             logger.sys_error("Could not create Keystone endpoint - %s, %s" % (input_dict, create_keystone))
-            logger.sys_error("SETUPERROR:could not create Keystone endpoint")
+            logger.sys_error("SETUPERROR:Could not create Keystone endpoint")
             return "Keystone error."
 
     logger.sys_info('SETUP5:Building Nova endpoints...')
@@ -147,7 +147,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_nova['endpoint_id']):
         logger.sys_info("SETUP6:Nova endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create Nova endpoint")
+        logger.sys_error("SETUPERROR:Could not create Nova endpoint")
         return "Nova error."
 
     logger.sys_info('SETUP7:Building Cinder endpoints...')
@@ -156,7 +156,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_cinder['endpoint_id']):
         logger.sys_info("SETUP8:Cinder endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create cinder endpoint")
+        logger.sys_error("SETUPERROR:Could not create Cinder endpoint")
         return "Cinder error."
 
     logger.sys_info('SETUP9:Building Cinder V2 endpoints...')
@@ -165,7 +165,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_cinderv2['endpoint_id']):
         logger.sys_info("SETUP10:Cinder v2 endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create cinder v2 endpoint")
+        logger.sys_error("SETUPERROR:Could not create Cinder v2 endpoint")
         return "Cinder V2 error."
 
     logger.sys_info('SETUP11:Building Glance endpoints...')
@@ -174,7 +174,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_glance['endpoint_id']):
         logger.sys_info("SETUP12:Glance endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create glance endpoint")
+        logger.sys_error("SETUPERROR:Could not create Glance endpoint")
         return "Glance error."
 
     logger.sys_info('SETUP13:Building Neutron endpoints...')
@@ -183,7 +183,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_neutron['endpoint_id']):
         logger.sys_info("SETUP14:Neutron endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create neutron endpoint")
+        logger.sys_error("SETUPERROR:Could not create Neutron endpoint")
         return "Neutron error."
 
     logger.sys_info('SETUP15:Building Heat endpoints...')
@@ -192,7 +192,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_heat['endpoint_id']):
         logger.sys_info("SETUP16:Heat endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create heat endpoint")
+        logger.sys_error("SETUPERROR:Could not create Heat endpoint")
         return "Heat error."
 
     logger.sys_info('SETUP17:Building Ceilometer endpoints...')
@@ -201,7 +201,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_ceil['endpoint_id']):
         logger.sys_info("SETUP18:Ceilometer endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create ceilometer endpoint")
+        logger.sys_error("SETUPERROR:Could not create Ceilometer endpoint")
         return "Ceilometer error."
 
     logger.sys_info('SETUP19:Building EC2 endpoints...')
@@ -210,7 +210,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_ec['endpoint_id']):
         logger.sys_info("SETUP20:EC2 endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create EC2 endpoint")
+        logger.sys_error("SETUPERROR:Could not create EC2 endpoint")
         return "EC2 error."
 
     logger.sys_info('SETUP21:Building S3 endpoints...')
@@ -219,7 +219,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_s3['endpoint_id']):
         logger.sys_info("SETUP22:S3 endpoint set up complete...")
     else:
-        logger.sys_error("SETUPERROR:could not create S3 endpoint")
+        logger.sys_error("SETUPERROR:Could not create S3 endpoint")
         return "S3 error."
 
     logger.sys_info('SETUP23:Adding the core node to the trans_nodes table...')
@@ -236,7 +236,7 @@ def run_setup(new_system_variables, auth_dict):
                       'node_gluster_disks': 'ssd'}
     insert_cc = node_db.insert_node(cc_insert_dict)
     if (insert_cc != 'OK'):
-        logger.sys_error("SETUPERROR:could not add core node to the trans_nodes table")
+        logger.sys_error("SETUPERROR:Could not add core node to the trans_nodes db table")
         return 'ERROR'
 
     # enable nova
@@ -248,7 +248,7 @@ def run_setup(new_system_variables, auth_dict):
         write_nova_config = util.write_new_config_file(config)
         if (write_nova_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Nova config files")
+            logger.sys_error("SETUPERROR:Could not write the Nova config files")
             return write_nova_config
         else:
             logger.sys_info("Nova config file written.")
@@ -261,7 +261,7 @@ def run_setup(new_system_variables, auth_dict):
     nova_start = service.nova('restart')
     if (nova_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Nova service")
+        logger.sys_error("SETUPERROR:Could not start the Nova service")
         return nova_start
 
     # enable cinder
@@ -272,7 +272,7 @@ def run_setup(new_system_variables, auth_dict):
         write_cinder_config = util.write_new_config_file(config)
         if (write_cinder_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Cinder config files")
+            logger.sys_error("SETUPERROR:Could not write the Cinder config files")
             return write_cinder_config
         else:
             logger.sys_info("Cinder config file written.")
@@ -283,7 +283,7 @@ def run_setup(new_system_variables, auth_dict):
     cinder_start = service.cinder('restart')
     if (cinder_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Cinder service")
+        logger.sys_error("SETUPERROR:Could not start the Cinder service")
         return cinder_start
 
     # enable glance
@@ -294,7 +294,7 @@ def run_setup(new_system_variables, auth_dict):
         write_glance_config = util.write_new_config_file(config)
         if (write_glance_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Glance config files")
+            logger.sys_error("SETUPERROR:Could not write the Glance config files")
             return write_glance_config
         else:
             logger.sys_info("Glance config file written.")
@@ -302,7 +302,7 @@ def run_setup(new_system_variables, auth_dict):
     glance_start = service.glance('restart')
     if (glance_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Glance service")
+        logger.sys_error("SETUPERROR:Could not start the Glance service")
         return glance_start
     else:
         time.sleep(1)
@@ -318,13 +318,13 @@ def run_setup(new_system_variables, auth_dict):
         write_heat_config = util.write_new_config_file(config)
         if (write_heat_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Head config files")
+            logger.sys_error("SETUPERROR:Could not write the Heat config files")
             return write_heat_config
         else:
             logger.sys_info("Heat config file written.")
     heat_start = service.heat('restart')
     if (heat_start != 'OK'):
-        logger.sys_error("SETUPERROR:could not start the Heat service")
+        logger.sys_error("SETUPERROR:Could not start the Heat service")
         return heat_start
     else:
         time.sleep(1)
@@ -341,14 +341,14 @@ def run_setup(new_system_variables, auth_dict):
         write_ceil_config = util.write_new_config_file(config)
         if (write_ceil_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Ceilometer config files")
+            logger.sys_error("SETUPERROR:Could not write the Ceilometer config files")
             return write_ceil_config
         else:
             logger.sys_info("Ceilometer config file written.")
     ceil_start = service.ceilometer('restart')
     if (ceil_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Ceilometer service")
+        logger.sys_error("SETUPERROR:Could not start the Ceilometer service")
         return ceil_start
 
     # enable neutron
@@ -360,7 +360,7 @@ def run_setup(new_system_variables, auth_dict):
         write_neutron_config = util.write_new_config_file(config)
         if (write_neutron_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Neutron config files")
+            logger.sys_error("SETUPERROR:Could not write the Neutron config files")
             return write_neutron_config
         else:
             logger.sys_info("Neutron config file written.")
@@ -371,7 +371,7 @@ def run_setup(new_system_variables, auth_dict):
     neutron_start = service.neutron('restart')
     if (neutron_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Neutron service")
+        logger.sys_error("SETUPERROR:Could not start the Neutron service")
         return neutron_start
 
     logger.sys_info('SETUP33:Writing the network config files...')
@@ -379,7 +379,7 @@ def run_setup(new_system_variables, auth_dict):
                'uplink_subnet': sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
     if (gateway != 'OK'):
-        logger.sys_error('SETUPERROR:the uplink gateway is not on the same subnet as the uplink ip.')
+        logger.sys_error('SETUPERROR:The uplink gateway is not on the same subnet as the uplink IP')
         return gateway
 
     resolve = {
@@ -392,7 +392,7 @@ def run_setup(new_system_variables, auth_dict):
     time.sleep(1)
     if (write_name_config != 'OK'):
         # Exit the setup return to factory default
-        logger.sys_error("SETUPERROR:could not write the Name Service config file")
+        logger.sys_error("SETUPERROR:Could not write the Name Service config file")
         return write_name_config
     else:
         logger.sys_info("SETUP34:Name service config file written...")
@@ -421,7 +421,7 @@ def run_setup(new_system_variables, auth_dict):
         time.sleep(1)
         if (write_net_config != 'OK'):
             # Exit the setup return to factory default
-            logger.sys_error("SETUPERROR:could not write the Network config files")
+            logger.sys_error("SETUPERROR:Could not write the Network config files")
             return write_net_config
         else:
             logger.sys_info("Net config file written.")
@@ -431,7 +431,7 @@ def run_setup(new_system_variables, auth_dict):
     pgsql_start = service.postgresql('restart')
     if (pgsql_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the PgSQL service")
+        logger.sys_error("SETUPERROR:Could not start the PostgreSQL service")
         return pgsql_start
     time.sleep(10)
 
@@ -440,7 +440,7 @@ def run_setup(new_system_variables, auth_dict):
     keystone_restart = service.keystone('restart')
     if (keystone_restart != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not restart the Keystone service")
+        logger.sys_error("SETUPERROR:Could not restart the Keystone service")
         return keystone_restart
     time.sleep(10)
 
@@ -475,34 +475,35 @@ def run_setup(new_system_variables, auth_dict):
         time.sleep(1)
         logger.sys_info('SETUP41:Sleeping until postgres accepts connections...')
         pg_accept = os.system('netstat -lnp | grep 5432 > /dev/null')
-    logger.sys_info('SETUP42:Postgres accepting connections on port 5432...')
+    logger.sys_info('SETUP:Postgres now accepting connections on port 5432...')
     time.sleep(10)
 
     # HACK
+    logger.sys_info('SETUP42:Restarting key OpenStack services; this can take over a minute...')
     neutron_start = service.neutron('restart')
     if (neutron_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Neutron service")
+        logger.sys_error("SETUPERROR:Could not start the Neutron service")
         return neutron_start
     time.sleep(10)
 
     heat_start = service.heat('restart')
     if (heat_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not restart the Heat service")
+        logger.sys_error("SETUPERROR:Could not restart the Heat service")
         return heat_start
     time.sleep(10)
 
     glance_start = service.glance('restart')
     if (glance_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Glance service")
+        logger.sys_error("SETUPERROR:Could not start the Glance service")
         return glance_start
 
     nova_start = service.nova('restart')
     if (nova_start != 'OK'):
         # fire off revert
-        logger.sys_error("SETUPERROR:could not start the Nova service")
+        logger.sys_error("SETUPERROR:Could not start the Nova service")
         return nova_start
 
     logger.sys_info('SETUP43:Creating Neutron Default Public Connection...')
@@ -610,7 +611,7 @@ def run_setup(new_system_variables, auth_dict):
     # setup the pre-installed images
     logger.sys_info('SETUP50:Importing Default Glance images...')
     glance = glance_ops(auth_dict)
-    logger.sys_info('SETUP51:Importing Cirros image...')
+    logger.sys_info('SETUP51:Importing the Cirros image...')
     cirros_input = {
         'image_name': "Cirros-x86_64-0-3-1",
         'container_format': "bare",
@@ -620,7 +621,7 @@ def run_setup(new_system_variables, auth_dict):
         'image_location': "/transcirrus/cirros-0.3.1-x86_64-disk.img",
         'os_type': "linux"
     }
-    import_cirros = glance.import_image(cirros_input)
+    import_cirros = glance.import_image(cirros_input,delete_file=False)
     if ('image_id' not in import_cirros):
         logger.sys_warning('Could not import the default cirros image.')
     else:
@@ -636,7 +637,7 @@ def run_setup(new_system_variables, auth_dict):
         'image_location': "/transcirrus/precise-server-cloudimg-amd64-disk1.img",
         'os_type': "linux"
     }
-    import_ubuntu = glance.import_image(ubuntu_input)
+    import_ubuntu = glance.import_image(ubuntu_input,delete_file=False)
     if ('image_id' not in import_ubuntu):
         logger.sys_warning('Could not import the default Ubuntu Precise image.')
     else:
@@ -652,7 +653,7 @@ def run_setup(new_system_variables, auth_dict):
         'image_location': "/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
         'os_type': "linux"
     }
-    import_fedora = glance.import_image(fedora_input)
+    import_fedora = glance.import_image(fedora_input,delete_file=False)
     if ('image_id' not in import_fedora):
         logger.sys_warning('Could not import the default Fedora image.')
     else:
@@ -672,6 +673,9 @@ def run_setup(new_system_variables, auth_dict):
     # close the temporary fds
     os.close(null_fds[0])
     os.close(null_fds[1])
+
+    # Give the logger some time to log the END before we exit
+    time.sleep(5)
 
     return 'OK'
 
