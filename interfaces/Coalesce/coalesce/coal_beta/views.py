@@ -3611,7 +3611,6 @@ def vpn_view(request, project_id, tunnel_id):
         vpn['ikepolicy'] = vpnops.show_vpn_ike_policy(project_id, vpn['ikepolicy_id'])['ikepolicy']
         vpn['ipsecpolicy'] = vpnops.show_vpn_ipsec_policy(project_id, vpn['ipsecpolicy_id'])['ipsecpolicy']
         vpn['vpnservice'] = vpnops.show_vpn_service(project_id, vpn['vpnservice_id'])['vpnservice']
-        print("vpn = %s"%vpn)
 
         return render_to_response('coal/project_view_widgets/networking/vpn_view.html',
                                   RequestContext(request, {'vpn': vpn}))
