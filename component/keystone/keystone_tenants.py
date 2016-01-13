@@ -287,6 +287,11 @@ class tenant_ops:
                     del_dict = {"table":'projects',"where":"proj_id='%s'" %(project_id)}
                     self.db.pg_delete(del_dict)
 
+                    # delete from trans_user_projects as well
+                    self.db.pg_transaction_begin()
+                    del_dict_tup = {"table":'trans_user_projects',"where":"proj_id='%s'" %(project_id)}
+                    self.db.pg_delete(del_dict_tup)
+
                     user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(project_id)}
                     self.db.pg_update(user_up_dict)
                     self.db.pg_transaction_commit()
