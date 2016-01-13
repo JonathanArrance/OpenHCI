@@ -12,6 +12,25 @@
 #       a previous install or upgrade.
 
 #
+# Wait until there are no locks on the RPM lock file. This is
+# required when we are being run from a RPM install script
+# and we try to yum/rpm install a package. If the lock is
+# held, the package we try to install will hang waiting for
+# our RPM lock which won't we won't release because we are
+# waiting on the package to complete it's install.
+# To resolve this, we will have our RPM install script
+# fork a process to run this script and then it will exit
+# which will soon free the lock so we can proceed with
+# this script.
+#
+
+while sudo lsof /var/lib/rpm/.rpm.lock
+do
+  echo "RPM file is locked; sleeping a second"
+  sleep 1000
+done
+
+#
 # Version 2.2-x section:
 #
 
@@ -55,6 +74,11 @@ if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf ]
 then
     /bin/rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf
 fi
+
+# Fix and restart monit
+monit quit
+/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/monit/fix_monit_conf.py
+monit
 
 # Install python IPy lib "Offline"
 if [ ! -f /usr/local/lib/python2.7/site-packages/IPy.py ]
@@ -191,26 +215,26 @@ then
 fi
 
 # # aPersona unique email update
-# sudo service postgresql restart
-# /usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info ADD CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
+sudo service postgresql restart
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info DROP CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
 
-# # add aPersona application to cloud if it isn't already there
-# if [ ! -f /var/lib/tomcat6/webapps/api_portal/WEB-INF/api-portal-dispatcher-servlet.xml ]
-# then
-#     /usr/bin/yum update --skip-broken -y
-#     /usr/bin/yum install java-1.7.0-openjdk -y
-#     /usr/bin/yum install tomcat6 -y
-#     /sbin/service tomcat6 start
-#     /sbin/chkconfig tomcat6 on
-#     /usr/bin/yum install tomcat6-webapps -y
-#     /sbin/service tomcat6 restart
-#     /usr/bin/yum update --skip-broken -y
-#     /bin/rm -rf /var/lib/tomcat6/webapps/*
-#     /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
-#     /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_configured.sql
-#     sed -i 's/8080/8090/g' /usr/share/tomcat6/conf/server.xml
-#     /sbin/service tomcat6 restart
-# fi
+# add aPersona application to cloud if it isn't already there
+if [ ! -f /var/lib/tomcat6/webapps/api_portal/WEB-INF/api-portal-dispatcher-servlet.xml ]
+then
+    /usr/bin/yum update --skip-broken -y
+    /usr/bin/yum install java-1.7.0-openjdk -y
+    /usr/bin/yum install tomcat6 -y
+    /sbin/service tomcat6 start
+    /sbin/chkconfig tomcat6 on
+    /usr/bin/yum install tomcat6-webapps -y
+    /sbin/service tomcat6 restart
+    /usr/bin/yum update --skip-broken -y
+    /bin/rm -rf /var/lib/tomcat6/webapps/*
+    /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
+    /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_configured.sql
+    sed -i 's/8080/8090/g' /usr/share/tomcat6/conf/server.xml
+    /sbin/service tomcat6 restart
+fi
 
 # Commands to setup our rest api daemon
 /bin/cp /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api /etc/init.d
@@ -239,7 +263,7 @@ then
 fi
 
 # downgrade websockify to work with noVNC console
-##/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
+/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
 
 
 # Install Openswan and Openstack VPN packages
@@ -275,3 +299,4 @@ cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; do
 /sbin/service ceilometer_third_party_meters restart
 /sbin/service transcirrus_api restart
 
+exit 0
