@@ -513,6 +513,26 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.delete_vpn_tunnel',
             name='delete_vpn_tunnel'),
 
+        url(r'^list_vpn_tunnels/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.list_vpn_tunnels',
+            name='list_vpn_tunnels'),
+
+        url(r'^show_vpn_tunnel/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
+            'coalesce.coal_beta.views.show_vpn_tunnel',
+            name='show_vpn_tunnel'),
+
+        url(r'^vpn/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/view/$',
+            'coalesce.coal_beta.views.vpn_view',
+            name='vpn_view'),
+
+        url(r'^vpn/get/create/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_vpn_create',
+            name='get_vpn_create'),
+
+        url(r'^vpn/get/info/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_vpn_info',
+            name='get_vpn_info'),
+
         # --- Routers ----
         url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_router',

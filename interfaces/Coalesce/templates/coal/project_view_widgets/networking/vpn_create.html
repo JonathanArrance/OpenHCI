@@ -1,0 +1,171 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title " id="modal-label">Create VPN</h4>
+</div>
+
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form id="vpn-form" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <hr class="narrow">
+                    <p>Click the following button to generate an information request email to the peer site admin. Once
+                        you have received the requested information, complete the form below:</p>
+
+                    <div class="form-group col-sm-12 text-center">
+                        <a type="button" class="btn btn-primary"
+                           href="mailto:?Subject=TransCirrus%20VPN%20Creation%20Request&Body=User%20{{ username }}%20has%20requested%20to%20create%20a%20VPN%20for%20their%20project%20{{ project.project_name }}%3A%0A%0AExternal%20IP%3A%20{{ router.external_ip }}%0ASubnet%20Network%20cidr%3A%20{{ subnet.subnet_cidr }}%0A%0APlease%20respond%20with%20the%20following%20info%20%28available%20by%20navigating%20to%20Networking%20in%20the%20Project%20Interface%20and%20clicking%20the%20blue%20info%20button%20on%20the%20VPN%20widget%29%3A%0A%0APeer%20CIDR%3A%0APeer%20External%20IP%3A%0A%0AThank%20you%21%0A%0A*This%20email%20was%20generated%20using%20the%20TransCirrus%20Flex%20Infrastructure%20user%20interface%0A%0A">
+                            Email Peer Site Admin
+                        </a>
+                    </div>
+
+                    <h4>Peer Site Info</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="peer-cidr" class="col-sm-4 control-label">Peer Site cidr:</label>
+                        <input type="text" name="peerCidr" id="peer-cidr" placeholder="Ex: 10.0.10.0/24"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="peer-address" class="col-sm-4 control-label">Peer Site Address:</label>
+                        <input type="text" name="peerAddress" id="peer-address" placeholder="Ex: 192.168.2.72"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="peer-ip" class="col-sm-4 control-label">Peer Site Tenant Router External IP:</label>
+                        <input type="text" name="peerIp" id="peer-ip" placeholder="Ex: 192.168.2.72"
+                               class="col-sm-8">
+                    </div>
+                    <h4>VPN Settings</h4>
+                    <hr class="narrow">
+                    <div class="form-group col-sm-12">
+                        <label for="ike-policy-name" class="col-sm-4 control-label">IKE Policy Name:</label>
+                        <input type="text" name="ikePolicyName" id="ike-policy-name" placeholder="ike_policy01"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="ipsec-policy-name" class="col-sm-4 control-label">IPsec Policy Name:</label>
+                        <input type="text" name="ipsecPolicyName" id="ipsec-policy-name" placeholder="ipsec_policy01"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="service-name" class="col-sm-4 control-label">Service Name:</label>
+                        <input type="text" name="serviceName" id="service-name" placeholder="service01"
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="service-description" class="col-sm-4 control-label">Service Description:</label>
+                        <input type="text" name="serviceDescription" id="service-description"
+                               placeholder="My VPN service."
+                               class="col-sm-8">
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label for="tunnel-name" class="col-sm-4 control-label">VPN Tunnel Name:</label>
+                        <input type="text" name="tunnelName" id="tunnel-name" placeholder="my_vpn01"
+                               class="col-sm-8">
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="submit" form="vpn-form" class="btn btn-primary" data-loading-text="Loading ..." disabled>
+        Confirm
+    </button>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(function () {
+        var page = $("#page-content"),
+                networking = $("#networking-container");
+        $("#vpn-form").validate({
+            rules: {
+                peerCidr: {
+                    required: true
+                },
+                peerAddress: {
+                    required: true
+                },
+                peerIp: {
+                    required: true
+                },
+                ikePolicyName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                ipsecPolicyName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                serviceName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                },
+                serviceDescription: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: 80
+                },
+                tunnelName: {
+                    required: true,
+                    charField: true,
+                    minlength: standardStringMin,
+                    maxlength: standardStringMax
+                }
+            },
+            submitHandler: function () {
+                showMessage('info', "Creating new VPN");
+                var peerCidr = $("#peer-cidr").val().slashTo47();
+                var url = '/add_vpn_tunnel/' + CURRENT_PROJECT_ID + '/' + $("#ike-policy-name").val() + '/' + $("#ipsec-policy-name").val() + '/' + $("#service-name").val() + '/' + $("#service-description").val() + '/{{ subnet.subnet_id }}/{{ router.router_id }}/' + peerCidr + '/' + $("#peer-address").val() + '/' + $("#peer-ip").val() + '/' + $("#tunnel-name").val() + '/';
+                $.getJSON(url)
+                        .done(function (data) {
+                            if (data.status == 'error')
+                                showMessage('error', data.message);
+                            if (data.status == 'success')
+                                showMessage('success', data.message);
+                        })
+                        .fail(function () {
+                            showMessage('error', 'Server Fault');
+                        })
+                        .always(function () {
+                            refreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                        });
+
+                closeModal();
+                showLoader(page);
+                window.setTimeout(function () {
+                    removeLoaders();
+                    refreshContainer(page, networking, "/projects/" + CURRENT_PROJECT_ID + "/get_networking_panel/");
+                }, 2000);
+            }
+        });
+
+        $("form input, form select").on("change focus keyup", function () {
+            window.setTimeout(function () {
+                if ($("#vpn-form").valid()) {
+                    $('button[type=submit]').removeProp("disabled");
+                } else {
+                    $('button[type=submit]').prop("disabled", true);
+                }
+            }, 1000);
+        });
+    });
+</script>

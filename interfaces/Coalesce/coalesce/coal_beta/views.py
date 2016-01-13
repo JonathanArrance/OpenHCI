@@ -52,6 +52,7 @@ import transcirrus.common.version as ver
 import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
 import transcirrus.operations.vpn_manager as vpn_operation
+from transcirrus.component.neutron.vpn import vpn_ops
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -906,14 +907,14 @@ def get_instance_wizard(request, project_id):
         return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
-                                                           'fips': fips, 'volumes': volumes, 
+                                                           'fips': fips, 'volumes': volumes,
                                                            'volume_types': volume_types, 'groups': sec_groups,
                                                            'keys': sec_keys, 'tenant_info': tenant_info}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
-                                                           'fips': fips, 'volumes': volumes, 
+                                                           'fips': fips, 'volumes': volumes,
                                                            'volume_types': volume_types, 'groups': sec_groups,
                                                            'keys': sec_keys, 'tenant_info': tenant_info,
                                                            'error': "Error: %s" % e}))
@@ -1693,7 +1694,7 @@ def get_networking_panel(request, project_id):
     networks = []
     open_networks = []
     routers = []
-    instances = []
+    vpns = []
     avail_instances = []
     tenant_info = {}
     try:
@@ -1704,6 +1705,7 @@ def get_networking_panel(request, project_id):
         no = neutron_net_ops(auth)
         l3o = layer_three_ops(auth)
         so = server_ops(auth)
+        vo = vpn_ops(auth)
 
         project = to.get_tenant(project_id)
 
@@ -1717,11 +1719,7 @@ def get_networking_panel(request, project_id):
 
         fips = l3o.list_floating_ips(project_id)
         for fip in fips:
-            if fip["floating_in_use"]:
-                ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
-                fip['instance_name'] = ip_info['instance_name']
-            else:
-                fip['instance_name'] = ''
+            fip['info'] = l3o.get_floating_ip(fip['floating_ip_id'])
         num_fips = len(fips)
 
         networks = no.list_internal_networks(project_id)
@@ -1736,6 +1734,10 @@ def get_networking_panel(request, project_id):
 
         routers = l3o.list_routers(project_id)
         num_routers = len(routers)
+
+        vpns = vo.list_vpn_ipsec_site_connection(project_id)['ipsec_site_connections']
+        for vpn in vpns:
+            vpn['status'] = vpn['status'].replace("_", " ")
 
         instances = so.list_servers(project_id)
         for instance in instances:
@@ -1760,6 +1762,7 @@ def get_networking_panel(request, project_id):
                                       'networks': networks,
                                       'open_networks': open_networks,
                                       'routers': routers,
+                                      'vpns': vpns,
                                       'instances': avail_instances}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
@@ -1772,6 +1775,7 @@ def get_networking_panel(request, project_id):
                                       'networks': networks,
                                       'open_networks': open_networks,
                                       'routers': routers,
+                                      'vpns': vpns,
                                       'instances': avail_instances,
                                       'error': "Error: %s" % e}))
 
@@ -1813,6 +1817,57 @@ def get_router_create(request, project_id):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/router_create.html', RequestContext(request, {'networks': networks, 'error': "Error: %s"%e}))
 
+
+def get_vpn_create(request, project_id):
+    project = []
+    router = []
+    subnet = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        l3o = layer_three_ops(auth)
+        no = neutron_net_ops(auth)
+        project = to.get_tenant(project_id)
+        router = l3o.get_router(no.get_network(project['def_network_id'])['router_id'])
+        subnet = no.get_net_subnet(router['router_int_sub_id'])
+        return render_to_response('coal/project_view_widgets/networking/vpn_create.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'subnet': subnet}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/vpn_create.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'subnet': subnet,
+                                      'error': "Error: %s"%e}))
+
+
+def get_vpn_info(request, project_id):
+    project = []
+    router = []
+    subnet = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        l3o = layer_three_ops(auth)
+        no = neutron_net_ops(auth)
+        project = to.get_tenant(project_id)
+        router = l3o.get_router(no.get_network(project['def_network_id'])['router_id'])
+        subnet = no.get_net_subnet(router['router_int_sub_id'])
+        return render_to_response('coal/project_view_widgets/networking/vpn_info.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'subnet': subnet}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/vpn_info.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'subnet': subnet,
+                                      'error': "Error: %s"%e}))
 
 
 def get_users_security_panel(request, project_id):
@@ -3547,6 +3602,23 @@ def router_view(request, router_id):
                                                         }))
 
 
+def vpn_view(request, project_id, tunnel_id):
+    vpn = {}
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        vpn = vpnops.show_vpn_ipsec_site_connection(project_id, tunnel_id)['ipsec_site_connection']
+        vpn['ikepolicy'] = vpnops.show_vpn_ike_policy(project_id, vpn['ikepolicy_id'])['ikepolicy']
+        vpn['ipsecpolicy'] = vpnops.show_vpn_ipsec_policy(project_id, vpn['ipsecpolicy_id'])['ipsecpolicy']
+        vpn['vpnservice'] = vpnops.show_vpn_service(project_id, vpn['vpnservice_id'])['vpnservice']
+
+        return render_to_response('coal/project_view_widgets/networking/vpn_view.html',
+                                  RequestContext(request, {'vpn': vpn}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/vpn_view.html',
+                                  RequestContext(request, {'vpn': vpn, 'error': "Error: %s" % e}))
+
+
 def instance_view(request, project_id, server_id):
     meter_dict = []
     stats = []
@@ -3637,10 +3709,34 @@ def instance_view(request, project_id, server_id):
                                       'current_project_id': project_id,
                                       'error': "Error: %s" % e}))
 
+def list_vpn_tunnels(request, project_id):
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        out = vpnops.list_vpn_ipsec_site_connection(project_id)
+        out['status'] = 'success'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not display the IPSec VPN Tunnel list for the project: %s" % (e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def show_vpn_tunnel(request, project_id, tunnel_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        out = vpnops.show_vpn_ipsec_site_connection(project_id,tunnel_id)
+        out['status'] = 'success'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not display the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
 
 def add_vpn_tunnel(request, project_id, ike_policy_name, ipsec_policy_name, service_name, service_description, subnet_id, router_id, peer_cidrs, peer_address, peer_id, tunnel_name):
     try:
         auth = request.session['auth']
+
+        # Replace any '&47' with a slash '/'
+        peer_cidrs = peer_cidrs.replace("&47", "/")
+
         vpn_dict = {
             "project_id": project_id,
             "ike_policy_name": ike_policy_name,
@@ -3654,11 +3750,13 @@ def add_vpn_tunnel(request, project_id, ike_policy_name, ipsec_policy_name, serv
             "peer_id": peer_id,
             "tunnel_name": tunnel_name
         }
+
         out = vpn_operation.create_vpn_tunnel(auth, vpn_dict)
+
         out['status'] = 'success'
         out['message'] = 'The IPSec VPN Tunnel: %s has been created.' % tunnel_name
     except Exception as e:
-        out = {'status': "error", 'message': "Could not add the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+        out = {'status': "error", 'message': "Could not add the IPSec VPN Tunnel %s to this project: %s" % (tunnel_name,e)}
     return HttpResponse(simplejson.dumps(out))
 
 
@@ -3841,7 +3939,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
             return HttpResponse(simplejson.dumps(out))
 
-        # Replace any '%47' with a slash '/'
+        # Replace any '&47' with a slash '/'
         url = url.replace("&47", "/")
 
         # Setup our cache to track the progress.
@@ -4964,7 +5062,7 @@ def login(request):
             return HttpResponse(simplejson.dumps(out))
     except Exception as e:
         out = {'status': "error", 'message': "Login failed. Exception msg: %s" % e}
-        return HttpResponse(simplejson.dumps(out)) 
+        return HttpResponse(simplejson.dumps(out))
 
     try:
         #--- user login successful, perform ASM validation ---
@@ -5001,7 +5099,7 @@ def login(request):
         #if code != 200:
         #--- ASM validation failed because of some issue. TODO: Need to alert admin
         #--- but let the user proceed
-            
+
         #--- ASM validation done, let user proceed ---
 
         request.session['auth'] = auth
@@ -5039,7 +5137,7 @@ def login(request):
             first_time = boot['first_time_boot']
             out['first_time'] = first_time
         print "login exception: %s" % out
-        return HttpResponse(simplejson.dumps(out)) 
+        return HttpResponse(simplejson.dumps(out))
 
 @never_cache
 def otp(request):
@@ -5055,7 +5153,7 @@ def otp(request):
             # either session expired or someone it trying to access OTP page directly        
             return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
 
-        #-- OTP Validation -- 
+        #-- OTP Validation --
         otp = request.POST['otp']
         hostname = request.get_host()
         cookie_name = GetCookieName(username, hostname)
@@ -5167,7 +5265,7 @@ def resend_otp(request):
             boot = node_util.check_first_time_boot()
             first_time = boot['first_time_boot']
             out['first_time'] = first_time
-        return HttpResponse(simplejson.dumps(out)) 
+        return HttpResponse(simplejson.dumps(out))
 
 @never_cache
 def logout(request, next_page=None,
@@ -5514,8 +5612,8 @@ def add_ldap_to_cloud(request, hostname, use_ssl, base_dn, uid_attr, binding_typ
     host = hostname.replace('&47', '/')
     try:
         input_dict = {
-                        "hostname": host, 
-                        "use_ssl": use_ssl, 
+                        "hostname": host,
+                        "use_ssl": use_ssl,
                         "base_dn": base_dn,
                         "uid_attr": uid_attr
                      }
