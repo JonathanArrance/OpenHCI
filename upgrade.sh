@@ -269,12 +269,12 @@ fi
 # Install Openswan and Openstack VPN packages
 if [ ! -f "/usr/sbin/ipsec" ]
 then
-    yum install -y openswan
+    yum install -y /usr/local/lib/python2.7/transcirrus/upgrade_resources/openswan-2.6.32-37.el6.x86_64.rpm
 fi
 
 if [ ! -f "/etc/init.d/neutron-vpn-agent" ]
 then
-    yum install -y openstack-neutron-vpn-agent
+    yum install -y /usr/local/lib/python2.7/transcirrus/upgrade_resources/openstack-neutron-vpn-agent-2014.1.5-1.el6.noarch.rpm
     /bin/chown neutron:neutron /etc/neutron/vpn_agent.ini
     /bin/chmod 770 /etc/neutron/vpn_agent.ini
 fi
