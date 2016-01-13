@@ -5465,7 +5465,7 @@ def tpa_add_user(request, username, email):
 def tpa_add_user_to_project(request, username, email, project_id):
     out = {}
     try:
-        auth = request.session['auth']
+        auth = extras.shadow_auth()
         to = tenant_ops(auth)
         user_dict = {'username': username, 'email': email, 'project_id': project_id}
         project = to.get_tenant(project_id)
@@ -5498,7 +5498,6 @@ def shib_login(request):
     else:
         logger.sys_info("has shib auth, not a user")
         auth = extras.shadow_auth()
-        request.session['auth'] = auth
         to = tenant_ops(auth)
         default_projects = to.get_default_tenants()
         has_default_shib = False
