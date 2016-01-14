@@ -5730,7 +5730,6 @@ def ldap_login(request, username):
         logger.sys_info("has ldap auth, not a user")
         email = ldap_users.generate_email(username)
         auth = extras.shadow_auth()
-        request.session['auth'] = auth
         to = tenant_ops(auth)
         default_projects = to.get_default_tenants()
         has_default_ldap = False
