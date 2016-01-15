@@ -52,7 +52,7 @@ $(function () {
         showConfirmModal(call);
     });
 
-    $(document).on('click', '#enable-configure-tpa', function (event) {
+    $(document).on('click', '#enable-tpa-project', function (event) {
         event.preventDefault();
         var project_id = $("#projects").val(),
             provider_id = $(this).data("provider_id"),
