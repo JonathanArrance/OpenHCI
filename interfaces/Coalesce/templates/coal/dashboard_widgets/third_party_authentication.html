@@ -63,11 +63,11 @@
                                 detected. All new {{ provider.name }} users will have a project created for them.
                             </p>
                         </div>
-                        <button type="button" class="btn btn-lg btn-success create-tpa-project"
+                        <button type="button" class="btn btn-success create-tpa-project"
                                 data-provider="{{ provider.id }}">
                             Build New
                         </button>
-                        <button type="button" class="btn btn-lg btn-info select-tpa-project"
+                        <button type="button" class="btn btn-info select-tpa-project"
                                 data-provider="{{ provider.id }}">
                             Enable Existing
                         </button>
@@ -96,7 +96,7 @@
                             </tr>
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-lg btn-danger delete-tpa-project"
+                        <button type="button" class="btn btn-danger delete-tpa-project"
                                 data-title="Delete Default {{ provider.name }} Project"
                                 data-message="Delete {{ provider.default_project.project_name }}?"
                                 data-call="/projects/{{ provider.default_project.project_id }}/{{ provider.default_project.project_name }}/delete/"
@@ -104,7 +104,7 @@
                                 data-async="projectDeleteTimer">
                             Delete
                         </button>
-                        <button type="button" class="btn btn-lg btn-info disable-tpa-project"
+                        <button type="button" class="btn btn-info disable-tpa-project"
                                 data-title="Disable Default {{ provider.name }} Project"
                                 data-message="Disable {{ provider.default_project.project_name }} as the Default {{ provider.name }} Project?  This is will not delete the project."
                                 data-call="/third_party_authentication/toggle/{{ provider.id }}/{{ provider.default_project.project_id }}/"
