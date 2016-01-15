@@ -1,0 +1,35 @@
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title" id="modal-label">Enable {{provider.name}} Default Project</h4>
+</div>
+<div class="modal-body bg-default-light">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <form class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group">
+                        <label for="projects" class="control-label">Project:</label>
+                        <select name="Projects" id="projects" class="form-control">
+                            {% for project in projects %}
+                                <option value="{{ project.project_id }}">{{ project.project_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-danger" data-dismiss="modal" data-loading-text="Close">Close</button>
+    <button type="button" class="btn btn-primary" data-loading-text="Loading ..." data-provider-name="{{ provider.name }}" data-provider-id="{{ provider.id }}" id="enable-tpa-project">
+        Enable
+    </button>
+</div>

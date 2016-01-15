@@ -866,6 +866,10 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.tpa_toggle_project',
             name='tpa_toggle_project'),
 
+        url(r'^third_party_authentication/select/$',
+            'coalesce.coal_beta.views.get_tpa_select_project',
+            name='get_tpa_select_project'),
+
         url(r'^third_party_authentication/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
             'coalesce.coal_beta.views.tpa_add_user',
             name='tpa_add_user'),
