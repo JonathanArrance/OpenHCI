@@ -5466,6 +5466,7 @@ def tpa_toggle_project(request, provider, project_id):
 def get_tpa_select_project(request, provider):
     try:
         auth = request.session['auth']
+        provider = provider.upper()
         if(auth != None and (auth['username'] == 'admin' or auth['username'] == 'shadow_admin')):
             to = tenant_ops(auth)
             projects = to.list_all_tenants()
