@@ -5458,7 +5458,7 @@ def tpa_toggle_project(request, provider, project_id):
         to.toggle_default_tenant(input_dict)
         out['status'] = 'success'
         out['message'] = 'The Default Project has been updated.'
-    except: Exception as e:
+    except Exception as e:
         out = {'status' : "error", 'message' : "Could not update Default Project: %s" %(e)}
     return HttpResponse(simplejson.dumps(out))
 

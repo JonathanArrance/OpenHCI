@@ -103,13 +103,13 @@
                                 data-async="projectDeleteTimer">
                             Delete Default {{ provider.name }} Project
                         </button>
-                        <button type="button" class="btn btn-lg btn-danger toggle-tpa-project"
+                        <button type="button" class="btn btn-lg btn-info toggle-tpa-project"
                                 data-title="Disable Default {{ provider.name }} Project"
                                 data-message="Disable {{ provider.default_project.project_name }} as the Default {{ provider.name }} Project?  This is will not delete the project."
                                 data-call="/third_party_authentication/toggle/{{ provider.name }}/{{ provider.default_project.project_id }}/"
                                 data-notice="Disabling Project {{ provider.default_project.project_name }}"
                                 data-async="projectToggleTimer">
-                            Delete Default {{ provider.name }} Project
+                            Disable Default {{ provider.name }} Project
                         </button>
                     {% endif %}
                 </div>
