@@ -5477,7 +5477,7 @@ def get_tpa_select_project(request, provider):
                         projects_filtered.append(proj)
             if provider == "SHIB":
                 provider_info = {'name': "Shibboleth", 'id': provider}
-            elif provider == "LDAP"
+            elif provider == "LDAP":
                 provider_info = {'name': provider, 'id': provider}
             else:
                 return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'providers': "error", 'error': "Error: Provider must be 'SHIB' or 'LDAP'."}))
