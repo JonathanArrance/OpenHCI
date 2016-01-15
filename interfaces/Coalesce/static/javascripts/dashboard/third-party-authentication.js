@@ -55,8 +55,8 @@ $(function () {
     $(document).on('click', '#enable-tpa-project', function (event) {
         event.preventDefault();
         var project_id = $("#projects").val(),
-            provider_id = $(this).data("provider_id"),
-            provider_name = $(this).data("provider_name"),
+            provider_id = $(this).data("provider-id"),
+            provider_name = $(this).data("provider-name"),
             buttons = $(this).parent().parent().find('button');
 
         showMessage('info', "Enabling Default " + provider_name + " Project...");
