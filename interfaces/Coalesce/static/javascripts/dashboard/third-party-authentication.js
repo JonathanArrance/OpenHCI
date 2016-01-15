@@ -48,7 +48,7 @@ $(function () {
     $(document).on('click', '.select-tpa-project', function (event) {
         event.preventDefault();
         var provider = $(this).data("provider"),
-            call = '/third_party_authentication/select/';
+            call = '/third_party_authentication/select/' + provider + '/';
         showConfirmModal(call);
     });
 
