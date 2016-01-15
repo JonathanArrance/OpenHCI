@@ -33,6 +33,18 @@ $(function () {
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
+    // Toggle default projects
+    $(document).on('click', '.toggle-tpa-project', function (event) {
+        event.preventDefault();
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = "/third_party_authentication/get/".slashTo47(),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
     // Confirm TPA configuration
     $(document).on('click', '#confirm-configure-tpa', function (event) {
         event.preventDefault();

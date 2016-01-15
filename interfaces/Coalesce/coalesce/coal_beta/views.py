@@ -5448,6 +5448,21 @@ def shib_build_default_project(request):
 #         out['message'] = "Error: Failed to disable default Shibboleth Project."
 #         return HttpResponse(simplejson.dumps(out))
 
+
+def tpa_toggle_project(request, provider, project_id):
+    out = {}
+    try:
+        input_dict = {'project_id': project_id, 'type': provider.upper()}
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        to.toggle_default_tenant(input_dict)
+        out['status'] = 'success'
+        out['message'] = 'The Default Project has been updated.'
+    except: Exception as e:
+        out = {'status' : "error", 'message' : "Could not update Default Project: %s" %(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
 def tpa_add_user(request, username, email):
     out = {}
     try:
