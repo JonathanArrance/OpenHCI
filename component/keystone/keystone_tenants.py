@@ -595,6 +595,6 @@ class tenant_ops:
             # invalid
             else:
                 logger.sys_error("Invalid type (%s) given for toggle_default_tenant." %input_dict['type'])
-                raise Exception("Invalid type (%s) given for toggle default third party authentication project." %input_dict['type']))
+                raise Exception("Invalid type (%s) given for toggle default third party authentication project." %input_dict['type'])
 
         return "OK"
