@@ -536,3 +536,65 @@ class tenant_ops:
 
         # else return None
         return None
+
+
+    def toggle_default_tenant(self, input_dict):
+        """
+        DESC:   enables or disables default project for shibboleth or ldap
+        INPUT:  innput_dict:    {
+                                    project_id  - project_id of project to enable/disable - req
+                                    type        - tpa flag, either "SHIB" or "LDAP" - req
+                                }
+        OUTPUT: "OK" - success
+        ACCESS: cloud admin only
+        NOTE:   need to revisit description handling in create_tenant(), if we want to keep, we'll have to update it here as well
+        """
+        # only cloud admin or shadow_admin can manage tpa
+        if(self.username != 'admin' and self.username != 'shadow_admin'):
+            logger.sys_error("Only cloud admin can toggle default third party authentication projects.")
+            raise Exception("Only cloud admin can toggle default third party authentication projects.")
+
+        # validate project_id
+        target = self.get_tenant(input_dict['project_id'])
+        if target is None:
+            logger.sys_error("Invalid project_id (%s) given for toggle_default_tenant." %input_dict['project_id'])
+            raise Exception("Invalid project_id (%s) given for toggle default third party authentication project." %input_dict['project_id'])
+
+        # if default, disable
+        if target['is_default'] is not None:
+            try:
+                disable = {'table':"projects",'set':"""is_default=NULL""",'where':"proj_id='%s'" %(input_dict['project_id'])}
+                self.db.pg_update(disable)
+                self.db.pg_transaction_commit()
+            except Exception as e:
+                logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                self.db.pg_transaction_rollback()
+                raise
+        # else, enable
+        else:
+            # shibboleth
+            if input_dict['type'] == "SHIB":
+                try:
+                    enable_shib = {'table':"projects",'set':"""is_default='SHIB'""",'where':"proj_id='%s'" %(input_dict['project_id'])}
+                    self.db.pg_update(enable_shib)
+                    self.db.pg_transaction_commit()
+                except Exception as e:
+                    logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                    self.db.pg_transaction_rollback()
+                    raise
+            # ldap
+            elif input_dict['type'] == "LDAP":
+                try:
+                    enable_ldap = {'table':"projects",'set':"""is_default='LDAP'""",'where':"proj_id='%s'" %(input_dict['project_id'])}
+                    self.db.pg_update(enable_ldap)
+                    self.db.pg_transaction_commit()
+                except Exception as e:
+                    logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                    self.db.pg_transaction_rollback()
+                    raise
+            # invalid
+            else:
+                logger.sys_error("Invalid type (%s) given for toggle_default_tenant." %input_dict['type'])
+                raise Exception("Invalid type (%s) given for toggle default third party authentication project." %input_dict['type']))
+
+        return "OK"
