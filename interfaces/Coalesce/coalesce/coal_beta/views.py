@@ -5525,6 +5525,45 @@ def shib_build_default_project(request):
 #         out['message'] = "Error: Failed to disable default Shibboleth Project."
 #         return HttpResponse(simplejson.dumps(out))
 
+
+def tpa_toggle_project(request, provider, project_id):
+    out = {}
+    try:
+        input_dict = {'project_id': project_id, 'type': provider.upper()}
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        to.toggle_default_tenant(input_dict)
+        out['status'] = 'success'
+        out['message'] = 'The Default Project has been updated.'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not update Default Project: %s" %(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def get_tpa_select_project(request, provider):
+    try:
+        auth = request.session['auth']
+        provider = provider.upper()
+        if(auth != None and (auth['username'] == 'admin' or auth['username'] == 'shadow_admin')):
+            to = tenant_ops(auth)
+            projects = to.list_all_tenants()
+            projects_filtered = []
+            for proj in projects:
+                if proj['project_name'] != "trans_default":
+                    proj_info = to.get_tenant(proj['project_id'])
+                    if proj_info['is_default'] is None:
+                        projects_filtered.append(proj)
+            if provider == "SHIB":
+                provider_info = {'name': "Shibboleth", 'id': provider}
+            elif provider == "LDAP":
+                provider_info = {'name': provider, 'id': provider}
+            else:
+                return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'providers': "error", 'error': "Error: Provider must be 'SHIB' or 'LDAP'."}))
+            return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'provider_info': provider_info, 'projects': projects_filtered}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'providers': "error", 'error': "Error: %s"%e}))
+
+
 def tpa_add_user(request, username, email):
     out = {}
     try:

@@ -49,16 +49,13 @@
 </table>
 
 {% for provider in providers %}
-    {% if provider.configured == 1 %} <!-- TODO: Add LDAP and Other functions -->
+    {% if provider.configured == 1 %}
         <div class="panel panel-primary loadable donuts">
             <div class="panel-heading">
-                <h3 class="panel-title">{{ provider.name }}</h3>
+                <h3 class="panel-title">{{ provider.name }} Default Project Details</h3>
             </div>
             <div class="panel-body center-text">
                 <div id="{{ provider.id }}" class="col-sm-12 no-padding">
-                    {#                        <button type="button" class="btn btn-lg btn-success update-shib-project">Update Default Project#}
-                    {#                           #}
-                    {#                        </button>#}
                     {% if provider.default_project == "none" %}
                         <div class="col-sm-12">
                             <p class="text-warning">
@@ -66,9 +63,13 @@
                                 detected. All new {{ provider.name }} users will have a project created for them.
                             </p>
                         </div>
-                        <button type="button" class="btn btn-lg btn-success create-tpa-project"
+                        <button type="button" class="btn btn-success create-tpa-project"
                                 data-provider="{{ provider.id }}">
-                            Build Default {{ provider.name }} Project
+                            Build New
+                        </button>
+                        <button type="button" class="btn btn-info select-tpa-project"
+                                data-provider="{{ provider.id }}">
+                            Enable Existing
                         </button>
                     {% else %}
                         <table class="table table-responsive table-bordered table-condensed">
@@ -95,13 +96,21 @@
                             </tr>
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-lg btn-danger delete-tpa-project"
+                        <button type="button" class="btn btn-danger delete-tpa-project"
                                 data-title="Delete Default {{ provider.name }} Project"
                                 data-message="Delete {{ provider.default_project.project_name }}?"
                                 data-call="/projects/{{ provider.default_project.project_id }}/{{ provider.default_project.project_name }}/delete/"
                                 data-notice="Deleting Project {{ provider.default_project.project_name }}"
                                 data-async="projectDeleteTimer">
-                            Delete Default {{ provider.name }} Project
+                            Delete
+                        </button>
+                        <button type="button" class="btn btn-info disable-tpa-project"
+                                data-title="Disable Default {{ provider.name }} Project"
+                                data-message="Disable {{ provider.default_project.project_name }} as the Default {{ provider.name }} Project?  This is will not delete the project."
+                                data-call="/third_party_authentication/toggle/{{ provider.id }}/{{ provider.default_project.project_id }}/"
+                                data-notice="Disabling Project {{ provider.default_project.project_name }}"
+                                data-async="projectToggleTimer">
+                            Disable
                         </button>
                     {% endif %}
                 </div>

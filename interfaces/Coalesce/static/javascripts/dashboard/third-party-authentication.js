@@ -33,6 +33,56 @@ $(function () {
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
 
+    // Toggle default projects
+    $(document).on('click', '.disable-tpa-project', function (event) {
+        event.preventDefault();
+        var title = encodeURIComponent($(this).data("title")),
+            message = encodeURIComponent($(this).data("message")),
+            call = ($(this).data("call")).slashTo47(),
+            notice = encodeURIComponent($(this).data("notice")),
+            refresh = "/third_party_authentication/get/".slashTo47(),
+            async = $(this).data("async");
+        showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
+    });
+
+    $(document).on('click', '.select-tpa-project', function (event) {
+        event.preventDefault();
+        var provider = $(this).data("provider"),
+            call = '/third_party_authentication/select/' + provider + '/';
+        showConfirmModal(call);
+    });
+
+    $(document).on('click', '#enable-tpa-project', function (event) {
+        event.preventDefault();
+        var project_id = $("#projects").val(),
+            provider_id = $(this).data("provider-id"),
+            provider_name = $(this).data("provider-name"),
+            buttons = $(this).parent().parent().find('button');
+
+        showMessage('info', "Enabling Default " + provider_name + " Project...");
+        setModalButtons(false, buttons);
+        call = "/third_party_authentication/toggle/" + provider_id + "/" + project_id + "/";
+        $.getJSON(call)
+            .done(function (data) {
+                if (data.status == 'error') {
+                    if (data.message) {
+                        showMessage('error', data.message);
+                    }
+                    setModalButtons(true, buttons);
+                }
+                if (data.status == 'success') {
+                    showMessage('success', data.message);
+                    setModalButtons(true, buttons);
+                    closeModal();
+                    refreshContent($("#page-content"), $("#tpa-container"), "/third_party_authentication/get/");
+                }
+            })
+            .fail(function () {
+                showMessage('error', 'Server Fault');
+                setModalButtons(true, buttons);
+            })
+    });
+
     // Confirm TPA configuration
     $(document).on('click', '#confirm-configure-tpa', function (event) {
         event.preventDefault();
