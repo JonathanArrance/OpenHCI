@@ -27,5 +27,5 @@ io = import_ops(b)
 #print r
 
 
-out = import_workload.import_vmware(b,{'image_name': 'import_windows2','package_name':'windows-multi.ova','path':'/home/transuser/jon','os_type':'windows'})
+out = import_workload.import_vmware(b,{'image_name': 'import_windows-empty','package_name':'windows-empty.ova','path':'/home/transuser/jon','os_type':'windows'})
 print out

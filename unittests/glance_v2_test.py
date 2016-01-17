@@ -108,7 +108,7 @@ print group
 """
 
 print "**Creating Image: test2...**"
-input_dict = {'image_name':"doon2",'image_type':'image_url','image_location':"http://cdn.download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img", 'container_format': "bare", 'disk_format': "qcow2", 'visibility': "public"}
+input_dict = {'image_name':"windows",'image_type':'windows','image_location':"/home/transuser/windows_server_2012_r2_standard_eval_kvm_20131117.qcow2", 'container_format': "bare", 'disk_format': "qcow2", 'visibility': "public"}
 ii = i.import_image(input_dict)
 print ii
 print

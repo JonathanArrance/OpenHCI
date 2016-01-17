@@ -233,6 +233,36 @@ class import_ops:
                         r_dict['memory'] = out2
         return r_dict
 
+    def inject_driver(self,path_array):
+        """
+        DESC: Inject all of the drivers and registry entries needed when converting to OpenStack
+        INPUT: path_array
+        OUTPUT: OK - success
+                ERROR - fail
+                NA - Unknown
+        ACCESS: Admins - can load drivers in any project to any converted os
+                PU - can load drivers to os converted in their project
+                User - can load drivers only in os that they are converting.
+        NOTE: the path array is an array of paths to drivers or registry files
+        """
+        
+
+    def import_iso(self):
+        """
+        DESC: List the vmware ovf/ova packages that were imported
+        INPUT: input_dict - instance_id - REQ
+                          - project_id - REQ
+                          - package_name - REQ
+        OUTPUT: output_dict - out_array - not converted
+                            - out_array - converted
+        ACCESS: Admins - can extract in any project
+                PU - can extract only in their project
+                User - can extract only in their project
+        NOTE: 
+        """
+        #get the converted an non-converted packages
+        pass
+
     def list_imports(self):
         """
         DESC: List the vmware ovf/ova packages that were imported

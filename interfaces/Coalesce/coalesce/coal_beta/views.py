@@ -2619,13 +2619,9 @@ def import_local (request, image_name, container_format, disk_format, image_type
         auth = request.session['auth']
         go = glance_ops(auth)
         content_type = request.FILES['imageLocal'].content_type
-
+    
         download_dir = download_fname = download_file = out = None
         if(container_format == 'ovf' or container_format == 'ova'):
-            #download_dir = "/transcirrus/workload_import/%s/%s/%s"%(auth['project_id'],auth['user_id'],image_name)
-            #os.mkdir(download_dir, 0755)
-            #os.popen('sudo mkdir -p %s'%(download_dir))
-            #os.popen('sudo chmod 777 %s'%(download_dir))
             download_dir   = "/tmp/"
             download_fname = image_name + "." + container_format
             download_file  = download_dir + download_fname
@@ -2634,7 +2630,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
             download_dir   = "/tmp/"
             download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
             download_file  = download_dir + download_fname
-
+    
         # Transfer the content from the temp location to our own file.
         try:
             with open(download_file, 'wb+') as destination:
@@ -2643,10 +2639,11 @@ def import_local (request, image_name, container_format, disk_format, image_type
         except Exception as e:
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
-
+    
         if(container_format == 'ovf' or container_format == 'ova'):
+            out = {}
             #we need to pull the virtual disks out and convert them
-            out = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type})
+            out['converted'] = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type})
             out['status'] = "success"
             out['message'] = "Local image %s was uploaded." % image_name
         else:
