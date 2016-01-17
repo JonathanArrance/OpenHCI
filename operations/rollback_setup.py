@@ -53,8 +53,10 @@ def rollback(auth_dict):
         logger.sys_info('No projects to roll back.')
 
     #remove the ssd and spindle vol types
-    ssd = volumes.delete_volume_type("ssd")
-    spindle = volumes.delete_volume_type("spindle")
+    voltypes = volumes.list_volume_types()
+    if(len(voltypes) > 0):
+        ssd = volumes.delete_volume_type("ssd")
+        spindle = volumes.delete_volume_type("spindle")
 
     #connect to the DB
     db = util.db_connect()
@@ -76,17 +78,18 @@ def rollback(auth_dict):
     except:
         logger.sys_error('Could not get the trans_default')
         pass
-    """
-    logger.sys_info("Removing the default glance images.")
+
+    logger.sys_info("Removing all glance images.")
     try:
-        #remove the default glance images if they were created
+        #remove any glance images we find
         images = glance.list_images()
         for image in images:
             glance.delete_image(image['image_id'])
-    except:
-        logger.sys_info("No Glance images to remove.")
+    except Exception as e:
+        logger.sys_info("Error removing glance images: %s" % e)
         pass
 
+    """
     #remove the iptables settings and the config file
     logger.sys_info("Removing iptables entries.")
     try:
@@ -208,7 +211,7 @@ def rollback(auth_dict):
         os.system('sudo rm -rf /etc/neutron')
         for f in os.listdir('/etc'):
             if fnmatch(f, 'os_configs*'):
-                os.system('sudo tar -xvf %s -C /etc' %f)
+                os.system('sudo tar -xvf /etc/%s -C /etc' %f)
         os.system('sudo chown -R nova:nova /etc/nova')
         os.system('sudo chown -R cinder:cinder /etc/cinder')
         os.system('sudo chown -R glance:glance /etc/glance')

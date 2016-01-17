@@ -323,7 +323,7 @@ Setup has completed successfully. The system is now ready to use\
 def rollback_msg(d, seconds):
     d.pause("""\
 Setup has encountered an issue.  The system will now rollback in %u seconds\
- to factory defaults.  Attempt to rerun setup."""
+ to factory defaults.  Please attempt to rerun setup after rollback."""
             % seconds, height=15, seconds=seconds)
 
 
@@ -529,6 +529,7 @@ def setup(d):
     p = Process(target=run_setup, args=(new_system_variables, user_dict))
     p.start()
 
+    got_error = False
     fill_text = "Preparing your cloud..."
     spinner = ["[|] ", "[/] ", "[-] ", "[\\] "]
     spin = 0
@@ -544,12 +545,37 @@ def setup(d):
         time.sleep(1)
         stat_raw = out.stdout.readlines()
         if (len(stat_raw) == 0):
-            d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
-            continue
+            # check to see if we got an error message
+            prc = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUPERROR', shell=True,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            prc.wait()
+            raw_msg = prc.stdout.readlines()
+            if (len(raw_msg) == 0):
+                # no error msg so let's make sure the process is still alive
+                if p.is_alive():
+                    d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
+                    continue
+                else:
+                    # our process is dead and there was no error message so we need to report it
+                    stat_raw = []
+                    stat_raw.append("1:2:3:4:SETUPERROR:Setup adnormally terminated; please contact TransCirrus")
+            else:
+                # got an error msg so let the code below handle it
+                stat_raw = raw_msg
         count += 1
         fill += 1.851
         stat = stat_raw[0].split(':')
-        fill_text = stat[-1].strip()
+
+        if len(stat) > 0:
+            fill_text = stat[-1].strip()
+        else:
+            fill_text = ""
+
+        if len(stat) > 1:
+            key_text = stat[-2].strip()
+        else:
+            key_text = ""
+
         if (fill_text == "END"):
             p.join()
             fill = 0
@@ -575,10 +601,10 @@ def setup(d):
                     os.waitpid (pid, os.WNOHANG)
                     break
             break
-        elif fill_text == "SETUPERROR":
-            last_message = stat
+        elif "SETUPERROR" in key_text:
+            last_message = fill_text
             d.gauge_update(100, text=spinner[spin]+fill_text, update_text=1)
-            p.exitcode = 2
+            got_error = True
             break
         else:
             d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
@@ -586,24 +612,24 @@ def setup(d):
 
     timeout = 10
 
-    if p.exitcode == 0:
+    if got_error:
+        d.msgbox("An error has occurred: " + last_message)
+        rollback_msg(d, timeout)
+        #clear_screen(d)
+        rollback(user_dict)
+        #util.reboot_system()
+    elif p.exitcode == 0:
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if (flag_set['first_time_boot'] != 'OK'):
             d.msgbox("An error has occured in setting the first time boot flag.")
         success_msg(d, timeout)
         clear_screen(d)
-    elif p.exitcode == 2:
-        d.msgbox("An error has occurred: " + last_message)
-        rollback_msg(d, timeout)
-        clear_screen(d)
-        rollback(user_dict)
-        util.reboot_system()
     else:
         rollback_msg(d, timeout)
-        clear_screen(d)
+        #clear_screen(d)
         rollback(user_dict)
-        util.reboot_system()
+        #util.reboot_system()
 
 
 def valid_ip(address):

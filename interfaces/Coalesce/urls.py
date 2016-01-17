@@ -514,12 +514,24 @@ urlpatterns = patterns('',
             name='delete_vpn_tunnel'),
 
         url(r'^list_vpn_tunnels/(?P<project_id>[^/]+)/$',
-            'coalesce.coal_beta.views.delete_vpn_tunnel',
-            name='delete_vpn_tunnel'),
+            'coalesce.coal_beta.views.list_vpn_tunnels',
+            name='list_vpn_tunnels'),
 
         url(r'^show_vpn_tunnel/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
-            'coalesce.coal_beta.views.delete_vpn_tunnel',
-            name='delete_vpn_tunnel'),
+            'coalesce.coal_beta.views.show_vpn_tunnel',
+            name='show_vpn_tunnel'),
+
+        url(r'^vpn/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/view/$',
+            'coalesce.coal_beta.views.vpn_view',
+            name='vpn_view'),
+
+        url(r'^vpn/get/create/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_vpn_create',
+            name='get_vpn_create'),
+
+        url(r'^vpn/get/info/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_vpn_info',
+            name='get_vpn_info'),
 
         # --- Routers ----
         url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
@@ -861,6 +873,14 @@ urlpatterns = patterns('',
         url(r'^third_party_authentication/get_build_default_project/(?P<provider>[^/]+)/$',
             'coalesce.coal_beta.views.get_third_party_authentication_build_project',
             name='get_third_party_authentication_build_project'),
+
+        url(r'^third_party_authentication/toggle/(?P<provider>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.tpa_toggle_project',
+            name='tpa_toggle_project'),
+
+        url(r'^third_party_authentication/select/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_tpa_select_project',
+            name='get_tpa_select_project'),
 
         url(r'^third_party_authentication/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
             'coalesce.coal_beta.views.tpa_add_user',

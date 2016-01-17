@@ -381,8 +381,10 @@ class server_ops:
                 #rand_id = random.randrange(0,100000)
                 create_dict['instance_name'] = create_dict['instance_name']+'_%s'%(str(self.rannum))
 
-        # get the user-data if it exists; returns "" if it doesn't exist
-        user_data = metadata.get_user_data(create_dict['image_id'])
+        # build exports that we may need in the user_data and then go get the user-data
+        # if there is no user_data then the function returns ""
+        exports = metadata.build_export_data(self.username)
+        user_data = metadata.get_user_data(create_dict['image_id'], exports)
 
         #connect to the rest api caller
         try:
