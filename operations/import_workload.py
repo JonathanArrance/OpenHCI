@@ -93,7 +93,6 @@ def import_vmware(auth_dict,input_dict):
                 raise Exception('Could not delete data drive image for drive %s. %s'%(input_dict['image_name']+'_'+x['order'],e))
         else:
             #append the boot disk.
-            print x
             image_attrib['boot_disk'] = x['disk_size']
             r_array.append(ret_dict)
 
