@@ -2639,7 +2639,7 @@ def import_local (request, image_name, container_format, disk_format, image_type
         except Exception as e:
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
-    
+
         if(container_format == 'ovf' or container_format == 'ova'):
             out = {}
             #we need to pull the virtual disks out and convert them
@@ -2698,7 +2698,6 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
             download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
             download_file  = download_dir + download_fname
 
-        print download_file
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
         filename, content_type = wget.download (image_location, download_file, download_progress)
