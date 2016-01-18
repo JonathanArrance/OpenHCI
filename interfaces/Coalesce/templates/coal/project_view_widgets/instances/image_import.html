@@ -172,7 +172,7 @@
                                 "na" + '/' +
                                 $("#image-visibility").val() + '/' +
                                 $("#image-os").val() + '/' +
-                                progressID + '/';
+                                progressID + '/' + CURRENT_PROJECT_ID + '/' ;
                         $.ajax(
                                 {
                                     type: 'POST',
@@ -239,7 +239,7 @@
                                 loc + '/' +
                                 $("#image-visibility").val() + '/' +
                                 $("#image-os").val() + '/' +
-                                progressID + '/';
+                                progressID + '/' + CURRENT_PROJECT_ID + '/';
                         window.loading.add("importing");
                         startProgressBarUpdate(progressID, $("#image-form"));
                         $.ajax(

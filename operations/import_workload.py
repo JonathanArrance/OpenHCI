@@ -17,6 +17,7 @@ def import_vmware(auth_dict,input_dict):
                       - package_name - REQ
                       - path - REQ
                       - os_type - REQ
+                      - project_id - REQ
     OUTPUT: array of r_dict - disk_type
                             - disk
                             - path
@@ -77,7 +78,7 @@ def import_vmware(auth_dict,input_dict):
         ret_dict = glance.import_image(import_dict)
         if(x['order'] != 'file1'):
             try:
-                convert_vol = vol.create_volume({'volume_name':input_dict['image_name']+'_'+x['order'],'volume_size':x['disk_size'],'project_id':auth_dict['project_id'],'volume_type':'spindle','image_id':ret_dict['image_id']})
+                convert_vol = vol.create_volume({'volume_name':input_dict['image_name']+'_'+x['order'],'volume_size':x['disk_size'],'project_id':input_dict['project_id'],'volume_type':'spindle','image_id':ret_dict['image_id']})
                 ret_dict['new_vol_name'] = convert_vol['volume_name']
                 ret_dict['volume_size'] = convert_vol['volume_size']
             except Exception as e:
