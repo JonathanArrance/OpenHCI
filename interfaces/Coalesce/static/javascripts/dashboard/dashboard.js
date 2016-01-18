@@ -35,7 +35,7 @@ $(function () {
         window.loading.current = tpa;
     });
 
-    $("#tcloud-settings").click(function (event) {
+    $("#cloud-settings").click(function (event) {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, settings, [], "/cloud_settings/get/");
         window.loading.current = settings;
