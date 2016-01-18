@@ -11,7 +11,6 @@ $(function () {
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
-    });
 
     // Toggle default projects
     $(document).on('click', '.disable-mfa', function (event) {
