@@ -5804,7 +5804,7 @@ def cloud_settings(request):
     settings = {}
     mfa = []
     settings['mfa'] = mfa
-    mfa.append({'name': aPersona, 'is_active': extras.is_apersona_up()})
+    mfa.append({'name': "aPersona", 'is_active': extras.is_apersona_up()})
     return render_to_response('coal/dashboard_widgets/cloud_settings.html', RequestContext(request, {'settings': settings}))
 
 
