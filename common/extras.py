@@ -2,6 +2,7 @@ from transcirrus.common.auth import authorization
 from random import choice
 from Crypto.Cipher import AES
 import binascii as bin
+import subprocess
 
 def shadow_auth():
     """
