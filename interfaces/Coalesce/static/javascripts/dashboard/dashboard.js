@@ -5,6 +5,7 @@ $(function () {
         project = $("#project-container"),
         tps = $("#tps-container"),
         tpa = $("#tpa-container"),
+        settings = $('#settings-container')
         metering = $("#metering-container"),
         account = $("#account-container");
 
@@ -32,6 +33,12 @@ $(function () {
         event.preventDefault();
         switchPageContent($(this), page, window.loading.current, tpa, [], "/third_party_authentication/get/");
         window.loading.current = tpa;
+    });
+
+    $("#tcloud-settings").click(function (event) {
+        event.preventDefault();
+        switchPageContent($(this), page, window.loading.current, settings, [], "/cloud_settings/get/");
+        window.loading.current = settings;
     });
 
     $("#metering").click(function (event) {

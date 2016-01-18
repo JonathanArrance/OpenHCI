@@ -5798,3 +5798,11 @@ def ldap_login(request, username):
                                                            'ldap_user': username,
                                                            'ldap_email': email,
                                                            'is_default_ldap': is_default_ldap}))
+
+
+def cloud_settings(request):
+    settings = {}
+    mfa = []
+    settings['mfa'] = mfa
+    mfa.append({'name': aPersona, 'is_active': extras.is_apersona_up()})
+    return render_to_response('coal/dashboard_widgets/cloud_settings.html', RequestContext(request, {'settings': settings}))

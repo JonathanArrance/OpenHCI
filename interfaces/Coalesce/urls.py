@@ -916,6 +916,15 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.ldap_build_default_project',
             name='ldap_build_default_project'),
 
+        # --- Cloud Settings ----
+        url(r'^/cloud_settings/get/$',
+            'coalesce.coal_beta.views.cloud_settings',
+            name='cloud_settings'),
+
+        url(r'^/cloud_settings/toggle_mfa/(?P<mfa>[^/]+)/$',
+            'coalesce.coal_beta.views.toggle_mfa',
+            name='toggle_mfa'),
+
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
