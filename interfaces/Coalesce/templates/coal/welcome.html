@@ -193,7 +193,8 @@
                         $("#log-in").removeProp("disabled"); 
                         data = $.parseJSON(data);
                         if (data.status == "success" || data.status == "info") {
-                            showMessage(data.status, data.message);
+                            if (data.status != "info")
+                                showMessage(data.status, data.message);
                             // if (data.status == "info")
                             //     alert(data.message)
                             if (data.user_level == 0) {
