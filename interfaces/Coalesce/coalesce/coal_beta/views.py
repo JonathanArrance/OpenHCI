@@ -11,6 +11,7 @@ import time
 import os
 import sys
 import hashlib
+from multiprocessing import Process
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
@@ -52,6 +53,7 @@ import transcirrus.common.version as ver
 import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
 import transcirrus.operations.vpn_manager as vpn_operation
+import transcirrus.operations.import_workload as import_workload
 from transcirrus.component.neutron.vpn import vpn_ops
 
 # Avoid shadowing the login() and logout() views below.
@@ -2610,19 +2612,25 @@ def create_keypair(request, key_name, project_id):
 
 # Import a local (user's laptop) image and add it to glance & database. The image has already been uploaded via the broswer
 # to memory or a temp file so we just need to transfer the contents to a file we control.
-def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id):
+def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id, project_id):
     from coalesce.coal_beta.models import ImportLocal
 
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
         content_type = request.FILES['imageLocal'].content_type
-
-        # Create a temp file to hold the image contents until we give it to glance.
-        download_dir   = "/tmp/"
-        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-        download_file  = download_dir + download_fname
-
+    
+        download_dir = download_fname = download_file = out = None
+        if(container_format == 'ovf' or container_format == 'ova'):
+            download_dir   = "/tmp/"
+            download_fname = image_name + "." + container_format
+            download_file  = download_dir + download_fname
+        else:
+            # Create a temp file to hold the image contents until we give it to glance.
+            download_dir   = "/tmp/"
+            download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+            download_file  = download_dir + download_fname
+    
         # Transfer the content from the temp location to our own file.
         try:
             with open(download_file, 'wb+') as destination:
@@ -2632,12 +2640,19 @@ def import_local (request, image_name, container_format, disk_format, image_type
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
 
-        # Add the image to glance.
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
-        import_dict['image_location'] = download_file
-        out = go.import_image(import_dict)
-        out['status'] = "success"
-        out['message'] = "Local image %s was uploaded." % image_name
+        if(container_format == 'ovf' or container_format == 'ova'):
+            out = {}
+            #we need to pull the virtual disks out and convert them
+            out['converted'] = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type, 'project_id':project_id})
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
+        else:
+            # Add the image to glance.
+            import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
+            import_dict['image_location'] = download_file
+            out = go.import_image(import_dict)
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
     except Exception as e:
         out = {'status' : "error", 'message' : "Error uploading local file: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2658,12 +2673,12 @@ def download_progress (current_size, total_size, width):
 
 # Import a remote image and add it to glance & database. The image is retrieved via a wget like interface.
 # TODO: A global cache_key is used and should be replaced with something else.
-def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id):
+def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id, project_id):
     global cache_key
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
+        #import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
 
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
@@ -2672,10 +2687,16 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
 
-        # Use wget to download the file.
-        download_dir   = "/tmp/"
-        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-        download_file  = download_dir + download_fname
+        download_dir = download_fname = download_file = out = None
+        if(container_format == 'ovf' or container_format == 'ova'):
+            download_dir   = "/tmp/"
+            download_fname = image_name + "." + container_format
+            download_file  = download_dir + download_fname
+        else:
+            # Create a temp file to hold the image contents until we give it to glance.
+            download_dir   = "/tmp/"
+            download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+            download_file  = download_dir + download_fname
 
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
@@ -2684,12 +2705,20 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache.delete(cache_key)
         cache_key = None
 
-        # Add the image to glance.
-        import_dict['image_location'] = download_file
-        import_dict['content_type'] = content_type
-        out = go.import_image(import_dict)
-        out['status'] = "success"
-        out['message'] = "Remote image %s was uploaded." % image_name
+        if(container_format == 'ovf' or container_format == 'ova'):
+            out = {}
+            #we need to pull the virtual disks out and convert them
+            out['converted'] = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type, 'project_id':project_id})
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
+        else:
+            import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
+            # Add the image to glance.
+            import_dict['image_location'] = download_file
+            import_dict['content_type'] = content_type
+            out = go.import_image(import_dict)
+            out['status'] = "success"
+            out['message'] = "Remote image %s was uploaded." % image_name
     except Exception as e:
         cache.delete(cache_key)
         cache_key = None
