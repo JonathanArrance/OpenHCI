@@ -7,7 +7,7 @@ $(function () {
             message = encodeURIComponent($(this).data("message")),
             call = ($(this).data("call")).slashTo47(),
             notice = encodeURIComponent($(this).data("notice")),
-            refresh = "/third_party_authentication/get/".slashTo47(),
+            refresh = "/cloud_settings/get/".slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });
@@ -19,7 +19,7 @@ $(function () {
             message = encodeURIComponent($(this).data("message")),
             call = ($(this).data("call")).slashTo47(),
             notice = encodeURIComponent($(this).data("notice")),
-            refresh = "/third_party_authentication/get/".slashTo47(),
+            refresh = "/cloud_settings/get/".slashTo47(),
             async = $(this).data("async");
         showConfirmModal('/get_confirm/' + title + '/' + message + '/' + call + '/' + notice + '/' + refresh + '/' + async + '/');
     });

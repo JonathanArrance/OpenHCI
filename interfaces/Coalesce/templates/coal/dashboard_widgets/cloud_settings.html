@@ -13,31 +13,31 @@
         <tbody>
             {% for mfa in settings.mfa %}
             <tr>
-                <th>{{ mfa.name }}</th>
+                <td>{{ mfa.name }}</td>
                 {% if mfa.is_active %}
-                    <td class="bg-success text-center">ENABLED</td>
-                    <td>
-                        <button type='button' class="btn btn-xs btn-danger pull-right disable-mfa"
-                            data-title="Disable {{ mfa.name }}"
-                            data-message="Disable {{ mfa.name }} Multi-factor Authentication from cloud?"
-                            data-call="/cloud_settings/toggle_mfa/{{ mfa.name }}/"
-                            data-notice="Disabling {{ mfa.name }} from cloud"
-                            data-async="refreshMFA">
-                            <i class="fa fa-minus"></i>
-                        </button>
-                    </td>
+                <td class="bg-success text-center">ENABLED</td>
+                <td>
+                    <button type='button' class="btn btn-xs btn-danger pull-right disable-mfa"
+                        data-title="Disable {{ mfa.name }}"
+                        data-message="Disable {{ mfa.name }} Multi-factor Authentication from cloud?"
+                        data-call="/cloud_settings/toggle_mfa/{{ mfa.name }}/"
+                        data-notice="Disabling {{ mfa.name }} from cloud"
+                        data-async="refreshMFA">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </td>
                 {% else %}
-                    <td class="bg-danger text-center">DISABLED</td>
-                    <td>
-                        <button type='button' class="btn btn-xs btn-success pull-right enable-mfa"
-                            data-title="Enable {{ mfa.name }}"
-                            data-message="Enable {{ mfa.name }} Multi-factor Authentication for cloud?"
-                            data-call="/cloud_settings/toggle_mfa/{{ mfa.name }}/"
-                            data-notice="Enabling {{ mfa.name }} for cloud"
-                            data-async="refreshMFA">
-                            <i class="fa fa-plus"></i>
-                        </button>
-                    </td>
+                <td class="bg-danger text-center">DISABLED</td>
+                <td>
+                    <button type='button' class="btn btn-xs btn-success pull-right enable-mfa"
+                        data-title="Enable {{ mfa.name }}"
+                        data-message="Enable {{ mfa.name }} Multi-factor Authentication for cloud?"
+                        data-call="/cloud_settings/toggle_mfa/{{ mfa.name }}/"
+                        data-notice="Enabling {{ mfa.name }} for cloud"
+                        data-async="refreshMFA">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </td>
                 {% endif %}
             </tr>
             {% endfor %}
