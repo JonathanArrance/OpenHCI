@@ -917,11 +917,11 @@ urlpatterns = patterns('',
             name='ldap_build_default_project'),
 
         # --- Cloud Settings ----
-        url(r'^/cloud_settings/get/$',
+        url(r'^cloud_settings/get/$',
             'coalesce.coal_beta.views.cloud_settings',
             name='cloud_settings'),
 
-        url(r'^/cloud_settings/toggle_mfa/(?P<mfa>[^/]+)/$',
+        url(r'^cloud_settings/toggle_mfa/(?P<mfa>[^/]+)/$',
             'coalesce.coal_beta.views.toggle_mfa',
             name='toggle_mfa'),
 
