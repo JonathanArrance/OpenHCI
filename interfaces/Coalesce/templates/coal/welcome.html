@@ -49,7 +49,11 @@
             {% else %}
                 <div class="well well-sm col-md-12">
                     <div class="col-md-12">
-                        <legend>Log In<img style="float: right; padding-top: 5px" src="{{ STATIC_URL }}images/aplogo.png" title="Login protected by aPersona Adaptive Security Manager"/></legend>
+                        <legend>Log In<img style="float: right; padding-top: 5px" src="{{ STATIC_URL }}images/aplogo.png" title="Login protected by aPersona Adaptive Security Manager"/>
+                            {% if not aPersona %}
+                                is disabled
+                            {% endif %}
+                        </legend>
                         <p>
                             By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
                                 href="/terms-of-use">Terms of Use</a>.
