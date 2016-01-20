@@ -165,6 +165,7 @@ def MakeRequestToApersona(url, data):
 def dashboard(request):
     is_cloud_admin = 0
     tpa_providers = auth_util.detect_auth()
+    aPersona = extras.is_apersona_up()
     try:
         auth = request.session['auth']
         if auth:
@@ -191,17 +192,17 @@ def dashboard(request):
                         project_id = auth['project_id']
                         project_admin = util.get_project_admin(project_id)
                         return render_to_response('coal/welcome.html',
-                                                  RequestContext(request, {"project_admin": project_admin}))
+                                                  RequestContext(request, {"project_admin": project_admin, 'aPersona': aPersona}))
                 else:
                     return render_to_response('coal/welcome.html',
-                                              RequestContext(request, {"providers": tpa_providers}))
+                                              RequestContext(request, {"providers": tpa_providers, 'aPersona': aPersona}))
                     # if tpa_providers['has_ldap'] != False:
                     #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
                     #
                     # if tpa_providers['has_other'] != False:
                     #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
             return render_to_response('coal/welcome.html',
-                                      RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug"}))
+                                      RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug", 'aPersona': aPersona}))
     except Exception as e:
         if tpa_providers['has_shib'] != False:
             try:
@@ -215,7 +216,7 @@ def dashboard(request):
                         project_id = auth['project_id']
                         project_admin = util.get_project_admin(project_id)
                         return render_to_response('coal/welcome.html',
-                                                  RequestContext(request, {"project_admin": project_admin}))
+                                                  RequestContext(request, {"project_admin": project_admin, 'aPersona': aPersona}))
                 else:
                     shadow_admin = extras.shadow_auth()
                     a = authorization(shadow_admin)
@@ -248,16 +249,18 @@ def dashboard(request):
                                               RequestContext(request, {'project': project_info,
                                                                        'shib_user': user,
                                                                        'shib_email': email,
-                                                                       'is_default_shib': is_default_shib}))
+                                                                       'is_default_shib': is_default_shib,
+                                                                       'aPersona': aPersona}))
             except:
                 return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers,
-                                                                                        'error': "Error: %s" % e}))
+                                                                                        'error': "Error: %s" % e,
+                                                                                        'aPersona': aPersona}))
         # if tpa_providers['has_ldap'] != False:
         #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
         #
         # if tpa_providers['has_other'] != False:
         #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
-        return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers, 'error': "Error: %s" % e}))
+        return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers, 'error': "Error: %s" % e, 'aPersona': aPersona}))
 
 def get_confirm(request, title, message, call, notice, async, refresh):
     t = urllib.unquote(title)
@@ -5885,3 +5888,25 @@ def ldap_login(request, username):
                                                            'ldap_user': username,
                                                            'ldap_email': email,
                                                            'is_default_ldap': is_default_ldap}))
+
+
+def cloud_settings(request):
+    settings = {}
+    mfa = []
+    settings['mfa'] = mfa
+    mfa.append({'name': "aPersona", 'is_active': extras.is_apersona_up()})
+    return render_to_response('coal/dashboard_widgets/cloud_settings.html', RequestContext(request, {'settings': settings}))
+
+
+def toggle_mfa(request, mfa):
+    out = {}
+    try:
+        if mfa == "aPersona":
+            aPersona = extras.toggle_apersona()
+            if aPersona == "ERROR":
+                raise Exception("Error handling aPersona service.")
+        out['status'] = 'success'
+        out['message'] = 'aPersona settings updated.'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not update aPersona settings: %s" %(e)}
+    return HttpResponse(simplejson.dumps(out))

@@ -2,6 +2,7 @@ from transcirrus.common.auth import authorization
 from random import choice
 from Crypto.Cipher import AES
 import binascii as bin
+import subprocess
 
 def shadow_auth():
     """
@@ -75,3 +76,37 @@ def decrypt(ciphertext):
     key, iv = id[:len(id)/2], id[len(id)/2:]
     crypt_obj = AES.new(key, AES.MODE_CBC, iv)
     return crypt_obj.decrypt(bin.a2b_base64(ciphertext))
+
+
+def toggle_apersona():
+    """
+    DESC:   enables/disables aPersona
+    INPUT:  none
+    OUTPUT: "OK" on success, else "ERROR"
+    ACCESS: need to have sudo privileges to run this
+    NOTE:   currently does not check for privileged access
+    """
+    if is_apersona_up():
+        status = subprocess.check_output(['sudo', 'service', 'tomcat6', 'stop']).strip()
+    else:
+        status = subprocess.check_output(['sudo', 'service', 'tomcat6', 'start']).strip()
+    if "OK" in status:
+        return "OK"
+    return "ERROR"
+
+
+def is_apersona_up():
+    """
+    DESC:   determines aPersona up status
+    INPUT:  none
+    OUTPUT: True/False
+    ACCESS: need to have sudo privileges to run this
+    NOTE:   currently does not check for privileged access
+    """
+    try:
+        status = subprocess.check_output(['sudo', 'service', 'tomcat6', 'status']).strip()
+        if "running" in status:
+            return True
+    except:
+        pass
+    return False

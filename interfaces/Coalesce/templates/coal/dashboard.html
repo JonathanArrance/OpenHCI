@@ -16,6 +16,7 @@
                     <li><a href="#" id="third-party-storage">Third Party Storage</a></li>
                     {% if is_cloud_admin == 1 %}
                         <li><a href="#" id="third-party-authentication">Third Party Authentication</a></li>
+                        <li><a href="#" id="cloud-settings">Cloud Settings</a></li>
                     {% endif %}
                     <li><a href="#" id="metering">Metering</a></li>
                     <li><a href="#" id="account">Your Account</a></li>
@@ -33,6 +34,7 @@
                 <div id="tps-container"></div>
                 {% if is_cloud_admin == 1 %}
                     <div id="tpa-container"></div>
+                    <div id="settings-container"></div>
                 {% endif %}
                 <div id="metering-container"></div>
                 <div id="account-container"></div>
@@ -53,4 +55,5 @@
     <script src="{{ STATIC_URL }}javascripts/dashboard/dashboard.js"></script>
     <script src="{{ STATIC_URL }}javascripts/dashboard/third-party-storage.js"></script>
     <script src="{{ STATIC_URL }}javascripts/dashboard/third-party-authentication.js"></script>
+    <script src="{{ STATIC_URL }}javascripts/dashboard/cloud-settings.js"></script>
 {% endblock %}
