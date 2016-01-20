@@ -10,6 +10,8 @@ from transcirrus.component.neutron.layer_three import layer_three_ops
 from transcirrus.component.cinder.cinder_volume import volume_ops
 from transcirrus.component.cinder.cinder_snapshot import snapshot_ops
 from transcirrus.component.nova.server_action import server_actions
+from transcirrus.component.neutron.vpn import vpn_ops
+import transcirrus.operations.vpn_manager as vpn_operation
 
 
 def destroy_project(auth_dict, project_dict):
@@ -39,6 +41,8 @@ def destroy_project(auth_dict, project_dict):
     logger.sys_info("Instantiated snapshot_ops object")
     sa = server_actions(auth_dict)
     logger.sys_info("Instantiated server actions object")
+    vo = vpn_ops(auth_dict)
+    logger.sys_info("Instantiated VPNaaS object")
 
     #instances
     server_list = nova.list_servers(project_dict['project_id'])
@@ -92,6 +96,15 @@ def destroy_project(auth_dict, project_dict):
             raise Exception("Destroy project: Can not remove volume %s."%(volume['volume_name']))
 
     #object storage containers (future)
+
+
+    #remove the vpn tunnels if any.
+    tunnels = vo.list_vpn_service(project_dict['project_id'])
+    if(len(tunnels) >= 1):
+        for tunnel in tunnels:
+            vpn_operation.delete_vpn_tunnel(auth_dict, project_dict['project_id'], tunnel['id'])
+    else:
+        logger.sys_info('No VPNaaS tunnels present.')
 
     #routers
     router_list = neutron_router.list_routers(project_dict['project_id'])
