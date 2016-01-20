@@ -171,6 +171,10 @@ urlpatterns = patterns('',
             name='manage_projects'),
 
 	# --- Instances ----
+        url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/pause_server/$',
+            'coalesce.coal_beta.views.create_instance_from_iso',
+            name='create_instance_from_iso'),
+
         url(r'^create_instance/(?P<instance_name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_id>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/(?P<boot_from_vol>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/(?P<volume_type>[^/]+)/$',
 	    'coalesce.coal_beta.views.create_instance',
             name='create_instance'),
