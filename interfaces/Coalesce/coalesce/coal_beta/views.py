@@ -2958,7 +2958,7 @@ def delete_router(request, project_id, router_id):
             remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
             l3o.delete_router_internal_interface(remove_dict)
         #del_router = l3o.delete_router(proj_rout_dict)
-        del_router = remove_router.remove_virt_router(proj_rout_dict)
+        del_router = remove_router.remove_virt_router(auth,proj_rout_dict)
         if(del_router == 'OK'):
             out['status'] = 'success'
             out['message'] = 'The router has been deleted.'

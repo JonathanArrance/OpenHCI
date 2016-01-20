@@ -26,8 +26,9 @@ def remove_virt_router(auth_dict, input_dict):
 
     #list the vpn tunnels in the project and find the ones attached to the router in question.
     tunnels = vo.list_vpn_service(input_dict['project_id'])
-    if(len(tunnels) >= 1):
-        for tunnel in tunnels:
+    if(len(tunnels['vpnservices']) >= 1):
+        for tunnel in tunnels['vpnservices']:
+            logger.sys_info('Deleting vpn tunnel %s'%(tunnel['id']))
             if(tunnel['router_id'] == input_dict['router_id']):
                 delete_vpn_tunnel(auth_dict, input_dict['project_id'], tunnel['id'])
     else:
