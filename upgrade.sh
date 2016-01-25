@@ -40,7 +40,7 @@ done
 /bin/chown cinder:cinder /mnt/nfs-vol/cinder-volume
 
 # Create the mongo db ceilometer user in case it was missing.
-/bin/echo 'db.addUser({user: "ceilometer",pwd: "transcirrus1",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
+/bin/echo 'db.addUser({user: "ceilometer",pwd: "simpleprivatecloudsolutions",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
 /usr/bin/mongo --host 172.24.24.10 ceilometer /tmp/MongoCeilometerUser.js
 
 # Fix any configs that may not have been setup for ceilometer meters
