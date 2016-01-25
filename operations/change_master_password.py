@@ -2,7 +2,7 @@
 #from celery import Celery
 #from celery import task
 from transcirrus.component.keystone.keystone_users import user_ops
-import os
+import os,sys
 import subprocess
 import transcirrus.common.config as config
 import transcirrus.common.logger as logger
