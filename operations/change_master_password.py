@@ -200,7 +200,5 @@ def change_master_password(new_password):
 # file so monit can start monitoring it.
 if __name__ == "__main__":
     # If we aren't given a node type then go figure it out else use what we were given.
-    if len(sys.argv) == 1:
-        new_password = sys.argv[1]
-    change_master_password(new_password)
+    change_master_password(sys.argv[1])
     sys.exit()
