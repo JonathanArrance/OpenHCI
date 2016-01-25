@@ -23,6 +23,8 @@
 # which will soon free the lock so we can proceed with
 # this script.
 #
+HOSTNAME=`hostname`
+MASTER_PWD='simpleprivatecloudsolutions'
 
 while sudo lsof /var/lib/rpm/.rpm.lock
 do
@@ -284,6 +286,19 @@ fi
 
 /usr/bin/openstack-config --set /etc/neutron/vpn_agent.ini vpnagent vpn_device_driver neutron.services.vpn.device_drivers.ipsec.OpenSwanDriver
 /usr/bin/openstack-config --set /etc/neutron/vpn_agent.ini ipsec ipsec_status_check_interval 60
+
+######################################################
+#
+#------------------Version 2.5-----------------------
+#
+#####################################################
+#chnage the master password 
+echo 'MASTER_PWD="'$MASTER_PWD'"' >> /usr/local/lib/python2.7/transcirrus/common/config.py
+
+#add master pwd to trans_system_settings table
+psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('master_pwd','"$MASTER_PWD"','"${HOSTNAME}"');"
+
+/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/change_master_password.py ${HOSTNAME}
 
 ######################################################
 #
