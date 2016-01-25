@@ -85,7 +85,7 @@ class InstanceTestCases(unittest.TestCase):
         data = self.rest.invoke('GET', path, headers=headers)
         instances = data['instances']
 
-        self.assertEqual(self.instance.get_num_instances(all_instances=True), 1, "there should have been 1 instance found; got %s" % self.instance.get_num_instances(all_instances=True))
+        self.assertEqual(self.instance.get_num_instances(), 1, "there should have been 1 instance found; got %s" % self.instance.get_num_instances(all_instances=True))
 
         valid_instances = self.instance.get_instances(all_instances=True)
 
@@ -134,6 +134,22 @@ class InstanceTestCases(unittest.TestCase):
             data = self.rest.invoke('GET', path, headers=headers, **proj)
         e = cm.exception
         self.assertEqual(e.error_code, 404, "should have raised an exception, got error code %s" % e.error_code)
+
+        # Test that we get the correct data for our test instance.
+        index = 0
+        path = "/{project_id}/instances/{instance_id}"
+        inst = {}
+        inst['project_id'] = self.project.get_project_by_index(index)
+        inst['instance_id'] = self.instance.get_instance_by_index(index)
+
+        print "inst: %s" % inst
+
+        inst_data = self.instance.get_instance_data(inst['instance_id'], inst['project_id'])
+                
+        headers = {'username': ut_config.admin, 'password': ut_config.admin_password}
+        data = self.rest.invoke('GET', path, headers=headers, **inst)
+        instance = data['project_id']
+        self.validate_instance(instance, inst_data)
 
         return
         

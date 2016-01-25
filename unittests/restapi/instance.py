@@ -13,6 +13,12 @@ class Instance:
         self.instances = []
         return
 
+    def get_instance_by_index(self, index):
+        if len(self.instances) > index:
+            return (self.instances[index])
+        else:
+            return (None)
+
     def get_instances(self, all_instances=False):
         if all_instances:
             so = server_ops(self.auth)
@@ -22,6 +28,14 @@ class Instance:
         else:
             return (self.instances)
 
+    def get_instance_data(self, instance_id, project_id):
+        input = {}
+        input['server_id']  = instance_id
+        input['project_id'] = project_id
+        so = server_ops(self.auth)
+        instance_data = so.get_server(input)
+        return (instance_data)
+
     def get_num_instances(self, all_instances=False):
         if all_instances:
             so = server_ops(self.auth)
@@ -29,6 +43,7 @@ class Instance:
             instance_list = so.list_all_servers()
             return (len(instance_list))
         else:
+            print "num instances %s" % len(self.instances)
             return (len(self.instances))
 
     def delete_instance_by_id(self, instance_id):
@@ -49,7 +64,7 @@ class Instance:
         so = server_ops(self.auth)
         instance_list = so.list_all_servers()
         for instance in instance_list:
-            if instance['instance_name'].startswith(INSTANCE_PREFIX) or delete_all:
+            if instance['server_name'].startswith(INSTANCE_PREFIX) or delete_all:
                 self.delete_instance_by_id(instance['instance_id'])
         return (True)
 
@@ -97,5 +112,5 @@ class Instance:
             auth = self.auth
 
         instance_info = boot_from_vol_ops.boot_instance(instance, auth)['instance']
-
-        return
+        self.instances.append(instance_info['vm_id'])
+        return (instance_info['vm_id'])
