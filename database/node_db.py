@@ -536,7 +536,7 @@ def update_node_master_pass(new_password):
         logger.sys_error('The master password can not be blank.')
         raise Exception('The master password can not be blank.')
 
-    db = db_connect()
+    db = util.db_connect()
 
     #update heat
     try:
