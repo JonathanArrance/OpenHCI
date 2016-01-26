@@ -299,7 +299,8 @@ sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc
 echo 'db.changeUserPassword("ceilometer", "'${MASTER_PWD}'")' >> /transcirrus/update_mongo_pwd.js
 
 #add master pwd to trans_system_settings table
-psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('master_pwd','"$MASTER_PWD"','"${HOSTNAME}"');"
+psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('master_pwd','"${MASTER_PWD}"','"${HOSTNAME}"');"
+psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('master_pwd','"${MASTER_PWD}"','"${HOSTNAME}"');"
 
 /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/change_master_password.py ${MASTER_PWD}
 
