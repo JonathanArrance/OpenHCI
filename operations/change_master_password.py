@@ -64,10 +64,10 @@ def change_master_password(new_password):
         else:
             update_array.append({'system_name':config.NODE_NAME,'parameter':'tran_db_pass','param_value':new_password})
             update_array.append({'system_name':config.NODE_NAME,'parameter':'os_db_pass','param_value':new_password})
-            write_tranDB = os.system("""sudo sed -i 's/TRAN_DB_PASS=.*/TRAN_DB_PASS=%s/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
+            write_tranDB = os.system("""sudo sed -i 's/TRAN_DB_PASS=.*/TRAN_DB_PASS="'"%s"'"/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
             if(write_tranDB != 0):
                 logger.sys_warning('Could not write the TRAN_DB_PASS and update the master password.')
-            write_osDB = os.system("""sudo sed -i 's/OS_DB_PASS=.*/OS_DB_PASS=%s/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
+            write_osDB = os.system("""sudo sed -i 's/OS_DB_PASS=.*/OS_DB_PASS="'"%s"'"/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
             if(write_osDB != 0):
                 logger.sys_warning('Could not write the OS_DB_PASS and update the master password.')
             os.system('sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc')

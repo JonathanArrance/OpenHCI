@@ -293,15 +293,15 @@ fi
 #
 #####################################################
 #chnage the master password 
-echo 'MASTER_PWD="'$MASTER_PWD'"' >> /usr/local/lib/python2.7/transcirrus/common/config.py
-
+echo 'MASTER_PWD="'${MASTER_PWD}'"' >> /usr/local/lib/python2.7/transcirrus/common/config.py
+sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc
 #create the mongo file
 echo 'db.changeUserPassword("ceilometer", "'${MASTER_PWD}'")' >> /transcirrus/update_mongo_pwd.js
 
 #add master pwd to trans_system_settings table
 psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('master_pwd','"$MASTER_PWD"','"${HOSTNAME}"');"
 
-/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/change_master_password.py ${HOSTNAME}
+/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/change_master_password.py ${MASTER_PWD}
 
 ######################################################
 #
