@@ -79,6 +79,10 @@ def change_master_password(new_password):
         write_apersona2 = os.system("""sudo sed -i 's/db.password=.*/db.password=%s/g' /var/lib/tomcat6/webapps/api_portal/WEB-INF/classes/apersona-db.properties"""%(new_password))
         if(write_apersona2 != 0):
             logger.sys_warning('Could not update the apersona password.')
+        #support
+        write_support = os.system("""sudo sed -i 's/pgsql.password=.*/pgsql.password='%s'/g' /usr/local/lib/python2.7/transcirrus/operations/support-collect.sh"""%(new_password))
+        if(write_support != 0):
+            logger.sys_warning('Could not update the support password.')
 
     if(config.NODE_TYPE == 'cc' or config.NODE_TYPE == 'cn' or config.NODE_TYPE == 'ha'):
         if(config.NODE_TYPE == 'cn' or config.NODE_TYPE == 'ha'):
