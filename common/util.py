@@ -1639,7 +1639,7 @@ def restart_rabbitmq():
     # rabbitmqctl fixes
     d = dict(os.environ)
     d['HOSTNAME'] = config.NODE_NAME
-    subprocess.Popen('sudo rabbitmqctl change_password guest transcirrus1', shell=True, env=d).wait()
+    subprocess.Popen('sudo rabbitmqctl change_password guest %s', shell=True, env=d %(config.MASTER_PWD)).wait()
     subprocess.call(['sudo', 'service', 'rabbitmq-server', 'restart'])
 
     # restart some openstack services as well

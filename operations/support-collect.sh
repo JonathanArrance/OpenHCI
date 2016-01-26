@@ -46,7 +46,7 @@ chown transuser:transuser ${DUMP_DIR}
 # We will start with sosreport since it collects most everything we want plus a lot more. We try
 # to skip some of the stuff we shouldn't need. The big one is selinux which really takes a long time.
 sosreport -v -a --build --diagnose --analyze --report --batch --tmp-dir=${DUMP_DIR}              \
-          -k pgsql.username=transuser -k pgsql.password=transcirrus1 -k pgsql.dbname=transcirrus \
+          -k pgsql.username=transuser -k pgsql.password=simpleprivatecloudsolutions -k pgsql.dbname=transcirrus \
           -k pgsql.dbport=5432 -k pgsql.dbhost=localhost                                         \
           --skip-plugins=acpid,cgroups,dovecot,foreman,gdm,hts,i18n,iscsi,iscsitarget,krb5,ldap  \
           --skip-plugins=mrggrid,mrgmessg,mysql,openhpi,printing,psacct,samba,sar,x11,xen,yum    \

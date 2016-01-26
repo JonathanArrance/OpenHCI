@@ -54,6 +54,7 @@ import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
 import transcirrus.operations.vpn_manager as vpn_operation
 import transcirrus.operations.import_workload as import_workload
+import transcirrus.operations.remove_virtual_router as remove_router
 from transcirrus.component.neutron.vpn import vpn_ops
 
 # Avoid shadowing the login() and logout() views below.
@@ -3013,7 +3014,8 @@ def delete_router(request, project_id, router_id):
         if subnet_id:
             remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
             l3o.delete_router_internal_interface(remove_dict)
-        del_router = l3o.delete_router(proj_rout_dict)
+        #del_router = l3o.delete_router(proj_rout_dict)
+        del_router = remove_router.remove_virt_router(auth,proj_rout_dict)
         if(del_router == 'OK'):
             out['status'] = 'success'
             out['message'] = 'The router has been deleted.'
@@ -3116,6 +3118,10 @@ def delete_vm_spec(request,flavor_id):
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
 
+def create_instance_from_iso(request):
+    pass
+
+
 def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_id, sec_key_name, image_id, network_name, project_id, boot_from_vol, volume_size, volume_name, volume_type):
     #this is used to create new instance. Not sure why it is called create image
     try:
@@ -3161,31 +3167,6 @@ def delete_instance(request, project_id, server_id, delete_boot_vol=None):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
-    #this is used to create new instance. Not sure why it is called create image
-    #if(amount is None):
-    #    amount = '1'
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        no = neutron_net_ops(auth)
-        instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
-                        'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
-                        'network_name': network_name,'image_name': image_name,
-                        'flavor_name':flavor_name, 'name':name}
-        out = so.create_server(instance)
-        priv_net_list = no.list_internal_networks(project_id)
-        default_priv = priv_net_list[0]['net_id']
-        input_dict = {'server_id':out['vm_id'], 'net_id': default_priv, 'project_id': project_id}
-        #net_info = so.attach_server_to_network(input_dict)
-        out['server_info']= so.get_server(input_dict)
-        out['status'] = 'success'
-        out['message'] = "New server %s was created."%(out['vm_name'])
-    except Exception as e:
-        out = {"status":"error","message":"%s"%(e)}
-    return HttpResponse(simplejson.dumps(out))
-'''
 def list_servers(request,project_id):
     try:
         auth = request.session['auth']

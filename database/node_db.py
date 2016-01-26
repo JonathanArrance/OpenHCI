@@ -69,7 +69,7 @@ def get_node(node_id):
     return r_dict
 
 def update_nova_node():
-    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:transcirrus1@172.24.24.10/nova",'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+    insert_nova_conf = {"parameter":"sql_connection","param_value":"postgresql://transuser:%s@172.24.24.10/nova",'file_name':"nova.conf",'node':"%s" %(config.MASTER_PWD,input_dict['node_id'])}
     insert_nova_ip = {"parameter":"my_ip","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_novncproxy = {"parameter":"novncproxy_base_url","param_value":"http://%s:6080/vnc_auto.html"%(util.get_uplink_ip()),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
     insert_vncproxy = {"parameter":"vncserver_proxyclient_address","param_value":"%s" %(input_dict['node_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -194,7 +194,7 @@ def insert_node(input_dict):
 
     #insert node info into specific service dbs based on node_type
     try:
-        insert_ceil_db = {'parameter':"connection",'param_value':"mongodb://ceilometer:transcirrus1@%s:27017/ceilometer"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
+        insert_ceil_db = {'parameter':"connection",'param_value':"mongodb://ceilometer:%s@%s:27017/ceilometer"%(config.MASTER_PWD,input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
         insert_ceil_auth_uri = {'parameter':"auth_uri",'param_value':"http://%s:5000"%(input_dict['cc_data_ip']),'file_name':"ceilometer.conf",'node':"%s" %(input_dict['node_id'])}
@@ -215,18 +215,20 @@ def insert_node(input_dict):
         return 'ERROR'
 
     if(input_dict['node_type'] == 'cc'):
-        #try:
-        #    #glance workers
-        #    insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':"%s"%(input_dict['node_id']),'file_name':'glance-api.conf','index':'48'}
-        #    glance_array = [insert_glance_workers]
-        #    for glance in glance_array:
-        #        db.pg_transaction_begin()
-        #        db.pg_insert('glance_defaults',glance)
-        #        db.pg_transaction_commit()
-        #except:
-        #    db.pg_transaction_rollback()
-        #    logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
-        #    return 'ERROR'
+        try:
+            #glance workers
+            #insert_glance_workers = {'parameter':'workers','param_value':"%s"%(proc_info['total_cores']),'host_name':"%s"%(input_dict['node_id']),'file_name':'glance-api.conf','index':'48'}
+            insert_glance_db = {'parameter':"connection",'param_value':"postgresql://transuser:%s@%s/glance"%(config.MASTER_PWD,input_dict['cc_data_ip']),'file_name':"glance-registry.conf",'host_name':"%s" %(input_dict['node_id'])}
+            insert_glance_db2 = {'parameter':"connection",'param_value':"postgresql://transuser:%s@%s/glance"%(config.MASTER_PWD,input_dict['cc_data_ip']),'file_name':"glance-api.conf",'host_name':"%s" %(input_dict['node_id'])}
+            glance_array = [insert_glance_db,insert_glance_db2]
+            for glance in glance_array:
+                db.pg_transaction_begin()
+                db.pg_insert('glance_defaults',glance)
+                db.pg_transaction_commit()
+        except:
+            db.pg_transaction_rollback()
+            logger.sql_error("Could not insert node specific glance config into TransCirrus db.")
+            return 'ERROR'
 
         try:
             insert_nova_ec2 = {'parameter':'ec2_host',"param_value":"%s"%(cc_uplink_ip),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -246,7 +248,7 @@ def insert_node(input_dict):
         #HACK need to add in a supersecret db password
         try:
             insert_cinderavail_zone = {'parameter':"storage_availability_zone",'param_value':"%s"%(input_dict['avail_zone']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_cinder_db = {'parameter':"connection",'param_value':"postgresql://transuser:transcirrus1@%s/cinder"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_cinder_db = {'parameter':"connection",'param_value':"postgresql://transuser:%s@%s/cinder"%(config.MASTER_PWD,input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_auth_host = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"cinder.conf",'node':"%s" %(input_dict['node_id'])}
             insert_cinder_auth_host_api = {'parameter':"auth_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"api-paste.ini",'node':"%s" %(input_dict['node_id'])}
@@ -286,7 +288,7 @@ def insert_node(input_dict):
             insert_node_virt = {'parameter':"virt_type",'param_value':"%s"%(input_dict['node_virt_type']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_rabbit = {'parameter':"rabbit_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_nova_metadata = {'parameter':"metadata_listen",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_nova_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/nova"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_nova_db = {"parameter":"connection","param_value":"postgresql://transuser:%s@%s/nova"%(config.MASTER_PWD,input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_metadata_host = {'parameter':"metadata_host",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_host = {'parameter':"neutron_url",'param_value':"http://%s:9696"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_admin = {'parameter':"neutron_admin_auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"nova.conf",'node':"%s" %(input_dict['node_id'])}
@@ -320,7 +322,7 @@ def insert_node(input_dict):
             insert_neutron_region = {"parameter":"auth_region","param_value":input_dict['node_cloud_name'],'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_localip = {"parameter":"local_ip","param_value":input_dict['node_data_ip'],'file_name':"ovs_neutron_plugin.ini",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_rabbit = {"parameter":"rabbit_host","param_value":'%s'%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
-            insert_neutron_db = {"parameter":"connection","param_value":"postgresql://transuser:transcirrus1@%s/neutron"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
+            insert_neutron_db = {"parameter":"connection","param_value":"postgresql://transuser:%s@%s/neutron"%(config.MASTER_PWD,input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
             insert_neutron_auth = {'parameter':"auth_url",'param_value':"http://%s:35357/v2.0"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_meta_ip = {'parameter':"nova_metadata_ip",'param_value':"%s"%(input_dict['cc_data_ip']),'file_name':"metadata_agent.ini",'node':"%s" %(input_dict['node_id'])}
             insert_nova_url = {'parameter':"nova_url",'param_value':"http://%s:8774/v2"%(input_dict['cc_data_ip']),'file_name':"neutron.conf",'node':"%s" %(input_dict['node_id'])}
@@ -520,6 +522,105 @@ def update_node(update_dict):
     else:
         return check_node
 
+def update_node_master_pass(new_password):
+    """
+    DESC: Used to update the mster password for openstack services in the TransCirrus config database. 
+    INPUT: new_password
+    OUTPUT: OK - success
+            ERROR - fail
+            NA - unknown
+    ACCESS: Wide open
+    NOTE: This will update the master password in the database. It will not re-write the config files.
+    """
+    if(new_password == ''):
+        logger.sys_error('The master password can not be blank.')
+        raise Exception('The master password can not be blank.')
+
+    db = util.db_connect()
+
+    #update heat
+    try:
+        heat_updates = [{'table':"heat_default",'set':"param_value='%s'"%(new_password),'where':"parameter='rabbit_password'"},
+                        {'table':"heat_default",'set':"param_value='%s'"%(new_password),'where':"parameter='admin_password'"}]
+        for heat_update in heat_updates:
+            db.pg_transaction_begin()
+            db.pg_update(heat_update)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sgl_error("Could not update Heat master password.")
+        return 'ERROR'
+
+    try:
+        ceil_updates = [{'table':"ceilometer_default",'set':"param_value='%s'"%(new_password),'where':"parameter='rabbit_password'"},
+                        {'table':"ceilometer_default",'set':"param_value='%s'"%(new_password),'where':"parameter='admin_password'"},
+                        {'table':"ceilometer_default",'set':"param_value='%s'"%(new_password),'where':"parameter='os_password'"}]
+        for ceil_update in ceil_updates:
+            db.pg_transaction_begin()
+            db.pg_update(ceil_update)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sgl_error("Could not update Ceilometer master password.")
+        return 'ERROR'
+
+    try:
+        cinder_updates = [{'table':"cinder_default",'set':"param_value='%s'"%(new_password),'where':"parameter='rabbit_password'"},
+                        {'table':"cinder_default",'set':"param_value='%s'"%(new_password),'where':"parameter='admin_password'"}]
+        for cinder_update in cinder_updates:
+            db.pg_transaction_begin()
+            db.pg_update(cinder_update)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sgl_error("Could not update Cinder master password.")
+        return 'ERROR'
+
+    try:
+        glance_updates = [{'table':"glance_defaults",'set':"param_value='%s'"%(new_password),'where':"parameter='rabbit_password'"},
+                        {'table':"glance_defaults",'set':"param_value='%s'"%(new_password),'where':"parameter='admin_password'"}]
+        for glance_update in glance_updates:
+            db.pg_transaction_begin()
+            db.pg_update(glance_update)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sgl_error("Could not update Glance master password.")
+        return 'ERROR'
+
+    try:
+        neutron_updates = [{'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='rabbit_password'"},
+                           {'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='admin_password'"},
+                           {'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='metadata_proxy_shared_secret'"},
+                           {'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='nova_admin_password'"}
+                           ]
+        for neutron_update in neutron_updates:
+            db.pg_transaction_begin()
+            db.pg_update(neutron_update)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sgl_error("Could not update Neutron master password.")
+        return 'ERROR'
+
+    try:
+        nova_updates = [{'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='rabbit_password'"},
+                           {'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='admin_password'"},
+                           {'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='neutron_metadata_proxy_shared_secret'"},
+                           {'table':"neutron_default",'set':"param_value='%s'"%(new_password),'where':"parameter='neutron_admin_password'"}
+                           ]
+        for nova_update in nova_updates:
+            db.pg_transaction_begin()
+            db.pg_update(nova_update)
+            db.pg_transaction_commit()
+    except:
+        db.pg_transaction_rollback()
+        logger.sgl_error("Could not update Nova master password.")
+        return 'ERROR'
+
+    return 'OK'
+
+
 def get_node_nova_config(node_id):
     """
     DESC: Pull the nova config information out of the nova config DB.
@@ -630,7 +731,7 @@ def update_controller_config(update_dict):
         #raise Exception("The node_id was not specified.") 
     
     #get the current nova info needed
-    #selet_nova = {'select':}    
+    #selet_nova = {'select':}
 
 def get_node_neutron_config(node_id):
     """

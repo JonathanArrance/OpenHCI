@@ -2015,9 +2015,9 @@ ALTER TABLE ONLY trans_user_info ALTER COLUMN index SET DEFAULT nextval('trans_u
 INSERT INTO heat_default VALUES ('verbose', 'False', 'heat.conf', 1);
 INSERT INTO heat_default VALUES ('debug', 'False', 'heat.conf', 2);
 INSERT INTO heat_default VALUES ('rabbit_userid', 'guest', 'heat.conf', 3);
-INSERT INTO heat_default VALUES ('rabbit_password', 'transcirrus1', 'heat.conf', 4);
+--INSERT INTO heat_default VALUES ('rabbit_password', 'simpleprivatecloudsolutions', 'heat.conf', 4);
 INSERT INTO heat_default VALUES ('admin_user', 'heat', 'heat.conf', 5);
-INSERT INTO heat_default VALUES ('admin_password', 'transcirrus1', 'heat.conf', 6);
+--INSERT INTO heat_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'heat.conf', 6);
 
 
 --
@@ -2029,11 +2029,11 @@ INSERT INTO heat_default VALUES ('admin_password', 'transcirrus1', 'heat.conf', 
 INSERT INTO ceilometer_default VALUES ('verbose', 'False', 'ceilometer.conf', 1);
 INSERT INTO ceilometer_default VALUES ('debug', 'False', 'ceilometer.conf', 2);
 INSERT INTO ceilometer_default VALUES ('rabbit_userid', 'guest', 'ceilometer.conf', 3);
-INSERT INTO ceilometer_default VALUES ('rabbit_password', 'transcirrus1', 'ceilometer.conf', 4);
+--INSERT INTO ceilometer_default VALUES ('rabbit_password', 'simpleprivatecloudsolutions', 'ceilometer.conf', 4);
 INSERT INTO ceilometer_default VALUES ('admin_user', 'ceilometer', 'ceilometer.conf', 5);
-INSERT INTO ceilometer_default VALUES ('admin_password', 'transcirrus1', 'ceilometer.conf', 6);
+--INSERT INTO ceilometer_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'ceilometer.conf', 6);
 INSERT INTO ceilometer_default VALUES ('os_username', 'ceilometer', 'ceilometer.conf', 7);
-INSERT INTO ceilometer_default VALUES ('os_password', 'transcirrus1', 'ceilometer.conf', 8);
+--INSERT INTO ceilometer_default VALUES ('os_password', 'simpleprivatecloudsolutions', 'ceilometer.conf', 8);
 
 
 
@@ -2045,17 +2045,17 @@ INSERT INTO ceilometer_default VALUES ('os_password', 'transcirrus1', 'ceilomete
 
 INSERT INTO cinder_default VALUES ('auth_protocol', 'http', 'api-paste.ini', 3);
 INSERT INTO cinder_default VALUES ('service_protocol', 'http', 'api-paste.ini', 5);
-INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'api-paste.ini', 9);
+--INSERT INTO cinder_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'api-paste.ini', 9);
 INSERT INTO cinder_default VALUES ('verbose', 'False', 'cinder.conf', 10);
 INSERT INTO cinder_default VALUES ('debug', 'False', 'cinder.conf', 11);
 INSERT INTO cinder_default VALUES ('auth_protocol', 'http', 'cinder.conf', 14);
-INSERT INTO cinder_default VALUES ('admin_password', 'transcirrus1', 'cinder.conf', 19);
+--INSERT INTO cinder_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'cinder.conf', 19);
 INSERT INTO cinder_default VALUES ('state_path', '/var/lib/cinder', 'cinder.conf', 20);
 INSERT INTO cinder_default VALUES ('lock_path', '/var/lib/cinder', 'cinder.conf', 21);
 INSERT INTO cinder_default VALUES ('volumes_dir', '/var/lib/cinder/volumes', 'cinder.conf', 22);
 INSERT INTO cinder_default VALUES ('rpc_backend', 'rabbit', 'cinder.conf', 23);
 INSERT INTO cinder_default VALUES ('rabbit_userid', 'guest', 'cinder.conf', 26);
-INSERT INTO cinder_default VALUES ('rabbit_password', 'transcirrus1', 'cinder.conf', 27);
+--INSERT INTO cinder_default VALUES ('rabbit_password', 'simpleprivatecloudsolutions', 'cinder.conf', 27);
 INSERT INTO cinder_default VALUES ('default_availability_zone', 'nova', 'cinder.conf', 28);
 INSERT INTO cinder_default VALUES ('scheduler_default_filters', 'AvailabilityZoneFilter,CapacityFilter,CapabilitiesFilter', 'cinder.conf', 29);
 INSERT INTO cinder_default VALUES ('volume_name_template', 'TransCirrus-volume-%s', 'cinder.conf', 31);
@@ -2079,7 +2079,7 @@ INSERT INTO glance_defaults VALUES ('registry_port', '9191', 'NULL', 'glance-api
 INSERT INTO glance_defaults VALUES ('rabbit_host', 'localhost', 'NULL', 'glance-api.conf', 12);
 INSERT INTO glance_defaults VALUES ('rabbit_port', '5672', 'NULL', 'glance-api.conf', 13);
 INSERT INTO glance_defaults VALUES ('rabbit_userid', 'guest', 'NULL', 'glance-api.conf', 14);
-INSERT INTO glance_defaults VALUES ('rabbit_password', 'transcirrus1', 'NULL', 'glance-api.conf', 15);
+--INSERT INTO glance_defaults VALUES ('rabbit_password', 'simpleprivatecloudsolutions', 'NULL', 'glance-api.conf', 15);
 INSERT INTO glance_defaults VALUES ('rabbit_notification_exchange', 'glance', 'NULL', 'glance-api.conf', 16);
 INSERT INTO glance_defaults VALUES ('auth_host', 'localhost', 'NULL', 'glance-api.conf', 17);
 INSERT INTO glance_defaults VALUES ('auth_uri', 'localhost:5000', 'NULL', 'glance-api.conf', 18);
@@ -2087,7 +2087,7 @@ INSERT INTO glance_defaults VALUES ('auth_port', '35357', 'NULL', 'glance-api.co
 INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-api.conf', 20);
 INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'glance-api.conf', 21);
 INSERT INTO glance_defaults VALUES ('admin_user', 'glance', 'NULL', 'glance-api.conf', 22);
-INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-api.conf', 23);
+--INSERT INTO glance_defaults VALUES ('admin_password', 'simpleprivatecloudsolutions', 'NULL', 'glance-api.conf', 23);
 INSERT INTO glance_defaults VALUES ('flavor', 'keystone', 'NULL', 'glance-api.conf', 24);
 INSERT INTO glance_defaults VALUES ('workers', '6', 'NULL', 'glance-api.conf', 25);
 INSERT INTO glance_defaults VALUES ('verbose', 'False', 'NULL', 'glance-registry.conf', 26);
@@ -2102,7 +2102,7 @@ INSERT INTO glance_defaults VALUES ('auth_port', '35357', 'NULL', 'glance-regist
 INSERT INTO glance_defaults VALUES ('auth_protocol', 'http', 'NULL', 'glance-registry.conf', 35);
 INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'glance-registry.conf', 36);
 INSERT INTO glance_defaults VALUES ('admin_user', 'glance', 'NULL', 'glance-registry.conf', 37);
-INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-registry.conf', 38);
+--INSERT INTO glance_defaults VALUES ('admin_password', 'simpleprivatecloudsolutions', 'NULL', 'glance-registry.conf', 38);
 INSERT INTO glance_defaults VALUES ('flavor', 'keystone', 'NULL', 'glance-registry.conf', 39);
 INSERT INTO glance_defaults VALUES ('verbose', 'False', 'NULL', 'glance-scrubber.conf', 40);
 INSERT INTO glance_defaults VALUES ('debug', 'False', 'NULL', 'glance-scrubber.conf', 41);
@@ -2112,7 +2112,7 @@ INSERT INTO glance_defaults VALUES ('registry_port', '9191', 'NULL', 'glance-scr
 INSERT INTO glance_defaults VALUES ('auth_url', 'http://localhost:5000/v2.0/', 'NULL', 'glance-scrubber.conf', 45);
 INSERT INTO glance_defaults VALUES ('admin_tenant_name', 'service', 'NULL', 'glance-scrubber.conf', 46);
 INSERT INTO glance_defaults VALUES ('admin_user', 'glance', 'NULL', 'glance-scrubber.conf', 47);
-INSERT INTO glance_defaults VALUES ('admin_password', 'transcirrus1', 'NULL', 'glance-scrubber.conf', 48);
+--INSERT INTO glance_defaults VALUES ('admin_password', 'simpleprivatecloudsolutions', 'NULL', 'glance-scrubber.conf', 48);
 
 --
 -- TOC entry 2170 (class 0 OID 16423)
@@ -2141,23 +2141,23 @@ INSERT INTO neutron_default VALUES ('debug', 'False', 'metadata_agent.ini', 13);
 INSERT INTO neutron_default VALUES ('verbose', 'False', 'metadata_agent.ini', 14);
 INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'metadata_agent.ini', 17);
 INSERT INTO neutron_default VALUES ('admin_user', 'neutron', 'metadata_agent.ini', 18);
-INSERT INTO neutron_default VALUES ('admin_password', 'transcirrus1', 'metadata_agent.ini', 19);
+--INSERT INTO neutron_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'metadata_agent.ini', 19);
 INSERT INTO neutron_default VALUES ('nova_metadata_port', '8775', 'metadata_agent.ini', 21);
-INSERT INTO neutron_default VALUES ('metadata_proxy_shared_secret', 'transcirrus1', 'metadata_agent.ini', 22);
+--INSERT INTO neutron_default VALUES ('metadata_proxy_shared_secret', 'simpleprivatecloudsolutions', 'metadata_agent.ini', 22);
 INSERT INTO neutron_default VALUES ('verbose', 'False', 'neutron.conf', 24);
 INSERT INTO neutron_default VALUES ('debug', 'False', 'neutron.conf', 25);
 INSERT INTO neutron_default VALUES ('bind_host', '0.0.0.0', 'neutron.conf', 26);
 INSERT INTO neutron_default VALUES ('bind_port', '9696', 'neutron.conf', 27);
 INSERT INTO neutron_default VALUES ('core_plugin', 'ml2', 'neutron.conf', 28);
-INSERT INTO neutron_default VALUES ('service_plugins', 'router,metering', 'neutron.conf', 29);
+INSERT INTO neutron_default VALUES ('service_plugins', 'router,metering,vpnaas', 'neutron.conf', 29);
 INSERT INTO neutron_default VALUES ('auth_strategy', 'keystone', 'neutron.conf', 30);
 INSERT INTO neutron_default VALUES ('control_exchange', 'neutron', 'neutron.conf', 31);
-INSERT INTO neutron_default VALUES ('rabbit_password', 'transcirrus1', 'neutron.conf', 33);
+--INSERT INTO neutron_default VALUES ('rabbit_password', 'simpleprivatecloudsolutions', 'neutron.conf', 33);
 INSERT INTO neutron_default VALUES ('rabbit_userid', 'guest', 'neutron.conf', 35);
-INSERT INTO neutron_default VALUES ('nova_admin_password', 'transcirrus1', 'neutron.conf', 42);
+--INSERT INTO neutron_default VALUES ('nova_admin_password', 'simpleprivatecloudsolutions', 'neutron.conf', 42);
 INSERT INTO neutron_default VALUES ('auth_protocol', 'http', 'neutron.conf', 48);
 INSERT INTO neutron_default VALUES ('admin_tenant_name', 'service', 'neutron.conf', 49);
-INSERT INTO neutron_default VALUES ('admin_password', 'transcirrus1', 'neutron.conf', 51);
+--INSERT INTO neutron_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'neutron.conf', 51);
 INSERT INTO neutron_default VALUES ('type_drivers', 'gre', 'ml2_conf.ini', 53);
 INSERT INTO neutron_default VALUES ('tenant_network_types', 'gre', 'ml2_conf.ini', 54);
 INSERT INTO neutron_default VALUES ('mechanism_drivers', 'openvswitch', 'ml2_conf.ini', 55);
@@ -2184,7 +2184,7 @@ INSERT INTO neutron_default VALUES ('tunnel_types', 'gre', 'ovs_neutron_plugin.i
 -- Data for Name: nova_default; Type: TABLE DATA; Schema: public; Owner: transuser
 --
 INSERT INTO nova_default VALUES ('rabbit_userid', 'guest', 'nova.conf', 3);
-INSERT INTO nova_default VALUES ('rabbit_password', 'transcirrus1', 'nova.conf', 4);
+--INSERT INTO nova_default VALUES ('rabbit_password', 'simpleprivatecloudsolutions', 'nova.conf', 4);
 INSERT INTO nova_default VALUES ('internal_service_availability_zone', 'internal', 'nova.conf', 5);
 INSERT INTO nova_default VALUES ('use_ipv6', 'False', 'nova.conf', 7);
 INSERT INTO nova_default VALUES ('enabled_apis', 'ec2,osapi_compute', 'nova.conf', 8);
@@ -2195,14 +2195,14 @@ INSERT INTO nova_default VALUES ('osapi_compute_listen', '0.0.0.0', 'nova.conf',
 INSERT INTO nova_default VALUES ('osapi_compute_listen_port', '8774', 'nova.conf', 15);
 INSERT INTO nova_default VALUES ('metadata_listen_port', '8775', 'nova.conf', 16);
 INSERT INTO nova_default VALUES ('service_neutron_metadata_proxy', 'True', 'nova.conf', 28);
-INSERT INTO nova_default VALUES ('neutron_metadata_proxy_shared_secret', 'transcirrus1', 'nova.conf', 29);
+--INSERT INTO nova_default VALUES ('neutron_metadata_proxy_shared_secret', 'simpleprivatecloudsolutions', 'nova.conf', 29);
 INSERT INTO nova_default VALUES ('allow_instance_snapshots', 'True', 'nova.conf', 30);
 INSERT INTO nova_default VALUES ('enable_instance_password', 'true', 'nova.conf', 31);
 INSERT INTO nova_default VALUES ('allow_resize_to_same_host', 'True', 'nova.conf', 34);
 INSERT INTO nova_default VALUES ('allow_migrate_to_same_host', 'False', 'nova.conf', 35);
 INSERT INTO nova_default VALUES ('default_schedule_zone', 'nova', 'nova.conf', 36);
 INSERT INTO nova_default VALUES ('neutron_admin_username', 'neutron', 'nova.conf', 43);
-INSERT INTO nova_default VALUES ('neutron_admin_password', 'transcirrus1', 'nova.conf', 44);
+--INSERT INTO nova_default VALUES ('neutron_admin_password', 'simpleprivatecloudsolutions', 'nova.conf', 44);
 INSERT INTO nova_default VALUES ('neutron_region_name', 'TransCirrusCloud', 'nova.conf', 46);
 INSERT INTO nova_default VALUES ('neutron_auth_strategy', 'keystone', 'nova.conf', 48);
 INSERT INTO nova_default VALUES ('neutron_ovs_bridge', 'br-int', 'nova.conf', 49);
@@ -2221,7 +2221,7 @@ INSERT INTO nova_default VALUES ('vnc_keymap', 'en-us', 'nova.conf', 60);
 INSERT INTO nova_default VALUES ('auth_protocol', 'http', 'nova.conf', 65);
 INSERT INTO nova_default VALUES ('auth_version', 'v2.0', 'nova.conf', 67);
 INSERT INTO nova_default VALUES ('admin_user', 'nova', 'nova.conf', 68);
-INSERT INTO nova_default VALUES ('admin_password', 'transcirrus1', 'nova.conf', 69);
+--INSERT INTO nova_default VALUES ('admin_password', 'simpleprivatecloudsolutions', 'nova.conf', 69);
 INSERT INTO nova_default VALUES ('qemu_allowed_storage_drivers', 'gluster', 'nova.conf', 74);
 
 --
