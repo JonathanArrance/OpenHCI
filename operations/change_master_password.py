@@ -70,7 +70,8 @@ def change_master_password(new_password):
             write_osDB = os.system("""sudo sed -i 's/OS_DB_PASS=.*/OS_DB_PASS="'"%s"'"/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
             if(write_osDB != 0):
                 logger.sys_warning('Could not write the OS_DB_PASS and update the master password.')
-            os.system('sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc')
+            #os.system('sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc')
+            reload(config)
         #apersona
         write_apersona = os.system("""sudo sed -i 's/db.password=.*/db.password=%s/g' /var/lib/tomcat6/webapps/apkv/WEB-INF/classes/apersona-db.properties"""%(new_password))
         if(write_apersona != 0):
