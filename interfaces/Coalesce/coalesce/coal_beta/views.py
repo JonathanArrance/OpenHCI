@@ -3277,13 +3277,13 @@ def resize_server(request, project_id, instance_id, flavor_id):
         auth = request.session['auth']
         input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
         so = server_ops(auth)
-        fo = flavor_ops(auth)
+        #fo = flavor_ops(auth)
         serv_info = so.get_server(input_dict)
-        flavor_info = fo.get_flavor(flavor_id)
-        server_flav = fo.get_flavor(serv_info['flavor_id'])
-        if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
-            logger.sys_error('Could not resize instance, disk space is less than current spec.')
-            raise Exception('Could not resize instance, disk space is less than current spec.')
+        #flavor_info = fo.get_flavor(flavor_id)
+        #server_flav = fo.get_flavor(serv_info['flavor_id'])
+        #if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
+        #    logger.sys_error('Could not resize instance, disk space is less than current spec.')
+        #    raise Exception('Could not resize instance, disk space is less than current spec.')
         rs = rs_server.resize_and_confirm(auth, input_dict)
         if(rs == 'OK'):
             out['status'] = 'success'

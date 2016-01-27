@@ -32,10 +32,10 @@ def resize_and_confirm(auth_dict,server_dict):
     get_inst = server.get_server(server_dict)
     inst_flav = flavor.get_flavor(get_inst['flavor_id'])
 
-    if(inst_flav['disk_space(GB)'] > get_flav['disk_space(GB)']):
+    if(int(inst_flav['disk_space(GB)']) > int(get_flav['disk_space(GB)'])):
         logger.sys_error('Instance can not be re-sized to a smaller disk in flavor %s'%(get_flav['flavor_name']))
         raise Exception('Instance can not be re-sized to a smaller disk in flavor %s'%(get_flav['flavor_name']))
-    if(inst_flav['ephemeral(GB)'] > get_flav['ephemeral(GB)']):
+    if(int(inst_flav['ephemeral(GB)']) > int(get_flav['ephemeral(GB)'])):
         logger.sys_error('Instance can not be re-sized to a smaller ephemeral disk in flavor %s'%(get_flav['flavor_name']))
         raise Exception('Instance can not be re-sized to a smaller ephemeral disk in flavor %s'%(get_flav['flavor_name']))
 
