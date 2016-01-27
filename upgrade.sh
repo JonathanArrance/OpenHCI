@@ -295,6 +295,7 @@ fi
 #chnage the master password 
 echo 'MASTER_PWD="'${MASTER_PWD}'"' >> /usr/local/lib/python2.7/transcirrus/common/config.py
 sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc
+python2.7 /usr/local/lib/python2.7/transcirrus/common/config.py
 #create the mongo file
 echo 'db.changeUserPassword("ceilometer", "'${MASTER_PWD}'")' >> /transcirrus/update_mongo_pwd.js
 
