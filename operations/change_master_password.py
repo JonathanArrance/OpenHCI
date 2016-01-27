@@ -41,10 +41,16 @@ def change_master_password(new_password):
         write_glance_reg = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/glance/g' /etc/glance/glance-registry.conf"""%(new_password,ip))
         if(write_glance_reg != 0):
             logger.sys_warning('Could not write the glance-registry.conf and update the master password.')
+        write_glance_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/glance/glance-api.conf"""%(new_password))
+        if(write_glance_rabbit!= 0):
+            logger.sys_warning('Could not write the glance-api.conf rabbit master password.')
         #heat
         write_heat = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/heat/g' /etc/heat/heat.conf"""%(new_password,ip))
         if(write_heat != 0):
             logger.sys_warning('Could not write the heat.conf and update the master password.')
+        write_heat_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/heat/heat.conf"""%(new_password))
+        if(write_heat_rabbit != 0):
+            logger.sys_warning('Could not write the heat.conf and update the rabbit master password.')
         #keystone
         write_keystone = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/keystone/g' /etc/keystone/keystone.conf"""%(new_password,ip))
         if(write_keystone != 0):
@@ -93,14 +99,23 @@ def change_master_password(new_password):
         write_nova = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/nova/g' /etc/nova/nova.conf"""%(new_password,ip))
         if(write_nova != 0):
             logger.sys_warning('Could not write the nova.conf and update the master password.')
+        write_nova_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/nova/nova.conf"""%(new_password))
+        if(write_nova_rabbit != 0):
+            logger.sys_warning('Could not write the nova.conf and update the rabbit master password.')
         #ceilometer
         write_ceilometer = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/ceilometer/g' /etc/ceilometer/ceilometer.conf"""%(new_password,ip))
         if(write_ceilometer != 0):
             logger.sys_warning('Could not write the ceilometer.conf and update the master password.')
+        write_ceilometer_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/ceilometer/ceilometer.conf"""%(new_password))
+        if(write_ceilometer_rabbit != 0):
+            logger.sys_warning('Could not write the nova.conf and update the rabbit master password.')
         #neutron
-        write_neutron= os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/neutron/g' /etc/neutron/neutron.conf"""%(new_password,ip))
+        write_neutron = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/neutron/g' /etc/neutron/neutron.conf"""%(new_password,ip))
         if(write_neutron != 0):
             logger.sys_warning('Could not write the neutron.conf and update the master password.')
+        write_neutron_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/neutron/neutron.conf"""%(new_password))
+        if(write_neutron_rabbit != 0):
+            logger.sys_warning('Could not write the neutron.conf and update the rabbit master password.')
 
     if(config.NODE_TYPE == 'cc' or config.NODE_TYPE == 'sn' or config.NODE_TYPE == 'ha'):
         if(config.NODE_TYPE == 'sn' or config.NODE_TYPE == 'ha'):
@@ -111,6 +126,9 @@ def change_master_password(new_password):
         write_cinder = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/cinder/g' /etc/cinder/cinder.conf"""%(new_password,ip))
         if(write_cinder != 0):
             logger.sys_warning('Could not write the cinder.conf and update the master password.')
+        write_cinder_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/cinder/cinder.conf"""%(new_password))
+        if(write_cinder_rabbit != 0):
+            logger.sys_warning('Could not write the cinder.conf and update the rabbit master password.')
 
     #update the DB entries with the new passwords
     util.update_system_variables(update_array)
