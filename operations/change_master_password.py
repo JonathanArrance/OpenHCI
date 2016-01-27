@@ -52,7 +52,7 @@ def change_master_password(new_password):
         if(write_heat_rabbit != 0):
             logger.sys_warning('Could not write the heat.conf and update the rabbit master password.')
         #keystone
-        write_keystone = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/keystone/g' /etc/keystone/keystone.conf"""%(new_password,ip))
+        write_keystone = os.system("""sudo sed -i 's/connection = postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/keystone/g' /etc/keystone/keystone.conf"""%(new_password,ip))
         if(write_keystone != 0):
             logger.sys_warning('Could not write the keystone.conf and update the master password.')
         #mongo
@@ -76,7 +76,7 @@ def change_master_password(new_password):
             write_osDB = os.system("""sudo sed -i 's/OS_DB_PASS=.*/OS_DB_PASS="'"%s"'"/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
             if(write_osDB != 0):
                 logger.sys_warning('Could not write the OS_DB_PASS and update the master password.')
-            #os.system('sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc')
+            os.system('sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc')
             reload(config)
         #apersona
         write_apersona = os.system("""sudo sed -i 's/db.password=.*/db.password=%s/g' /var/lib/tomcat6/webapps/apkv/WEB-INF/classes/apersona-db.properties"""%(new_password))
@@ -103,7 +103,7 @@ def change_master_password(new_password):
         if(write_nova_rabbit != 0):
             logger.sys_warning('Could not write the nova.conf and update the rabbit master password.')
         #ceilometer
-        write_ceilometer = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/ceilometer/g' /etc/ceilometer/ceilometer.conf"""%(new_password,ip))
+        write_ceilometer = os.system("""sudo sed -i 's/connection=mongodb.*/connection=mongodb:\/\/ceilometer:%s@%s\/ceilometer/g' /etc/ceilometer/ceilometer.conf"""%(new_password,ip))
         if(write_ceilometer != 0):
             logger.sys_warning('Could not write the ceilometer.conf and update the master password.')
         write_ceilometer_rabbit = os.system("""sudo sed -i 's/rabbit_password=.*/rabbit_password=%s/g' /etc/ceilometer/ceilometer.conf"""%(new_password))
@@ -215,7 +215,7 @@ def change_master_password(new_password):
         except Exception as e:
             logger.sys_error('Could not restart Ceilometer on compute node %s.'%(e))
 
-    if(config.NODE_TYPE == 'cc' or config.NODE_TYPE == 'sn' or config.NODE_TYPE == 'ha'):
+    if(config.NODE_TYPE == 'sn'):
         try:
             sc.cinder_sn('restart')
             logger.sys_info('Cinder restarted.')
