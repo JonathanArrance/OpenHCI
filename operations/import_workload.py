@@ -49,7 +49,7 @@ def import_vmware(auth_dict,input_dict):
         name = input_dict['package_name'].split('.')
         #set up the fully qualified path
         fqp = input_dict['path']+'/'+name[0]
-    
+
         out = os.listdir(fqp)
         image_attrib = None
         for o in out:
@@ -114,5 +114,13 @@ def import_vmware(auth_dict,input_dict):
 
     #remove the custom flavor
 
+    #clean up the mess in /tmp
+    clean_up = os.system('sudo rm -rf %s'%(fqp))
+    clean_up2 = os.system('sudo rm -rf %s'%(input_dict['path']+'/'+input_dict['package_name']))
+    if(clean_up == 0 and clean_up2 == 0):
+        logger.sys_info('Cleaned up %s after workload import.'%(fqp))
+    else:
+        logger.sys_warning('Cleaned up %s after workload import.'%(fqp))
+        
     return r_array
 

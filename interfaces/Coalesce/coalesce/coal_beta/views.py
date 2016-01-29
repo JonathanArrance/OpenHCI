@@ -3132,9 +3132,11 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
                      'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                      'network_name': network_name,'image_id': image_id,
                      'flavor_id':flavor_id, 'instance_name':instance_name,
-                     'boot_from_vol':boot_from_vol, 'volume_size':volume_size,
+                     'boot_from_vol':boot_from_vol,
                      'volume_name': volume_name, 'volume_type':volume_type
                     }
+        if(volume_size != 'None'):
+            instance['volume_size'] = volume_size
         out = bni.boot_instance(instance,auth)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
