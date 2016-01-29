@@ -20,6 +20,7 @@ d = a.get_auth()
 print "Instantiating user_ops object."
 end = endpoint_ops(d)
 
+"""
 print "Create a new service endpoint with a cloud name."
 new_endpoint_dict = {"service_name":"swift"}
 create = end.create_endpoint(new_endpoint_dict)
@@ -39,15 +40,15 @@ new_endpoint_dict3 = {"service_name":"keystone"}
 create3 = end.create_endpoint(new_endpoint_dict3)
 print create3
 print "---------------------------------------------"
-
 """
+
 time.sleep(1)
 print "list the configured services"
 listservice = end.list_service_catalog()
 print listservice
 print "----------------------------------------------"
 
-
+"""
 print "Create a new service endpoint with a fake service name."
 new_endpoint_dict3 = {"service_name":"blah"}
 create3 = end.create_endpoint(new_endpoint_dict3)

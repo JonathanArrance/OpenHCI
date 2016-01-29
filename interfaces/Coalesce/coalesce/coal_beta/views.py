@@ -3132,9 +3132,11 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
                      'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                      'network_name': network_name,'image_id': image_id,
                      'flavor_id':flavor_id, 'instance_name':instance_name,
-                     'boot_from_vol':boot_from_vol, 'volume_size':volume_size,
+                     'boot_from_vol':boot_from_vol,
                      'volume_name': volume_name, 'volume_type':volume_type
                     }
+        if(volume_size != 'None'):
+            instance['volume_size'] = volume_size
         out = bni.boot_instance(instance,auth)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
@@ -3277,13 +3279,13 @@ def resize_server(request, project_id, instance_id, flavor_id):
         auth = request.session['auth']
         input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
         so = server_ops(auth)
-        fo = flavor_ops(auth)
+        #fo = flavor_ops(auth)
         serv_info = so.get_server(input_dict)
-        flavor_info = fo.get_flavor(flavor_id)
-        server_flav = fo.get_flavor(serv_info['flavor_id'])
-        if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
-            logger.sys_error('Could not resize instance, disk space is less than current spec.')
-            raise Exception('Could not resize instance, disk space is less than current spec.')
+        #flavor_info = fo.get_flavor(flavor_id)
+        #server_flav = fo.get_flavor(serv_info['flavor_id'])
+        #if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
+        #    logger.sys_error('Could not resize instance, disk space is less than current spec.')
+        #    raise Exception('Could not resize instance, disk space is less than current spec.')
         rs = rs_server.resize_and_confirm(auth, input_dict)
         if(rs == 'OK'):
             out['status'] = 'success'
