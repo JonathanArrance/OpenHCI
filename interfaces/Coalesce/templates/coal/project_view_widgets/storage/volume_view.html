@@ -75,6 +75,13 @@
                                     data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
                                 <i class="fa fa-chain-broken"></i> detach
                             </button>
+                            <button type="button" class="btn btn-xs btn-warning format-volume-from-view"
+                                    data-call="/format_volume/{{ current_project_id }}/{{ volume_info.volume_id }}/"
+                                    data-notice="Formating Volume {{ volume_info.volume_name }} attached to instance {{ volume_info.volume_instance.server_name }}"
+                                    data-toggle="popover" title="Format Volume" data-html="true"
+                                    data-content="Loading <i class='fa fa-cog fa-spin'></i>" data-placement="bottom">
+                                <i class="fa fa-chain-broken"></i> format
+                            </button>
                         {% endif %}
                         {% if snapshots %}
                             <button type="button" class="btn btn-xs btn-info revert-volume-from-view"

@@ -28,7 +28,7 @@ print create_vol
 
 s = snap.list_snapshots()
 print s
-'''
+
 types = vol.list_volume_types()
 print types
 
@@ -52,7 +52,7 @@ create = {'volume_name':'transcirrus5','volume_size':'1','project_id':"ff8fbdc33
 create_vol = vol.create_volume(create)
 print create_vol
 time.sleep(5)
-'''
+
 print "createing a new volume snap"
 create = {'snapshot_name':'trans_snap4','snapshot_desc':'Yo yo','project_id':"d4b29af44660474da7d5f884ec107f76",'volume_id':create_vol['volume_id']}
 create_snap = snap.create_snapshot(create)
@@ -121,15 +121,15 @@ print voltype
 voltype2 = vol.create_volume_type("e-series")
 print voltype2
 
-
-get = {'volume_id':'6a110555-1128-40e6-9cc2-2ff01d927cef','project_id':'6492cba476994153800c5220a2f51bc2'}
-yo = vol.get_volume_info(get)
-print yo
+'''
+get = {'volume_id':'4ca60f1a-650a-4f9f-82e7-fc662dcfeefa','project_id':'c56f19725e7d4544a9d1c3787cb02d70'}
+#yo = vol.get_volume_info(get)
+#print yo
 
 
 stuff = vol.get_volume(get)
 print stuff
-
+'''
 print "createing a new volume"
 create = {'volume_name':'test11','volume_size':'1','project_id':"bf54175ff7594e23b8f320c74fb05d68",'volume_type':'ssd'}
 create_vol = vol.create_volume(create)

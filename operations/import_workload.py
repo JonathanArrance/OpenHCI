@@ -30,13 +30,14 @@ def import_vmware(auth_dict,input_dict):
     """
 
     #make sure req values are in input_dict
-    #for key,value in input_dict.iteritems:
-    #    if key == "":
-    #        logger.sys_error('Requiered value %s not given in import_workload.'%(key))
-    #        raise Exception('Requiered value %s not given in import_workload.'%(key))
-    ##    elif value == "":
-    #       logger.sys_error('Requiered value given in import_workload is blank.')
-    #        raise Exception('Requiered value given in import_workload is blank.')
+    logger.sys_info('\n**Import Vmware workload operation: def: import_vmware**\n')
+    for key,value in input_dict.items():
+        if(key == ''):
+            logger.sys_error('Required value not passed.')
+            raise Exception('Required value not passed.')
+        if(value == ''):
+            logger.sys_error('Required value not passed.')
+            raise Exception('Required value not passed.')
 
     io = import_ops(auth_dict)
     glance = glance_ops(auth_dict)
