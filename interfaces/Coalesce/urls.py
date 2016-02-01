@@ -360,6 +360,11 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
 
+        #FORMAT THE VOLUME ONCE ATTACHED TO INSTANCE
+        # url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+        #    'coalesce.coal_beta.views.attach_volume',
+        #    name='format_volume'),
+
         url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.attach_volume',
             name='attach_volume'),

@@ -1552,7 +1552,8 @@ CREATE TABLE trans_system_vols (
     vol_attached_to_inst character varying,
     vol_mount_location character varying,
     vol_type character varying(15),
-    vol_zone character varying
+    vol_zone character varying,
+    vol_filesystem character varying
 );
 
 
