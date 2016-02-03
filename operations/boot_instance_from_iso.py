@@ -1,6 +1,17 @@
 #!/usr/bin/python2.7
 import sys
 import json
+# need the following packages
+# yum install virt-install
+# yum install virtio-win
+# yum install virt-viewer
+
+# virtio drivers
+# /usr/share/virtio-win/virtio-win-0.1.102.iso
+
+# command
+# sudo virt-install --connect qemu:///system --name ws2012 --ram 2048 --vcpus 2 --network user,model=virtio --disk path=/tmp/ws2012.qcow2,format=qcow2,device=disk,bus=virtio
+# --cdrom /tmp/windows2012.iso --disk path=/usr/share/virtio-win/virtio-win-0.1.102.iso,device=cdrom --vnc --os-type windows --os-variant win2k8
 
 import transcirrus.common.logger as logger
 import transcirrus.common.config as config

@@ -379,6 +379,7 @@ class glance_ops:
                        - created_at
                        - updated_at
                        - image_file
+                       - os_type
                        - schema
         """
         if ((self.status_level > 2) or (self.status_level < 0)):
@@ -411,7 +412,8 @@ class glance_ops:
             load = json.loads(rest['data'])
             if 'user_id' not in load:
                 load['user_id'] = "-1"
-            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['user_id'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'os_type':load['os_type'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
+            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['user_id'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], \
+                      'os_type':load['os_type'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'os_type':load['os_type'], 'schema':load['schema']}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])

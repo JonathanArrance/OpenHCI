@@ -478,6 +478,7 @@ class server_ops:
                        - novnc_console
                        - date_created
                        - boot_from_vol
+                       - image_id
                        - fault
         ACCESS: All users can get information for a virtual server in their project they own.
                 Admins can get info on any virtual server.
@@ -554,7 +555,7 @@ class server_ops:
             #build the return dictionary
             r_dict = {'server_name':server[0][0],'server_id':server[0][1],'server_key_name':server[0][2],'server_group_name':server[0][3],'server_flavor':server[0][4],'flavor_id':load['server']['flavor']['id'],
                       'server_os':server[0][5],'server_net_id':server[0][6],'server_int_net':load['server']['addresses'],'server_zone':server[0][7],'server_status':load['server']['status'],'server_state':load['server']['OS-EXT-STS:vm_state'],
-                      'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc,'date_created':load['server']['created'],'fault':self.fault}
+                      'server_node':load['server']['hostId'],'server_public_ips':server[0][8],'floating_ip_id':server[0][9],'project_id':server[0][10],'novnc_console':novnc,'date_created':load['server']['created'],'image_id':load['server']['image']['id'],'fault':self.fault}
 
             #HACK - need to figure out how to get this from API
             #get if boot from vol

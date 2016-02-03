@@ -307,6 +307,18 @@ psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('m
 
 ######################################################
 #
+#------------------Version 2.6-----------------------
+#
+#####################################################
+yum install -y virt-install
+yum install -y virtio-win
+yum install -y virt-viewer
+
+#alter the table
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_filesystem character varying;"
+
+######################################################
+#
 #------------------Restart Services-------------------
 #
 ######################################################

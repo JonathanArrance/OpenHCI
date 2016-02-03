@@ -2943,6 +2943,9 @@ def detach_volume(request, project_id, volume_id):
         out = {'status' : "error", 'message' : "Could not detach the volume."}
     return HttpResponse(simplejson.dumps(out))
 
+def format_volume(request, project_id, net_id, volume_id):
+    auth = request.session['auth']
+
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
         auth = request.session['auth']
