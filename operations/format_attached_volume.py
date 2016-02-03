@@ -71,11 +71,16 @@ def format_volume(input_dict,auth_dict):
     drive_letter = _fix_drive_letter(attach_id)
 
     #7. get the ssh key
-    ssh_key_name = server.get_sec_keys({instance_info['server_key_name']'project_id':input_dict['project_id']})
+    #get user sec keys
+    key_list = server.list_sec_keys(input_dict['project_id'])
+    ssh_key_info = {}
+    for key in key_list:
+        if(key['key_name'] == instance_info['server_key_name']):
+            ssh_key_info = server.get_sec_keys({'sec_key_id':key['key_id'],'project_id':input_dict['project_id']})
 
     #8. connect to the instance from the backend
     if(inst_image_info['os_type'] == 'linux'):
-        _linux()
+        _linux({'instance_ip':instance_info['server_int_net'],'inst_sec_key':})
     elif(inst_image_info['os_type'] == 'windows'):
         _windows()
 
