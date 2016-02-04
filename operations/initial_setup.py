@@ -663,7 +663,7 @@ def run_setup(new_system_variables, auth_dict):
     os.system('source /home/transuser/factory_creds;openstack-status >> /transcirrus/first_time_status.txt')
 
     # restart rabbitmq using new hostname
-    util.restart_rabbitmq()
+    service.rabbit('restart')
 
     logger.sys_info("SETUP54:END")
 
