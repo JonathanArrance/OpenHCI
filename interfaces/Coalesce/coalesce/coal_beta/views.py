@@ -1824,9 +1824,10 @@ def get_router_create(request, project_id):
         return render_to_response('coal/project_view_widgets/networking/router_create.html', RequestContext(request, {'networks': networks, 'error': "Error: %s"%e}))
 
 
-def get_vpn_create(request, project_id):
+def get_vpn_create(request, project_id, router_id):
     project = []
     router = []
+    network = []
     subnet = []
     try:
         auth = request.session['auth']
@@ -1834,18 +1835,21 @@ def get_vpn_create(request, project_id):
         l3o = layer_three_ops(auth)
         no = neutron_net_ops(auth)
         project = to.get_tenant(project_id)
-        router = l3o.get_router(no.get_network(project['def_network_id'])['router_id'])
-        subnet = no.get_net_subnet(router['router_int_sub_id'])
+        router = l3o.get_router(router_id)
+        network = no.get_network(router['network_id'])
+        subnet = no.get_net_subnet(network['net_subnet_id'][0]['subnet_id'])
         return render_to_response('coal/project_view_widgets/networking/vpn_create.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'router': router,
+                                      'network': network,
                                       'subnet': subnet}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/vpn_create.html',
                                   RequestContext(request, {
                                       'project': project,
                                       'router': router,
+                                      'network': network,
                                       'subnet': subnet,
                                       'error': "Error: %s"%e}))
 
@@ -3609,15 +3613,41 @@ def network_view(request, net_id):
                                    RequestContext(request, {'nw': nw, 'sn': sn, 'error': "Error: %s"%e,}))
 
 
-def router_view(request, router_id):
-    auth = request.session['auth']
-    l3o = layer_three_ops(auth)
-    router = l3o.get_router(router_id)
+def router_view(request, project_id, router_id):
+    router = []
+    network = []
+    subnet = []
+    vpns = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        l3o = layer_three_ops(auth)
+        no = neutron_net_ops(auth)
+        vo = vpn_ops(auth)
 
-    return render_to_response('coal/project_view_widgets/networking/router_view.html',
-                               RequestContext(request, {
+        project = to.get_tenant(project_id)
+        router = l3o.get_router(router_id)
+        network = no.get_network(router['network_id'])
+        subnet = no.get_net_subnet(network['net_subnet_id'][0]['subnet_id'])
+
+        vpns = vo.list_vpn_ipsec_site_connection(project_id)['ipsec_site_connections']
+        for vpn in vpns:
+            vpn['status'] = vpn['status'].replace("_", " ")
+
+        return render_to_response('coal/project_view_widgets/networking/router_view.html',
+                               RequestContext(request, {'project': project,
                                                         'router': router,
-                                                        }))
+                                                        'network': network,
+                                                        'subnet': subnet,
+                                                        'vpns': vpns}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/router_view.html',
+                               RequestContext(request, {'project': project,
+                                                        'router': router,
+                                                        'network': network,
+                                                        'subnet': subnet,
+                                                        'vpns': vpns,
+                                                        'error': "Error: %s"%e}))
 
 
 def vpn_view(request, project_id, tunnel_id):
