@@ -52,13 +52,13 @@ def change_master_password(new_password):
         if(write_heat_rabbit != 0):
             logger.sys_warning('Could not write the heat.conf and update the rabbit master password.')
         #keystone
-        write_keystone = os.system("""sudo sed -i 's/connection = postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/keystone/g' /etc/keystone/keystone.conf"""%(new_password,ip))
+        write_keystone = os.system("""sudo sed -i 's/connection = postgresql.*/connection = postgresql:\/\/transuser:%s@%s\/keystone/g' /etc/keystone/keystone.conf"""%(new_password,ip))
         if(write_keystone != 0):
             logger.sys_warning('Could not write the keystone.conf and update the master password.')
         #mongo
         write_mongo = os.system("""sudo sed -i 's/db.changeUserPassword.*/db.changeUserPassword("ceilometer", "%s")/g' /transcirrus/update_mongo_pwd.js"""%(new_password))
         if(write_mongo != 0):
-            logger.sys_warning('Could not write the keystone.conf and update the master password.')
+            logger.sys_warning('Could not write the ceilometer.conf and update the master password.')
         else:
             run_mongo = os.system("""sudo mongo --host 172.24.24.10 ceilometer /transcirrus/update_mongo_pwd.js""")
             if(run_mongo != 0):
