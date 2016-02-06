@@ -199,7 +199,7 @@ $(function () {
         showConfirmModal('/floating_ip/get/assign/' + CURRENT_PROJECT_ID + '/' + $(this).data("ip") + '/');
     });
 
-    $(document).on('click', ".deallocate-ip, .unassign-ip, .delete-network, .delete-router, .delete-vpn", function (event) {
+    $(document).on('click', ".deallocate-ip, .unassign-ip, .delete-network, .delete-router", function (event) {
         event.preventDefault();
         var title = encodeURIComponent($(this).data("title")),
             message = encodeURIComponent($(this).data("message")),
@@ -222,7 +222,7 @@ $(function () {
 
     $(document).on('click', '.create-vpn', function (event) {
         event.preventDefault();
-        showConfirmModal('/vpn/get/create/' + CURRENT_PROJECT_ID + "/");
+        showConfirmModal('/vpn/get/create/' + CURRENT_PROJECT_ID + "/" + $(this).data("router") + "/");
     });
 
     $(document).on('click', '.vpn-info', function (event) {

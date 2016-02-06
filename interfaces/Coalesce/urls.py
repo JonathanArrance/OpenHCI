@@ -534,7 +534,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.vpn_view',
             name='vpn_view'),
 
-        url(r'^vpn/get/create/(?P<project_id>[^/]+)/$',
+        url(r'^vpn/get/create/(?P<project_id>[^/]+)/(?P<router_id>[^/]+)/$',
             'coalesce.coal_beta.views.get_vpn_create',
             name='get_vpn_create'),
 
@@ -551,7 +551,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.delete_router',
             name='delete_router'),
 
-        url(r'^router/(?P<router_id>[^/]+)/view/$',
+        url(r'^router/(?P<project_id>[^/]+)/(?P<router_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.router_view',
             name='router_view'),
 
