@@ -1,7 +1,6 @@
 #get the libs needed
 #from celery import Celery
 #from celery import task
-from transcirrus.component.keystone.keystone_users import user_ops
 import os,sys
 import subprocess
 import transcirrus.common.config as config
@@ -18,7 +17,6 @@ def change_master_password(new_password):
     os.system('echo \''+new_password+'\n'+new_password+'\n\' | sudo passwd transuser')
     logger.sys_info("Password for transuser successfully changed.")
 
-    user = user_ops({'username':'admin','is_admin':1,'user_level':0})
     update_array= []
     write_creds = os.system("""sudo sed -i 's/MASTER_PWD=.*/MASTER_PWD="%s"/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
     if(write_creds != 0):
