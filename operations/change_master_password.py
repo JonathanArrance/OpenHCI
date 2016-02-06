@@ -18,6 +18,7 @@ def change_master_password(new_password):
     os.system('echo \''+new_password+'\n'+new_password+'\n\' | sudo passwd transuser')
     logger.sys_info("Password for transuser successfully changed.")
 
+    user = user_ops({'username':'admin','is_admin':1,'user_level':0})
     update_array= []
     write_creds = os.system("""sudo sed -i 's/MASTER_PWD=.*/MASTER_PWD="%s"/g' /usr/local/lib/python2.7/transcirrus/common/config.py"""%(new_password))
     if(write_creds != 0):
@@ -34,6 +35,15 @@ def change_master_password(new_password):
             ip = config.TRANSCIRRUS_DB
         else:
             ip = 'localhost'
+        #chnage service level user passwords
+        users = ['cinder','nova','neutron','glance','heat','ceilometer','ec2','swift','s3','keystone']
+        #huge hack - I do not like this.
+        for user in users:
+            logger.sys_info('Changeing password for service user %s'%(user))
+            change_pwd = os.system('source factory_creds; keystone user-password-update --pass %s %s'%(new_password,user))
+            if(change_pwd != 0):
+                logger.sys_warning('Could not change the service user password for %s.'%(user))
+
         #glance
         write_glance_api = os.system("""sudo sed -i 's/connection=postgresql.*/connection=postgresql:\/\/transuser:%s@%s\/glance/g' /etc/glance/glance-api.conf"""%(new_password,ip))
         if(write_glance_api != 0):
