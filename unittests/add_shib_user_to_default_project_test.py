@@ -17,7 +17,7 @@ auth = ex.shadow_auth()
 
 to = tenant_ops(auth)
 uo = user_ops(auth)
-default_project = to.get_default_tenant()
+default_project = to.get_default_tenants()
 
 for x in range(20):
     test = "| test #%d |" %(x+1)

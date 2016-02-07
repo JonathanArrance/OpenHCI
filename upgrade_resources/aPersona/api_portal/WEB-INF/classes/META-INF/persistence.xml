@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="api_portal">
+		<class>com.apersona.portal.api.model.AlertType</class>
+		<class>com.apersona.portal.api.model.Alert</class>
+		<class>com.apersona.portal.api.model.DeviceGeo</class>
+		<class>com.apersona.portal.api.model.EmailService</class>
+		<class>com.apersona.portal.api.model.FailedLogin</class>
+		<class>com.apersona.portal.api.model.KeyvaultLicense</class>
+		<class>com.apersona.portal.api.model.MonitorEmail</class>
+		<class>com.apersona.portal.api.model.Page</class>
+		<class>com.apersona.portal.api.model.Provider</class>
+		<class>com.apersona.portal.api.model.Question</class>
+		<class>com.apersona.portal.api.model.Role</class>
+		<class>com.apersona.portal.api.model.Server</class>
+		<class>com.apersona.portal.api.model.User</class>
+		<class>com.apersona.portal.api.model.UserLoginCounter</class>
+		<class>com.apersona.portal.api.model.UserQuestion</class>
+		<class>com.apersona.portal.api.model.UserRole</class>
+		<class>com.apersona.portal.api.model.ServerGroup</class>
+		<class>com.apersona.portal.api.model.ServerGroupMapping</class>
+		<class>com.apersona.portal.api.model.ReqRespLog</class>
+		<class>com.apersona.portal.api.model.InstallationTracker</class>
+	</persistence-unit>
+</persistence>

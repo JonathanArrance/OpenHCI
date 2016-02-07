@@ -34,7 +34,7 @@
                         <label for="instance-flavor" class="col-sm-4 control-label">Settings:</label>
                         <select name="instanceFlavor" id="instance-flavor" class="col-sm-8">
                             {% for flavor in flavors %}
-                                <option value="{{ flavor.info.id }}">{{ flavor.info.name }}</option>
+                                <option value="{{ flavor.info.id }}:{{ flavor.info.disk_space }}">{{ flavor.info.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -93,9 +93,12 @@
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
-                        <label for="boot-size" class="col-sm-4 control-label">size:</label>
-                        <input type="text" name="bootSize" id="boot-size" placeholder="Volume Size"
-                               class="col-sm-8" disabled="disabled">
+                        <label for="boot-size" class="col-sm-4 control-label"><i class="fa fa-info-circle"
+                                                                                     data-toggle="tooltip"
+                                                                                     data-placement="bottom"
+                                                                                     title="If a volume size is not specified, the volume size used in the vm spec will be used. If a volume size is specified then it will be compared to the size in the spec, and the larger size will be used."></i>
+                        size (optional):</label>
+                        <input type="text" name="bootSize" id="boot-size" placeholder="Volume Size" class="col-sm-8" disabled="disabled">
                     </div>
                 </fieldset>
             </form>
@@ -149,11 +152,13 @@
                     setModalButtons(false, buttons);
                     showMessage('info', "Creating new instance");
 
+                    SPLITS = $("#instance-flavor").val().split(':')
+                    if($("#boot-size").val() == ''){$("#boot-size").val(SPLITS[1])}
                     var url =
                             '/create_instance/' +
                             $("#instance-name").val() + '/' +
                             $("#instance-group").val() + '/nova/' +
-                            $("#instance-flavor").val() + '/' +
+                            SPLITS[0] + '/' +
                             $("#instance-key").val() + '/' +
                             $("#instance-image").val() + '/' +
                             $("#instance-network").val() + '/' +
@@ -198,7 +203,7 @@
                     required: true
                 },
                 bootSize: {
-                    required: true,
+                    required: false,
                     range: [1, (parseInt("{{ quota.gigabytes }}") - parseInt("{{ used_storage }}"))]
                 }
             }

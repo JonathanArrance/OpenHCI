@@ -130,6 +130,8 @@ class layer_three_ops:
                        - admin_state_up
                        - internal_port
                        - subnet_id (NICK ADDED REDUNDANT KEY FOR router_int_sub_id)
+                - OR -
+                None if router does not exist
         ACCESS: All user types can get the information for a router in their project. Admin can
                 get info on any router.
         NOTE: this info can be gathered from the transcirrus db
@@ -145,10 +147,14 @@ class layer_three_ops:
             logger.sql_error("Could not find router %s"%(router_id))
             raise Exception("Could not find router %s"%(router_id))
 
-        r_dict = {'router_name':router[0][1],'router_status':router[0][5],'router_id':router[0][2],'project_id':router[0][4],'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][10],
-                  'external_ip':router[0][11],'admin_state_up':router[0][9],'internal_port':router[0][8], 'subnet_id': router[0][6]}
+        # make sure router exists
+        if len(router) > 0:
+            r_dict = {'router_name':router[0][1],'router_status':router[0][5],'router_id':router[0][2],'project_id':router[0][4],'network_id':router[0][3],'router_int_sub_id':router[0][6],'external_gateway':router[0][10],
+                      'external_ip':router[0][11],'admin_state_up':router[0][9],'internal_port':router[0][8], 'subnet_id': router[0][6]}
 
-        return r_dict
+            return r_dict
+        # router does not exist
+        return None
 
     def add_router(self,router_dict):
         """
@@ -913,6 +919,8 @@ class layer_three_ops:
                        - internal_net_name
                        - internal_net_id
                        - project_id
+                - OR -
+                None if floating ip does not exist
         NOTE: none
         """
         if(floating_ip_id == ''):
@@ -942,14 +950,17 @@ class layer_three_ops:
                 logger.sys_error("Could not get of floating ip with id %s."%(floating_ip_id))
                 raise Exception("Could not get of floating ip with id %s."%(floating_ip_id))
             floating = self.db.pg_select(get_floating)
-            r_dict = {'floating_ip':floating[0][0],
-                      'floating_ip_id':floating_ip_id,
-                      'instance_name':'',
-                      'instance_id':'',
-                      'internal_net_name':'',
-                      'internal_net_id':'',
-                      'project_id':floating[0][1]
-                    }
+            if len(floating) > 0:
+                r_dict = {'floating_ip':floating[0][0],
+                          'floating_ip_id':floating_ip_id,
+                          'instance_name':'',
+                          'instance_id':'',
+                          'internal_net_name':'',
+                          'internal_net_id':'',
+                          'project_id':floating[0][1]
+                        }
+            else:
+                return None
         elif(len(floating) == 1):
             r_dict = {'floating_ip':floating[0][3],
               'floating_ip_id':floating[0][4],

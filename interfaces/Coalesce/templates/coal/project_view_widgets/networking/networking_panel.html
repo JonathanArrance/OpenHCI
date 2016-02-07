@@ -26,24 +26,24 @@
                     <tr id="{{ fip.floating_ip_id }}"
                         class="ip">
                         <td class="ip-address">{{ fip.floating_ip }}</td>
-                        <td class="ip-instance center-text {% if fip.instance_name != '' %}bg-info{% endif %}">
-                            {% if fip.instance_name == '' %}
+                        <td class="ip-instance center-text {% if fip.info.instance_name != '' %}bg-info{% endif %}">
+                            {% if fip.info.instance_name == '' %}
                                 No Assigned Instance
                             {% else %}
-                                {{ fip.instance_name }}
+                                {{ fip.info.instance_name }}
                             {% endif %}
                         </td>
-                        <td class="ip-network {% if fip.internal_net_name %}bg-info{% endif %}">
-                            {% if fip.internal_net_name %}
-                                {{ fip.internal_net_name }}
-                            {% else %}
+                        <td class="ip-network {% if fip.info.internal_net_name %}bg-info{% endif %}">
+                            {% if fip.info.internal_net_name == '' %}
                                 No Internal Network
+                            {% else %}
+                                {{ fip.info.internal_net_name }}
                             {% endif %}
                         </td>
                         <td class="ip-actions">
                             <div class="btn-group actions-dropdown">
                                 <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" role="button"
-                                   aria-expanded="false">
+                                        aria-expanded="false">
                                     <i class="fa fa-caret-down"></i>
                                 </button>
                                 <ul class="dropdown-menu bg-alt-dark">
@@ -99,6 +99,7 @@
                         generateQuotaPie("fip-stats", [['used', "{{ tenant_info.num_fips }}"], ['available', "{{ quota.floating_ips }}"]], "# Floating IPs");
                     </script>
                 </span>
+
                 <div class="col-sm-12">
                     <p class="small pull-left">
                         <label>Legend:</label>
@@ -207,7 +208,7 @@
                 {% for router in routers %}
                     <tr id="{{ router.router_id }}" class="router">
                         <td class="router-name">
-                            <button data-call="/router/{{ router.router_id }}/view/"
+                            <button data-call="/router/{{ project.project_id }}/{{ router.router_id }}/view/"
                                     data-refresh="/projects/{{ project.project_id }}/get_networking_panel/"
                                     data-toggle="tooltip" data-placement="bottom"
                                     title="ID: {{ router.router_id }}"
@@ -220,12 +221,30 @@
                         </td>
                         {% if user_level == 0 %}
                             <td class="router-actions">
-                                <button type='button' class="btn btn-xs btn-danger pull-right delete-router"
-                                        data-title="Delete Router" data-message="Delete {{ router.router_name }}?"
-                                        data-call="/delete_router/{{ project.project_id }}/{{ router.router_id }}/"
-                                        data-notice="Deleting Router {{ router.router_name }}">
-                                    <i class="fa fa-minus"></i>
-                                </button>
+                                <div class="btn-group actions-dropdown">
+                                    <button class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown"
+                                            role="button"
+                                            aria-expanded="false">
+                                        <i class="fa fa-caret-down"></i>
+                                    </button>
+                                    <ul class="dropdown-menu bg-alt-dark">
+                                        {% if user_level == 0 %}
+                                            <li>
+                                                <a href="#" class="create-vpn" data-router="{{ router.router_id }}">
+                                                    <i class="fa fa-exchange"></i> add vpn
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        <li class="bg-danger">
+                                            <a href="#" class="delete-router" data-title="Delete Router"
+                                               data-message="Delete {{ router.router_name }}?"
+                                               data-call="/delete_router/{{ project.project_id }}/{{ router.router_id }}/"
+                                               data-notice="Deleting Router {{ instance.server_name }}">
+                                                <i class="fa fa-trash-o"></i> delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </td>
                         {% endif %}
                     </tr>
@@ -242,8 +261,74 @@
             </tbody>
         </table>
     </div>
-</div>
 
-<script>
-    $('[data-toggle="tooltip"]').tooltip();
-</script>
+    {#    <div class="col-sm-4">#}
+    {#        <h3 class="row-header">VPNs</h3>#}
+    {#        <table class="table table-striped table-hover table-responsive table-bordered">#}
+    {#            <thead class="bg-primary">#}
+    {#            <tr>#}
+    {#                <th>VPN</th>#}
+    {#                <th>Status</th>#}
+    {#                {% if user_level == 0 %}#}
+    {#                    <th>#}
+    {#                        <button class="btn btn-xs btn-success pull-right create-vpn">#}
+    {#                            <i class="fa fa-plus"></i>#}
+    {#                        </button>#}
+    {#                        <button type="button" class="btn btn-info btn-xs pull-right vpn-info"#}
+    {#                                data-toggle="popover" title="{{ project.project_name }} VPN Info"#}
+    {#                                data-html="true" data-placement="left"#}
+    {#                                data-content="<div class='col-sm-12'><h4>Loading <i class='fa fa-cog fa-spin'></i></h1></div>">#}
+    {#                            <i class="fa fa-info-circle"></i>#}
+    {#                        </button>#}
+    {#                    </th>#}
+    {#                {% endif %}#}
+    {#            </tr>#}
+    {#            </thead>#}
+    {#            <tbody>#}
+    {#            {% if vpns %}#}
+    {#                {% for vpn in vpns %}#}
+    {#                    <tr id="{{ vpn.id }}" class="vpn">#}
+    {#                        <td class="vpn-name">#}
+    {#                            <button data-call="/vpn/{{ project.project_id }}/{{ vpn.id }}/view/"#}
+    {#                                    data-refresh="/projects/{{ project.project_id }}/get_networking_panel/"#}
+    {#                                    data-toggle="tooltip" data-placement="bottom"#}
+    {#                                    title="ID: {{ vpn.id }}"#}
+    {#                                    class="btn btn-12 btn-xs btn-social btn-light">#}
+    {#                                <i class="fa fa-info-circle"></i>{{ vpn.name }}#}
+    {#                            </button>#}
+    {#                        </td>#}
+    {#                        <td class="vpn-status center-text {% if vpn.status == "ACTIVE" %}bg-success{% elif vpn.status == "DOWN" %}bg-danger{% else %}bg-warning{% endif %}">#}
+    {#                            {{ vpn.status }}#}
+    {#                        </td>#}
+    {#                        {% if user_level == 0 %}#}
+    {#                            <td class="vpn-actions">#}
+    {#                                <button type='button' class="btn btn-xs btn-danger pull-right delete-vpn"#}
+    {#                                        data-title="Delete VPN" data-message="Delete {{ vpn.name }}?"#}
+    {#                                        data-call="/delete_vpn_tunnel/{{ project.project_id }}/{{ vpn.id }}/{{ vpn.name }}/"#}
+    {#                                        data-notice="Deleting VPN {{ vpn.name }}">#}
+    {#                                    <i class="fa fa-minus"></i>#}
+    {#                                </button>#}
+    {#                            </td>#}
+    {#                        {% endif %}#}
+    {#                    </tr>#}
+    {#                {% endfor %}#}
+    {#            {% else %}#}
+    {#                <tr class="vpn-placeholder text-warning">#}
+    {#                    <td><p><i>This project has no VPNs</i></p></td>#}
+    {#                    <td></td>#}
+    {#                    {% if user_level == 0 %}#}
+    {#                        <td></td>#}
+    {#                    {% endif %}#}
+    {#                </tr>#}
+    {#            {% endif %}#}
+    {#            </tbody>#}
+    {#        </table>#}
+    {#    </div>#}
+    {#</div>#}
+
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+            $('[data-toggle="popover"]').popover();
+        });
+    </script>

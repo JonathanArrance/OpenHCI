@@ -10,6 +10,8 @@ from django.core.cache import cache
 import time
 import os
 import sys
+import hashlib
+from multiprocessing import Process
 
 from transcirrus.common.auth import authorization
 from transcirrus.common.stats import stat_ops
@@ -50,6 +52,10 @@ import transcirrus.common.logger as logger
 import transcirrus.common.version as ver
 import transcirrus.common.memcache as memcache
 import transcirrus.operations.flavor_resize_list as flavor_resize_ops
+import transcirrus.operations.vpn_manager as vpn_operation
+import transcirrus.operations.import_workload as import_workload
+import transcirrus.operations.remove_virtual_router as remove_router
+from transcirrus.component.neutron.vpn import vpn_ops
 
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import REDIRECT_FIELD_NAME, logout as auth_logout, get_user_model
@@ -65,6 +71,7 @@ from collections import defaultdict
 import csv
 import json
 from urlparse import urlsplit
+import urllib2
 import urllib
 
 from transcirrus.component.swift.containerconnection import Args
@@ -81,12 +88,19 @@ from transcirrus.operations.third_party_auth import tpa_users
 from transcirrus.operations.third_party_auth import tpa_tenants
 import transcirrus.operations.third_party_auth.shibboleth.add_shib_to_cloud as add_shib
 import transcirrus.operations.third_party_auth.shibboleth.remove_shib_from_cloud as remove_shib
+import transcirrus.operations.third_party_auth.ldap.add_ldap_to_cloud as add_ldap
+import transcirrus.operations.third_party_auth.ldap.remove_ldap_from_cloud as remove_ldap
 from transcirrus.operations.third_party_auth.auth import tp_authorization
+from transcirrus.operations.third_party_auth.ldap import ldap_users
 from transcirrus.common import extras
 
 # Custom imports
 #from coalesce.coal_beta.models import *
 from coalesce.coal_beta.forms import *
+
+# ASM changes - TODO change the location of constants and properties accordingly
+from . import constants
+from . import properties
 
 # Globals
 cache_key = None
@@ -96,8 +110,62 @@ eseries_config = None
 nfs_config = None
 
 
+def GetClientIP(request):
+    """Gets the clients IP address from request object.
+
+    Args:
+    request: An HttpRequest object.
+
+    Returns:
+    String representing IP address.
+    """
+    for ip_header in constants.IP_HEADERS_ORDERED:
+        if request.META.get(ip_header):
+            return request.META.get(ip_header)
+
+
+def GetCookieName(username, hostname):
+    """Prepares and returns the name of cookie to be set in the response.
+
+    Args:
+    username: String representing the name of the current user.
+    hostname: String representing the name of the host.
+
+    Returns:
+    String (hashed by md5/sha1) representing the cookie name.
+    """
+    cookie_key = properties.COOKIE_NAME % (username, hostname)
+    return hashlib.md5(cookie_key).hexdigest()
+
+
+def MakeRequestToApersona(url, data):
+    """Makes a server side call to the aPersona authentication system.
+
+    Args:
+    url: String representing the URL to make the call.
+    data: Dict representing the params that needs to be passed.
+
+    Returns:
+    HttpResponse from aPersona authentication system.
+    """
+    data = urllib.urlencode(data)
+    method = "POST"
+    handler = urllib2.HTTPHandler()
+    opener = urllib2.build_opener(handler)
+    request = urllib2.Request('%s?%s' % (url, data))
+    request.add_header("Content-Type",'application/json')
+    request.get_method = lambda: method
+    try:
+        return opener.open(request)
+    except urllib2.HTTPError, e:
+        print "raising exception: %s" % e
+        raise e
+
+
 def dashboard(request):
     is_cloud_admin = 0
+    tpa_providers = auth_util.detect_auth()
+    aPersona = extras.is_apersona_up()
     try:
         auth = request.session['auth']
         if auth:
@@ -113,9 +181,7 @@ def dashboard(request):
             else:
                 return render_to_response('coal/dashboard.html',
                                           RequestContext(request, {"is_cloud_admin": is_cloud_admin}))
-
         else:
-            tpa_providers = auth_util.detect_auth()
             if tpa_providers['has_shib'] != False:
                 email = request.META['eppn']
                 user = email.split("@")[0]
@@ -126,19 +192,18 @@ def dashboard(request):
                         project_id = auth['project_id']
                         project_admin = util.get_project_admin(project_id)
                         return render_to_response('coal/welcome.html',
-                                                  RequestContext(request, {"project_admin": project_admin}))
+                                                  RequestContext(request, {"project_admin": project_admin, 'aPersona': aPersona}))
                 else:
                     return render_to_response('coal/welcome.html',
-                                              RequestContext(request, {"providers": tpa_providers}))
+                                              RequestContext(request, {"providers": tpa_providers, 'aPersona': aPersona}))
                     # if tpa_providers['has_ldap'] != False:
                     #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
                     #
                     # if tpa_providers['has_other'] != False:
                     #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
             return render_to_response('coal/welcome.html',
-                                      RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug"}))
+                                      RequestContext(request, {"providers": tpa_providers, 'error': "Error: bug", 'aPersona': aPersona}))
     except Exception as e:
-        tpa_providers = auth_util.detect_auth()
         if tpa_providers['has_shib'] != False:
             try:
                 email = request.META['eppn']
@@ -151,14 +216,20 @@ def dashboard(request):
                         project_id = auth['project_id']
                         project_admin = util.get_project_admin(project_id)
                         return render_to_response('coal/welcome.html',
-                                                  RequestContext(request, {"project_admin": project_admin}))
+                                                  RequestContext(request, {"project_admin": project_admin, 'aPersona': aPersona}))
                 else:
                     shadow_admin = extras.shadow_auth()
                     a = authorization(shadow_admin)
                     auth = a.get_auth()
                     request.session['auth'] = auth
                     to = tenant_ops(auth)
-                    default_shib_project = to.get_default_tenant()
+                    default_projects = to.get_default_tenants()
+                    default_shib_project = None
+                    if default_projects is not None:
+                        for proj in default_projects:
+                            if proj['is_default'] == "SHIB":
+                                default_shib_project = proj
+                                break
                     if default_shib_project == None:
                         node_id = util.get_node_id()
                         sys_vars = util.get_system_variables(node_id)
@@ -178,16 +249,18 @@ def dashboard(request):
                                               RequestContext(request, {'project': project_info,
                                                                        'shib_user': user,
                                                                        'shib_email': email,
-                                                                       'is_default_shib': is_default_shib}))
+                                                                       'is_default_shib': is_default_shib,
+                                                                       'aPersona': aPersona}))
             except:
                 return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers,
-                                                                                        'error': "Error: %s" % e}))
+                                                                                        'error': "Error: %s" % e,
+                                                                                        'aPersona': aPersona}))
         # if tpa_providers['has_ldap'] != False:
         #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
         #
         # if tpa_providers['has_other'] != False:
         #     return render_to_response('coal/welcome.html', RequestContext(request, { "providers": tpa_providers}))
-        return render_to_response('coal/welcome.html', RequestContext(request, {'error': "Error: %s" % e}))
+        return render_to_response('coal/welcome.html', RequestContext(request, {"providers": tpa_providers, 'error': "Error: %s" % e, 'aPersona': aPersona}))
 
 def get_confirm(request, title, message, call, notice, async, refresh):
     t = urllib.unquote(title)
@@ -367,50 +440,64 @@ def get_third_party_authentication(request):
         if auth['user_level'] == 0:
             to = tenant_ops(auth)
             provs = auth_util.detect_auth()
-            if provs['has_shib'] == True:
-                default_shib_project = to.get_default_tenant()
-                if default_shib_project is not None:
-                    default_shib_project_info = to.get_tenant(default_shib_project['project_id'])
-                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": default_shib_project_info})
+            default_projects = to.get_default_tenants()
+            default_shib_project = "none"
+            default_ldap_project = "none"
+            if default_projects is not None:
+                for proj in default_projects:
+                    if proj['is_default'] == "SHIB":
+                        default_shib_project = proj
+                    if proj['is_default'] == "LDAP":
+                        default_ldap_project = proj
+            tpa_configured = False
+            if provs['has_shib'] is True:
+                tpa_configured = True
+                if default_shib_project != "none":
+                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": default_shib_project})
                 else:
-                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": "none"})
+                    providers.append({"name": "Shibboleth", "id": "shib", "configured": 1, "default_project": default_shib_project})
             else:
-                providers.append({"name": "Shibboleth", "id": "shib", "configured": 0, "default_project": "none"})
+                providers.append({"name": "Shibboleth", "id": "shib", "configured": 0, "default_project": default_shib_project})
 
-            if provs['has_ldap'] == True:
-                providers.append({"name": "LDAP", "id": "ldap", "configured": 1})
+            if provs['has_ldap'] is True:
+                tpa_configured = True
+                if default_ldap_project != "none":
+                    providers.append({"name": "LDAP", "id": "ldap", "configured": 1, "default_project": default_ldap_project})
+                else:
+                    providers.append({"name": "LDAP", "id": "ldap", "configured": 1, "default_project": default_ldap_project})
             else:
-                providers.append({"name": "LDAP", "id": "ldap", "configured": 0})
+                providers.append({"name": "LDAP", "id": "ldap", "configured": 0, "default_project": default_ldap_project})
 
-            if provs['has_other'] == True:
-                providers.append({"name": "Other", "id": "other", "configured": 1})
-            else:
-                providers.append({"name": "Other", "id": "other", "configured": 0})
+            # if provs['has_other'] is True:
+            #     tpa_configured = True
+            #     providers.append({"name": "Other", "id": "other", "configured": 1})
+            # else:
+            #     providers.append({"name": "Other", "id": "other", "configured": 0})
+
             return render_to_response('coal/dashboard_widgets/third_party_authentication.html',
-                                      RequestContext(request, {'providers': providers}))
+                                      RequestContext(request, {'providers': providers, 'tpa_configured': tpa_configured}))
         else:
             error = "You are not permitted to detect third party Authentication systems."
             return render_to_response('coal/dashboard_widgets/third_party_authentication.html',
-                                      RequestContext(request, {'providers': providers, 'error': "Error: %s" % error}))
+                                      RequestContext(request, {'providers': providers, 'tpa_configured': tpa_configured, 'error': "Error: %s" % error}))
     except Exception as e:
         return render_to_response('coal/dashboard_widgets/third_party_authentication.html',
                                   RequestContext(request, {'providers': providers, 'error': "Error: %s" % e}))
 
 
-def get_third_party_authentication_configure(request, provider, update=None):
+def get_third_party_authentication_configure(request, update=None):
     try:
         auth = request.session['auth']
+        providers = []
         if(auth != None and auth['is_admin'] == 1):
-            prov = {}
-            if provider == 'shib':
-                prov = { 'id': provider, 'name':"Shibboleth" }
-            if provider == 'ldap':
-                prov = { 'id': provider, 'name':"LDAP" }
-            if provider == 'other':
-                prov = { 'id': provider, 'name':"Other" }
-            return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'provider': prov, 'update': update}))
+            provs = auth_util.detect_auth()
+            if provs['has_shib'] is False:
+                providers.append({'name': "Shibboleth", 'value': "shib"})
+            if provs['has_ldap'] is False:
+                providers.append({'name': "LDAP", 'value': "ldap"})
+            return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'providers': providers, 'update': update}))
     except Exception as e:
-        return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'provider': "error", 'error': "Error: %s"%e}))
+        return render_to_response('coal/dashboard_widgets/third_party_authentication_configure.html', RequestContext(request, { 'providers': "error", 'error': "Error: %s"%e}))
 
 def get_third_party_authentication_build_project(request, provider):
     try:
@@ -717,10 +804,12 @@ def project_view(request, project_id):
             host_dict = {'project_id': project_id, 'zone': 'nova'}
             hosts = saa.list_compute_hosts(host_dict)
 
-            default_shib_project = to.get_default_tenant()
-            if default_shib_project is not None:
-                if project_id == default_shib_project['project_id']:
-                    is_auth_default = 1
+            default_projects = to.get_default_tenants()
+            if default_projects is not None:
+                for proj in default_projects:
+                    if project_id == proj['project_id']:
+                        is_auth_default = 1
+                        break
 
         project = to.get_tenant(project_id)
 
@@ -824,14 +913,14 @@ def get_instance_wizard(request, project_id):
         return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
-                                                           'fips': fips, 'volumes': volumes, 
+                                                           'fips': fips, 'volumes': volumes,
                                                            'volume_types': volume_types, 'groups': sec_groups,
                                                            'keys': sec_keys, 'tenant_info': tenant_info}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/project/instance_wizard.html',
                                   RequestContext(request, {'project': project, 'quota': quota, 'limits': limits,
                                                            'images': images, 'flavors': flavors, 'networks': networks,
-                                                           'fips': fips, 'volumes': volumes, 
+                                                           'fips': fips, 'volumes': volumes,
                                                            'volume_types': volume_types, 'groups': sec_groups,
                                                            'keys': sec_keys, 'tenant_info': tenant_info,
                                                            'error': "Error: %s" % e}))
@@ -1611,7 +1700,7 @@ def get_networking_panel(request, project_id):
     networks = []
     open_networks = []
     routers = []
-    instances = []
+    vpns = []
     avail_instances = []
     tenant_info = {}
     try:
@@ -1622,6 +1711,7 @@ def get_networking_panel(request, project_id):
         no = neutron_net_ops(auth)
         l3o = layer_three_ops(auth)
         so = server_ops(auth)
+        vo = vpn_ops(auth)
 
         project = to.get_tenant(project_id)
 
@@ -1635,11 +1725,7 @@ def get_networking_panel(request, project_id):
 
         fips = l3o.list_floating_ips(project_id)
         for fip in fips:
-            if fip["floating_in_use"]:
-                ip_info = l3o.get_floating_ip(fip['floating_ip_id'])
-                fip['instance_name'] = ip_info['instance_name']
-            else:
-                fip['instance_name'] = ''
+            fip['info'] = l3o.get_floating_ip(fip['floating_ip_id'])
         num_fips = len(fips)
 
         networks = no.list_internal_networks(project_id)
@@ -1654,6 +1740,10 @@ def get_networking_panel(request, project_id):
 
         routers = l3o.list_routers(project_id)
         num_routers = len(routers)
+
+        vpns = vo.list_vpn_ipsec_site_connection(project_id)['ipsec_site_connections']
+        for vpn in vpns:
+            vpn['status'] = vpn['status'].replace("_", " ")
 
         instances = so.list_servers(project_id)
         for instance in instances:
@@ -1678,6 +1768,7 @@ def get_networking_panel(request, project_id):
                                       'networks': networks,
                                       'open_networks': open_networks,
                                       'routers': routers,
+                                      'vpns': vpns,
                                       'instances': avail_instances}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/networking_panel.html',
@@ -1690,6 +1781,7 @@ def get_networking_panel(request, project_id):
                                       'networks': networks,
                                       'open_networks': open_networks,
                                       'routers': routers,
+                                      'vpns': vpns,
                                       'instances': avail_instances,
                                       'error': "Error: %s" % e}))
 
@@ -1731,6 +1823,61 @@ def get_router_create(request, project_id):
     except Exception as e:
         return render_to_response('coal/project_view_widgets/networking/router_create.html', RequestContext(request, {'networks': networks, 'error': "Error: %s"%e}))
 
+
+def get_vpn_create(request, project_id, router_id):
+    project = []
+    router = []
+    network = []
+    subnet = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        l3o = layer_three_ops(auth)
+        no = neutron_net_ops(auth)
+        project = to.get_tenant(project_id)
+        router = l3o.get_router(router_id)
+        network = no.get_network(router['network_id'])
+        subnet = no.get_net_subnet(network['net_subnet_id'][0]['subnet_id'])
+        return render_to_response('coal/project_view_widgets/networking/vpn_create.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'network': network,
+                                      'subnet': subnet}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/vpn_create.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'network': network,
+                                      'subnet': subnet,
+                                      'error': "Error: %s"%e}))
+
+
+def get_vpn_info(request, project_id):
+    project = []
+    router = []
+    subnet = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        l3o = layer_three_ops(auth)
+        no = neutron_net_ops(auth)
+        project = to.get_tenant(project_id)
+        router = l3o.get_router(no.get_network(project['def_network_id'])['router_id'])
+        subnet = no.get_net_subnet(router['router_int_sub_id'])
+        return render_to_response('coal/project_view_widgets/networking/vpn_info.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'subnet': subnet}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/vpn_info.html',
+                                  RequestContext(request, {
+                                      'project': project,
+                                      'router': router,
+                                      'subnet': subnet,
+                                      'error': "Error: %s"%e}))
 
 
 def get_users_security_panel(request, project_id):
@@ -1850,24 +1997,35 @@ def get_security_group_update(request, sec_group_id, project_id):
         tcp = []
         udp = []
         # icmp = []
-        ports = ""
+        ports = {}
+        ports_tcp = ""
+        ports_udp = ""
         for port in sec_group['ports']:
             if port['transport'] == 'tcp':
-                tcp.append(int(port['to_port']))
+                tcp.append((int(port['from_port']),int(port['to_port'])))
             if port['transport'] == 'udp':
-                udp.append(int(port['to_port']))
+                udp.append((int(port['from_port']),int(port['to_port'])))
             # if port['transport'] == 'icmp':
                 # icmp.append(int(port['to_port']))
-        if len(tcp) != 0:
-            transport = sorted(tcp)
-            transport_tag = "tcp"
-        else:
-            transport = sorted(udp)
-            transport_tag = "udp"
-        for port in transport:
-            ports += str(port) + ","
-        ports = ports[:-1]
-        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports, 'transport_tag': transport_tag}))
+        tcp = sorted(tcp,key=lambda x: x[0])
+        udp = sorted(udp,key=lambda x: x[0])
+        for port in tcp:
+            if port[0] == port[1]:
+                ports_tcp += str(port[0]) + ","
+            else:
+                ports_tcp += str(port[0]) + "-" + str(port[1]) + ","
+        if len(ports_tcp) > 0:
+            ports_tcp = ports_tcp[:-1]
+        for port in udp:
+            if port[0] == port[1]:
+                ports_udp += str(port[0]) + ","
+            else:
+                ports_udp += str(port[0]) + "-" + str(port[1]) + ","
+        if len(ports_udp) > 0:
+            ports_udp = ports_udp[:-1]
+        ports['tcp'] = ports_tcp
+        ports['udp'] = ports_udp
+        return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group, 'ports': ports}))
     except Exception as e:
         return render_to_response('coal/project_view_widgets/users_security/security_group_update.html', RequestContext(request, {'sec_group': sec_group,'error': "Error: %s"%e}))
 
@@ -2377,13 +2535,10 @@ def create_user(request, username, password, user_role, email, project_id):
 
 def create_security_group(request, groupname, groupdesc, ports, transport, project_id):
     try:
-        portstrings    = ports.split(',')
-        portlist = []
-        for port in portstrings:
-            portlist.append(int(port))
+        port_array = ports.split(',')
         auth = request.session['auth']
         so = server_ops(auth)
-        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': portlist, 'transport': transport, 'project_id': project_id}
+        create_sec = {'group_name': groupname, 'group_desc':groupdesc, 'ports': port_array, 'transport': transport, 'project_id': project_id}
         out = so.create_sec_group(create_sec)
         out['status'] = 'success'
         out['message'] = 'The security group %s was created'%(groupname)
@@ -2395,13 +2550,10 @@ def create_security_group(request, groupname, groupdesc, ports, transport, proje
 def update_security_group(request, groupid, project_id, ports, enable_ping, transport):
     output = {}
     try:
-        portstrings = ports.split(',')
-        portlist = []
-        for port in portstrings:
-            portlist.append(port)
+        port_array = ports.split(',')
         auth = request.session['auth']
         so = server_ops(auth)
-        update_sec = {'group_id': groupid, 'enable_ping': enable_ping, 'ports': portlist, 'project_id': project_id, 'transport': transport, 'update':'true'}
+        update_sec = {'group_id': groupid, 'enable_ping': enable_ping, 'ports': port_array, 'project_id': project_id, 'transport': transport, 'update':'true'}
         out = so.update_sec_group(update_sec)
         if(out == 'OK'):
             grp = { 'project_id': project_id, 'sec_group_id': groupid }
@@ -2442,13 +2594,13 @@ def security_group_view(request, groupid, project_id):
     sec_group = so.get_sec_group(grp)
     for port in sec_group['ports']:
         if port['transport'] == 'tcp':
-            tcp.append(int(port['to_port']))
+            tcp.append((int(port['from_port']),int(port['to_port'])))
         if port['transport'] == 'udp':
-            udp.append(int(port['to_port']))
+            udp.append((int(port['from_port']),int(port['to_port'])))
         # if port['transport'] == 'icmp':
             # icmp.append(int(port['to_port']))
-    tcp = sorted(tcp)
-    udp = sorted(udp)
+    tcp = sorted(tcp,key=lambda x: x[0])
+    udp = sorted(udp,key=lambda x: x[0])
     icmp = sorted(icmp)
     ports = {'tcp': tcp, 'udp': udp, 'icmp':icmp}
     return render_to_response('coal/project_view_widgets/users_security/security_group_view.html',
@@ -2468,19 +2620,25 @@ def create_keypair(request, key_name, project_id):
 
 # Import a local (user's laptop) image and add it to glance & database. The image has already been uploaded via the broswer
 # to memory or a temp file so we just need to transfer the contents to a file we control.
-def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id):
+def import_local (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id, project_id):
     from coalesce.coal_beta.models import ImportLocal
 
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
         content_type = request.FILES['imageLocal'].content_type
-
-        # Create a temp file to hold the image contents until we give it to glance.
-        download_dir   = "/tmp/"
-        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-        download_file  = download_dir + download_fname
-
+    
+        download_dir = download_fname = download_file = out = None
+        if(container_format == 'ovf' or container_format == 'ova'):
+            download_dir   = "/tmp/"
+            download_fname = image_name + "." + container_format
+            download_file  = download_dir + download_fname
+        else:
+            # Create a temp file to hold the image contents until we give it to glance.
+            download_dir   = "/tmp/"
+            download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+            download_file  = download_dir + download_fname
+    
         # Transfer the content from the temp location to our own file.
         try:
             with open(download_file, 'wb+') as destination:
@@ -2490,12 +2648,19 @@ def import_local (request, image_name, container_format, disk_format, image_type
             out = {'status' : "error", 'message' : "Error opening local file: %s" % e}
             return HttpResponse(simplejson.dumps(out))
 
-        # Add the image to glance.
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
-        import_dict['image_location'] = download_file
-        out = go.import_image(import_dict)
-        out['status'] = "success"
-        out['message'] = "Local image %s was uploaded." % image_name
+        if(container_format == 'ovf' or container_format == 'ova'):
+            out = {}
+            #we need to pull the virtual disks out and convert them
+            out['converted'] = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type, 'project_id':project_id})
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
+        else:
+            # Add the image to glance.
+            import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': image_type, 'disk_format': disk_format, 'visibility': visibility, 'image_location': "", 'os_type': os_type, 'content_type': content_type}
+            import_dict['image_location'] = download_file
+            out = go.import_image(import_dict)
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
     except Exception as e:
         out = {'status' : "error", 'message' : "Error uploading local file: %s" % e}
     return HttpResponse(simplejson.dumps(out))
@@ -2516,12 +2681,12 @@ def download_progress (current_size, total_size, width):
 
 # Import a remote image and add it to glance & database. The image is retrieved via a wget like interface.
 # TODO: A global cache_key is used and should be replaced with something else.
-def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id):
+def import_remote (request, image_name, container_format, disk_format, image_type, image_location, visibility, os_type, progress_id, project_id):
     global cache_key
     try:
         auth = request.session['auth']
         go = glance_ops(auth)
-        import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
+        #import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
 
         # Replace any '%47' with a slash '/'
         image_location = image_location.replace("&47", "/")
@@ -2530,10 +2695,16 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], progress_id)
         cache.set (cache_key, {'length': 0, 'uploaded' : 0})
 
-        # Use wget to download the file.
-        download_dir   = "/tmp/"
-        download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
-        download_file  = download_dir + download_fname
+        download_dir = download_fname = download_file = out = None
+        if(container_format == 'ovf' or container_format == 'ova'):
+            download_dir   = "/tmp/"
+            download_fname = image_name + "." + container_format
+            download_file  = download_dir + download_fname
+        else:
+            # Create a temp file to hold the image contents until we give it to glance.
+            download_dir   = "/tmp/"
+            download_fname = time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".img"
+            download_file  = download_dir + download_fname
 
         # Download the file via a wget like interface to the file called download_file and
         # log the progress via the callback function download_progress.
@@ -2542,12 +2713,20 @@ def import_remote (request, image_name, container_format, disk_format, image_typ
         cache.delete(cache_key)
         cache_key = None
 
-        # Add the image to glance.
-        import_dict['image_location'] = download_file
-        import_dict['content_type'] = content_type
-        out = go.import_image(import_dict)
-        out['status'] = "success"
-        out['message'] = "Remote image %s was uploaded." % image_name
+        if(container_format == 'ovf' or container_format == 'ova'):
+            out = {}
+            #we need to pull the virtual disks out and convert them
+            out['converted'] = import_workload.import_vmware(auth,{'image_name': image_name,'package_name':download_fname,'path':download_dir,'os_type': os_type, 'project_id':project_id})
+            out['status'] = "success"
+            out['message'] = "Local image %s was uploaded." % image_name
+        else:
+            import_dict = {'image_name': image_name, 'container_format': container_format, 'image_type': 'image_file', 'disk_format': disk_format, 'visibility': visibility, 'image_location': image_location, 'os_type': os_type, 'content_type': ""}
+            # Add the image to glance.
+            import_dict['image_location'] = download_file
+            import_dict['content_type'] = content_type
+            out = go.import_image(import_dict)
+            out['status'] = "success"
+            out['message'] = "Remote image %s was uploaded." % image_name
     except Exception as e:
         cache.delete(cache_key)
         cache_key = None
@@ -2768,6 +2947,9 @@ def detach_volume(request, project_id, volume_id):
         out = {'status' : "error", 'message' : "Could not detach the volume."}
     return HttpResponse(simplejson.dumps(out))
 
+def format_volume(request, project_id, net_id, volume_id):
+    auth = request.session['auth']
+
 def create_snapshot(request, project_id, name, volume_id, desc):
     try:
         auth = request.session['auth']
@@ -2839,7 +3021,8 @@ def delete_router(request, project_id, router_id):
         if subnet_id:
             remove_dict = {'router_id': router_id, 'subnet_id': subnet_id, 'project_id': project_id}
             l3o.delete_router_internal_interface(remove_dict)
-        del_router = l3o.delete_router(proj_rout_dict)
+        #del_router = l3o.delete_router(proj_rout_dict)
+        del_router = remove_router.remove_virt_router(auth,proj_rout_dict)
         if(del_router == 'OK'):
             out['status'] = 'success'
             out['message'] = 'The router has been deleted.'
@@ -2942,6 +3125,10 @@ def delete_vm_spec(request,flavor_id):
         output = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(output))
 
+def create_instance_from_iso(request):
+    pass
+
+
 def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_id, sec_key_name, image_id, network_name, project_id, boot_from_vol, volume_size, volume_name, volume_type):
     #this is used to create new instance. Not sure why it is called create image
     try:
@@ -2952,9 +3139,11 @@ def create_instance(request, instance_name, sec_group_name, avail_zone, flavor_i
                      'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
                      'network_name': network_name,'image_id': image_id,
                      'flavor_id':flavor_id, 'instance_name':instance_name,
-                     'boot_from_vol':boot_from_vol, 'volume_size':volume_size,
+                     'boot_from_vol':boot_from_vol,
                      'volume_name': volume_name, 'volume_type':volume_type
                     }
+        if(volume_size != 'None'):
+            instance['volume_size'] = volume_size
         out = bni.boot_instance(instance,auth)
         priv_net_list = no.list_internal_networks(project_id)
         default_priv = priv_net_list[0]['net_id']
@@ -2987,31 +3176,6 @@ def delete_instance(request, project_id, server_id, delete_boot_vol=None):
         out = {"status":"error","message":"%s"%(e)}
     return HttpResponse(simplejson.dumps(out))
 
-'''
-def create_image(request, name, sec_group_name, avail_zone, flavor_name, sec_key_name, image_name, network_name, project_id):
-    #this is used to create new instance. Not sure why it is called create image
-    #if(amount is None):
-    #    amount = '1'
-    try:
-        auth = request.session['auth']
-        so = server_ops(auth)
-        no = neutron_net_ops(auth)
-        instance = {    'project_id':project_id, 'sec_group_name':sec_group_name,
-                        'avail_zone':avail_zone, 'sec_key_name': sec_key_name,
-                        'network_name': network_name,'image_name': image_name,
-                        'flavor_name':flavor_name, 'name':name}
-        out = so.create_server(instance)
-        priv_net_list = no.list_internal_networks(project_id)
-        default_priv = priv_net_list[0]['net_id']
-        input_dict = {'server_id':out['vm_id'], 'net_id': default_priv, 'project_id': project_id}
-        #net_info = so.attach_server_to_network(input_dict)
-        out['server_info']= so.get_server(input_dict)
-        out['status'] = 'success'
-        out['message'] = "New server %s was created."%(out['vm_name'])
-    except Exception as e:
-        out = {"status":"error","message":"%s"%(e)}
-    return HttpResponse(simplejson.dumps(out))
-'''
 def list_servers(request,project_id):
     try:
         auth = request.session['auth']
@@ -3122,13 +3286,13 @@ def resize_server(request, project_id, instance_id, flavor_id):
         auth = request.session['auth']
         input_dict = {'project_id':project_id, 'server_id':instance_id, 'flavor_id': flavor_id}
         so = server_ops(auth)
-        fo = flavor_ops(auth)
+        #fo = flavor_ops(auth)
         serv_info = so.get_server(input_dict)
-        flavor_info = fo.get_flavor(flavor_id)
-        server_flav = fo.get_flavor(serv_info['flavor_id'])
-        if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
-            logger.sys_error('Could not resize instance, disk space is less than current spec.')
-            raise Exception('Could not resize instance, disk space is less than current spec.')
+        #flavor_info = fo.get_flavor(flavor_id)
+        #server_flav = fo.get_flavor(serv_info['flavor_id'])
+        #if(flavor_info['disk_space(GB)'] < server_flav['disk_space(GB)']):
+        #    logger.sys_error('Could not resize instance, disk space is less than current spec.')
+        #    raise Exception('Could not resize instance, disk space is less than current spec.')
         rs = rs_server.resize_and_confirm(auth, input_dict)
         if(rs == 'OK'):
             out['status'] = 'success'
@@ -3449,15 +3613,58 @@ def network_view(request, net_id):
                                    RequestContext(request, {'nw': nw, 'sn': sn, 'error': "Error: %s"%e,}))
 
 
-def router_view(request, router_id):
-    auth = request.session['auth']
-    l3o = layer_three_ops(auth)
-    router = l3o.get_router(router_id)
+def router_view(request, project_id, router_id):
+    router = []
+    network = []
+    subnet = []
+    vpns = []
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        l3o = layer_three_ops(auth)
+        no = neutron_net_ops(auth)
+        vo = vpn_ops(auth)
 
-    return render_to_response('coal/project_view_widgets/networking/router_view.html',
-                               RequestContext(request, {
+        project = to.get_tenant(project_id)
+        router = l3o.get_router(router_id)
+        network = no.get_network(router['network_id'])
+        subnet = no.get_net_subnet(network['net_subnet_id'][0]['subnet_id'])
+
+        vpns = vo.list_vpn_ipsec_site_connection(project_id)['ipsec_site_connections']
+        for vpn in vpns:
+            vpn['status'] = vpn['status'].replace("_", " ")
+
+        return render_to_response('coal/project_view_widgets/networking/router_view.html',
+                               RequestContext(request, {'project': project,
                                                         'router': router,
-                                                        }))
+                                                        'network': network,
+                                                        'subnet': subnet,
+                                                        'vpns': vpns}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/router_view.html',
+                               RequestContext(request, {'project': project,
+                                                        'router': router,
+                                                        'network': network,
+                                                        'subnet': subnet,
+                                                        'vpns': vpns,
+                                                        'error': "Error: %s"%e}))
+
+
+def vpn_view(request, project_id, tunnel_id):
+    vpn = {}
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        vpn = vpnops.show_vpn_ipsec_site_connection(project_id, tunnel_id)['ipsec_site_connection']
+        vpn['ikepolicy'] = vpnops.show_vpn_ike_policy(project_id, vpn['ikepolicy_id'])['ikepolicy']
+        vpn['ipsecpolicy'] = vpnops.show_vpn_ipsec_policy(project_id, vpn['ipsecpolicy_id'])['ipsecpolicy']
+        vpn['vpnservice'] = vpnops.show_vpn_service(project_id, vpn['vpnservice_id'])['vpnservice']
+
+        return render_to_response('coal/project_view_widgets/networking/vpn_view.html',
+                                  RequestContext(request, {'vpn': vpn}))
+    except Exception as e:
+        return render_to_response('coal/project_view_widgets/networking/vpn_view.html',
+                                  RequestContext(request, {'vpn': vpn, 'error': "Error: %s" % e}))
 
 
 def instance_view(request, project_id, server_id):
@@ -3549,6 +3756,67 @@ def instance_view(request, project_id, server_id):
                                       'snapshots': snapshots,
                                       'current_project_id': project_id,
                                       'error': "Error: %s" % e}))
+
+def list_vpn_tunnels(request, project_id):
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        out = vpnops.list_vpn_ipsec_site_connection(project_id)
+        out['status'] = 'success'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not display the IPSec VPN Tunnel list for the project: %s" % (e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def show_vpn_tunnel(request, project_id, tunnel_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+        vpnops = vpn_ops(auth)
+        out = vpnops.show_vpn_ipsec_site_connection(project_id,tunnel_id)
+        out['status'] = 'success'
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not display the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+def add_vpn_tunnel(request, project_id, ike_policy_name, ipsec_policy_name, service_name, service_description, subnet_id, router_id, peer_cidrs, peer_address, peer_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+
+        # Replace any '&47' with a slash '/'
+        peer_cidrs = peer_cidrs.replace("&47", "/")
+
+        vpn_dict = {
+            "project_id": project_id,
+            "ike_policy_name": ike_policy_name,
+            "ipsec_policy_name": ipsec_policy_name,
+            "service_name": service_name,
+            "service_description": service_description,
+            "subnet_id": subnet_id,
+            "router_id": router_id,
+            "peer_cidrs": peer_cidrs,
+            "peer_address": peer_address,
+            "peer_id": peer_id,
+            "tunnel_name": tunnel_name
+        }
+
+        out = vpn_operation.create_vpn_tunnel(auth, vpn_dict)
+
+        out['status'] = 'success'
+        out['message'] = 'The IPSec VPN Tunnel: %s has been created.' % tunnel_name
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not add the IPSec VPN Tunnel %s to this project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def delete_vpn_tunnel(request, project_id, tunnel_id, tunnel_name):
+    try:
+        auth = request.session['auth']
+        out = vpn_operation.delete_vpn_tunnel(auth, project_id, tunnel_id)
+        out['status'] = 'success'
+        out['message'] = 'The IPSec VPN Tunnel: %s has been deleted.' % tunnel_name
+    except Exception as e:
+        out = {'status': "error", 'message': "Could not delete the IPSec VPN Tunnel: %s to the project: %s" % (tunnel_name,e)}
+    return HttpResponse(simplejson.dumps(out))
 
 
 def add_private_network(request, net_name, admin_state, shared, project_id):
@@ -3719,7 +3987,7 @@ def upload_remote_object (request, container, url, project_id, project_name, pro
             out = {'status' : "error", 'message' : "Container %s does not exist for this project" % container}
             return HttpResponse(simplejson.dumps(out))
 
-        # Replace any '%47' with a slash '/'
+        # Replace any '&47' with a slash '/'
         url = url.replace("&47", "/")
 
         # Setup our cache to track the progress.
@@ -4805,10 +5073,33 @@ def jq(request):
     file = open(r'%s\javascripts\\jquery-latest.pack.js' % settings.PROJECT_PATH, 'rb').read()
     return HttpResponse(file, mimetype="text/javascript")
 
+def get_user_email(auth):
+	uo = user_ops(auth)
+	user_id = auth['user_id']
+	project_id = auth['project_id']
+	user_info_dict = {"user_id": user_id, "project_id": project_id}
+	selected_user_info = uo.get_user_id_info(user_info_dict)
+	email = selected_user_info['email']
+        if email == None:
+           #Not able to retrieve email from auth for 'admin' user, hardcoding for testing
+           return 'bugs@transcirrus.com'
+        else:
+           return email
+
+def get_asm_lic_key():
+      #TODO : obtain appropriate ASM Lic Key based on user type, hardcoding to USER type for now
+      return properties.LICENSE_KEY_USER;
+
 # ---- Authentication ---
 @never_cache
 def login(request):
     out = {}
+
+    if request.method == 'GET':
+        if 'error' in request.GET and request.GET['error'] != "" :
+           error = request.GET['error']
+        return render_to_response('coal/welcome.html',RequestContext(request, {"error": error}))
+
     try:
         username = request.POST['username']
         password = request.POST['password']
@@ -4817,21 +5108,211 @@ def login(request):
         if auth['token'] == None:
             out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
             return HttpResponse(simplejson.dumps(out))
-        else:
-            request.session['auth'] = auth
-            out = {}
-            out['status'] = "success"
-            out['message'] = "Successfully logged in."
-            out['user_level'] = auth['user_level']
-            if auth['user_level'] > 0:
-                out['project_id'] = auth['project_id']
-            else:
-                boot = node_util.check_first_time_boot()
-                first_time = boot['first_time_boot']
-                out['first_time'] = first_time
+    except Exception as e:
+        out = {'status': "error", 'message': "Login failed. Exception msg: %s" % e}
+        return HttpResponse(simplejson.dumps(out))
+
+    try:
+        #--- user login successful, perform ASM validation ---
+        request.session['username']=username
+        request.session['auth_staging']=auth
+
+        #--- get parameters required for validation ---
+        hostname = request.get_host()
+        cookie_name = GetCookieName(username, hostname)
+        cookie_value = request.COOKIES.get(cookie_name)
+        user_email = get_user_email(auth)
+        data_for_apersona_request = {
+                        properties.RequestAttributes.USERNAME: user_email,
+                        properties.RequestAttributes.ID: '',
+                        properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
+                        properties.RequestAttributes.AUTH_PARAM: request.POST.get(
+                            'authParam', constants.AUTH_PARAM),
+                        properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
+                        properties.RequestAttributes.HOSTNAME: hostname,
+                        properties.RequestAttributes.REQUEST_URL: request.get_full_path(),
+                        properties.RequestAttributes.COOKIE_VALUE: cookie_value
+        }
+        response = MakeRequestToApersona(
+                    properties.ASM_URL.format(path='extAuthenticate.kv'),
+                    data_for_apersona_request)
+        response = json.loads(response.read())
+        code = response.get('code', '')
+        if code == 202:
+            #--- ASM requires OTP to validate user ---
+            emailParts = user_email.split("@")
+            out = {'status': "otp", 'message': response.get('message', '')}
             return HttpResponse(simplejson.dumps(out))
-    except:
-        out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+
+        #if code != 200:
+        #--- ASM validation failed because of some issue. TODO: Need to alert admin
+        #--- but let the user proceed
+
+        #--- ASM validation done, let user proceed ---
+
+        request.session['auth'] = auth
+        request.session['auth_staging'] = None
+        out = {}
+        out['status'] = "success"
+        out['message'] = "Successfully logged in."
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
+        http_resp = HttpResponse(simplejson.dumps(out))
+        print "login success, code: %s" % code
+
+        if code == 200:
+                #--- ASM validation successful, set ASM cookie ---
+                identifier = response.get('identifier', '')
+                cookie_name = GetCookieName(username, request.get_host())
+                http_resp.set_cookie(cookie_name, identifier)
+
+        return http_resp
+    except Exception as e:
+        request.session['auth'] = auth
+        out = {}
+        out['status'] = "info"
+        out['message'] = "aPersona error: %s -- please contact your administrator. Click OK to continue." % e
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
+        print "login exception: %s" % out
+        return HttpResponse(simplejson.dumps(out))
+
+@never_cache
+def otp(request):
+    try:
+        username = request.session['username']
+        auth = request.session['auth_staging']
+        user_email = get_user_email(auth)
+        out = {}
+        if request.method == 'GET':
+            email_parts = user_email.split("@")
+            email_mask = email_parts[0][:2]+"******"+email_parts[0][-1:]+"@"+email_parts[1]
+            # TODO -> if username is not in session, then redirect to login page
+            # either session expired or someone it trying to access OTP page directly        
+            return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
+
+        #-- OTP Validation --
+        otp = request.POST['otp']
+        hostname = request.get_host()
+        cookie_name = GetCookieName(username, hostname)
+        cookie_value = request.COOKIES.get(cookie_name)
+        data_for_apersona_request = {
+                      properties.RequestAttributes.USERNAME: user_email,
+                      properties.RequestAttributes.ID: '',
+                      properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
+                      properties.RequestAttributes.AUTH_PARAM: request.POST.get(
+                            'authParam', constants.AUTH_PARAM),
+                      properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
+                      properties.RequestAttributes.HOSTNAME: hostname,
+                      properties.RequestAttributes.REQUEST_URL: request.get_full_path(),
+                      properties.RequestAttributes.COOKIE_VALUE: cookie_value,
+                      properties.RequestAttributes.OTP: otp
+        }
+        response = MakeRequestToApersona(
+                  properties.ASM_URL.format(path='extVerifyOtp.kv'),
+                  data_for_apersona_request)
+        response = json.loads(response.read())
+        code = response.get('code', '')
+        otpMsg = response.get('message', '')
+
+
+        if code == 202:
+            out = {'status': "otp", 'message': otpMsg}
+            return HttpResponse(simplejson.dumps(out))
+
+        if code == 401:
+            #--- User exceeded maximum attempts for OTP, direct him back to login page
+            out = {'status': "login", 'message': otpMsg}
+            return HttpResponse(simplejson.dumps(out))
+
+        if code is not None:
+                request.session['auth'] = auth
+                request.session['auth_staging'] = None
+                out = {}
+                out['status'] = "success"
+                out['message'] = "Successfully logged in."
+                out['user_level'] = auth['user_level']
+                if auth['user_level'] > 0:
+                    out['project_id'] = auth['project_id']
+                else:
+                    boot = node_util.check_first_time_boot()
+                    first_time = boot['first_time_boot']
+                    out['first_time'] = first_time
+                http_resp = HttpResponse(simplejson.dumps(out))
+
+                if code == 200:
+                        #--- ASM validation successful, set ASM cookie ---
+                        identifier = response.get('identifier', '')
+                        cookie_name = GetCookieName(username, request.get_host())
+                        http_resp.set_cookie(cookie_name, identifier)
+
+                return http_resp
+                #--- In case of 500 or other return codes ASM validation failed because of some issue.
+                #--- TODO: Need to alert admin, but let the user proceed
+    except Exception as e:
+        request.session['auth'] = auth
+        out = {}
+        out['status'] = "info"
+        out['message'] = "aPersona OTP validation error: %s -- please contact your administrator. Click OK to continue." % e
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
+        return HttpResponse(simplejson.dumps(out))
+
+@never_cache
+def resend_otp(request):
+    try:
+        username = request.session['username']
+        auth = request.session['auth_staging']
+        user_email = get_user_email(auth)
+        email_parts = user_email.split("@")
+        out = {}
+        email_mask = email_parts[0][:2]+"******"+email_parts[0][-1:]+"@"+email_parts[1]
+        hostname = request.get_host()
+        data_for_apersona_request = {
+                      properties.RequestAttributes.USERNAME: user_email,
+                      properties.RequestAttributes.ID: '',
+                      properties.RequestAttributes.LICENSE_KEY: get_asm_lic_key(),
+                      properties.RequestAttributes.CLIENT_IP: GetClientIP(request),
+                      properties.RequestAttributes.HOSTNAME: hostname,
+                      properties.RequestAttributes.REQUEST_URL: request.get_full_path()
+        }
+
+        response = MakeRequestToApersona(
+                  properties.ASM_URL.format(path='extResendOtp.kv'),
+                  data_for_apersona_request)
+        response = json.loads(response.read())
+        code = response.get('code', '')
+        otpMsg = response.get('message', '')
+        out = {'status': "otp", 'message': otpMsg}
+
+        return render_to_response('coal/otp.html',{"username": username,"email_mask":email_mask}, RequestContext(request))
+    except Exception as e:
+        request.session['auth'] = auth
+        out = {}
+        out['status'] = "info"
+        out['message'] = "aPersona OTP resend validation error: %s -- please contact your administrator. Click OK to continue." % e
+        out['user_level'] = auth['user_level']
+        if auth['user_level'] > 0:
+            out['project_id'] = auth['project_id']
+        else:
+            boot = node_util.check_first_time_boot()
+            first_time = boot['first_time_boot']
+            out['first_time'] = first_time
         return HttpResponse(simplejson.dumps(out))
 
 @never_cache
@@ -4929,10 +5410,6 @@ def add_shib_to_cloud(request, sso_entity_id, mp_backing_file_path, mp_uri):
 def remove_shib_from_cloud(request):
     out = {}
     try:
-    # auth = request.session['auth']
-    # to = tenant_ops(auth)
-    # default_shib_project = to.get_default_tenant()
-    # if default_shib_project is None:
         out['shib'] = remove_shib.remove_shib()
         if out['shib'] == "OK":
             out['status'] = "success"
@@ -4957,8 +5434,15 @@ def shib_build_default_project(request):
     try:
         auth = request.session['auth']
         to = tenant_ops(auth)
-        default_shib_project = to.get_default_tenant()
-        if default_shib_project is None:
+        default_projects = to.get_default_tenants()
+        has_default_shib = False
+        if default_projects is not None:
+            for proj in default_projects:
+                if proj['is_default'] == "SHIB":
+                    default_shib_project = proj
+                    has_default_shib = True
+                    break
+        if has_default_shib is False:
             if request.method == 'POST':
                 if request.POST.get('cancel'):
                     return HttpResponseRedirect('/')
@@ -5038,13 +5522,13 @@ def shib_build_default_project(request):
                             'snapshots': snapshots,
                             'volumes': volumes}
                         project_dict['advanced_ops']['quota'] = quota
-                    proj, admin = tpa_tenants.build_default_project(auth, project_dict)
+                    proj, admin = tpa_tenants.build_default_shib_project(auth, project_dict)
                     out = {"status": "success",
                            "message": "%s created as default Project for Shibboleth users." % proj_name,
                            "project": proj, "admin": admin}
                     return HttpResponse(simplejson.dumps(out))
                 except Exception as e:
-                    out = {"status": "error", "message": "Error: %s" % e}
+                    out = {"status": "error", "message": "Error: %s"%e}
                     return HttpResponse(simplejson.dumps(out))
             else:
                 out = {"status": "error", "message": "Error: Server Fault: Please try again"}
@@ -5089,7 +5573,46 @@ def shib_build_default_project(request):
 #         out['message'] = "Error: Failed to disable default Shibboleth Project."
 #         return HttpResponse(simplejson.dumps(out))
 
-def shib_add_user(request, username, email):
+
+def tpa_toggle_project(request, provider, project_id):
+    out = {}
+    try:
+        input_dict = {'project_id': project_id, 'type': provider.upper()}
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        to.toggle_default_tenant(input_dict)
+        out['status'] = 'success'
+        out['message'] = 'The Default Project has been updated.'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not update Default Project: %s" %(e)}
+    return HttpResponse(simplejson.dumps(out))
+
+
+def get_tpa_select_project(request, provider):
+    try:
+        auth = request.session['auth']
+        provider = provider.upper()
+        if(auth != None and (auth['username'] == 'admin' or auth['username'] == 'shadow_admin')):
+            to = tenant_ops(auth)
+            projects = to.list_all_tenants()
+            projects_filtered = []
+            for proj in projects:
+                if proj['project_name'] != "trans_default":
+                    proj_info = to.get_tenant(proj['project_id'])
+                    if proj_info['is_default'] is None:
+                        projects_filtered.append(proj)
+            if provider == "SHIB":
+                provider_info = {'name': "Shibboleth", 'id': provider}
+            elif provider == "LDAP":
+                provider_info = {'name': provider, 'id': provider}
+            else:
+                return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'providers': "error", 'error': "Error: Provider must be 'SHIB' or 'LDAP'."}))
+            return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'provider_info': provider_info, 'projects': projects_filtered}))
+    except Exception as e:
+        return render_to_response('coal/dashboard_widgets/third_party_authentication_enable_project.html', RequestContext(request, { 'providers': "error", 'error': "Error: %s"%e}))
+
+
+def tpa_add_user(request, username, email):
     out = {}
     try:
         user_dict = {'username': username, 'email': email}
@@ -5103,10 +5626,10 @@ def shib_add_user(request, username, email):
         out = {'status' : "error", 'message' : "Could not create user %s: %s" %(username,e)}
     return HttpResponse(simplejson.dumps(out))
 
-def shib_add_user_to_project(request, username, email, project_id):
+def tpa_add_user_to_project(request, username, email, project_id):
     out = {}
     try:
-        auth = request.session['auth']
+        auth = extras.shadow_auth()
         to = tenant_ops(auth)
         user_dict = {'username': username, 'email': email, 'project_id': project_id}
         project = to.get_tenant(project_id)
@@ -5139,10 +5662,16 @@ def shib_login(request):
     else:
         logger.sys_info("has shib auth, not a user")
         auth = extras.shadow_auth()
-        request.session['auth'] = auth
         to = tenant_ops(auth)
-        default_shib_project = to.get_default_tenant()
-        if default_shib_project == None:
+        default_projects = to.get_default_tenants()
+        has_default_shib = False
+        if default_projects is not None:
+            for proj in default_projects:
+                if proj['is_default'] == "SHIB":
+                    default_shib_project = proj
+                    has_default_shib = True
+                    break
+        if has_default_shib is False:
             node_id = util.get_node_id()
             sys_vars = util.get_system_variables(node_id)
             subnet_array = []
@@ -5162,3 +5691,257 @@ def shib_login(request):
                                                            'shib_user': user,
                                                            'shib_email': email,
                                                            'is_default_shib': is_default_shib}))
+
+
+def add_ldap_to_cloud(request, hostname, use_ssl, base_dn, uid_attr, binding_type, manager_dn, manager_pw):
+    out = {}
+    host = hostname.replace('&47', '/')
+    try:
+        input_dict = {
+                        "hostname": host,
+                        "use_ssl": use_ssl,
+                        "base_dn": base_dn,
+                        "uid_attr": uid_attr
+                     }
+        manager_dict = None
+        if binding_type != "anonymous":
+            manager_dict = {
+                                "manager_dn": manager_dn,
+                                "manager_pw": manager_pw
+                           }
+        if manager_dict is None:
+            out['ldap'] = add_ldap.add_ldap(input_dict)
+        else:
+            out['ldap'] = add_ldap.add_ldap(input_dict,manager_dict)
+        if out['ldap'] == "OK":
+            out['status'] = "success"
+            out['message'] = "Successfully added LDAP to cloud."
+            # User must logout and log back in
+        else:
+            out['status'] = "error"
+            out['message'] = "Failed to add LDAP to cloud."
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out['status'] = "error"
+        out['message'] = "Error: %s."%e
+        return HttpResponse(simplejson.dumps(out))
+
+
+def remove_ldap_from_cloud(request):
+    out = {}
+    try:
+        out['ldap'] = remove_ldap.remove_ldap()
+        if out['ldap'] == "OK":
+            out['status'] = "success"
+            out['message'] = "Successfully removed LDAP from cloud."
+            # User must logout and log back in
+        else:
+            out['status'] = "error"
+            out['message'] = "Failed to remove LDAP from cloud."
+        return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out['status'] = "error"
+        out['message'] = "Error: %s." % e
+        return HttpResponse(simplejson.dumps(out))
+
+
+def ldap_build_default_project(request):
+    try:
+        auth = request.session['auth']
+        to = tenant_ops(auth)
+        default_projects = to.get_default_tenants()
+        has_default_ldap = False
+        if default_projects is not None:
+            for proj in default_projects:
+                if proj['is_default'] == "LDAP":
+                    default_ldap_project = proj
+                    has_default_ldap = True
+                    break
+        if has_default_ldap is False:
+            if request.method == 'POST':
+                if request.POST.get('cancel'):
+                    return HttpResponseRedirect('/')
+                try:
+                    proj_name = request.POST['projectName']
+                    username = request.POST['adminName']
+                    password = request.POST['adminPassword']
+                    email = request.POST['adminEmail']
+                    group_name = request.POST['securityGroup']
+                    sec_keys_name = request.POST['securityKey']
+                    net_name = request.POST['networkName']
+                    router_name = request.POST['routerName']
+                    subnet_dns = request.POST['dnsAddress']
+                    # ports[] - op
+                    # get the advanced props flag
+                    # advanced        = form.cleaned_data['advanced'] #TRUE/FALSE
+                    advanced = None
+                    dns = []
+                    dns.append(subnet_dns)
+                    dns = []
+                    dns.append(subnet_dns)
+                    auth = request.session['auth']
+                    project_dict = {
+                        'project_name': proj_name,
+                        'user_dict': {
+                            'username': username,
+                            'password': password,
+                            'user_role': 'admin',
+                            'email': email,
+                            'project_id': ''},
+                        'net_name': net_name,
+                        'subnet_dns': dns,
+                        'sec_group_dict': {
+                            'ports': '',
+                            'group_name': group_name,
+                            'group_desc': 'none',
+                            'project_id': ''},
+                        'sec_keys_name': sec_keys_name,
+                        'router_name': router_name
+                    }
+                    # add in the advanced quota options
+                    if (advanced):
+                        cores = request.POST['core']
+                        fixed_ips = request.POST['fixed_ips']
+                        floating_ips = request.POST['floating_ips']
+                        injected_file_content_bytes = request.POST['injected_file_content_bytes']
+                        injected_file_path_bytes = request.POST['injected_file_path_bytes']
+                        injected_files = request.POST['injected_files']
+                        instances = request.POST['instances']
+                        key_pairs = request.POST['key_pairs']
+                        metadata_items = request.POST['metadata_items']
+                        ram = request.POST['ram']
+                        security_group_rules = request.POST['security_group_rules']
+                        security_groups = request.POST['security_groups']
+                        storage = request.POST['storage']
+                        snapshots = request.POST['snapshots']
+                        volumes = request.POST['volumes']
+                        subnet_quota = request.POST['subnet_quota']
+                        router_quota = request.POST['router_quota']
+                        network_quota = request.POST['network_quota']
+                        floatingip_quota = request.POST['floatingip_quota']
+                        port_quota = request.POST['port_quota']
+                        quota = {
+                            'cores': cores,
+                            'fixed_ips': fixed_ips,
+                            'floating_ips': floating_ips,
+                            'injected_file_content_bytes': injected_file_content_bytes,
+                            'injected_file_path_bytes': injected_file_path_bytes,
+                            'injected_files': injected_files,
+                            'instances': instances,
+                            'key_pairs': key_pairs,
+                            'metadata_items': metadata_items,
+                            'ram': ram,
+                            'security_group_rules': security_group_rules,
+                            'security_groups': security_groups,
+                            'storage': storage,
+                            'snapshots': snapshots,
+                            'volumes': volumes}
+                        project_dict['advanced_ops']['quota'] = quota
+                    proj, admin = tpa_tenants.build_default_ldap_project(auth, project_dict)
+                    out = {"status": "success",
+                           "message": "%s created as default Project for LDAP users." % proj_name,
+                           "project": proj, "admin": admin}
+                    return HttpResponse(simplejson.dumps(out))
+                except Exception as e:
+                    out = {"status": "error", "message": "Error: %s"%e}
+                    return HttpResponse(simplejson.dumps(out))
+            else:
+                out = {"status": "error", "message": "Error: Server Fault: Please try again"}
+                return HttpResponse(simplejson.dumps(out))
+        else:
+            out = {"status": "error",
+                   "message": "Delete current default LDAP Project %s before creating a new one." %
+                              default_ldap_project['project_name']}
+            return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out = {"status": "error", "message": "Error: %s"%e}
+        return HttpResponse(simplejson.dumps(out))
+
+
+def ldap_auth(request):
+    out = {}
+    try:
+        username = request.POST['ldapUsername']
+        password = request.POST['ldapPassword']
+        ldap_auth = ldap_users.validate_user(username,password)
+        if ldap_auth == 'OK':
+            out['status'] = "success"
+            out['message'] = "Successfully logged in."
+            return HttpResponse(simplejson.dumps(out))
+        else:
+            out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+            return HttpResponse(simplejson.dumps(out))
+    except Exception as e:
+        out = {'status': "error", 'message': "Login failed.  Please verify your username and password."}
+        return HttpResponse(simplejson.dumps(out))
+
+
+def ldap_login(request, username):
+    la = tp_authorization(username)
+    auth = la.get_auth()
+    if auth != None:
+        logger.sys_info("has ldap auth, already a user")
+        if auth['user_level'] > 0:
+            project_id = auth['project_id']
+            project_admin = util.get_project_admin(project_id)
+            request.session['auth'] = auth
+            return render_to_response('coal/welcome.html',
+                                      RequestContext(request, {"project_admin": project_admin}))
+        else:
+            request.session['auth'] = auth
+            return render_to_response('coal/welcome.html', RequestContext(request))
+    else:
+        logger.sys_info("has ldap auth, not a user")
+        email = ldap_users.generate_email(username)
+        auth = extras.shadow_auth()
+        to = tenant_ops(auth)
+        default_projects = to.get_default_tenants()
+        has_default_ldap = False
+        if default_projects is not None:
+            for proj in default_projects:
+                if proj['is_default'] == "LDAP":
+                    default_ldap_project = proj
+                    has_default_ldap = True
+                    break
+        if has_default_ldap is False:
+            node_id = util.get_node_id()
+            sys_vars = util.get_system_variables(node_id)
+            subnet_array = []
+            subnet_array.append(sys_vars['UPLINK_DNS'])
+            project_info = {
+                'project_name': username + "_project",
+                'def_network_name': username + "_network",
+                'def_security_group_name': username + "_security_group",
+                'def_security_key_name': username + "_security_keys",
+            }
+            is_default_ldap = 0
+        else:
+            project_info = to.get_tenant(default_ldap_project['project_id'])
+            is_default_ldap = 1
+        return render_to_response('coal/third_party_authentication/ldap_add_user.html',
+                                  RequestContext(request, {'project': project_info,
+                                                           'ldap_user': username,
+                                                           'ldap_email': email,
+                                                           'is_default_ldap': is_default_ldap}))
+
+
+def cloud_settings(request):
+    settings = {}
+    mfa = []
+    settings['mfa'] = mfa
+    mfa.append({'name': "aPersona", 'is_active': extras.is_apersona_up()})
+    return render_to_response('coal/dashboard_widgets/cloud_settings.html', RequestContext(request, {'settings': settings}))
+
+
+def toggle_mfa(request, mfa):
+    out = {}
+    try:
+        if mfa == "aPersona":
+            aPersona = extras.toggle_apersona()
+            if aPersona == "ERROR":
+                raise Exception("Error handling aPersona service.")
+        out['status'] = 'success'
+        out['message'] = 'aPersona settings updated.'
+    except Exception as e:
+        out = {'status' : "error", 'message' : "Could not update aPersona settings: %s" %(e)}
+    return HttpResponse(simplejson.dumps(out))

@@ -27,23 +27,24 @@
                         <select name="imageContainer" id="image-container" class="col-sm-8">
                             <option value="bare">bare</option>
                             <option value="ovf">ovf</option>
-                            <option value="aki">aki</option>
-                            <option value="ari">ari</option>
-                            <option value="ami">ami</option>
+                            <option value="ova">ova</option>
+                            <!-- <option value="aki">aki</option> -->
+                            <!-- <option value="ari">ari</option> -->
+                            <!-- <option value="ami">ami</option> -->
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
                         <label for="image-disk" class="col-sm-4 control-label">Disk Format:</label>
                         <select name="imageDisk" id="image-disk" class="col-sm-8">
                             <option value="raw">raw</option>
-                            <option value="vhd">vhd</option>
+                            <!-- <option value="vhd">vhd</option> -->
                             <option value="vmdk">vmdk</option>
-                            <option value="vdi">vdi</option>
+                            <!-- <option value="vdi">vdi</option> -->
                             <option value="iso">iso</option>
                             <option value="qcow2">qcow2</option>
-                            <option value="aki">aki</option>
-                            <option value="ari">ari</option>
-                            <option value="ami">ami</option>
+                            <!-- <option value="aki">aki</option> -->
+                            <!-- <option value="ari">ari</option> -->
+                            <!-- option value="ami">ami</option> -->
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
@@ -171,7 +172,7 @@
                                 "na" + '/' +
                                 $("#image-visibility").val() + '/' +
                                 $("#image-os").val() + '/' +
-                                progressID + '/';
+                                progressID + '/' + CURRENT_PROJECT_ID + '/' ;
                         $.ajax(
                                 {
                                     type: 'POST',
@@ -238,7 +239,7 @@
                                 loc + '/' +
                                 $("#image-visibility").val() + '/' +
                                 $("#image-os").val() + '/' +
-                                progressID + '/';
+                                progressID + '/' + CURRENT_PROJECT_ID + '/';
                         window.loading.add("importing");
                         startProgressBarUpdate(progressID, $("#image-form"));
                         $.ajax(

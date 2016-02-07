@@ -1,0 +1,284 @@
+{% extends "coal/base-fluid.html" %}
+
+{% block asmscript %}
+<script type="text/javascript" src="{{ STATIC_URL }}javascripts/apersona.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}javascripts/sha1.js"></script>
+
+{% endblock %}
+
+{% if error %}
+    <script>showMessage('error', "{{ error }}");</script>
+{% endif %}
+
+{% block content %}
+    <div class="row-fluid">
+        <div class="col-md-6">
+            {% if token %}
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Help</h3>
+                    </div>
+                    <div class="panel-body center-text">
+                        <h4>Manage your account by going to your
+                            {% if user_level == 0 %}
+                                <a href={% url 'home' %}> Dashboard</a>.
+                            {% else %}
+                                <a href={% url 'home' %}> Dashboard</a>.
+                            {% endif %}
+                        </h4>
+
+                        <h4>
+                            {% if user_level == 0 %}
+                                Manage projects in your cloud with <a href="/cloud/manage">Cloud Management</a>.
+                            {% else %}
+                                {% if user_level == 1 %}
+                                    To manage your project, follow the
+                                    <a href="/projects/{{ project_id }}/view/">Your Project</a> link.
+                                {% else %}
+                                    To manage your project, follow the
+                                    <a href="/projects/{{ project_id }}/view/">Your Project</a> link.
+                                {% endif %}
+                            {% endif %}
+                        </h4>
+
+                        <h4>
+                            {% if user_level == 0 %}
+                                For technical support, please go to our
+                                <a href="http://www.transcirrus.com/support.html">support page</a>.
+                            {% else %}
+                                For help, contact:
+                                <a href="mailto:{{ project_admin.admin_email }}">{{ project_admin.admin_name }}</a>
+                            {% endif %}
+                        </h4>
+                    </div>
+                </div>
+            {% else %}
+                <div class="well well-sm col-md-12">
+                    <div class="col-md-12">
+                        <legend>Log In<img style="float: right; padding-top: 5px" src="{{ STATIC_URL }}images/aplogo.png" title="Login protected by aPersona Adaptive Security Manager"/></legend>
+                        <p>
+                            By using this website, the user ("<b>user</b>" or "<b>you</b>") agree to the <a
+                                href="/terms-of-use">Terms of Use</a>.
+                            If you do not agree to these terms of use, you should exit the website. By entering
+                            logon
+                            information and accessing the website contents, you are stating full acceptance of
+                            the
+                            terms.
+                        </p>
+                    </div>
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#standard-login"><strong>Standard</strong></a></li>
+                        {% if providers.has_shib %}
+                            <li><a data-toggle="tab" href="#shibboleth-login"><strong>Shibboleth</strong></a></li>
+                        {% endif %}
+                        {% if providers.has_ldap %}
+                            <li><a data-toggle="tab" href="#ldap-login"><strong>LDAP</strong></a></li>
+                        {% endif %}
+                    </ul>
+                    <div class="tab-content">
+                        {% if providers.has_shib == True %}
+                            <div id="shibboleth-login" class="tab-pane fade">
+                                <a href="/shib"><button class="center-block btn-primary btn-lg btn-success">Log In Via Shibboleth</button></a>
+                            </div>
+                        {% endif %}
+                        {% if providers.has_ldap == True %}
+                            <div id="ldap-login" class="tab-pane fade">
+                                <form class="form-horizontal" id="ldap-login-form" method="post">
+                                    {% csrf_token %}
+                                    <fieldset>
+                                        <div class="form-group col-md-12">
+                                            <label class="col-md-2" for="ldap-username">Username:</label>
+                                            <input class="col-md-10" type="text" name="ldapUsername" id="ldap-username"
+                                                   placeholder="Your LDAP Username"/>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <label class="col-md-2" for="ldap-password">Password:</label>
+                                            <input class="col-md-10" type="password" name="ldapPassword" id="ldap-password"
+                                                   placeholder="Your LDAP Password"/>
+                                        </div>
+
+                                        <div class="form-group col-md-12">
+                                            <button class="btn-primary" id="ldap-log-in" type="submit" form="ldap-login-form">Log In</button>
+                                        </div>
+                                    </fieldset>
+                                </form>
+                            </div>
+                        {% endif %}
+                        <div id="standard-login" class="tab-pane fade in active">
+                            <form class="form-horizontal" id="login-form" method="post">
+                              <p>We have emailed an Identity Code to <b><u>{{email_mask}}</u></b> to confirm your identity. Please enter it here:</p>
+                                {% csrf_token %}
+                                <fieldset>
+                                        <div class="form-group col-md-12">
+                                            <input class="col-md-10" type="hidden" name="username" id="username" value="{{username}}"
+                                                   placeholder="Your Username"/>
+                                        </div>
+                                            <div class="form-group col-md-12">
+                                                <label class="col-md-2" for="otp">One Time Passcode:</label>
+                                                <input class="col-md-10" type="otp" name="otp" id="otp"
+                                                       placeholder="Your OTP"/>
+                                            </div>
+
+                                        <div class="form-group col-md-12">
+                                            <a href="/resend_otp">Resend One Time Passcode</a>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <input type="hidden" name="authParam" id="authParam"/>
+                                            <button class="btn-primary" id="log-in" type="submit" form="login-form">Log In</button>
+                                        </div>
+                                    </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="well well-sm col-md-12">
+                <a href="https://www.twitter.com/transcirrus"
+                   class="btn btn-block btn-social btn-center btn-300 btn-twitter">
+                    <i class="fa fa-twitter"></i> Find us on Twitter
+                </a>
+                <a href="https://www.facebook.com/transcirrus"
+                   class="btn btn-block btn-social btn-center btn-300 btn-facebook">
+                    <i class="fa fa-facebook"></i> Find us on Facebook
+                </a>
+                <a href="https://www.linkedin.com/company/transcirrus"
+                   class="btn btn-block btn-social btn-center btn-300 btn-linkedin">
+                    <i class="fa fa-linkedin"></i> Find us on Linked In
+                </a>
+                <a href="http://www.transcirrus.com" class="btn btn-block btn-social btn-center btn-300 btn-primary">
+                    <i class="fa fa-desktop"></i> View our Website
+                </a>
+                <a href="mailto:info@transcirrus.com" class="btn btn-block btn-social btn-center btn-300 btn-warning">
+                    <i class="fa fa-envelope"></i> Send us an E-Mail
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel center-text">
+                <a class="twitter-timeline" href="https://twitter.com/TransCirrus_UI"
+                   data-widget-id="618212245999362048" data-chrome="nofooter noscrollbar transparent"
+                   data-tweet-limit="4">
+                    Tweets by @TransCirrus_UI</a>
+            </div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="col-md-12">
+            <div class="panel">
+                <p class="small"><i>
+                    This solution has a Copyright 2015 for TransCirrus. By using this website, the user
+                    ("<b>user</b>" or "<b>you</b>") agree to the <a href="/terms-of-use">Terms of Use</a>.
+                    If you do not agree to these terms of use, you should exit the website. By entering logon
+                    information and accessing the website contents, you are stating full acceptance of the
+                    terms. Please take the time to review the <a href="/privacy-policy">Privacy Policy</a>.
+                    The information contained in this website is for general information purposes only.The
+                    information is provided by TransCirrus, Inc. and while we endeavour to keep the
+                    information up to date and correct, we make no representations or warranties of any
+                    kind, express or implied, about the completeness, accuracy, reliability, suitability
+                    or availability with respect to the website or the information, products, services,
+                    or related graphics contained on the website for any purpose. Any reliance you place
+                    on such information is therefore strictly at your own risk.
+                </i></p>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        $(function () {
+            var form = $('#login-form');
+            form.submit(function () {
+                $("#log-in").prop("disabled", true);
+                $.ajax({
+                    type: form.attr('method'),
+                    url: "/otp/",
+                    data: form.serialize(),
+                    success: function (data) {
+                        data = $.parseJSON(data);
+                        $("#log-in").removeProp("disabled");
+                        if (data.status == "success") {
+                            showMessage('success', "Successfully logged in, redirecting ...");
+                            if (data.user_level == 0) {
+                                if (data.first_time == "TRUE") {
+                                    location.reload()
+                                } else {
+                                    location.replace("/cloud/manage/");
+                                }
+                            } else {
+                                if (data.user_level == 1) {
+                                    location.replace("/projects/" + data.project_id + "/view/");
+                                } else {
+                                    location.replace("/projects/" + data.project_id + "/view/");
+                                }
+                            }
+                        }else if(data.status == "otp"){
+                            showMessage('error', 'The OTP you entered was not correct. Please try again.');
+                            $("#log-in").removeProp("disabled");
+                        }else if(data.status == "login"){
+                           location.replace("/login/?error="+data.message);  
+                        }else if (data.status == "error") {
+                            showMessage('error', data.message);
+                            $("#log-in").removeProp("disabled");
+                        }
+                    },
+                    error: function () {
+                        showMessage('error', "Server Fault");
+                        $("#log-in").prop("disabled", false);
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            var ldap_form = $('#ldap-login-form');
+            ldap_form.submit(function () {
+                $("#ldap-log-in").prop("disabled", true);
+                $.ajax({
+                    type: ldap_form.attr('method'),
+                    url: "/ldap/auth/",
+                    data: ldap_form.serialize(),
+                    success: function (data) {
+                        data = $.parseJSON(data);
+                        if (data.status == "success") {
+                            showMessage('success', "Successfully logged in, redirecting ...");
+                            $("#ldap-log-in").prop("disabled", false);
+                            location.replace("/ldap/login/" + $("#ldap-username").val());
+                        }
+                        if (data.status == "error") {
+                            showMessage('error', data.message);
+                            $("#ldap-log-in").removeProp("disabled");
+                        }
+                    },
+                    error: function () {
+                        showMessage('error', "Server Fault");
+                        $("#ldap-log-in").prop("disabled", false);
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+    <script>
+        window.twttr = (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0],
+                    t = window.twttr || {};
+            if (d.getElementById(id)) return t;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "https://platform.twitter.com/widgets.js";
+            fjs.parentNode.insertBefore(js, fjs);
+
+            t._e = [];
+            t.ready = function (f) {
+                t._e.push(f);
+            };
+
+            return t;
+        }(document, "script", "twitter-wjs"));
+    </script>
+{% endblock %}

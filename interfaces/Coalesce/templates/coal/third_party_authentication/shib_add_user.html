@@ -113,7 +113,7 @@
             $(".confirm-shib-user").prop("disabled", "disabled");
             if (isDefaultShib) {
                 showMessage('info', "Adding user to {{ project.project_name }}.");
-                $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/{{ project.project_id }}/")
+                $.getJSON("/third_party_authentication/add_user/{{ shib_user }}/{{ shib_email }}/{{ project.project_id }}/")
                         .done(function (data) {
                             if (data.status == "success") {
                                 showMessage('success', "Successfully added {{ shib_user }} to {{ project.project_name }}, redirecting to Project View ...");
@@ -130,7 +130,7 @@
                         })
             } else {
                 showMessage('info', "Building Project {{ project.project_name }}.");
-                $.getJSON("/third_party_authentication/shib/add_user/{{ shib_user }}/{{ shib_email }}/")
+                $.getJSON("/third_party_authentication/add_user/{{ shib_user }}/{{ shib_email }}/")
                         .done(function (data) {
                             if (data.status == "success") {
                                 showMessage('success', "Successfully built {{ project.project_name }}, redirecting to Project View ...");
@@ -149,9 +149,9 @@
         });
     });
 
-    window.onbeforeunload = function () {
-        $.getJSON("/shadow_logout/");
-    }
+    // window.onbeforeunload = function () {
+    //     $.getJSON("/shadow_logout/");
+    // }
 </script>
 </body>
 </html>

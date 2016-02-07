@@ -1,0 +1,8 @@
+# DB properties for apersona database
+
+# vault1 db
+db.driverClassName=com.mysql.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/apersona
+db.username=root
+db.password=#ENCRYPTED_PASSWORD#
+db.jpa.database=MYSQL

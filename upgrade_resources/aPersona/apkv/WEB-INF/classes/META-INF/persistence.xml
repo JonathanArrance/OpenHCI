@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="apersona-rest-email">
+		<class>com.apersona.kv.model.AlertType</class>
+		<class>com.apersona.kv.model.Alert</class>
+		<class>com.apersona.kv.model.DeviceGeo</class>
+		<class>com.apersona.kv.model.EmailService</class>
+		<class>com.apersona.kv.model.FailedLogin</class>
+		<class>com.apersona.kv.model.KeyvaultLicense</class>
+		<class>com.apersona.kv.model.MonitorEmail</class>
+		<class>com.apersona.kv.model.Page</class>
+		<class>com.apersona.kv.model.Provider</class>
+		<class>com.apersona.kv.model.Question</class>
+		<class>com.apersona.kv.model.Role</class>
+		<class>com.apersona.kv.model.Server</class>
+		<class>com.apersona.kv.model.User</class>
+		<class>com.apersona.kv.model.UserLoginCounter</class>
+		<class>com.apersona.kv.model.UserQuestion</class>
+		<class>com.apersona.kv.model.UserRole</class>
+		<class>com.apersona.kv.model.ServerGroup</class>
+		<class>com.apersona.kv.model.ServerGroupMapping</class>
+		<class>com.apersona.kv.model.ReqRespLog</class>
+	</persistence-unit>
+</persistence>

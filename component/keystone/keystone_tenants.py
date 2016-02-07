@@ -78,13 +78,13 @@ class tenant_ops:
 
     def create_tenant(self,project_name, is_default=False):
         """
-        DESC: create a new project in Openstack. Only admins can perform this operation.
-              calls the rest api in OpenStack and updates applicable fields in Transcirrus
-              database
-        INPUT: self object
-               project_name -   what you want to call the new project - Required
-               is_default   -   op, if true, will be used as default project for adding third party authentication users
-                            -   THERE CAN ONLY BE ONE per cloud, TODO below as to where to check for this
+        DESC:   create a new project in Openstack. Only admins can perform this operation.
+                calls the rest api in OpenStack and updates applicable fields in Transcirrus
+                database
+        INPUT:  self object
+                project_name    - what you want to call the new project
+                is_default      - op - "SHIB" for default shibboleth project, "LDAP" for default ldap project
+                                - THERE CAN ONLY BE ONE of each per cloud, TODO below as to where to check for this
         OUTPUT project_id
         """
         logger.sys_info('\n**Creating new Keystone project. Component: Keystone Def: create_tenant**\n')
@@ -127,9 +127,12 @@ class tenant_ops:
             # added for custom third party configuration, now we can check description to determine cloud behavior
             description = project_name
 
-            # TODO: determine if "THERE CAN ONLY BE ONE" check should be done in frontend or backend, currently relying on frontend
-            if is_default == True:
-                description = "DEFAULT"
+            # TODO: determine if "THERE CAN ONLY BE ONE" of each check should be done in frontend or backend, currently relying on front-end
+            if is_default is not False:
+                if is_default != "SHIB" and is_default != "LDAP":
+                    logger.sys_error("incorrect value for default project passed")
+                    raise Exception("Incorrect value for default project passed, must be 'SHIB' or 'LDAP'.")
+                description = is_default
 
             try:
                 #Build the new project in OpenStack
@@ -160,8 +163,8 @@ class tenant_ops:
                 self.db.pg_transaction_begin()
                 #insert the new project into the db
                 proj_ins_dict = {"proj_id":project_id,"proj_name":project_name,"host_system_name":self.controller, "host_system_ip":self.api_ip}
-                if description == "DEFAULT":
-                    proj_ins_dict["is_default"] = "TRUE"
+                if description != project_name:
+                    proj_ins_dict["is_default"] = description
                 self.db.pg_insert("projects",proj_ins_dict)
             except Exception as e:
                 logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s" %(e))
@@ -284,6 +287,11 @@ class tenant_ops:
                     del_dict = {"table":'projects',"where":"proj_id='%s'" %(project_id)}
                     self.db.pg_delete(del_dict)
 
+                    # delete from trans_user_projects as well
+                    self.db.pg_transaction_begin()
+                    del_dict_tup = {"table":'trans_user_projects',"where":"proj_id='%s'" %(project_id)}
+                    self.db.pg_delete(del_dict_tup)
+
                     user_up_dict = {'table':"trans_user_info",'set':"""user_primary_project='NULL',user_project_id='NULL'""",'where':"user_project_id='%s'" %(project_id)}
                     self.db.pg_update(user_up_dict)
                     self.db.pg_transaction_commit()
@@ -387,6 +395,8 @@ class tenant_ops:
                        - def_network_name
                        - def_network_id
                        - is_default
+                - OR -
+                None if project does not exist
         ACCESS: Admins can get any project, users can only view the primary project
               they belong to.
         NOTE: If any of the project variables are empty a None will be returned for that variable.
@@ -414,16 +424,20 @@ class tenant_ops:
 
         logger.sys_info('%s proj stuff' %(proj))
         #build the dictionary up
-        r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
-                  "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9],
-                  "is_default":proj[0][10]}
-        if(self.is_admin == 1):
-            return r_dict
-        else:
-            if(self.project_id == proj[0][0]):
+        if len(proj) > 0:
+            r_dict = {"project_id":proj[0][0],"project_name":proj[0][1],"def_security_key_name":proj[0][2],"def_security_key_id":proj[0][3],"def_security_group_id":proj[0][4],
+                      "def_security_group_name":proj[0][5], "host_system_name":proj[0][6], "host_system_ip":proj[0][7], "def_network_name":proj[0][8], "def_network_id":proj[0][9],
+                      "is_default":proj[0][10]}
+            if(self.is_admin == 1):
                 return r_dict
             else:
-                raise Exception("Users can only get information on their own projects.")
+                if(self.project_id == proj[0][0]):
+                    return r_dict
+                else:
+                    return None
+                    # raise Exception("Users can only get information on their own projects.")
+        else:
+            return None
 
     def list_tenant_users(self,project_id):
         """
@@ -469,35 +483,118 @@ class tenant_ops:
         pass
 
 
-    def get_default_tenant(self):
+    def get_default_tenants(self):
         """
-        DESC:   returns the default project used in third party authentication, or None if none exists
+        DESC:   returns the default projects used in third party authentication, or None if none exists
         INPUT:  none
-        OUTPUT: tenant_dict:    {
-                                    project_id
-                                    project_name
-                                    def_security_key_name
-                                    def_security_key_id
-                                    def_security_group_id
-                                    def_security_group_name
-                                    host_system_name
-                                    host_system_ip
-                                    def_network_name
-                                    def_network_id
-                                    is_default
-                                }
+        OUTPUT: array of:
+                    tenant_dict:    {
+                                        project_id
+                                        project_name
+                                        def_security_key_name
+                                        def_security_key_id
+                                        def_security_group_id
+                                        def_security_group_name
+                                        host_system_name
+                                        host_system_ip
+                                        def_network_name
+                                        def_network_id
+                                        is_default
+                                    }
                     - OR -
                 None
         ACCESS: wide open, but with great power comes great responsibility
         NOTE:
         """
-        # list all tenants
-        tenants = self.list_all_tenants()
-        for tenant in tenants:
-            # get each tenant's info
-            info = self.get_tenant(tenant['project_id'])
-            if info['is_default'] == "TRUE":
-                # if default, return this tenant
-                return tenant
-        #else return None
+        # try to connect to the transcirrus db
+        try:
+            self.db = pgsql(config.TRANSCIRRUS_DB,config.TRAN_DB_PORT,config.TRAN_DB_NAME,config.TRAN_DB_USER,config.TRAN_DB_PASS)
+        except Exception as e:
+            logger.sys_error("Could not connect to db with error: %s" %(e))
+            raise Exception("Could not connect to db with error: %s" %(e))
+
+        # get the default project info
+        proj = []
+        try:
+            get = {"select":'*', "from":'projects', "where":"is_default is not null"}
+            proj = self.db.pg_select(get)
+        except:
+            logger.sql_error("Could not get the default project info")
+            raise Exception("Could not get the default project info.")
+
+        # make sure a default project exists
+        if len(proj) != 0:
+            r_array = []
+            for p in proj:
+                # build the dictionary up
+                r_dict = {"project_id":p[0],"project_name":p[1],"def_security_key_name":p[2],"def_security_key_id":p[3],"def_security_group_id":p[4],
+                          "def_security_group_name":p[5], "host_system_name":p[6], "host_system_ip":p[7], "def_network_name":p[8], "def_network_id":p[9],
+                          "is_default":p[10]}
+                r_array.append(r_dict)
+            # return default project info
+            return r_array
+
+        # else return None
         return None
+
+
+    def toggle_default_tenant(self, input_dict):
+        """
+        DESC:   enables or disables default project for shibboleth or ldap
+        INPUT:  innput_dict:    {
+                                    project_id  - project_id of project to enable/disable - req
+                                    type        - tpa flag, either "SHIB" or "LDAP" - req
+                                }
+        OUTPUT: "OK" - success
+        ACCESS: cloud admin only
+        NOTE:   need to revisit description handling in create_tenant(), if we want to keep, we'll have to update it here as well
+        """
+        # only cloud admin or shadow_admin can manage tpa
+        if(self.username != 'admin' and self.username != 'shadow_admin'):
+            logger.sys_error("Only cloud admin can toggle default third party authentication projects.")
+            raise Exception("Only cloud admin can toggle default third party authentication projects.")
+
+        # validate project_id
+        target = self.get_tenant(input_dict['project_id'])
+        if target is None:
+            logger.sys_error("Invalid project_id (%s) given for toggle_default_tenant." %input_dict['project_id'])
+            raise Exception("Invalid project_id (%s) given for toggle default third party authentication project." %input_dict['project_id'])
+
+        # if default, disable
+        if target['is_default'] is not None:
+            try:
+                disable = {'table':"projects",'set':"""is_default=NULL""",'where':"proj_id='%s'" %(input_dict['project_id'])}
+                self.db.pg_update(disable)
+                self.db.pg_transaction_commit()
+            except Exception as e:
+                logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                self.db.pg_transaction_rollback()
+                raise
+        # else, enable
+        else:
+            # shibboleth
+            if input_dict['type'] == "SHIB":
+                try:
+                    enable_shib = {'table':"projects",'set':"""is_default='SHIB'""",'where':"proj_id='%s'" %(input_dict['project_id'])}
+                    self.db.pg_update(enable_shib)
+                    self.db.pg_transaction_commit()
+                except Exception as e:
+                    logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                    self.db.pg_transaction_rollback()
+                    raise
+            # ldap
+            elif input_dict['type'] == "LDAP":
+                try:
+                    enable_ldap = {'table':"projects",'set':"""is_default='LDAP'""",'where':"proj_id='%s'" %(input_dict['project_id'])}
+                    self.db.pg_update(enable_ldap)
+                    self.db.pg_transaction_commit()
+                except Exception as e:
+                    logger.sql_error("Could not commit the transaction to the Transcirrus DB.%s, Contact an Admin" %(e))
+                    self.db.pg_transaction_rollback()
+                    raise
+            # invalid
+            else:
+                logger.sys_error("Invalid type (%s) given for toggle_default_tenant." %input_dict['type'])
+                raise Exception("Invalid type (%s) given for toggle default third party authentication project." %input_dict['type'])
+
+        return "OK"

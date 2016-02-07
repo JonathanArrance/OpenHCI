@@ -1,0 +1,555 @@
+---------------
+    Phase 1    
+---------------
+
+--- Version info ---
+
+@tc_rapi.route('/tc/v1.0/version', methods=['GET'])
+url(r'^version/$',
+    name='get_version'),
+
+
+--- Project ---
+
+@tc_rapi.route('/tc/v1.0/project', methods=['GET'])
+url(r'^projects/manage/$',
+    name='manage_projects'),
+
+@tc_rapi.route('/tc/v1.0/project', methods=['POST'])
+url(r'^projects/build/$',
+    name='build_project', (POST['projectName'], POST['adminName'], POST['adminPassword'], POST['adminEmail'], POST['securityGroup'], 
+	                       POST['securityKey'], POST['networkName'], POST['routerName'], POST['dnsAddress'])
+	body: str:projectName
+	      str:adminName
+		  str:adminPassword
+		  str:adminEmail
+		  str:securityGroup
+		  str:securityKey
+		  str:networkName
+		  str:routerName
+		  str:dnsAddress
+
+
+--- Instance ---
+
+@tc_rapi.route('/tc/v1.0/instance/<str:project_id>/<str:instance_name>/<str:sec_group_name>/<str:avail_zone>/<str:flavor_id>/<str:sec_key_name>/<str:image_id>/<str:network_name>/<str:boot_from_vol>/<str:volume_size>/<str:volume_name>/<str:volume_type>', methods=['POST'])
+url(r'^create_instance/(?P<instance_name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_id>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/(?P<boot_from_vol>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/(?P<volume_type>[^/]+)/$',
+    name='create_instance'),
+
+@tc_rapi.route('/tc/v1.0/instance/<str:project_id>', methods=['GET'])
+url(r'^(?P<project_id>[^/]+)/list_servers/$',
+    name='list_servers'),
+
+@tc_rapi.route('/tc/v1.0/instance/status/<str:project_id>', methods=['GET'])
+url(r'^(?P<project_id>[^/]+)/list_servers_status/$',
+    name='list_servers'),
+
+@tc_rapi.route('/tc/v1.0/instance//<str:project_id>/<str:server_id>', methods=['GET'])
+url(r'^(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/instance_view/$',
+    name='instance_view'),
+
+@tc_rapi.route('/tc/v1.0/instance/<str:project_id>/<str:server_id>/<str:delete_boot_vol>', methods=['DELETE'])
+url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<delete_boot_vol>[^/]+)/delete_instance/$',
+    name='delete_instance'),
+
+
+--- Flavor ---
+
+@tc_rapi.route('/tc/v1.0/flavor', methods=['GET'])
+url(r'^flavor/get/create/$',
+    name='get_flavor_create'),
+
+
+--- Floating IP ---
+
+@tc_rapi.route('/tc/v1.0/floating_ip/<str:floating_ip_id>', methods=['GET'])
+url(r'^floating_ip/(?P<floating_ip_id>[^/]+)/view/$',
+    name='floating_ip_view'),
+
+@tc_rapi.route('/tc/v1.0/floating_ip/allocate/<str:project_id>/<str:ext_net_id>', methods=['POST'])
+url(r'^allocate_floating_ip/(?P<project_id>[^/]+)/(?P<ext_net_id>[^/]+)/$',
+    name='allocate_floating_ip'),
+
+@tc_rapi.route('/tc/v1.0/floating_ip/deallocate/<str:project_id>/<str:floating_ip>', methods=['POST'])
+url(r'^deallocate_floating_ip/(?P<project_id>[^/]+)/(?P<floating_ip>[^/]+)/$',
+    name='deallocate_floating_ip'),
+
+@tc_rapi.route('/tc/v1.0/floating_ip/assign/<str:project_id>/<str:instance_id>/<str:floating_ip>', methods=['POST'])
+url(r'^assign_floating_ip/(?P<floating_ip>[^/]+)/(?P<instance_id>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='assign_floating_ip'),
+
+@tc_rapi.route('/tc/v1.0/floating_ip/unassign/<str:floating_ip_id>', methods=['POST'])
+url(r'^unassign_floating_ip/(?P<floating_ip_id>[^/]+)/$',
+    name='unassign_floating_ip'),
+
+
+--- Volume ---
+
+@tc_rapi.route('/tc/v1.0/volume/<str:project_id>/<str:volume_id>', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/volumes/(?P<volume_id>[^/]+)/view/$',
+    name='volume_view'),
+
+@tc_rapi.route('/tc/v1.0/volume/<str:project_id>/<str:volume_name>/<str:volume_size>/<str:volume_type>', methods=['POST'])
+url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_type>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='create_volume'),
+
+@tc_rapi.route('/tc/v1.0/volume/attach/<str:project_id>/<str:volume_id>/<str:instance_id>', methods=['POST'])
+url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='attach_volume'),
+
+@tc_rapi.route('/tc/v1.0/volume/detach/<str:project_id>/<str:volume_id>', methods=['POST'])
+url(r'^detach_volume/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='detach_volume'),
+
+@tc_rapi.route('/tc/v1.0/volume/<str:project_id>/<str:volume_id>', methods=['DELETE'])
+url(r'^delete_volume/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='delete_volume'),
+
+
+--- Network ---
+
+@tc_rapi.route('/tc/v1.0/network/<str:net_id>', methods=['GET'])
+url(r'^network/(?P<net_id>[^/]+)/view/$',
+    name='network_view'),
+
+
+--- Router ---
+
+@tc_rapi.route('/tc/v1.0/router/<str:router_id>', methods=['GET'])
+url(r'^router/(?P<router_id>[^/]+)/view/$',
+    name='router_view'),
+
+
+--- User ---
+
+@tc_rapi.route('/tc/v1.0/user/<str:project_id>/<str:username>/<str:password>/<str:user_role>/<str:email>', methods=['POST'])
+url(r'^create_user/(?P<username>[^/]+)/(?P<password>[^/]+)/(?P<user_role>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='create_user'),
+
+@tc_rapi.route('/tc/v1.0/user/<str:username>/<str:userid>', methods=['DELETE'])
+url(r'^delete_user/(?P<username>[^/]+)/(?P<userid>[^/]+)/$',
+    name='delete_user'),
+
+@tc_rapi.route('/tc/v1.0/user/<str:project_id>/<str:user_name>', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/user/(?P<user_name>[-\w]+)/view/$',
+    name='user_view'),
+
+@tc_rapi.route('/tc/v1.0/user/<str:project_id>/<str:username>/<str:user_role>', methods=['GET'])
+url(r'^add_existing_user/(?P<username>[^/]+)/(?P<user_role>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='add_existing_user'),
+
+@tc_rapi.route('/tc/v1.0/user/<str:project_id>/<str:user_id>', methods=['POST'])
+url(r'^remove_user_from_project/(?P<user_id>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='remove_user_from_project'),
+
+
+--- Security Group ---
+
+@tc_rapi.route('/tc/v1.0/security_group/<str:project_id>/<str:groupname>/<str:groupdesc>/<str:ports>/<str:transport>', methods=['POST'])
+url(r'^create_security_group/(?P<groupname>[^/]+)/(?P<groupdesc>[^/]+)/(?P<ports>[^/]+)/(?P<transport>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='create_security_group'),
+
+@tc_rapi.route('/tc/v1.0/security_group/<str:project_id>/<str:sec_group_id>', methods=['DELETE'])
+url(r'^delete_sec_group/(?P<sec_group_id>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='delete_sec_group'),
+
+@tc_rapi.route('/tc/v1.0/security_group/<str:project_id>/<str:groupid>/<str:ports>/<str:transport>/<str:enable_ping>', methods=['POST'])
+url(r'^update_security_group/(?P<groupid>[^/]+)/(?P<project_id>[^/]+)/(?P<ports>[^/]+)/(?P<enable_ping>[^/]+)/(?P<transport>[^/]+)/$',
+    name='update_security_group'),
+
+@tc_rapi.route('/tc/v1.0/security_group/<str:project_id>/<str:groupid>', methods=['GET'])
+url(r'^security_group/(?P<groupid>[^/]+)/(?P<project_id>[^/]+)/view/$',
+    name='security_group_view'),
+
+
+--- Security Key ---
+
+@tc_rapi.route('/tc/v1.0/security_key/<str:project_id>/<str:sec_key_id>', methods=['GET'])
+url(r'^key_pair/(?P<sec_key_id>[^/]+)/(?P<project_id>[^/]+)/view/$',
+    name='key_view'),
+
+@tc_rapi.route('/tc/v1.0/security_key/<str:project_id>/<str:sec_key_name>', methods=['DELETE'])
+url(r'^key_pair/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/delete/$',
+    name='key_delete'),
+
+@tc_rapi.route('/tc/v1.0/security_key', methods=['POST'])
+url(r'^key_pair/get/create/$',
+    name='get_security_key_create'),
+
+
+
+---------------
+    Phase 2    
+---------------
+
+--- Porjects ---
+
+@tc_rapi.route('/tc/v1.0/project/<string:project_id>/<string:project_name>', methods=['DELETE'])
+url(r'^projects/(?P<project_id>\w+)/(?P<project_name>[-\w]+)/delete/$',
+    name='destroy_project'),
+
+
+--- Flavor ---
+
+@tc_rapi.route('/tc/v1.0/flavor/<str:name>/<str:ram>/<str:boot_disk>/<str:cpus>', methods=['POST'])
+url(r'^create_vm_spec/(?P<name>[^/]+)/(?P<ram>[^/]+)/(?P<boot_disk>[^/]+)/(?P<cpus>[^/]+)/$',
+    name='create_vm_spec'),
+
+@tc_rapi.route('/tc/v1.0/flavor/<str:flavor_id>', methods=['DELETE'])
+url(r'^delete_vm_spec/(?P<flavor_id>[^/]+)/$',
+    name='delete_vm_spec'),
+
+
+--- Nodes ---
+
+@tc_rapi.route('/tc/v1.0/nodes/stats', methods=['GET'])
+url(r'^nodes/get_stats/$',
+    name='get_node_stats'),
+
+--- Project ---
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/view/$',
+    name='project_view'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/get_stats/$',
+    name='get_project_stats'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/get_project_panel/$',
+    name='get_project_panel'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/get_instance_panel/$',
+    name='get_instance_panel'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/get_storage_panel/$',
+    name='get_storage_panel'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/get_networking_panel/$',
+    name='get_networking_panel'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/get_users_security_panel/$',
+    name='get_users_security_panel'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/get/images/(?P<project_id>\w+)/$',
+    name='get_project_images'),
+
+@tc_rapi.route('/tc/v1.0/project/', methods=['GET'])
+url(r'^projects/get/keys/(?P<project_id>\w+)/$',
+    name='get_project_keys'),
+
+
+--- Quotas ---
+
+@tc_rapi.route('/tc/v1.0/project/quota/<str:project_id>', methods=['GET'])
+url(r'^projects/(?P<project_id>\w+)/get_project_quota/$',
+    name='get_project_quota'),
+
+@tc_rapi.route('/tc/v1.0/project/quota/<str:project_id>/<str:quota_settings>', methods=['POST'])
+url(r'^projects/(?P<project_id>\w+)/(?P<quota_settings>[^/]+)/set_project_quota/$',
+    name='set_project_quota'),
+
+
+--- Instance ---
+
+@tc_rapi.route('/tc/v1.0/instance/pause/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/pause_server/$',
+    name='pause_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/unpause/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/unpause_server/$',
+    name='unpause_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/suspend/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/suspend_server/$',
+    name='suspend_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/resume/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/resume_server/$',
+    name='resume_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/resize/<str:project_id>/<str:instance_id>/<str:flavor_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<flavor_id>[^/]+)/resize_server/$',
+    name='resize_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/reboot/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/reboot/$',
+    name='reboot'),
+
+@tc_rapi.route('/tc/v1.0/instance/power_cycle/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_cycle/$',
+    name='power_cycle'),
+
+@tc_rapi.route('/tc/v1.0/instance/power_off/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_off_server/$',
+    name='power_off_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/power_on/<str:project_id>/<str:instance_id>', methods=['POST'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/power_on_server/$',
+    name='power_on_server'),
+
+
+--- Volume ---
+
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^create_vol_from_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/$',
+    name='create_vol_from_snapshot'),
+
+# REMOVED DESCRIPTION FOR NOW AS IT IS UNUSED
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^create_vol_clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/$',
+    name='create_vol_clone'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^revert_volume_snapshot/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/(?P<volume_name>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+    name='revert_volume_snapshot'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/create/(?P<project_id>[^/]+)/$',
+    name='get_volume_create'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/attach/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='get_volume_attach'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/attach_from_view/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='get_volume_attach_from_view'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/revert/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='get_volume_revert'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/revert_from_view/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='get_volume_revert_from_view'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/clone/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='get_volume_clone'),
+
+@tc_rapi.route('/tc/v1.0/volume', methods=['GET'])
+url(r'^volume/get/clone_from_view/(?P<project_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+    name='get_volume_clone_from_view'),
+
+
+--- Snapshot ---
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^take_snapshot/(?P<snapshot_name>[^/]+)/(?P<snapshot_desc>[^/]+)/(?P<volume_id>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='take_snapshot'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^create_snapshot/(?P<project_id>[^/]+)/(?P<name>[^/]+)/(?P<volume_id>[^/]+)/(?P<desc>[^/]+)/$',
+    name='create_snapshot'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^delete_snapshot/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+    name='delete_snapshot'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^snapshot/(?P<snapshot_id>[^/]+)/view/$',
+    name='snapshot_view'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^snapshot/(?P<snapshot_id>[^/]+)/view/$',
+    name='snapshot_view'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^snapshot/get/create/(?P<volume_id>[^/]+)/$',
+    name='get_snapshot_create'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^snapshot/get/create_from_view/$',
+    name='get_snapshot_create_from_view'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^snapshot/get/create_volume/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+    name='get_snapshot_create_volume'),
+
+@tc_rapi.route('/tc/v1.0/snapshot', methods=['GET'])
+url(r'^snapshot/get/create_volume_from_view/(?P<project_id>[^/]+)/(?P<snapshot_id>[^/]+)/$',
+    name='get_snapshot_create_volume_from_view'),
+
+
+--- Network ---
+
+@tc_rapi.route('/tc/v1.0/network', methods=['GET'])
+url(r'^delete_private_network/(?P<project_id>[^/]+)/(?P<net_id>[^/]+)/$',
+    name='remove_private_network'),
+
+@tc_rapi.route('/tc/v1.0/network', methods=['GET'])
+url(r'^add_private_network/(?P<net_name>[^/]+)/(?P<admin_state>[^/]+)/(?P<shared>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='add_private_network'),
+
+@tc_rapi.route('/tc/v1.0/network', methods=['GET'])
+url(r'^network/get/create/$',
+    name='get_private_network_create'),
+
+
+--- Router ---
+
+@tc_rapi.route('/tc/v1.0/router', methods=['GET'])
+url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='create_router'),
+
+@tc_rapi.route('/tc/v1.0/router', methods=['GET'])
+url(r'^delete_router/(?P<project_id>[^/]+)/(?P<router_id>[^/]+)/$',
+    name='delete_router'),
+
+@tc_rapi.route('/tc/v1.0/router', methods=['GET'])
+url(r'^router/get/create/(?P<project_id>[^/]+)/$',
+    name='get_router_create'),
+
+
+--- User ---
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^user/(?P<project_name>\w+)/(?P<project_id>\w+)/(?P<user_name>[-\w]+)/account_view/$',
+    name='user_account_view'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^toggle_user/(?P<username>[^/]+)/(?P<toggle>[^/]+)/$',
+    name='toggle_user'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^update_user_password/(?P<user_id>[^/]+)/(?P<current_password>[^/]+)/(?P<new_password>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='update_user_password'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^get_update_account_password/$',
+    name='get_update_account_password'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^user/get/update_password/(?P<is_self>[^/]+)/$',
+    name='get_user_update_password'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^user/get/create/$',
+    name='get_user_create'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^user/get/add/$',
+    'coalesce.coal_beta.views.get_user_add',
+    name='get_user_add'),
+
+@tc_rapi.route('/tc/v1.0/user', methods=['GET'])
+url(r'^user/set/password/(?P<user_id>[^/]+)/(?P<new_password>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='set_user_password'),
+
+
+--- Security Group ---
+
+@tc_rapi.route('/tc/v1.0/security_group', methods=['GET'])
+url(r'^security_group/get/create/$',
+    name='get_security_group_create'),
+
+@tc_rapi.route('/tc/v1.0/security_group', methods=['GET'])
+url(r'^create_sec_keys/(?P<key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='create_keypair'),
+
+
+--- Security Key ---
+
+@tc_rapi.route('/tc/v1.0/security_key', methods=['GET'])
+url(r'^download_public_key/(?P<sec_key_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<project_id>[^/]+)/$',
+    name='download_public_key'),
+
+
+--- 3rd Party Storage ---
+
+@tc_rapi.route('/tc/v1.0/third_party_storage', methods=['GET'])
+url(r'^supported_third_party_storage/$',
+    name='supported_third_party_storage'),
+
+@tc_rapi.route('/tc/v1.0/third_party_storage', methods=['GET'])
+url(r'^third_party_storage/get/$',
+    name='get_third_party_storage'),
+
+
+--- Metering ---
+
+@tc_rapi.route('/tc/v1.0/meters', methods=['GET'])
+url(r'^metering/get/$',
+    name='get_metering'),
+
+
+--- Ceilometer Post Third Part Meter ---
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^ceilometer/post/meter/(?P<counter_type>[^/]+)/(?P<counter_name>[^/]+)/(?P<counter_volume>[^/]+)/(?P<counter_unit>[^/]+)/(?P<resource_id>[^/]+)/$',
+    name='get_statistics'),
+
+
+--- Ceilometer Statistics ---
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/$',
+    name='get_statistics'),
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_tenant_id>[^/]+)/$',
+    name='get_statistics'),
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^ceilometer/get/statistics/adminresource/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
+    name='get_statistics'),
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_tenant_id>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
+    name='get_statistics'),
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/instance_view/ceilometer/get/statistics/(?P<ceil_start_time>[^/]+)/(?P<ceil_end_time>[^/]+)/(?P<ceil_meter_list>[^/]+)/(?P<ceil_tenant_id>[^/]+)/(?P<ceil_resource_id>[^/]+)/$',
+    name='get_statistics_for_instance'),
+
+@tc_rapi.route('/tc/v1.0/statistics', methods=['GET'])
+url(r'^ceilometer/get/meters/(?P<meter_group>[^/]+)/$',
+    name='get_meters'),
+
+
+
+---------------
+    Phase 3    
+---------------
+
+--- Instance ---
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/live_migrate_server/$',
+    name='live_migrate_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/migrate_server/$',
+    name='migrate_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<host_name>[^/]+)/evacuate_server/$',
+    name='evacuate_server'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['DELETE'])
+url(r'^server/(?P<snapshot_id>[^/]+)/delete_instance_snapshot/$',
+    name='delete_instance_snapshot'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'^instance/get/create/(?P<project_id>\w+)/$',
+    name='get_instance_create'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'^instance/get/resize/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/$',
+    name='get_instance_resize'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'^instance/get/create_snapshot/$',
+    name='get_instance_create_snapshot'),
+
+@tc_rapi.route('/tc/v1.0/instance/', methods=['GET'])
+url(r'^instance/get/revert/(?P<server_id>[^/]+)/$',
+    name='get_instance_revert'),

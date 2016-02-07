@@ -6,11 +6,11 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h5 class="modal-title" id="modal-label">{{ nw.net_name }} View</h5>
+    <h5 class="modal-title" id="modal-label">{{ router.router_name }} View</h5>
 </div>
 <div class="modal-body well bg">
     <div class="row">
-        <div class="col-sm-8 col-sm-offset-2">
+        <div class="col-sm-5 col-sm-offset-1">
             <table class="table table-striped table-hover table-responsive table-bordered">
                 <thead class="bg-primary">
                 <tr>
@@ -54,5 +54,112 @@
                 </tbody>
             </table>
         </div>
+        <div class="col-sm-5">
+            <div class="row">
+                <strong>Router VPN Info: </strong>
+
+                <div class="col-sm-12">
+                    <ul class="list-unstyled list-inline">
+                        <li>
+                            <span>External IP: {{ router.external_ip }}</span>
+                        </li>
+                        <li>
+                            <span>Subnet cidr: {{ subnet.subnet_cidr }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+
+                <strong>VPNs: </strong>
+                <table class="table table-striped table-hover table-responsive table-bordered">
+                    <thead class="bg-primary">
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if vpns %}
+                        {% for vpn in vpns %}
+                            <tr id="{{ vpn.id }}" class="vpn">
+                                <td class="vpn-name">
+                                    {{ vpn.name }}
+                                </td>
+                                <td class="vpn-status center-text {% if vpn.status == "ACTIVE" %}bg-success{% elif vpn.status == "DOWN" %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ vpn.status }}
+                                </td>
+                                {% if user_level == 0 %}
+                                    <td class="vpn-actions">
+                                        <button type='button'
+                                                class="delete-vpn btn btn-xs btn-danger pull-right"
+                                                data-call="/delete_vpn_tunnel/{{ project.project_id }}/{{ vpn.id }}/{{ vpn.name }}/"
+                                                data-notice="Deleting VPN {{ vpn.name }}"
+                                                data-toggle="popover" title="Delete VPN" data-html="true"
+                                                data-content="Loading <i class='fa fa-cog fa-spin'></i>"
+                                                data-placement="auto bottom" data-viewport=".info-content">
+                                            <i class="fa fa-minus"></i>
+                                        </button>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="vpn-placeholder text-warning">
+                            <td><p><i>This project has no VPNs</i></p></td>
+                            <td></td>
+                            {% if user_level == 0 %}
+                                <td></td>
+                            {% endif %}
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    var ROUTER_ID = "{{router.router_id}}",
+            ROUTER = "{{router.router_name}}";
+    $(function(){
+        var view = $(".info-content");
+
+        window.loading.current = view;
+        if (window.routerViewTimer) {
+            window.clearInterval(window.routerViewTimer);
+        }
+        window.routerViewTimer = setInterval(function () {
+            stealthRefreshContainer(view, view, "/router/" + CURRENT_PROJECT_ID + "/" + ROUTER_ID + "/view/");
+        }, 60000);
+
+        $('[data-toggle="popover"]').popover();
+
+        $(document).on('click', '.delete-vpn', function (event) {
+            event.preventDefault();
+            $('.btn').not(this).popover('hide');
+            var call = $(this).data("call"),
+                    notice = $(this).data("notice");
+            $(".popover-content").html($('<button type="button" id="delete-vpn" class="btn btn-xs btn-primary">Confirm</button>'));
+            $("#delete-vpn").click(function (event) {
+                event.preventDefault();
+                showMessage('info', notice);
+                $.getJSON(call)
+                        .done(function (data) {
+                            if (data.status == "error") {
+                                showMessage('error', data.message);
+                            }
+                            if (data.status == "success") {
+                                showMessage('success', data.message);
+                                refreshContainer(view, view, "/router/" + CURRENT_PROJECT_ID + "/" + ROUTER_ID + "/view/");
+                            }
+                        }).fail(function () {
+                            showMessage('error', "Server Fault");
+                        });
+                $(".popover").popover('hide');
+            });
+        });
+    });
+</script>

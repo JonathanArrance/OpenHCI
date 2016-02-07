@@ -19,19 +19,14 @@
                     <div class="form-group col-sm-12">
                         <label for="group-transport" class="col-sm-4 control-label">Transport:</label>
                         <select name="groupTransport" id="group-transport" class="col-sm-8">
-                            {% if transport_tag == "tcp" %}
                                 <option value="tcp" selected>tcp</option>
                                 <option value="udp">udp</option>
-                            {% else %}
-                                <option value="udp" selected>udp</option>
-                                <option value="tcp">tcp</option>
-                            {% endif %}
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
                         <label for="group-ports" class="col-sm-4 control-label">Ports:</label>
                         <input type="text" name="groupPorts" id="group-ports" placeholder="Security Group Ports"
-                               class="col-sm-8" value="{{ ports }}">
+                               class="col-sm-8" value="{{ ports.tcp }}">
                     </div>
                 </fieldset>
             </form>
@@ -47,6 +42,15 @@
 </div>
 
 <script>
+    // switch port info
+    $("#group-transport").on("change keyup", function () {
+        if ($("#group-transport").val() == "tcp") {
+            $("#group-ports").val('{{ ports.tcp }}')
+        }
+        if ($("#group-transport").val() == "udp") {
+            $("#group-ports").val('{{ ports.udp }}')
+        }
+    }); 
     $('[data-toggle="tooltip"]').tooltip();
     $(function () {
         var page = $("#page-content"),

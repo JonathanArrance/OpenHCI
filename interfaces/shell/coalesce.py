@@ -4,19 +4,23 @@
 """Setup for Transcirrus CiaC"""
 
 from __future__ import nested_scopes, division
-import sys, os, time, getopt, subprocess, dialog
+import sys, os, time, getopt, subprocess, dialog, re
 from multiprocessing import Process
 from transcirrus.common.auth import authorization
 from transcirrus.common import node_util
 from transcirrus.common import util
 #import transcirrus.common.logger as logger
-import transcirrus.common.config as config
+from transcirrus.common import config
 from transcirrus.operations.initial_setup import run_setup
 from transcirrus.operations.rollback_setup import rollback
 from transcirrus.operations.change_adminuser_password import change_admin_password
-import transcirrus.interfaces.shell.dashboard as dashboard
+from transcirrus.component.keystone.keystone_users import user_ops
+from transcirrus.interfaces.shell import dashboard
 from transcirrus.operations.restart_all_services import restart_services
 from IPy import IP
+
+# compile email regex for easy use
+EMAIL_REGEX = re.compile(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$")
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.3"
@@ -119,19 +123,20 @@ def info_ha_primary(d, info_dict):
         elements = [
             ("Node Name:", 1, 1, info_dict['node_name'], 1, 24, 40, 40, 0x0),
             ("Uplink HA IP:", 2, 1, info_dict['up_ha_ip'], 2, 24, 40, 40, 0x0),
-            ("Uplink IP:", 2, 1, info_dict['uplink_ip'], 2, 24, 40, 40, 0x0),
-            ("Uplink Subnet Mask:", 3, 1, info_dict['uplink_subnet'], 3, 24, 40, 40, 0x0),
-            ("Uplink Gateway:", 4, 1, info_dict['uplink_gateway'], 4, 24, 40, 40, 0x0),
-            ("Uplink DNS:", 5, 1, info_dict['uplink_dns'], 5, 24, 40, 40, 0x0),
-            ("Uplink Domain Name:", 6, 1, info_dict['uplink_domain'], 6, 24, 40, 40, 0x0),
-            ("Management IP:", 7, 1, info_dict['mgmt_ip'], 7, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 8, 1, info_dict['mgmt_subnet'], 8, 24, 40, 40, 0x0),
-            ("Management DNS:", 9, 1, info_dict['mgmt_dns'], 9, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 10, 1, info_dict['mgmt_domain'], 10, 24, 40, 40, 0x0),
-            ("Public IP Start-Point:", 11, 1, info_dict['vm_ip_min'], 11, 24, 40, 40, 0x0),
-            ("Public IP End-Point:", 12, 1, info_dict['vm_ip_max'], 12, 24, 40, 40, 0x0),
-            ("New Admin password:", 13, 1, info_dict['pwd'], 13, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 14, 1, info_dict['cnfrm'], 14, 24, 40, 40, HIDDEN)
+            ("Uplink IP:", 3, 1, info_dict['uplink_ip'], 3, 24, 40, 40, 0x0),
+            ("Uplink Subnet Mask:", 4, 1, info_dict['uplink_subnet'], 4, 24, 40, 40, 0x0),
+            ("Uplink Gateway:", 5, 1, info_dict['uplink_gateway'], 5, 24, 40, 40, 0x0),
+            ("Uplink DNS:", 6, 1, info_dict['uplink_dns'], 6, 24, 40, 40, 0x0),
+            ("Uplink Domain Name:", 7, 1, info_dict['uplink_domain'], 7, 24, 40, 40, 0x0),
+            ("Management IP:", 8, 1, info_dict['mgmt_ip'], 8, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 9, 1, info_dict['mgmt_subnet'], 9, 24, 40, 40, 0x0),
+            ("Management DNS:", 10, 1, info_dict['mgmt_dns'], 10, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 11, 1, info_dict['mgmt_domain'], 11, 24, 40, 40, 0x0),
+            ("Public IP Start-Point:", 12, 1, info_dict['vm_ip_min'], 12, 24, 40, 40, 0x0),
+            ("Public IP End-Point:", 13, 1, info_dict['vm_ip_max'], 13, 24, 40, 40, 0x0),
+            ("Admin email:", 14, 1, info_dict['email'], 14, 24, 40, 40, 0x0),
+            ("New Admin password:", 15, 1, info_dict['pwd'], 15, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 16, 1, info_dict['cnfrm'], 16, 24, 40, 40, HIDDEN)
             ]
         (code, fields) = d.mixedform(
             "Please fill in Cloud Information:", elements, width=77, insecure=True)
@@ -140,21 +145,22 @@ def info_ha_primary(d, info_dict):
             break
 
     r_dict = dict()
-    r_dict['node_name'] =        fields[0]
-    r_dict['up_ha_ip'] =         fields[1]
-    r_dict['uplink_ip'] =        fields[2]
-    r_dict['uplink_subnet'] =    fields[3]
-    r_dict['uplink_gateway'] =   fields[4]
-    r_dict['uplink_dns'] =       fields[5]
-    r_dict['uplink_domain'] =    fields[6]
-    r_dict['mgmt_ip'] =          fields[7]
-    r_dict['mgmt_subnet'] =      fields[8]
-    r_dict['mgmt_dns'] =         fields[9]
-    r_dict['mgmt_domain'] =      fields[10]
-    r_dict['vm_ip_min'] =        fields[11]
-    r_dict['vm_ip_max'] =        fields[12]
-    r_dict['pwd'] =              fields[13]
-    r_dict['cnfrm'] =            fields[14]
+    r_dict['node_name'] =       fields[0]
+    r_dict['up_ha_ip'] =        fields[1]
+    r_dict['uplink_ip'] =       fields[2]
+    r_dict['uplink_subnet'] =   fields[3]
+    r_dict['uplink_gateway'] =  fields[4]
+    r_dict['uplink_dns'] =      fields[5]
+    r_dict['uplink_domain'] =   fields[6]
+    r_dict['mgmt_ip'] =         fields[7]
+    r_dict['mgmt_subnet'] =     fields[8]
+    r_dict['mgmt_dns'] =        fields[9]
+    r_dict['mgmt_domain'] =     fields[10]
+    r_dict['vm_ip_min'] =       fields[11]
+    r_dict['vm_ip_max'] =       fields[12]
+    r_dict['email'] =           fields[13]
+    r_dict['pwd'] =             fields[14]
+    r_dict['cnfrm'] =           fields[15]
     return r_dict
 
 
@@ -172,8 +178,9 @@ def info_ha_secondary(d, info_dict):
             ("Management Subnet Mask:", 8, 1, info_dict['mgmt_subnet'], 8, 24, 40, 40, 0x0),
             ("Management DNS:", 9, 1, info_dict['mgmt_dns'], 9, 24, 40, 40, 0x0),
             ("Management Domain Name:", 10, 1, info_dict['mgmt_domain'], 10, 24, 40, 40, 0x0),
-            ("New Admin password:", 13, 1, info_dict['pwd'], 13, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 14, 1, info_dict['cnfrm'], 14, 24, 40, 40, HIDDEN)
+            ("Admin email:", 11, 1, info_dict['email'], 11, 24, 40, 40, 0x0),
+            ("New Admin password:", 12, 1, info_dict['pwd'], 12, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 13, 1, info_dict['cnfrm'], 13, 24, 40, 40, HIDDEN)
             ]
 
         (code, fields) = d.mixedform(
@@ -183,18 +190,19 @@ def info_ha_secondary(d, info_dict):
             break
 
     r_dict = dict()
-    r_dict['node_name'] =        fields[0]
-    r_dict['uplink_ip'] =        fields[1]
-    r_dict['uplink_subnet'] =    fields[2]
-    r_dict['uplink_gateway'] =   fields[3]
-    r_dict['uplink_dns'] =       fields[4]
-    r_dict['uplink_domain'] =    fields[5]
-    r_dict['mgmt_ip'] =          fields[6]
-    r_dict['mgmt_subnet'] =      fields[7]
-    r_dict['mgmt_dns'] =         fields[8]
-    r_dict['mgmt_domain'] =      fields[9]
-    r_dict['pwd'] =              fields[10]
-    r_dict['cnfrm'] =            fields[11]
+    r_dict['node_name'] =       fields[0]
+    r_dict['uplink_ip'] =       fields[1]
+    r_dict['uplink_subnet'] =   fields[2]
+    r_dict['uplink_gateway'] =  fields[3]
+    r_dict['uplink_dns'] =      fields[4]
+    r_dict['uplink_domain'] =   fields[5]
+    r_dict['mgmt_ip'] =         fields[6]
+    r_dict['mgmt_subnet'] =     fields[7]
+    r_dict['mgmt_dns'] =        fields[8]
+    r_dict['mgmt_domain'] =     fields[9]
+    r_dict['email'] =           fields[10]
+    r_dict['pwd'] =             fields[11]
+    r_dict['cnfrm'] =           fields[12]
     return r_dict
 
 
@@ -214,8 +222,9 @@ def info_cc(d, info_dict):
             ("Management Domain Name:", 10, 1, info_dict['mgmt_domain'], 10, 24, 40, 40, 0x0),
             ("Public IP Start-Point:", 11, 1, info_dict['vm_ip_min'], 11, 24, 40, 40, 0x0),
             ("Public IP End-Point:", 12, 1, info_dict['vm_ip_max'], 12, 24, 40, 40, 0x0),
-            ("New Admin password:", 13, 1, info_dict['pwd'], 13, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 14, 1, info_dict['cnfrm'], 14, 24, 40, 40, HIDDEN)
+            ("Admin email:", 13, 1, info_dict['email'], 13, 24, 40, 40, 0x0),
+            ("New Admin password:", 14, 1, info_dict['pwd'], 14, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 15, 1, info_dict['cnfrm'], 15, 24, 40, 40, HIDDEN)
             ]
 
         (code, fields) = d.mixedform(
@@ -225,20 +234,21 @@ def info_cc(d, info_dict):
             break
 
     r_dict = dict()
-    r_dict['node_name'] =        fields[0]
-    r_dict['uplink_ip'] =        fields[1]
-    r_dict['uplink_subnet'] =    fields[2]
-    r_dict['uplink_gateway'] =   fields[3]
-    r_dict['uplink_dns'] =       fields[4]
-    r_dict['uplink_domain'] =    fields[5]
-    r_dict['mgmt_ip'] =          fields[6]
-    r_dict['mgmt_subnet'] =      fields[7]
-    r_dict['mgmt_dns'] =         fields[8]
-    r_dict['mgmt_domain'] =      fields[9]
-    r_dict['vm_ip_min'] =        fields[10]
-    r_dict['vm_ip_max'] =        fields[11]
-    r_dict['pwd'] =              fields[12]
-    r_dict['cnfrm'] =            fields[13]
+    r_dict['node_name'] =       fields[0]
+    r_dict['uplink_ip'] =       fields[1]
+    r_dict['uplink_subnet'] =   fields[2]
+    r_dict['uplink_gateway'] =  fields[3]
+    r_dict['uplink_dns'] =      fields[4]
+    r_dict['uplink_domain'] =   fields[5]
+    r_dict['mgmt_ip'] =         fields[6]
+    r_dict['mgmt_subnet'] =     fields[7]
+    r_dict['mgmt_dns'] =        fields[8]
+    r_dict['mgmt_domain'] =     fields[9]
+    r_dict['vm_ip_min'] =       fields[10]
+    r_dict['vm_ip_max'] =       fields[11]
+    r_dict['email'] =           fields[12]
+    r_dict['pwd'] =             fields[13]
+    r_dict['cnfrm'] =           fields[14]
     return r_dict
 
 
@@ -247,12 +257,13 @@ def info_cn(d, info_dict):
         HIDDEN = 0x1
         elements = [
             ("Node Name:", 1, 1, info_dict['node_name'], 1, 24, 40, 40, 0x0),
-            ("Management IP:", 7, 1, info_dict['mgmt_ip'], 7, 24, 40, 40, 0x0),
-            ("Management Subnet Mask:", 8, 1, info_dict['mgmt_subnet'], 8, 24, 40, 40, 0x0),
-            ("Management DNS:", 9, 1, info_dict['mgmt_dns'], 9, 24, 40, 40, 0x0),
-            ("Management Domain Name:", 10, 1, info_dict['mgmt_domain'], 10, 24, 40, 40, 0x0),
-            ("New Admin password:", 13, 1, info_dict['pwd'], 13, 24, 40, 40, HIDDEN),
-            ("Confirm Password:", 14, 1, info_dict['cnfrm'], 14, 24, 40, 40, HIDDEN)
+            ("Management IP:", 2, 1, info_dict['mgmt_ip'], 2, 24, 40, 40, 0x0),
+            ("Management Subnet Mask:", 3, 1, info_dict['mgmt_subnet'], 3, 24, 40, 40, 0x0),
+            ("Management DNS:", 4, 1, info_dict['mgmt_dns'], 4, 24, 40, 40, 0x0),
+            ("Management Domain Name:", 5, 1, info_dict['mgmt_domain'], 5, 24, 40, 40, 0x0),
+            ("Admin email:", 6, 1, info_dict['email'], 6, 24, 40, 40, 0x0),
+            ("New Admin password:", 7, 1, info_dict['pwd'], 7, 24, 40, 40, HIDDEN),
+            ("Confirm Password:", 8, 1, info_dict['cnfrm'], 8, 24, 40, 40, HIDDEN)
             ]
 
         (code, fields) = d.mixedform(
@@ -262,13 +273,14 @@ def info_cn(d, info_dict):
             break
 
     r_dict = dict()
-    r_dict['node_name'] =        fields[0]
-    r_dict['mgmt_ip'] =          fields[1]
-    r_dict['mgmt_subnet'] =      fields[2]
-    r_dict['mgmt_dns'] =         fields[3]
-    r_dict['mgmt_domain'] =      fields[4]
-    r_dict['pwd'] =              fields[5]
-    r_dict['cnfrm'] =            fields[6]
+    r_dict['node_name'] =       fields[0]
+    r_dict['mgmt_ip'] =         fields[1]
+    r_dict['mgmt_subnet'] =     fields[2]
+    r_dict['mgmt_dns'] =        fields[3]
+    r_dict['mgmt_domain'] =     fields[4]
+    r_dict['email'] =           fields[5]
+    r_dict['pwd'] =             fields[6]
+    r_dict['cnfrm'] =           fields[7]
     return r_dict
 
 
@@ -311,7 +323,7 @@ Setup has completed successfully. The system is now ready to use\
 def rollback_msg(d, seconds):
     d.pause("""\
 Setup has encountered an issue.  The system will now rollback in %u seconds\
- to factory defaults.  Attempt to rerun setup."""
+ to factory defaults.  Please attempt to rerun setup after rollback."""
             % seconds, height=15, seconds=seconds)
 
 
@@ -398,6 +410,7 @@ def setup(d):
                     'mgmt_domain':      "",
                     'vm_ip_min':        "",
                     'vm_ip_max':        "",
+                    'email':            "",
                     'pwd':              "",
                     'cnfrm':            ""
                 }
@@ -468,6 +481,10 @@ def setup(d):
                         valid_ip_vm(info_dict['uplink_ip'], info_dict['vm_ip_max'], info_dict['uplink_subnet']) is False):
             d.msgbox("Invalid VM Range End-Point, try again.", width=60, height=10)
             continue
+        # Validate admin email
+        if ('email' in info_dict and not EMAIL_REGEX.match(info_dict['email'])):
+            d.msgbox("Invalid email format, try again.", width=60, height=10)
+            continue
         # Validate new password
         if ('pwd' in info_dict and 'cnfrm' in info_dict and info_dict['pwd'] != info_dict['cnfrm'] and
                         len(info_dict['pwd']) != 0 and len(info_dict['cnfrm']) != 0):
@@ -512,12 +529,14 @@ def setup(d):
     p = Process(target=run_setup, args=(new_system_variables, user_dict))
     p.start()
 
+    got_error = False
     fill_text = "Preparing your cloud..."
     spinner = ["[|] ", "[/] ", "[-] ", "[\\] "]
     spin = 0
     d.gauge_start(text=fill_text)
     fill = 0
     count = 0
+    last_message = "No message"
     while (1):
         spin = (spin + 1) % 4
         out = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUP%s' % (count), shell=True,
@@ -526,25 +545,66 @@ def setup(d):
         time.sleep(1)
         stat_raw = out.stdout.readlines()
         if (len(stat_raw) == 0):
-            d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
-            continue
+            # check to see if we got an error message
+            prc = subprocess.Popen('sudo cat /var/log/caclogs/system.log | grep SETUPERROR', shell=True,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            prc.wait()
+            raw_msg = prc.stdout.readlines()
+            if (len(raw_msg) == 0):
+                # no error msg so let's make sure the process is still alive
+                if p.is_alive():
+                    d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
+                    continue
+                else:
+                    # our process is dead and there was no error message so we need to report it
+                    stat_raw = []
+                    stat_raw.append("1:2:3:4:SETUPERROR:Setup adnormally terminated; please contact TransCirrus")
+            else:
+                # got an error msg so let the code below handle it
+                stat_raw = raw_msg
         count += 1
-        fill = fill + 1.851
+        fill += 1.851
         stat = stat_raw[0].split(':')
-        fill_text = stat[-1].strip()
+
+        if len(stat) > 0:
+            fill_text = stat[-1].strip()
+        else:
+            fill_text = ""
+
+        if len(stat) > 1:
+            key_text = stat[-2].strip()
+        else:
+            key_text = ""
+
         if (fill_text == "END"):
             p.join()
             fill = 0
+            # update admin password
             o = Process(target=change_admin_password, args=(user_dict, info_dict['pwd']))
             o.start()
+            forked = False
             while (1):
+                if forked is False:
+                    # update admin email
+                    pid = os.fork()
+                    forked = True
+                    if pid == 0:
+                        uo = user_ops(user_dict)
+                        uo.update_user({'username': "admin", 'email': info_dict['email']})
+                        os._exit(0)
                 spin = (spin + 1) % 4
-                d.gauge_update(fill, text=spinner[spin]+'Updating credentials...', update_text=1)
-                fill = fill + 10
+                d.gauge_update(fill, text=spinner[spin]+'Updating admin account...', update_text=1)
+                fill += 7.692
                 time.sleep(1)
                 if (fill > 100):
                     o.join()
+                    os.waitpid (pid, os.WNOHANG)
                     break
+            break
+        elif "SETUPERROR" in key_text:
+            last_message = fill_text
+            d.gauge_update(100, text=spinner[spin]+fill_text, update_text=1)
+            got_error = True
             break
         else:
             d.gauge_update(fill, text=spinner[spin]+fill_text, update_text=1)
@@ -552,7 +612,13 @@ def setup(d):
 
     timeout = 10
 
-    if (p.exitcode == 0):
+    if got_error:
+        d.msgbox("An error has occurred: " + last_message)
+        rollback_msg(d, timeout)
+        #clear_screen(d)
+        rollback(user_dict)
+        #util.reboot_system()
+    elif p.exitcode == 0:
         restart_services()
         flag_set = node_util.set_first_time_boot('UNSET')
         if (flag_set['first_time_boot'] != 'OK'):
@@ -561,9 +627,9 @@ def setup(d):
         clear_screen(d)
     else:
         rollback_msg(d, timeout)
-        clear_screen(d)
+        #clear_screen(d)
         rollback(user_dict)
-        util.reboot_system()
+        #util.reboot_system()
 
 
 def valid_ip(address):

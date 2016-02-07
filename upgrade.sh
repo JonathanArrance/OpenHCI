@@ -12,6 +12,27 @@
 #       a previous install or upgrade.
 
 #
+# Wait until there are no locks on the RPM lock file. This is
+# required when we are being run from a RPM install script
+# and we try to yum/rpm install a package. If the lock is
+# held, the package we try to install will hang waiting for
+# our RPM lock which won't we won't release because we are
+# waiting on the package to complete it's install.
+# To resolve this, we will have our RPM install script
+# fork a process to run this script and then it will exit
+# which will soon free the lock so we can proceed with
+# this script.
+#
+HOSTNAME=`hostname`
+MASTER_PWD='simpleprivatecloudsolutions'
+
+while sudo lsof /var/lib/rpm/.rpm.lock
+do
+  echo "RPM file is locked; sleeping a second"
+  sleep 1000
+done
+
+#
 # Version 2.2-x section:
 #
 
@@ -21,7 +42,7 @@
 /bin/chown cinder:cinder /mnt/nfs-vol/cinder-volume
 
 # Create the mongo db ceilometer user in case it was missing.
-/bin/echo 'db.addUser({user: "ceilometer",pwd: "transcirrus1",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
+/bin/echo 'db.addUser({user: "ceilometer",pwd: "simpleprivatecloudsolutions",roles: [ "readWrite", "dbAdmin" ]})' >> /tmp/MongoCeilometerUser.js
 /usr/bin/mongo --host 172.24.24.10 ceilometer /tmp/MongoCeilometerUser.js
 
 # Fix any configs that may not have been setup for ceilometer meters
@@ -55,6 +76,11 @@ if [ -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf ]
 then
     /bin/rm -f /usr/local/lib/python2.7/transcirrus/operations/monit/neutron.conf
 fi
+
+# Fix and restart monit
+monit quit
+/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/monit/fix_monit_conf.py
+monit
 
 # Install python IPy lib "Offline"
 if [ ! -f /usr/local/lib/python2.7/site-packages/IPy.py ]
@@ -97,12 +123,6 @@ sudo sed -i 's/=enforcing/=disabled/;s/=permissive/=disabled/' /etc/selinux/conf
 if [ ! -f /usr/local/lib/python2.7/site-packages/lxml/__init__.py ]
 then
     /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/lxml-3.4.4.tar.gz
-fi
-
-# Install python ldap lib "Offline"
-if [ ! -f /usr/local/lib/python2.7/site-packages/ldap/__init__.py ]
-then
-    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/python-ldap-2.4.20.tar.gz
 fi
 
 # Remove old ceilometer memory patch daemon.
@@ -165,9 +185,150 @@ else
     # add admin, shadow_admin and trans_default project to transcirrus db
     /usr/bin/psql -U postgres -d transcirrus -c "INSERT INTO trans_user_info VALUES (1, 'shadow_admin', 'admin', 0, 'TRUE', '"${SHADOW_ADMIN_USER}"', 'trans_default','"${PROJID}"', 'admin', NULL);"
     /usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/upgrade_resources/add_shadow_admin.py
+    # add email for shadow_admin
+    python2.7 -c "from transcirrus.common import extras; from transcirrus.component.keystone.keystone_users import user_ops; auth = extras.shadow_auth(); uo = user_ops(auth); uo.update_user({'username': 'shadow_admin', 'email': 'bugs@transcirrus.com'})"
 fi
+
+######################################################
+#
+#---------------------2.4 Patches---------------------
+#
+######################################################
+
+# Install python ldap lib "Offline"
+if [ ! -f /usr/local/lib/python2.7/site-packages/ldap/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install /usr/local/lib/python2.7/transcirrus/upgrade_resources/python-ldap-2.4.20.tar.gz
+fi
+
+# Write ldap_config.py if it doesn't already exist
+if [ ! -f /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py ]
+then
+    /bin/echo "Writing ldap_config.py..."
+    /bin/touch /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
+    /bin/echo 'CONFIGURED=False' >> /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
+    /bin/chmod 777 /usr/local/lib/python2.7/transcirrus/operations/third_party_auth/ldap/ldap_config.py
+fi
+
+# Install flasgger package
+if [ ! -f /usr/local/lib/python2.7/site-packages/flasgger/__init__.py ]
+then
+    /usr/local/bin/pip2.7 install flasgger
+fi
+
+# # aPersona unique email update
+sudo service postgresql restart
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE ONLY trans_user_info DROP CONSTRAINT trans_user_info_user_email_key UNIQUE (user_email);"
+
+# add aPersona application to cloud if it isn't already there
+if [ ! -f /var/lib/tomcat6/webapps/api_portal/WEB-INF/api-portal-dispatcher-servlet.xml ]
+then
+    /usr/bin/yum update --skip-broken -y
+    /usr/bin/yum install java-1.7.0-openjdk -y
+    /usr/bin/yum install tomcat6 -y
+    /sbin/service tomcat6 start
+    /sbin/chkconfig tomcat6 on
+    /usr/bin/yum install tomcat6-webapps -y
+    /sbin/service tomcat6 restart
+    /usr/bin/yum update --skip-broken -y
+    /bin/rm -rf /var/lib/tomcat6/webapps/*
+    /bin/cp -r /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/ap* /var/lib/tomcat6/webapps/
+    /usr/bin/psql -U postgres -f /usr/local/lib/python2.7/transcirrus/upgrade_resources/aPersona/apersona_configured.sql
+    sed -i 's/8080/8090/g' /usr/share/tomcat6/conf/server.xml
+    /sbin/service tomcat6 restart
+fi
+
+# Commands to setup our rest api daemon
+/bin/cp /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api /etc/init.d
+/bin/chmod 755 /etc/init.d/transcirrus_api
+/bin/chmod 755 /usr/local/lib/python2.7/transcirrus/daemons/transcirrus_api
+/bin/chown root:root /etc/init.d/transcirrus_api
+/sbin/chkconfig --levels 235 transcirrus_api on
+/sbin/chkconfig --add /etc/init.d/transcirrus_api
+/sbin/service transcirrus_api restart
+
+# Commands to build and install gmp which fixes some security issues
+# which also requires pycrpto to be re-installed.
+if [ ! -f "/usr/local/lib/libgmp.a" ]
+then
+  cwd=$(pwd)
+  cd /tmp
+  tar -xvjpf /usr/local/lib/python2.7/transcirrus/upgrade_resources/gmp-6.1.0.tar.bz2
+  cd gmp-6.1.0
+  ./configure
+  make
+  make check
+  make install
+
+  /usr/local/bin/pip2.7 install --ignore-installed /usr/local/lib/python2.7/transcirrus/upgrade_resources/pycrypto-2.6.1.tar.gz
+  cd $cwd
+fi
+
+# downgrade websockify to work with noVNC console
+/usr/bin/yum downgrade -y python-websockify-0.5.1-1.el6.noarch
+
+
+# Install Openswan and Openstack VPN packages
+if [ ! -f "/usr/sbin/ipsec" ]
+then
+    yum install -y /usr/local/lib/python2.7/transcirrus/upgrade_resources/openswan-2.6.32-37.el6.x86_64.rpm
+fi
+
+if [ ! -f "/etc/init.d/neutron-vpn-agent" ]
+then
+    yum install -y /usr/local/lib/python2.7/transcirrus/upgrade_resources/openstack-neutron-vpn-agent-2014.1.5-1.el6.noarch.rpm
+    /bin/chown neutron:neutron /etc/neutron/vpn_agent.ini
+    /bin/chmod 770 /etc/neutron/vpn_agent.ini
+fi
+
+# Setup VPNaaS Neutron Config
+/usr/bin/openstack-config --set /etc/neutron/neutron.conf DEFAULT service_plugins router,metering,vpnaas
+
+/usr/bin/openstack-config --set /etc/neutron/vpn_agent.ini vpnagent vpn_device_driver neutron.services.vpn.device_drivers.ipsec.OpenSwanDriver
+/usr/bin/openstack-config --set /etc/neutron/vpn_agent.ini ipsec ipsec_status_check_interval 60
+
+######################################################
+#
+#------------------Version 2.5-----------------------
+#
+#####################################################
+#chnage the master password 
+echo 'MASTER_PWD="'${MASTER_PWD}'"' >> /usr/local/lib/python2.7/transcirrus/common/config.py
+sudo rm /usr/local/lib/python2.7/transcirrus/common/config.pyc
+python2.7 /usr/local/lib/python2.7/transcirrus/common/config.py
+#create the mongo file
+echo 'db.changeUserPassword("ceilometer", "'${MASTER_PWD}'")' >> /transcirrus/update_mongo_pwd.js
+
+#add master pwd to trans_system_settings table
+psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('master_pwd','"${MASTER_PWD}"','"${HOSTNAME}"');"
+psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('master_pwd','"${MASTER_PWD}"','"${HOSTNAME}"');"
+
+/usr/local/bin/python2.7 /usr/local/lib/python2.7/transcirrus/operations/change_master_password.py ${MASTER_PWD}
+
+######################################################
+#
+#------------------Version 2.6-----------------------
+#
+#####################################################
+yum install -y virt-install
+yum install -y virtio-win
+yum install -y virt-viewer
+
+#alter the table
+/usr/bin/psql -U postgres -d transcirrus -c "ALTER TABLE trans_system_vols ADD COLUMN vol_filesystem character varying;"
+
+######################################################
+#
+#------------------Restart Services-------------------
+#
+######################################################
+
+/sbin/service ipsec restart
 
 cd /etc/init.d/; for i in $( /bin/ls openstack-* ); do sudo service $i restart; done
 cd /etc/init.d/; for i in $( /bin/ls neutron-* ); do sudo service $i restart; done
 
 /sbin/service ceilometer_third_party_meters restart
+/sbin/service transcirrus_api restart
+
+exit 0

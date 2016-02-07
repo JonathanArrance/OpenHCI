@@ -53,7 +53,7 @@ def run_setup(new_system_variables, auth_dict):
     # retrieve the node_id from the config file before it is rewritten.
     node_id = util.get_node_id()
     #node_name = util.get_system_name()
-    #auth_dict['api_ip'] = util.get_api_ip()
+    auth_dict['api_ip'] = util.get_api_ip()
 
     # new_cloud_name = new_system_variables['cloud_name']
     # get the original system vars from the DB - used in case we need to rollback
@@ -79,6 +79,7 @@ def run_setup(new_system_variables, auth_dict):
     boot = node_util.check_first_time_boot()
 
     if (boot == 'FALSE'):
+        logger.sys_info('SETUPERROR:System already set up')
         return "System already set up."
 
     # properly format the key values to an array.
@@ -101,25 +102,30 @@ def run_setup(new_system_variables, auth_dict):
     write_config = util.write_new_config_file(config_dict)
 
     if (write_config != 'OK'):
-        logger.sys_error("Could not write the new config file.")
+        logger.sys_error("SETUPERROR:Could not write the new config file.")
         # Perform the rollback to the original values
         # rollback = util.update_system_variables(rollback_sys_vars)
+        return "Could not write the new config file."
 
     # create an enpoint object
     endpoint = endpoint_ops(auth_dict)
 
-    logger.sys_info('SETUP2:Re-building Swift endpoints...')
-    # reset the swift
-    del_swift = endpoint.delete_endpoint('swift')
-
-    if (del_swift == 'OK'):
-        input_dict = {'cloud_name': sys_vars['CLOUD_NAME'], 'service_name': 'swift'}
-        create_swift = endpoint.create_endpoint(input_dict)
-
-        if (create_swift['endpoint_id']):
-            logger.sys_info("Swift endpoint set up complete.")
-        else:
-            return "Swift error."
+    logger.sys_info('SETUP2:Building endpoints...')
+    # Remove the comments when we support Swift
+    ##logger.sys_info('SETUP2:Re-building Swift endpoints...')
+    ### reset the swift
+    ##del_swift = endpoint.delete_endpoint('swift')
+    ##
+    ##if (del_swift == 'OK'):
+    ##    input_dict = {'cloud_name': sys_vars['CLOUD_NAME'], 'service_name': 'swift'}
+    ##    create_swift = endpoint.create_endpoint(input_dict)
+    ##
+    ##    if (create_swift['endpoint_id']):
+    ##        logger.sys_info("Swift endpoint set up complete.")
+    ##    else:
+    ##        logger.sys_error("Could not create Swift endpoint - %s, %s" % (input_dict, create_swift))
+    ##        logger.sys_error("SETUPERROR:could not create Swift endpoint")
+    ##        return "Swift error."
 
     logger.sys_info('SETUP3:Re-building Keystone endpoints...')
     # reset the keystone endpoint
@@ -130,6 +136,8 @@ def run_setup(new_system_variables, auth_dict):
         if (create_keystone['endpoint_id']):
             logger.sys_info("SETUP4:Keystone endpoint set up complete...")
         else:
+            logger.sys_error("Could not create Keystone endpoint - %s, %s" % (input_dict, create_keystone))
+            logger.sys_error("SETUPERROR:Could not create Keystone endpoint")
             return "Keystone error."
 
     logger.sys_info('SETUP5:Building Nova endpoints...')
@@ -139,6 +147,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_nova['endpoint_id']):
         logger.sys_info("SETUP6:Nova endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Nova endpoint")
         return "Nova error."
 
     logger.sys_info('SETUP7:Building Cinder endpoints...')
@@ -147,14 +156,16 @@ def run_setup(new_system_variables, auth_dict):
     if (create_cinder['endpoint_id']):
         logger.sys_info("SETUP8:Cinder endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Cinder endpoint")
         return "Cinder error."
 
     logger.sys_info('SETUP9:Building Cinder V2 endpoints...')
     cinderv2_input_dict = {'cloud_name': sys_vars['CLOUD_NAME'], 'service_name': 'cinder_v2'}
     create_cinderv2 = endpoint.create_endpoint(cinderv2_input_dict)
     if (create_cinderv2['endpoint_id']):
-        logger.sys_info("SETUP10:Cinder endpoint set up complete...")
+        logger.sys_info("SETUP10:Cinder v2 endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Cinder v2 endpoint")
         return "Cinder V2 error."
 
     logger.sys_info('SETUP11:Building Glance endpoints...')
@@ -163,6 +174,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_glance['endpoint_id']):
         logger.sys_info("SETUP12:Glance endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Glance endpoint")
         return "Glance error."
 
     logger.sys_info('SETUP13:Building Neutron endpoints...')
@@ -171,6 +183,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_neutron['endpoint_id']):
         logger.sys_info("SETUP14:Neutron endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Neutron endpoint")
         return "Neutron error."
 
     logger.sys_info('SETUP15:Building Heat endpoints...')
@@ -179,6 +192,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_heat['endpoint_id']):
         logger.sys_info("SETUP16:Heat endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Heat endpoint")
         return "Heat error."
 
     logger.sys_info('SETUP17:Building Ceilometer endpoints...')
@@ -187,6 +201,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_ceil['endpoint_id']):
         logger.sys_info("SETUP18:Ceilometer endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create Ceilometer endpoint")
         return "Ceilometer error."
 
     logger.sys_info('SETUP19:Building EC2 endpoints...')
@@ -195,6 +210,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_ec['endpoint_id']):
         logger.sys_info("SETUP20:EC2 endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create EC2 endpoint")
         return "EC2 error."
 
     logger.sys_info('SETUP21:Building S3 endpoints...')
@@ -203,6 +219,7 @@ def run_setup(new_system_variables, auth_dict):
     if (create_s3['endpoint_id']):
         logger.sys_info("SETUP22:S3 endpoint set up complete...")
     else:
+        logger.sys_error("SETUPERROR:Could not create S3 endpoint")
         return "S3 error."
 
     logger.sys_info('SETUP23:Adding the core node to the trans_nodes table...')
@@ -219,6 +236,7 @@ def run_setup(new_system_variables, auth_dict):
                       'node_gluster_disks': 'ssd'}
     insert_cc = node_db.insert_node(cc_insert_dict)
     if (insert_cc != 'OK'):
+        logger.sys_error("SETUPERROR:Could not add core node to the trans_nodes db table")
         return 'ERROR'
 
     # enable nova
@@ -230,6 +248,7 @@ def run_setup(new_system_variables, auth_dict):
         write_nova_config = util.write_new_config_file(config)
         if (write_nova_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Nova config files")
             return write_nova_config
         else:
             logger.sys_info("Nova config file written.")
@@ -242,6 +261,7 @@ def run_setup(new_system_variables, auth_dict):
     nova_start = service.nova('restart')
     if (nova_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Nova service")
         return nova_start
 
     # enable cinder
@@ -252,6 +272,7 @@ def run_setup(new_system_variables, auth_dict):
         write_cinder_config = util.write_new_config_file(config)
         if (write_cinder_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Cinder config files")
             return write_cinder_config
         else:
             logger.sys_info("Cinder config file written.")
@@ -262,6 +283,7 @@ def run_setup(new_system_variables, auth_dict):
     cinder_start = service.cinder('restart')
     if (cinder_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Cinder service")
         return cinder_start
 
     # enable glance
@@ -272,6 +294,7 @@ def run_setup(new_system_variables, auth_dict):
         write_glance_config = util.write_new_config_file(config)
         if (write_glance_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Glance config files")
             return write_glance_config
         else:
             logger.sys_info("Glance config file written.")
@@ -279,6 +302,7 @@ def run_setup(new_system_variables, auth_dict):
     glance_start = service.glance('restart')
     if (glance_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Glance service")
         return glance_start
     else:
         time.sleep(1)
@@ -294,11 +318,13 @@ def run_setup(new_system_variables, auth_dict):
         write_heat_config = util.write_new_config_file(config)
         if (write_heat_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Heat config files")
             return write_heat_config
         else:
             logger.sys_info("Heat config file written.")
     heat_start = service.heat('restart')
     if (heat_start != 'OK'):
+        logger.sys_error("SETUPERROR:Could not start the Heat service")
         return heat_start
     else:
         time.sleep(1)
@@ -315,12 +341,14 @@ def run_setup(new_system_variables, auth_dict):
         write_ceil_config = util.write_new_config_file(config)
         if (write_ceil_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Ceilometer config files")
             return write_ceil_config
         else:
             logger.sys_info("Ceilometer config file written.")
     ceil_start = service.ceilometer('restart')
     if (ceil_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Ceilometer service")
         return ceil_start
 
     # enable neutron
@@ -332,6 +360,7 @@ def run_setup(new_system_variables, auth_dict):
         write_neutron_config = util.write_new_config_file(config)
         if (write_neutron_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Neutron config files")
             return write_neutron_config
         else:
             logger.sys_info("Neutron config file written.")
@@ -342,6 +371,7 @@ def run_setup(new_system_variables, auth_dict):
     neutron_start = service.neutron('restart')
     if (neutron_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Neutron service")
         return neutron_start
 
     logger.sys_info('SETUP33:Writing the network config files...')
@@ -349,7 +379,7 @@ def run_setup(new_system_variables, auth_dict):
                'uplink_subnet': sys_vars['UPLINK_SUBNET']}
     gateway = util.check_gateway_in_range(g_input)
     if (gateway != 'OK'):
-        logger.sys_error('Uplink gateway is not on the same subnet as the uplink ip.')
+        logger.sys_error('SETUPERROR:The uplink gateway is not on the same subnet as the uplink IP')
         return gateway
 
     resolve = {
@@ -362,6 +392,7 @@ def run_setup(new_system_variables, auth_dict):
     time.sleep(1)
     if (write_name_config != 'OK'):
         # Exit the setup return to factory default
+        logger.sys_error("SETUPERROR:Could not write the Name Service config file")
         return write_name_config
     else:
         logger.sys_info("SETUP34:Name service config file written...")
@@ -390,6 +421,7 @@ def run_setup(new_system_variables, auth_dict):
         time.sleep(1)
         if (write_net_config != 'OK'):
             # Exit the setup return to factory default
+            logger.sys_error("SETUPERROR:Could not write the Network config files")
             return write_net_config
         else:
             logger.sys_info("Net config file written.")
@@ -399,6 +431,7 @@ def run_setup(new_system_variables, auth_dict):
     pgsql_start = service.postgresql('restart')
     if (pgsql_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the PostgreSQL service")
         return pgsql_start
     time.sleep(10)
 
@@ -407,6 +440,7 @@ def run_setup(new_system_variables, auth_dict):
     keystone_restart = service.keystone('restart')
     if (keystone_restart != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not restart the Keystone service")
         return keystone_restart
     time.sleep(10)
 
@@ -432,7 +466,7 @@ def run_setup(new_system_variables, auth_dict):
                    'public_end': sys_vars['VM_IP_MAX'], 'public_subnet': sys_vars['UPLINK_SUBNET']}
     pub_check = util.check_public_with_uplink(public_dict)
     if (pub_check != 'OK'):
-        logger.sys_error('The public network given does not match the uplink subnet.')
+        logger.sys_error('SETUPERROR:The public network given does not match the uplink subnet.')
         return pub_check
 
     # if in the same range create the default public range in neutron/neutron
@@ -441,30 +475,35 @@ def run_setup(new_system_variables, auth_dict):
         time.sleep(1)
         logger.sys_info('SETUP41:Sleeping until postgres accepts connections...')
         pg_accept = os.system('netstat -lnp | grep 5432 > /dev/null')
-    logger.sys_info('SETUP42:Postgres accepting connections on port 5432...')
+    logger.sys_info('SETUP:Postgres now accepting connections on port 5432...')
     time.sleep(10)
 
     # HACK
+    logger.sys_info('SETUP42:Restarting key OpenStack services; this can take over a minute...')
     neutron_start = service.neutron('restart')
     if (neutron_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Neutron service")
         return neutron_start
     time.sleep(10)
 
     heat_start = service.heat('restart')
     if (heat_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not restart the Heat service")
         return heat_start
     time.sleep(10)
 
     glance_start = service.glance('restart')
     if (glance_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Glance service")
         return glance_start
 
     nova_start = service.nova('restart')
     if (nova_start != 'OK'):
         # fire off revert
+        logger.sys_error("SETUPERROR:Could not start the Nova service")
         return nova_start
 
     logger.sys_info('SETUP43:Creating Neutron Default Public Connection...')
@@ -472,7 +511,7 @@ def run_setup(new_system_variables, auth_dict):
     p_create_dict = {'net_name': 'DefaultPublic', 'admin_state': 'true', 'shared': 'false'}
     default_public = neu_net.add_public_network(p_create_dict)
     if ('net_id' not in default_public):
-        logger.sys_error("Could not create the default public network.")
+        logger.sys_error("SETUPERROR:Could not create the default public network.")
         return 'ERROR'
     else:
         # add the new public net to the sys_vars_table
@@ -480,7 +519,7 @@ def run_setup(new_system_variables, auth_dict):
                       'param_value': default_public['net_id']}]
         update_def_pub_net = util.update_system_variables(def_array)
         if ((update_def_pub_net == 'ERROR') or (update_def_pub_net == 'NA')):
-            logger.sys_error("Could not update the default public network id, Setup has failed.")
+            logger.sys_error("SETUPERROR:Could not update the default public network id.")
             return 'ERROR'
 
     # create a subnet in the public network. Subnet ip range must be on the same subnet as the uplink IP
@@ -499,14 +538,14 @@ def run_setup(new_system_variables, auth_dict):
     }
     default_pub_subnet = neu_net.add_public_subnet(s_create_dict)
     if ('subnet_id' not in default_pub_subnet):
-        logger.sys_error("Could not create the default public subnet.")
+        logger.sys_error("SETUPERROR:Could not create the default public subnet.")
         return 'ERROR'
     else:
         def_sub_array = [{'system_name': sys_vars['NODE_NAME'], 'parameter': 'default_pub_subnet_id',
                           'param_value': default_pub_subnet['subnet_id']}]
         update_def_pub_subnet = util.update_system_variables(def_sub_array)
         if ((update_def_pub_subnet == 'ERROR') or (update_def_pub_subnet == 'NA')):
-            logger.sys_error("Could not update the default public network id, Setup has failed.")
+            logger.sys_error("SETUPERROR:Could not update the default public network id")
             return 'ERROR'
 
     # build the net content array
@@ -525,7 +564,8 @@ def run_setup(new_system_variables, auth_dict):
 
     write_net_config = util.write_new_config_file(netconfig_dict)
     if (write_net_config != 'OK'):
-        logger.sys_error("Could not write network setting to the config file.")
+        logger.sys_error("SETUPERROR:Could not write network settings to the config file.")
+        return "Error"
 
     # add ext net id to neutron l3agent.conf
     os.system('sudo chmod 664 /etc/neutron/l3_agent.ini')
@@ -556,89 +596,76 @@ def run_setup(new_system_variables, auth_dict):
     spindle_input = {"volume_type_id": "%s" % (spindle['volume_type_id']), "volume_backend_name": "spindle"}
     ssd_back = volumes.assign_volume_type_to_backend(ssd_input)
     if (ssd_back == 'ERROR'):
-        logger.sys_error("Could not assign the backing to the ssd volume type.")
+        logger.sys_error("SETUPERROR:Could not assign the ssd volume backend type")
         return 'ERROR'
     else:
         logger.sys_info("Volume type SSD added to the backings")
 
     spindle_back = volumes.assign_volume_type_to_backend(spindle_input)
     if (spindle_back == 'ERROR'):
-        logger.sys_error("Could not assign the backing to the spindle volume type.")
+        logger.sys_error("SETUPERROR:Could not assign the spindle volume backend type")
         return 'ERROR'
     else:
         logger.sys_info("Volume type spindle added to the backings")
 
     # setup the pre-installed images
     logger.sys_info('SETUP50:Importing Default Glance images...')
-    # glance = glance_ops(auth_dict)
-    logger.sys_info('SETUP51:Importing Cirros image...')
-    # cirros_input = {
-    #     'image_name': "Cirros-x86_64-0-3-1",
-    #     'container_format': "bare",
-    #     'disk_format': "qcow2",
-    #     'visibility': 'public',
-    #     'image_type': 'image_file',
-    #     'image_location': "/transcirrus/cirros-0.3.1-x86_64-disk.img",
-    #     'os_type': "linux"
-    # }
-    # import_cirros = glance.import_image(cirros_input)
-    # if ('image_id' not in import_cirros):
-    #     logger.sys_warning('Could not import the default cirros image.')
-    # else:
-    #     logger.sys_info("SETUP:Added the cirros image...")
+    glance = glance_ops(auth_dict)
+    logger.sys_info('SETUP51:Importing the Cirros image...')
+    cirros_input = {
+        'image_name': "Cirros-x86_64-0-3-1",
+        'container_format': "bare",
+        'disk_format': "qcow2",
+        'visibility': 'public',
+        'image_type': 'image_file',
+        'image_location': "/transcirrus/cirros-0.3.1-x86_64-disk.img",
+        'os_type': "linux"
+    }
+    import_cirros = glance.import_image(cirros_input,delete_file=False)
+    if ('image_id' not in import_cirros):
+        logger.sys_warning('Could not import the default cirros image.')
+    else:
+        logger.sys_info("SETUP:Added the cirros image...")
 
     logger.sys_info('SETUP52:Importing Ubuntu 12.04 image...')
-    # ubuntu_input = {
-    #     'image_name': "Ubuntu-12-04-x86_64",
-    #     'container_format': "bare",
-    #     'disk_format': "qcow2",
-    #     'visibility': 'public',
-    #     'image_type': 'image_file',
-    #     'image_location': "/transcirrus/precise-server-cloudimg-amd64-disk1.img",
-    #     'os_type': "linux"
-    # }
-    # import_ubuntu = glance.import_image(ubuntu_input)
-    # if ('image_id' not in import_ubuntu):
-    #     logger.sys_warning('Could not import the default Ubuntu Precise image.')
-    # else:
-    #     logger.sys_info("SETUP:Added the Ubuntu 12.04 image...")
+    ubuntu_input = {
+        'image_name': "Ubuntu-12-04-x86_64",
+        'container_format': "bare",
+        'disk_format': "qcow2",
+        'visibility': 'public',
+        'image_type': 'image_file',
+        'image_location': "/transcirrus/precise-server-cloudimg-amd64-disk1.img",
+        'os_type': "linux"
+    }
+    import_ubuntu = glance.import_image(ubuntu_input,delete_file=False)
+    if ('image_id' not in import_ubuntu):
+        logger.sys_warning('Could not import the default Ubuntu Precise image.')
+    else:
+        logger.sys_info("SETUP:Added the Ubuntu 12.04 image...")
 
     logger.sys_info('SETUP53:Importing CentOS 6.5 image...')
-    # fedora_input = {
-    #     'image_name': "CentOS-65-x86_64",
-    #     'container_format': "bare",
-    #     'disk_format': "qcow2",
-    #     'visibility': 'public',
-    #     'image_type': 'image_file',
-    #     'image_location': "/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
-    #     'os_type': "linux"
-    # }
-    # import_fedora = glance.import_image(fedora_input)
-    # if ('image_id' not in import_fedora):
-    #     logger.sys_warning('Could not import the default Fedora image.')
-    # else:
-    #     logger.sys_info("SETUP:Added the CentOS 6.5 image...")
+    fedora_input = {
+        'image_name': "CentOS-65-x86_64",
+        'container_format': "bare",
+        'disk_format': "qcow2",
+        'visibility': 'public',
+        'image_type': 'image_file',
+        'image_location': "/transcirrus/centos-6.5-20140117.0.x86_64.qcow2",
+        'os_type': "linux"
+    }
+    import_fedora = glance.import_image(fedora_input,delete_file=False)
+    if ('image_id' not in import_fedora):
+        logger.sys_warning('Could not import the default Fedora image.')
+    else:
+        logger.sys_info("SETUP:Added the CentOS 6.5 image...")
 
-    # set the first time boot flag
-    # first_boot = node_util.set_first_time_boot('UNSET')
-    # if(first_boot == 'ERROR'):
-    #    logger.sys_error("Could not set the first time boot flag to the UNSET status.")
-    # else:
-    #    logger.sys_info("First time boot flag unset.")
-
-    # logger.sys_info("Restarting all services")
-
-    # restart all of the services and return the statuses
-    # checkpoint = restart_services()
-    # checkpoint['status'] = 'OK'
-    # print checkpoint
-    # logger.sys_info("Service status: %s"%(checkpoint))
     os.system('sudo chmod 775 /var/lib/glance/images')
     os.system('source /home/transuser/factory_creds;openstack-status >> /transcirrus/first_time_status.txt')
-    logger.sys_info("SETUP54:END")
 
     # restart rabbitmq using new hostname
-    util.restart_rabbitmq()
+    service.rabbit('restart')
+
+    logger.sys_info("SETUP54:END")
 
     # restore file descriptors so I can print the results
     os.dup2(save[0], 1)
@@ -646,6 +673,9 @@ def run_setup(new_system_variables, auth_dict):
     # close the temporary fds
     os.close(null_fds[0])
     os.close(null_fds[1])
+
+    # Give the logger some time to log the END before we exit
+    time.sleep(5)
 
     return 'OK'
 

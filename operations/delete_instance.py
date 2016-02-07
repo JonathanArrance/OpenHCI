@@ -73,7 +73,7 @@ def delete_instance(auth_dict, delete_dict):
         logger.sys_error("Floating ip id could not be found.")
         raise Exception("Floating ip id could not be found.")
 
-    if(floater):
+    if(len(floater) >= 1):
         try:
             get_float_ip = {'select':'floating_ip','from':'trans_floating_ip','where':"floating_ip_id='%s'"%(floater[0][0])}
             floatip = db.pg_select(get_float_ip)

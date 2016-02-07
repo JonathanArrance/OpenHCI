@@ -84,10 +84,11 @@ class glance_ops:
         #close any open db connections
         self.db.close_connection()
 
-    def import_image (self,input_dict):
+    def import_image (self,input_dict,delete_file=True):
         """
         DESC: Import a pre-made glance image .img file
         INPUT: input_dict - image_name - req
+                          -input_type - op linux/windows
                           - container_format - req (bare, ovf, aki, ari, ami)
                           - disk_format - req (raw, vhd, vmdk, vdi, iso, qcow2, aki, ari, ami)
                           - image_type - must specify EITHER image_file OR image_url
@@ -195,14 +196,25 @@ class glance_ops:
             if((rest['response'] == 201 or rest['response'] == 204)):
                 logger.sys_info("Response %s with Reason %s" %(rest['response'],rest['reason']))
 
-                command = "sudo rm -f %s;sudo rm -f %s" % (input_dict['image_location'], filename)
-                subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                std_out, std_err = subproc.communicate()
+                command = None
+                if delete_file:
+                    # we were told to delete the image file so delete it and the temp file (if it exists)
+                    if filename != input_dict['image_location']:
+                        command = "sudo rm -f %s;sudo rm -f %s" % (input_dict['image_location'], filename)
+                    else:
+                        command = "sudo rm -f %s" % (filename)
+                elif filename != input_dict['image_location']:
+                    # just delete the temp file since it exists
+                    command = "sudo rm -f %s" % (filename)
+
+                if command != None:
+                    subproc = subprocess.Popen (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                    std_out, std_err = subproc.communicate()
     
-                # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
-                if subproc.returncode != 0:
-                    logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
-                    logger.sys_error("Error message: %s" % std_err)
+                    # We won't raise an exception for this since we were able to add the image, just not delete the temp file.
+                    if subproc.returncode != 0:
+                        logger.sys_error("Error deleting uploaded file %s, exit status: %d" % (download_file, subproc.returncode))
+                        logger.sys_error("Error message: %s" % std_err)
                 return ret_dict
             else:
                 logger.sys_error("Uploaded image data via glance - bad status: %s" % rest['reason'])
@@ -367,6 +379,7 @@ class glance_ops:
                        - created_at
                        - updated_at
                        - image_file
+                       - os_type
                        - schema
         """
         if ((self.status_level > 2) or (self.status_level < 0)):
@@ -399,7 +412,8 @@ class glance_ops:
             load = json.loads(rest['data'])
             if 'user_id' not in load:
                 load['user_id'] = "-1"
-            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['user_id'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'schema':load['schema']}
+            r_dict = {'image_id':load['id'], 'image_name':load['name'], 'user_id':load['user_id'], 'project_id':load['owner'] ,'status':load['status'], 'visibility':load['visibility'], 'size':load['size'], 'checksum':load['checksum'], 'tags':load['tags'], \
+                      'os_type':load['os_type'], 'created_at':load['created_at'], 'updated_at':load['updated_at'], 'image_file':load['file'], 'os_type':load['os_type'], 'schema':load['schema']}
             return r_dict
         else:
             util.http_codes(rest['response'],rest['reason'])

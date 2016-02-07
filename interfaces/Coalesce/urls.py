@@ -170,9 +170,13 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.manage_projects',
             name='manage_projects'),
 
-	# --- Instances ----
+        # --- Instances ----
+        url(r'server/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/pause_server/$',
+            'coalesce.coal_beta.views.create_instance_from_iso',
+            name='create_instance_from_iso'),
+
         url(r'^create_instance/(?P<instance_name>[^/]+)/(?P<sec_group_name>[^/]+)/(?P<avail_zone>[^/]+)/(?P<flavor_id>[^/]+)/(?P<sec_key_name>[^/]+)/(?P<image_id>[^/]+)/(?P<network_name>[^/]+)/(?P<project_id>[^/]+)/(?P<boot_from_vol>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_name>[^/]+)/(?P<volume_type>[^/]+)/$',
-	    'coalesce.coal_beta.views.create_instance',
+            'coalesce.coal_beta.views.create_instance',
             name='create_instance'),
 
         url(r'^(?P<project_id>[^/]+)/list_servers/$',
@@ -203,8 +207,8 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.resume_server',
             name='resume_server'),
 
-	url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<delete_boot_vol>[^/]+)/delete_instance/$',
-	    'coalesce.coal_beta.views.delete_instance',
+        url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/(?P<delete_boot_vol>[^/]+)/delete_instance/$',
+            'coalesce.coal_beta.views.delete_instance',
             name='delete_instance'),
 
         # url(r'server/(?P<project_id>[^/]+)/(?P<server_id>[^/]+)/get_server/$',
@@ -268,11 +272,11 @@ urlpatterns = patterns('',
             name='get_instance_revert'),
 
         # --- Images ----
-        url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
+        url(r'^import_local/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.import_local',
             name='import_local'),
 
-        url(r'^import_remote/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/$',
+        url(r'^import_remote/(?P<image_name>[^/]+)/(?P<container_format>[^/]+)/(?P<disk_format>[^/]+)/(?P<image_type>[^/]+)/(?P<image_location>[^/]+)/(?P<visibility>[^/]+)/(?P<os_type>[^/]+)/(?P<progress_id>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.import_remote',
             name='import_remote'),
 
@@ -355,6 +359,11 @@ urlpatterns = patterns('',
         url(r'^create_volume/(?P<volume_name>[^/]+)/(?P<volume_size>[^/]+)/(?P<volume_type>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_volume',
             name='create_volume'),
+
+        #FORMAT THE VOLUME ONCE ATTACHED TO INSTANCE
+        # url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
+        #    'coalesce.coal_beta.views.attach_volume',
+        #    name='format_volume'),
 
         url(r'^attach_volume/(?P<project_id>[^/]+)/(?P<instance_id>[^/]+)/(?P<volume_id>[^/]+)/$',
             'coalesce.coal_beta.views.attach_volume',
@@ -503,6 +512,36 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_private_network_create',
             name='get_private_network_create'),
 
+        # --- IPSec VPN Tunnels ----
+
+        url(r'^add_vpn_tunnel/(?P<project_id>[^/]+)/(?P<ike_policy_name>[^/]+)/(?P<ipsec_policy_name>[^/]+)/(?P<service_name>[^/]+)/(?P<service_description>[^/]+)/(?P<subnet_id>[^/]+)/(?P<router_id>[^/]+)/(?P<peer_cidrs>[^/]+)/(?P<peer_address>[^/]+)/(?P<peer_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
+            'coalesce.coal_beta.views.add_vpn_tunnel',
+            name='add_vpn_tunnel'),
+
+        url(r'^delete_vpn_tunnel/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
+            'coalesce.coal_beta.views.delete_vpn_tunnel',
+            name='delete_vpn_tunnel'),
+
+        url(r'^list_vpn_tunnels/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.list_vpn_tunnels',
+            name='list_vpn_tunnels'),
+
+        url(r'^show_vpn_tunnel/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/(?P<tunnel_name>[^/]+)/$',
+            'coalesce.coal_beta.views.show_vpn_tunnel',
+            name='show_vpn_tunnel'),
+
+        url(r'^vpn/(?P<project_id>[^/]+)/(?P<tunnel_id>[^/]+)/view/$',
+            'coalesce.coal_beta.views.vpn_view',
+            name='vpn_view'),
+
+        url(r'^vpn/get/create/(?P<project_id>[^/]+)/(?P<router_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_vpn_create',
+            name='get_vpn_create'),
+
+        url(r'^vpn/get/info/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.get_vpn_info',
+            name='get_vpn_info'),
+
         # --- Routers ----
         url(r'^create_router/(?P<router_name>[^/]+)/(?P<priv_net>[^/]+)/(?P<default_public>[^/]+)/(?P<project_id>[^/]+)/$',
             'coalesce.coal_beta.views.create_router',
@@ -512,7 +551,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.delete_router',
             name='delete_router'),
 
-        url(r'^router/(?P<router_id>[^/]+)/view/$',
+        url(r'^router/(?P<project_id>[^/]+)/(?P<router_id>[^/]+)/view/$',
             'coalesce.coal_beta.views.router_view',
             name='router_view'),
 
@@ -795,6 +834,14 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.login',
             name='login'),
 
+        url(r'^otp/$',
+            'coalesce.coal_beta.views.otp',
+            name='otp'),
+        
+        url(r'^resend_otp/$',
+            'coalesce.coal_beta.views.resend_otp',
+            name='resend_otp'),
+
         url(r'^coal/logout/$',
             'coalesce.coal_beta.views.logout',
             {'template_name': 'coal/welcome.html'},
@@ -824,7 +871,7 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.get_third_party_authentication',
             name='get_third_party_authentication'),
 
-        url(r'^third_party_authentication/get_configure/(?P<provider>[^/]+)/$',
+        url(r'^third_party_authentication/get_configure/$',
             'coalesce.coal_beta.views.get_third_party_authentication_configure',
             name='get_third_party_authentication_configure'),
 
@@ -835,6 +882,22 @@ urlpatterns = patterns('',
         url(r'^third_party_authentication/get_build_default_project/(?P<provider>[^/]+)/$',
             'coalesce.coal_beta.views.get_third_party_authentication_build_project',
             name='get_third_party_authentication_build_project'),
+
+        url(r'^third_party_authentication/toggle/(?P<provider>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.tpa_toggle_project',
+            name='tpa_toggle_project'),
+
+        url(r'^third_party_authentication/select/(?P<provider>[^/]+)/$',
+            'coalesce.coal_beta.views.get_tpa_select_project',
+            name='get_tpa_select_project'),
+
+        url(r'^third_party_authentication/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
+            'coalesce.coal_beta.views.tpa_add_user',
+            name='tpa_add_user'),
+
+        url(r'^third_party_authentication/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
+            'coalesce.coal_beta.views.tpa_add_user_to_project',
+            name='tpa_add_user_to_project'),
 
         # --- Shibboleth ----
         url(r'^shib/$',
@@ -849,17 +912,39 @@ urlpatterns = patterns('',
             'coalesce.coal_beta.views.remove_shib_from_cloud',
             name='remove_shib_from_cloud'),
 
-        url(r'^third_party_authentication/shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/$',
-            'coalesce.coal_beta.views.shib_add_user',
-            name='shib_add_user'),
-
-        url(r'^third_party_authentication/shib/add_user/(?P<username>[^/]+)/(?P<email>[^/]+)/(?P<project_id>[^/]+)/$',
-            'coalesce.coal_beta.views.shib_add_user_to_project',
-            name='shib_add_user_to_project'),
-
         url(r'^third_party_authentication/shib/build_default_project/$',
             'coalesce.coal_beta.views.shib_build_default_project',
             name='shib_build_default_project'),
+
+        # --- LDAP ----
+        url(r'^third_party_authentication/ldap/config/(?P<hostname>[^/]+)/(?P<use_ssl>[^/]+)/(?P<base_dn>[^/]+)/(?P<uid_attr>[^/]+)/(?P<binding_type>[^/]+)/(?P<manager_dn>[^/]+)/(?P<manager_pw>[^/]+)/$',
+            'coalesce.coal_beta.views.add_ldap_to_cloud',
+            name='add_ldap_to_cloud'),
+
+        url(r'^third_party_authentication/ldap/remove/$',
+            'coalesce.coal_beta.views.remove_ldap_from_cloud',
+            name='remove_ldap_from_cloud'),
+
+        url(r'^ldap/auth/$',
+            'coalesce.coal_beta.views.ldap_auth',
+            name='ldap_auth'),
+
+        url(r'^ldap/login/(?P<username>[^/]+)/$',
+            'coalesce.coal_beta.views.ldap_login',
+            name='ldap_login'),
+
+        url(r'^third_party_authentication/ldap/build_default_project/$',
+            'coalesce.coal_beta.views.ldap_build_default_project',
+            name='ldap_build_default_project'),
+
+        # --- Cloud Settings ----
+        url(r'^cloud_settings/get/$',
+            'coalesce.coal_beta.views.cloud_settings',
+            name='cloud_settings'),
+
+        url(r'^cloud_settings/toggle_mfa/(?P<mfa>[^/]+)/$',
+            'coalesce.coal_beta.views.toggle_mfa',
+            name='toggle_mfa'),
 
 )+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

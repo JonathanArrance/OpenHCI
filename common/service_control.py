@@ -131,6 +131,22 @@ def iscsi(action):
     out = _operator(iscsi_array,action)
     return out
 
+def tomcat(action):
+    """
+    DESC: Control the iscsi services
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the openstack services.
+    NOTES: These only work on the ciac node for now
+    """
+    tomcat = ['tomcat6']
+    out = _operator(tomcat,action)
+    return out
+
 def heat(action):
     """
     DESC: Control the heat service
@@ -178,6 +194,22 @@ def ceilometer_cn(action):
     """
     ceil_array = ['openstack-ceilometer-compute']
     out = _operator(ceil_array,action)
+    return out
+
+def mongo(action):
+    """
+    DESC: Control the mongo db service
+    INPUT: start
+           restart
+           stop
+    OUTPUT: OK
+            ERROR
+            NA
+    ACCESS: Only an admin can control the mongo db services.
+    NOTES: These only work on the ciac node for now
+    """
+    mongo_array = ['mongod']
+    out = _operator(mongo_array,action)
     return out
 
 def postgresql(action):

@@ -6,44 +6,113 @@
     <button type="button" class="close" data-dismiss="modal" data-loading-text="&times;" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title" id="modal-label">Configure {{ provider.name }}</h4>
+    <h4 class="modal-title" id="modal-label">Configure Third Party Authentication</h4>
 </div>
 <div class="modal-body bg-default-light">
     <div class="container-fluid">
         <div class="row-fluid">
+            <form class="form-horizontal">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group">
+                        <label for="providers" class="control-label">Provider:</label>
+                        <select name="Providers" id="providers" class="form-control">
+                            {% for provider in providers %}
+                                <option value="{{ provider.value }}">{{ provider.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
             <!-- ===== SHIBBOLETH ===== -->
-            {% if provider.id == 'shib' %}
-                <form class="form-horizontal" id="shib-config" method="post" enctype="multipart/form-data">
-                    <div class="form-group col-sm-12">
-                        <label for="sso-entity-id" class="col-sm-4">SSO Entity ID:</label>
+            <form style="display:none" class="form-horizontal" id="shib-config" method="post"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group">
+                        <label for="sso-entity-id" class="control-label">SSO Entity ID:</label>
+
                         <input type="url" name="ssoEntityID" id="sso-entity-id"
-                               placeholder="ex: https://idp.yourshibboleth.com/idp/shibboleth"
-                               class="col-sm-8">
+                               placeholder="ex: https://idp.yourshibboleth.com/idp/shibboleth" class="form-control">
                     </div>
+                    <div class="form-group">
+                        <label for="mp-backing-file-path" class="control-label">Metadata Provider File:</label>
 
-                    <div class="form-group col-sm-12">
-                        <label for="mp-backing-file-path" class="col-sm-4">Metadata Provider File:</label>
                         <input type="text" name="mpBackingFilePath" id="mp-backing-file-path"
-                               placeholder="ex: shibboleth-metadata.xml"
-                               class="col-sm-8">
+                               placeholder="ex: shibboleth-metadata.xml" class="form-control">
                     </div>
+                    <div class="form-group">
+                        <label for="mp-uri" class="control-label">Metadata Provider URI:</label>
 
-                    <div class="form-group col-sm-12">
-                        <label for="mp-uri" class="col-sm-4">Metadata Provider URI:</label>
                         <input type="url" name="mpURI" id="mp-uri"
                                placeholder="http://www.yourshibboleth.com/metadata/shibboleth-providers.xml"
-                               class="col-sm-8">
+                               class="form-control">
                     </div>
-                </form>
-                <!-- ===== LDAP ===== -->
-            {% elif provider.id == 'nfs' %}
-                <form class="form-horizontal">
-                </form>
-                <!-- ===== NIMBLE ===== -->
-            {% elif provider.id == 'nimble' %}
-                <form class="form-horizontal">
-                </form>
-            {% endif %}
+                </fieldset>
+            </form>
+            <!-- ===== LDAP ===== -->
+            <form style="display:none" class="form-horizontal" id="ldap-config" method="post"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset>
+                    <div class="form-group">
+                        <label for="hostname" class="control-label">Host:</label>
+
+                        <div class="input-group">
+                            <span class="input-group-addon bg-default">ldap://</span>
+                            <input type="text" name="Hostname" id="hostname" placeholder="ex: ldap.example.com"
+                                   class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="use-ssl" class="control-label">Security Layer:</label>
+
+                        <select name="useSSL" id="use-ssl" class="form-control">
+                            <option value="False">none</option>
+                            <option value="True">TSL/SSL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="base-dn" class="control-label">Base DN:</label>
+
+                        <input type="text" name="baseDN" id="base-dn" placeholder="ex: dc=example,dc=com"
+                               class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="uid-attr" class="control-label">
+                            <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="bottom"
+                               title="Attribute name for 'jsmith' type of login name."></i>
+                            User Name Attribute:
+                        </label>
+
+                        <input type="text" name="uidATTR" id="uid-attr" placeholder="ex: uid" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="binding-type" class="control-label">Binding Type:</label>
+
+                        <select name="bindingType" id="binding-type" class="form-control">
+                            <option value="anonymous">Anonymous</option>
+                            <option value="manager">Manager Account</option>
+                        </select>
+                    </div>
+                    <div style="display:none" class="form-group" id="manager-dn-config">
+                        <label for="manager-dn" class="control-label">Manager DN:</label>
+
+                        <input type="text" name="managerDN" id="manager-dn"
+                               placeholder="ex: cn=Manager,dc=example,dc=com" class="form-control">
+                    </div>
+                    <div style="display:none" class="form-group" id="manager-pw-config">
+                        <label for="manager-pw" class="control-label">Manager Password:</label>
+
+                        <input type="password" name="managerPW" id="manager-pw" class="form-control">
+                    </div>
+                </fieldset>
+            </form>
+            <!-- ===== OTHER ===== -->
+            <form style="display:none" class="form-horizontal">
+                {% csrf_token %}
+                <fieldset></fieldset>
+            </form>
         </div>
     </div>
 </div>
@@ -56,9 +125,13 @@
 </div>
 
 <script>
+    // Initialize form
+    var shibValidator, ldapValidator;
     $(function () {
-        // E-Series
-        $("#shib-config").validate({
+        $("#" + $("#providers").val() + "-config").show();
+
+        // Declare Shibboleth validation
+        shibValidator = $("#shib-config").validate({
             rules: {
                 ssoEntityID: {
                     required: true,
@@ -73,17 +146,75 @@
                 }
             }
         });
-    });
 
-    $("form input, form select").on("change focus keyup", function () {
-        window.setTimeout(function () {
-            if ("{{ provider.id }}" == "shib") {
-                if ($("#shib-config").valid()) {
-                    $("#confirm-configure-tpa").removeProp("disabled");
-                } else {
-                    $("#confirm-configure-tpa").prop("disabled", "disabled");
+        // Declare LDAP validation
+        ldapValidator = $("#ldap-config").validate({
+            rules: {
+                Hostname: {
+                    required: true
+                },
+                useSSL: {
+                    required: true
+                },
+                baseDN: {
+                    required: true
+                },
+                uidATTR: {
+                    required: true
+                },
+                managerDN: {
+                    required: true
+                },
+                managerPW: {
+                    required: true
                 }
             }
-        }, 1000);
+        });
+    });
+
+    // switch provider forms
+    $("#providers").on("change keyup", function () {
+        if (this.value == "shib") {
+            $("#shib-config").show();
+            $("#ldap-config").hide();
+        }
+        if (this.value == "ldap") {
+            $("#ldap-config").show();
+            $("#shib-config").hide();
+        }
+    });
+
+    // show/hide extra binding-type inputs
+    $("#binding-type").on("change keyup", function () {
+        if (this.value == "anonymous") {
+            $("#manager-dn-config, #manager-pw-config").hide();
+        }
+        if (this.value == "manager") {
+            $("#manager-dn-config, #manager-pw-config").show();
+        }
+    });
+
+    // enable/disable confirm button
+    $("form input, form select").on("change focus keyup", function () {
+        var confirm = $("#confirm-configure-tpa");
+        switch ($("#providers").val()) {
+            case "shib":
+                if (shibValidator.checkForm()) {
+                    confirm.removeProp("disabled");
+                } else {
+                    confirm.prop("disabled", "disabled");
+                }
+                break;
+            case "ldap":
+                if (ldapValidator.checkForm()) {
+                    confirm.removeProp("disabled");
+                } else {
+                    confirm.prop("disabled", "disabled");
+                }
+                break;
+            default:
+                confirm.removeProp("disabled");
+                break;
+        }
     });
 </script>
