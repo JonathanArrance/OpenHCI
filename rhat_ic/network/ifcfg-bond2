@@ -1,0 +1,6 @@
+#UPLINK
+DEVICE=bond2
+ONBOOT=yes
+BOOTPROTO=none
+BRIDGE=br-ex
+USERCTL=no

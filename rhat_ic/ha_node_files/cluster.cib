@@ -1,0 +1,198 @@
+#Known good stuff
+#primitive DATA_VIP IPaddr2 \
+#	params ip=172.24.24.10 nic=bond1 cidr_netmask=24 \
+#	op monitor interval=10s
+#primitive UPLINK_VIP IPaddr2 \
+#	params ip=192.168.2.67 nic=br-ex \
+#	op monitor interval=10s
+primitive p_drbd_haresource ocf:linbit:drbd \
+	params drbd_resource=haresource \
+	op start interval=0 timeout=240s \
+	op stop interval=0 timeout=100s \
+	op monitor interval=9s role=Master timeout=30s \
+	op monitor interval=11s role=Slave timeout=30s
+primitive p_drbd_spindle ocf:linbit:drbd \
+        params drbd_resource=spindle \
+        op start interval=0 timeout=240s \
+        op stop interval=0 timeout=100s \
+        op monitor interval=9s role=Master timeout=30s \
+        op monitor interval=11s role=Slave timeout=30s
+primitive p_drbd_ssd ocf:linbit:drbd \
+        params drbd_resource=ssd \
+        op start interval=0 timeout=240s \
+        op stop interval=0 timeout=100s \
+        op monitor interval=9s role=Master timeout=30s \
+        op monitor interval=11s role=Slave timeout=30s
+primitive p_coalesce apache \
+	params client=wget configfile="/etc/httpd/conf/httpd.conf" port=80 statusurl="http://localhost/server-status" \
+	op monitor interval=5s timeout=20s \
+	op start interval=0s timeout=60s \
+	op stop interval=0s timeout=60s
+primitive p_haresource_fs Filesystem \
+	params device="/dev/drbd0" directory="/transcirrus/haresources" fstype=xfs \
+	op start interval=0s timeout=60s \
+	op monitor interval=20s timeout=40s \
+	op stop interval=0s timeout=60s
+primitive p_spindle_fs Filesystem \
+        params device="/dev/drbd2" directory="/data/gluster-spindle" fstype=xfs \
+        op start interval=0s timeout=60s \
+        op monitor interval=20s timeout=40s \
+        op stop interval=0s timeout=60s
+primitive p_ssd_fs Filesystem \
+        params device="/dev/drbd1" directory="/data/gluster" fstype=xfs \
+        op start interval=0s timeout=60s \
+        op monitor interval=20s timeout=40s \
+        op stop interval=0s timeout=60s
+primitive p_postgresql pgsql \
+	params binary="/usr/bin/psql" config="/transcirrus/haresources/pgsql/data/postgresql.conf" pgdata="/transcirrus/haresources/pgsql/data" \
+	op start interval=0 timeout=120 \
+	op stop interval=0 timeout=120 \
+	op monitor interval=30 timeout=30 depth=0
+group g_postgresql p_haresource_fs p_data_vip p_postgresql
+ms ms_drbd_postgresql p_drbd_haresource \
+	meta master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+ms ms_drbd_spindle p_drbd_spindle \
+        meta master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+ms ms_drbd_ssd p_drbd_ssd \
+        meta master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+#location cli-prefer-p_data_vip p_data_vip role=Started inf: ${HANODE1}
+#location cli-prefer-p_uplink_vip p_uplink_vip role=Started inf: ${HANODE1}
+location cli-prefer-p_postgresql g_postgresql role=Started inf: ${HANODE1}
+location cli-prefer-p_coalesce p_coalesce role=Started inf: ${HANODE1}
+location prefer-${HANODE1} p_coalesce 50: ${HANODE1}
+colocation c_postgresql_on_drbd inf: g_postgresql ms_drbd_postgresql:Master
+colocation website-with-ip inf: p_coalesce p_uplink_vip
+order apache-after-ip Mandatory: p_uplink_vip p_coalesce
+order o_drbd_before_postgresql inf: ms_drbd_postgresql:promote g_postgresql:start
+property cib-bootstrap-options: \
+	dc-version=1.1.11-97629de \
+	cluster-infrastructure="classic openais (with plugin)" \
+	expected-quorum-votes=3 \
+	stonith-enabled=false \
+	no-quorum-policy=ignore
+rsc_defaults rsc-options: \
+	resource-stickiness=200
+
+
+
+
+
+#add the pacemaker drbd config ha resource
+crm configure primitive p_drbd_haresources ocf:linbit:drbd params drbd_resource=haresource op start interval=0 timeout=240s op stop interval=0 timeout=100s op monitor interval=9s role=Master timeout=30s op monitor interval=11s role=Slave timeout=30s
+crm configure ms ms_drbd_haresources p_drbd_haresources meta master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+crm configure primitive p_haresources_fs Filesystem params device="/dev/drbd0" directory="/transcirrus/haresources" fstype=xfs op start interval=0s timeout=60s op monitor interval=20s timeout=40s op stop interval=0s timeout=60s
+
+#add pacemaker config for pgsql
+crm configure primitive p_postgresql pgsql params config="/transcirrus/haresources/pgsql/data/postgresql.conf" pgdata="/transcirrus/haresources/pgsql/data" op start interval=0 timeout=120 op stop interval=0 timeout=120 op monitor interval=30 timeout=30 depth=0
+crm configure group g_ha_group p_haresources_fs p_data_vip p_postgresql
+crm configure location cli-prefer-p_data_vip g_ha_group role=Started inf: ${HOSTNAME}
+
+#add dhcp
+crm configure primitive p_dhcp lsb:dhcpd
+crm configure primitive p_dhcp_conf symlink params link="/etc/dhcp/dhcpd.conf" target="/transcirrus/haresources/etc/dhcp/dhcpd.conf" backup_suffix=.original
+crm configure primitive p_dhcp_leases symlink params link="/var/lib/dhcpd/dhcpd.leases" target="/transcirrus/haresources/var/lib/dhcpd/dhcpd.leases" backup_suffix=.original
+crm configure primitive p_dhcp_sysconfig symlink params link="/etc/sysconfig/dhcpd" target="/transcirrus/haresources/etc/sysconfig/dhcpd" backup_suffix=.original
+crm configure modgroup g_ha_group add p_dhcp_conf
+crm configure modgroup g_ha_group add p_dhcp_sysconfig
+crm configure modgroup g_ha_group add p_dhcp_leases
+
+#add apache to corosync
+crm configure primitive p_interface apache params client=wget configfile="/etc/httpd/conf/httpd.conf" port=80 statusurl="http://localhost/server-status" op monitor interval=5s timeout=20s op start interval=0s timeout=60s op stop interval=0s timeout=60s
+crm configure location cli-prefer-p_interface p_interface role=Started inf: ${HOSTNAME}
+crm configure location prefer-${HOSTNAME} p_interface 50: ${HOSTNAME}
+
+#add rabbit
+crm configure primitive p_rabbitmq ocf:rabbitmq:rabbitmq-server params nodename="rabbit@localhost" mnesia_base="/var/lib/rabbitmq" op monitor interval="20s" timeout="10s"
+crm configure primitive p_rabbit_conf symlink params link="/var/lib/rabbitmq" target="/transcirrus/haresources/var/lib/rabbitmq" backup_suffix=.original
+crm configure modgroup g_ha_group p_rabbitmq
+
+#haresource common
+crm configure colocation c_ha_on_drbd inf: g_ha_group ms_drbd_haresources:Master
+crm configure order o_drbd_before_ha inf: ms_drbd_haresources:promote g_ha_group:start
+
+
+
+
+
+
+
+node ha-16257 \
+        attributes
+node ha-30963 \
+        attributes standby=on
+primitive p_cluster_ip IPaddr2 \
+        params ip=192.168.10.70 cidr_netmask=24 \
+        op start interval=0s timeout=20s \
+        op stop interval=0s timeout=20s \
+        op monitor interval=30s
+primitive p_data_ip IPaddr2 \
+        params ip=172.24.24.10 cidr_netmask=24 \
+        op start interval=0s timeout=20s \
+        op stop interval=0s timeout=20s \
+        op monitor interval=30s
+primitive p_dhcp lsb:dhcpd \
+        params \
+        op monitor interval=60s
+primitive p_dhcp_conf symlink \
+        params link="/etc/dhcp/dhcpd.conf" target="/transcirrus/haresources/etc/dhcp/dhcpd.conf" backup_suffix=.original \
+        op start interval=0s timeout=15 \
+        op stop interval=0s timeout=15 \
+        op monitor interval=60 timeout=15
+primitive p_dhcp_leases symlink \
+        params link="/var/lib/dhcpd/dhcpd.leases" target="/transcirrus/haresources/var/lib/dhcpd/dhcpd.leases" backup_suffix=.original \
+        op start interval=0s timeout=15 \
+        op stop interval=0s timeout=15 \
+        op monitor interval=60 timeout=15
+primitive p_dhcp_sysconfig symlink \
+        params link="/etc/sysconfig/dhcpd" target="/transcirrus/haresources/etc/sysconfig/dhcpd" backup_suffix=.original \
+        op start interval=0s timeout=15 \
+        op stop interval=0s timeout=15 \
+        op monitor interval=60 timeout=15
+primitive p_drbd_haresources ocf:linbit:drbd \
+        params drbd_resource=haresources \
+        op start interval=0s timeout=240 \
+        op promote interval=0s timeout=90 \
+        op demote interval=0s timeout=90 \
+        op stop interval=0s timeout=100 \
+        op monitor interval=60s
+primitive p_haresources_fs Filesystem \
+        params device="/dev/drbd0" directory="/transcirrus/haresources" fstype=xfs \
+        op start interval=0s timeout=60s \
+        op monitor interval=20s timeout=40s \
+        op stop interval=0s timeout=60s
+primitive p_interface apache \
+        params client=wget configfile="/etc/httpd/conf/httpd.conf" port=80 statusurl="http://localhost/server-status" \
+        op monitor interval=5s timeout=20s \
+        op start interval=0s timeout=60s \
+        op stop interval=0s timeout=60s
+primitive p_postgresql pgsql \
+        params config="/transcirrus/haresources/pgsql/data/postgresql.conf" pgdata="/transcirrus/haresources/pgsql/data" \
+        op promote interval=0s timeout=120 \
+        op demote interval=0s timeout=120 \
+        op start interval=0 timeout=120 \
+        op stop interval=0 timeout=120 \
+        op monitor interval=30 timeout=30
+primitive p_rabbitmq ocf:rabbitmq:rabbitmq-server \
+        params nodename="rabbit@localhost" mnesia_base="/var/lib/rabbitmq" \
+        op start interval=0s timeout=600 \
+        op stop interval=0s timeout=120 \
+        op monitor interval=20s timeout=10s
+group g_ha_group p_haresources_fs p_data_ip p_postgresql p_rabbitmq p_dhcp_conf p_dhcp_sysconfig p_dhcp_leases
+ms p_drbd_haresources_clone p_drbd_haresources \
+        meta master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+location location-g_ha_group-ha-16257-INFINITY g_ha_group inf: ha-16257
+location location-p_cluster_ip-ha-16257-50 p_cluster_ip 50: ha-16257
+location location-p_data_ip-ha-16257-50 p_data_ip 50: ha-16257
+location location-p_interface-ha-16257-50 p_interface 50: ha-16257
+colocation colocation-p_haresources_fs-p_drbd_haresources_clone-INFINITY inf: p_haresources_fs p_drbd_haresources_clone:Master
+colocation colocation-p_interface-p_cluster_ip-INFINITY inf: p_interface p_cluster_ip
+colocation colocation-p_interface-p_haresources_fs-INFINITY inf: p_interface p_haresources_fs
+property cib-bootstrap-options: \
+        dc-version=1.1.11-97629de \
+        cluster-infrastructure=cman \
+        expected-quorum-votes=2 \
+        stonith-enabled=false
+rsc_defaults rsc_defaults-options: \
+        resource-stickiness=100
+op_defaults op_defaults-options: \
+        timeout=240s

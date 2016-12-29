@@ -1,0 +1,58 @@
+4,5c4,18
+< mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.old
+< wget -P /etc/yum.repos.d/ http://192.168.10.10/rhat_ic/ciac_files/CentOS-Base.repo
+---
+> #mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.old
+> #wget -P /etc/yum.repos.d/ http://192.168.10.10/rhat_ic/ciac_files/CentOS-Base.repo
+> 
+> #get the rhel subscriptions - new way for rhel 7 and above
+> #subscription-manager register --username "jonathan.arrance@transcirrus.com" --password "password"
+> #subscription-manager attach --auto
+> 
+> #register with RHN classic
+> rhnreg_ks --profilename=TransCirrus_manufacturing --username=jonathan_arrance --password=transcirrus2015!
+> 
+> #OSP-5
+> rhn-channel -a -c rhel-x86_64-server-6-ost-5 -u jonathan_arrance -p transcirrus2015!
+> 
+> #XFS
+> rhn-channel -a -c rhel-x86_64-server-sfs-6 -u jonathan_arrance -p transcirrus2015!
+173c186
+< yum install -y http://192.168.10.10/rhat_ic/common/rdo-release-icehouse-4.noarch.rpm
+---
+> #yum install -y http://192.168.10.10/rhat_ic/common/rdo-release-icehouse-4.noarch.rpm
+204c217
+< yum install -y memcached xfsprogs openstack-utils python-keystone-auth-token
+---
+> yum install -y memcached openstack-utils python-keystone-auth-token xfsprogs
+229a243,246
+> #install XFS on RHEL - these are centOS 6.6 pakages
+> #yum install -y http://192.168.10.10/rhat_ic/common/xfsprogs-3.1.1-16.el6.x86_64.rpm
+> #yum install -y http://192.168.10.10/rhat_ic/common/xfsdump-3.0.4-4.el6.x86_64.rpm
+> 
+249c266
+< yum install -y openstack-swift-account openstack-swift-container openstack-swift-object xfsprogs xinetd openstack-swift-proxy python-swiftclient python-keystone-auth-token
+---
+> yum install -y openstack-swift-account openstack-swift-container openstack-swift-object xinetd openstack-swift-proxy python-swiftclient python-keystone-auth-token
+495d511
+< #Starting httpd: httpd: Syntax error on line 221 of /etc/httpd/conf/httpd.conf: Syntax error on line 12 of /etc/httpd/conf.d/ssl.conf: Cannot load /etc/httpd/modules/mod_ssl.so into server: /etc/httpd/modules/mod_ssl.so: cannot open shared object file: No such file or directory
+1204a1221,1235
+> #update ceilometer policy for rhel
+> rm -f /etc/ceilometer/policy.json
+> touch /etc/ceilometer/policy.json
+> (
+> cat <<'EOP'
+> {
+>     "context_is_admin": [["role:admin"]],
+>     "segregation": [["rule:context_is_admin"]]
+> }
+> EOP
+> ) >> /etc/ceilometer/policy.json
+> chmod 770 /etc/ceilometer/policy.json
+> chmod +x /etc/ceilometer/policy.json
+> chown ceilometer:ceilometer /etc/ceilometer/policy.json
+> 
+1296,1298d1326
+< #compile the transcirrus code
+< #python2.7 /usr/local/lib/python2.7/transcirrus/compiler.py
+< 

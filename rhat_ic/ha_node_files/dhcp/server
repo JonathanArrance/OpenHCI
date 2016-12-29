@@ -1,0 +1,189 @@
+#!/bin/bash
+#
+#
+#		OCF Resource Agent compliant dhcp resource script.
+#
+
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+# The passed in OCF_CRM_meta_notify_* environment
+# is not reliably with pacemaker up to at least
+# 1.0.10 and 1.1.4. It should be fixed later.
+# Until that is fixed, the "self-outdating feature" would base its actions on
+# wrong information, and possibly not outdate when it should, or, even worse,
+# outdate the last remaining valid copy.
+# Disable.
+OCF_RESKEY_stop_outdates_secondary_default="false"
+
+: ${OCF_RESKEY_drbdconf:=${OCF_RESKEY_drbdconf_default}}
+: ${OCF_RESKEY_stop_outdates_secondary:=${OCF_RESKEY_stop_outdates_secondary_default}}
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="dhcp">
+<version>1.3</version>
+
+<longdesc lang="en">
+This resource agent manages an ISC dhcp server by stopping and
+starting it via its init script.
+
+The DHCP server should position its leases-file on a cluster shared
+filesystem (e.g. drbd) to work properly in a cluster.
+</longdesc>
+
+<shortdesc lang="en">Manages a ISC dhcp server</shortdesc>
+
+<parameters>
+<parameter name="service" unique="1" required="0">
+<longdesc lang="en">
+The service name of the DHCP-server.
+(Defaults to isc-dhcp-server)
+</longdesc>
+<shortdesc lang="en">DHCP-service name</shortdesc>
+<content type="string" default="isc-dhcp-server"/>
+</parameter>
+</parameters>
+
+<actions>
+<action name="start"   timeout="20s" />
+<action name="stop"    timeout="20s" />
+<action name="status" depth="0"  timeout="20s" interval="10s" />
+<action name="monitor" depth="0"  timeout="20s" interval="10s" />
+<action name="meta-data"  timeout="5s" />
+<action name="validate-all"  timeout="20s" />
+</actions>
+</resource-agent>
+END
+}
+
+dhcp_usage() {
+	cat <<END
+usage: $0 {start|stop|status|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+dhcp_start() {
+
+	local dhcp_status=`dhcp_served`
+
+	if [ "$dhcp_status" = "ok" ]; then
+		exit $OCF_SUCCESS
+	fi
+
+	service $OCF_RESKEY_service start 2>&1 >/dev/null
+
+	sleep 4
+
+	dhcp_status=`dhcp_served`
+
+	if [ "$dhcp_status" = "ok" ]; then
+		exit $OCF_SUCCESS
+	fi
+
+	exit $OCF_NOT_RUNNING
+
+}
+
+dhcp_stop() {
+
+	local dhcp_status=`dhcp_served`
+
+	if [ "$dhcp_status" = "no" ]; then
+		exit $OCF_SUCCESS
+	fi
+
+	service $OCF_RESKEY_service stop 2>&1 >/dev/null
+
+	dhcp_status=`dhcp_served`
+
+	if [ "$dhcp_status" = "no" ]; then
+		exit $OCF_SUCCESS
+	fi
+
+	exit $OCF_ERR_GENERIC
+
+}
+
+dhcp_served() {
+
+	export LANG=C
+
+	local dhcp_status=`service ${OCF_RESKEY_service} status 2>&1`
+
+	if [ $? -ne 0 ]; then
+		ocf_log err "Service $OCF_RESKEY_service not registered."
+		exit $OCF_ERR_CONFIGURED
+	fi
+
+	echo $dhcp_status | grep "start/running" 2>&1 >/dev/null
+
+	if [ $? -eq 0 ]; then
+		echo "ok"
+	else
+		echo "no"
+	fi
+
+	return 0
+
+}
+
+dhcp_monitor() {
+
+	local dhcp_status=`dhcp_served`
+
+	case $dhcp_status in
+	ok)
+		return $OCF_SUCCESS
+		;;
+	no)
+		return $OCF_NOT_RUNNING
+		;;
+	*)
+		return $OCF_ERR_GENERIC
+		;;
+	esac
+
+}
+
+if [ X"$OCF_RESKEY_service" = "X" ]; then
+	OCF_RESKEY_service="isc-dhcp-server"
+fi
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+usage|help)	dhcp_usage
+		exit $OCF_SUCCESS
+		;;
+esac
+
+case $__OCF_ACTION in
+start)		dhcp_start
+		;;
+stop)		dhcp_stop
+		;;
+status)		dhcp_status=`dhcp_served`
+		if [ $dhcp_status = "ok" ]; then
+			echo "running"
+			exit $OCF_SUCCESS
+		else
+			echo "stopped"
+			exit $OCF_NOT_RUNNING
+		fi
+		;;
+monitor)	dhcp_monitor
+		;;
+validate-all)	;;
+*)		dhcp_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac

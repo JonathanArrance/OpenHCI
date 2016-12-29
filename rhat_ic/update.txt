@@ -1,0 +1,139 @@
+`ceilometer/nova.conf:qpid_hostname=172.38.24.10
+`ceilometer/nova.conf:nova_url=http://localhost:8774/v1.1 sql_connection=postgresql://transuser:transcirrus1@172.38.24.10/nova
+`ceilometer/nova.conf:glance_api_servers=172.38.24.10:9292
+`ceilometer/nova.conf:novncproxy_base_url=http://172.38.24.10:6080/vnc_auto.html
+`ceilometer/nova.conf:vncserver_proxyclient_address=172.38.24.10
+`ceilometer/nova.conf:quantum_url=http://172.38.24.10:9696
+`ceilometer/nova.conf:quantum_admin_auth_url=http://172.38.24.10:35357/v2.0
+`ceilometer/nova.conf:metadata_host=172.38.24.10
+`ceilometer/nova.conf:metadata_listen=172.38.24.10
+`ceilometer/proxy-server.conf:auth_host = 172.38.24.10
+`ceilometer/proxy-server.conf:auth_uri = http://172.38.24.10:5000/
+`ceilometer/proxy-server.conf:service_host = 172.38.24.10
+`ceilometer/proxy-server.conf:memcache_servers = 172.38.24.10:11211
+`Binary file ciac_files/os_configs.tar matches
+`ciac_files/ciac-setup-sim.sh:psql -U postgres -d transcirrus -c "INSERT INTO projects VALUES ('"${TRANS_TENANT}"', 'trans_default',NULL,NULL,NULL,NULL,'"${HOSTNAME}"','172.38.24.10',NULL,NULL);"
+`ciac_files/ciac-setup-sim.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-sim.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-sim.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-sim.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-sim.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup-sim.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup-sim.sh:gluster volume create cinder-volume-ssd 172.38.24.10:/data/gluster/cinder-volume-ssd
+`ciac_files/ciac-setup-sim.sh:echo '172.38.24.10:cinder-volume-ssd' >> /etc/cinder/shares.conf
+`ciac_files/ciac-setup-sim.sh:gluster volume create cinder-volume-spindle 172.38.24.10:/data/gluster-spindle/cinder-volume-spindle
+`ciac_files/ciac-setup-sim.sh:echo '172.38.24.10:cinder-volume-spindle' >> /etc/cinder/shares_two.conf
+`ciac_files/ciac-setup-sim.sh:gluster volume create instances 172.38.24.10:/data/gluster/instances
+`ciac_files/ciac-setup-sim.sh:mount -t glusterfs 172.38.24.10:/instances /var/lib/nova/instances
+`ciac_files/ciac-setup-sim.sh:#echo 'mount -t glusterfs 172.38.24.10:/instances /var/lib/nova/instances' >> /etc/rc.local
+`ciac_files/ciac-setup-sim.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/ciac-setup-sim.sh:gluster volume create glance 172.38.24.10:/data/gluster-spindle/glance
+`ciac_files/ciac-setup-sim.sh:mount -t glusterfs 172.38.24.10:/glance /var/lib/glance
+`ciac_files/ciac-setup-sim.sh:echo '172.38.24.10:/glance /var/lib/glance glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/anaconda-ks-demo.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=eth4 --noipv6 --bondslaves eth4,eth5
+`ciac_files/anaconda-ks-testbed.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=em3 --noipv6 --bondslaves em3,em4
+`ciac_files/ciac-setup-testbed.sh:psql -U postgres -d transcirrus -c "INSERT INTO projects VALUES ('"${TRANS_TENANT}"', 'trans_default',NULL,NULL,NULL,NULL,'"${HOSTNAME}"','172.38.24.10',NULL,NULL);"
+`ciac_files/ciac-setup-testbed.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-testbed.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-testbed.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-testbed.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-testbed.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup-testbed.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup-testbed.sh:gluster volume create cinder-volume-ssd 172.38.24.10:/data/gluster/cinder-volume-ssd
+`ciac_files/ciac-setup-testbed.sh:echo '172.38.24.10:cinder-volume-ssd' >> /etc/cinder/shares.conf
+`ciac_files/ciac-setup-testbed.sh:gluster volume create instances 172.38.24.10:/data/gluster/instances
+`ciac_files/ciac-setup-testbed.sh:mount -t glusterfs 172.38.24.10:/instances /var/lib/nova/instances
+`ciac_files/ciac-setup-testbed.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/ciac-setup-testbed.sh:gluster volume create glance 172.38.24.10:/data/gluster/glance
+`ciac_files/ciac-setup-testbed.sh:mount -t glusterfs 172.38.24.10:/glance /var/lib/glance
+`ciac_files/ciac-setup-testbed.sh:echo '172.38.24.10:/glance /var/lib/glance glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/ciac-setup-demo.sh:psql -U postgres -d transcirrus -c "INSERT INTO projects VALUES ('"${TRANS_TENANT}"', 'trans_default',NULL,NULL,NULL,NULL,'"${HOSTNAME}"','172.38.24.10',NULL,NULL);"
+`ciac_files/ciac-setup-demo.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-demo.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-demo.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-demo.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup-demo.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup-demo.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup-demo.sh:gluster volume create cinder-volume-ssd 172.38.24.10:/data/gluster/cinder-volume-ssd
+`ciac_files/ciac-setup-demo.sh:echo '172.38.24.10:cinder-volume-ssd' >> /etc/cinder/shares.conf
+`ciac_files/ciac-setup-demo.sh:gluster volume create instances 172.38.24.10:/data/gluster/instances
+`ciac_files/ciac-setup-demo.sh:mount -t glusterfs 172.38.24.10:/instances /var/lib/nova/instances
+`ciac_files/ciac-setup-demo.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/ciac-setup-demo.sh:gluster volume create glance 172.38.24.10:/data/gluster/glance
+`ciac_files/ciac-setup-demo.sh:mount -t glusterfs 172.38.24.10:/glance /var/lib/glance
+`ciac_files/ciac-setup-demo.sh:echo '172.38.24.10:/glance /var/lib/glance glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/anaconda-ks.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=eth4 --noipv6 --bondslaves eth4,eth5
+`ciac_files/anaconda-ks-phy.cfg.orig:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=eth0 --noipv6 --bondslaves eth2,eth3
+`ciac_files/anaconda-ks-7.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=ens36 --noipv6 --bondslaves ens36,ens37
+`ciac_files/ciac-setup.sh:psql -U postgres -d transcirrus -c "INSERT INTO projects VALUES ('"${TRANS_TENANT}"', 'trans_default',NULL,NULL,NULL,NULL,'"${HOSTNAME}"','172.38.24.10',NULL,NULL);"
+`ciac_files/ciac-setup.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+`ciac_files/ciac-setup.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`ciac_files/ciac-setup.sh:gluster volume create cinder-volume-ssd 172.38.24.10:/data/gluster/cinder-volume-ssd
+`ciac_files/ciac-setup.sh:echo '172.38.24.10:cinder-volume-ssd' >> /etc/cinder/shares.conf
+`ciac_files/ciac-setup.sh:gluster volume create instances 172.38.24.10:/data/gluster/instances
+`ciac_files/ciac-setup.sh:mount -t glusterfs 172.38.24.10:/instances /var/lib/nova/instances
+`ciac_files/ciac-setup.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/ciac-setup.sh:gluster volume create glance 172.38.24.10:/data/gluster/glance
+`ciac_files/ciac-setup.sh:mount -t glusterfs 172.38.24.10:/glance /var/lib/glance
+`ciac_files/ciac-setup.sh:echo '172.38.24.10:/glance /var/lib/glance glusterfs defaults,_netdev 0 0' >> /etc/fstab
+`ciac_files/anaconda-ks-phy.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=eth4 --noipv6 --bondslaves eth4,eth5
+`ciac_files/yo/quantum/plugins/openvswitch/ovs_quantum_plugin.ini:local_ip = 172.38.24.10 
+`cn_files/cn-setup-sim.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`cn_files/cn-setup-sim.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`cn_files/cn-setup-sim.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev,direct-io-mode=disable,transport=tcp 0 0' >> /etc/fstab
+`Binary file cn_files/cn_configs.tar matches
+`cn_files/cn-setup.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`cn_files/cn-setup.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`cn_files/cn-setup.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev,direct-io-mode=disable,transport=tcp 0 0' >> /etc/fstab
+`cn_files/cn-setup-testbed.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`cn_files/cn-setup-testbed.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`cn_files/cn-setup-testbed.sh:echo '172.38.24.10:/instances /var/lib/nova/instances glusterfs defaults,_netdev,direct-io-mode=disable,transport=tcp 0 0' >> /etc/fstab
+`cn_files/yo/quantum/plugins/openvswitch/ovs_quantum_plugin.ini:local_ip = 172.38.24.10 
+`cn_files/yo/quantum/quantum.conf:qpid_hostname = 172.38.24.10 
+`Binary file gluster/gluster-swift-1.8.0-7.tar matches
+`gluster/gluster_swift/proxy-server.conf:auth_host = 172.38.24.10
+`gluster/gluster_swift/proxy-server.conf:auth_uri = http://172.38.24.10:5000/
+`gluster/gluster_swift/proxy-server.conf:service_host = 172.38.24.10
+`gluster/gluster_swift/proxy-server.conf:memcache_servers = 172.38.24.10:11211
+`Binary file gluster/yo/gluster-swift-1.8.0-7.tar matches
+`gluster/yo/gluster-swift-1.8.0-7/bin/gluster-swift-gen-builders:    swift-ring-builder $1 add z$2-172.38.24.10:$3/$4_ 100.0
+`gluster/yo/gluster-swift-1.8.0-7/etc/proxy-server.conf:auth_host = 172.38.24.10
+`gluster/yo/gluster-swift-1.8.0-7/etc/proxy-server.conf:auth_uri = http://172.38.24.10:5000/
+`gluster/yo/gluster-swift-1.8.0-7/etc/proxy-server.conf:service_host = 172.38.24.10
+`gluster/yo/gluster-swift-1.8.0-7/etc/proxy-server.conf:memcache_servers = 172.38.24.10:11211
+Binary file ha_node_files/os_configs.tar matches
+ha_node_files/ciac-setup-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO projects VALUES ('"${TRANS_TENANT}"', 'trans_default',NULL,NULL,NULL,NULL,'"${HOSTNAME}"','172.38.24.10',NULL,NULL);"
+ha_node_files/ciac-setup-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-ha.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+ha_node_files/ciac-setup-ha.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+ha_node_files/ciac-setup-ha.sh:gluster volume create cinder-volume 172.38.24.10:/data/gluster/cinder-volume
+ha_node_files/ciac-setup-ha.sh:echo '172.38.24.10:cinder-volume' >> /etc/cinder/shares.conf
+ha_node_files/anaconda-ks.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=eth4 --noipv6 --bondslaves eth4,eth5
+ha_node_files/anaconda-ks-phy.cfg:network --activate --onboot yes --device bond1 --bootproto static --ip=172.38.24.10 --netmask=255.255.255.0 --bondopts=mode=balance-alb,miimon=100,primary=eth0 --noipv6 --bondslaves eth0,eth1
+ha_node_files/ciac-setup-sim-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO projects VALUES ('"${TRANS_TENANT}"', 'trans_default',NULL,NULL,NULL,NULL,'"${HOSTNAME}"','172.38.24.10',NULL,NULL);"
+ha_node_files/ciac-setup-sim-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-sim-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-sim-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('transcirrus_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-sim-ha.sh:psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('os_db','172.38.24.10','"${HOSTNAME}"');"
+ha_node_files/ciac-setup-sim-ha.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+ha_node_files/ciac-setup-sim-ha.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+ha_node_files/ciac-setup-sim-ha.sh:gluster volume create cinder-volume 172.38.24.10:/data/gluster/cinder-volume
+ha_node_files/ciac-setup-sim-ha.sh:echo '172.38.24.10:cinder-volume' >> /etc/cinder/shares.conf
+ha_node_files/yo/quantum/plugins/openvswitch/ovs_quantum_plugin.ini:local_ip = 172.38.24.10 
+`Binary file network/network.tar matches
+`network/ifcfg-bond1:IPADDR=172.38.24.10
+`sn_files/sn-setup-spin.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup-spin.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup-spin-sim.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup-spin-sim.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup-sim.sh:echo "TRANSCIRRUS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py
+`sn_files/sn-setup-sim.sh:echo "OS_DB='172.38.24.10'" >> /usr/local/lib/python2.7/transcirrus/common/config.py

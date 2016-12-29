@@ -1,0 +1,34 @@
+495d494
+< #Starting httpd: httpd: Syntax error on line 221 of /etc/httpd/conf/httpd.conf: Syntax error on line 12 of /etc/httpd/conf.d/ssl.conf: Cannot load /etc/httpd/modules/mod_ssl.so into server: /etc/httpd/modules/mod_ssl.so: cannot open shared object file: No such file or directory
+917c916
+< psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('physical_node','0','"${HOSTNAME}"');"
+---
+> psql -U postgres -d transcirrus -c "INSERT INTO trans_system_settings VALUES ('physical_node','1','"${HOSTNAME}"');"
+964c963
+< psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('physical_node','0','"${HOSTNAME}"');"
+---
+> psql -U postgres -d transcirrus -c "INSERT INTO factory_defaults VALUES ('physical_node','1','"${HOSTNAME}"');"
+972,975c971,974
+< 	for i in {0..254}
+< 	do
+<    		psql -U postgres -d transcirrus -c "INSERT INTO trans_subnets VALUES('$(($x * 255 + $i))',NULL,'c','4','10.$x.$(($i % 255)).0/24','10.$x.$(($i % 255)).1','10.$x.$(($i % 255)).2','10.$x.$(($i % 255)).254',NULL,NULL,NULL,'false',0,'int-sub-$(($x * 255 + $i))','255.255.255.0');"
+< 	done
+---
+>     for i in {0..254}
+>     do
+>         psql -U postgres -d transcirrus -c "INSERT INTO trans_subnets VALUES('$(($x * 255 + $i))',NULL,'c','4','10.$x.$(($i % 255)).0/24','10.$x.$(($i % 255)).1','10.$x.$(($i % 255)).2','10.$x.$(($i % 255)).254',NULL,NULL,NULL,'false',0,'int-sub-$(($x * 255 + $i))','255.255.255.0');"
+>     done
+1201a1201
+> 
+1209a1210
+> #turn on zero connect
+1267,1269d1267
+< #Fix monit
+< python2.7 /usr/local/lib/python2.7/transcirrus/operations/monit/fix_monit_conf.py cc
+< 
+1274a1273,1275
+> #Fix monit
+> python2.7 /usr/local/lib/python2.7/transcirrus/operations/monit/fix_monit_conf.py cc
+> 
+1303d1303
+< #cinder

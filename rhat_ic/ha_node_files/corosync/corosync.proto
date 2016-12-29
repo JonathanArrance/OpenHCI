@@ -1,0 +1,75 @@
+compatibility: whitetank
+
+aisexec {
+    # Run as root - this is necessary to be able to manage resources with Pacemaker
+    user: root
+    group: root
+}
+
+service {
+    # Load the Pacemaker Cluster Resource Manager
+    ver: 1
+    name: pacemaker
+    use_mgmtd: no
+    use_logd: no
+}
+
+totem {
+    version: 2
+    #How long before declaring a token lost (ms)
+        token: 5000
+    # How many token retransmits before forming a new configuration
+        token_retransmits_before_loss_const: 10
+    # How long to wait for join messages in the membership protocol (ms)
+        join: 1000
+    # How long to wait for consensus to be achieved before starting a new
+    # round of membership configuration (ms)
+        consensus: 7500
+    # Turn off the virtual synchrony filter
+        vsftype: none
+    # Number of messages that may be sent by one processor on receipt of the token
+        max_messages: 20
+    # Stagger sending the node join messages by 1..send_join ms
+        send_join: 45
+    # Limit generated nodeids to 31-bits (positive signed integers)
+        clear_node_high_bit: yes
+    # Disable encryption
+        secauth: off
+    # How many threads to use for encryption/decryption
+        threads: 0
+    # Optionally assign a fixed node id (integer)
+    # nodeid: 1234interface {
+interface {
+         ringnumber: 0
+        member {
+            memberaddr: %HANODE1%
+        }
+        #member {
+        #    memberaddr: %HANODE2%
+        #}
+        #HANODE#
+bindnetaddr: 169.254.0.0
+                mcastaddr: 226.94.1.1
+                mcastport: 5405
+                ttl: 1
+        }
+    }
+
+logging {
+    fileline: off
+    to_stderr: no
+    to_logfile: yes
+    to_syslog: yes
+    logfile: /var/log/cluster/corosync.log
+    debug: off
+    timestamp: on
+
+logger_subsys {
+    subsys: AMF
+    debug: off
+    }
+}
+
+amf {
+    mode: disabled
+}

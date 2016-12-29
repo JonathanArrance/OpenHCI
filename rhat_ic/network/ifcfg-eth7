@@ -1,0 +1,6 @@
+DEVICE=eth7
+USERCTL=no
+ONBOOT=yes
+MASTER=bond1
+SLAVE=yes
+BOOTPROTO=none
